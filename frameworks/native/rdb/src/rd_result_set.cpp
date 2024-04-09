@@ -57,7 +57,7 @@ int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         return E_OK;
     }
     if (isClosed_) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     int errCode = PrepareStep();
     if (errCode) {
@@ -66,12 +66,12 @@ int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     }
     auto [statement, connection] = GetStatement();
     if (statement == nullptr) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     bool needReset = false;
     if (rowPos_ == INIT_POS) {
         errCode = statement->Step();
-        if (errCode != E_OK && errCode != E_STEP_RESULT_IS_AFTER_LAST) {
+        if (errCode != E_OK && errCode != E_NO_MORE_ROWS) {
             return errCode;
         }
         needReset = true;
@@ -107,11 +107,11 @@ int RdSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     auto [statement, connection] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("the resultSet is closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     int outputType;
     int errCode = statement->GetColumnType(columnIndex, outputType);
@@ -185,11 +185,11 @@ int RdSharedResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &va
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("the resultSet is closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (AbsSharedResultSet::rowPos_ == RdSharedResultSet::INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     return statement->GetFloat32Array(col, value);
 }
@@ -198,7 +198,7 @@ int RdSharedResultSet::GoToNextRow()
 {
     if (AbsSharedResultSet::isClosed_) {
         LOG_ERROR("the resultSet is closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     int errCode = PrepareStep();
     if (errCode != E_OK) {
@@ -208,18 +208,18 @@ int RdSharedResultSet::GoToNextRow()
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("the resultSet is closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     errCode = statement->Step();
     if (errCode == E_OK) {
         AbsSharedResultSet::rowPos_++;
         return E_OK;
-    } else if (errCode == E_STEP_RESULT_IS_AFTER_LAST) {
+    } else if (errCode == E_NO_MORE_ROWS) {
         isAfterLast_ = true;
         RdSharedResultSet::rowCount_ = AbsSharedResultSet::rowPos_ + 1;
         RdSharedResultSet::FinishStep();
         AbsSharedResultSet::rowPos_ = RdSharedResultSet::rowCount_;
-        return E_STEP_RESULT_IS_AFTER_LAST;
+        return E_NO_MORE_ROWS;
     } else {
         LOG_ERROR("step errCode is %{public}d", errCode);
         RdSharedResultSet::FinishStep();
@@ -236,18 +236,18 @@ int RdSharedResultSet::PrepareStep()
     }
     if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
         LOG_ERROR("not a select sql_!");
-        return E_EXECUTE_IN_STEP_QUERY;
+        return E_NOT_SELECT;
     }
 
     auto pool = rdConnectionPool_;
     if (pool == nullptr) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     auto connection = pool->AcquireConnection(true, 0);
     if (connection == nullptr) {
         LOG_ERROR("rdConnectionPool_ AcquireConnection failed!");
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     auto statement = RdStatement::CreateStatement(std::static_pointer_cast<RdConnection>(connection), sql_);
     if (statement == nullptr) {
@@ -351,11 +351,11 @@ int RdSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     return statement->GetColumnBlob(columnIndex, blob);
@@ -366,11 +366,11 @@ int RdSharedResultSet::GetString(int columnIndex, std::string &value)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     int errCode = statement->GetColumnString(columnIndex, value);
@@ -386,10 +386,10 @@ int RdSharedResultSet::GetInt(int columnIndex, int &value)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     int64_t columnValue;
@@ -407,10 +407,10 @@ int RdSharedResultSet::GetLong(int columnIndex, int64_t &value)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     int errCode = statement->GetColumnLong(columnIndex, value);
     if (errCode != E_OK) {
@@ -425,10 +425,10 @@ int RdSharedResultSet::GetDouble(int columnIndex, double &value)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     int errCode = statement->GetColumnDouble(columnIndex, value);
     if (errCode != E_OK) {
@@ -453,12 +453,12 @@ int RdSharedResultSet::GetSize(int columnIndex, size_t &size)
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
         size = 0;
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     return statement->GetSize(columnIndex, size);
@@ -500,11 +500,11 @@ std::pair<int, ValueObject> RdSharedResultSet::GetValueObject(int32_t col, size_
 {
     auto [statement, conn] = GetStatement();
     if (statement == nullptr) {
-        return { E_STEP_RESULT_CLOSED, ValueObject() };
+        return { E_ALREADY_CLOSED, ValueObject() };
     }
 
     if (rowPos_ == INIT_POS) {
-        return { E_STEP_RESULT_QUERY_NOT_EXECUTED, ValueObject() };
+        return { E_NOT_INIT, ValueObject() };
     }
 
     ValueObject value;

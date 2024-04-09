@@ -199,7 +199,7 @@ int ConnPool::AcquireTransaction()
         return E_OK;
     }
     LOG_WARN("transactionUsed_ is %{public}d", transactionUsed_);
-    return E_TRANSACTION_IN_EXECUTE;
+    return E_DATABASE_BUSY;
 }
 
 void ConnPool::ReleaseTransaction()
@@ -385,7 +385,7 @@ int32_t ConnPool::Container::ConfigLocale(const std::string& locale)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
     if (max_ != count_) {
-        return E_NO_ROW_IN_QUERY;
+        return E_DATABASE_BUSY;
     }
     for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();

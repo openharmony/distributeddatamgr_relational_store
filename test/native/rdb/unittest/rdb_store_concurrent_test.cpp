@@ -156,7 +156,7 @@ int RdbConcurrentTest::Query()
             if (errCode != E_OK) {
                 return errCode;
             }
-        } else if (ret == E_STEP_RESULT_IS_AFTER_LAST) {
+        } else if (ret == E_NO_MORE_ROWS) {
             break;
         } else {
             return ret;

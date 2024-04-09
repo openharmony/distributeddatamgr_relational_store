@@ -429,18 +429,19 @@ napi_value JSUtils::Convert2JSValue(napi_env env, bool value)
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<float> &value)
 {
     napi_value jsValue = nullptr;
-    void *native = new float[value.size()];
+    float *native = nullptr;
     napi_value buffer = nullptr;
-    napi_status status = napi_create_arraybuffer(env, value.size() * sizeof(float), &native, &buffer);
+    napi_status status = napi_create_arraybuffer(env, value.size() * sizeof(float), (void **)&native, &buffer);
     if (status != napi_ok) {
-        delete[] static_cast<float *>(native);
+        return nullptr;
+    }
+    if (native == nullptr) {
         return nullptr;
     }
     for (size_t i = 0; i < value.size(); i++) {
-        *(static_cast<float *>(native) + i) = value[i];
+        *(native + i) = value[i];
     }
     status = napi_create_typedarray(env, napi_float32_array, value.size(), buffer, 0, &jsValue);
-    delete[] static_cast<float *>(native);
     if (status != napi_ok) {
         return nullptr;
     }

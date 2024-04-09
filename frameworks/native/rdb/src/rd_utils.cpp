@@ -15,6 +15,9 @@
 
 #define LOG_TAG "RdUtils"
 #include "rd_utils.h"
+
+#include <securec.h>
+
 #include "grd_error.h"
 #include "grd_api_manager.h"
 #include "logger.h"
@@ -37,7 +40,7 @@ struct GrdErrnoPair {
 
 const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
-    { GRD_NO_DATA, E_STEP_RESULT_IS_AFTER_LAST },
+    { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_INNER_ERR, E_ERROR },
 };
 
@@ -145,6 +148,11 @@ int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindBlob(stmt, idx, val, len, freeFunc));
 }
 
+void RdSqlFreeCharStr(void *charStr)
+{
+    delete[] ((char *)charStr);
+}
+
 int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *))
 {
     LOG_DEBUG("[RdUtils::RdSqlBindText]");
@@ -154,7 +162,17 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (GRD_KVApiInfo.DBSqlBindText == nullptr) {
         return TransferGrdErrno(GRD_INNER_ERR);
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindText(stmt, idx, val, len, freeFunc));
+    char *tmpVal = new char[len + 1]();
+    errno_t err = strcpy_s(tmpVal, len + 1, (const char *)val);
+    if (err < 0) {
+        LOG_ERROR("BindText failed due to strycpy %{public}d, len is %{public}d", err, len + 1);
+        delete[] tmpVal;
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    if (freeFunc == nullptr) {
+        freeFunc = RdSqlFreeCharStr;
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindText(stmt, idx, tmpVal, len, freeFunc));
 }
 
 int RdUtils::RdSqlBindInt(GRD_SqlStmt *stmt, uint32_t idx, int32_t val)

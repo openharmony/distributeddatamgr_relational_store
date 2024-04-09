@@ -62,8 +62,7 @@ public:
     int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs,
         int64_t trxId) override;
-    int ExecuteAndGetLong(
-        int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
+    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,

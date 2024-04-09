@@ -24,6 +24,7 @@ namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
 using RowEntity = OHOS::NativeRdb::RowEntity;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using BigInt = OHOS::NativeRdb::BigInteger;
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 template<>
@@ -32,6 +33,10 @@ template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
+template<>
+napi_value Convert2JSValue(napi_env env, const BigInt &value);
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt &value);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

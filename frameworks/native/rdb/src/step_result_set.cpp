@@ -60,7 +60,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
     if (isClosed_) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     int errCode = PrepareStep();
@@ -71,7 +71,7 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
     int columnCount = 0;
     errCode = statement->GetColumnCount(columnCount);
@@ -100,12 +100,12 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     int sqliteType;
@@ -130,6 +130,12 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
             break;
         case SqliteStatement::COLUMN_TYPE_ASSETS:
             columnType = ColumnType::TYPE_ASSETS;
+            break;
+        case SqliteStatement::COLUMN_TYPE_FLOATS:
+            columnType = ColumnType::TYPE_FLOAT32_ARRAY;
+            break;
+        case SqliteStatement::COLUMN_TYPE_BIGINT:
+            columnType = ColumnType::TYPE_BIGINT;
             break;
         case SQLITE_NULL:
             columnType = ColumnType::TYPE_NULL;
@@ -196,7 +202,7 @@ int StepResultSet::GoToNextRow()
 {
     if (isClosed_) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     int errCode = PrepareStep();
@@ -208,7 +214,7 @@ int StepResultSet::GoToNextRow()
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     int retryCount = 0;
@@ -235,7 +241,7 @@ int StepResultSet::GoToNextRow()
         rowCount_ = rowPos_ + 1;
         FinishStep();
         rowPos_ = rowCount_;
-        return E_STEP_RESULT_IS_AFTER_LAST;
+        return E_NO_MORE_ROWS;
     } else {
         LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
@@ -268,13 +274,13 @@ int StepResultSet::PrepareStep()
     }
 
     if (conn_ == nullptr) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     auto type = SqliteUtils::GetSqlStatementType(sql_);
     if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
         LOG_ERROR("not a select sql_!");
-        return E_EXECUTE_IN_STEP_QUERY;
+        return E_NOT_SELECT;
     }
 
     auto statement = SqliteStatement::CreateStatement(conn_, sql_);
@@ -349,12 +355,12 @@ int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     return statement->GetColumnBlob(columnIndex, blob);
 }
@@ -364,11 +370,11 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     int errCode = statement->GetColumnString(columnIndex, value);
@@ -384,11 +390,11 @@ int StepResultSet::GetInt(int columnIndex, int &value)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     int64_t columnValue;
@@ -406,11 +412,11 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     int errCode = statement->GetColumnLong(columnIndex, value);
     if (errCode != E_OK) {
@@ -425,11 +431,11 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     int errCode = statement->GetColumnDouble(columnIndex, value);
     if (errCode != E_OK) {
@@ -459,11 +465,11 @@ int StepResultSet::GetModifyTime(std::string &modifyTime)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
     auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
     int errCode = statement->GetColumnString(index - columnNames_.begin(), modifyTime);
@@ -479,12 +485,12 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("resultSet closed");
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     if (rowPos_ == INIT_POS) {
         size = 0;
-        return E_STEP_RESULT_QUERY_NOT_EXECUTED;
+        return E_NOT_INIT;
     }
 
     return statement->GetSize(columnIndex, size);
@@ -526,11 +532,11 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
 {
     auto statement = GetStatement();
     if (statement == nullptr) {
-        return { E_STEP_RESULT_CLOSED, ValueObject() };
+        return { E_ALREADY_CLOSED, ValueObject() };
     }
 
     if (rowPos_ == INIT_POS) {
-        return { E_STEP_RESULT_QUERY_NOT_EXECUTED, ValueObject() };
+        return { E_NOT_INIT, ValueObject() };
     }
 
     ValueObject value;

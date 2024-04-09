@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define LOG_TAG "SqliteConnection"
 #include "sqlite_connection.h"
 
@@ -22,6 +23,8 @@
 #include <cerrno>
 #include <memory>
 #include <new>
+
+#include "hilog/log_c.h"
 
 #ifdef RDB_SUPPORT_ICU
 #include <unicode/ucol.h>
@@ -364,6 +367,16 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 }
 #endif
 
+std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
+{
+    auto name = config.GetBundleName();
+    if (name.empty()) {
+        LOG_WARN("Bundle name is empty, using path instead.");
+        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
+    }
+    return name;
+}
+
 int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -371,7 +384,7 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
     bool isKeyExpired = false;
     int32_t errCode = E_OK;
     if (config.IsEncrypt()) {
-        errCode = RdbSecurityManager::GetInstance().Init(config.GetBundleName());
+        errCode = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
         if (errCode != E_OK) {
             key.assign(key.size(), 0);
             return errCode;
@@ -627,18 +640,11 @@ int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<Value
     }
 
     errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("SqliteConnection Execute : Queries can be performed using query or QuerySql methods only");
-        statement.ResetStatementAndClearBindings();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("SqliteConnection Execute : err %{public}d", errCode);
-        statement.ResetStatementAndClearBindings();
-        return SQLiteError::ErrNo(errCode);
+    if (errCode != SQLITE_DONE) {
+        LOG_WARN("SqliteConnection Execute : err %{public}d", errCode);
     }
 
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::ExecuteForChangedRowCount(
@@ -650,20 +656,11 @@ int SqliteConnection::ExecuteForChangedRowCount(
     }
 
     errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("SqliteConnection ExecuteForChangedRowCount : Queries can be performed using query or QuerySql "
-                  "methods only");
-        statement.ResetStatementAndClearBindings();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("SqliteConnection ExecuteForChangedRowCount : failed %{public}d", errCode);
-        statement.ResetStatementAndClearBindings();
-        return SQLiteError::ErrNo(errCode);
+    if (errCode == SQLITE_DONE) {
+        changedRows = sqlite3_changes(dbHandle);
     }
 
-    changedRows = sqlite3_changes(dbHandle);
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::ExecuteForLastInsertedRowId(
@@ -675,19 +672,11 @@ int SqliteConnection::ExecuteForLastInsertedRowId(
     }
 
     errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
-        statement.ResetStatementAndClearBindings();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("failed: %{public}d. sql: %{public}s", errCode, SqliteUtils::Anonymous(sql).c_str());
-        statement.ResetStatementAndClearBindings();
-        return SQLiteError::ErrNo(errCode);
+    if (errCode == SQLITE_DONE) {
+        outRowId = (sqlite3_changes(dbHandle) > 0) ? sqlite3_last_insert_rowid(dbHandle) : -1;
     }
 
-    outRowId = (sqlite3_changes(dbHandle) > 0) ? sqlite3_last_insert_rowid(dbHandle) : -1;
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::ExecuteGetLong(
@@ -711,8 +700,7 @@ int SqliteConnection::ExecuteGetLong(
         return errCode;
     }
 
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::ExecuteGetString(
@@ -725,8 +713,7 @@ int SqliteConnection::ExecuteGetString(
 
     errCode = statement.Step();
     if (errCode != SQLITE_ROW) {
-        statement.ResetStatementAndClearBindings();
-        return E_NO_ROW_IN_QUERY;
+        return statement.ResetStatementAndClearBindings();
     }
 
     errCode = statement.GetColumnString(0, outValue);
@@ -735,8 +722,7 @@ int SqliteConnection::ExecuteGetString(
         return errCode;
     }
 
-    errCode = statement.ResetStatementAndClearBindings();
-    return errCode;
+    return statement.ResetStatementAndClearBindings();
 }
 
 int SqliteConnection::DesFinalize()
