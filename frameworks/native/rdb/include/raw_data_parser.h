@@ -24,14 +24,21 @@ class RawDataParser final {
 public:
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;
+    using Floats = ValueObject::FloatVector;
     template<typename T, typename... Rest>
     static bool Convert(T input, std::variant<Rest...> &output);
+
     static size_t ParserRawData(const uint8_t *data, size_t length, Asset &asset);
     static size_t ParserRawData(const uint8_t *data, size_t length, Assets &assets);
     static size_t ParserRawData(const uint8_t *data, size_t length, std::map<std::string, Asset> &assets);
+    static size_t ParserRawData(const uint8_t *data, size_t length, BigInteger &bigint);
+    static size_t ParserRawData(const uint8_t *data, size_t length, Floats &floats);
+
     static std::vector<uint8_t> PackageRawData(const Asset &asset);
     static std::vector<uint8_t> PackageRawData(const Assets &assets);
     static std::vector<uint8_t> PackageRawData(const std::map<std::string, Asset> &assets);
+    static std::vector<uint8_t> PackageRawData(const BigInteger &bigint);
+    static std::vector<uint8_t> PackageRawData(const Floats &floats);
 
 private:
     struct InnerAsset : public Serializable {
@@ -58,8 +65,11 @@ private:
         }
         return Get<T, O, Rest...>(std::move(input), output);
     }
+
     static constexpr const uint32_t ASSET_MAGIC = 0x41534554;
     static constexpr const uint32_t ASSETS_MAGIC = 0x41534553;
+    static constexpr const uint32_t FLOUT32_ARRAY = 0x46333241;
+    static constexpr const uint32_t BIG_INT = 0x42494749;
 };
 
 template<typename T, typename... Rest>

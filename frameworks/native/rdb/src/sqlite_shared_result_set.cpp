@@ -54,7 +54,7 @@ std::pair<std::shared_ptr<SqliteStatement>, int> SqliteSharedResultSet::PrepareS
 
     if (conn_ == nullptr) {
         LOG_ERROR("Already close");
-        return {nullptr, E_STEP_RESULT_CLOSED};
+        return {nullptr, E_ALREADY_CLOSED};
     }
 
     auto statement = SqliteStatement::CreateStatement(conn_, qrySql_);
@@ -79,7 +79,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
     }
 
     if (isClosed_) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     auto [statement, errCode] = PrepareStep();
@@ -118,11 +118,17 @@ int SqliteSharedResultSet::GetRowCount(int &count)
     }
 
     if (isClosed_) {
-        return E_STEP_RESULT_CLOSED;
+        return E_ALREADY_CLOSED;
     }
 
     FillBlock(0);
     count = rowNum_;
+
+    if (count == 0) {
+        rowNum_ = NO_COUNT;
+        FillBlock(0);
+        count = rowNum_;
+    }
     return E_OK;
 }
 
@@ -164,11 +170,6 @@ void SqliteSharedResultSet::FillBlock(int requiredPos)
         return;
     }
     ClearBlock();
-    if (block == nullptr) {
-        LOG_ERROR("GetBlock failed.");
-        return;
-    }
-
     if (rowNum_ == NO_COUNT) {
         auto [errCode, rowNum] = ExecuteForSharedBlock(block, requiredPos, requiredPos, true);
         if (errCode != E_OK) {
@@ -195,11 +196,6 @@ std::pair<int, int32_t> SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk:
     int required, bool needCount)
 {
     int32_t rowNum = NO_COUNT;
-    if (block == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
-        return { E_ERROR, rowNum };
-    }
-
     auto [statement, errCode] = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("PrepareStep error = %{public}d ", errCode);

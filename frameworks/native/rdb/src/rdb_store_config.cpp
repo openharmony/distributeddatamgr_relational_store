@@ -25,20 +25,20 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
     int journalSize, int pageSize, const std::string &encryptAlgo)
-    : name(name),
-      path(name),
-      storageMode(storageMode),
-      journalMode(journalMode),
-      syncMode(syncMode),
-      readOnly(isReadOnly),
-      databaseFileType(databaseFileType),
-      encryptKey_(encryptKey),
-      securityLevel(securityLevel),
+    : readOnly(isReadOnly),
       isCreateNecessary_(isCreateNecessary),
-      autoCheck(autoCheck),
+      autoCheck_(autoCheck),
       journalSize(journalSize),
       pageSize(pageSize),
-      encryptAlgo(encryptAlgo)
+      securityLevel(securityLevel),
+      storageMode(storageMode),
+      name(name),
+      path(name),
+      journalMode(journalMode),
+      syncMode(syncMode),
+      databaseFileType(databaseFileType),
+      encryptAlgo(encryptAlgo),
+      encryptKey_(encryptKey)
 {
 }
 
@@ -148,11 +148,11 @@ void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 
 bool RdbStoreConfig::IsAutoCheck() const
 {
-    return autoCheck;
+    return autoCheck_;
 }
 void RdbStoreConfig::SetAutoCheck(bool autoCheck)
 {
-    this->autoCheck = autoCheck;
+    this->autoCheck_ = autoCheck;
 }
 int RdbStoreConfig::GetJournalSize() const
 {
@@ -481,5 +481,15 @@ void RdbStoreConfig::SetRoleType(RoleType role)
 uint32_t RdbStoreConfig::GetRoleType() const
 {
     return role_;
+}
+
+void RdbStoreConfig::SetDBType(int32_t dbType)
+{
+    dbType_ = dbType;
+}
+
+int32_t RdbStoreConfig::GetDBType() const
+{
+    return dbType_;
 }
 } // namespace OHOS::NativeRdb

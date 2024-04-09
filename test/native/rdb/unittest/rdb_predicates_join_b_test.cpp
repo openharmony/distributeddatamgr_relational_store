@@ -49,11 +49,13 @@ public:
     int ResultSize(std::shared_ptr<ResultSet> &resultSet);
 
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
+
+protected:
+    std::shared_ptr<RdbStore> store_;
 };
 
 const std::string RdbStorePredicateJoinBTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_join_b_test.db";
-std::shared_ptr<RdbStore> RdbStorePredicateJoinBTest::store = nullptr;
+
 const std::string CREATE_TABLE_DEPT_SQL = std::string("CREATE TABLE IF NOT EXISTS dept ") +
       std::string("(id INTEGER PRIMARY KEY , dName TEXT , loc TEXT)");
 const std::string CREATE_TABLE_JOB_SQL = std::string("CREATE TABLE IF NOT EXISTS job ") +
@@ -84,37 +86,43 @@ int PredicateJoinBTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, i
     return E_OK;
 }
 
-void RdbStorePredicateJoinBTest::SetUpTestCase(void) {}
+void RdbStorePredicateJoinBTest::SetUpTestCase(void)
+{
+    RdbHelper::DeleteRdbStore(RdbStorePredicateJoinBTest::DATABASE_NAME);
+}
 
 void RdbStorePredicateJoinBTest::TearDownTestCase(void) {}
 
 void RdbStorePredicateJoinBTest::SetUp(void)
 {
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStorePredicateJoinBTest::DATABASE_NAME);
     int errCode = E_OK;
     RdbStoreConfig config(RdbStorePredicateJoinBTest::DATABASE_NAME);
     PredicateJoinBTestOpenCallback helper;
-    RdbStorePredicateJoinBTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStorePredicateJoinBTest::store, nullptr);
+    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store_, nullptr);
     RdbStorePredicateJoinBTest::GenerateAllTables();
 }
 
 void RdbStorePredicateJoinBTest::TearDown(void)
 {
+    store_ = nullptr;
     RdbHelper::DeleteRdbStore(RdbStorePredicateJoinBTest::DATABASE_NAME);
 }
 
 void RdbStorePredicateJoinBTest::GenerateAllTables()
 {
-    RdbStorePredicateJoinBTest::store->ExecuteSql(CREATE_TABLE_DEPT_SQL);
+    store_->ExecuteSql(CREATE_TABLE_DEPT_SQL);
     RdbStorePredicateJoinBTest::InsertDeptDates();
 
-    RdbStorePredicateJoinBTest::store->ExecuteSql(CREATE_TABLE_JOB_SQL);
+    store_->ExecuteSql(CREATE_TABLE_JOB_SQL);
     RdbStorePredicateJoinBTest::InsertJobDates();
 
-    RdbStorePredicateJoinBTest::store->ExecuteSql(CREATE_TABLE_EMP_SQL);
+    store_->ExecuteSql(CREATE_TABLE_EMP_SQL);
     RdbStorePredicateJoinBTest::InsertEmpDates();
 
-    RdbStorePredicateJoinBTest::store->ExecuteSql(CREATE_TABLE_SALARYGRADE_SQL);
+    store_->ExecuteSql(CREATE_TABLE_SALARYGRADE_SQL);
     RdbStorePredicateJoinBTest::InsertSalarygradeDates();
 }
 
@@ -126,25 +134,25 @@ void RdbStorePredicateJoinBTest::InsertDeptDates()
     values.PutInt("id", 10);
     values.PutString("dName", std::string("JiaoYanBU"));
     values.PutString("loc", std::string("BeiJing"));
-    store->Insert(id, "dept", values);
+    store_->Insert(id, "dept", values);
 
     values.Clear();
     values.PutInt("id", 20);
     values.PutString("dName", std::string("XueGongBu"));
     values.PutString("loc", std::string("ShangHai"));
-    store->Insert(id, "dept", values);
+    store_->Insert(id, "dept", values);
 
     values.Clear();
     values.PutInt("id", 30);
     values.PutString("dName", std::string("XiaoShouBu"));
     values.PutString("loc", std::string("GuangZhou"));
-    store->Insert(id, "dept", values);
+    store_->Insert(id, "dept", values);
 
     values.Clear();
     values.PutInt("id", 40);
     values.PutString("dName", std::string("CaiWuBu"));
     values.PutString("loc", std::string("ShenZhen"));
-    store->Insert(id, "dept", values);
+    store_->Insert(id, "dept", values);
 }
 
 void RdbStorePredicateJoinBTest::InsertJobDates()
@@ -155,25 +163,25 @@ void RdbStorePredicateJoinBTest::InsertJobDates()
     values.PutInt("id", 1);
     values.PutString("jName", std::string("Chairman"));
     values.PutString("description", std::string("ManageTheEntireCompany"));
-    store->Insert(id, "job", values);
+    store_->Insert(id, "job", values);
 
     values.Clear();
     values.PutInt("id", 2);
     values.PutString("jName", std::string("Manager"));
     values.PutString("description", std::string("ManageEmployeesOfTheDepartment"));
-    store->Insert(id, "job", values);
+    store_->Insert(id, "job", values);
 
     values.Clear();
     values.PutInt("id", 3);
     values.PutString("jName", std::string("Salesperson"));
     values.PutString("description", std::string("SellingProductsToCustomers"));
-    store->Insert(id, "job", values);
+    store_->Insert(id, "job", values);
 
     values.Clear();
     values.PutInt("id", 4);
     values.PutString("jName", std::string("Clerk"));
     values.PutString("description", std::string("UseOfficeSoftware"));
-    store->Insert(id, "job", values);
+    store_->Insert(id, "job", values);
 }
 
 void RdbStorePredicateJoinBTest::InsertEmpDates()
@@ -182,7 +190,7 @@ void RdbStorePredicateJoinBTest::InsertEmpDates()
 
     int ret = 0;
     for (int i = 0; i <= CYCLENUM; i++) {
-        ret = store->Insert(id, "emp", UTUtils::SetRowDatas(UTUtils::gRowDatas[i]));
+        ret = store_->Insert(id, "emp", UTUtils::SetRowDatas(UTUtils::gRowDatas[i]));
     }
     EXPECT_EQ(ret, E_OK);
 }
@@ -195,31 +203,31 @@ void RdbStorePredicateJoinBTest::InsertSalarygradeDates()
     values.PutInt("grade", 1);
     values.PutInt("loSalary", 7000);
     values.PutInt("hiSalary", 12000);
-    store->Insert(id, "salarygrade", values);
+    store_->Insert(id, "salarygrade", values);
 
     values.Clear();
     values.PutInt("grade", 2);
     values.PutInt("loSalary", 12010);
     values.PutInt("hiSalary", 14000);
-    store->Insert(id, "salarygrade", values);
+    store_->Insert(id, "salarygrade", values);
 
     values.Clear();
     values.PutInt("grade", 3);
     values.PutInt("loSalary", 14010);
     values.PutInt("hiSalary", 20000);
-    store->Insert(id, "salarygrade", values);
+    store_->Insert(id, "salarygrade", values);
 
     values.Clear();
     values.PutInt("grade", 4);
     values.PutInt("loSalary", 20010);
     values.PutInt("hiSalary", 30000);
-    store->Insert(id, "salarygrade", values);
+    store_->Insert(id, "salarygrade", values);
 
     values.Clear();
     values.PutInt("grade", 5);
     values.PutInt("loSalary", 30010);
     values.PutInt("hiSalary", 99990);
-    store->Insert(id, "salarygrade", values);
+    store_->Insert(id, "salarygrade", values);
 }
 
 int RdbStorePredicateJoinBTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
@@ -254,7 +262,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_CrossJoinB_001, TestSize.Level1)
     EXPECT_EQ("CROSS JOIN dept ON(emp.deptId = dept.id)", predicates.GetJoinClause());
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = store_->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
 
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
@@ -328,7 +336,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_002, TestSize.Level1)
     columns.push_back("t1.salary");
     columns.push_back("t2.jName");
     columns.push_back("t2.description");
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = store_->Query(predicates, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -374,7 +382,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_003, TestSize.Level1)
     columns.push_back("t1.eName");
     columns.push_back("t1.salary");
     columns.push_back("t2.*");
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = store_->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -434,7 +442,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_004, TestSize.Level1)
     columns.push_back("t3.dName");
     columns.push_back("t3.loc");
     columns.push_back("t4.grade");
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = store_->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 
@@ -491,7 +499,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_LeftOuterJoinB_005, TestSize.Level
     columns.push_back("t1.mgr");
     columns.push_back("t2.id");
     columns.push_back("t2.eName");
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateJoinBTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = store_->Query(predicates, columns);
     EXPECT_EQ(14, ResultSize(allDataTypes));
     EXPECT_EQ(E_OK, allDataTypes->GoToFirstRow());
 

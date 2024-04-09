@@ -28,6 +28,11 @@ class SqliteConnection;
 
 class SqliteStatement {
 public:
+    static constexpr int COLUMN_TYPE_ASSET = 1000;
+    static constexpr int COLUMN_TYPE_ASSETS = 1001;
+    static constexpr int COLUMN_TYPE_FLOATS = 1002;
+    static constexpr int COLUMN_TYPE_BIGINT = 1003;
+
     SqliteStatement();
     ~SqliteStatement();
     static std::shared_ptr<SqliteStatement> CreateStatement(std::shared_ptr<SqliteConnection> connection,
@@ -53,14 +58,39 @@ public:
     {
         return stmtHandle;
     }
-    static constexpr int COLUMN_TYPE_ASSET = 1000;
-    static constexpr int COLUMN_TYPE_ASSETS = 1001;
+
 private:
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;
+    using BigInt = ValueObject::BigInt;
+    using Floats = ValueObject::FloatVector;
+    using Action = int32_t (*)(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindNil(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindInteger(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindDouble(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindText(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindBool(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindBlob(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindAsset(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindAssets(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindFloats(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
     static const int SQLITE_SET_SHAREDBLOCK = 2004;
     static const int SQLITE_USE_SHAREDBLOCK = 2005;
+    static constexpr Action ACTIONS[ValueObject::TYPE_MAX] = {
+        BindNil,
+        BindInteger,
+        BindDouble,
+        BindText,
+        BindBool,
+        BindBlob,
+        BindAsset,
+        BindAssets,
+        BindFloats,
+        BindBigInt
+    };
 
+    int GetCustomerValue(int index, ValueObject &value) const;
     int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
     int IsValid(int index) const;
     std::string sql;

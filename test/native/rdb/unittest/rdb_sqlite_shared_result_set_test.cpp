@@ -561,7 +561,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_005, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret3 = rstSet->GetString(colCnt, valueStr);
-    EXPECT_EQ(ret3, E_INVALID_COLUMN_INDEX);
+    EXPECT_EQ(ret3, E_OUT_RANGE);
 
     int retN = rstSet->GoToNextRow();
     EXPECT_EQ(retN, E_OK);
@@ -613,7 +613,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_006, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret1 = rstSet->GetDouble(colCnt, valueDb);
-    EXPECT_EQ(ret1, E_INVALID_COLUMN_INDEX);
+    EXPECT_EQ(ret1, E_OUT_RANGE);
 
     int retN = rstSet->GoToNextRow();
     EXPECT_EQ(retN, E_OK);
@@ -717,7 +717,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_008, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret1 = rstSet->GetColumnType(colCnt, colType);
-    EXPECT_EQ(ret1, E_INVALID_COLUMN_INDEX);
+    EXPECT_EQ(ret1, E_OUT_RANGE);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
@@ -793,7 +793,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_010, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret = rstSet->GetColumnName(colCnt, colName);
-    EXPECT_EQ(ret, E_INVALID_COLUMN_INDEX);
+    EXPECT_EQ(ret, E_OUT_RANGE);
 
     rstSet->Close();
     bool isClosedFlag = rstSet->IsClosed();
@@ -867,7 +867,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_012, TestSize.Le
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
     int ret1 = rstSet->GetLong(colCnt, valueInt);
-    EXPECT_EQ(ret1, E_INVALID_COLUMN_INDEX);
+    EXPECT_EQ(ret1, E_OUT_RANGE);
 
     int retN = rstSet->GoToNextRow();
     EXPECT_EQ(retN, E_OK);
@@ -926,7 +926,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_014, TestSize.Le
 
     int retF = rstSet->GoToFirstRow();
     EXPECT_EQ(retF, E_OK);
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     EXPECT_NE(pBk, nullptr);
 
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
@@ -961,7 +961,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_015, TestSize.Le
     EXPECT_EQ(retN, E_OK);
 
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     std::string path1 = pBk->Name();
 
     EXPECT_EQ(path,  "/data/test/shared_test.db");
@@ -994,7 +994,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_016, TestSize.Le
     pSqlSharedRstSet->SetFillBlockForwardOnly(true);
     pSqlSharedRstSet->GoToFirstRow();
 
-    OHOS::AppDataFwk::SharedBlock*  pBk = pSqlSharedRstSet->GetBlock();
+    auto pBk = pSqlSharedRstSet->GetBlock();
     EXPECT_NE(pBk, nullptr);
     std::string path = RdbSqliteSharedResultSetTest::store->GetPath();
     std::string path1 = pBk->Name();
@@ -1198,7 +1198,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_023, TestSize.Le
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, ret);
+    EXPECT_EQ(E_ALREADY_CLOSED, ret);
 }
 
 /* *
@@ -1218,7 +1218,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_024, TestSize.Le
 
     int count = 0;
     int ret = resultSet->GetRowCount(count);
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, ret);
+    EXPECT_EQ(E_ALREADY_CLOSED, ret);
 }
 
 /* *
@@ -1256,7 +1256,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_026, TestSize.Le
 
     std::vector<uint8_t> blob;
     int ret = resultSet->GetBlob(-10, blob);
-    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    EXPECT_EQ(E_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1277,7 +1277,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_027, TestSize.Le
 
     ValueObject::Asset value;
     int ret = resultSet->GetAsset(-10, value);
-    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    EXPECT_EQ(E_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1298,7 +1298,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_028, TestSize.Le
 
     ValueObject::Assets value;
     int ret = resultSet->GetAssets(-10, value);
-    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    EXPECT_EQ(E_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1319,7 +1319,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_029, TestSize.Le
 
     size_t size;
     int ret = resultSet->GetSize(-10, size);
-    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    EXPECT_EQ(E_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1340,7 +1340,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_030, TestSize.Le
 
     bool isNUll;
     int ret = resultSet->IsColumnNull(-10, isNUll);
-    EXPECT_EQ(E_INVALID_COLUMN_INDEX, ret);
+    EXPECT_EQ(E_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1359,20 +1359,20 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Le
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GoToLastRow());
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
 
     bool isExpectResult = true;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->IsAtLastRow(isExpectResult));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->IsAtLastRow(isExpectResult));
     EXPECT_NE(false, isExpectResult);
 
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->IsEnded(isExpectResult));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->IsEnded(isExpectResult));
     EXPECT_NE(false, isExpectResult);
 
     int columnCount;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnCount(columnCount));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetColumnCount(columnCount));
 
     std::string columnName;
-    EXPECT_EQ(E_STEP_RESULT_CLOSED, resultSet->GetColumnName(1, columnName));
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetColumnName(1, columnName));
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }
