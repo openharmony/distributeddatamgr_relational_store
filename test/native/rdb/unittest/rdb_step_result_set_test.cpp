@@ -528,7 +528,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
     EXPECT_EQ(1, iValue);
 
     iRet = resultSet->GetInt(3, iValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
@@ -587,7 +587,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
     EXPECT_EQ("1", strValue);
 
     iRet = resultSet->GetString(3, strValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
@@ -636,7 +636,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
     EXPECT_EQ(1.0, dValue);
 
     iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
     EXPECT_EQ(4, columnCount);
@@ -1320,6 +1320,22 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToNextRow());
 
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
     std::vector<std::string> columnNames;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetAllColumnNames(columnNames));
 
@@ -1340,9 +1356,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 
     double valuedouble;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetDouble(1, valuedouble));
-
-    std::string modifyTime;
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetModifyTime(modifyTime));
 
     ValueObject object;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->Get(4, object));

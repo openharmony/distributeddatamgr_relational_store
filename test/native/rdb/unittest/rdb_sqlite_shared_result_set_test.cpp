@@ -1361,6 +1361,18 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Le
     EXPECT_EQ(true, resultSet->IsClosed());
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
 
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+    
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+    
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
     bool isExpectResult = true;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->IsAtLastRow(isExpectResult));
     EXPECT_NE(false, isExpectResult);

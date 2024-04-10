@@ -199,7 +199,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**
@@ -252,7 +252,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
     int64_t outValue;
     int ret = store->ExecuteForLastInsertedRowId(outValue, "", {});
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_NE(E_OK, ret);
 }
 
 /**
@@ -265,7 +265,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
     int64_t outValue;
     int ret = store->ExecuteForChangedRowCount(outValue, "", {});
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_NE(E_OK, ret);
 }
 
 /**

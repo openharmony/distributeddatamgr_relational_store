@@ -26,6 +26,7 @@
 #include "value_object.h"
 #include "shared_block.h"
 
+#include "connection.h"
 typedef struct ClientChangedData ClientChangedData;
 namespace OHOS {
 namespace NativeRdb {
@@ -35,13 +36,25 @@ namespace NativeRdb {
  */
 using DataChangeCallback = std::function<void(ClientChangedData &clientChangedData)>;
 
-class SqliteConnection {
+class SqliteConnection : public Connection {
 public:
     static std::shared_ptr<SqliteConnection> Open(const RdbStoreConfig &config, bool isWrite, int &errCode);
+    static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     ~SqliteConnection();
-    bool IsWriteConnection() const;
-    int32_t SetId(int32_t id);
-    int32_t GetId() const;
+    int32_t OnInitialize() override;
+    int TryCheckPoint() override;
+    int LimitWalSize() override;
+    int ConfigLocale(const std::string &localeStr) override;
+    int CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int ReSetKey(const RdbStoreConfig &config) override;
+    int32_t GetJournalMode() override;
+    std::shared_ptr<Statement> CreateStatement(const std::string& sql, std::shared_ptr<Connection> conn) override;
+    bool IsWriter() const override;
+    int SubscribeTableChanges(const Notifier& notifier) override;
+    int GetMaxVariable() const override;
+    int32_t GetDBType() const override;
+
+protected:
     int Prepare(const std::string &sql, bool &outIsReadOnly);
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteForChangedRowCount(int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -52,21 +65,13 @@ public:
     int ExecuteGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
-    int ReSetKey(const RdbStoreConfig &config);
     int DesFinalize();
     void SetInTransaction(bool transaction);
-    bool IsInTransaction();
-    int TryCheckPoint();
-    int LimitWalSize();
-    int ConfigLocale(const std::string &localeStr);
-    int CleanDirtyData(const std::string &table, uint64_t cursor);
-    int RegisterCallBackObserver(const DataChangeCallback &clientChangedData);
-    int GetMaxVariableNumber();
-    JournalMode GetJournalMode();
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
+    int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
@@ -74,7 +79,7 @@ private:
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
-    int SetSyncMode(const std::string &syncMode);
+    int SetWalSyncMode(const std::string &syncMode);
     int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
 
@@ -99,18 +104,15 @@ private:
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
 
     sqlite3 *dbHandle;
-    bool isWriteConnection;
+    bool isWriter_;
     bool isReadOnly;
     bool isConfigured_ = false;
-    bool inTransaction_;
     bool hasClientObserver_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int openFlags;
     int maxVariableNumber_;
-    int32_t id_ = 0;
     std::mutex mutex_;
     SqliteStatement statement;
-    std::shared_ptr<SqliteStatement> stepStatement;
     std::string filePath;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 };
