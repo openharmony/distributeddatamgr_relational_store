@@ -19,14 +19,15 @@
 #include <memory>
 #include <vector>
 
-#include "sqlite3sym.h"
-#include "value_object.h"
 #include "share_block.h"
+#include "sqlite3sym.h"
+#include "statement.h"
+#include "value_object.h"
+
 namespace OHOS {
 namespace NativeRdb {
-class SqliteConnection;
-
-class SqliteStatement {
+class Connection;
+class SqliteStatement : public Statement {
 public:
     static constexpr int COLUMN_TYPE_ASSET = 1000;
     static constexpr int COLUMN_TYPE_ASSETS = 1001;
@@ -35,31 +36,26 @@ public:
 
     SqliteStatement();
     ~SqliteStatement();
-    static std::shared_ptr<SqliteStatement> CreateStatement(std::shared_ptr<SqliteConnection> connection,
-        const std::string& sql);
-    int Prepare(sqlite3 *dbHandle, const std::string &sql);
-    int Finalize();
-    int BindArguments(const std::vector<ValueObject> &bindArgs) const;
-    int ResetStatementAndClearBindings() const;
-    int Step() const;
-
-    int GetColumnCount(int &count) const;
-    int GetColumnName(int index, std::string &columnName) const;
-    int GetColumnType(int index, int &columnType) const;
-    int GetColumnBlob(int index, std::vector<uint8_t> &value) const;
-    int GetColumnString(int index, std::string &value) const;
-    int GetColumnLong(int index, int64_t &value) const;
-    int GetColumnDouble(int index, double &value) const;
-    int GetSize(int index, size_t &size) const;
-    int GetColumn(int index, ValueObject &value) const;
-    bool IsReadOnly() const;
-    bool SupportSharedBlock() const;
-    sqlite3_stmt *GetSql3Stmt() const
-    {
-        return stmtHandle;
-    }
+    int Prepare(const std::string& sql) override;
+    int Bind(const std::vector<ValueObject>& args) override;
+    int Step() override;
+    int Reset() override;
+    int Finalize() override;
+    int Execute(const std::vector<ValueObject>& args) override;
+    std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject>& args) override;
+    int Changes() const override;
+    int64_t LastInsertRowId() const override;
+    int32_t GetColumnCount() const override;
+    std::pair<int32_t, std::string> GetColumnName(int index) const override;
+    std::pair<int32_t, int32_t> GetColumnType(int index) const override;
+    std::pair<int32_t, size_t> GetSize(int index) const override;
+    std::pair<int32_t, ValueObject> GetColumn(int index) const override;
+    bool ReadOnly() const override;
+    bool SupportBlockInfo() const override;
+    int32_t FillBlockInfo(SharedBlockInfo* info) const override;
 
 private:
+    friend class SqliteConnection;
     using Asset = ValueObject::Asset;
     using Assets = ValueObject::Assets;
     using BigInt = ValueObject::BigInt;
@@ -87,17 +83,22 @@ private:
         BindAsset,
         BindAssets,
         BindFloats,
-        BindBigInt
+        BindBigInt,
     };
 
-    int GetCustomerValue(int index, ValueObject &value) const;
-    int InnerBindArguments(const std::vector<ValueObject> &bindArgs) const;
+    int Prepare(sqlite3* dbHandle, const std::string& sql);
+    int BindArgs(const std::vector<ValueObject>& bindArgs);
     int IsValid(int index) const;
-    std::string sql;
-    sqlite3_stmt *stmtHandle;
-    bool readOnly;
-    int columnCount;
-    int numParameters;
+    ValueObject GetValueFromBlob(int index, const char* decl) const;
+
+    bool readOnly_;
+    bool bound_ = false;
+    int columnCount_ = -1;
+    int numParameters_;
+    sqlite3_stmt *stmt_;
+    std::shared_ptr<Connection> conn_;
+
+    std::string sql_;
 };
 
 } // namespace NativeRdb

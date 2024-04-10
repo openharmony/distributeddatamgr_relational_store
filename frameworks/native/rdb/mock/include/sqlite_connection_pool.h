@@ -27,22 +27,24 @@
 #include <vector>
 
 #include "base_transaction.h"
+#include "connection.h"
+#include "rdb_common.h"
 #include "rdb_store_config.h"
-#include "sqlite_connection.h"
 namespace OHOS {
 namespace NativeRdb {
 class SqliteConnectionPool : public std::enable_shared_from_this<SqliteConnectionPool> {
 public:
-    using SharedConn = std::shared_ptr<SqliteConnection>;
+    using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
-    static constexpr int USE_COUNT_MAX = 2;
     static std::shared_ptr<SqliteConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
     ~SqliteConnectionPool();
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
     SharedConn AcquireByID(int32_t id);
+    std::pair<int32_t, SharedConn> DisableWal();
+    int32_t EnableWal();
     int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
@@ -51,28 +53,30 @@ public:
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
     void ReleaseTransaction();
-    std::pair<int, std::shared_ptr<SqliteConnection>> DisableWalMode();
-    int EnableWalMode();
+    RebuiltType GetRebuildType();
     void CloseAllConnections();
+    bool IsInTransaction();
+    void SetInTransaction(bool isInTransaction);
 private:
     struct ConnNode {
         bool using_ = false;
-        int32_t tid_ = 0;
+        uint32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
-        std::shared_ptr<SqliteConnection> connect_;
+        std::shared_ptr<Connection> connect_;
 
-        explicit ConnNode(std::shared_ptr<SqliteConnection> conn);
-        std::shared_ptr<SqliteConnection> GetConnect(bool justHold = false);
+        explicit ConnNode(std::shared_ptr<Connection> conn);
+        std::shared_ptr<Connection> GetConnect(bool justHold = false);
         int64_t GetUsingTime() const;
         bool IsWriter() const;
         void Unused();
     };
 
     struct Container {
-        using Creator = std::function<std::pair<int32_t, std::shared_ptr<SqliteConnection>>()>;
+        using Creator = std::function<std::pair<int32_t, std::shared_ptr<Connection>>()>;
         int max_ = 0;
         int count_ = 0;
+        bool closed_ = false;
         int32_t left_ = 0;
         int32_t right_ = 0;
         std::chrono::seconds timeout_;
@@ -84,8 +88,8 @@ private:
         std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
             int32_t max, int32_t timeout, bool needAcquire, Creator creator);
         int32_t ConfigLocale(const std::string &locale);
-        std::shared_ptr<SqliteConnectionPool::ConnNode> AcquireById(int32_t id);
         std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
+        std::shared_ptr<ConnNode> AcquireById(int32_t id);
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
@@ -96,6 +100,10 @@ private:
     int Init();
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
+    void RemoveDBFile();
+    void MarkRebuild(RebuiltType &type);
+    static void RemoveDBFile(const std::string &path);
+    static int RebuildDBInner(std::shared_ptr<SqliteConnectionPool> &pool);
 
     static constexpr int LIMITATION = 1024;
     RdbStoreConfig config_;
@@ -108,6 +116,8 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
+    std::atomic<bool> isInTransaction_ = false;
+    static std::atomic<RebuiltType> rebuild_;
 };
 
 } // namespace NativeRdb

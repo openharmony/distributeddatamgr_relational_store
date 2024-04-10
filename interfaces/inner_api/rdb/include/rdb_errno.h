@@ -85,9 +85,9 @@ constexpr int E_OUT_RANGE = (E_BASE + 8);
 constexpr int E_INVALID_COLUMN_TYPE = (E_BASE + 9);
 
 /**
-* @brief The error for the database corrupted.
+* @brief The error code for a file name is empty.
 */
-constexpr int E_DATA_BASE_CORRUPTED = (E_BASE + 10);
+constexpr int E_EMPTY_FILE_NAME = (E_BASE + 10);
 
 /**
 * @brief The error for the current file path is invalid.
@@ -212,7 +212,7 @@ constexpr int E_DATABASE_BUSY = (E_BASE + 34);
 /**
 * @brief The error code when the statement not initialized.
 */
-constexpr int E_STEP_STATEMENT_NOT_INIT = (E_BASE + 35);
+constexpr int E_STORE_CLOSED = (E_BASE + 35);
 
 /**
 * @brief The error code for the attach is not supported in WAL journal mode.
@@ -308,6 +308,14 @@ static constexpr int E_NOT_SUPPORT_THE_SQL = (E_BASE + 53);
  * @brief The database is already attached.
  */
 static constexpr int E_ATTACHED_DATABASE_EXIST = (E_BASE + 54);
+/**
+ * @brief The error when sql is not supported in execute
+ */
+static constexpr int E_SQLITE_ERROR = (E_BASE + 55);
+/**
+ * @brief The error when sql is not supported in execute
+ */
+static constexpr int E_DATABASE_CORRUPT = (E_BASE + 56);
 } // namespace NativeRdb
 } // namespace OHOS
 

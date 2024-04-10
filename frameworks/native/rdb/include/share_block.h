@@ -69,7 +69,7 @@ int SeriPutNull(void *pCtx, int addedRows, int column);
 int SeriPutOther(void *pCtx, int addedRows, int column);
 int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock);
 int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum);
-void FillSharedBlockOpt(SharedBlockInfo *info);
+int FillSharedBlockOpt(SharedBlockInfo *info);
 FillOneRowResult FillOneRowOfString(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
     int addedRows, int pos);
 FillOneRowResult FillOneRowOfLong(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
@@ -83,7 +83,7 @@ FillOneRowResult FillOneRowOfNull(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
 FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns,
     int startPos, int addedRows);
 void FillRow(SharedBlockInfo *info);
-void FillSharedBlock(SharedBlockInfo *info);
+int FillSharedBlock(SharedBlockInfo *info);
 bool ResetStatement(SharedBlockInfo *sharedBlockInfo);
 int64_t GetCombinedData(int startPos, int totalRows);
 #ifdef __cplusplus

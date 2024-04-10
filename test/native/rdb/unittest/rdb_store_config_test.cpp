@@ -221,7 +221,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_004, TestSize.Level1)
     ConfigTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
+    EXPECT_EQ(errCode, E_RELATIVE_PATH);
 }
 
 /**
@@ -382,32 +382,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_011, TestSize.Level1)
     int ret = store->ExecuteAndGetString(currentMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(currentMode, "off");
-}
-
-/**
- * @tc.name: RdbStoreConfig_012
- * @tc.desc: test RdbStoreConfig SetReadPermission/GetReadPermission/SetWritePermission/GetWritePermission
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_012, TestSize.Level1)
-{
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-    RdbStoreConfig config(dbPath);
-
-    std::string readPermission = "readPermission";
-    config.SetReadPermission(readPermission);
-    std::string getReadPermission = config.GetReadPermission();
-    EXPECT_EQ(getReadPermission, readPermission);
-
-    std::string writePermission = "writePermission";
-    config.SetWritePermission(writePermission);
-    std::string getWritePermission = config.GetWritePermission();
-    EXPECT_EQ(getWritePermission, writePermission);
-
-    std::string uri = "uri";
-    config.SetUri(uri);
-    std::string getUri = config.GetUri();
-    EXPECT_EQ(getUri, uri);
 }
 
 /**

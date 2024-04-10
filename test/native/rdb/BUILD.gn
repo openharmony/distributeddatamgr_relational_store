@@ -107,6 +107,7 @@ ohos_unittest("NativeRdbTest") {
 
   sources += [
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
+    "../../../frameworks/native/rdb/src/connection.cpp",
     "../../../frameworks/native/rdb/src/raw_data_parser.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",

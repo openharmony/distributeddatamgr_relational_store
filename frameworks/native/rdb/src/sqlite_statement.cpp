@@ -15,62 +15,45 @@
 #define LOG_TAG "SqliteStatement"
 #include "sqlite_statement.h"
 
-#include <chrono>
-#include <cinttypes>
+#include <cstdint>
 #include <iomanip>
+#include <memory>
 #include <sstream>
+#include <utility>
+
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
-#include "sqlite3sym.h"
+#include "share_block.h"
+#include "shared_block_serializer_info.h"
+#include "sqlite3.h"
+#include "sqlite3ext.h"
 #include "sqlite_connection.h"
+#include "sqlite_connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
-#include "shared_block_serializer_info.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 // Setting Data Precision
-const int SET_DATA_PRECISION = 15;
-SqliteStatement::SqliteStatement() : sql(""), stmtHandle(nullptr), readOnly(false), columnCount(0), numParameters(0)
-{
-}
+constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
+SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("") {}
 
 SqliteStatement::~SqliteStatement()
 {
     Finalize();
+    conn_ = nullptr;
 }
 
-std::shared_ptr<SqliteStatement> SqliteStatement::CreateStatement(
-    std::shared_ptr<SqliteConnection> connection, const std::string &sql)
+int SqliteStatement::Prepare(sqlite3* dbHandle, const std::string& newSql)
 {
-    sqlite3_stmt *stmt = nullptr;
-    int errCode = sqlite3_prepare_v2(connection->dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
-    if (errCode != SQLITE_OK) {
-        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-        LOG_ERROR("prepare_v2 ret is %{public}d %{public}" PRIu64 ".", errCode, time);
-        if (stmt != nullptr) {
-            sqlite3_finalize(stmt);
-        }
-        return nullptr;
-    }
-    std::shared_ptr<SqliteStatement> sqliteStatement = std::make_shared<SqliteStatement>();
-    sqliteStatement->stmtHandle = stmt;
-    sqliteStatement->readOnly = (sqlite3_stmt_readonly(stmt) != 0);
-    sqliteStatement->columnCount = sqlite3_column_count(stmt);
-    sqliteStatement->numParameters = sqlite3_bind_parameter_count(stmt);
-    return sqliteStatement;
-}
-
-int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
-{
-    if (sql.compare(newSql) == 0) {
+    if (sql_.compare(newSql) == 0) {
         return E_OK;
     }
     // prepare the new sqlite3_stmt
-    sqlite3_stmt *stmt = nullptr;
+    sqlite3_stmt* stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         if (stmt != nullptr) {
@@ -79,63 +62,20 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         return SQLiteError::ErrNo(errCode);
     }
     Finalize(); // finalize the old
-    sql = newSql;
-    stmtHandle = stmt;
-    readOnly = (sqlite3_stmt_readonly(stmtHandle) != 0) ? true : false;
-    columnCount = sqlite3_column_count(stmtHandle);
-    numParameters = sqlite3_bind_parameter_count(stmtHandle);
+    sql_ = newSql;
+    stmt_ = stmt;
+    readOnly_ = (sqlite3_stmt_readonly(stmt_) != 0);
+    columnCount_ = sqlite3_column_count(stmt_);
+    numParameters_ = sqlite3_bind_parameter_count(stmt_);
     return E_OK;
 }
 
-int SqliteStatement::Finalize()
+int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 {
-    if (stmtHandle == nullptr) {
-        return E_OK;
+    if (bound_) {
+        Reset();
     }
-
-    int errCode = sqlite3_finalize(stmtHandle);
-    stmtHandle = nullptr;
-    sql = "";
-    readOnly = false;
-    columnCount = 0;
-    numParameters = 0;
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("finalize ret is %{public}d", errCode);
-        return SQLiteError::ErrNo(errCode);
-    }
-    return E_OK;
-}
-
-int SqliteStatement::BindArguments(const std::vector<ValueObject> &bindArgs) const
-{
-    int count = static_cast<int>(bindArgs.size());
-    std::vector<ValueObject> abindArgs;
-
-    if (count == 0) {
-        return E_OK;
-    }
-    // Obtains the bound parameter set.
-    if ((numParameters != 0) && (count <= numParameters)) {
-        for (const auto& i : bindArgs) {
-            abindArgs.push_back(i);
-        }
-
-        for (int i = count; i < numParameters; i++) { // TD: when count <> numParameters
-            ValueObject val;
-            abindArgs.push_back(val);
-        }
-    }
-
-    if (count > numParameters) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters);
-        return E_INVALID_BIND_ARGS_COUNT;
-    }
-
-    return InnerBindArguments(abindArgs);
-}
-
-int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs) const
-{
+    bound_ = true;
     int index = 1;
     for (auto &arg : bindArgs) {
         auto action = ACTIONS[arg.value.index()];
@@ -143,9 +83,9 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
             LOG_ERROR("not support the type %{public}zu", arg.value.index());
             return E_INVALID_ARGS;
         }
-        auto errCode = action(stmtHandle, index, arg.value);
+        auto errCode = action(stmt_, index, arg.value);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("bind ret is %{public}d", errCode);
+            LOG_ERROR("Bind has error: %{public}d", errCode);
             return SQLiteError::ErrNo(errCode);
         }
         index++;
@@ -154,338 +94,297 @@ int SqliteStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs
     return E_OK;
 }
 
-int SqliteStatement::ResetStatementAndClearBindings() const
+int SqliteStatement::IsValid(int index) const
 {
-    if (stmtHandle == nullptr) {
+    if (stmt_ == nullptr) {
+        LOG_ERROR("invalid statement.");
+        return E_INVALID_STATEMENT;
+    }
+
+    if (index >= columnCount_) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
+        return E_OUT_RANGE ;
+    }
+
+    return E_OK;
+}
+
+int SqliteStatement::Prepare(const std::string& sql)
+{
+    if (stmt_ == nullptr) {
+        return E_ERROR;
+    }
+    auto db = sqlite3_db_handle(stmt_);
+    return Prepare(db, sql);
+}
+
+int SqliteStatement::Bind(const std::vector<ValueObject>& args)
+{
+    int count = static_cast<int>(args.size());
+    std::vector<ValueObject> abindArgs;
+
+    if (count == 0) {
+        return E_OK;
+    }
+    // Obtains the bound parameter set.
+    if ((numParameters_ != 0) && (count <= numParameters_)) {
+        for (const auto& i : args) {
+            abindArgs.push_back(i);
+        }
+
+        for (int i = count; i < numParameters_; i++) { // TD: when count <> numParameters
+            ValueObject val;
+            abindArgs.push_back(val);
+        }
+    }
+
+    if (count > numParameters_) {
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
+        return E_INVALID_BIND_ARGS_COUNT;
+    }
+
+    return BindArgs(abindArgs);
+}
+
+int SqliteStatement::Step()
+{
+    return sqlite3_step(stmt_);
+}
+
+int SqliteStatement::Reset()
+{
+    if (stmt_ == nullptr) {
         return E_OK;
     }
 
-    int errCode = sqlite3_reset(stmtHandle);
+    int errCode = sqlite3_reset(stmt_);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("reset ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
 
-    errCode = sqlite3_clear_bindings(stmtHandle);
+    errCode = sqlite3_clear_bindings(stmt_);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("clear_bindings ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
-
     return E_OK;
 }
 
-int SqliteStatement::Step() const
+int SqliteStatement::Finalize()
 {
-    return sqlite3_step(stmtHandle);
-}
-
-int SqliteStatement::GetColumnCount(int &count) const
-{
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+    if (stmt_ == nullptr) {
+        return E_OK;
     }
-    count = columnCount;
+
+    int errCode = sqlite3_finalize(stmt_);
+    stmt_ = nullptr;
+    sql_ = "";
+    readOnly_ = false;
+    columnCount_ = -1;
+    numParameters_ = 0;
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("finalize ret is %{public}d", errCode);
+        return SQLiteError::ErrNo(errCode);
+    }
     return E_OK;
 }
 
-int SqliteStatement::GetColumnName(int index, std::string &columnName) const
+int SqliteStatement::Execute(const std::vector<ValueObject>& args)
+{
+    int count = static_cast<int>(args.size());
+    if (count != numParameters_ || conn_ == nullptr) {
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
+        return E_INVALID_BIND_ARGS_COUNT;
+    }
+
+    if (!conn_->IsWriter() && !ReadOnly()) {
+        return E_EXECUTE_WRITE_IN_READ_CONNECTION;
+    }
+
+    auto errCode = conn_->LimitWalSize();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = BindArgs(args);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = sqlite3_step(stmt_);
+    if (errCode != SQLITE_DONE && errCode != SQLITE_ROW) {
+        LOG_ERROR("sqlite3_step SQLITE_ROW failed %{public}d", errCode);
+        return SQLiteError::ErrNo(errCode);
+    }
+    return E_OK;
+}
+
+std::pair<int, ValueObject> SqliteStatement::ExecuteForValue(const std::vector<ValueObject>& args)
+{
+    auto errCode = Execute(args);
+    if (errCode == E_OK) {
+        return GetColumn(0);
+    }
+    return { errCode, ValueObject() };
+}
+
+int SqliteStatement::Changes() const
+{
+    if (stmt_ == nullptr) {
+        return -1;
+    }
+    auto db = sqlite3_db_handle(stmt_);
+    return sqlite3_changes(db);
+}
+
+int64_t SqliteStatement::LastInsertRowId() const
+{
+    if (stmt_ == nullptr) {
+        return -1;
+    }
+    auto db = sqlite3_db_handle(stmt_);
+    return sqlite3_last_insert_rowid(db);
+}
+
+int32_t SqliteStatement::GetColumnCount() const
+{
+    return columnCount_;
+}
+
+std::pair<int32_t, std::string> SqliteStatement::GetColumnName(int index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return ret;
+        return { ret, "" };
     }
 
-    const char *name = sqlite3_column_name(stmtHandle, index);
+    const char* name = sqlite3_column_name(stmt_, index);
     if (name == nullptr) {
         LOG_ERROR("column_name is null.");
-        return E_ERROR;
+        return { E_ERROR, "" };
     }
-    columnName = std::string(name);
-    return E_OK;
+    return { E_OK, std::string(name) };
 }
 
-int SqliteStatement::GetColumnType(int index, int &columnType) const
+std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return ret;
+        return { ret, SQLITE_NULL };
     }
 
-    int type = sqlite3_column_type(stmtHandle, index);
-    switch (type) {
-        case SQLITE_INTEGER:
-        case SQLITE_FLOAT:
-        case SQLITE_NULL:
-        case SQLITE_TEXT:
-            columnType = type;
-            return E_OK;
-        case SQLITE_BLOB: {
-            auto declType = SqliteUtils::StrToUpper(std::string(sqlite3_column_decltype(stmtHandle, index)));
-            if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
-                columnType = COLUMN_TYPE_ASSET;
-                return E_OK;
-            }
-            if (declType == ValueObject::DeclType<ValueObject::Assets>()) {
-                columnType = COLUMN_TYPE_ASSETS;
-                return E_OK;
-            }
-            if (declType == ValueObject::DeclType<ValueObject::FloatVector>()) {
-                columnType = COLUMN_TYPE_FLOATS;
-                return E_OK;
-            }
-            if (declType == ValueObject::DeclType<ValueObject::BigInt>()) {
-                columnType = COLUMN_TYPE_BIGINT;
-                return E_OK;
-            }
-            columnType = type;
-            return E_OK;
+    int type = sqlite3_column_type(stmt_, index);
+    if (type == SQLITE_BLOB) {
+        auto declType = SqliteUtils::StrToUpper(std::string(sqlite3_column_decltype(stmt_, index)));
+        if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
+            return { E_OK, COLUMN_TYPE_ASSET };
         }
-        default:
-            LOG_ERROR("invalid type %{public}d.", type);
-            return E_ERROR;
+        if (declType == ValueObject::DeclType<ValueObject::Assets>()) {
+            return { E_OK, COLUMN_TYPE_ASSETS };
+        }
     }
+    return { E_OK, type };
 }
 
-int SqliteStatement::GetColumnBlob(int index, std::vector<uint8_t> &value) const
+std::pair<int32_t, size_t> SqliteStatement::GetSize(int index) const
 {
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
+    if (stmt_ == nullptr) {
+        return { E_INVALID_STATEMENT, 0 };
     }
 
-    int type = sqlite3_column_type(stmtHandle, index);
-    if (type != SQLITE_BLOB && type != SQLITE_TEXT && type != SQLITE_NULL) {
-        LOG_ERROR("invalid type %{public}d.", type);
-        return E_INVALID_COLUMN_TYPE;
+    if (index >= columnCount_) {
+        return { E_OUT_RANGE, 0 };
     }
 
-    int size = sqlite3_column_bytes(stmtHandle, index);
-    auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
-    if (size == 0 || blob == nullptr) {
-        value.resize(0);
-    } else {
-        value.resize(size);
-        value.assign(blob, blob + size);
+    int type = sqlite3_column_type(stmt_, index);
+    if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
+        auto size = static_cast<size_t>(sqlite3_column_bytes(stmt_, index));
+        return { E_OK, size };
     }
-
-    return E_OK;
+    return { E_INVALID_COLUMN_TYPE, 0 };
 }
 
-int SqliteStatement::GetColumnString(int index, std::string &value) const
+std::pair<int32_t, ValueObject> SqliteStatement::GetColumn(int index) const
 {
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
+    auto errCode = IsValid(index);
+    if (errCode != E_OK) {
+        return { errCode, ValueObject() };
     }
 
-    int type = sqlite3_column_type(stmtHandle, index);
-    switch (type) {
-        case SQLITE_TEXT: {
-            auto val = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
-            value = (val == nullptr) ? "" : std::string(val, sqlite3_column_bytes(stmtHandle, index));
-            break;
-        }
-        case SQLITE_INTEGER: {
-            int64_t val = sqlite3_column_int64(stmtHandle, index);
-            value = std::to_string(val);
-            break;
-        }
-        case SQLITE_FLOAT: {
-            double val = sqlite3_column_double(stmtHandle, index);
-            std::ostringstream os;
-            if (os << std::setprecision(SET_DATA_PRECISION) << val)
-                value = os.str();
-            break;
-        }
-        case SQLITE_NULL: {
-            value = "";
-            return E_OK;
-        }
-        case SQLITE_BLOB: {
-            return E_INVALID_COLUMN_TYPE;
-        }
-        default:
-            return E_ERROR;
-    }
-    return E_OK;
-}
-
-int SqliteStatement::GetColumnLong(int index, int64_t &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    char *errStr = nullptr;
-    int type = sqlite3_column_type(stmtHandle, index);
-    if (type == SQLITE_INTEGER) {
-        value = sqlite3_column_int64(stmtHandle, index);
-    } else if (type == SQLITE_TEXT) {
-        auto val = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
-        value = (val == nullptr) ? 0 : strtoll(val, &errStr, 0);
-    } else if (type == SQLITE_FLOAT) {
-        double val = sqlite3_column_double(stmtHandle, index);
-        value = static_cast<int64_t>(val);
-    } else if (type == SQLITE_NULL) {
-        value = 0;
-    } else if (type == SQLITE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        return E_ERROR;
-    }
-
-    return E_OK;
-}
-int SqliteStatement::GetColumnDouble(int index, double &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    char *ptr = nullptr;
-    int type = sqlite3_column_type(stmtHandle, index);
-    if (type == SQLITE_FLOAT) {
-        value = sqlite3_column_double(stmtHandle, index);
-    } else if (type == SQLITE_INTEGER) {
-        int64_t val = sqlite3_column_int64(stmtHandle, index);
-        value = static_cast<double>(val);
-    } else if (type == SQLITE_TEXT) {
-        auto val = reinterpret_cast<const char *>(sqlite3_column_text(stmtHandle, index));
-        value = (val == nullptr) ? 0.0 : std::strtod(val, &ptr);
-    } else if (type == SQLITE_NULL) {
-        value = 0.0;
-    } else if (type == SQLITE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        LOG_ERROR("invalid type %{public}d.", type);
-        return E_ERROR;
-    }
-
-    return E_OK;
-}
-
-int SqliteStatement::GetColumn(int index, ValueObject& value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    int type = sqlite3_column_type(stmtHandle, index);
+    int type = sqlite3_column_type(stmt_, index);
     switch (type) {
         case SQLITE_FLOAT:
-            value = sqlite3_column_double(stmtHandle, index);
-            break;
+            return { E_OK, ValueObject(sqlite3_column_double(stmt_, index)) };
         case SQLITE_INTEGER:
-            value = static_cast<int64_t>(sqlite3_column_int64(stmtHandle, index));
-            break;
+            return { E_OK, ValueObject(static_cast<int64_t>(sqlite3_column_int64(stmt_, index))) };
         case SQLITE_TEXT: {
-            int size = sqlite3_column_bytes(stmtHandle, index);
-            auto text = reinterpret_cast<const char*>(sqlite3_column_text(stmtHandle, index));
-            value = ValueObject(text == nullptr ? std::string("") : std::string(text, size));
+            int size = sqlite3_column_bytes(stmt_, index);
+            auto text = reinterpret_cast<const char*>(sqlite3_column_text(stmt_, index));
+            return { E_OK, ValueObject(text == nullptr ? std::string("") : std::string(text, size)) };
         }
-            break;
-        case SQLITE_BLOB:
-            return GetCustomerValue(index, value);
         case SQLITE_NULL:
+            return { E_OK, ValueObject() };
         default:
             break;
     }
-    return E_OK;
+    const char* decl = sqlite3_column_decltype(stmt_, index);
+    if (type != SQLITE_BLOB || decl == nullptr) {
+        LOG_ERROR("invalid type %{public}d.", type);
+        return { E_ERROR, ValueObject() };
+    }
+    return { E_OK, GetValueFromBlob(index, decl) };
 }
 
-int SqliteStatement::GetCustomerValue(int index, ValueObject& value) const
+ValueObject SqliteStatement::GetValueFromBlob(int index, const char* decl) const
 {
-    const char *decl = sqlite3_column_decltype(stmtHandle, index);
-    if (decl == nullptr) {
-        LOG_ERROR("index %{public}d invalid type.", index);
-        return E_ERROR;
-    }
-
-    int size = sqlite3_column_bytes(stmtHandle, index);
-    auto blob = static_cast<const uint8_t *>(sqlite3_column_blob(stmtHandle, index));
+    int size = sqlite3_column_bytes(stmt_, index);
+    auto blob = static_cast<const uint8_t*>(sqlite3_column_blob(stmt_, index));
     std::string declType = SqliteUtils::StrToUpper(decl);
     if (declType == ValueObject::DeclType<Asset>()) {
         Asset asset;
         RawDataParser::ParserRawData(blob, size, asset);
-        value = std::move(asset);
-        return E_OK;
+        return ValueObject(std::move(asset));
     }
     if (declType == ValueObject::DeclType<Assets>()) {
         Assets assets;
         RawDataParser::ParserRawData(blob, size, assets);
-        value = std::move(assets);
-        return E_OK;
+        return ValueObject(std::move(assets));
     }
     if (declType == ValueObject::DeclType<Floats>()) {
         Floats floats;
         RawDataParser::ParserRawData(blob, size, floats);
-        value = std::move(floats);
-        return E_OK;
+        return ValueObject(std::move(floats));
     }
     if (declType == ValueObject::DeclType<BigInt>()) {
         BigInt bigint;
         RawDataParser::ParserRawData(blob, size, bigint);
-        value = std::move(bigint);
-        return E_OK;
+        return ValueObject(std::move(bigint));
     }
     std::vector<uint8_t> rawData;
     if (size > 0 || blob != nullptr) {
         rawData.resize(size);
         rawData.assign(blob, blob + size);
     }
-    value = std::move(rawData);
-    return E_OK;
+    return ValueObject(std::move(rawData));
 }
 
-int SqliteStatement::GetSize(int index, size_t &size) const
+bool SqliteStatement::ReadOnly() const
 {
-    size = 0;
-    if (stmtHandle == nullptr) {
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        return E_OUT_RANGE;
-    }
-
-    int type = sqlite3_column_type(stmtHandle, index);
-    if (type == SQLITE_BLOB || type == SQLITE_TEXT || type == SQLITE_NULL) {
-        size = static_cast<size_t>(sqlite3_column_bytes(stmtHandle, index));
-        return E_OK;
-    }
-
-    return E_INVALID_COLUMN_TYPE;
+    return readOnly_;
 }
 
-bool SqliteStatement::IsReadOnly() const
+bool SqliteStatement::SupportBlockInfo() const
 {
-    return readOnly;
-}
-
-int SqliteStatement::IsValid(int index) const
-{
-    if (stmtHandle == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
-    }
-
-    if (index >= columnCount) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount);
-        return E_OUT_RANGE;
-    }
-
-    return E_OK;
-}
-
-bool SqliteStatement::SupportSharedBlock() const
-{
-    auto db = sqlite3_db_handle(stmtHandle);
+    auto db = sqlite3_db_handle(stmt_);
     return (sqlite3_db_config(db, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
+}
+int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo* info) const
+{
+    if (info == nullptr) {
+        return E_ERROR;
+    }
+    info->statement = stmt_;
+    return E_OK;
 }
 
 int32_t SqliteStatement::BindNil(sqlite3_stmt* stat, int index, const ValueObject::Type& arg)

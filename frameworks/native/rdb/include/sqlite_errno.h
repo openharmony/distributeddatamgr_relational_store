@@ -30,6 +30,8 @@ const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_LOCKED, E_DATABASE_BUSY },
     { SQLITE_EMPTY, E_OK },
     { SQLITE_MISMATCH, E_INVALID_ARGS },
+    { SQLITE_CORRUPT, E_DATABASE_CORRUPT },
+    { SQLITE_NOTADB, E_DATABASE_CORRUPT },
 };
 class SQLiteError {
 public:

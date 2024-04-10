@@ -21,6 +21,7 @@
 
 #include "logger.h"
 #include "shared_block_serializer_info.h"
+#include "sqlite_errno.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -105,19 +106,18 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
     return status;
 }
 
-void FillSharedBlockOpt(SharedBlockInfo *info)
+int FillSharedBlockOpt(SharedBlockInfo *info)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, info->statement, info->columnNum, info->startPos);
-    Sqlite3SharedBlockMethods sqliteSharedBlock = {
-        1,          &serializer,   info->isCountAllRows, info->startPos, info->requiredPos, SeriAddRow,  SeriReset,
-        SeriFinish, SeriPutString, SeriPutLong,          SeriPutDouble,  SeriPutBlob,       SeriPutNull, SeriPutOther
+    Sqlite3SharedBlockMethods sqliteBlock = { 1, &serializer, info->isCountAllRows, info->startPos,
+        info->requiredPos, SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob,
+        SeriPutNull, SeriPutOther
     };
-
     auto db = sqlite3_db_handle(info->statement);
-    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, &sqliteSharedBlock);
+    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, &sqliteBlock);
     if (rc != SQLITE_OK) {
         LOG_ERROR("set sqlite shared block methods error. rc=%{private}d", rc);
-        return;
+        return SQLiteError::ErrNo(rc);
     }
     int retryCount = 0;
     while (true) {
@@ -136,14 +136,15 @@ void FillSharedBlockOpt(SharedBlockInfo *info)
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
 
-    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, 0);
+    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, nullptr);
     if (rc != SQLITE_OK) {
-        LOG_ERROR("clear sqlite shared block methods error. rc=%{private}d", rc);
-        return;
+        LOG_ERROR("clear sqlite shared block methods error. rc=%{public}d", rc);
+        return SQLiteError::ErrNo(rc);
     }
+    return E_OK;
 }
 
-void FillSharedBlock(SharedBlockInfo *info)
+int FillSharedBlock(SharedBlockInfo *info)
 {
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;
@@ -151,6 +152,7 @@ void FillSharedBlock(SharedBlockInfo *info)
     bool hasException = false;
     while (!hasException && (!isFull || info->isCountAllRows)) {
         int err = sqlite3_step(info->statement);
+        LOG_ERROR("step error in fill shared block is %{public}d", err);
         if (err == SQLITE_ROW) {
             retryCount = 0;
             info->totalRows += 1;
@@ -168,14 +170,17 @@ void FillSharedBlock(SharedBlockInfo *info)
             if (retryCount > RETRY_TIME) {
                 LOG_ERROR("Bailing on database busy retry");
                 hasException = true;
+                return E_DATABASE_BUSY;
             } else {
                 usleep(SLEEP_TIME);
                 retryCount++;
             }
         } else {
             hasException = true;
+            return SQLiteError::ErrNo(err);
         }
     }
+    return E_OK;
 }
 
 void FillRow(SharedBlockInfo *info)
