@@ -152,7 +152,6 @@ int FillSharedBlock(SharedBlockInfo *info)
     bool hasException = false;
     while (!hasException && (!isFull || info->isCountAllRows)) {
         int err = sqlite3_step(info->statement);
-        LOG_ERROR("step error in fill shared block is %{public}d", err);
         if (err == SQLITE_ROW) {
             retryCount = 0;
             info->totalRows += 1;

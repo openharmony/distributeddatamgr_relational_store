@@ -229,8 +229,10 @@ private:
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    std::shared_ptr<Statement> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
-    std::shared_ptr<Statement> GetStatement(const std::string& sql, bool read = false) const;
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(
+        const std::string &sql, std::shared_ptr<Connection> conn) const;
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql, bool read = false) const;
+    void RemoveDbFiles(std::string &path);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -253,6 +255,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
+    uint32_t rebuild_;
 };
 } // namespace OHOS::NativeRdb
 #endif

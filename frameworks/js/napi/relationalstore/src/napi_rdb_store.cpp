@@ -1843,12 +1843,16 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
     };
-    auto exec = [context]() -> int {
-        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        CHECK_RETURN_ERR(obj != nullptr);
+    ExecuteAction exec;
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    if (obj != nullptr) {
+        auto store = obj->GetInstance();
         obj->SetInstance(nullptr);
-        return OK;
-    };
+        exec = [context, store]() mutable -> int {
+            store = nullptr;
+            return OK;
+        };
+    }
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));

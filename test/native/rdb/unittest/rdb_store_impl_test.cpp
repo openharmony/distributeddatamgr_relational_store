@@ -395,7 +395,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
     config.SetPageSize(1024);
     auto [errCode, connection] = Connection::Create(config, true);
     EXPECT_NE(nullptr, connection);
-    auto statement = connection->CreateStatement("PRAGMA page_size", connection);
+    auto [err, statement] = connection->CreateStatement("PRAGMA page_size", connection);
     auto [error, object] = statement->ExecuteForValue();
     EXPECT_EQ(E_OK, error);
     EXPECT_EQ(1024, static_cast<int64_t>(object));
@@ -515,11 +515,10 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)
 {
     const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
-    int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetPageSize(1024);
-    auto connection = SqliteConnection::Open(config, true, errCode);
+    auto [errCode, connection] = SqliteConnection::Create(config, true);
     EXPECT_NE(nullptr, connection);
     RdbStoreImplTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);

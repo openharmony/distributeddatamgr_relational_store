@@ -41,8 +41,6 @@ using SharedConns = std::vector<std::shared_ptr<Connection>>;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 constexpr int USE_COUNT_MAX = 2;
 
-std::atomic<RebuiltType> ConnPool::rebuild_ = RebuiltType::NONE;
-
 std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
     std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
@@ -51,17 +49,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
         return nullptr;
     }
     errCode = pool->Init();
-    if (errCode == E_DATABASE_CORRUPT) {
-        if (!storeConfig.GetAllowRebuild()) {
-            LOG_WARN("DB corrupt but not allow rebuild");
-            return nullptr;
-        }
-        errCode = RebuildDBInner(pool);
-    }
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    return pool;
+    return errCode == E_OK ? pool : nullptr;
 }
 
 ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
@@ -74,8 +62,7 @@ int ConnPool::Init()
     if (config_.GetRoleType() == OWNER) {
         // write connect count is 1
         auto errCode = writers_.Initialize(1, config_.GetWriteTime(), [this]() {
-            auto [errCode, conn] = Connection::Create(config_, true);
-            return std::pair{ errCode, conn };
+            return Connection::Create(config_, true);
         });
         if (errCode != E_OK) {
             return errCode;
@@ -229,11 +216,6 @@ void ConnPool::ReleaseTransaction()
     transCondition_.notify_one();
 }
 
-RebuiltType ConnPool::GetRebuildType()
-{
-    return rebuild_.load();
-}
-
 int ConnPool::RestartReaders()
 {
     readers_.Clear();
@@ -319,9 +301,7 @@ std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
 
 int ConnPool::EnableWal()
 {
-    CloseAllConnections();
-    auto errCode = Init();
-    return errCode;
+    return Init();
 }
 
 ConnPool::ConnNode::ConnNode(std::shared_ptr<Conn> conn) : connect_(std::move(conn)) {}
@@ -346,6 +326,7 @@ void ConnPool::ConnNode::Unused()
     tid_ = 0;
     time_ = std::chrono::steady_clock::now();
     if (connect_ != nullptr) {
+        connect_->DesFinalize();
         connect_->TryCheckPoint();
     }
 }
@@ -522,17 +503,5 @@ void ConnPool::RemoveDBFile(const std::string &path)
     SqliteUtils::DeleteFile(path + "-journal");
 }
 
-int ConnPool::RebuildDBInner(std::shared_ptr<ConnPool> &pool)
-{
-    pool->RemoveDBFile();
-    int errCode = pool->Init();
-    if (errCode != E_OK) {
-        LOG_ERROR("RebuildDB error %{public}d", errCode);
-    } else {
-        LOG_INFO("rebuild success");
-        rebuild_.store(RebuiltType::REBUILT);
-    }
-    return errCode;
-}
 } // namespace NativeRdb
 } // namespace OHOS

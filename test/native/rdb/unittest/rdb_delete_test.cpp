@@ -34,10 +34,12 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
+    static const int E_SQLITE_ERROR; // errno SQLITE_ERROR
 };
 
 const std::string RdbDeleteTest::DATABASE_NAME = RDB_TEST_PATH + "delete_test.db";
 std::shared_ptr<RdbStore> RdbDeleteTest::store = nullptr;
+const int RdbDeleteTest::E_SQLITE_ERROR = -1; // errno SQLITE_ERROR
 
 class DeleteTestOpenCallback : public RdbOpenCallback {
 public:
@@ -219,10 +221,10 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
     ret = store->Delete(deletedRows, "wrongTable", "id = ?", std::vector<std::string>{ "1" });
-    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    EXPECT_EQ(ret, RdbDeleteTest::E_SQLITE_ERROR);
 
     ret = store->Delete(deletedRows, "test", "wrong sql id = ?", std::vector<std::string>{ "1" });
-    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    EXPECT_EQ(ret, RdbDeleteTest::E_SQLITE_ERROR);
 
     ret = store->Delete(deletedRows, "test", "id = 1", std::vector<std::string>());
     EXPECT_EQ(ret, E_OK);

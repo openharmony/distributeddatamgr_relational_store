@@ -53,7 +53,6 @@ public:
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
     void ReleaseTransaction();
-    RebuiltType GetRebuildType();
     void CloseAllConnections();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
@@ -76,7 +75,6 @@ private:
         using Creator = std::function<std::pair<int32_t, std::shared_ptr<Connection>>()>;
         int max_ = 0;
         int count_ = 0;
-        bool closed_ = false;
         int32_t left_ = 0;
         int32_t right_ = 0;
         std::chrono::seconds timeout_;
@@ -102,8 +100,7 @@ private:
     void ReleaseNode(std::shared_ptr<ConnNode> node);
     void RemoveDBFile();
     void MarkRebuild(RebuiltType &type);
-    static void RemoveDBFile(const std::string &path);
-    static int RebuildDBInner(std::shared_ptr<SqliteConnectionPool> &pool);
+    void RemoveDBFile(const std::string &path);
 
     static constexpr int LIMITATION = 1024;
     RdbStoreConfig config_;
@@ -117,7 +114,6 @@ private:
     std::mutex transMutex_;
     bool transactionUsed_;
     std::atomic<bool> isInTransaction_ = false;
-    static std::atomic<RebuiltType> rebuild_;
 };
 
 } // namespace NativeRdb

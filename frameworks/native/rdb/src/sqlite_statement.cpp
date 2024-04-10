@@ -193,27 +193,29 @@ int SqliteStatement::Finalize()
 int SqliteStatement::Execute(const std::vector<ValueObject>& args)
 {
     int count = static_cast<int>(args.size());
-    if (count != numParameters_ || conn_ == nullptr) {
+    if (count != numParameters_) {
         LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
-    if (!conn_->IsWriter() && !ReadOnly()) {
-        return E_EXECUTE_WRITE_IN_READ_CONNECTION;
+    if (conn_ != nullptr) {
+        if (!conn_->IsWriter() && !ReadOnly()) {
+            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
+        }
+
+        auto errCode = conn_->LimitWalSize();
+        if (errCode != E_OK) {
+            return errCode;
+        }
     }
 
-    auto errCode = conn_->LimitWalSize();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = BindArgs(args);
+    auto errCode = BindArgs(args);
     if (errCode != E_OK) {
         return errCode;
     }
     errCode = sqlite3_step(stmt_);
     if (errCode != SQLITE_DONE && errCode != SQLITE_ROW) {
-        LOG_ERROR("sqlite3_step SQLITE_ROW failed %{public}d", errCode);
+        LOG_ERROR("sqlite3_step failed %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -281,6 +283,12 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
         }
         if (declType == ValueObject::DeclType<ValueObject::Assets>()) {
             return { E_OK, COLUMN_TYPE_ASSETS };
+        }
+        if (declType == ValueObject::DeclType<ValueObject::FloatVector>()) {
+            return { E_OK, COLUMN_TYPE_FLOATS };
+        }
+        if (declType == ValueObject::DeclType<ValueObject::BigInt>()) {
+            return { E_OK, COLUMN_TYPE_BIGINT };
         }
     }
     return { E_OK, type };

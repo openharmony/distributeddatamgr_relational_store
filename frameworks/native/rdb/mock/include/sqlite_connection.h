@@ -36,7 +36,6 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 
 class SqliteConnection : public Connection {
 public:
-    static std::shared_ptr<SqliteConnection> Open(const RdbStoreConfig &config, bool isWrite, int &errCode);
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     ~SqliteConnection();
     int32_t OnInitialize() override;
@@ -44,29 +43,25 @@ public:
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
     int32_t GetJournalMode() override;
-    std::shared_ptr<Statement> CreateStatement(const std::string& sql, std::shared_ptr<Connection> conn) override;
+    std::pair<int, std::shared_ptr<Statement>> CreateStatement(
+        const std::string &sql, std::shared_ptr<Connection> conn) override;
     bool IsWriter() const override;
     int SubscribeTableChanges(const Notifier& notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
+    int DesFinalize() override;
 
 protected:
-    int Prepare(const std::string &sql, bool &outIsReadOnly);
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteForChangedRowCount(int &changedRows, const std::string &sql, const std::vector<ValueObject> &bindArgs);
-    int ExecuteForLastInsertedRowId(int64_t &outRowId, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs);
     int ExecuteGetLong(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetString(std::string &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int DesFinalize();
     void SetInTransaction(bool transaction);
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
-    int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
@@ -75,7 +70,6 @@ private:
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
-    int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void LimitPermission(const std::string &dbPath) const;
 
     int SetPersistWal();
@@ -89,8 +83,6 @@ private:
 
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
-
-    friend class SqliteStatement;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
@@ -107,7 +99,6 @@ private:
     int openFlags;
     int maxVariableNumber_;
     std::mutex mutex_;
-    SqliteStatement statement;
     std::string filePath;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
 };
