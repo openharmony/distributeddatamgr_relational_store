@@ -61,28 +61,22 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 
 __attribute__((used)) int32_t g_reg = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 
-std::shared_ptr<SqliteConnection> SqliteConnection::Open(
-    const RdbStoreConfig &config, bool isWrite, int &errCode)
-{
-    for (size_t i = 0; i < ITERS_COUNT; i++) {
-        std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
-        if (connection == nullptr) {
-            LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
-            return nullptr;
-        }
-        errCode = connection->InnerOpen(config, i);
-        if (errCode == E_OK) {
-            return connection;
-        }
-    }
-    return nullptr;
-}
-
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto& [errCode, conn] = result;
-    conn = Open(config, isWrite, errCode);
+    for (size_t i = 0; i < ITERS_COUNT; i++) {
+        std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
+        if (connection == nullptr) {
+            LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
+            break;
+        }
+        errCode = connection->InnerOpen(config, i);
+        if (errCode == E_OK) {
+            conn = connection;
+            break;
+        }
+    }
     return result;
 }
 
@@ -91,43 +85,14 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
       isWriter_(isWriteConnection),
       isReadOnly(false),
       openFlags(0),
-      statement(),
       filePath("")
 {
-}
-
-int SqliteConnection::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
-{
-    std::string path;
-    if (config.GetRoleType() == VISITOR) {
-        path = config.GetVisitorDir();
-    } else {
-        path = config.GetPath();
-    }
-
-    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        if (config.GetRoleType() == VISITOR) {
-            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
-                config.GetRoleType());
-            return E_NOT_SUPPORT;
-        }
-        dbPath = SqliteGlobalConfig::GetMemoryDbPath();
-    } else if (path.empty()) {
-        LOG_ERROR("SqliteConnection GetDbPath input empty database path");
-        return E_INVALID_FILE_PATH;
-    } else if (path.front() != '/' && path.at(1) != ':') {
-        LOG_ERROR("SqliteConnection GetDbPath input relative path");
-        return E_RELATIVE_PATH;
-    } else {
-        dbPath = path;
-    }
-    return E_OK;
 }
 
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 {
     std::string dbPath;
-    auto ret = GetDbPath(config, dbPath);
+    auto ret = SqliteGlobalConfig::GetDbPath(config, dbPath);
     if (ret != E_OK) {
         return ret;
     }
@@ -292,8 +257,6 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
 SqliteConnection::~SqliteConnection()
 {
     if (dbHandle != nullptr) {
-        statement.Finalize();
-
         if (hasClientObserver_) {
             UnRegisterClientObserver(dbHandle);
         }
@@ -311,7 +274,8 @@ int32_t SqliteConnection::OnInitialize()
     return 0;
 }
 
-std::shared_ptr<Statement> SqliteConnection::CreateStatement(const std::string& sql, std::shared_ptr<Connection> conn)
+std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
+    const std::string &sql, std::shared_ptr<Connection> conn)
 {
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
@@ -321,7 +285,7 @@ std::shared_ptr<Statement> SqliteConnection::CreateStatement(const std::string& 
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
-        return nullptr;
+        return { SQLiteError::ErrNo(errCode), nullptr };
     }
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>();
     statement->stmt_ = stmt;
@@ -330,7 +294,7 @@ std::shared_ptr<Statement> SqliteConnection::CreateStatement(const std::string& 
     statement->columnCount_ = sqlite3_column_count(stmt);
     statement->numParameters_ = sqlite3_bind_parameter_count(stmt);
     statement->conn_ = conn;
-    return statement;
+    return { E_OK, statement };
 }
 
 bool SqliteConnection::IsWriter() const
@@ -677,169 +641,51 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     return errCode;
 }
 
-int SqliteConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
-{
-    int errCode = statement.Prepare(dbHandle, sql);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    outIsReadOnly = statement.ReadOnly();
-    return E_OK;
-}
-
-int SqliteConnection::PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs)
-{
-    if (dbHandle == nullptr) {
-        LOG_ERROR("SqliteConnection dbHandle is nullptr");
-        return E_INVALID_STATEMENT;
-    }
-
-    int errCode = LimitWalSize();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = statement.Prepare(dbHandle, sql);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    if (!isWriter_ && !statement.ReadOnly()) {
-        return E_EXECUTE_WRITE_IN_READ_CONNECTION;
-    }
-
-    errCode = statement.Bind(bindArgs);
-    return errCode;
-}
-
 int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
+    auto [errCode, statement] = CreateStatement(sql, nullptr);
+    if (statement == nullptr || errCode != E_OK) {
         return errCode;
     }
-
-    errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("Queries can be performed using query or QuerySql methods only");
-        statement.Reset();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("ExecuteSql failed %{public}d", errCode);
-        statement.Reset();
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    errCode = statement.Reset();
-    return errCode;
-}
-
-int SqliteConnection::ExecuteForChangedRowCount(int& changedRows, const std::string& sql,
-    const std::vector<ValueObject>& bindArgs)
-{
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("Queries can be performed using query or QuerySql methods only");
-        statement.Reset();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("ExecuteForChangedRowCount failed %{public}d", errCode);
-        statement.Reset();
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    changedRows = sqlite3_changes(dbHandle);
-    errCode = statement.Reset();
-    return errCode;
-}
-
-int SqliteConnection::ExecuteForLastInsertedRowId(int64_t& outRowId, const std::string& sql,
-    const std::vector<ValueObject>& bindArgs)
-{
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = statement.Step();
-    if (errCode == SQLITE_ROW) {
-        LOG_ERROR("Queries can be performed using query or QuerySql methods only");
-        statement.Reset();
-        return E_QUERY_IN_EXECUTE;
-    } else if (errCode != SQLITE_DONE) {
-        LOG_ERROR("ExecuteForLastInsertedRowId failed %{public}d", errCode);
-        statement.Reset();
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    outRowId = (sqlite3_changes(dbHandle) > 0) ? sqlite3_last_insert_rowid(dbHandle) : -1;
-    errCode = statement.Reset();
-    return errCode;
+    return statement->Execute(bindArgs);
 }
 
 int SqliteConnection::ExecuteGetLong(int64_t& outValue, const std::string& sql,
     const std::vector<ValueObject>& bindArgs)
 {
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
+    auto [errCode, statement] = CreateStatement(sql, nullptr);
+    if (statement == nullptr || errCode != E_OK) {
         return errCode;
     }
-
-    errCode = statement.Step();
-    if (errCode != SQLITE_ROW) {
-        statement.Reset();
-        LOG_ERROR("Step does not return a row, err: %{public}d.", errCode);
-        return E_NO_ROW_IN_QUERY;
-    }
-
-    std::tie(errCode, outValue) = statement.GetColumn(0);
+    ValueObject object;
+    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
-        statement.Reset();
-        return errCode;
+        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
+            bindArgs.size());
     }
-
-    return statement.Reset();
+    outValue = object;
+    return errCode;
 }
 
 int SqliteConnection::ExecuteGetString(std::string& outValue, const std::string& sql,
     const std::vector<ValueObject>& bindArgs)
 {
-    int errCode = PrepareAndBind(sql, bindArgs);
-    if (errCode != E_OK) {
+    auto [errCode, statement] = CreateStatement(sql, nullptr);
+    if (statement == nullptr || errCode != E_OK) {
         return errCode;
     }
-
-    errCode = statement.Step();
-    if (errCode != SQLITE_ROW) {
-        LOG_ERROR("Step does not return a row, err: %{public}d.", errCode);
-        statement.Reset();
-        return E_NO_ROW_IN_QUERY;
-    }
-
     ValueObject object;
-    std::tie(errCode, object) = statement.GetColumn(0);
+    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
-        statement.Reset();
-        return errCode;
+        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
+            bindArgs.size());
     }
     outValue = static_cast<std::string>(object);
-
-    return statement.Reset();
+    return errCode;
 }
 
 int SqliteConnection::DesFinalize()
 {
-    int errCode = 0;
-    errCode = statement.Finalize();
-    if (errCode != SQLITE_OK) {
-        return errCode;
-    }
-
     if (dbHandle != nullptr) {
         sqlite3_db_release_memory(dbHandle);
     }

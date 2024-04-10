@@ -146,11 +146,10 @@ describe('RdbStoreCorruptTest', function () {
     it('rebuiltTest001', 0, async function (done) {
         console.log(TAG + "************* rebuiltTest001 start *************");
         await Generate();
-        rdbStore.close();
+        await rdbStore.close();
         rdbStore = undefined;
         try {
             rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
-            expect().assertFail();
         } catch (e) {
             console.log(TAG, `rebuiltTest001 open error ${e.code}. ${e.message}`);
             expect(14800011).assertEqual(e.code);

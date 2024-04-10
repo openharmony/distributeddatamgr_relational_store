@@ -58,11 +58,11 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
         LOG_ERROR("Already close");
         return {nullptr, E_ALREADY_CLOSED};
     }
-    auto statement = conn_->CreateStatement(qrySql_, conn_);
-    if (statement == nullptr) {
+    auto [errCode, statement] = conn_->CreateStatement(qrySql_, conn_);
+    if (statement == nullptr || errCode != E_OK) {
         return { nullptr, E_ERROR };
     }
-    auto errCode = statement->Bind(bindArgs_);
+    errCode = statement->Bind(bindArgs_);
     if (errCode != E_OK) {
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
         statement->Reset();
@@ -76,6 +76,10 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 
 int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
+    if (!columnNames_.empty()) {
+        columnNames = columnNames_;
+        return E_OK;
+    }
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
@@ -87,6 +91,7 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
 
     // Get the total number of columns
     auto columnCount = statement->GetColumnCount();
+    std::lock_guard<std::mutex> lock(columnNamesLock_);
     for (int i = 0; i < columnCount; i++) {
         auto [ret, name] = statement->GetColumnName(i);
         if (ret != E_OK) {
@@ -95,15 +100,13 @@ int SqliteSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNam
         }
         columnNames.push_back(name);
     }
-
+    columnNames_ = columnNames;
+    columnCount_ = static_cast<int>(columnNames_.size());
     return E_OK;
 }
 
 int SqliteSharedResultSet::GetRowCount(int &count)
 {
-    if (isClosed_) {
-        return E_ALREADY_CLOSED;
-    }
     if (rowNum_ != NO_COUNT) {
         count = rowNum_;
         return E_OK;
@@ -212,7 +215,7 @@ std::pair<int, int32_t> SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk:
 {
     int32_t rowNum = NO_COUNT;
     if (sharedBlock == nullptr) {
-        LOG_ERROR("ExecuteForSharedBlock:sharedBlock is null.");
+        LOG_ERROR("sharedBlock is null.");
         return { E_ERROR, rowNum };
     }
 

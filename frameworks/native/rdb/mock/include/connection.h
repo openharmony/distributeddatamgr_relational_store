@@ -37,7 +37,8 @@ public:
     int32_t GetId() const;
     virtual ~Connection() = default;
     virtual int32_t OnInitialize() = 0;
-    virtual std::shared_ptr<Statement> CreateStatement(const std::string& sql, std::shared_ptr<Connection> conn) = 0;
+    virtual std::pair<int, std::shared_ptr<Statement>> CreateStatement(
+        const std::string &sql, std::shared_ptr<Connection> conn) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
     virtual int TryCheckPoint() = 0;
@@ -46,6 +47,7 @@ public:
     virtual int SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
+    virtual int32_t DesFinalize() = 0;
 private:
     int32_t id_ = 0;
 };

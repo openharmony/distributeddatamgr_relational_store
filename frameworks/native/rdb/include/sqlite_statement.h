@@ -83,7 +83,7 @@ private:
         BindAsset,
         BindAssets,
         BindFloats,
-        BindBigInt,
+        BindBigInt
     };
 
     int Prepare(sqlite3* dbHandle, const std::string& sql);

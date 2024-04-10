@@ -71,12 +71,12 @@ int StepResultSet::PrepareStep()
         return E_NOT_SELECT ;
     }
 
-    auto statement = conn_->CreateStatement(sql_, conn_);
-    if (statement == nullptr) {
+    auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
+    if (statement == nullptr || errCode != E_OK) {
         return E_STATEMENT_NOT_PREPARED;
     }
 
-    int errCode = statement->Bind(args_);
+    errCode = statement->Bind(args_);
     if (errCode != E_OK) {
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
         statement->Reset();
@@ -275,7 +275,6 @@ int StepResultSet::GoToNextRow()
         rowPos_ = rowCount_;
         return E_NO_MORE_ROWS;
     } else {
-        LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
         rowPos_ = rowCount_;
         return SQLiteError::ErrNo(errCode);
@@ -386,9 +385,10 @@ int StepResultSet::GetString(int columnIndex, std::string &value)
         }
     } else if (type == ValueObject::TYPE_STRING) {
         value = std::get<std::string>(valueObject.value);
-    } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
-        return E_INVALID_OBJECT_TYPE;
+    } else if (type == ValueObject::TYPE_BLOB) {
+        return E_INVALID_COLUMN_TYPE;
+    } else {
+        return E_ERROR;
     }
     return E_OK;
 }
@@ -423,6 +423,8 @@ int StepResultSet::GetLong(int columnIndex, int64_t &value)
     } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
         LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
+    } else {
+        return E_ERROR;
     }
     return E_OK;
 }
@@ -446,6 +448,8 @@ int StepResultSet::GetDouble(int columnIndex, double &value)
     } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
         LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
+    } else {
+        return E_ERROR;
     }
 
     return E_OK;
@@ -542,7 +546,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
     }
-    value = (T)object;
+    value = static_cast<T>(object);
     return E_OK;
 }
 
@@ -558,8 +562,7 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
     }
 
     auto [ret, value] = statement->GetColumn(col);
-    if (index < ValueObject::TYPE_MAX && value.value.index() != index &&
-        static_cast<ColumnType>(value.value.index()) != ColumnType::TYPE_NULL) {
+    if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };
     }
     return { ret, std::move(value) };

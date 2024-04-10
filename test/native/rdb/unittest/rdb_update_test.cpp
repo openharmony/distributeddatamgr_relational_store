@@ -38,11 +38,13 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
+    static const int E_SQLITE_ERROR;      // errno SQLITE_ERROR
     static const int E_SQLITE_CONSTRAINT; // errno SQLITE_CONSTRAINT
 };
 
 const std::string RdbStoreUpdateTest::DATABASE_NAME = RDB_TEST_PATH + "update_test.db";
 std::shared_ptr<RdbStore> RdbStoreUpdateTest::store = nullptr;
+const int RdbStoreUpdateTest::E_SQLITE_ERROR = -1; // errno SQLITE_ERROR
 const int RdbStoreUpdateTest::E_SQLITE_CONSTRAINT = -19;
 
 class UpdateTestOpenCallback : public RdbOpenCallback {
@@ -201,7 +203,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
     ret = store->Update(changedRows, "wrongTable", values, "", std::vector<std::string>()); // no such table
-    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_ERROR);
 }
 
 /**
@@ -225,7 +227,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
     values.PutDouble("wrongColumn", 100.5); // no such column
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->Update(changedRows, "test", values, "", std::vector<std::string>());
-    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    EXPECT_EQ(ret, RdbStoreUpdateTest::E_SQLITE_ERROR);
 }
 
 /**
