@@ -170,15 +170,15 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ContextBase *context = reinterpret_cast<ContextBase *>(data);
-    if (context->error == nullptr && context->exec_) {
-        context->execCode_ = context->exec_();
-    }
-    context->exec_ = nullptr;
     if (context->executed_ != nullptr) {
         context->executed_->times_++;
         context->executed_->lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
     }
+    if (context->error == nullptr && context->exec_) {
+        context->execCode_ = context->exec_();
+    }
+    context->exec_ = nullptr;
 }
 
 void AsyncCall::OnComplete(napi_env env, void *data)
