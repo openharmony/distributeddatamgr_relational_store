@@ -1320,22 +1320,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToNextRow());
 
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
-
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
-
     std::vector<std::string> columnNames;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetAllColumnNames(columnNames));
 
@@ -1356,6 +1340,9 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
 
     double valuedouble;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetDouble(1, valuedouble));
+
+    std::string modifyTime;
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetModifyTime(modifyTime));
 
     ValueObject object;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->Get(4, object));

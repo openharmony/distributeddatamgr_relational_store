@@ -53,4 +53,4 @@ int Connection::GetId() const
 {
     return id_;
 }
-} // namespace OHOS::NativeRdb
+}

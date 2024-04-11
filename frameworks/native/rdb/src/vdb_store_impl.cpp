@@ -262,7 +262,7 @@ int VdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     return E_NOT_SUPPORT;
 }
 
-int VdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int VdbStoreImpl::Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey)
 {
     return E_NOT_SUPPORT;
 }
@@ -297,7 +297,7 @@ bool VdbStoreImpl::IsInTransaction()
     return false;
 }
 
-int VdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
+int VdbStoreImpl::Restore(const std::string backupPath, const std::vector<uint8_t> &newKey)
 {
     return E_NOT_SUPPORT;
 }

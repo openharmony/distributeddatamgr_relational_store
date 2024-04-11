@@ -36,8 +36,7 @@ public:
     static constexpr int APP_DEFAULT_UMASK = 0002;
     static constexpr int SQLITE_MAX_COLUMN = 2000;
     static constexpr char ATTACH_BACKUP_SQL[] = "ATTACH ? AS backup KEY ?";
-    static constexpr char ATTACH_WITH_KEY_SQL[] = "ATTACH DATABASE ? AS ? KEY ?";
-    static constexpr char ATTACH_SQL[] = "ATTACH DATABASE ? AS ?";
+    static constexpr char ATTACH_SQL[] = "ATTACH DATABASE ? AS ? KEY ?";
     static constexpr char DETACH_SQL[] = "DETACH DATABASE ?";
     static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
     static constexpr char DETACH_BACKUP_SQL[] = "detach backup";

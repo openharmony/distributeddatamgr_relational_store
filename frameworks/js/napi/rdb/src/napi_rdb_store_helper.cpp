@@ -313,6 +313,14 @@ int ParseContextProperty(const napi_env &env, std::shared_ptr<HelperRdbContext> 
     context->config.SetModuleName(context->abilitycontext->GetModuleName());
     context->config.SetArea(context->abilitycontext->GetArea());
     context->config.SetBundleName(context->abilitycontext->GetBundleName());
+
+    if (!context->abilitycontext->IsHasProxyDataConfig()) {
+        context->config.SetUri(context->abilitycontext->GetUri());
+        context->config.SetReadPermission(context->abilitycontext->GetReadPermission());
+        context->config.SetWritePermission(context->abilitycontext->GetWritePermission());
+    } else {
+        context->config.SetUri("dataProxy");
+    }
     return OK;
 }
 

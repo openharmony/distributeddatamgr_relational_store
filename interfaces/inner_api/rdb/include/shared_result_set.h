@@ -48,7 +48,7 @@ public:
     /**
      * @brief Called when the position of the result set changes.
      */
-    virtual int OnGo(int oldRowIndex, int newRowIndex) = 0;
+    virtual bool OnGo(int oldRowIndex, int newRowIndex) = 0;
 };
 } // namespace NativeRdb
 } // namespace OHOS

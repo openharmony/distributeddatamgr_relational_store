@@ -84,14 +84,14 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
     int RollBack() override;
     int Commit() override;
     bool IsInTransaction() override;
-    int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
+    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &sqlArgs) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) override;

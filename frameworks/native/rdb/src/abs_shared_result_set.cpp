@@ -57,9 +57,9 @@ int AbsSharedResultSet::GetRowCount(int &count)
     return E_OK;
 }
 
-int AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)
+bool AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)
 {
-    return E_OK;
+    return true;
 }
 
 /**
@@ -92,9 +92,6 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 int AbsSharedResultSet::GoToRow(int position)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (isClosed_) {
-        return E_ALREADY_CLOSED;
-    }
     if (position == rowPos_) {
         return E_OK;
     }
@@ -105,10 +102,10 @@ int AbsSharedResultSet::GoToRow(int position)
     }
 
     int rowCnt = 0;
-    auto ret = GetRowCount(rowCnt);
-    if (ret != E_OK || rowCnt == 0) {
-        LOG_ERROR("GetRowCount ret is %{public}d, rowCount is %{public}d", ret, rowCnt);
-        return ret == E_OK ? E_ERROR : ret;
+    GetRowCount(rowCnt);
+    if (rowCnt == 0) {
+        LOG_DEBUG("No data!");
+        return E_ERROR;
     }
 
     if (position >= rowCnt) {
@@ -120,9 +117,10 @@ int AbsSharedResultSet::GoToRow(int position)
         rowPos_ = 0;
     }
 
-    if (GetBlock() == nullptr || (uint32_t)position < GetBlock()->GetStartPos()
-        || (uint32_t)position >= GetBlock()->GetLastPos() || rowPos_ == rowCnt) {
-        ret = OnGo(rowPos_, position);
+    bool result = true;
+    if (GetBlock() == nullptr || (uint32_t)position < GetBlock()->GetStartPos() ||
+        (uint32_t)position >= GetBlock()->GetLastPos() || rowPos_ == rowCnt) {
+        result = OnGo(rowPos_, position);
     } else {
         uint32_t blockPos = GetBlock()->GetBlockPos();
         if (position > rowPos_) {
@@ -139,10 +137,11 @@ int AbsSharedResultSet::GoToRow(int position)
         GetBlock()->SetBlockPos(blockPos);
     }
 
-    if (ret == E_OK) {
+    if (result) {
         rowPos_ = position;
+        return E_OK;
     }
-    return ret;
+    return E_ERROR;
 }
 
 int AbsSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &value)
@@ -542,10 +541,6 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
  */
 int AbsSharedResultSet::CheckState(int columnIndex)
 {
-    if (isClosed_) {
-        return E_ALREADY_CLOSED;
-    }
-
     if (GetBlock() == nullptr) {
         LOG_ERROR("AbsSharedResultSet::CheckState sharedBlock is null!");
         return E_ERROR;

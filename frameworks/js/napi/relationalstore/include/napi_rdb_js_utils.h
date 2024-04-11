@@ -41,7 +41,6 @@ struct RdbConfig {
     bool isSearchable = false;
     bool isAutoClean = false;
     bool vector = false;
-    bool allowRebuild = false;
     SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string dataGroupId;
     std::string name;
