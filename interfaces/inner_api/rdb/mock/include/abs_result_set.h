@@ -76,7 +76,7 @@ protected:
      */
     int rowPos_;
     std::map<std::string, int> columnMap_;
-    bool isClosed_;
+    bool isClosed_ = false;
 };
 } // namespace NativeRdb
 } // namespace OHOS

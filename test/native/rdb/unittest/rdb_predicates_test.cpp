@@ -314,9 +314,9 @@ public:
 
     time_t DateMakeTime(std::vector<int> data);
     void InsertDates(std::vector<AllDataType> dataTypes);
-    AllDataType *BuildAllDataType1();
-    AllDataType *BuildAllDataType2();
-    AllDataType *BuildAllDataType3();
+    AllDataType BuildAllDataType1();
+    AllDataType BuildAllDataType2();
+    AllDataType BuildAllDataType3();
     void GenerateAllDataTypeTable();
     void CalendarTest(RdbPredicates predicates1);
     void BasicDataTypeTest(RdbPredicates predicates1);
@@ -394,119 +394,110 @@ void RdbStorePredicateTest::GenerateAllDataTypeTable()
     RdbStorePredicateTest::store->ExecuteSql(CREATE_TABLE_ALL_DATA_TYPE_SQL);
     RdbStorePredicateTest::store->ExecuteSql(CREATE_TABLE_PERSON_SQL);
 
-    AllDataType *dataType1 = RdbStorePredicateTest::BuildAllDataType1();
-
-    AllDataType *dataType2 = RdbStorePredicateTest::BuildAllDataType2();
-
-    AllDataType *dataType3 = RdbStorePredicateTest::BuildAllDataType3();
+    AllDataType dataType1 = RdbStorePredicateTest::BuildAllDataType1();
+    AllDataType dataType2 = RdbStorePredicateTest::BuildAllDataType2();
+    AllDataType dataType3 = RdbStorePredicateTest::BuildAllDataType3();
 
     std::vector<AllDataType> dataTypes;
-    dataTypes.push_back(*dataType1);
-    dataTypes.push_back(*dataType2);
-    dataTypes.push_back(*dataType3);
+    dataTypes.push_back(dataType1);
+    dataTypes.push_back(dataType2);
+    dataTypes.push_back(dataType3);
     RdbStorePredicateTest::InsertDates(dataTypes);
-
-    delete dataType1;
-    dataType1 = nullptr;
-    delete dataType2;
-    dataType2 = nullptr;
-    delete dataType3;
-    dataType3 = nullptr;
 }
 
-AllDataType *RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
+AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
 {
     std::vector<uint8_t> blob = {1, 2, 3};
-    AllDataType *dataType = new AllDataType();
-    dataType->SetId(1);
-    dataType->SetIntegerValue(INT_MAX);
-    dataType->SetDoubleValue(DBL_MAX);
-    dataType->SetBooleanValue(true);
-    dataType->SetFloatValue(FLT_MAX);
-    dataType->SetLongValue(LONG_MAX);
-    dataType->SetShortValue(SHRT_MAX);
-    dataType->SetCharacterValue(' ');
-    dataType->SetStringValue("ABCDEFGHIJKLMN");
-    dataType->SetBlobValue(blob);
-    dataType->SetClobValue("ABCDEFGHIJKLMN");
-    dataType->SetByteValue(INT8_MAX);
+    AllDataType dataType;
+    dataType.SetId(1); // 1 means Id of the AllDataType object is 1
+    dataType.SetIntegerValue(INT_MAX);
+    dataType.SetDoubleValue(DBL_MAX);
+    dataType.SetBooleanValue(true);
+    dataType.SetFloatValue(FLT_MAX);
+    dataType.SetLongValue(LONG_MAX);
+    dataType.SetShortValue(SHRT_MAX);
+    dataType.SetCharacterValue(' ');
+    dataType.SetStringValue("ABCDEFGHIJKLMN");
+    dataType.SetBlobValue(blob);
+    dataType.SetClobValue("ABCDEFGHIJKLMN");
+    dataType.SetByteValue(INT8_MAX);
 
     std::vector<int> date = {2019, 7, 10};
     time_t timeValue = RdbStorePredicateTest::DateMakeTime(date);
-    dataType->SetTimeValue(timeValue);
+    dataType.SetTimeValue(timeValue);
 
-    dataType->SetPrimIntValue(INT_MAX);
-    dataType->SetPrimDoubleValue(DBL_MAX);
-    dataType->SetPrimFloatValue(FLT_MAX);
-    dataType->SetPrimBooleanValue(true);
-    dataType->SetPrimByteValue(INT8_MAX);
-    dataType->SetPrimCharValue(' ');
-    dataType->SetPrimLongValue(LONG_MAX);
-    dataType->SetPrimShortValue(SHRT_MAX);
+    dataType.SetPrimIntValue(INT_MAX);
+    dataType.SetPrimDoubleValue(DBL_MAX);
+    dataType.SetPrimFloatValue(FLT_MAX);
+    dataType.SetPrimBooleanValue(true);
+    dataType.SetPrimByteValue(INT8_MAX);
+    dataType.SetPrimCharValue(' ');
+    dataType.SetPrimLongValue(LONG_MAX);
+    dataType.SetPrimShortValue(SHRT_MAX);
     return dataType;
 }
 
-AllDataType *RdbStorePredicateTest::BuildAllDataType2()
+AllDataType RdbStorePredicateTest::BuildAllDataType2()
 {
     std::vector<uint8_t> blob = {1, 2, 3};
-    AllDataType *dataType2 = new AllDataType();
-    dataType2->SetId(2);
-    dataType2->SetIntegerValue(1);
-    dataType2->SetDoubleValue(1.0);
-    dataType2->SetBooleanValue(false);
-    dataType2->SetFloatValue(1.0);
-    dataType2->SetLongValue(static_cast<int64_t>(1));
-    dataType2->SetShortValue(static_cast<short>(1));
-    dataType2->SetCharacterValue(' ');
-    dataType2->SetStringValue("ABCDEFGHIJKLMN");
-    dataType2->SetBlobValue(blob);
-    dataType2->SetClobValue("ABCDEFGHIJKLMN");
-    dataType2->SetByteValue(INT8_MIN);
+    AllDataType dataType2;
+    dataType2.SetId(2); // 2 means Id of the AllDataType object is 2
+    dataType2.SetIntegerValue(1);
+    dataType2.SetDoubleValue(1.0);
+    dataType2.SetBooleanValue(false);
+    dataType2.SetFloatValue(1.0);
+    dataType2.SetLongValue(static_cast<int64_t>(1));
+    dataType2.SetShortValue(static_cast<short>(1));
+    dataType2.SetCharacterValue(' ');
+    dataType2.SetStringValue("ABCDEFGHIJKLMN");
+    dataType2.SetBlobValue(blob);
+    dataType2.SetClobValue("ABCDEFGHIJKLMN");
+    dataType2.SetByteValue(INT8_MIN);
 
     std::vector<int> date = {2019, 7, 17};
     time_t timeValue2 = RdbStorePredicateTest::DateMakeTime(date);
-    dataType2->SetTimeValue(timeValue2);
+    dataType2.SetTimeValue(timeValue2);
 
-    dataType2->SetPrimIntValue(1);
-    dataType2->SetPrimDoubleValue(1.0);
-    dataType2->SetPrimFloatValue(1.0);
-    dataType2->SetPrimBooleanValue(false);
-    dataType2->SetPrimByteValue(static_cast<char>(1));
-    dataType2->SetPrimCharValue(' ');
-    dataType2->SetPrimLongValue(static_cast<int64_t>(1));
-    dataType2->SetPrimShortValue(static_cast<short>(1));
+    dataType2.SetPrimIntValue(1);
+    dataType2.SetPrimDoubleValue(1.0);
+    dataType2.SetPrimFloatValue(1.0);
+    dataType2.SetPrimBooleanValue(false);
+    dataType2.SetPrimByteValue(static_cast<char>(1));
+    dataType2.SetPrimCharValue(' ');
+    dataType2.SetPrimLongValue(static_cast<int64_t>(1));
+    dataType2.SetPrimShortValue(static_cast<short>(1));
     return dataType2;
 }
 
-AllDataType *RdbStorePredicateTest::BuildAllDataType3()
+AllDataType RdbStorePredicateTest::BuildAllDataType3()
 {
     std::vector<uint8_t> blob = {1, 2, 3};
-    AllDataType *dataType3 = new AllDataType();
-    dataType3->SetId(3);
-    dataType3->SetIntegerValue(INT_MIN);
-    dataType3->SetDoubleValue(DBL_MIN);
-    dataType3->SetBooleanValue(false);
-    dataType3->SetFloatValue(FLT_MIN);
-    dataType3->SetLongValue(LONG_MIN);
-    dataType3->SetShortValue(SHRT_MIN);
-    dataType3->SetCharacterValue(' ');
-    dataType3->SetStringValue("ABCDEFGHIJKLMN");
-    dataType3->SetBlobValue(blob);
-    dataType3->SetClobValue("ABCDEFGHIJKLMN");
-    dataType3->SetByteValue(INT8_MIN);
+    AllDataType dataType3;
+    dataType3.SetId(3); // 3 means Id of the AllDataType object is 3
+    dataType3.SetIntegerValue(INT_MIN);
+    dataType3.SetDoubleValue(DBL_MIN);
+    dataType3.SetBooleanValue(false);
+    dataType3.SetFloatValue(FLT_MIN);
+    dataType3.SetLongValue(LONG_MIN);
+    dataType3.SetShortValue(SHRT_MIN);
+    dataType3.SetCharacterValue(' ');
+    dataType3.SetStringValue("ABCDEFGHIJKLMN");
+    dataType3.SetBlobValue(blob);
+    dataType3.SetClobValue("ABCDEFGHIJKLMN");
+    dataType3.SetByteValue(INT8_MIN);
 
     std::vector<int> date = {2019, 6, 10};
     time_t timeValue3 = RdbStorePredicateTest::DateMakeTime(date);
-    dataType3->SetTimeValue(timeValue3);
+    dataType3.SetTimeValue(timeValue3);
 
-    dataType3->SetPrimIntValue(INT_MIN);
-    dataType3->SetPrimDoubleValue(DBL_MIN);
-    dataType3->SetPrimFloatValue(FLT_MIN);
-    dataType3->SetPrimBooleanValue(false);
-    dataType3->SetPrimByteValue(INT8_MIN);
-    dataType3->SetPrimCharValue(' ');
-    dataType3->SetPrimLongValue(LONG_MIN);
-    dataType3->SetPrimShortValue(SHRT_MIN);
+    dataType3.SetPrimIntValue(INT_MIN);
+    dataType3.SetPrimDoubleValue(DBL_MIN);
+    dataType3.SetPrimFloatValue(FLT_MIN);
+    dataType3.SetPrimBooleanValue(false);
+    dataType3.SetPrimByteValue(INT8_MIN);
+    dataType3.SetPrimCharValue(' ');
+    dataType3.SetPrimLongValue(LONG_MIN);
+    dataType3.SetPrimShortValue(SHRT_MIN);
     return dataType3;
 }
 
@@ -557,6 +548,7 @@ void RdbStorePredicateTest::InsertDates(std::vector<AllDataType> dataTypes)
         strByte << primCharValue;
         string str2 = strByte.str();
         objects.push_back(ValueObject(str2));
+        objects.push_back(ValueObject());
         RdbStorePredicateTest::store->ExecuteSql(ALL_DATA_TYPE_INSERT_SQL, objects);
     }
 }
