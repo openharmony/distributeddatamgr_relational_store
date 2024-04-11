@@ -16,7 +16,6 @@
 #ifndef NATIVE_RDB_RDB_COMMON_H
 #define NATIVE_RDB_RDB_COMMON_H
 
-#include <cstdint>
 namespace OHOS {
 namespace NativeRdb {
 enum class ConflictResolution {
@@ -33,12 +32,7 @@ enum class ConflictResolution {
     /** Implements replace operation operator when conflict occurs.*/
     ON_CONFLICT_REPLACE,
 };
-
-enum RebuiltType : uint32_t {
-    NONE,
-    REBUILT,
-};
-} // namespace NativeRdb
-} // namespace OHOS
+}
+}
 
 #endif // NATIVE_RDB_RDB_COMMON_H

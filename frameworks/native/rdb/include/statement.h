@@ -22,7 +22,7 @@
 
 #include "value_object.h"
 namespace OHOS::NativeRdb {
-struct SharedBlockInfo;
+class SharedBlockInfo;
 class Statement {
 public:
     static constexpr int COLUMN_TYPE_ASSET = 1000;

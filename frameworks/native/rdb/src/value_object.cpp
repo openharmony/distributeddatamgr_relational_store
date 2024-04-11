@@ -15,6 +15,7 @@
 
 #include "value_object.h"
 
+#include <iostream>
 #include <sstream>
 
 #include "rdb_errno.h"

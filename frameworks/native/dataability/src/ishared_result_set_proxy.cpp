@@ -103,7 +103,7 @@ int ISharedResultSetProxy::GetRowCount(int &count)
     return E_OK;
 }
 
-int ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
+bool ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
 {
     LOG_DEBUG("OnGo Begin");
     MessageParcel request;
@@ -117,7 +117,7 @@ int ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
         LOG_ERROR("OnGo IPC Error %{public}x", errCode);
         return -errCode;
     }
-    return reply.ReadInt32();
+    return reply.ReadBool();
 }
 
 int ISharedResultSetProxy::Close()

@@ -42,6 +42,10 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
 {
 }
 
+RdbStoreConfig::RdbStoreConfig()
+{
+}
+
 RdbStoreConfig::~RdbStoreConfig()
 {
     ClearEncryptKey();
@@ -315,7 +319,35 @@ bool RdbStoreConfig::IsEncrypt() const
 {
     return this->isEncrypt_;
 }
+std::string RdbStoreConfig::GetUri() const
+{
+    return uri_;
+}
 
+void RdbStoreConfig::SetUri(const std::string &uri)
+{
+    uri_ = uri;
+}
+
+std::string RdbStoreConfig::GetReadPermission() const
+{
+    return readPermission_;
+}
+
+void RdbStoreConfig::SetReadPermission(const std::string &permission)
+{
+    readPermission_ = permission;
+}
+
+std::string RdbStoreConfig::GetWritePermission() const
+{
+    return writePermission_;
+}
+
+void RdbStoreConfig::SetWritePermission(const std::string &permission)
+{
+    writePermission_ = permission;
+}
 bool RdbStoreConfig::IsCreateNecessary() const
 {
     return isCreateNecessary_;
@@ -428,7 +460,7 @@ int RdbStoreConfig::GetWriteTime() const
 
 void RdbStoreConfig::SetWriteTime(int timeout)
 {
-    writeTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
+    writeTimeout_ = timeout;
 }
 
 int RdbStoreConfig::GetReadTime() const
@@ -438,7 +470,7 @@ int RdbStoreConfig::GetReadTime() const
 
 void RdbStoreConfig::SetReadTime(int timeout)
 {
-    readTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
+    readTimeout_ = timeout;
 }
 
 void RdbStoreConfig::SetRoleType(RoleType role)
@@ -459,15 +491,5 @@ void RdbStoreConfig::SetDBType(int32_t dbType)
 int32_t RdbStoreConfig::GetDBType() const
 {
     return dbType_;
-}
-
-void RdbStoreConfig::SetAllowRebuild(bool allowRebuild)
-{
-    this->allowRebuilt_ = allowRebuild;
-}
-
-bool RdbStoreConfig::GetAllowRebuild() const
-{
-    return allowRebuilt_;
 }
 } // namespace OHOS::NativeRdb

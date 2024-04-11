@@ -185,18 +185,6 @@ static napi_value ExportConflictResolution(napi_env env)
     return conflictResolution;
 }
 
-static napi_value ExportRebuiltType(napi_env env)
-{
-    napi_value rebuiltType = nullptr;
-    napi_create_object(env, &rebuiltType);
-
-    SET_NAPI_PROPERTY(rebuiltType, "NONE", int32_t(NativeRdb::RebuiltType::NONE));
-    SET_NAPI_PROPERTY(rebuiltType, "REBUILT", int32_t(NativeRdb::RebuiltType::REBUILT));
-
-    napi_object_freeze(env, rebuiltType);
-    return rebuiltType;
-}
-
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -213,7 +201,6 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
-        DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

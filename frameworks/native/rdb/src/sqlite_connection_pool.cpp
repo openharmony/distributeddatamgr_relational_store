@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "logger.h"
-#include "rdb_common.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -33,23 +32,25 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using Conn = Connection;
 using ConnPool = SqliteConnectionPool;
-using SharedConn = std::shared_ptr<Connection>;
-using SharedConns = std::vector<std::shared_ptr<Connection>>;
+using Conn = SqliteConnection;
+using SharedConn = std::shared_ptr<SqliteConnection>;
+using SharedConns = std::vector<SharedConn>;
 
 constexpr int32_t TRANSACTION_TIMEOUT(2);
-constexpr int USE_COUNT_MAX = 2;
 
 std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
 {
     std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
     if (pool == nullptr) {
-        LOG_ERROR("ConnPool::Create new failed, pool is nullptr");
+        LOG_ERROR("SqliteConnectionPool::Create new failed, pool is nullptr");
         return nullptr;
     }
     errCode = pool->Init();
-    return errCode == E_OK ? pool : nullptr;
+    if (errCode != E_OK) {
+        return nullptr;
+    }
+    return pool;
 }
 
 ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
@@ -62,7 +63,9 @@ int ConnPool::Init()
     if (config_.GetRoleType() == OWNER) {
         // write connect count is 1
         auto errCode = writers_.Initialize(1, config_.GetWriteTime(), [this]() {
-            return Connection::Create(config_, true);
+            int32_t errCode = E_OK;
+            auto conn = Conn::Open(config_, true, errCode);
+            return std::pair{ errCode, conn };
         });
         if (errCode != E_OK) {
             return errCode;
@@ -75,7 +78,9 @@ int ConnPool::Init()
         return E_ARGS_READ_CON_OVERLOAD;
     }
     return readers_.Initialize(maxReader_, config_.GetReadTime(), [this]() {
-        return Connection::Create(config_, false);
+        int32_t errCode = E_OK;
+        auto conn = Conn::Open(config_, false, errCode);
+        return std::pair{ errCode, conn };
     });
 }
 
@@ -100,22 +105,12 @@ void ConnPool::CloseAllConnections()
     readers_.Clear();
 }
 
-bool ConnPool::IsInTransaction()
-{
-    return isInTransaction_.load();
-}
-
-void ConnPool::SetInTransaction(bool isInTransaction)
-{
-    isInTransaction_.store(isInTransaction);
-}
-
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
 {
     return Acquire(isReadOnly);
 }
 
-std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
+std::pair<SharedConn, SharedConns> SqliteConnectionPool::AcquireAll(int32_t time)
 {
     using namespace std::chrono;
     std::pair<SharedConn, SharedConns> result;
@@ -143,7 +138,7 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
     return result;
 }
 
-std::shared_ptr<Connection> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
+std::shared_ptr<SqliteConnection> SqliteConnectionPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
 {
     Container *container = (isReadOnly && maxReader_ != 0) ? &readers_ : &writers_;
     auto node = container->Acquire(ms);
@@ -156,7 +151,7 @@ std::shared_ptr<Connection> ConnPool::Acquire(bool isReadOnly, std::chrono::mill
     if (conn == nullptr) {
         return nullptr;
     }
-    return std::shared_ptr<Connection>(conn.get(), [pool = weak_from_this(), node](Connection*) {
+    return std::shared_ptr<SqliteConnection>(conn.get(), [pool = weak_from_this(), node](SqliteConnection*) {
         auto realPool = pool.lock();
         if (realPool == nullptr) {
             return;
@@ -220,7 +215,9 @@ int ConnPool::RestartReaders()
 {
     readers_.Clear();
     return readers_.Initialize(maxReader_, config_.GetReadTime(), [this]() {
-        return Connection::Create(config_, false);
+        int32_t errCode = E_OK;
+        auto conn = Conn::Open(config_, false, errCode);
+        return std::pair{ errCode, conn };
     });
 }
 
@@ -248,10 +245,18 @@ int ConnPool::ChangeDbFileForRestore(
     }
 
     CloseAllConnections();
-    RemoveDBFile();
 
-    if (config_.GetPath() != newPath) {
-        RemoveDBFile(newPath);
+    std::string currentPath = config_.GetPath();
+    SqliteUtils::DeleteFile(currentPath);
+    SqliteUtils::DeleteFile(currentPath + "-shm");
+    SqliteUtils::DeleteFile(currentPath + "-wal");
+    SqliteUtils::DeleteFile(currentPath + "-journal");
+
+    if (currentPath != newPath) {
+        SqliteUtils::DeleteFile(newPath);
+        SqliteUtils::DeleteFile(newPath + "-shm");
+        SqliteUtils::DeleteFile(newPath + "-wal");
+        SqliteUtils::DeleteFile(newPath + "-journal");
     }
 
     int retVal = SqliteUtils::RenameFile(backupPath, newPath);
@@ -273,13 +278,15 @@ std::mutex &ConnPool::GetTransactionStackMutex()
     return transactionStackMutex_;
 }
 
-std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
+std::pair<int, std::shared_ptr<Conn>> ConnPool::DisableWalMode()
 {
     auto [errCode, node] = writers_.Initialize(1, config_.GetWriteTime(), true, [this]() {
+        int32_t errCode = E_OK;
         RdbStoreConfig config = config_;
         config.SetJournalMode(JournalMode::MODE_TRUNCATE);
         maxReader_ = GetMaxReaders(config);
-        return Connection::Create(config, true);
+        auto conn = Conn::Open(config, true, errCode);
+        return std::pair{ errCode, conn };
     });
     if (errCode != E_OK) {
         return { errCode, nullptr };
@@ -299,7 +306,7 @@ std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
     return { E_OK, std::move(result) };
 }
 
-int ConnPool::EnableWal()
+int ConnPool::EnableWalMode()
 {
     return Init();
 }
@@ -334,7 +341,7 @@ void ConnPool::ConnNode::Unused()
 bool ConnPool::ConnNode::IsWriter() const
 {
     if (connect_ != nullptr) {
-        return connect_->IsWriter();
+        return connect_->IsWriteConnection();
     }
     return false;
 }
@@ -489,19 +496,5 @@ int32_t ConnPool::Container::Dump(const char *header)
     LOG_WARN("%{public}s: %{public}s", header, info.c_str());
     return 0;
 }
-
-void ConnPool::RemoveDBFile()
-{
-    RemoveDBFile(config_.GetPath());
-}
-
-void ConnPool::RemoveDBFile(const std::string &path)
-{
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
-}
-
 } // namespace NativeRdb
 } // namespace OHOS

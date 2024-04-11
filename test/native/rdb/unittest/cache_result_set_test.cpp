@@ -278,6 +278,27 @@ HWTEST_F(CacheResultSetTest, GetTest_001, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: GetModifyTimeTest_001
+ * @tc.desc: Normal testCase for CacheResultSet, get modify time
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetModifyTimeTest_001, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    std::set<std::string> columnNames = { "id", "data", "field" };
+    for (auto& column : columnNames) {
+        valuesBucket.Put(column, "1");
+    }
+    valuesBuckets.push_back(std::move(valuesBucket));
+    CacheResultSet cacheResultSet(std::move(valuesBuckets));
+
+    std::string modifyTime;
+    int ret = cacheResultSet.GetModifyTime(modifyTime);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
+}
+
+/* *
  * @tc.name: IsColumnNullTest_001
  * @tc.desc: Normal testCase for CacheResultSet, check if the column is empty
  * @tc.type: FUNC
