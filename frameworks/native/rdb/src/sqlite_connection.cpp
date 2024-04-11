@@ -897,19 +897,5 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
             return;
     }
 }
-
-int SqliteConnection::DoLockRow(const std::string &table, std::vector<std::vector<uint8_t>> hashKeys, bool isLock)
-{
-    DistributedDB::DBStatus ret;
-    if (isLock) {
-        ret = Lock(table, hashKeys, dbHandle);
-    } else {
-        ret = UnLock(table, hashKeys, dbHandle);
-    }
-    if (ret == DistributedDB::DBStatus::WAIT_COMPENSATED_SYNC || ret == DistributedDB::DBStatus::NOT_FOUND) {
-        return ret;
-    }
-    return ret == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
-}
 } // namespace NativeRdb
 } // namespace OHOS

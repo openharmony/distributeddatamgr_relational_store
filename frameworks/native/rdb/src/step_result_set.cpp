@@ -20,16 +20,18 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
+#include "sqlite_connection_pool.h"
 #include "sqlite_errno.h"
+#include "sqlite_statement.h"
 #include "sqlite_utils.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string& sql_,
-    const std::vector<ValueObject>& selectionArgs)
-    : sqliteStatement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false)
+StepResultSet::StepResultSet(
+    std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql_, const std::vector<ValueObject> &selectionArgs)
+    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false)
 {
     auto connection = pool->AcquireConnection(true);
     if (connection == nullptr) {
@@ -40,8 +42,8 @@ StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const s
         conn_ = connection;
     }
 
-    int errCode = PrepareStep();
-    if (errCode) {
+    auto errCode = PrepareStep();
+    if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
     }
 }
@@ -51,6 +53,44 @@ StepResultSet::~StepResultSet()
     Close();
 }
 
+/**
+ * Obtain session and prepare precompile statement for step query
+ */
+int StepResultSet::PrepareStep()
+{
+    if (sqliteStatement_ != nullptr) {
+        return E_OK;
+    }
+
+    if (conn_ == nullptr) {
+        return E_ALREADY_CLOSED;
+    }
+
+    if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
+        LOG_ERROR("not a select sql_!");
+        return E_NOT_SELECT ;
+    }
+
+    auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
+    if (statement == nullptr || errCode != E_OK) {
+        return E_STATEMENT_NOT_PREPARED;
+    }
+
+    errCode = statement->Bind(args_);
+    if (errCode != E_OK) {
+        LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
+        statement->Reset();
+        statement = nullptr;
+        return errCode;
+    }
+
+    sqliteStatement_ = std::move(statement);
+    if (sqliteStatement_ == nullptr) {
+        LOG_ERROR("sqliteStatement_ is nullptr");
+    }
+    return E_OK;
+}
+
 int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
     if (!columnNames_.empty()) {
@@ -58,32 +98,22 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         return E_OK;
     }
 
-    if (isClosed_) {
-        LOG_ERROR("resultSet closed");
+    int errorCode = PrepareStep();
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    auto statement = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
     }
 
-    int errCode = PrepareStep();
-    if (errCode) {
-        LOG_ERROR("get all column names Step ret %{public}d", errCode);
-        return errCode;
-    }
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-    int columnCount = 0;
-    errCode = statement->GetColumnCount(columnCount);
-    if (errCode) {
-        LOG_ERROR("GetColumnCount ret %{public}d", errCode);
-        return errCode;
-    }
+    auto columnCount = statement->GetColumnCount();
 
     columnNames.clear();
     for (int i = 0; i < columnCount; i++) {
-        std::string columnName;
-        errCode = statement->GetColumnName(i, columnName);
+        auto [errCode, columnName] = statement->GetColumnName(i);
         if (errCode) {
             columnNames.clear();
             LOG_ERROR("GetColumnName ret %{public}d", errCode);
@@ -99,18 +129,16 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
+        LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
     }
-
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
         return E_NOT_INIT;
     }
 
-    int sqliteType;
-    int errCode = statement->GetColumnType(columnIndex, sqliteType);
-    if (errCode) {
+    auto [errCode, sqliteType] = statement->GetColumnType(columnIndex);
+    if (errCode != E_OK) {
         LOG_ERROR("GetColumnType ret %{public}d", errCode);
         return errCode;
     }
@@ -149,6 +177,9 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int StepResultSet::GetRowCount(int &count)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
     if (rowCount_ != INIT_POS) {
         count = rowCount_;
         return E_OK;
@@ -171,9 +202,11 @@ int StepResultSet::GetRowCount(int &count)
  */
 int StepResultSet::GoToRow(int position)
 {
-    // If the moved position is less than zero, reset the result and return an error
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
     if (position < 0) {
-        LOG_DEBUG("position %{public}d.", position);
+        LOG_ERROR("position %{public}d.", position);
         Reset();
         return E_ERROR;
     }
@@ -186,7 +219,7 @@ int StepResultSet::GoToRow(int position)
     }
     while (position != rowPos_) {
         int errCode = GoToNextRow();
-        if (errCode) {
+        if (errCode != E_OK) {
             LOG_ERROR("GoToNextRow ret %{public}d", errCode);
             return errCode;
         }
@@ -206,14 +239,13 @@ int StepResultSet::GoToNextRow()
     }
 
     int errCode = PrepareStep();
-    if (errCode) {
-        LOG_ERROR("go to nextrow step ret %{public}d", errCode);
+    if (errCode != E_OK) {
         return errCode;
     }
 
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
+        LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
     }
 
@@ -243,7 +275,6 @@ int StepResultSet::GoToNextRow()
         rowPos_ = rowCount_;
         return E_NO_MORE_ROWS;
     } else {
-        LOG_ERROR("step ret is %{public}d", errCode);
         FinishStep();
         rowPos_ = rowCount_;
         return SQLiteError::ErrNo(errCode);
@@ -258,44 +289,8 @@ int StepResultSet::Close()
     isClosed_ = true;
 
     auto args = std::move(args_);
-    sqliteStatement_ = nullptr;
-    conn_ = nullptr;
     auto columnNames = std::move(columnNames_);
     return FinishStep();
-}
-
-/**
- * Obtain session and prepare precompile statement for step query
- */
-int StepResultSet::PrepareStep()
-{
-    if (sqliteStatement_ != nullptr) {
-        return E_OK;
-    }
-
-    if (conn_ == nullptr) {
-        return E_ALREADY_CLOSED;
-    }
-
-    if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
-        LOG_ERROR("not a select sql_!");
-        return E_NOT_SELECT;
-    }
-
-    auto statement = SqliteStatement::CreateStatement(conn_, sql_);
-    if (statement == nullptr) {
-        return E_STATEMENT_NOT_PREPARED;
-    }
-
-    int errCode = statement->BindArguments(args_);
-    if (errCode != E_OK) {
-        LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
-        statement->ResetStatementAndClearBindings();
-        statement = nullptr;
-        return errCode;
-    }
-    sqliteStatement_ = std::move(statement);
-    return E_OK;
 }
 
 /**
@@ -305,7 +300,7 @@ int StepResultSet::FinishStep()
 {
     auto statement = GetStatement();
     if (statement != nullptr) {
-        statement->ResetStatementAndClearBindings();
+        statement->Reset();
         sqliteStatement_ = nullptr;
     }
     rowPos_ = INIT_POS;
@@ -320,7 +315,6 @@ void StepResultSet::Reset()
     FinishStep();
     isAfterLast_ = false;
 }
-
 
 /**
  * Checks whether the result set is positioned after the last row
@@ -351,107 +345,154 @@ int StepResultSet::IsAtFirstRow(bool &result) const
 
 int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
+    ValueObject valueObject;
+    int errorCode = Get(columnIndex, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
     }
-
-    if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
+    blob.resize(0);
+    int type = valueObject.GetType();
+    if (type == ValueObject::TYPE_BLOB) {
+        blob = std::get<std::vector<uint8_t>>(valueObject.value);
+        return E_OK;
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(valueObject.value);
+        blob.assign(temp.begin(), temp.end());
+        return E_OK;
+    } else if (type == ValueObject::TYPE_NULL) {
+        return E_OK;
     }
-    return statement->GetColumnBlob(columnIndex, blob);
+    LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+    return E_INVALID_OBJECT_TYPE;
 }
 
 int StepResultSet::GetString(int columnIndex, std::string &value)
 {
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
+    ValueObject valueObject;
+    int errorCode = Get(columnIndex, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
     }
-
-    if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
-    }
-
-    int errCode = statement->GetColumnString(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
+    int type = valueObject.GetType();
+    if (type == ValueObject::TYPE_INT) {
+        auto temp = std::get<int64_t>(valueObject.value);
+        value = std::to_string(temp);
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        double temp = std::get<double>(valueObject.value);
+        std::ostringstream os;
+        if (os << temp) {
+            value = os.str();
+        }
+    } else if (type == ValueObject::TYPE_STRING) {
+        value = std::get<std::string>(valueObject.value);
+    } else if (type == ValueObject::TYPE_BLOB) {
+        return E_INVALID_COLUMN_TYPE;
+    } else {
+        return E_ERROR;
     }
     return E_OK;
 }
 
 int StepResultSet::GetInt(int columnIndex, int &value)
 {
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-
-    if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
-    }
-
-    int64_t columnValue;
-    int errCode = statement->GetColumnLong(columnIndex, columnValue);
+    int64_t temp = 0;
+    int errCode = GetLong(columnIndex, temp);
     if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
     }
-    value = static_cast<int>(columnValue);
+    value = int32_t(temp);
     return E_OK;
 }
 
 int StepResultSet::GetLong(int columnIndex, int64_t &value)
 {
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
+    ValueObject valueObject;
+    int errorCode = Get(columnIndex, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
     }
-
-    if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
-    }
-    int errCode = statement->GetColumnLong(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
+    value = 0L;
+    int type = valueObject.GetType();
+    if (type == ValueObject::TYPE_INT) {
+        value = std::get<int64_t>(valueObject.value);
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        value = int64_t(std::get<double>(valueObject.value));
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(valueObject.value);
+        value = temp.empty() ? 0L : (int64_t)strtoll(temp.c_str(), nullptr, 0);
+    } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    } else {
+        return E_ERROR;
     }
     return E_OK;
 }
 
 int StepResultSet::GetDouble(int columnIndex, double &value)
 {
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
+    ValueObject valueObject;
+    int errorCode = Get(columnIndex, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    value = 0.0L;
+    int type = valueObject.GetType();
+    if (type == ValueObject::TYPE_INT) {
+        value = double(std::get<int64_t>(valueObject.value));
+    } else if (type == ValueObject::TYPE_DOUBLE) {
+        value = std::get<double>(valueObject.value);
+    } else if (type == ValueObject::TYPE_STRING) {
+        auto temp = std::get<std::string>(valueObject.value);
+        value = temp.empty() ? 0.0 : (double)strtod(temp.c_str(), nullptr);
+    } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    } else {
+        return E_ERROR;
     }
 
-    if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
-    }
-    int errCode = statement->GetColumnDouble(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
     return E_OK;
 }
 
 int StepResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
 {
-    return GetValue(col, value);
+    ValueObject valueObject;
+    int errorCode = Get(col, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
+        return E_NULL_OBJECT;
+    }
+
+    if (valueObject.GetType() != ValueObject::TYPE_ASSET) {
+        LOG_ERROR("the type is not assets, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        return E_INVALID_OBJECT_TYPE;
+    }
+    value = valueObject;
+    return E_OK;
 }
 
 int StepResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 {
-    return GetValue(col, value);
+    ValueObject valueObject;
+    int errorCode = Get(col, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
+        return E_NULL_OBJECT;
+    }
+
+    if (valueObject.GetType() != ValueObject::TYPE_ASSETS) {
+        LOG_ERROR("the type is not assets, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        return E_INVALID_OBJECT_TYPE;
+    }
+    value = valueObject;
+    return E_OK;
 }
 
 int StepResultSet::Get(int32_t col, ValueObject &value)
@@ -459,31 +500,11 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
     return GetValue(col, value);
 }
 
-int StepResultSet::GetModifyTime(std::string &modifyTime)
-{
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-
-    if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
-    }
-    auto index = std::find(columnNames_.begin(), columnNames_.end(), "modifyTime");
-    int errCode = statement->GetColumnString(index - columnNames_.begin(), modifyTime);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
-}
-
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
+        LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
     }
 
@@ -492,7 +513,9 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
         return E_NOT_INIT;
     }
 
-    return statement->GetSize(columnIndex, size);
+    int32_t errCode = 0;
+    std::tie(errCode, size) = statement->GetSize(columnIndex);
+    return errCode;
 }
 
 int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
@@ -523,7 +546,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
         LOG_ERROR("ret is %{public}d", errCode);
         return errCode;
     }
-    value = object;
+    value = static_cast<T>(object);
     return E_OK;
 }
 
@@ -538,15 +561,14 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
         return { E_NOT_INIT, ValueObject() };
     }
 
-    ValueObject value;
-    auto ret = statement->GetColumn(col, value);
+    auto [ret, value] = statement->GetColumn(col);
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };
     }
     return { ret, std::move(value) };
 }
 
-std::shared_ptr<SqliteStatement> StepResultSet::GetStatement()
+std::shared_ptr<Statement> StepResultSet::GetStatement()
 {
     if (isClosed_ || conn_ == nullptr) {
         return nullptr;

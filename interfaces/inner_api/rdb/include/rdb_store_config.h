@@ -138,26 +138,6 @@ enum DBType : uint32_t {
 };
 
 /**
- * @brief The constant indicates the database default page size.
- */
-static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-
-/**
- * @brief The constant indicates the database default journal size.
- */
-static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
-
-/**
- * @brief The constant indicates the database default journal mode.
- */
-static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
-
-/**
- * @brief The constant indicates the database default encrypt algorithm.
- */
-static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
-
-/**
  * @brief Use DistributedType replace OHOS::DistributedRdb::RdbDistributedType.
  */
 using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
@@ -177,6 +157,26 @@ struct ScalarFunctionInfo {
  */
 class API_EXPORT RdbStoreConfig {
 public:
+    /**
+    * @brief The constant indicates the database default page size.
+    */
+    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+
+    /**
+    * @brief The constant indicates the database default journal size.
+    */
+    static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
+
+    /**
+    * @brief The constant indicates the database default journal mode.
+    */
+    static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
+
+    /**
+    * @brief The constant indicates the database default encrypt algorithm.
+    */
+    static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+
     /**
      * @brief Constructor.
      *
@@ -202,7 +202,7 @@ public:
         const std::string &databaseFileType = "", SecurityLevel securityLevel = SecurityLevel::LAST,
         bool isCreateNecessary = true, bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE,
         int pageSize = DB_PAGE_SIZE, const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
-    RdbStoreConfig();
+    RdbStoreConfig() = default;
     /**
      * @brief Destructor.
      */
@@ -352,36 +352,6 @@ public:
      * @brief Obtains the area in this {@code StoreConfig} object.
      */
     API_EXPORT int32_t GetArea() const;
-
-    /**
-     * @brief Obtains the uri in this {@code StoreConfig} object.
-     */
-    API_EXPORT std::string GetUri() const;
-
-    /**
-     * @brief Sets the uri for the object.
-     */
-    API_EXPORT void SetUri(const std::string& uri);
-
-    /**
-     * @brief Obtains the read permission in this {@code StoreConfig} object.
-     */
-    API_EXPORT std::string GetReadPermission() const;
-
-    /**
-     * @brief Sets the read permission for the object.
-     */
-    API_EXPORT void SetReadPermission(const std::string& permission);
-
-    /**
-     * @brief Obtains the write permission in this {@code StoreConfig} object.
-     */
-    API_EXPORT std::string GetWritePermission() const;
-
-    /**
-     * @brief Sets the write permission for the object.
-     */
-    API_EXPORT void SetWritePermission(const std::string& permission);
 
     /**
      * @brief Obtains the journal mode value in this {@code StoreConfig} object.
@@ -551,7 +521,8 @@ public:
                && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize == config.journalSize && this->pageSize == config.pageSize
-               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
+               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
+               && this->allowRebuilt_ == config.allowRebuilt_;
     }
 
     /**
@@ -587,6 +558,10 @@ public:
 
     uint32_t GetRoleType() const;
 
+    void SetAllowRebuild(bool allowRebuild);
+
+    bool GetAllowRebuild() const;
+
     void SetDBType(int32_t dbType);
 
     int32_t GetDBType() const;
@@ -616,9 +591,6 @@ private:
     std::string journalMode;
     std::string syncMode;
     std::string databaseFileType;
-    std::string uri_;
-    std::string readPermission_;
-    std::string writePermission_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
@@ -628,6 +600,10 @@ private:
     std::string customDir_;
     std::vector<uint8_t> encryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    
+    static constexpr int MAX_TIMEOUT = 300; // seconds
+    static constexpr int MIN_TIMEOUT = 1;   // seconds
+    bool allowRebuilt_ = false;
 };
 } // namespace OHOS::NativeRdb
 

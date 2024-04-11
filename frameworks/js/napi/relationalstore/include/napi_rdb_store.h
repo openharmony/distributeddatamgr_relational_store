@@ -86,7 +86,7 @@ private:
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
-    static napi_value DoLockRow(napi_env env, napi_callback_info info, bool isLock);
+    static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
     static napi_value LockRow(napi_env env, napi_callback_info info);
     static napi_value UnlockRow(napi_env env, napi_callback_info info);
     static napi_value QueryLockedRow(napi_env env, napi_callback_info info);

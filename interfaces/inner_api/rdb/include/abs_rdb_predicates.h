@@ -300,6 +300,10 @@ public:
      */
     API_EXPORT virtual void SetJoinCount(int joinCount);
 
+    static constexpr const char *LOCK_STATUS = "#_status";
+    static constexpr int LOCKED = 2;
+    static constexpr int LOCK_CHANGED = 3;
+
 protected:
     std::vector<std::string> joinTypes;
     std::vector<std::string> joinTableNames;

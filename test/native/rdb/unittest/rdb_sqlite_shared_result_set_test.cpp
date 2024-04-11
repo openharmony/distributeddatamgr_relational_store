@@ -1361,6 +1361,18 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_031, TestSize.Le
     EXPECT_EQ(true, resultSet->IsClosed());
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToLastRow());
 
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+    
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToPreviousRow());
+    
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToFirstRow());
+
+    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GoToRow(1));
+
     bool isExpectResult = true;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->IsAtLastRow(isExpectResult));
     EXPECT_NE(false, isExpectResult);
@@ -1496,4 +1508,38 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_034, TestSize.Le
         EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, value)) << "Current position:" << i;
         EXPECT_EQ(value.size(), position * 100 * 1024) << "Current position:" << i;
     }
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_035
+ * @tc.desc: normal testcase of SqliteSharedResultSet for qrySql is WITH
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_035, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =RdbSqliteSharedResultSetTest::store->QuerySql(
+        "WITH tem AS ( SELECT * FROM test) SELECT * FROM tem");
+    EXPECT_NE(resultSet, nullptr);
+
+    std::vector<std::string> columnNames;
+    int ret = resultSet->GetAllColumnNames(columnNames);
+    EXPECT_EQ(E_OK, ret);
+
+    std::string colName = "";
+    resultSet->GetColumnName(1, colName);
+    EXPECT_EQ(colName, "data1");
+    EXPECT_EQ(columnNames[1], colName);
+
+    resultSet->GetColumnName(2, colName);
+    EXPECT_EQ(colName, "data2");
+    EXPECT_EQ(columnNames[2], colName);
+
+    resultSet->GetColumnName(3, colName);
+    EXPECT_EQ(colName, "data3");
+    resultSet->GetColumnName(4, colName);
+    EXPECT_EQ(colName, "data4");
+
+    resultSet->Close();
 }

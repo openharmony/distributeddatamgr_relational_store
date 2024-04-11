@@ -22,7 +22,7 @@
 
 #include "value_object.h"
 namespace OHOS::NativeRdb {
-class SharedBlockInfo;
+struct SharedBlockInfo;
 class Statement {
 public:
     static constexpr int COLUMN_TYPE_ASSET = 1000;
@@ -50,6 +50,11 @@ public:
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
     virtual int32_t FillBlockInfo(SharedBlockInfo *info) const = 0;
+    virtual int ModifyLockStatus(
+        const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
+    {
+        return 0;
+    }
 };
 }
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_STATEMENT_H

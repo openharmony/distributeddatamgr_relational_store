@@ -64,24 +64,10 @@ enum RoleType : uint32_t {
 };
 
 enum DBType : uint32_t {
-    /**
-     * The SQLITE database.
-    */
     DB_SQLITE = 0,
-
-    /**
-     * The vector database.
-    */
     DB_VECTOR,
-    /**
-     * The BUTT of database.
-    */
     DB_BUTT
 };
-static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
-static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
-static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
-static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
 
 using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
 
@@ -93,6 +79,10 @@ struct ScalarFunctionInfo {
 
 class RdbStoreConfig {
 public:
+    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+    static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
+    static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
+    static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
@@ -100,7 +90,7 @@ public:
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
         bool autoCheck = false, int journalSize = 1048576, int pageSize = 4096,
         const std::string &encryptAlgo = "sha256");
-    RdbStoreConfig();
+    RdbStoreConfig() = default;
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -135,12 +125,6 @@ public:
     void SetServiceName(const std::string& serviceName);
     void SetArea(int32_t area);
     int32_t GetArea() const;
-    std::string GetUri() const;
-    void SetUri(const std::string& uri);
-    std::string GetReadPermission() const;
-    void SetReadPermission(const std::string& permission);
-    std::string GetWritePermission() const;
-    void SetWritePermission(const std::string& permission);
     void SetCreateNecessary(bool isCreateNecessary);
     void SetAutoClean(bool isAutoClean);
     bool GetAutoClean() const;
@@ -176,6 +160,10 @@ public:
     std::string GetVisitorDir() const;
     void SetRoleType(RoleType role);
     uint32_t GetRoleType() const;
+    void SetAllowRebuild(bool allowRebuild);
+    bool GetAllowRebuild() const;
+    void SetDBType(int32_t dbType);
+    int32_t GetDBType() const;
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -206,12 +194,9 @@ public:
                && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize == config.journalSize && this->pageSize == config.pageSize
-               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_;
+               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
+               && this->allowRebuilt_ == config.allowRebuilt_;
     }
-
-    void SetDBType(int32_t dbType);
-
-    int32_t GetDBType() const;
 
 private:
     bool readOnly = false;
@@ -236,9 +221,6 @@ private:
     std::string journalMode;
     std::string syncMode;
     std::string databaseFileType;
-    std::string uri_;
-    std::string readPermission_;
-    std::string writePermission_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
@@ -248,6 +230,10 @@ private:
     std::string customDir_;
     std::vector<uint8_t> encryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    
+    static constexpr int MAX_TIMEOUT = 300; // seconds
+    static constexpr int MIN_TIMEOUT = 1;   // seconds
+    bool allowRebuilt_ = false;
 };
 } // namespace OHOS::NativeRdb
 

@@ -1026,6 +1026,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    EXPECT_NE(valueBucket, nullptr);
     valueBucket->putInt64(valueBucket, "id", 1);
     valueBucket->putText(valueBucket, "data1", "wanger");
     valueBucket->putInt64(valueBucket, "data2", 12800);
@@ -1038,7 +1039,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("lock_test");
+    EXPECT_NE(predicates, nullptr);
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    EXPECT_NE(valueObject, nullptr);
     const char *data1Value = "wanger";
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);

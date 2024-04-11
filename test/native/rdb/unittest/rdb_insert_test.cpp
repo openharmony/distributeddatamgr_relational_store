@@ -39,14 +39,12 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_ERROR;      // errno SQLITE_ERROR
     static const int E_SQLITE_CONSTRAINT; // errno SQLITE_CONSTRAINT
 };
 
 const std::string RdbStoreInsertTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
 std::shared_ptr<RdbStore> RdbStoreInsertTest::store = nullptr;
 const int RdbStoreInsertTest::E_SQLITE_CONSTRAINT = -19;
-const int RdbStoreInsertTest::E_SQLITE_ERROR = -1;
 
 class InsertTestOpenCallback : public RdbOpenCallback {
 public:
@@ -259,7 +257,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
     ret = store->Insert(id, "wrongTable", values); // no such table
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_ERROR);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**
@@ -283,7 +281,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
     values.PutDouble("wrongColumn", 100.5); // no such column
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_ERROR);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**
@@ -418,7 +416,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
     ret = store->Replace(id, "wrongTable", values); // no such table
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_ERROR);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**
@@ -442,7 +440,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
     values.PutDouble("wrongColumn", 100.5); // no such column
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->Replace(id, "test", values);
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_ERROR);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**

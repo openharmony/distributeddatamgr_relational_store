@@ -50,7 +50,6 @@ public:
     int GetAsset(int32_t col, ValueObject::Asset &value) override;
     int GetAssets(int32_t col, ValueObject::Assets &value) override;
     int Get(int32_t col, ValueObject &value) override;
-    int GetModifyTime(std::string &modifyTime) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
     bool IsClosed() const override;
     int Close() override;
@@ -59,19 +58,18 @@ private:
     template<typename T>
     int GetValue(int32_t col, T &value);
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
+    std::shared_ptr<Statement> GetStatement();
     void Reset();
     int FinishStep();
     int PrepareStep();
 
-    std::shared_ptr<SqliteStatement> GetStatement();
     static const int INIT_POS = -1;
     // Max times of retrying step query
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
 
-    std::shared_ptr<SqliteStatement> sqliteStatement_;
-    std::shared_ptr<SqliteConnection> conn_;
+    std::shared_ptr<Statement> sqliteStatement_;
     std::vector<std::string> columnNames_;
     std::vector<ValueObject> args_;
     std::string sql_;
@@ -80,6 +78,7 @@ private:
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     mutable std::shared_mutex mutex_;
+    std::shared_ptr<Connection> conn_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
