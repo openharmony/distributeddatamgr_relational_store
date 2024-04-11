@@ -14,12 +14,30 @@
  */
 
 #include "mock.h"
+#include "relational_store_client.h"
 
 namespace OHOS {
 namespace NativeRdb {
 __attribute__((visibility("default"))) int gettid()
 {
     return 0;
+}
+
+DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db)
+{
+    return DistributedDB::DBStatus::OK;
+}
+
+DistributedDB::DBStatus Lock(
+    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+{
+    return DistributedDB::DBStatus::OK;
+}
+
+DistributedDB::DBStatus UnLock(
+    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+{
+    return DistributedDB::DBStatus::OK;
 }
 }
 }

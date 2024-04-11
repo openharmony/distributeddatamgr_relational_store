@@ -15,14 +15,14 @@
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
-#include <cstring>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -48,7 +48,7 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
     /* the sql string length less than 3 can not be any type sql */
     if (sql.length() < 3) {
-        return STATEMENT_OTHER;
+        return STATEMENT_ERROR;
     }
     /* analyze the sql type through first 3 character */
     std::string prefixSql = StrToUpper(sql.substr(0, 3));

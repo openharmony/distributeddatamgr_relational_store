@@ -924,7 +924,7 @@ int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
 int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
 
 /**
- * @brief Queries data in the database based on specified conditions.
+ * @brief Queries locked data in the database based on specified conditions.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.

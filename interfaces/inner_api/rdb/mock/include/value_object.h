@@ -292,60 +292,13 @@ public:
      */
     int GetVecs(FloatVector &val) const;
 
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the int type ValueObject.
-     */
     operator int() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the int64_t type ValueObject.
-     */
     operator int64_t() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the double type ValueObject.
-     */
     operator double() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the bool type ValueObject.
-     */
     operator bool() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the string type ValueObject.
-     */
     operator std::string() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the vector<uint8_t> type ValueObject.
-     */
     operator Blob() const;
-
-    /**
-     * @brief Type conversion function.
-     *
-     * @return Returns the vector<uint8_t> type ValueObject.
-     */
     operator Asset() const;
-
-    /**
-    * @brief Type conversion function.
-    *
-    * @return Returns the vector<uint8_t> type ValueObject.
-    */
     operator Assets() const;
 
     /**

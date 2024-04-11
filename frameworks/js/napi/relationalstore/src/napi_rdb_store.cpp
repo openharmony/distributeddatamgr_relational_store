@@ -1896,7 +1896,7 @@ void RdbStoreProxy::SyncObserver::ProgressNotification(const Details &details)
     }
 }
 
-napi_value RdbStoreProxy::DoLockRow(napi_env env, napi_callback_info info, bool isLock)
+napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock)
 {
     LOG_DEBUG("start");
     auto context = std::make_shared<RdbStoreContext>();
@@ -1908,9 +1908,9 @@ napi_value RdbStoreProxy::DoLockRow(napi_env env, napi_callback_info info, bool 
     auto exec = [context, isLock]() -> int {
         LOG_DEBUG("Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        CHECK_RETURN_ERR(obj != nullptr && obj->>GetInstance() != nullptr);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
         CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
-        return obj->>GetInstance()->LockRow(*(context->rdbPredicates), isLock);
+        return obj->GetInstance()->ModifyLockStatus(*(context->rdbPredicates), isLock);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -1925,12 +1925,12 @@ napi_value RdbStoreProxy::DoLockRow(napi_env env, napi_callback_info info, bool 
 
 napi_value RdbStoreProxy::LockRow(napi_env env, napi_callback_info info)
 {
-    return DoLockRow(env, info, true);
+    return ModifyLockStatus(env, info, true);
 }
 
 napi_value RdbStoreProxy::UnlockRow(napi_env env, napi_callback_info info)
 {
-    return DoLockRow(env, info, false);
+    return ModifyLockStatus(env, info, false);
 }
 
 napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
@@ -1940,15 +1940,18 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1 to 2"));
         CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
-        if (argc == 2) {
+        if (argc >= 2) {
             CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
         }
     };
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        CHECK_RETURN_ERR(obj != nullptr && obj->>GetInstance() != nullptr);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
         CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
-        context->resultSet = obj->>GetInstance()->QueryLockedRow(*(context->rdbPredicates), context->columns);
+
+        context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
+        context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
+        context->resultSet = obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {

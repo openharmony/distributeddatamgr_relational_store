@@ -182,9 +182,7 @@ public:
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
-    int LockRow(const AbsRdbPredicates &predicates, bool isLock) override;
-    std::shared_ptr<AbsSharedResultSet> QueryLockedRow(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
+    int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
 
 protected:
     int InnerOpen();
@@ -209,7 +207,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
-    void DoCloudSync(const std::string &table, bool isCompensation = false);
+    void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
         const AsyncDetail &async);
     int InnerBackup(const std::string& databasePath,

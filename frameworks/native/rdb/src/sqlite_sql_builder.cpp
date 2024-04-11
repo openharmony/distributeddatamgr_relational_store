@@ -308,7 +308,6 @@ std::string SqliteSqlBuilder::BuildLockRowQueryString(
     } else {
         SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
         AppendClause(sql, " WHERE ", whereClause);
-        sql.append(" AND (").append(logTable).append(".status = 2 OR ").append(logTable).append(".status = 3) ");
     }
     AppendClause(sql, " GROUP BY ", predicates.GetGroup(), table);
     auto order = predicates.GetOrder();

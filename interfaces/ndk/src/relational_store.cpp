@@ -657,7 +657,7 @@ int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
     if (rdbStore == nullptr || predicate == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->LockRow(predicate->Get(), true);
+    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), true);
 }
 
 int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
@@ -667,7 +667,7 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
     if (rdbStore == nullptr || predicate == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->LockRow(predicate->Get(), false);
+    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), false);
 }
 
 OH_Cursor *OH_Rdb_QueryLockedRow(
@@ -676,6 +676,7 @@ OH_Cursor *OH_Rdb_QueryLockedRow(
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
     if (rdbStore == nullptr || predicate == nullptr) {
+        LOG_ERROR("rdbStore or predicate is nullptr.");
         return nullptr;
     }
     std::vector<std::string> columns;
@@ -685,9 +686,14 @@ OH_Cursor *OH_Rdb_QueryLockedRow(
             columns.push_back(columnNames[i]);
         }
     }
-
+    predicate->Get().BeginWrap();
+    predicate->Get().EqualTo(OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS, OHOS::NativeRdb::AbsRdbPredicates::LOCKED);
+    predicate->Get().Or();
+    predicate->Get().EqualTo(
+        OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS, OHOS::NativeRdb::AbsRdbPredicates::LOCK_CHANGED);
+    predicate->Get().EndWrap();
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
-        rdbStore->GetStore()->QueryLockedRow(predicate->Get(), columns);
+        rdbStore->GetStore()->QueryByStep(predicate->Get(), columns);
     if (resultSet == nullptr) {
         return nullptr;
     }

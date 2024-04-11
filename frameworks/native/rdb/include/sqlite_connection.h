@@ -64,8 +64,6 @@ protected:
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
     void SetInTransaction(bool transaction);
-    int DoLockRow(const std::string &table, std::vector<std::vector<uint8_t>> hashKeys, bool isLock);
-
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     explicit SqliteConnection(bool isWriteConnection);

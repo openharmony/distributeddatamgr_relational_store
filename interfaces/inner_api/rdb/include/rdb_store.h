@@ -91,9 +91,9 @@ public:
      * @brief Inserts a row of data into the target table.
      *
      * @param table Indicates the target table.
-     * @param initialValues Indicates the row of data {@link ValuesBucket} to be inserted into the table.
+     * @param values Indicates the row of data {@link ValuesBucket} to be inserted into the table.
      */
-    virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+    virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
 
     /**
      * @brief Inserts a batch of data into the target table.
@@ -101,8 +101,8 @@ public:
      * @param table Indicates the target table.
      * @param initialBatchValue Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
      */
-    virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
-        const std::vector<ValuesBucket> &initialBatchValues) = 0;
+    virtual int BatchInsert(
+        int64_t &outInsertNum, const std::string &table, const std::vector<ValuesBucket> &values) = 0;
 
     /**
      * @brief Replaces a row of data into the target table.
@@ -110,7 +110,7 @@ public:
      * @param table Indicates the target table.
      * @param initialBatchValue Indicates the row of data {@link ValuesBucket} to be replaced into the table.
      */
-    virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+    virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
 
     /**
      * @brief Inserts a row of data into the target table.
@@ -321,7 +321,7 @@ public:
      * @param databasePath Indicates the database file path.
      * @param destEncryptKey Indicates the database encrypt key.
      */
-    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey = {}) = 0;
+    virtual int Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey = {}) = 0;
 
     /**
      * @brief Attaches a database.
@@ -417,7 +417,7 @@ public:
     virtual int BeginTransaction() = 0;
     virtual std::pair<int, int64_t> BeginTrans()
     {
-        return { E_NOT_SUPPORT, 0};
+        return { E_NOT_SUPPORT, 0 };
     }
 
     /**
@@ -474,7 +474,7 @@ public:
      * @param backupPath  Indicates the name that saves the database file path.
      * @param newKey Indicates the database new key.
      */
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
+    virtual int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
 
     /**
      * @brief Set table to be distributed table.
@@ -587,6 +587,10 @@ public:
     virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) = 0;
 
     /**
+     * @brief Gets the rebuilt_ status of the database.
+     */
+    virtual int GetRebuilt(RebuiltType &rebuilt) = 0;
+    /**
      * @brief Attaches a database file to the currently linked database.
      *
      * @param config Indicates the {@link RdbStoreConfig} configuration of the database related to this RDB store.
@@ -615,21 +619,9 @@ public:
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
-    virtual int LockRow(const AbsRdbPredicates &predicates, bool isLock)
+    virtual int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock)
     {
         return E_ERROR;
-    }
-
-    /**
-     * @brief Queries lockded data in the database based on specified conditions.
-     *
-     * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
-     * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
-     */
-    virtual std::shared_ptr<AbsSharedResultSet> QueryLockedRow(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
-    {
-        return nullptr;
     }
 };
 } // namespace OHOS::NativeRdb

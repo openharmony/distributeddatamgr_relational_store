@@ -208,11 +208,10 @@ describe('rdbStoreLockRowTest', function () {
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_LockRow_0002
      * @tc.name Abnormal test case of lock, if TABLE name or column invalid
-     * @tc.desc 1.Create value
-     *          2.Configure predicates (TABLE name: "")
-     *          3.Configure predicates (TABLE name: "wrongTable")
-     *          4.Configure predicates (column: "aaa")
-     *          5.Configure predicates (column: "null")
+     * @tc.desc 1.Configure predicates (TABLE name: "")
+     *          2.Configure predicates (TABLE name: "wrongTable")
+     *          3.Configure predicates (column: "aaa")
+     *          4.Configure predicates (no data)
      */
     it('testRdbStoreLockRow0002', 0, async function () {
         console.log(TAG + "************* testRdbStoreLockRow0002 start *************");
@@ -244,14 +243,6 @@ describe('rdbStoreLockRowTest', function () {
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
-            predicates.equalTo("null", 100.5)
-            await rdbStore.lockRow(predicates)
-        } catch (err) {
-            console.log(TAG + `emptyBucket failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
-        }
-        try {
-            let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName2)
             await rdbStore.lockRow(predicates)
             console.log(TAG + `lock success`)
@@ -265,11 +256,10 @@ describe('rdbStoreLockRowTest', function () {
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_LockRow_0003
      * @tc.name Abnormal test case of unlock, if TABLE name or column invalid
-     * @tc.desc 1.Create value
-     *          2.Configure predicates (TABLE name: "")
-     *          3.Configure predicates (TABLE name: "wrongTable")
-     *          4.Configure predicates (column: "aaa")
-     *          5.Configure predicates (column: "null")
+     * @tc.desc 1.Configure predicates (TABLE name: "")
+     *          2.Configure predicates (TABLE name: "wrongTable")
+     *          3.Configure predicates (column: "aaa")
+     *          4.Configure predicates (no data)
      */
     it('testRdbStoreLockRow0003', 0, async function () {
         console.log(TAG + "************* testRdbStoreLockRow0003 start *************");
@@ -297,14 +287,6 @@ describe('rdbStoreLockRowTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `aaa failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
-        }
-        try {
-            let predicates = new data_relationalStore.RdbPredicates(TABLE)
-            predicates.equalTo("null", 100.5)
-            await rdbStore.unlockRow(predicates)
-        } catch (err) {
-            console.log(TAG + `emptyBucket failed, err: ${JSON.stringify(err)}`)
             expect(14800000).assertEqual(err.code)
         }
         try {
@@ -688,6 +670,7 @@ describe('rdbStoreLockRowTest', function () {
         // locked->lock_change
         try {
             var u8 = new Uint8Array([4, 5, 6])
+            const assets = [asset2, asset3];
             const valueBucket = {
                 "name": checkName2,
                 "age": 20,
@@ -739,6 +722,7 @@ describe('rdbStoreLockRowTest', function () {
         // lock_change->lock_change
         try {
             var u8 = new Uint8Array([4, 5, 6])
+            const assets = [asset2, asset3];
             const valueBucket = {
                 "name": checkName2,
                 "age": 20,
@@ -815,6 +799,37 @@ describe('rdbStoreLockRowTest', function () {
         }
         await queryLockedData(1, checkName2)
         console.log(TAG + "************* testRdbStoreLockRow0012 end   *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_LockRow_0013
+     * @tc.name Abnormal test case of lock, if TABLE name or column invalid
+     * @tc.desc 1.Parameter count is incorrect
+     */
+    it('testRdbStoreLockRow0013', 0, async function () {
+        console.log(TAG + "************* testRdbStoreLockRow0013 start *************");
+        try {
+            await rdbStore.lockRow()
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect("401").assertEqual(err.code)
+        }
+        try {
+            await rdbStore.lockRow()
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect("401").assertEqual(err.code)
+        }
+        try {
+            await rdbStore.queryLockedRow()
+            expect().assertFail()
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect("401").assertEqual(err.code)
+        }
+        console.log(TAG + "************* testRdbStoreLockRow0013 end   *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");

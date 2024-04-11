@@ -34,6 +34,7 @@ public:
     static constexpr int STATEMENT_PRAGMA = 8;
     static constexpr int STATEMENT_DDL = 9;
     static constexpr int STATEMENT_INSERT = 10;
+    static constexpr int STATEMENT_ERROR = 11;
     static constexpr int STATEMENT_OTHER = 99;
     static constexpr int CONFLICT_CLAUSE_COUNT = 6;
     static constexpr const char* REP = "#_";
