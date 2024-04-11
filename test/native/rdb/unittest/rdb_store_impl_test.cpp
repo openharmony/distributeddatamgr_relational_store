@@ -68,8 +68,8 @@ void RdbStoreImplTest::TearDownTestCase(void) {}
 void RdbStoreImplTest::SetUp(void)
 {
     store_ = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
-    int errCode = E_OK;
+    int errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(E_OK, errCode);
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     RdbStoreImplTestOpenCallback helper;
     store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -81,7 +81,7 @@ void RdbStoreImplTest::TearDown(void)
 {
     store_ = nullptr;
     RdbHelper::ClearCache();
-    int errCode = RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+    int errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
     EXPECT_EQ(E_OK, errCode);
 }
 
@@ -99,7 +99,8 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level2)
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
     valuesBucket.PutInt("timestamp", ValueObject(1000000000));
-    int errorCode = store_->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    int errorCode = store_->Insert(rowId,
+        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
@@ -192,8 +193,8 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     // table name is ""
     std::vector<RdbStore::PRIKey> PKey = {1};
@@ -228,8 +229,8 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
-        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     std::vector<RdbStore::PRIKey> PKey = {1};
     std::map<RdbStore::PRIKey, RdbStore::Date> result =
@@ -273,9 +274,10 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
-    store_->Query(errCode, true, "test", {}, "", std::vector<ValueObject>{}, "", "", "", 1, 0);
+    store_->Query(errCode, true, "test", {},
+        "", std::vector<ValueObject> {}, "", "", "", 1, 0);
     EXPECT_EQ(E_OK, errCode);
 
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
@@ -388,19 +390,18 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
 {
     const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
-    int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetPageSize(1024);
-    auto connection = SqliteConnection::Open(config, true, errCode);
+    auto [errCode, connection] = Connection::Create(config, true);
     EXPECT_NE(nullptr, connection);
-    int64_t value = 0;
-    errCode = connection->ExecuteGetLong(value, "PRAGMA page_size");
-    EXPECT_EQ(E_OK, errCode);
-    EXPECT_EQ(1024, value);
+    auto [err, statement] = connection->CreateStatement("PRAGMA page_size", connection);
+    auto [error, object] = statement->ExecuteForValue();
+    EXPECT_EQ(E_OK, error);
+    EXPECT_EQ(1024, static_cast<int64_t>(object));
 
-    auto tmp = SqliteConnection::Open(config, true, errCode);
-    EXPECT_NE(nullptr, tmp);
+    std::tie(errCode, connection) = Connection::Create(config, true);
+    EXPECT_NE(nullptr, connection);
 }
 
 /* *
@@ -514,11 +515,10 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)
 {
     const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
-    int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetPageSize(1024);
-    auto connection = SqliteConnection::Open(config, true, errCode);
+    auto [errCode, connection] = SqliteConnection::Create(config, true);
     EXPECT_NE(nullptr, connection);
     RdbStoreImplTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -688,11 +688,11 @@ HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
     // tabel is empty
     std::string table = "";
     uint64_t cursor = UINT64_MAX;
-    errCode = store_->CleanDirtyData(table, cursor);
+    errCode = RdbStoreImplTest::store_->CleanDirtyData(table, cursor);
     EXPECT_EQ(E_INVALID_ARGS, errCode);
 
     table = "test";
-    errCode = store_->CleanDirtyData(table, cursor);
+    errCode = RdbStoreImplTest::store_->CleanDirtyData(table, cursor);
     EXPECT_EQ(E_ERROR, errCode);
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }

@@ -200,7 +200,7 @@ public:
     /**
      * @brief Called when the position of the result set changes.
      */
-    API_EXPORT bool OnGo(int oldRowIndex, int newRowIndex) override;
+    API_EXPORT int OnGo(int oldRowIndex, int newRowIndex) override;
 
     /**
      * @brief Allocates a new shared block to an {@link AbsSharedResultSet}

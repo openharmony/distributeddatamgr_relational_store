@@ -24,8 +24,10 @@
 #include <vector>
 
 #include "abs_shared_result_set.h"
+#include "connection.h"
 #include "rdb_store_impl.h"
 #include "shared_block.h"
+#include "sqlite_connection.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
@@ -34,13 +36,13 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
-        std::string sql, const std::vector<ValueObject> &bindArgs);
+    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path, std::string sql,
+        const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int Close() override;
     int GetRowCount(int &count) override;
-    bool OnGo(int oldPosition, int newPosition) override;
+    int OnGo(int oldPosition, int newPosition) override;
     void SetBlock(AppDataFwk::SharedBlock *block) override;
     int PickFillBlockStartPosition(int resultSetPosition, int blockCapacity) const;
     void SetFillBlockForwardOnly(bool isOnlyFillResultSetBlockInput);
@@ -49,27 +51,27 @@ protected:
     void Finalize() override;
 
 private:
-    std::pair<std::shared_ptr<SqliteStatement>, int> PrepareStep();
-    void FillBlock(int requiredPos);
-    std::pair<int, int32_t> ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start, int required,
-        bool needCount);
+    std::pair<std::shared_ptr<Statement>, int> PrepareStep();
+    int FillBlock(int requiredPos);
+    std::pair<int, int32_t> ExecuteForSharedBlock(
+        AppDataFwk::SharedBlock *sharedBlock, int start, int required, bool needCount);
 
 private:
     // The specified value is -1 when there is no data
-    static const int NO_COUNT = -1;
+    static constexpr int NO_COUNT = -1;
     // The pick position of the shared block for search
-    static const int PICK_POS = 3;
+    static constexpr int PICK_POS = 3;
     int resultSetBlockCapacity_;
     // The number of rows in the cursor
     int rowNum_;
-
-    std::shared_ptr<SqliteConnection> conn_;
     std::string qrySql_;
     std::vector<ValueObject> bindArgs_;
     std::vector<std::string> columnNames_;
     std::mutex columnNamesLock_;
     // Controls fetching of rows relative to requested position
     bool isOnlyFillResultSetBlock_;
+    std::mutex mutex_;
+    std::shared_ptr<Connection> conn_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

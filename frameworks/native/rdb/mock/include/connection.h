@@ -20,8 +20,8 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <utility>
 
+#include "rdb_store_config.h"
 #include "statement.h"
 namespace OHOS::NativeRdb {
 class RdbStoreConfig;
@@ -41,11 +41,9 @@ public:
         const std::string &sql, std::shared_ptr<Connection> conn) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
-    virtual int ReSetKey(const RdbStoreConfig &config) = 0;
     virtual int TryCheckPoint() = 0;
     virtual int LimitWalSize() = 0;
     virtual int ConfigLocale(const std::string &localeStr) = 0;
-    virtual int CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
     virtual int SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;

@@ -22,6 +22,7 @@
 #include <mutex>
 #include <thread>
 
+#include "abs_shared_result_set.h"
 #include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
@@ -69,7 +70,7 @@ public:
         const std::vector<ValueObject> &bindArgs) override;
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
+    int Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -85,7 +86,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
-    int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey) override;
+    int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
@@ -98,6 +99,7 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
+    int GetRebuilt(RebuiltType &rebuilt) override;
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
@@ -120,12 +122,12 @@ private:
     int CheckAttach(const std::string &sql);
     bool PathToRealPath(const std::string &path, std::string &realPath);
     std::string ExtractFilePath(const std::string &fileFullName);
-    int BeginExecuteSql(const std::string &sql, std::shared_ptr<SqliteConnection> &connection);
-    int FreeTransaction(std::shared_ptr<SqliteConnection> connection, const std::string &sql);
+    int BeginExecuteSql(const std::string &sql, std::shared_ptr<Connection> &connection);
+    int FreeTransaction(std::shared_ptr<Connection> connection, const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
     ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
-    int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
+    int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
@@ -135,6 +137,10 @@ private:
     int RegisterDataChangeCallback();
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(
+        const std::string &sql, std::shared_ptr<Connection> conn) const;
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql, bool read = false) const;
+    void RemoveDbFiles(std::string &path);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -144,6 +150,7 @@ private:
 
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
     ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
+    uint32_t rebuild_;
 };
 } // namespace OHOS::NativeRdb
 #endif

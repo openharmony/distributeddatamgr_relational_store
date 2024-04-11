@@ -39,12 +39,12 @@ public:
 #ifdef WINDOWS_PLATFORM
     virtual void Clear();
 #endif
-    virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+    virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
-        const std::vector<ValuesBucket> &initialBatchValues) = 0;
-    virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) = 0;
+        const std::vector<ValuesBucket> &values) = 0;
+    virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
     virtual int InsertWithConflictResolution(
-        int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues,
+        int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
     virtual int Update(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs) = 0;
@@ -74,7 +74,7 @@ public:
         const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs = {}) = 0;
-    virtual int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey = {}) = 0;
+    virtual int Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey = {}) = 0;
     virtual int Attach(
         const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
     {
@@ -101,10 +101,11 @@ public:
     virtual bool IsOpen() const = 0;
     virtual bool IsReadOnly() const = 0;
     virtual bool IsMemoryRdb() const = 0;
-    virtual int Restore(const std::string backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
+    virtual int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey = {}) = 0;
     virtual std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) = 0;
     virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) = 0;
+    virtual int GetRebuilt(RebuiltType &rebuilt) = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
