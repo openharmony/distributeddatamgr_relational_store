@@ -16,14 +16,13 @@
 #ifndef RDB_JSKIT_NAPI_RDB_JS_UTILS_H
 #define RDB_JSKIT_NAPI_RDB_JS_UTILS_H
 
-#include <stdint.h>
 #include "asset_value.h"
 #include "js_utils.h"
-#include "napi_rdb_error.h"
 #include "napi_rdb_store_observer.h"
-#include "rdb_store_config.h"
 #include "result_set.h"
 #include "value_object.h"
+#include "rdb_types.h"
+
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
@@ -32,29 +31,6 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 using Date = OHOS::DistributedRdb::Date;
 using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeInfo;
 using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
-using Error = RelationalStoreJsKit::Error;
-using SecurityLevel = NativeRdb::SecurityLevel;
-using RdbStoreConfig = NativeRdb::RdbStoreConfig;
-
-struct RdbConfig {
-    bool isEncrypt = false;
-    bool isSearchable = false;
-    bool isAutoClean = false;
-    SecurityLevel securityLevel = SecurityLevel::LAST;
-    std::string dataGroupId;
-    std::string name;
-    std::string customDir;
-    std::string path;
-};
-
-struct ContextParam {
-    std::string bundleName;
-    std::string moduleName;
-    std::string baseDir;
-    int32_t area;
-    bool isSystemApp = false;
-    bool isStageMode = true;
-};
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
@@ -67,12 +43,6 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, DistributedRdb::Distribu
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
-
-template<>
-int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig);
-
-template<>
-int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &context);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
@@ -99,13 +69,6 @@ template<>
 napi_value Convert2JSValue(napi_env env, const Date &date);
 template<>
 std::string ToString(const PRIKey &key);
-
-bool IsNapiString(napi_env env, napi_value value);
-
-std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
-    napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param);
-RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
-
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H
