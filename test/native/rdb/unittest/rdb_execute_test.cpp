@@ -317,11 +317,11 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
     store->SetVersion(5);
     auto [ret, outValue] = store->Execute("PRAGMA user_version");
     EXPECT_EQ(E_OK, ret);
-    EXPECT_EQ(ValueObjectType::TYPE_STRING, outValue.GetType());
+    EXPECT_EQ(ValueObjectType::TYPE_INT, outValue.GetType());
 
-    std::string outputResult;
-    outValue.GetString(outputResult);
-    EXPECT_EQ("5", outputResult);
+    int64_t outputResult {0};
+    outValue.GetLong(outputResult);
+    EXPECT_EQ(5, outputResult);
 
     // set user_version as 0
     store->SetVersion(0);
@@ -478,7 +478,6 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
     int64_t intOutValue;
-    std::string strOutValue;
 
     const std::string CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -489,8 +488,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
 
     auto [ret1, outValue1] = store->Execute(CREATE_TABLE_TEST2);
     EXPECT_EQ(E_OK, ret1);
-    outValue1.GetString(strOutValue);
-    EXPECT_EQ("", strOutValue);
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, outValue1.GetType());
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql(TEST_TABLE_IS_EXIST);
     EXPECT_NE(nullptr, resultSet);
@@ -503,8 +501,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
 
     auto [ret2, outValue2] = store->Execute(DROP_TABLE_TEST2);
     EXPECT_EQ(E_OK, ret2);
-    outValue2.GetString(strOutValue);
-    EXPECT_EQ("", strOutValue);
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, outValue2.GetType());
 
     resultSet = store->QuerySql(TEST_TABLE_IS_EXIST);
     EXPECT_NE(nullptr, resultSet);
@@ -566,4 +563,37 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0018, TestSize.Level1)
 
     auto [ret1, outValue1] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)");
     EXPECT_NE(E_OK, ret1);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0019
+ * @tc.desc: Normal testCase for Execute, set user_version of store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0019, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    // set user_version as 5
+    auto [ret, outValue] = store->Execute("PRAGMA user_version=5");
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, outValue.GetType());
+
+    // set user_version as 0
+    std::tie(ret, outValue) = store->Execute("PRAGMA user_version=0");
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, outValue.GetType());
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0020
+ * @tc.desc: AbNormal testCase for Execute, get table_info
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+
+    auto [ret, outValue] = store->Execute("PRAGMA table_info(test)");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
 }

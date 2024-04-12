@@ -108,7 +108,7 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.version = 5;
             let ret = await rdbStore.execute("PRAGMA user_version");
             // get user_version 5
-            expect("5").assertEqual(ret);
+            expect(5).assertEqual(ret);
         } catch (err) {
             expect(null).assertFail();
             console.error(`get user_version failed, code:${err.code}, message: ${err.message}`);
@@ -458,6 +458,44 @@ describe('rdbStoreExcuteTest', function () {
         }
         done();
         console.info(TAG + "************* testExecute0016 end   *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Execute_0017
+     * @tc.name Normal test case of Execute, set user_version of store
+     * @tc.desc 1. Set user_version of store
+     *          2. Check returned value
+     */
+    it('testExecute0017', 0, async function (done) {
+        console.info(TAG + "************* testExecute0017 start *************");
+        try {
+            let ret = await rdbStore.execute("PRAGMA user_version=5");
+            expect(null).assertEqual(ret);
+        } catch (err) {
+            expect(null).assertFail();
+            console.error(`set user version failed, code:${err.code}, message: ${err.message}`);
+        }
+        done();
+        console.info(TAG + "************* testExecute0017 end   *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Execute_0018
+     * @tc.name AbNormal test case of Execute, get table info
+     * @tc.desc 1. Get table info
+     *          2. Check returned value
+     */
+    it('testExecute0018', 0, async function (done) {
+        console.info(TAG + "************* testExecute0018 start *************");
+        try {
+            await rdbStore.execute("PRAGMA table_info(test)");
+            expect(null).assertFail();
+        } catch (err) {
+            expect(14800000).assertEqual(err.code);
+            console.error(`get table info failed, code:${err.code}, message: ${err.message}`);
+        }
+        done();
+        console.info(TAG + "************* testExecute0018 end   *************");
     })
 
     console.info(TAG + "*************Unit Test End*************");

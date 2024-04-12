@@ -859,39 +859,62 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
 std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs,
     int64_t trxId)
 {
-    int errCode = E_OK;
-    ValueObject outValue;
+    ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
-    if (sqlType == SqliteUtils::STATEMENT_SELECT) {
-        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
-        return { E_NOT_SUPPORT_THE_SQL, outValue };
+    if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
+        LOG_ERROR("Not support the sqlType: %{public}d, sql: %{public}s", sqlType, sql.c_str());
+        return { E_NOT_SUPPORT_THE_SQL, object };
+    }
+
+    auto connect = connectionPool_->AcquireConnection(false);
+    if (connect == nullptr) {
+        return { E_CON_OVER_LIMIT, object };
+    }
+
+    auto [errCode, statement] = GetStatement(sql, connect);
+    if (errCode != E_OK) {
+        return { errCode, object };
+    }
+
+    errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("execute sql failed, sql: %{public}s, error: %{public}d.", sql.c_str(), errCode);
+        return { errCode, object };
     }
 
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        int64_t intOutValue = -1;
-        errCode = ExecuteForLastInsertedRowId(intOutValue, sql, bindArgs);
-        return { errCode, ValueObject(intOutValue) };
+        int outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+        return { errCode, ValueObject(outValue) };
     }
 
     if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
-        int64_t intOutValue = -1;
-        errCode = ExecuteForChangedRowCount(intOutValue, sql, bindArgs);
-        return { errCode, ValueObject(intOutValue) };
+        int outValue = statement->Changes();
+        return { errCode, ValueObject(outValue) };
     }
 
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        std::string strOutValue;
-        errCode = ExecuteAndGetString(strOutValue, sql, bindArgs);
-        return { errCode, ValueObject(strOutValue) };
+        if (statement->GetColumnCount() == 1) {
+            return statement->GetColumn(0);
+        }
+
+        if (statement->GetColumnCount() > 1) {
+            LOG_ERROR("Not support the sql:%{public}s, column count more than 1", sql.c_str());
+            return { E_NOT_SUPPORT_THE_SQL, object };
+        }
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        errCode = ExecuteSql(sql, bindArgs);
-        return { errCode, outValue };
-    } else {
-        LOG_ERROR("Not support the sql: %{public}s", SqliteUtils::Anonymous(sql).c_str());
-        return { E_NOT_SUPPORT_THE_SQL, outValue };
+        statement->Reset();
+        statement->Prepare("PRAGMA schema_version");
+        auto [err, version] = statement->ExecuteForValue();
+        if (vSchema_ < static_cast<int64_t>(version)) {
+            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
+                     name_.c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
+            vSchema_ = version;
+            errCode = connectionPool_->RestartReaders();
+        }
     }
+    return { errCode, object };
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs)
