@@ -1014,36 +1014,33 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
     }
-    auto conn = connectionPool_->AcquireConnection(true);
-    if (conn == nullptr) {
-        return E_BASE;
-    }
+
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
     if (!destEncryptKey.empty() && !isEncrypt_) {
         bindArgs.emplace_back(destEncryptKey);
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+        (static_cast<RdbStore *>(this))->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
             config_.GetPath(), RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
         bindArgs.emplace_back(key);
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+        (static_cast<RdbStore *>(this))->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
 #endif
     } else {
         std::string str = "";
         bindArgs.emplace_back(str);
     }
 
-    int ret = conn->ExecuteSql(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
+    int ret = ExecuteSqlInner(GlobalExpr::ATTACH_BACKUP_SQL, bindArgs);
     if (ret != E_OK) {
         return ret;
     }
-    int64_t count;
-    ret = conn->ExecuteGetLong(count, GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
 
-    int res = conn->ExecuteSql(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
+    ret = ExecuteGetLongInner(GlobalExpr::EXPORT_SQL, std::vector<ValueObject>());
+
+    int res = ExecuteSqlInner(GlobalExpr::DETACH_BACKUP_SQL, std::vector<ValueObject>());
 
     return res == E_OK ? ret : res;
 }
@@ -1088,122 +1085,57 @@ bool RdbStoreImpl::IsHoldingConnection()
     return connectionPool_ != nullptr;
 }
 
-int RdbStoreImpl::AttachInner(
-    const std::string &attachName, const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime)
-{
-    auto [conn, readers] = connectionPool_->AcquireAll(waitTime);
-    if (conn == nullptr) {
-        return E_DATABASE_BUSY;
-    }
-
-    if (conn->GetJournalMode() == JournalMode::MODE_WAL) {
-        // close first to prevent the connection from being put back.
-        connectionPool_->CloseAllConnections();
-        conn = nullptr;
-        readers.clear();
-        auto [err, newConn] = connectionPool_->DisableWalMode();
-        if (err != E_OK) {
-            return err;
-        }
-        conn = newConn;
-    }
-    std::vector<ValueObject> bindArgs;
-    bindArgs.emplace_back(ValueObject(dbPath));
-    bindArgs.emplace_back(ValueObject(attachName));
-    if (!key.empty()) {
-        conn->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
-        bindArgs.emplace_back(ValueObject(key));
-    }
-    return conn->ExecuteSql(GlobalExpr::ATTACH_SQL, bindArgs);
-}
 
 /**
  * Attaches a database.
  */
-std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
-    const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
+int RdbStoreImpl::Attach(const std::string &alias, const std::string &pathName,
+    const std::vector<uint8_t> destEncryptKey)
 {
-    if (config_.GetRoleType() == VISITOR) {
-        return { E_NOT_SUPPORT, 0 };
+    std::shared_ptr<SqliteConnection> connection;
+    std::string sql = GlobalExpr::PRAGMA_JOUR_MODE_EXP;
+    int errCode = BeginExecuteSql(sql, connection);
+    if (errCode != 0) {
+        return errCode;
     }
-    std::string dbPath;
-    int err = SqliteGlobalConfig::GetDbPath(config, dbPath);
-    if (err != E_OK || access(dbPath.c_str(), F_OK) != E_OK) {
-        return { E_INVALID_FILE_PATH, 0 };
+    std::string journalMode;
+    errCode = connection->ExecuteGetString(journalMode, sql, std::vector<ValueObject>());
+    if (errCode != E_OK) {
+        LOG_ERROR("RdbStoreImpl CheckAttach fail to get journal mode : %d", errCode);
+        return errCode;
     }
-
-    // encrypted databases are not supported to attach a non encrypted database.
-    if (!config.IsEncrypt() && isEncrypt_) {
-        return { E_NOT_SUPPORTED, 0 };
-    }
-
-    auto iter = attachedInfo_.Find(attachName);
-    if (iter.first) {
-        return { E_ATTACHED_DATABASE_EXIST, 0 };
-    }
-
-    std::vector<uint8_t> key;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (config.IsEncrypt()) {
-        RdbPassword rdbPwd =
-            RdbSecurityManager::GetInstance().GetRdbPassword(dbPath, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    }
-#endif
-    err = AttachInner(attachName, dbPath, key, waitTime);
-    if (err == SQLITE_ERROR) {
-        // only when attachName is already in use, SQLITE-ERROR will be reported here.
-        return { E_ATTACHED_DATABASE_EXIST, 0 };
-    } else if (err != E_OK) {
-        LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
-                  "[%{public}s]",
-            err, config_.GetName().c_str(), attachName.c_str(), config.GetName().c_str());
-        return { err, 0 };
-    }
-    if (!attachedInfo_.Insert(attachName, config)) {
-        return { E_ATTACHED_DATABASE_EXIST, 0 };
-    }
-    return { E_OK, attachedInfo_.Size() };
-}
-
-std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, int32_t waitTime)
-{
-    if (config_.GetRoleType() == VISITOR) {
-        return { E_NOT_SUPPORT, 0 };
-    }
-    auto iter = attachedInfo_.Find(attachName);
-    if (!iter.first) {
-        return { E_OK, attachedInfo_.Size() };
+    journalMode = SqliteUtils::StrToUpper(journalMode);
+    if (journalMode == GlobalExpr::DEFAULT_JOURNAL_MODE) {
+        LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
+        return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
 
-    auto [connection, readers] = connectionPool_->AcquireAll(waitTime);
-    if (connection == nullptr) {
-        return { E_DATABASE_BUSY, 0 };
-    }
     std::vector<ValueObject> bindArgs;
-    bindArgs.push_back(ValueObject(attachName));
+    bindArgs.emplace_back(pathName);
+    bindArgs.emplace_back(alias);
+    if (!destEncryptKey.empty() && !isEncrypt_) {
+        bindArgs.emplace_back(destEncryptKey);
+        (static_cast<RdbStore *>(this))->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    } else if (isEncrypt_) {
+        RdbPassword rdbPwd =
+            RdbSecurityManager::GetInstance().GetRdbPassword(config_.GetPath(),
+                RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        bindArgs.emplace_back(key);
+        (static_cast<RdbStore *>(this))->ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+#endif
+    } else {
+        std::string str = "";
+        bindArgs.push_back(ValueObject(str));
+    }
+    sql = GlobalExpr::ATTACH_SQL;
+    errCode = connection->ExecuteSql(sql, bindArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("ExecuteSql ATTACH_SQL error %d", errCode);
+    }
 
-    int err = connection->ExecuteSql(GlobalExpr::DETACH_SQL, bindArgs);
-    if (err != E_OK) {
-        LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
-                  "[%{public}s]",
-            err, config_.GetName().c_str(), attachName.c_str(), iter.second.GetName().c_str());
-        return { err, 0 };
-    }
-    
-    attachedInfo_.Erase(attachName);
-    if (!attachedInfo_.Empty()) {
-        return { E_OK, attachedInfo_.Size() };
-    }
-    // close first to prevent the connection from being put back.
-    connectionPool_->CloseAllConnections();
-    connection = nullptr;
-    readers.clear();
-    err = connectionPool_->EnableWalMode();
-    if (err != E_OK) {
-        return { err, 0 };
-    }
-    return { E_OK, 0 };
+    return errCode;
 }
 
 /**
@@ -1406,7 +1338,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     }
 
     journalMode = SqliteUtils::StrToUpper(journalMode);
-    if (journalMode == GlobalExpr::JOURNAL_MODE_WAL) {
+    if (journalMode == GlobalExpr::DEFAULT_JOURNAL_MODE) {
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
         return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
@@ -1978,6 +1910,5 @@ bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns)
     }
     return false;
 }
-
 #endif
 } // namespace OHOS::NativeRdb

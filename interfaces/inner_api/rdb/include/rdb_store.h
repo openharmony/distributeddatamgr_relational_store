@@ -16,7 +16,6 @@
 #ifndef NATIVE_RDB_RDB_STORE_H
 #define NATIVE_RDB_RDB_STORE_H
 
-#include <stdint.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -29,7 +28,6 @@
 #include "rdb_types.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
-#include "rdb_store_config.h"
 
 namespace OHOS::NativeRdb {
 class API_EXPORT RdbStore {
@@ -326,16 +324,11 @@ public:
      * @brief Attaches a database.
      *
      * @param alias Indicates the database alias.
-     * @param pathName Indicates the database file pathname.
+     * @param databasePath Indicates the database file pathname.
      * @param destEncryptKey Indicates the database encrypt key.
      */
-    [[deprecated("Use Attach(const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) "
-                 "instead.")]]
     virtual int Attach(
-        const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey)
-    {
-        return E_OK;
-    }
+        const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey) = 0;
 
     /**
      * @brief Get the value of the column based on specified conditions.
@@ -572,30 +565,6 @@ public:
      * @param table Indicates the specified table.
      */
     virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX) = 0;
-
-    /**
-     * @brief Attaches a database file to the currently linked database.
-     *
-     * @param config Indicates the {@link RdbStoreConfig} configuration of the database related to this RDB store.
-     * @param attachName Indicates the alias of the database.
-     * @param waitTime Indicates the maximum time allowed for attaching the database file.
-     */
-    virtual std::pair<int32_t, int32_t> Attach(
-        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2)
-    {
-        return std::pair<int32_t, int32_t>(0, E_OK);
-    }
-
-    /**
-     * @brief Detaches a database from this database.
-     *
-     * @param attachName Indicates the alias of the database.
-     * @param waitTime Indicates the maximum time allowed for attaching the database file.
-     */
-    virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2)
-    {
-        return std::pair<int32_t, int32_t>(0, E_OK);
-    }
 };
 } // namespace OHOS::NativeRdb
 #endif
