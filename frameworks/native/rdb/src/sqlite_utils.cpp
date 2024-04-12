@@ -81,6 +81,12 @@ void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::s
     }
 }
 
+bool SqliteUtils::IsSupportSqlForExecute(int sqlType)
+{
+    return (sqlType == STATEMENT_DDL || sqlType == STATEMENT_INSERT || sqlType == STATEMENT_UPDATE ||
+            sqlType == STATEMENT_PRAGMA);
+}
+
 bool SqliteUtils::IsSqlReadOnly(int sqlType)
 {
     return (sqlType == STATEMENT_SELECT);

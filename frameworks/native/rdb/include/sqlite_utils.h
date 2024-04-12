@@ -40,6 +40,7 @@ public:
     static constexpr const char* REP = "#_";
 
     static int GetSqlStatementType(const std::string &sql);
+    static bool IsSupportSqlForExecute(int sqlType);
     static bool IsSqlReadOnly(int sqlType);
     static bool IsSpecial(int sqlType);
     static const char *GetConflictClause(int conflictResolution);
