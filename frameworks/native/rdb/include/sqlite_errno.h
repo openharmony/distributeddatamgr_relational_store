@@ -24,12 +24,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
-struct ErrMap {
-    int32_t sqliteErr;
-    int32_t errCode;
-};
-
-const static ErrMap ERROR_CODE_TABLE[] = {
+const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_FULL, E_DATABASE_FULL },
     { SQLITE_BUSY, E_DATABASE_BUSY },
     { SQLITE_LOCKED, E_DATABASE_BUSY },
@@ -40,16 +35,13 @@ const static ErrMap ERROR_CODE_TABLE[] = {
 };
 class SQLiteError {
 public:
-    static constexpr size_t TABLE_SIZE = sizeof(ERROR_CODE_TABLE) / sizeof(ERROR_CODE_TABLE[0]);
     static int ErrNo(int sqliteErr)
     {
-        ErrMap tag = { sqliteErr, E_SQLITE_ERROR };
-        auto it = std::lower_bound(ERROR_CODE_TABLE, ERROR_CODE_TABLE + TABLE_SIZE, tag,
-            [](const ErrMap &first, const ErrMap &second) { return first.sqliteErr < second.sqliteErr; });
-        if (it < ERROR_CODE_TABLE + TABLE_SIZE) {
-            return it->errCode;
+        auto iter = ERROR_CODE_MAPPINT_TABLE.find(sqliteErr);
+        if (iter != ERROR_CODE_MAPPINT_TABLE.end()) {
+            return iter->second;
         }
-        return E_SQLITE_ERROR;
+        return -sqliteErr;
     }
 };
 } // namespace NativeRdb
