@@ -22,12 +22,10 @@
 #include <mutex>
 #include <thread>
 
-#include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
-
 
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
@@ -67,6 +65,8 @@ public:
     int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
         const std::vector<ValueObject> &bindArgs) override;
     int Backup(const std::string databasePath, const std::vector<uint8_t> destEncryptKey) override;
+    int Attach(const std::string &alias, const std::string &pathName,
+        const std::vector<uint8_t> destEncryptKey) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -91,9 +91,6 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
     int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
-    std::pair<int32_t, int32_t> Attach(
-        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
-    std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
 
 private:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
@@ -114,8 +111,6 @@ private:
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
     inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
-    int AttachInner(const std::string &attachName,
-        const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -125,7 +120,6 @@ private:
 
     const RdbStoreConfig config_;
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
-    ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
     bool isOpen_ = false;
     bool isReadOnly_;
     bool isMemoryRdb_;

@@ -33,13 +33,14 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
         return napi_invalid_arg;
     }
 
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "version", output.version), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "name", output.name), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "uri", output.uri), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "createTime", output.createTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "modifyTime", output.modifyTime), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "size", output.size), napi_invalid_arg);
-    NAPI_CALL_BASE(env, GetNamedProperty(env, jsValue, "hash", output.hash), napi_invalid_arg);
+    NAPI_CALL_BASE(env, Convert2ValueExt(env, GetNamedProperty(env, jsValue, "version"), output.version),
+        napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    NAPI_CALL_BASE(env, GET_PROPERTY(env, jsValue, output, hash), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -48,13 +49,13 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
     napi_value object = nullptr;
     NAPI_CALL_BASE(env, napi_create_object(env, &object), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "version", value.version), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "name", value.name), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "uri", value.uri), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "createTime", value.createTime), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "modifyTime", value.modifyTime), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "size", value.size), object);
-    NAPI_CALL_BASE(env, SetNamedProperty(env, object, "hash", value.hash), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, version), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, name), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, uri), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, createTime), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, modifyTime), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, size), object);
+    NAPI_CALL_BASE(env, ADD_JS_PROPERTY(env, object, value, hash), object);
     return object;
 }
 

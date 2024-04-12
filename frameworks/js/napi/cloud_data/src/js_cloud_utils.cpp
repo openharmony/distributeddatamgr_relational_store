@@ -41,11 +41,11 @@ int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output)
     if (status != napi_ok || type != napi_object) {
         return napi_invalid_arg;
     }
-    int32_t result = GetNamedProperty(env, input, "eventId", output.eventId);
+    int32_t result = GET_PROPERTY(env, input, output, eventId);
     if (result != napi_ok) {
         return napi_invalid_arg;
     }
-    return GetNamedProperty(env, input, "extraData", output.extraData);
+    return GET_PROPERTY(env, input, output, extraData);
 }
 
 template<>
@@ -57,18 +57,18 @@ int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "identity", output.identity), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "role", output.role, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, input, output, identity), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "role", output.role), napi_invalid_arg);
     if (output.role < CloudData::Role::ROLE_NIL || output.role >= CloudData::Role::ROLE_BUTT) {
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "state", output.state, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "state", output.state), napi_invalid_arg);
     if (output.state < CloudData::Confirmation::CFM_NIL ||
         output.state >= CloudData::Confirmation::CFM_BUTT) {
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "privilege", output.privilege, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "attachInfo", output.attachInfo, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "privilege", output.privilege), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "attachInfo", output.attachInfo), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -81,11 +81,11 @@ int32_t Convert2Value(napi_env env, napi_value input, Privilege &output)
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "writable", output.writable, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "readable", output.readable, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "creatable", output.creatable, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "deletable", output.deletable, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "shareable", output.shareable, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "writable", output.writable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "readable", output.readable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "creatable", output.creatable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "deletable", output.deletable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetOptionalValue(env, input, "shareable", output.shareable), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -101,14 +101,17 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
         return napi_invalid_arg;
     }
 
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "name", output.name), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "uri", output.uri), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "createTime", output.createTime), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "modifyTime", output.modifyTime), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "modifyTime", output.size), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "path", output.path), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "status", output.status, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, name), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, uri), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, createTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, modifyTime), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, size), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GET_PROPERTY(env, jsValue, output, path), napi_invalid_arg);
     output.hash = output.modifyTime + "_" + output.size;
+    auto jsStatus = GetNamedProperty(env, jsValue, "status");
+    if (jsStatus != nullptr) {
+        Convert2ValueExt(env, jsStatus, output.status);
+    }
     if (output.status != Asset::STATUS_DELETE) {
         output.status = Asset::STATUS_UNKNOWN;
     }
