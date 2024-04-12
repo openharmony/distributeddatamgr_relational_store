@@ -55,7 +55,6 @@ private:
     static napi_value Count(napi_env env, napi_callback_info info);
     static napi_value Replace(napi_env env, napi_callback_info info);
     static napi_value Attach(napi_env env, napi_callback_info info);
-    static napi_value Detach(napi_env env, napi_callback_info info);
     static napi_value GetPath(napi_env env, napi_callback_info info);
     static napi_value IsMemoryRdb(napi_env env, napi_callback_info info);
     static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
@@ -81,8 +80,6 @@ private:
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
 
     static constexpr int EVENT_HANDLE_NUM = 2;
-    static constexpr int WAIT_TIME_DEFAULT = 2;
-    static constexpr int WAIT_TIME_LIMIT = 300;
 
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);

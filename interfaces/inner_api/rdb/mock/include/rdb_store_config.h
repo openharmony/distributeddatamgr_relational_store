@@ -85,7 +85,6 @@ public:
         SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
         bool autoCheck = false, int journalSize = 1048576, int pageSize = 4096,
         const std::string &encryptAlgo = "sha256");
-    RdbStoreConfig();
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;

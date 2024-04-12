@@ -20,9 +20,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "js_native_api_types.h"
 #include "js_utils.h"
-#include "napi_rdb_js_utils.h"
 #include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
@@ -40,7 +38,6 @@ using namespace OHOS::DataShare;
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
-using namespace OHOS::AppDataMgrJsKit::JSUtils;
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
@@ -59,7 +56,7 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-struct RdbStoreContext : public ContextBase {
+struct RdbStoreContext : public Context {
     std::string device;
     std::string tableName;
     std::vector<std::string> tablesNames;
@@ -116,6 +113,7 @@ RdbStoreProxy::~RdbStoreProxy()
     if (rdbStore_ == nullptr) {
         return;
     }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -143,6 +141,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore_->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 bool RdbStoreProxy::IsSystemAppCalled()
@@ -179,8 +178,6 @@ void RdbStoreProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("commit", Commit),
         DECLARE_NAPI_FUNCTION("restore", Restore),
         DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
-        DECLARE_NAPI_FUNCTION("attach", Attach),
-        DECLARE_NAPI_FUNCTION("detach", Detach),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
         DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
@@ -265,7 +262,7 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
     return proxy;
 }
 
-int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<ContextBase> context)
+int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbStoreContext> context)
 {
     RdbStoreProxy *obj = GetNativeInstance(env, self);
     CHECK_RETURN_SET(obj && obj->rdbStore_, std::make_shared<ParamError>("RdbStore", "nullptr."));
@@ -887,101 +884,23 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-struct AttachContext : public ContextBase {
-    ContextParam param;
-    RdbConfig config;
-    std::string attachName;
-    int32_t waitTime;
-    int32_t attachedNum;
-};
-
 napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<AttachContext>();
+    auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 3, std::make_shared<ParamNumError>("3 or 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        int32_t errCode;
-        // The parameter must be between 2 and 4
-        CHECK_RETURN_SET_E(argc >= 2 && argc <= 4, std::make_shared<ParamNumError>("2 or 3 or 4"));
-        // argv[0] may be a string or context.
-        bool isString = IsNapiString(env, argv[0]);
-        if (isString) {
-            errCode = Convert2Value(env, argv[0], context->config.path);
-            CHECK_RETURN_SET_E(napi_ok == errCode && !context->config.path.empty(),
-                std::make_shared<ParamError>("fullPath cannot be empty."));
-        } else {
-            errCode = Convert2Value(env, argv[0], context->param);
-            CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal context."));
-
-            int errCode = Convert2Value(env, argv[1], context->config);
-            CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
-
-            auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
-            CHECK_RETURN_SET_E(OK == code, err);
-        }
-        // when the first parameter is string, the pos of attachName is 1; otherwise, it is 2
-        size_t pos = isString ? 1 : 2;
-        errCode = Convert2Value(env, argv[pos++], context->attachName);
-        CHECK_RETURN_SET_E(napi_ok == errCode && !context->attachName.empty(),
-            std::make_shared<ParamError>("attachName cannot be empty."));
-        context->waitTime = WAIT_TIME_DEFAULT;
-        if (pos < argc) {
-            errCode = Convert2ValueExt(env, argv[pos], context->waitTime);
-            CHECK_RETURN_SET_E(napi_ok == errCode && context->waitTime >= 1 && context->waitTime <= WAIT_TIME_LIMIT,
-                std::make_shared<ParamError>("waitTime cannot exceed 300s."));
-        }
+        CHECK_RETURN(OK == ParseAlias(env, argv[0], context));
+        CHECK_RETURN(OK == ParsePath(env, argv[1], context));
     };
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        auto res = obj->rdbStore_->Attach(
-            GetRdbStoreConfig(context->config, context->param), context->attachName, context->waitTime);
-        context->attachedNum = res.second;
-        return res.first;
+        return obj->rdbStore_->Attach(context->aliasName, context->pathName, context->newKey);
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = Convert2JSValue(env, context->attachedNum);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
-}
-
-napi_value RdbStoreProxy::Detach(napi_env env, napi_callback_info info)
-{
-    struct DetachContext : public ContextBase {
-        std::string attachName;
-        int32_t waitTime;
-        int32_t attachedNum;
-    };
-    auto context = std::make_shared<DetachContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        // this interface has 1 or 2 parameters
-        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-        int32_t errCode = Convert2Value(env, argv[0], context->attachName);
-        CHECK_RETURN_SET_E(napi_ok == errCode && !context->attachName.empty(),
-            std::make_shared<ParamError>("attachName cannot be empty."));
-        context->waitTime = WAIT_TIME_DEFAULT;
-        // parse waitTime when the number of parameters is 2
-        if (argc == 2) {
-            errCode = Convert2ValueExt(env, argv[1], context->waitTime);
-            CHECK_RETURN_SET_E(napi_ok == errCode && context->waitTime < WAIT_TIME_LIMIT,
-                std::make_shared<ParamError>("waitTime cannot exceed 300s."));
-        }
-    };
-    auto exec = [context]() -> int {
-        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        auto res = obj->rdbStore_->Detach(context->attachName, context->waitTime);
-        context->attachedNum = res.second;
-        return res.first;
-    };
-    auto output = [context](napi_env env, napi_value &result) {
-        result = Convert2JSValue(env, context->attachedNum);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 

@@ -33,15 +33,12 @@ public:
     void TearDown();
     void QueryCheck1(std::shared_ptr<RdbStore> &store) const;
     void QueryCheck2(std::shared_ptr<RdbStore> &store) const;
-    void DeleteCheck(std::shared_ptr<RdbStore> &store) const;
-    void UpdateCheck(std::shared_ptr<RdbStore> &store) const;
-    void InsertCheck(std::shared_ptr<RdbStore> &store) const;
 
-    static constexpr const char *MAIN_DATABASE_NAME = "/data/test/main.db";
-    static constexpr const char *ATTACHED_DATABASE_NAME = "/data/test/attached.db";
-    static constexpr const char *ENCRYPT_ATTACHED_DATABASE_NAME = "/data/test/encrypt_attached.db";
-    static constexpr int BUSY_TIMEOUT = 2;
+    static const std::string MAIN_DATABASE_NAME;
+    static const std::string ATTACHED_DATABASE_NAME;
 };
+
+const std::string RdbAttachTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "main.db";
 
 class MainOpenCallback : public RdbOpenCallback {
 public:
@@ -62,6 +59,8 @@ int MainOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }
+
+const std::string RdbAttachTest::ATTACHED_DATABASE_NAME = RDB_TEST_PATH + "attached.db";
 
 class AttachedOpenCallback : public RdbOpenCallback {
 public:
@@ -120,7 +119,7 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_001, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 
-    int ret = store->ExecuteSql("ATTACH '" + std::string(ATTACHED_DATABASE_NAME) + "' as attached");
+    int ret = store->ExecuteSql("ATTACH '" + ATTACHED_DATABASE_NAME + "' as attached");
     EXPECT_EQ(ret, E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE);
 }
 
@@ -138,10 +137,23 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_002, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 
-    int ret = store->ExecuteSql("ATTACH DATABASE '" + std::string(ATTACHED_DATABASE_NAME) + "' as 'attached'");
+    int ret = store->ExecuteSql("ATTACH DATABASE '" + ATTACHED_DATABASE_NAME + "' as 'attached'");
     EXPECT_EQ(ret, E_OK);
 
-    InsertCheck(store);
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(id, 1);
+
+    values.Clear();
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("lisi"));
+    ret = store->Insert(id, "test2", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(id, 1);
 
     QueryCheck1(store);
 
@@ -150,21 +162,23 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_002, TestSize.Level1)
 
     QueryCheck2(store);
 
-    ret = store->ExecuteSql("attach database '" + std::string(ATTACHED_DATABASE_NAME) + "' as 'attached'");
+    ret = store->ExecuteSql("attach database '" + ATTACHED_DATABASE_NAME + "' as 'attached'");
     EXPECT_EQ(ret, E_OK);
 
     ret = store->ExecuteSql("detach database 'attached'");
     EXPECT_EQ(ret, E_OK);
 }
 
-/**
+
+/* *
  * @tc.name: RdbStore_Attach_003
  * @tc.desc: Abnormal testCase for Attach
  * @tc.type: FUNC
  */
 HWTEST_F(RdbAttachTest, RdbStore_Attach_003, TestSize.Level2)
 {
-    const std::string attachedName = "attached";
+    const std::string alias = "attached";
+    std::vector<uint8_t> destEncryptKey;
     RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
     MainOpenCallback helper;
     int errCode = E_OK;
@@ -173,113 +187,33 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_003, TestSize.Level2)
     std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(nullptr, store1);
     EXPECT_EQ(E_OK, errCode);
-    RdbStoreConfig attachedConfig(RdbAttachTest::ATTACHED_DATABASE_NAME);
-    auto ret = store1->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(1, ret.second);
-    QueryCheck1(store1);
-    // use the same attachedName to attach again
-    ret = store1->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(E_ATTACHED_DATABASE_EXIST, ret.first);
 
-    ret = store1->Detach(attachedName);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(0, ret.second);
-    QueryCheck2(store1);
-}
+    int ret = store1->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_EQ(E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE, ret);
+    RdbHelper::DeleteRdbStore(RdbAttachTest::MAIN_DATABASE_NAME);
 
-/**
- * @tc.name: RdbStore_Attach_004
- * @tc.desc: Abnormal testCase for Attach with wrong path
- * @tc.type: FUNC
- */
-HWTEST_F(RdbAttachTest, RdbStore_Attach_004, TestSize.Level2)
-{
-    const std::string attachedName = "attached";
-    RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
-    MainOpenCallback helper;
-    int errCode = E_OK;
-
-    // journal mode is wal
-    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(nullptr, store1);
+    // journal mode is TRUNCATE
+    // destEncryptKey is empty and isEncrypt_ is false
+    config.SetJournalMode(JournalMode::MODE_TRUNCATE);
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store2);
     EXPECT_EQ(E_OK, errCode);
-    RdbStoreConfig attachedConfig("/wrong/path");
-    auto ret = store1->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(E_INVALID_FILE_PATH, ret.first);
-}
+    ret = store2->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_EQ(E_OK, ret);
 
-/**
- * @tc.name: RdbStore_Attach_005
- * @tc.desc: Abnormal testCase for Attach encrypted database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbAttachTest, RdbStore_Attach_005, TestSize.Level2)
-{
-    int errCode = E_OK;
-    AttachedOpenCallback attachedHelper;
-    RdbStoreConfig encryptAttachedConfig(RdbAttachTest::ENCRYPT_ATTACHED_DATABASE_NAME);
-    encryptAttachedConfig.SetEncryptStatus(true);
-    std::shared_ptr<RdbStore> encryptAttachedStore =
-        RdbHelper::GetRdbStore(encryptAttachedConfig, 1, attachedHelper, errCode);
-    EXPECT_NE(encryptAttachedStore, nullptr);
+    // destEncryptKey is not empty and isEncrypt_ is false
+    destEncryptKey = {1};
+    ret = store2->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_NE(E_OK, ret);
+    RdbHelper::DeleteRdbStore(RdbAttachTest::MAIN_DATABASE_NAME);
 
-    encryptAttachedStore = nullptr;
-    const std::string attachedName = "attached";
-    RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
-    MainOpenCallback helper;
-
-    // journal mode is wal
-    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(nullptr, store1);
+    // destEncryptKey is not empty and isEncrypt_ is true
+    config.SetEncryptStatus(true);
+    std::shared_ptr<RdbStore> store3 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store3);
     EXPECT_EQ(E_OK, errCode);
-    auto ret = store1->Attach(encryptAttachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(1, ret.second);
-
-    int64_t id;
-    ValuesBucket values;
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("lisi"));
-    int res = store1->Insert(id, "test2", values);
-    EXPECT_EQ(res, E_OK);
-    EXPECT_EQ(id, 1);
-    QueryCheck1(store1);
-
-    ret = store1->Detach(attachedName);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(0, ret.second);
-    QueryCheck2(store1);
-    RdbHelper::DeleteRdbStore(RdbAttachTest::ENCRYPT_ATTACHED_DATABASE_NAME);
-}
-
-/**
- * @tc.name: RdbStore_Attach_006
- * @tc.desc: Abnormal testCase for Attach
- * @tc.type: FUNC
- */
-HWTEST_F(RdbAttachTest, RdbStore_Attach_006, TestSize.Level2)
-{
-    const std::string attachedName = "attached";
-    RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
-    MainOpenCallback helper;
-    int errCode = E_OK;
-
-    // journal mode is wal
-    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(nullptr, store1);
-    EXPECT_EQ(E_OK, errCode);
-    RdbStoreConfig attachedConfig(RdbAttachTest::ATTACHED_DATABASE_NAME);
-    auto ret = store1->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(1, ret.second);
-
-    UpdateCheck(store1);
-    DeleteCheck(store1);
-
-    ret = store1->Detach(attachedName);
-    EXPECT_EQ(E_OK, ret.first);
-    EXPECT_EQ(0, ret.second);
+    ret = store3->Attach(alias, RdbAttachTest::ATTACHED_DATABASE_NAME, destEncryptKey);
+    EXPECT_NE(E_OK, ret);
 }
 
 void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
@@ -341,88 +275,4 @@ void RdbAttachTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
     // detached, no table test2
     resultSet = store->QuerySql("SELECT * FROM test2");
     EXPECT_NE(resultSet, nullptr);
-}
-
-void RdbAttachTest::DeleteCheck(std::shared_ptr<RdbStore> &store) const
-{
-    int changedRows = 0;
-    AbsRdbPredicates predicates("test1");
-    predicates.EqualTo("id", 1);
-    int ret = store->Delete(changedRows, predicates);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(changedRows, 1);
-
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
-    EXPECT_NE(resultSet, nullptr);
-    int count = 0;
-    resultSet->GetRowCount(count);
-    EXPECT_EQ(0, count);
-
-    int changedRows2 = 0;
-    AbsRdbPredicates predicates2("test2");
-    predicates2.EqualTo("id", 1);
-    ret = store->Delete(changedRows2, predicates2);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(changedRows2, 1);
-
-    std::shared_ptr<ResultSet> resultSet2 =
-        store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
-    EXPECT_NE(resultSet2, nullptr);
-    int count2 = 0;
-    resultSet2->GetRowCount(count2);
-    EXPECT_EQ(0, count2);
-}
-
-void RdbAttachTest::UpdateCheck(std::shared_ptr<RdbStore> &store) const
-{
-    int changedRows = 0;
-    ValuesBucket values;
-    values.PutString("name", std::string("lisi_update1"));
-    AbsRdbPredicates predicates("test1");
-    predicates.EqualTo("id", 1);
-    int ret = store->Update(changedRows, values, predicates);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(changedRows, 1);
-
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
-    EXPECT_NE(resultSet, nullptr);
-    int count = 0;
-    resultSet->GetRowCount(count);
-    EXPECT_EQ(1, count);
-
-    values.Clear();
-    values.PutString("name", std::string("lisi_update2"));
-    AbsRdbPredicates predicates2("test2");
-    predicates2.EqualTo("id", 1);
-    int changedRows2 = 0;
-    ret = store->Update(changedRows2, values, predicates2);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(changedRows2, 1);
-
-    std::shared_ptr<ResultSet> resultSet2 =
-        store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
-    EXPECT_NE(resultSet2, nullptr);
-    int count2 = 0;
-    resultSet2->GetRowCount(count2);
-    EXPECT_EQ(1, count2);
-}
-
-void RdbAttachTest::InsertCheck(std::shared_ptr<RdbStore> &store) const
-{
-    int64_t id;
-    ValuesBucket values;
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    int ret = store->Insert(id, "test1", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(id, 1);
-
-    values.Clear();
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("lisi"));
-    ret = store->Insert(id, "test2", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(id, 1);
 }
