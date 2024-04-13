@@ -30,6 +30,7 @@
 namespace OHOS {
 namespace AppDataFwk {
 using namespace OHOS::Rdb;
+std::atomic<int64_t> identifier {0};
 
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
@@ -75,7 +76,11 @@ int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<As
 
 int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outSharedBlock)
 {
-    std::string ashmemName = "SharedBlock:" + name;
+    std::string ashmemPath;
+    size_t lastSlashPos = name.find_last_of('/');
+    ashmemPath = name.substr(lastSlashPos);
+
+    std::string ashmemName = "SharedBlock:" + ashmemPath + std::to_string(identifier.fetch_add(1));
 
     sptr<Ashmem> ashmem = Ashmem::CreateAshmem(ashmemName.c_str(), size);
     if (ashmem == nullptr) {
