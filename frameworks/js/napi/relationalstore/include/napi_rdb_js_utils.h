@@ -90,8 +90,6 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statis
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail);
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails);
-template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail);
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details);
