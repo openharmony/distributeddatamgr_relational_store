@@ -85,7 +85,7 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
         }
         auto errCode = action(stmt_, index, arg.value);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("Bind has error: %{public}d", errCode);
+            LOG_ERROR("Bind has error: %{public}d, sql: %{public}s", errCode, sql_.c_str());
             return SQLiteError::ErrNo(errCode);
         }
         index++;
@@ -139,7 +139,8 @@ int SqliteStatement::Bind(const std::vector<ValueObject>& args)
     }
 
     if (count > numParameters_) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql: %{public}s", count, numParameters_,
+            sql_.c_str());
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -194,7 +195,8 @@ int SqliteStatement::Execute(const std::vector<ValueObject>& args)
 {
     int count = static_cast<int>(args.size());
     if (count != numParameters_) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", count, numParameters_,
+            sql_.c_str());
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -215,7 +217,7 @@ int SqliteStatement::Execute(const std::vector<ValueObject>& args)
     }
     errCode = sqlite3_step(stmt_);
     if (errCode != SQLITE_DONE && errCode != SQLITE_ROW) {
-        LOG_ERROR("sqlite3_step failed %{public}d", errCode);
+        LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s", errCode, sql_.c_str());
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
