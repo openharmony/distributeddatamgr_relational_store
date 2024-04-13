@@ -316,6 +316,7 @@ int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier
                 tables.insert(key);
             }
         }
+        notifier(tables);
     });
     if (status != E_OK) {
         LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
