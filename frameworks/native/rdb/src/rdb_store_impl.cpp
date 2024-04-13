@@ -57,6 +57,7 @@
 #include "relational_store_manager.h"
 #include "result_set_proxy.h"
 #include "runtime_config.h"
+#include "security_policy.h"
 #include "sqlite_connection.h"
 #include "sqlite_shared_result_set.h"
 #endif
@@ -70,6 +71,9 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+using RdbMgr = DistributedRdb::RdbManagerImpl;
+#endif
 int RdbStoreImpl::InnerOpen()
 {
     LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path_).c_str());
@@ -1691,7 +1695,21 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_INVALID_FILE_PATH;
     }
 
-    return connectionPool_->ChangeDbFileForRestore(path_, backupFilePath, newKey);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+#endif
+    int errCode = connectionPool_->ChangeDbFileForRestore(path_, backupFilePath, newKey);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    SecurityPolicy::SetSecurityLabel(config_);
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+        return errCode;
+    }
+#endif
+    return errCode;
 }
 
 /**
