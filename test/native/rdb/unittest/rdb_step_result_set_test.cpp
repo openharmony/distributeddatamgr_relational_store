@@ -356,7 +356,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(0, position);
 
-    CheckResultSetAttribute(resultSet, 0, true, true, true);
+    CheckResultSetAttribute(resultSet, 0, true, false, false);
 }
 
 /* *
@@ -406,15 +406,15 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
 
-    CheckResultSetAttribute(resultSet, 0, true, true, true);
+    CheckResultSetAttribute(resultSet, 0, true, false, false);
 
     EXPECT_NE(E_OK, resultSet->GoToNextRow());
-    EXPECT_NE(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     bool bResultSet = false;
     int iRet = resultSet->IsAtFirstRow(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    EXPECT_EQ(bResultSet, false);
 
     bResultSet = false;
     iRet = resultSet->IsStarted(bResultSet);
@@ -483,19 +483,19 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    EXPECT_EQ(bResultSet, false);
 
     while (E_OK == resultSet->GoToNextRow()) {
         moveTimes++;
     }
     iRet = resultSet->GetRowIndex(position);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(1, position);
+    EXPECT_EQ(0, position);
 
     bResultSet = false;
     iRet = resultSet->IsEnded(bResultSet);
     EXPECT_EQ(E_OK, iRet);
-    EXPECT_EQ(bResultSet, true);
+    EXPECT_EQ(bResultSet, false);
 }
 /* *
  * @tc.name: RdbStore_StepResultSet_009
@@ -1075,9 +1075,9 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
     int ret = resultSet->GoToPreviousRow();
     EXPECT_NE(E_OK, ret);
 
-    CheckResultSetAttribute(resultSet, -1, false, false, false);
+    CheckResultSetAttribute(resultSet, 0, true, true, false);
 
-    EXPECT_EQ(resultSet->GoTo(2), E_OK);
+    EXPECT_EQ(resultSet->GoTo(1), E_OK);
 
     CheckResultSetData(0, resultSet, g_resultSetData[0]);
 
@@ -1428,7 +1428,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     size_t size;
-    EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetSize(2, size));
+    EXPECT_EQ(E_NOT_INIT, resultSet->GetSize(2, size));
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());

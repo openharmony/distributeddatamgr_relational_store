@@ -106,15 +106,13 @@ ContextBase::~ContextBase()
 void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError)
 {
     LOG_DEBUG("SetBusinessError enter");
-    napi_value code = nullptr;
-    napi_value msg = nullptr;
-    napi_create_object(env, businessError);
     // if error is not inner error
     if (error != nullptr) {
+        napi_value code = nullptr;
+        napi_value msg = nullptr;
         napi_create_int32(env, error->GetCode(), &code);
         napi_create_string_utf8(env, error->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);
-        napi_set_named_property(env, *businessError, "code", code);
-        napi_set_named_property(env, *businessError, "message", msg);
+        napi_create_error(env, code, msg, businessError);
     }
 }
 
@@ -163,6 +161,11 @@ napi_value AsyncCall::Sync(napi_env env, std::shared_ptr<ContextBase> context)
 {
     OnExecute(env, reinterpret_cast<void *>(context.get()));
     OnComplete(env, reinterpret_cast<void *>(context.get()));
+    if (context->execCode_ != NativeRdb::E_OK) {
+        napi_value error;
+        SetBusinessError(env, context->error, &error);
+        napi_throw(env, error);
+    }
     return context->result_;
 }
 
