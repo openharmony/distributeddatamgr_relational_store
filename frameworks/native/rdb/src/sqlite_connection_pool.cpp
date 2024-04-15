@@ -342,6 +342,9 @@ bool ConnPool::ConnNode::IsWriter() const
 int32_t ConnPool::Container::Initialize(int32_t max, int32_t timeout, Creator creator)
 {
     auto [errCode, node] = Initialize(max, timeout, false, std::move(creator));
+    if (errCode == E_OK) {
+        cond_.notify_all();
+    }
     return errCode;
 }
 
