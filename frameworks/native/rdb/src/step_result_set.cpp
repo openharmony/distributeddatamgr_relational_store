@@ -31,7 +31,8 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 StepResultSet::StepResultSet(
     std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql_, const std::vector<ValueObject> &selectionArgs)
-    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false)
+    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false),
+      isStarted_(false)
 {
     auto connection = pool->AcquireConnection(true);
     if (connection == nullptr) {
@@ -128,14 +129,17 @@ int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
+    if (rowPos_ == INIT_POS || isAfterLast_) {
+        LOG_ERROR("query not executed.");
+        return E_NOT_INIT;
+    }
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
-    }
-    if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
     }
 
     auto [errCode, sqliteType] = statement->GetColumnType(columnIndex);
@@ -193,8 +197,12 @@ int StepResultSet::GetRowCount(int &count)
     }
     count = rowCount_;
     // Reset the start position of the query result
-    GoToRow(oldPosition);
-
+    if (oldPosition != INIT_POS) {
+        GoToRow(oldPosition);
+    } else {
+        Reset();
+        isStarted_ = false;
+    }
     return E_OK;
 }
 
@@ -208,7 +216,6 @@ int StepResultSet::GoToRow(int position)
     }
     if (position < 0) {
         LOG_ERROR("position %{public}d.", position);
-        Reset();
         return E_ERROR;
     }
     if (position == rowPos_) {
@@ -268,10 +275,14 @@ int StepResultSet::GoToNextRow()
 
     if (errCode == SQLITE_ROW) {
         rowPos_++;
+        isStarted_ = true;
         return E_OK;
     } else if (errCode == SQLITE_DONE) {
-        isAfterLast_ = true;
-        rowCount_ = rowPos_ + 1;
+        if (!isAfterLast_ && rowCount_ != EMPTY_ROW_COUNT) {
+            rowCount_ = rowPos_ + 1;
+        }
+        isAfterLast_ = rowCount_ != EMPTY_ROW_COUNT;
+        isStarted_ = true;
         FinishStep();
         rowPos_ = rowCount_;
         return E_NO_MORE_ROWS;
@@ -331,7 +342,7 @@ int StepResultSet::IsEnded(bool &result)
  */
 int StepResultSet::IsStarted(bool &result) const
 {
-    result = (rowPos_ != INIT_POS);
+    result = isStarted_;
     return E_OK;
 }
 
@@ -340,7 +351,7 @@ int StepResultSet::IsStarted(bool &result) const
  */
 int StepResultSet::IsAtFirstRow(bool &result) const
 {
-    result = (rowPos_ == 0);
+    result = (rowPos_ == 0) && (rowCount_ != 0);
     return E_OK;
 }
 
@@ -498,23 +509,28 @@ int StepResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 
 int StepResultSet::Get(int32_t col, ValueObject &value)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
     return GetValue(col, value);
 }
 
 int StepResultSet::GetSize(int columnIndex, size_t &size)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
+    if (rowPos_ == INIT_POS || isAfterLast_) {
+        size = 0;
+        return E_NOT_INIT;
+    }
+
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("Statement is nullptr");
         return E_ALREADY_CLOSED;
     }
-
-    if (rowPos_ == INIT_POS) {
-        size = 0;
-        return E_NOT_INIT;
-    }
-
-    int32_t errCode = 0;
+    auto errCode = E_ERROR;
     std::tie(errCode, size) = statement->GetSize(columnIndex);
     return errCode;
 }
@@ -553,15 +569,13 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
+    if (rowPos_ == INIT_POS || isAfterLast_) {
+        return { E_NOT_INIT, ValueObject() };
+    }
     auto statement = GetStatement();
     if (statement == nullptr) {
         return { E_ALREADY_CLOSED, ValueObject() };
     }
-
-    if (rowPos_ == INIT_POS) {
-        return { E_NOT_INIT, ValueObject() };
-    }
-
     auto [ret, value] = statement->GetColumn(col);
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };

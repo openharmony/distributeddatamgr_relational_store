@@ -68,6 +68,7 @@ private:
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
     // Interval of retrying step query in millisecond
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
+    static const int EMPTY_ROW_COUNT = 0;
 
     std::shared_ptr<Statement> sqliteStatement_;
     std::vector<std::string> columnNames_;
@@ -77,6 +78,7 @@ private:
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
+    bool isStarted_;
     mutable std::shared_mutex mutex_;
     std::shared_ptr<Connection> conn_;
 };
