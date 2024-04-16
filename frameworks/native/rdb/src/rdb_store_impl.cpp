@@ -1171,7 +1171,8 @@ int RdbStoreImpl::AttachInner(
         return E_DATABASE_BUSY;
     }
 
-    if (conn->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
+    if (config_.GetStorageMode() != StorageMode::MODE_MEMORY &&
+        conn->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
         // close first to prevent the connection from being put back.
         connectionPool_->CloseAllConnections();
         conn = nullptr;
