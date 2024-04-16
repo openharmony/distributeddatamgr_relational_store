@@ -540,7 +540,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     resultSet = store->QuerySql("SELECT * FROM test");
     resultSet->GetRowCount(rowCount);
     EXPECT_EQ(100, rowCount);
-    number = 0l;
+    number = 0L;
     while (true) {
         error = resultSet->GoToNextRow();
         if (error != E_OK) {
