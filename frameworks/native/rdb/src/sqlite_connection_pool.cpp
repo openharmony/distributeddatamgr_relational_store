@@ -326,7 +326,6 @@ void ConnPool::ConnNode::Unused()
     tid_ = 0;
     time_ = std::chrono::steady_clock::now();
     if (connect_ != nullptr) {
-        connect_->DesFinalize();
         connect_->TryCheckPoint();
     }
 }
