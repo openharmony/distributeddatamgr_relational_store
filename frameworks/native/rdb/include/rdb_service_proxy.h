@@ -73,6 +73,9 @@ public:
 
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const RdbSyncerParam &param,
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
+    int32_t Disable(const RdbSyncerParam& param) override;
+    int32_t Enable(const RdbSyncerParam& param) override;
+
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
