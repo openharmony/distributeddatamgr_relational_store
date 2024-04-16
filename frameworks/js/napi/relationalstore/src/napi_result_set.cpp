@@ -248,6 +248,7 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
     int errCode = resultSetProxy->GetInstance()->IsEnded(result);
     if (errCode != E_OK) {
         LOG_ERROR("IsEnded failed code:%{public}d", errCode);
+        result = true;
     }
 
     return JSUtils::Convert2JSValue(env, result);
