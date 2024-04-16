@@ -32,6 +32,7 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     napi_value args[2] = { 0 };
     napi_value thiz = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &thiz, nullptr));
+    // "2" argc is tablename and the object that contains the predicates
     NAPI_ASSERT(env, argc == 2, "DataAbilityJsKit::CreateRdbPredicates Invalid argvs!");
 
     LOG_DEBUG("DataAbilityJsKit::CreateRdbPredicates argc is %{public}zu", argc);
