@@ -54,7 +54,6 @@ public:
     int SubscribeTableChanges(const Notifier& notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
-    int32_t DesFinalize() override;
 
 protected:
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
