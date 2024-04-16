@@ -72,6 +72,10 @@ public:
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
 
+    virtual int32_t Disable(const RdbSyncerParam &param) = 0;
+
+    virtual int32_t Enable(const RdbSyncerParam &param) = 0;
+
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 };
 }
