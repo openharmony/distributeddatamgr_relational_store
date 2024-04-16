@@ -309,6 +309,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     // 3 parameters need to converte to field, low, high
     napi_value args[3] = { 0 };
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    // 3 parameters need to converte to field, low, high
     RDB_NAPI_ASSERT(env, argc == 3, std::make_shared<ParamNumError>("3"));
 
     field = JSUtils::Convert2String(env, args[0]);
