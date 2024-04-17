@@ -167,30 +167,6 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tabl
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails)
-{
-    napi_value jsValue = nullptr;
-    napi_status status = napi_create_array_with_length(env, tableDetails.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    int index = 0;
-    for (const auto &[device, result] : tableDetails) {
-        napi_value jsElement = nullptr;
-        // The length of the converted JavaScript array is 2
-        status = napi_create_array_with_length(env, 2, &jsElement);
-        if (status != napi_ok) {
-            return nullptr;
-        }
-        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
-        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
-        napi_set_element(env, jsValue, index++, jsElement);
-    }
-    return jsValue;
-}
-
-template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail)
 {
     napi_value object = nullptr;
