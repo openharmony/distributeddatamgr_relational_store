@@ -159,6 +159,13 @@ public:
     API_EXPORT AbsRdbPredicates *Contains(const std::string &field, const std::string &value) override;
 
     /**
+     * @brief Adds an Not Contains condition to the remote AbsRdbPredicates.
+     *
+     * This method indicates that the expected field not contains value.
+     */
+    API_EXPORT AbsRdbPredicates *NotContains(const std::string &field, const std::string &value) override;
+
+    /**
      * @brief Adds an BeginsWith condition to the remote AbsRdbPredicates.
      *
      * This method indicates that the expected field begin with value.
@@ -192,6 +199,13 @@ public:
      * This method is similar to Like of the SQL statement.
      */
     API_EXPORT AbsRdbPredicates *Like(const std::string &field, const std::string &value) override;
+
+    /**
+     * @brief Adds an Like condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to Like of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *NotLike(const std::string &field, const std::string &value) override;
 
     /**
      * @brief Adds an Glob condition to the remote AbsRdbPredicates.

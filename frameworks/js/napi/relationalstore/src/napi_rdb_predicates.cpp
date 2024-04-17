@@ -38,11 +38,13 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("or", Or),
         DECLARE_NAPI_FUNCTION("and", And),
         DECLARE_NAPI_FUNCTION("contains", Contains),
+        DECLARE_NAPI_FUNCTION("notContains", NotContains),
         DECLARE_NAPI_FUNCTION("beginsWith", BeginsWith),
         DECLARE_NAPI_FUNCTION("endsWith", EndsWith),
         DECLARE_NAPI_FUNCTION("isNull", IsNull),
         DECLARE_NAPI_FUNCTION("isNotNull", IsNotNull),
         DECLARE_NAPI_FUNCTION("like", Like),
+        DECLARE_NAPI_FUNCTION("notLike", NotLike),
         DECLARE_NAPI_FUNCTION("glob", Glob),
         DECLARE_NAPI_FUNCTION("between", Between),
         DECLARE_NAPI_FUNCTION("notBetween", NotBetween),
@@ -398,6 +400,17 @@ napi_value RdbPredicatesProxy::Contains(napi_env env, napi_callback_info info)
     return thiz;
 }
 
+napi_value RdbPredicatesProxy::NotContains(napi_env env, napi_callback_info info)
+{
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndStringValue(env, info, thiz, field, value, "string");
+    CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
+    predicatesProxy->GetInstance()->NotContains(field, value);
+    return thiz;
+}
+
 napi_value RdbPredicatesProxy::BeginsWith(napi_env env, napi_callback_info info)
 {
     napi_value thiz = nullptr;
@@ -450,6 +463,18 @@ napi_value RdbPredicatesProxy::Like(napi_env env, napi_callback_info info)
     predicatesProxy->GetInstance()->Like(field, value);
     return thiz;
 }
+
+napi_value RdbPredicatesProxy::NotLike(napi_env env, napi_callback_info info)
+{
+    napi_value thiz = nullptr;
+    std::string field = "";
+    std::string value = "";
+    auto predicatesProxy = ParseFieldAndStringValue(env, info, thiz, field, value, "string");
+    CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
+    predicatesProxy->GetInstance()->NotLike(field, value);
+    return thiz;
+}
+
 
 napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {
