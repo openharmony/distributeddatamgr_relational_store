@@ -63,6 +63,8 @@ class JSAbility final {
 public:
     static bool CheckContext(napi_env env, napi_callback_info info);
     static std::shared_ptr<Context> GetContext(napi_env env, napi_value object);
+    static std::shared_ptr<Context> GetStageModeContext(napi_env env, napi_value value);
+    static std::shared_ptr<Context> GetCurrentAbility(napi_env env, napi_value value);
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
