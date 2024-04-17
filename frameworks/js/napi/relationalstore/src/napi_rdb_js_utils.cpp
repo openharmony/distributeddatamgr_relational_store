@@ -341,17 +341,10 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
 int32_t GetCurrentAbilityParam(napi_env env, napi_value jsValue, ContextParam &param)
 {
-    auto ability = AbilityRuntime::GetCurrentAbility(env);
-    if (ability == nullptr) {
-        LOG_ERROR("GetCurrentAbility failed.");
+    std::shared_ptr<Context> context = JSAbility::GetCurrentAbility(env, jsValue);
+    if (context == nullptr) {
         return napi_invalid_arg;
     }
-    auto abilityContext = ability->GetAbilityContext();
-    if (abilityContext == nullptr) {
-        LOG_ERROR("GetAbilityContext failed.");
-        return napi_invalid_arg;
-    }
-    std::shared_ptr<Context> context = std::make_shared<Context>(abilityContext);
     param.baseDir = context->GetDatabaseDir();
     param.moduleName = context->GetModuleName();
     param.area = context->GetArea();
@@ -419,12 +412,12 @@ std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
         if (!param.isStageMode) {
             return std::make_tuple(ERR, std::make_shared<InnerError>(E_NOT_STAGE_MODE));
         }
-        auto stageContext = AbilityRuntime::GetStageModeContext(env, jsValue);
+        auto stageContext = JSAbility::GetStageModeContext(env, jsValue);
         if (stageContext == nullptr) {
             return std::make_tuple(ERR, std::make_shared<ParamError>("Illegal context."));
         }
         std::string groupDir;
-        int errCode = stageContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, false, groupDir);
+        int errCode = stageContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
         CHECK_RETURN_CORE(errCode == E_OK || !groupDir.empty(), RDB_DO_NOTHING,
             std::make_tuple(ERR, std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID)));
         baseDir = groupDir;
