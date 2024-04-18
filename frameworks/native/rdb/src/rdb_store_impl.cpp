@@ -391,9 +391,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, c
         return E_INVALID_ARGS;
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (delayNotifier_ != nullptr) {
-        delayNotifier_->SetAutoSyncInterval(AUTO_SYNC_MAX_INTERVAL);
-    }
+    PauseDelayNotify pauseDelayNotify(delayNotifier_);
 #endif
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
