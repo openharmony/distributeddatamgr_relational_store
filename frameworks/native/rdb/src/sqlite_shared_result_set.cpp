@@ -38,14 +38,7 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPoo
     : AbsSharedResultSet(path), resultSetBlockCapacity_(0), rowNum_(NO_COUNT), qrySql_(sql),
       bindArgs_(std::move(bindArgs)), isOnlyFillResultSetBlock_(false)
 {
-    auto connection = pool->AcquireConnection(true);
-    if (connection == nullptr) {
-        return;
-    }
-    conn_ = pool->AcquireByID(connection->GetId());
-    if (conn_ == nullptr) {
-        conn_ = connection;
-    }
+    conn_ = pool->AcquireRef(true);
 }
 std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
@@ -130,6 +123,7 @@ int SqliteSharedResultSet::GetRowCount(int &count)
 int SqliteSharedResultSet::Close()
 {
     AbsSharedResultSet::Close();
+    conn_ = nullptr;
     auto qrySql = std::move(qrySql_);
     auto bindArgs = std::move(bindArgs_);
     auto columnNames = std::move(columnNames_);
