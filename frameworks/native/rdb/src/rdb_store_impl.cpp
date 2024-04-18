@@ -311,7 +311,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
       isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
       orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
-      connectionPool_(nullptr)
+      connectionPool_(nullptr), rebuild_(RebuiltType::NONE)
 {
 }
 
@@ -411,7 +411,7 @@ int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, c
         }
     }
     connection = nullptr;
-    outInsertNum = values.size();
+    outInsertNum = static_cast<int64_t>(values.size());
     DoCloudSync(table);
     return E_OK;
 }
@@ -439,7 +439,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
                 fields.insert(std::make_pair(key, col));
                 valuePosition++;
             } else {
-                col = it->second;
+                col = static_cast<int32_t>(it->second);
             }
             values[col][row] = value;
         }
@@ -450,7 +450,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
     int32_t col = 0;
     for (auto &[key, pos] : fields) {
         for (size_t row = 0; row < buckets.size(); ++row) {
-            args[col + row * fields.size()] = std::move(values[pos][row]);
+            args[col + static_cast<int32_t>(row * fields.size())] = std::move(values[pos][row]);
         }
         col++;
         sql.append(key).append(",");
@@ -467,7 +467,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(const std::string& sql, 
         return ExecuteSqls();
     }
     size_t rowNumbers = args.size() / fieldSize;
-    size_t maxRowNumbersOneTimes = limit / fieldSize;
+    size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
     size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
     size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
     LOG_DEBUG("rowNumbers %{public}zu, maxRowNumbersOneTimes %{public}zu, executeTimes %{public}zu,"
@@ -488,7 +488,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(const std::string& sql, 
     if (executeTimes != 0) {
         executeSql = appendAgsSql(maxRowNumbersOneTimes);
         std::vector<std::vector<ValueObject>> sqlArgs;
-        size_t maxVariableNumbers = maxRowNumbersOneTimes * fieldSize;
+        size_t maxVariableNumbers = static_cast<size_t>(maxRowNumbersOneTimes * fieldSize);
         for (size_t i = 0; i < executeTimes; ++i) {
             std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
             sqlArgs.emplace_back(std::move(bindValueArgs));

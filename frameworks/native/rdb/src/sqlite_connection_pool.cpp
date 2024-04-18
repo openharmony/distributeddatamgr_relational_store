@@ -308,10 +308,9 @@ ConnPool::ConnNode::ConnNode(std::shared_ptr<Conn> conn) : connect_(std::move(co
 
 std::shared_ptr<Conn> ConnPool::ConnNode::GetConnect(bool justHold)
 {
-    if (!justHold) {
-        tid_ = gettid();
-        time_ = std::chrono::steady_clock::now();
-    }
+    tid_ = gettid();
+    time_ = std::chrono::steady_clock::now();
+
     return connect_;
 }
 

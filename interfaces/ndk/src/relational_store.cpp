@@ -676,7 +676,7 @@ void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
     if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD) {
         auto count = devices.size();
         std::unique_ptr<const char *[]> deviceIds = std::make_unique<const char *[]>(count);
-        for (auto i = 0; i < count; ++i) {
+        for (uint32_t i = 0; i < count; ++i) {
             deviceIds[i] = devices[i].c_str();
         }
         (*observer_->callback.briefObserver)(observer_->context, deviceIds.get(), count);

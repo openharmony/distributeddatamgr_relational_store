@@ -32,7 +32,7 @@ std::shared_ptr<RdbConnection> RdbConnection::Open(const RdbStoreConfig &config,
     return nullptr;
 }
 
-RdbConnection::RdbConnection(bool isWriteConnection) : isWriteConnection_(isWriteConnection)
+RdbConnection::RdbConnection(bool isWriteConnection) : isWriteConnection_(isWriteConnection), isReadOnly_(false)
 {
 }
 
