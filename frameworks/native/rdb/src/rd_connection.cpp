@@ -40,7 +40,7 @@ std::shared_ptr<RdConnection> RdConnection::Open(const RdbStoreConfig &config, b
 }
 
 RdConnection::RdConnection(bool isWriteConnection)
-    : RdbConnection(isWriteConnection)
+    : RdbConnection(isWriteConnection), inTransaction_(false)
 {
 }
 
