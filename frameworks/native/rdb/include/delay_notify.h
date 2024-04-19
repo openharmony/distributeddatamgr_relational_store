@@ -15,6 +15,7 @@
 
 #ifndef NATIVE_RDB_DELAY_NOTIFY_H
 #define NATIVE_RDB_DELAY_NOTIFY_H
+#include <atomic>
 #include <map>
 #include <string>
 #include <functional>
@@ -25,16 +26,20 @@ namespace OHOS::NativeRdb {
 class DelayNotify {
 public:
     using Task = std::function<int(const DistributedRdb::RdbChangedData &)>;
+    DelayNotify();
     ~DelayNotify();
     void SetExecutorPool(std::shared_ptr<ExecutorPool> pool);
     void SetTask(Task task);
     void UpdateNotify(const DistributedRdb::RdbChangedData &changedData);
     void SetAutoSyncInterval(uint32_t autoSyncInterval);
+    void Pause();
+    void Resume();
 private:
     static constexpr uint32_t AUTO_SYNC_INTERVAL = 200;
+    std::atomic_int32_t pauseCount_;
     ExecutorPool::TaskId delaySyncTaskId_ = ExecutorPool::INVALID_TASK_ID;
     Task task_;
-    std::shared_ptr<ExecutorPool> pool_ = nullptr;
+    std::shared_ptr<ExecutorPool> pool_;
     std::mutex mutex_;
     DistributedRdb::RdbChangedData changedData_;
 
@@ -43,6 +48,15 @@ private:
     void ExecuteTask();
     void RestoreDefaultSyncInterval();
     uint32_t autoSyncInterval_ = AUTO_SYNC_INTERVAL;
+};
+
+class PauseDelayNotify {
+public:
+    explicit PauseDelayNotify(std::shared_ptr<DelayNotify> delayNotifier);
+    ~PauseDelayNotify();
+private:
+    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
+    std::shared_ptr<DelayNotify> delayNotifier_;
 };
 }
 #endif // NATIVE_RDB_DELAY_NOTIFY_H

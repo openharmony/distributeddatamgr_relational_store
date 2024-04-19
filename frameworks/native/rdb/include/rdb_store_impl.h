@@ -236,7 +236,6 @@ private:
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
-    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
     static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 
