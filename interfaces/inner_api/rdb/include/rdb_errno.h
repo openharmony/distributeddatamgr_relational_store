@@ -316,6 +316,10 @@ static constexpr int E_SQLITE_ERROR = (E_BASE + 55);
  * @brief The error when sql is not supported in execute
  */
 static constexpr int E_DATABASE_CORRUPT = (E_BASE + 56);
+/**
+ * @brief The error when unlocking data needs to be compensated sync
+ */
+static constexpr int E_WAIT_COMPENSATED_SYNC = (E_BASE + 57);
 } // namespace NativeRdb
 } // namespace OHOS
 

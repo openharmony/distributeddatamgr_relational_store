@@ -32,6 +32,7 @@
 #include "sqlite_connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "relational_store_client.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -485,6 +486,32 @@ int32_t SqliteStatement::BindBigInt(sqlite3_stmt* stat, int index, const ValueOb
     }
     auto rawData = RawDataParser::PackageRawData(*val);
     return sqlite3_bind_blob(stat, index, static_cast<const void*>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
+}
+
+int SqliteStatement::ModifyLockStatus(
+    const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
+{
+    DistributedDB::DBStatus ret;
+    auto db = sqlite3_db_handle(stmt_);
+    if (db == nullptr) {
+        return E_ERROR;
+    }
+    if (isLock) {
+        ret = Lock(table, hashKeys, db);
+    } else {
+        ret = UnLock(table, hashKeys, db);
+    }
+    if (ret == DistributedDB::DBStatus::OK) {
+        return E_OK;
+    }
+    if (ret == DistributedDB::DBStatus::WAIT_COMPENSATED_SYNC) {
+        return E_WAIT_COMPENSATED_SYNC;
+    }
+    if (ret == DistributedDB::DBStatus::NOT_FOUND) {
+        return E_NO_ROW_IN_QUERY;
+    }
+    LOG_ERROR("Lock/Unlock failed, err is %{public}d.", ret);
+    return E_ERROR;
 }
 } // namespace NativeRdb
 } // namespace OHOS

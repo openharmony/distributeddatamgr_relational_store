@@ -742,7 +742,14 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    std::string sql;
+    if (predicates.HasSpecificField()) {
+        std::string table = predicates.GetTableName();
+        std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+        sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
+    } else {
+        sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    }
     return QueryByStep(sql, predicates.GetBindArgs());
 }
 
@@ -2105,6 +2112,69 @@ bool RdbStoreImpl::ColHasSpecificField(const std::vector<std::string> &columns)
         }
     }
     return false;
+}
+
+int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys)
+{
+    std::string table = predicates.GetTableName();
+    if (table.empty()) {
+        return E_EMPTY_TABLE_NAME;
+    }
+    auto logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+    std::string sql;
+    sql.append("SELECT ").append(logTable).append(".hash_key ").append("FROM ").append(logTable);
+    sql.append(" INNER JOIN ").append(table).append(" ON ");
+    sql.append(table).append(".ROWID = ").append(logTable).append(".data_key");
+    auto whereClause = predicates.GetWhereClause();
+    if (!whereClause.empty()) {
+        SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
+        sql.append(" WHERE ").append(whereClause);
+    }
+
+    auto result = QuerySql(sql, predicates.GetBindArgs());
+    if (result == nullptr) {
+        return E_ERROR;
+    }
+    int count = 0;
+    if (result->GetRowCount(count) != E_OK) {
+        return E_ERROR;
+    }
+    if (count <= 0) {
+        return E_NO_ROW_IN_QUERY;
+    }
+    while (result->GoToNextRow() == E_OK) {
+        std::vector<uint8_t> hashKey;
+        if (result->GetBlob(0, hashKey) != E_OK) {
+            return E_ERROR;
+        }
+        hashKeys.push_back(std::move(hashKey));
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock)
+{
+    std::vector<std::vector<uint8_t>> hashKeys;
+    int ret = GetHashKeyForLockRow(predicates, hashKeys);
+    if (ret != E_OK) {
+        LOG_ERROR("GetHashKeyForLockRow failed, err is %{public}d.", ret);
+        return ret;
+    }
+    auto [err, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION);
+    if (statement == nullptr || err != E_OK) {
+        return err;
+    }
+    int errCode = statement->ModifyLockStatus(predicates.GetTableName(), hashKeys, isLock);
+    if (errCode == E_WAIT_COMPENSATED_SYNC) {
+        LOG_DEBUG("Start compensation sync.");
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true };
+        InnerSync(option, AbsRdbPredicates(predicates.GetTableName()).GetDistributedPredicates(), nullptr);
+        return E_OK;
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("ModifyLockStatus failed, err is %{public}d.", errCode);
+    }
+    return errCode;
 }
 #endif
 
