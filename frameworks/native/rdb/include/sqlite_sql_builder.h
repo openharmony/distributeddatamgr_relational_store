@@ -49,6 +49,8 @@ public:
     static std::string BuildSqlStringFromPredicates(const AbsPredicates &predicates);
     static std::string BuildCursorQueryString(const AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns, const std::string &logTable, const std::pair<bool, bool> &queryStatus);
+    static std::string BuildLockRowQueryString(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
 
 private:
     static void AppendClause(std::string &builder, const std::string &name,
