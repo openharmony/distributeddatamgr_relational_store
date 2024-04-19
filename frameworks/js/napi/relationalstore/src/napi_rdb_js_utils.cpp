@@ -371,7 +371,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
     LOG_DEBUG("stage mode branch");
     status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
     ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
-    status = GetNamedProperty(env, jsValue, "area", param.area);
+    status = GetNamedProperty(env, jsValue, "area", param.area, true);
     ASSERT(status == napi_ok, "get area failed.", napi_invalid_arg);
 
     napi_value hapInfo = nullptr;
@@ -386,7 +386,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
     if (appInfo != nullptr) {
         status = GetNamedProperty(env, appInfo, "name", param.bundleName);
         ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
-        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp);
+        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
         ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
     }
     return napi_ok;
