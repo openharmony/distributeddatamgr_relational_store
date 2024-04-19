@@ -1441,7 +1441,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
-        auto aysnc = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
+        auto async = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
             if (queue == nullptr || callback == nullptr) {
                 return;
             }
@@ -1452,9 +1452,9 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             });
         };
         if (context->rdbPredicates == nullptr) {
-            context->execCode_ = obj->GetInstance()->Sync(option, context->tablesNames, aysnc);
+            context->execCode_ = obj->GetInstance()->Sync(option, context->tablesNames, async);
         } else {
-            context->execCode_ = obj->GetInstance()->Sync(option, *(context->rdbPredicates), aysnc);
+            context->execCode_ = obj->GetInstance()->Sync(option, *(context->rdbPredicates), async);
         }
         return OK;
     };
