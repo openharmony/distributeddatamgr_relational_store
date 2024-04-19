@@ -221,8 +221,10 @@ UvQueue::UvEntry::~UvEntry()
         return;
     }
     napi_delete_reference(env_, callback_);
+    callback_ = nullptr;
     if (object_ != nullptr) {
         napi_delete_reference(env_, object_);
+        object_ = nullptr;
     }
 }
 
