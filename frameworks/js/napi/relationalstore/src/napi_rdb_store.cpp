@@ -291,7 +291,7 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
 int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<ContextBase> context)
 {
     RdbStoreProxy *obj = GetNativeInstance(env, self);
-    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "nullptr."));
+    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "not nullptr."));
     context->boundObj = obj;
     return OK;
 }
@@ -299,7 +299,7 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<Cont
 int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->tableName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
+    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty string."));
     return OK;
 }
 
@@ -307,7 +307,7 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 {
     double cursor = 0;
     auto status = JSUtils::Convert2Value(env, arg, cursor);
-    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "not invalid cursor"));
+    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "valid cursor."));
     context->cursor = static_cast<uint64_t>(cursor);
     return OK;
 }
@@ -315,14 +315,14 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->columnName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not string"));
+    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not empty string."));
     return OK;
 }
 
 int ParsePrimaryKey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     JSUtils::Convert2Value(env, arg, context->keys);
-    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "not number or string"));
+    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "number or string."));
     return OK;
 }
 
@@ -336,7 +336,7 @@ int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     int32_t ret = JSUtils::Convert2Value(env, arg, context->tablesNames);
-    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty"));
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty string."));
     return OK;
 }
 
