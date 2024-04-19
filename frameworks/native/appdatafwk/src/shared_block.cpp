@@ -78,8 +78,7 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outS
 {
     std::string ashmemPath;
     size_t lastSlashPos = name.find_last_of('/');
-    ashmemPath = name.substr(lastSlashPos);
-
+    ashmemPath = (lastSlashPos != std::string::npos) ? name.substr(lastSlashPos) : name;
     std::string ashmemName = "SharedBlock:" + ashmemPath + std::to_string(identifier.fetch_add(1));
 
     sptr<Ashmem> ashmem = Ashmem::CreateAshmem(ashmemName.c_str(), size);
