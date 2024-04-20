@@ -25,7 +25,7 @@ constexpr size_t ARGC_MAX = 6;
 EvtHandler::EvtHandler(napi_env env) : env_(env)
 {
     if (env != nullptr) {
-        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner()); 
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     }
 }
 
@@ -38,7 +38,7 @@ EvtHandler::~EvtHandler()
 
 void EvtHandler::PostTask(EvtCallback callback, Args args)
 {
-     if (handler_ == nullptr || callback.IsNull()) {
+    if (handler_ == nullptr || callback.IsNull()) {
         LOG_ERROR("handler_ or callback is nullptr");
         return;
     }
