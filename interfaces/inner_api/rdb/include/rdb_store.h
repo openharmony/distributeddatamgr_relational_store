@@ -613,6 +613,16 @@ public:
     {
         return std::pair<int32_t, int32_t>(0, E_OK);
     }
+
+    /**
+     * @brief Locks/Unlocks data from the database based on a specified instance object of AbsRdbPredicates.
+     *
+     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+     */
+    virtual int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock)
+    {
+        return E_ERROR;
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif

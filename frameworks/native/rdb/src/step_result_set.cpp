@@ -34,13 +34,9 @@ StepResultSet::StepResultSet(
     : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false),
       isStarted_(false)
 {
-    auto connection = pool->AcquireConnection(true);
-    if (connection == nullptr) {
-        return;
-    }
-    conn_ = pool->AcquireByID(connection->GetId());
+    conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
-        conn_ = connection;
+        return;
     }
 
     auto errCode = PrepareStep();
@@ -299,7 +295,8 @@ int StepResultSet::Close()
         return E_OK;
     }
     isClosed_ = true;
-
+    conn_ = nullptr;
+    sqliteStatement_ = nullptr;
     auto args = std::move(args_);
     auto columnNames = std::move(columnNames_);
     return FinishStep();

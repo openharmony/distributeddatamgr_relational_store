@@ -278,7 +278,7 @@ describe('rdbStoreCloudSyncTest', function () {
             rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, function (detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
                 done();
-                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
                 console.log(TAG + "************* testRdbStoreCloudSync0009 end *************");
             }, () => {
             });
@@ -300,7 +300,7 @@ describe('rdbStoreCloudSyncTest', function () {
         function Progress(detail) {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
             console.log(TAG + "************* testRdbStoreCloudSync0010 end *************");
         }
 
@@ -325,7 +325,7 @@ describe('rdbStoreCloudSyncTest', function () {
             function Progress(detail) {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
                 done();
-                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+                expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
                 console.log(TAG + "************* testRdbStoreCloudSync0011 end *************");
             }
 
@@ -350,7 +350,7 @@ describe('rdbStoreCloudSyncTest', function () {
         function Progress(detail) {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
             console.log(TAG + "************* testRdbStoreCloudSync0012 end *************");
         }
 
@@ -375,7 +375,7 @@ describe('rdbStoreCloudSyncTest', function () {
         function Progress(detail) {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
             console.log(TAG + "************* testRdbStoreCloudSync0013 end *************");
         }
 
@@ -400,7 +400,7 @@ describe('rdbStoreCloudSyncTest', function () {
         function Progress(detail) {
             console.log(TAG + `Progress:` + JSON.stringify(detail));
             done();
-            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":[]}');
+            expect(JSON.stringify(detail)).assertEqual('{"schedule":2,"code":3,"details":{}}');
             console.log(TAG + "************* testRdbStoreCloudSync0014 end *************");
         }
 

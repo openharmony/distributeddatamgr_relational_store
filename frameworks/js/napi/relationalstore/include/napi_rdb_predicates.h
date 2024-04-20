@@ -64,11 +64,13 @@ private:
     static napi_value Or(napi_env env, napi_callback_info info);
     static napi_value And(napi_env env, napi_callback_info info);
     static napi_value Contains(napi_env env, napi_callback_info info);
+    static napi_value NotContains(napi_env env, napi_callback_info info);
     static napi_value BeginsWith(napi_env env, napi_callback_info info);
     static napi_value EndsWith(napi_env env, napi_callback_info info);
     static napi_value IsNull(napi_env env, napi_callback_info info);
     static napi_value IsNotNull(napi_env env, napi_callback_info info);
     static napi_value Like(napi_env env, napi_callback_info info);
+    static napi_value NotLike(napi_env env, napi_callback_info info);
     static napi_value Glob(napi_env env, napi_callback_info info);
     static napi_value Between(napi_env env, napi_callback_info info);
     static napi_value NotBetween(napi_env env, napi_callback_info info);

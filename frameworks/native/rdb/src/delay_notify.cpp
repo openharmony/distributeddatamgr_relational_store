@@ -17,6 +17,10 @@
 #include "logger.h"
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+DelayNotify::DelayNotify() : pauseCount_(0), task_(nullptr), pool_(nullptr)
+{
+}
+
 DelayNotify::~DelayNotify()
 {
     if (pool_ == nullptr) {
@@ -119,4 +123,32 @@ void DelayNotify::RestoreDefaultSyncInterval()
     autoSyncInterval_ = AUTO_SYNC_INTERVAL;
 }
 
+void DelayNotify::Pause()
+{
+    StopTimer();
+    pauseCount_.fetch_add(1, std::memory_order_relaxed);
+}
+
+void DelayNotify::Resume()
+{
+    pauseCount_.fetch_sub(1, std::memory_order_relaxed);
+    if (pauseCount_.load() == 0) {
+        StartTimer();
+    }
+}
+
+PauseDelayNotify::PauseDelayNotify(std::shared_ptr<DelayNotify> delayNotifier) : delayNotifier_(delayNotifier)
+{
+    if (delayNotifier_ != nullptr) {
+        delayNotifier_->Pause();
+        delayNotifier_->SetAutoSyncInterval(AUTO_SYNC_MAX_INTERVAL);
+    }
+}
+
+PauseDelayNotify::~PauseDelayNotify()
+{
+    if (delayNotifier_ != nullptr) {
+        delayNotifier_->Resume();
+    }
+}
 }
