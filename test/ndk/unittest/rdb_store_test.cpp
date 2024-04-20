@@ -956,7 +956,6 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_021, TestSize.Level1
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
 
-
 /**
  * @tc.name: Abnormal_RDB_OH_interface_test_022
  * @tc.desc: Abnormal testCase of store for OH interface.
@@ -1072,4 +1071,309 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
     valueBucket->destroy(valueBucket);
     predicates->destroy(predicates);
     cursor->destroy(cursor);
+}
+
+void LocalDataChangeObserverCallback1(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->inserted.type);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(2, changeInfo[i]->inserted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_024
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe, insert data into local database
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_024, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback = LocalDataChangeObserverCallback1;
+    Rdb_DataObserver observer = { nullptr, { callback } };
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    int errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    EXPECT_EQ(2, errCode);
+
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+}
+
+void LocalDataChangeObserverCallback2(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->updated.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->updated.type);
+        EXPECT_EQ(1, changeInfo[i]->updated.count);
+        EXPECT_EQ(1, changeInfo[i]->updated.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->inserted.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_025
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe, update data into local database
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_025, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback = LocalDataChangeObserverCallback2;
+    Rdb_DataObserver observer = { nullptr, { callback } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putNull(valueBucket, "data5");
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+    int errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates);
+    EXPECT_EQ(errCode, 1);
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+}
+
+void LocalDataChangeObserverCallback3(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->deleted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->deleted.type);
+        EXPECT_EQ(1, changeInfo[i]->deleted.count);
+        EXPECT_EQ(1, changeInfo[i]->deleted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->inserted.count);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_026
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe, delete data into local database
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_026, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback = LocalDataChangeObserverCallback3;
+    Rdb_DataObserver observer = { nullptr, { callback } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+    int errCode = OH_Rdb_Delete(storeTestRdbStore_, predicates);
+    EXPECT_EQ(errCode, 1);
+
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+}
+
+void LocalDataChangeObserverCallback4(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->inserted.type);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(2, changeInfo[i]->inserted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+void LocalDataChangeObserverCallback5(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->inserted.type);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(2, changeInfo[i]->inserted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_027
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe, register two observers for local database
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_027, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback1 = LocalDataChangeObserverCallback4;
+    Rdb_DataObserver observer1 = { nullptr, { callback1 } };
+
+    Rdb_DetailsObserver callback2 = LocalDataChangeObserverCallback5;
+    Rdb_DataObserver observer2 = { nullptr, { callback2 } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2), RDB_OK);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    int errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    EXPECT_EQ(2, errCode);
+
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2), RDB_OK);
+}
+
+void LocalDataChangeObserverCallback6(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    EXPECT_EQ(0, count);
+}
+
+void LocalDataChangeObserverCallback7(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "store_test"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->inserted.type);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(2, changeInfo[i]->inserted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_028
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe.
+ *           1.register two observers for local database
+ *           2.unRegister one of observers
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_028, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback1 = LocalDataChangeObserverCallback6;
+    Rdb_DataObserver observer1 = { nullptr, { callback1 } };
+
+    Rdb_DetailsObserver callback2 = LocalDataChangeObserverCallback7;
+    Rdb_DataObserver observer2 = { nullptr, { callback2 } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2), RDB_OK);
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer1), RDB_OK);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    int errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    EXPECT_EQ(2, errCode);
+
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2), RDB_OK);
+}
+
+void LocalDataChangeObserverCallback8(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; i++) {
+        EXPECT_EQ(DISTRIBUTED_CHANGE_INFO_VERSION, changeInfo[i]->version);
+        EXPECT_EQ(strcmp(changeInfo[i]->tableName, "test1"), 0);
+        EXPECT_EQ(RDB_DATA_CHANGE, changeInfo[i]->ChangeType);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(TYPE_INT64, changeInfo[i]->inserted.type);
+        EXPECT_EQ(1, changeInfo[i]->inserted.count);
+        EXPECT_EQ(1, changeInfo[i]->inserted.data->integer);
+        EXPECT_EQ(0, changeInfo[i]->updated.count);
+        EXPECT_EQ(0, changeInfo[i]->deleted.count);
+    }
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_029
+ * @tc.desc: normal testCase for OH_Rdb_Subscribe.
+ *           1.register observer for local database
+ *           2.create new table test
+ *           3.insert data into table test
+ *           2.unRegister one of observer
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_029, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DetailsObserver callback = LocalDataChangeObserverCallback8;
+    Rdb_DataObserver observer = { nullptr, { callback } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+
+    constexpr const char* createTableSql = "CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                           "data1 TEXT, data2 INTEGER, data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, 0);
+
+    OH_VBucket* valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "test1", valueBucket);
+    EXPECT_EQ(1, errCode);
+
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
+
+    constexpr const char* dropTableSql = "DROP TABLE IF EXISTS test1";
+    errCode = OH_Rdb_Execute(storeTestRdbStore_, dropTableSql);
+    EXPECT_EQ(errCode, 0);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_030
+ * @tc.desc: abNormal testCase for OH_Rdb_Subscribe. Register observer for local database and observer is nullptr.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_030, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+
+    Rdb_DataObserver observer = { nullptr,  { nullptr } };
+
+    EXPECT_EQ(OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_Unsubscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer), RDB_OK);
 }

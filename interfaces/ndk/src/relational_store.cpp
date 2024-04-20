@@ -131,6 +131,8 @@ OHOS::DistributedRdb::SubscribeMode NDKUtils::GetSubscribeType(Rdb_SubscribeType
             return SubscribeMode::CLOUD;
         case Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS:
             return SubscribeMode::CLOUD_DETAIL;
+        case Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS:
+            return SubscribeMode::LOCAL_DETAIL;
         default:
             return SubscribeMode::SUBSCRIBE_MODE_MAX;
     }
@@ -449,7 +451,7 @@ int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_Da
 
 int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver *observer)
 {
-    if (store_ == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS ||
+    if (store_ == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS ||
         observer->callback.briefObserver == nullptr || observer->callback.detailsObserver == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
@@ -464,7 +466,12 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
     }
     auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
     auto ndkObserver = std::make_shared<NDKStoreObserver>(observer, type);
-    auto subscribeResult = store_->Subscribe(subscribeOption, ndkObserver.get());
+    int subscribeResult = OHOS::NativeRdb::E_OK;
+    if (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
+        subscribeResult = store_->SubscribeObserver(subscribeOption, ndkObserver);
+    } else {
+        subscribeResult = store_->Subscribe(subscribeOption, ndkObserver.get());
+    }
     if (subscribeResult != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed");
     } else {
@@ -475,7 +482,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
 
 int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserver *observer)
 {
-    if (store_ == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS) {
+    if (store_ == nullptr || type < RDB_SUBSCRIBE_TYPE_CLOUD || type > RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::lock_guard<decltype(mutex_)> lock(mutex_);
@@ -485,7 +492,12 @@ int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserve
             continue;
         }
         auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
-        int errCode = store_->UnSubscribe(subscribeOption, it->get());
+        int errCode = OHOS::NativeRdb::E_OK;
+        if (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
+            errCode = store_->UnsubscribeObserver(subscribeOption, *it);
+        } else {
+            errCode = store_->UnSubscribe(subscribeOption, it->get());
+        }
         if (errCode != NativeRdb::E_OK) {
             LOG_ERROR("unsubscribe failed");
             return errCode;
@@ -736,6 +748,31 @@ void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
 void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::PrimaryFields &fields,
                                 RdbStoreObserver::ChangeInfo &&changeInfo)
 {
+    uint32_t count = changeInfo.size();
+    if (count == 0) {
+        LOG_ERROR("No any infos");
+        return;
+    }
+    if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS ||
+        mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
+
+        Rdb_ChangeInfo *infos = (Rdb_ChangeInfo *)(malloc(count * sizeof(Rdb_ChangeInfo)));
+
+        int index = 0;
+        for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
+            infos[index].version = DISTRIBUTED_CHANGE_INFO_VERSION;
+            infos[index].tableName = it->first.c_str();
+            infos[index].ChangeType = origin.dataType;
+            ConvertKeyInfo(infos[index].inserted, it->second[RdbStoreObserver::CHG_TYPE_INSERT]);
+            ConvertKeyInfo(infos[index].updated, it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
+            ConvertKeyInfo(infos[index].deleted, it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
+            index++;
+        }
+        (*observer_->callback.detailsObserver)(observer_->context, const_cast<const Rdb_ChangeInfo**>(&infos), count);
+        if (infos != nullptr) {
+            free(infos);
+        }
+    }
 }
 
 void NDKStoreObserver::OnChange()
@@ -745,6 +782,31 @@ void NDKStoreObserver::OnChange()
 
 void NDKStoreObserver::ConvertKeyInfo(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
 {
+    keyInfo.count = static_cast<int>(primaryKey.size());
+    if (primaryKey.empty()) {
+        return;
+    }
+
+    keyInfo.type = TYPE_NULL;
+    Rdb_KeyInfo::Rdb_KeyData *keyInfoData =
+        (Rdb_KeyInfo::Rdb_KeyData *)(malloc(keyInfo.count * sizeof(Rdb_KeyInfo::Rdb_KeyData)));
+
+    for (size_t i = 0; i < primaryKey.size(); ++i) {
+        const auto &key = primaryKey[i];
+        if (auto val = std::get_if<double>(&key)) {
+            keyInfo.type = TYPE_REAL;
+            keyInfoData[i].real = *val;
+        } else if (auto val = std::get_if<int64_t>(&key)) {
+            keyInfo.type = TYPE_INT64;
+            keyInfoData[i].integer = *val;
+        } else if (auto val = std::get_if<std::string>(&key)) {
+            keyInfo.type = TYPE_TEXT;
+            keyInfoData[i].text = val->c_str();
+        } else {
+            return;
+        }
+    }
+    keyInfo.data = keyInfoData;
 }
 
 bool NDKStoreObserver::operator==(const Rdb_DataObserver *other)
