@@ -133,15 +133,24 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
     bool mode = false;
     AbilityRuntime::IsStageContext(env, value, mode);
     if (mode) {
-        LOG_DEBUG("Get context as stage mode.");
-        auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
-        if (stageContext == nullptr) {
-            LOG_ERROR("GetStageModeContext failed.");
-            return nullptr;
-        }
-        return std::make_shared<Context>(stageContext);
+        return GetStageModeContext(env, value);
     }
+    return GetCurrentAbility(env, value);
+}
 
+std::shared_ptr<Context> JSAbility::GetStageModeContext(napi_env env, napi_value value)
+{
+    LOG_DEBUG("Get context as stage mode.");
+    auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
+    if (stageContext == nullptr) {
+        LOG_ERROR("GetStageModeContext failed.");
+        return nullptr;
+    }
+    return std::make_shared<Context>(stageContext);
+}
+
+std::shared_ptr<Context> JSAbility::GetCurrentAbility(napi_env env, napi_value value)
+{
     LOG_DEBUG("Get context as feature ability mode.");
     auto ability = AbilityRuntime::GetCurrentAbility(env);
     if (ability == nullptr) {

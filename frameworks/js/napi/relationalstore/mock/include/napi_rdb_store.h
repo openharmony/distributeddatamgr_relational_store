@@ -78,6 +78,9 @@ private:
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
+    
+    static constexpr int WAIT_TIME_DEFAULT = 2;
+    static constexpr int WAIT_TIME_LIMIT = 300;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

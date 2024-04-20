@@ -33,6 +33,7 @@ public:
         uint32_t seqNum = 0;
         bool isAsync = false;
         bool isAutoSync = false;
+        bool isCompensation = false;
     };
     using ResultSet = NativeRdb::ResultSet;
 
@@ -71,6 +72,10 @@ public:
         const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData) = 0;
+
+    virtual int32_t Disable(const RdbSyncerParam &param) = 0;
+
+    virtual int32_t Enable(const RdbSyncerParam &param) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 };
