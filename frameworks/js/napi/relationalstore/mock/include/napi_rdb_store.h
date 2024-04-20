@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -41,6 +42,8 @@ public:
     bool IsSystemAppCalled();
 
 private:
+    static Descriptor GetDescriptors();
+    static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value Delete(napi_env env, napi_callback_info info);
     static napi_value Update(napi_env env, napi_callback_info info);
@@ -48,6 +51,7 @@ private:
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
+    static napi_value QuerySync(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
     static napi_value Execute(napi_env env, napi_callback_info info);
     static napi_value Backup(napi_env env, napi_callback_info info);

@@ -33,6 +33,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -50,6 +51,7 @@ private:
     static napi_value Insert(napi_env env, napi_callback_info info);
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
+    static napi_value QuerySync(napi_env env, napi_callback_info info);
     static napi_value RemoteQuery(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
@@ -86,6 +88,8 @@ private:
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
+    static Descriptor GetDescriptors();
+    static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
     static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
     static napi_value LockRow(napi_env env, napi_callback_info info);
     static napi_value UnlockRow(napi_env env, napi_callback_info info);
