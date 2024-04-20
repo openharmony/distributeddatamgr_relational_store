@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 
+#include "js_evt_handler.h"
 #include "js_proxy.h"
 #include "js_uv_queue.h"
 #include "napi/native_api.h"
@@ -134,6 +135,7 @@ private:
 
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
+    std::shared_ptr<AppDataMgrJsKit::EvtHandler> handler_;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;

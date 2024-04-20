@@ -162,9 +162,6 @@ void UvQueue::DoWork(uv_work_t *work)
 
 void UvQueue::DoExecute(uv_work_t *work)
 {
-    if (work == nullptr) {
-        return;
-    }
     Task *task = static_cast<Task *>(work->data);
     work->data = nullptr;
     (*task)();
@@ -173,9 +170,6 @@ void UvQueue::DoExecute(uv_work_t *work)
 
 void UvQueue::DoUvCallback(uv_work_t *work, int status)
 {
-    if (work == nullptr) {
-        return;
-    }
     std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
         delete data;
         delete work;
@@ -201,9 +195,6 @@ void UvQueue::DoUvCallback(uv_work_t *work, int status)
 
 void UvQueue::DoUvPromise(uv_work_t *work, int status)
 {
-    if (work == nullptr) {
-        return;
-    }
     std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
         delete data;
         delete work;
