@@ -106,8 +106,6 @@ struct RdbStoreContext : public ContextBase {
     }
 };
 
-static __thread napi_ref constructor_ = nullptr;
-
 RdbStoreProxy::RdbStoreProxy()
 {
 }
@@ -180,56 +178,66 @@ bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
     return type == napi_string;
 }
 
+Descriptor RdbStoreProxy::GetDescriptors()
+{
+    return []() -> std::vector<napi_property_descriptor> {
+        std::vector<napi_property_descriptor> properties = {
+            DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("executeSql", ExecuteSql, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("rollback", RollBackByTxId, ASYNC),
+            DECLARE_NAPI_FUNCTION("backup", Backup),
+            DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
+            DECLARE_NAPI_FUNCTION("beginTrans", BeginTrans),
+            DECLARE_NAPI_FUNCTION("rollBack", RollBack),
+            DECLARE_NAPI_FUNCTION("commit", Commit),
+            DECLARE_NAPI_FUNCTION("restore", Restore),
+            DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
+            DECLARE_NAPI_GETTER("rebuilt", GetRebuilt),
+            DECLARE_NAPI_FUNCTION("close", Close),
+            DECLARE_NAPI_FUNCTION("attach", Attach),
+            DECLARE_NAPI_FUNCTION("detach", Detach),
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+            DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
+            DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
+            DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
+            DECLARE_NAPI_FUNCTION("sync", Sync),
+            DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
+            DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
+            DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData),
+            DECLARE_NAPI_FUNCTION("on", OnEvent),
+            DECLARE_NAPI_FUNCTION("off", OffEvent),
+            DECLARE_NAPI_FUNCTION("emit", Notify),
+            DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource),
+#endif
+        };
+        AddSyncFunctions(properties);
+        return properties;
+    };
+}
+
+void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &properties)
+{
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySync, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QuerySync, SYNC));
+}
+
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
 {
-    napi_property_descriptor descriptors[] = {
-        DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySync, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QuerySync, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSql", ExecuteSql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("rollback", RollBackByTxId, ASYNC),
-        DECLARE_NAPI_FUNCTION("backup", Backup),
-        DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
-        DECLARE_NAPI_FUNCTION("beginTrans", BeginTrans),
-        DECLARE_NAPI_FUNCTION("rollBack", RollBack),
-        DECLARE_NAPI_FUNCTION("commit", Commit),
-        DECLARE_NAPI_FUNCTION("restore", Restore),
-        DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
-        DECLARE_NAPI_GETTER("rebuilt", GetRebuilt),
-        DECLARE_NAPI_FUNCTION("close", Close),
-        DECLARE_NAPI_FUNCTION("attach", Attach),
-        DECLARE_NAPI_FUNCTION("detach", Detach),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
-        DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
-        DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
-        DECLARE_NAPI_FUNCTION("sync", Sync),
-        DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
-        DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
-        DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData),
-        DECLARE_NAPI_FUNCTION("on", OnEvent),
-        DECLARE_NAPI_FUNCTION("off", OffEvent),
-        DECLARE_NAPI_FUNCTION("emit", Notify),
-        DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource),
-#endif
-    };
-    napi_value cons = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStore", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
-    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
+    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "RdbStore", GetDescriptors(), Initialize);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbStore", jsCtor));
 }
 
 napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
@@ -259,15 +267,14 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
         return nullptr;
     }
-    napi_value cons = nullptr;
-    napi_status status = napi_get_reference_value(env, constructor_, &cons);
-    if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::NewInstance get constructor failed! code:%{public}d!", status);
+    napi_value cons = JSUtils::GetClass(env, "ohos.data.relationalStore", "RdbStore");
+    if (cons == nullptr) {
+        LOG_ERROR("Constructor of ResultSet is nullptr!");
         return nullptr;
     }
 
     napi_value instance = nullptr;
-    status = napi_new_instance(env, cons, 0, nullptr, &instance);
+    auto status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::NewInstance napi_new_instance failed! code:%{public}d!", status);
         return nullptr;
