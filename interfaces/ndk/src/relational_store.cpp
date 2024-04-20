@@ -650,6 +650,56 @@ int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressOb
     return rdbStore->UnsubscribeAutoSyncProgress(callback);
 }
 
+int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), true);
+}
+
+int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), false);
+}
+
+OH_Cursor *OH_Rdb_QueryLockedRow(
+    OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        LOG_ERROR("rdbStore or predicate is nullptr.");
+        return nullptr;
+    }
+    std::vector<std::string> columns;
+    if (columnNames != nullptr && length > 0) {
+        columns.reserve(length);
+        for (int i = 0; i < length; i++) {
+            columns.push_back(columnNames[i]);
+        }
+    }
+    predicate->Get().BeginWrap();
+    predicate->Get().EqualTo(OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS, OHOS::NativeRdb::AbsRdbPredicates::LOCKED);
+    predicate->Get().Or();
+    predicate->Get().EqualTo(
+        OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS, OHOS::NativeRdb::AbsRdbPredicates::LOCK_CHANGED);
+    predicate->Get().EndWrap();
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
+        rdbStore->GetStore()->QueryByStep(predicate->Get(), columns);
+    if (resultSet == nullptr) {
+        return nullptr;
+    }
+    return new OHOS::RdbNdk::RelationalCursor(std::move(resultSet));
+}
+
 NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback):callback_(callback)
 {
 }

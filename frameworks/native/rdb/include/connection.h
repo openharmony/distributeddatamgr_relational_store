@@ -49,7 +49,6 @@ public:
     virtual int SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
-    virtual int32_t DesFinalize() = 0;
 private:
     int32_t id_ = 0;
 };

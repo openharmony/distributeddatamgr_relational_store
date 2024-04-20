@@ -22,12 +22,13 @@ namespace RelationalStoreJsKit {
 using JsErrorCode = OHOS::RelationalStoreJsKit::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_NOT_SUPPORTED, 801, "Capability not supported." },
-    { NativeRdb::E_INCORRECT_SQL, 14800018, "Incorrect SQL. Grammar errors or violation of constraints." },
+    { NativeRdb::E_INCORRECT_SQL, 14800021, "Incorrect SQL. Grammar errors or violation of constraints." },
     { NativeRdb::E_NOT_SELECT, 14800019, "The SQL must be a query statement." },
     { NativeRdb::E_OUT_RANGE, 14800020, "The column index is invalid." },
     { NativeRdb::E_INVALID_FILE_PATH, 14800010, "Invalid database path." },
     { E_RESULT_GOTO_ERROR, 14800012, "The result set is empty or the specified location is invalid." },
     { NativeRdb::E_INVALID_STATEMENT, 14800013, "The column value is null or the column type is incompatible." },
+    { NativeRdb::E_NO_ROW_IN_QUERY, 14800018, "No data meets the condition." },
     { NativeRdb::E_NOT_INIT,  14800013, "The column value is null or the column type is incompatible." },
     { NativeRdb::E_ALREADY_CLOSED, 14800014, "The resultSet has been closed." },
     { NativeRdb::E_DATABASE_BUSY, 14800015, "The database does not respond." },

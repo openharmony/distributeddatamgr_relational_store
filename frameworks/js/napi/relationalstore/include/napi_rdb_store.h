@@ -90,6 +90,10 @@ private:
     static napi_value Close(napi_env env, napi_callback_info info);
     static Descriptor GetDescriptors();
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
+    static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
+    static napi_value LockRow(napi_env env, napi_callback_info info);
+    static napi_value UnlockRow(napi_env env, napi_callback_info info);
+    static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
 
     static constexpr int EVENT_HANDLE_NUM = 2;
     static constexpr int WAIT_TIME_DEFAULT = 2;

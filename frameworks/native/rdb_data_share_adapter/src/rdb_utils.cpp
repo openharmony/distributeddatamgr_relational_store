@@ -143,6 +143,11 @@ void RdbUtils::Like(const DataShare::OperationItem &item, RdbPredicates &predica
     predicates.Like(item.GetSingle(0), ToValueObject(item.singleParams[1]));
 }
 
+void RdbUtils::NotLike(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.NotLike(item.GetSingle(0), ToValueObject(item.singleParams[1]));
+}
+
 void RdbUtils::OrderByAsc(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
     predicates.OrderByAsc(item.GetSingle(0));
@@ -203,6 +208,12 @@ void RdbUtils::Contains(const DataShare::OperationItem &item, RdbPredicates &pre
 {
     predicates.Contains(item.GetSingle(0), ToValueObject(item.singleParams[1]));
 }
+
+void RdbUtils::NotContains(const DataShare::OperationItem &item, RdbPredicates &predicates)
+{
+    predicates.NotContains(item.GetSingle(0), ToValueObject(item.singleParams[1]));
+}
+
 
 void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
