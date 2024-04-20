@@ -22,6 +22,7 @@ ohos_copy("relational_store_declaration") {
 }
 
 sources = [
+  "../common/src/js_evt_handler.cpp",
   "../common/src/js_scope.cpp",
   "../common/src/js_utils.cpp",
   "../common/src/js_uv_queue.cpp",
@@ -73,6 +74,7 @@ if (is_ohos) {
       "ability_runtime:napi_base_context",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "napi:ace_napi",
