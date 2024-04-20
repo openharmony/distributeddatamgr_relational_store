@@ -154,6 +154,8 @@ enum RdbPredicateOperator {
     LESS_THAN_OR_EQUAL,
     DISTINCT,
     INDEXED_BY,
+    NOT_CONTAINS,
+    NOT_LIKE,
     OPERATOR_MAX
 };
 

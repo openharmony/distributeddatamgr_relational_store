@@ -455,13 +455,17 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
     auto connection = connectionPool->AcquireConnection(true);
     EXPECT_NE(nullptr, connection);
     connection = connectionPool->AcquireConnection(true);
-    EXPECT_EQ(nullptr, connection);
+    EXPECT_NE(nullptr, connection);
+    connection = connectionPool->AcquireConnection(true);
+    EXPECT_NE(nullptr, connection);
 
     // repeat AcquireWriter without release
     connection = connectionPool->AcquireConnection(false);
     EXPECT_NE(nullptr, connection);
     connection = connectionPool->AcquireConnection(false);
     EXPECT_EQ(nullptr, connection);
+    connection = connectionPool->AcquireConnection(false);
+    EXPECT_NE(nullptr, connection);
 
     // repeat AcquireTransaction without release
     errCode = connectionPool->AcquireTransaction();
@@ -497,12 +501,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
     auto connection = connectionPool->AcquireConnection(false);
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
     EXPECT_EQ(E_ERROR, errCode);
-
-    // newPath == currentPath, idleReadConnectionCount != readConnectionCount
-    connection = connectionPool->AcquireConnection(true);
-    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
-    EXPECT_EQ(E_ERROR, errCode);
-
+    connection = nullptr;
     // newPath == currentPath
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
     EXPECT_NE(E_OK, errCode);

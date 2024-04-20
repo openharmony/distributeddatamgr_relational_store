@@ -41,5 +41,8 @@
 	{"name":"OH_Data_Asset_CreateOne"},
 	{"name":"OH_Data_Asset_DestroyOne"},
 	{"name":"OH_Data_Asset_CreateMultiple"},
-	{"name":"OH_Data_Asset_DestroyMultiple"}
+	{"name":"OH_Data_Asset_DestroyMultiple"},
+	{"name":"OH_Rdb_LockRow"},
+	{"name":"OH_Rdb_UnlockRow"},
+	{"name":"OH_Rdb_QueryLockedRow"}
 ]

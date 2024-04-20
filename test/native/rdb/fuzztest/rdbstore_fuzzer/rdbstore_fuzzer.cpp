@@ -177,6 +177,152 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
+int RdbDoLockRowFuzz(const uint8_t *data, size_t size, bool isLock)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+
+    bool result = true;
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        result = false;
+    }
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    AbsRdbPredicates predicates(tableName);
+    predicates.EqualTo("name", ValueObject(valName));
+    errCode = store->ModifyLockStatus(predicates, isLock);
+    if (errCode != E_OK) {
+        result = false;
+    }
+
+    store->ExecuteSql("DELETE FROM test");
+    return result;
+}
+
+bool RdbLockRowFuzz(const uint8_t *data, size_t size)
+{
+    return RdbDoLockRowFuzz(data, size, true);
+}
+
+bool RdbUnlockRowFuzz(const uint8_t *data, size_t size)
+{
+    return RdbDoLockRowFuzz(data, size, false);
+}
+
+void RdbSetLockedRowPredicates(AbsRdbPredicates &predicates)
+{
+    predicates.Clear();
+    predicates.BeginWrap();
+    predicates.EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED);
+    predicates.Or();
+    predicates.EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED);
+    predicates.EndWrap();
+}
+
+void RdbQueryLockedRowFuzz1(const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        return;
+    }
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    std::string vectorElem(data, data + size);
+    AbsRdbPredicates predicates(tableName);
+    RdbSetLockedRowPredicates(predicates);
+    predicates.EqualTo("name", ValueObject(valName));
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.NotEqualTo("name", ValueObject(valName));
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.Contains("name", valName);
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.BeginsWith("name", valName);
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.EndsWith("name", valName);
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.Like("name", valName);
+    store->QueryByStep(predicates, { vectorElem });
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.Glob("name", valName);
+    store->QueryByStep(predicates, { vectorElem });
+    store->ExecuteSql("DELETE FROM test");
+}
+
+void RdbQueryLockedRowFuzz2(const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    if (errCode != E_OK) {
+        return;
+    }
+
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    ValueObject valAge(std::string(data, data + size));
+    ValueObject valAgeChange(std::string(data, data + size));
+    std::vector<std::string> bindaArgs({ std::string(data, data + size) });
+    std::vector<ValueObject> vectorElem({ std::string(data, data + size) });
+    AbsRdbPredicates predicates(tableName);
+    RdbSetLockedRowPredicates(predicates);
+    predicates.Between("age", valAge, valAgeChange);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.NotBetween("age", valAge, valAgeChange);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.GreaterThan("age", valAge);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.LessThan("age", valAgeChange);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.GreaterThanOrEqualTo("age", valAge);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.LessThanOrEqualTo("age", valAgeChange);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.In("name", vectorElem);
+    store->QueryByStep(predicates, bindaArgs);
+
+    RdbSetLockedRowPredicates(predicates);
+    predicates.NotIn("name", vectorElem);
+    store->QueryByStep(predicates, bindaArgs);
+    store->ExecuteSql("DELETE FROM test");
+}
+
 void RdbQueryFuzz1(const uint8_t *data, size_t size)
 {
     if (data == nullptr) {
@@ -291,6 +437,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::RdbUpdateFuzz(data, size);
     OHOS::RdbQueryFuzz1(data, size);
     OHOS::RdbQueryFuzz2(data, size);
+    OHOS::RdbLockRowFuzz(data, size);
+    OHOS::RdbUnlockRowFuzz(data, size);
+    OHOS::RdbQueryLockedRowFuzz1(data, size);
+    OHOS::RdbQueryLockedRowFuzz2(data, size);
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }
