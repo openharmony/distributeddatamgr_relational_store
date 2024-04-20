@@ -33,6 +33,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -87,6 +88,8 @@ private:
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
+    static Descriptor GetDescriptors();
+    static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
 
     static constexpr int EVENT_HANDLE_NUM = 2;
     static constexpr int WAIT_TIME_DEFAULT = 2;
