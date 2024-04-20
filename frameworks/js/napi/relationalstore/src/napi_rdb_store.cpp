@@ -204,7 +204,6 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("close", Close),
             DECLARE_NAPI_FUNCTION("attach", Attach),
             DECLARE_NAPI_FUNCTION("detach", Detach),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
             DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
             DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
             DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
@@ -219,7 +218,6 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("lockRow", LockRow),
             DECLARE_NAPI_FUNCTION("unlockRow", UnlockRow),
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
-#endif
         };
         AddSyncFunctions(properties);
         return properties;
