@@ -533,6 +533,22 @@ public:
     virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
+     * @brief SubscribeObserver to event changes.
+     */
+    virtual int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+    {
+        return E_OK;
+    }
+
+    /**
+     * @brief UnsubscribeObserver to event changes.
+     */
+    virtual int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+    {
+        return E_OK;
+    }
+
+    /**
      * @brief Register message for auto sync operation.
      */
     virtual int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;

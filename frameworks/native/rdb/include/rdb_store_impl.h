@@ -168,6 +168,10 @@ public:
 
     int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
+    int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
+
+    int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
+
     int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
 
     int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
@@ -217,12 +221,14 @@ private:
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
+    int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
 
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
     int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
+    int32_t UnsubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
