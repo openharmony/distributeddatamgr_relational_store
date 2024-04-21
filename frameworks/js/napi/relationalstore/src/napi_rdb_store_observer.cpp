@@ -42,7 +42,7 @@ void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
 {
-    if (mode_ == DistributedRdb::CLOUD_DETAIL) {
+    if (mode_ == DistributedRdb::CLOUD_DETAIL || mode_ == DistributedRdb::LOCAL_DETAIL) {
         std::vector<JSChangeInfo> infos;
         for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
             infos.push_back(JSChangeInfo(origin, it));
