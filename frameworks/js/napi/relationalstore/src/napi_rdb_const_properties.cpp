@@ -58,6 +58,7 @@ static napi_value ExportSubscribeType(napi_env env)
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_REMOTE", int32_t(SubscribeMode::REMOTE));
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD", int32_t(SubscribeMode::CLOUD));
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD_DETAILS", int32_t(SubscribeMode::CLOUD_DETAIL));
+    SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_LOCAL_DETAILS", int32_t(SubscribeMode::LOCAL_DETAIL));
     napi_object_freeze(env, subscribeType);
     return subscribeType;
 }
