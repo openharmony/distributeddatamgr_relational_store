@@ -1880,6 +1880,21 @@ int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreOb
     return E_OK;
 }
 
+int32_t RdbStoreImpl::SubscribeLocalDetail(const SubscribeOption &option,
+    const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    auto connection = connectionPool_->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    int32_t errCode = connection->Subscribe(option.event, observer);
+    if (errCode != E_OK) {
+        LOG_ERROR("subscribe local detail observer failed. db name:%{public}s errCode:%{public}" PRId32,
+            config_.GetName().c_str(), errCode);
+    }
+    return errCode;
+}
+
 int RdbStoreImpl::SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
 {
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
@@ -1995,6 +2010,21 @@ int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption& option)
     return E_OK;
 }
 
+int32_t RdbStoreImpl::UnsubscribeLocalDetail(const SubscribeOption& option,
+    const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    auto connection = connectionPool_->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_CON_OVER_LIMIT;
+    }
+    int32_t errCode = connection->Unsubscribe(option.event, observer);
+    if (errCode != E_OK) {
+        LOG_ERROR("unsubscribe local detail observer failed. db name:%{public}s errCode:%{public}" PRId32,
+            config_.GetName().c_str(), errCode);
+    }
+    return errCode;
+}
+
 int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
 {
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
@@ -2016,6 +2046,16 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
         return UnSubscribeLocalSharedAll(option);
     }
     return UnSubscribeRemote(option, observer);
+}
+
+int RdbStoreImpl::SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    return SubscribeLocalDetail(option, observer);
+}
+
+int RdbStoreImpl::UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    return UnsubscribeLocalDetail(option, observer);
 }
 
 int RdbStoreImpl::Notify(const std::string &event)
