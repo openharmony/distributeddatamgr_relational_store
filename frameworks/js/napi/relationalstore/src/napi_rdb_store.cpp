@@ -1602,8 +1602,14 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1], mode);
-    int errCode = GetInstance()->Subscribe(option, observer.get());
+    int errCode = E_OK;
+    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+        errCode = GetInstance()->SubscribeObserver(option, observer);
+    } else {
+        errCode = GetInstance()->Subscribe(option, observer.get());
+    }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
     LOG_INFO("subscribe success");
@@ -1658,6 +1664,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
 
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -1667,8 +1674,12 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
             ++it;
             continue;
         }
-
-        int errCode = GetInstance()->UnSubscribe(option, it->get());
+        int errCode = E_OK;
+        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+            errCode = GetInstance()->UnsubscribeObserver(option, *it);
+        } else {
+            errCode = GetInstance()->UnSubscribe(option, it->get());
+        }
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         it = observers_[mode].erase(it);
         LOG_DEBUG("observer unsubscribe success");
