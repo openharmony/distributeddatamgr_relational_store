@@ -16,7 +16,10 @@
 #ifndef RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
 #define RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
 
+#include <memory>
+
 #include "sqlite3sym.h"
+#include "store_observer.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -30,6 +33,14 @@ enum DBStatus {
 }
 
 DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db);
+
+DistributedDB::DBStatus RegisterStoreObserver(sqlite3 *db,
+    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
+
+DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db,
+    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
+
+DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db);
 
 DistributedDB::DBStatus Lock(
     const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db);

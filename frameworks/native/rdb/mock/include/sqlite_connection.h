@@ -16,11 +16,13 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_H
 #define NATIVE_RDB_SQLITE_CONNECTION_H
 
+#include <list>
 #include <mutex>
 #include <memory>
 #include <vector>
 
 #include "connection.h"
+#include "rdb_local_db_observer.h"
 #include "sqlite3sym.h"
 #include "sqlite_statement.h"
 #include "rdb_store_config.h"
@@ -49,6 +51,10 @@ public:
     int SubscribeTableChanges(const Notifier& notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
+    int32_t Subscribe(const std::string &event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Unsubscribe(const std::string &event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
 
 protected:
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
@@ -82,6 +88,9 @@ private:
 
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
+    int32_t UnsubscribeLocalDetail(const std::string &event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
+    int32_t UnsubscribeLocalDetailAll(const std::string &event);
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
@@ -100,6 +109,7 @@ private:
     std::mutex mutex_;
     std::string filePath;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
+    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> rdbStoreLocalDbObservers_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
