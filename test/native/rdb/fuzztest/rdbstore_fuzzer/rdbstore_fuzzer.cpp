@@ -365,6 +365,14 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     store->Query(predicates, {vectorElem});
 
     predicates.Clear();
+    predicates.NotLike("name", valName);
+    store->Query(predicates, {vectorElem});
+
+    predicates.Clear();
+    predicates.NotContains("name", valName);
+    store->Query(predicates, {vectorElem});
+
+    predicates.Clear();
     predicates.Glob("name", valName);
     store->Query(predicates, {vectorElem});
     store->ExecuteSql("DELETE FROM test");
