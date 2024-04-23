@@ -261,6 +261,9 @@ SqliteConnection::~SqliteConnection()
         if (hasClientObserver_) {
             UnRegisterClientObserver(dbHandle);
         }
+        if (isWriter_) {
+            UnregisterStoreObserver(dbHandle);
+        }
 
         int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
@@ -890,6 +893,91 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         default:
             return;
     }
+}
+
+int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    if (!isWriter_ || observer == nullptr) {
+        return E_OK;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    rdbStoreLocalDbObservers_.try_emplace(event);
+    auto &list = rdbStoreLocalDbObservers_.find(event)->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->GetObserver() == observer) {
+            LOG_ERROR("duplicate subscribe");
+            return E_OK;
+        }
+    }
+    auto localStoreObserver = std::make_shared<RdbStoreLocalDbObserver>(observer);
+    int32_t errCode = RegisterStoreObserver(dbHandle, localStoreObserver);
+    if (errCode != E_OK) {
+        LOG_ERROR("subscribe failed.");
+        return errCode;
+    }
+    rdbStoreLocalDbObservers_[event].push_back(std::move(localStoreObserver));
+    return E_OK;
+}
+
+int32_t SqliteConnection::Unsubscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    if (!isWriter_) {
+        return E_OK;
+    }
+    if (observer) {
+        return UnsubscribeLocalDetail(event, observer);
+    }
+    return UnsubscribeLocalDetailAll(event);
+}
+
+int32_t SqliteConnection::UnsubscribeLocalDetail(const std::string &event,
+    const std::shared_ptr<RdbStoreObserver> &observer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto observers = rdbStoreLocalDbObservers_.find(event);
+    if (observers == rdbStoreLocalDbObservers_.end()) {
+        return E_OK;
+    }
+
+    auto &list = observers->second;
+    for (auto it = list.begin(); it != list.end(); it++) {
+        if ((*it)->GetObserver() == observer) {
+            int32_t err = UnregisterStoreObserver(dbHandle, *it);
+            if (err != 0) {
+                LOG_ERROR("unsubscribeLocalShared failed.");
+                return err;
+            }
+            list.erase(it);
+            break;
+        }
+    }
+    if (list.empty()) {
+        rdbStoreLocalDbObservers_.erase(event);
+    }
+    return E_OK;
+}
+
+int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto observers = rdbStoreLocalDbObservers_.find(event);
+    if (observers == rdbStoreLocalDbObservers_.end()) {
+        return E_OK;
+    }
+
+    auto &list = observers->second;
+    auto it = list.begin();
+    while (it != list.end()) {
+        int32_t err = UnregisterStoreObserver(dbHandle, *it);
+        if (err != 0) {
+            LOG_ERROR("unsubscribe failed.");
+            return err;
+        }
+        it = list.erase(it);
+    }
+
+    rdbStoreLocalDbObservers_.erase(event);
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

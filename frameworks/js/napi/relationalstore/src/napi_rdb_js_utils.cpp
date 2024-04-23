@@ -167,30 +167,6 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tabl
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetails &tableDetails)
-{
-    napi_value jsValue = nullptr;
-    napi_status status = napi_create_array_with_length(env, tableDetails.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    int index = 0;
-    for (const auto &[device, result] : tableDetails) {
-        napi_value jsElement = nullptr;
-        // The length of the converted JavaScript array is 2
-        status = napi_create_array_with_length(env, 2, &jsElement);
-        if (status != napi_ok) {
-            return nullptr;
-        }
-        napi_set_element(env, jsElement, 0, Convert2JSValue(env, device));
-        napi_set_element(env, jsElement, 1, Convert2JSValue(env, result));
-        napi_set_element(env, jsValue, index++, jsElement);
-    }
-    return jsValue;
-}
-
-template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail)
 {
     napi_value object = nullptr;
@@ -374,7 +350,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
     LOG_DEBUG("stage mode branch");
     status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
     ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
-    status = GetNamedProperty(env, jsValue, "area", param.area);
+    status = GetNamedProperty(env, jsValue, "area", param.area, true);
     ASSERT(status == napi_ok, "get area failed.", napi_invalid_arg);
 
     napi_value hapInfo = nullptr;
@@ -389,7 +365,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
     if (appInfo != nullptr) {
         status = GetNamedProperty(env, appInfo, "name", param.bundleName);
         ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
-        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp);
+        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
         ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
     }
     return napi_ok;

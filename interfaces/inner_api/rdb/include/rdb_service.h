@@ -33,6 +33,7 @@ public:
         uint32_t seqNum = 0;
         bool isAsync = false;
         bool isAutoSync = false;
+        bool isCompensation = false;
     };
     using ResultSet = NativeRdb::ResultSet;
 

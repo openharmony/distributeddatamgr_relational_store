@@ -205,6 +205,7 @@ enum SubscribeMode {
     CLOUD_DETAIL,
     LOCAL,
     LOCAL_SHARED,
+    LOCAL_DETAIL,
     SUBSCRIBE_MODE_MAX
 };
 

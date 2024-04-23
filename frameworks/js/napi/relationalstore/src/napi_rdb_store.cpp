@@ -92,6 +92,7 @@ struct RdbStoreContext : public ContextBase {
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
     std::vector<NativeRdb::RdbStore::PRIKey> keys;
     std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
+    bool isQuerySql = false;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
@@ -104,8 +105,6 @@ struct RdbStoreContext : public ContextBase {
     {
     }
 };
-
-static __thread napi_ref constructor_ = nullptr;
 
 RdbStoreProxy::RdbStoreProxy()
 {
@@ -179,49 +178,67 @@ bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
     return type == napi_string;
 }
 
+Descriptor RdbStoreProxy::GetDescriptors()
+{
+    return []() -> std::vector<napi_property_descriptor> {
+        std::vector<napi_property_descriptor> properties = {
+            DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("executeSql", ExecuteSql, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("rollback", RollBackByTxId, ASYNC),
+            DECLARE_NAPI_FUNCTION("backup", Backup),
+            DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
+            DECLARE_NAPI_FUNCTION("beginTrans", BeginTrans),
+            DECLARE_NAPI_FUNCTION("rollBack", RollBack),
+            DECLARE_NAPI_FUNCTION("commit", Commit),
+            DECLARE_NAPI_FUNCTION("restore", Restore),
+            DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
+            DECLARE_NAPI_GETTER("rebuilt", GetRebuilt),
+            DECLARE_NAPI_FUNCTION("close", Close),
+            DECLARE_NAPI_FUNCTION("attach", Attach),
+            DECLARE_NAPI_FUNCTION("detach", Detach),
+            DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
+            DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
+            DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
+            DECLARE_NAPI_FUNCTION("sync", Sync),
+            DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
+            DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
+            DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData),
+            DECLARE_NAPI_FUNCTION("on", OnEvent),
+            DECLARE_NAPI_FUNCTION("off", OffEvent),
+            DECLARE_NAPI_FUNCTION("emit", Notify),
+            DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource),
+            DECLARE_NAPI_FUNCTION("lockRow", LockRow),
+            DECLARE_NAPI_FUNCTION("unlockRow", UnlockRow),
+            DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
+        };
+        AddSyncFunctions(properties);
+        return properties;
+    };
+}
+
+void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &properties)
+{
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySync, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QuerySync, SYNC));
+}
+
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
 {
-    napi_property_descriptor descriptors[] = {
-        DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("executeSql", ExecuteSql, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("rollback", RollBackByTxId, ASYNC),
-        DECLARE_NAPI_FUNCTION("backup", Backup),
-        DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
-        DECLARE_NAPI_FUNCTION("beginTrans", BeginTrans),
-        DECLARE_NAPI_FUNCTION("rollBack", RollBack),
-        DECLARE_NAPI_FUNCTION("commit", Commit),
-        DECLARE_NAPI_FUNCTION("restore", Restore),
-        DECLARE_NAPI_GETTER_SETTER("version", GetVersion, SetVersion),
-        DECLARE_NAPI_GETTER("rebuilt", GetRebuilt),
-        DECLARE_NAPI_FUNCTION("close", Close),
-        DECLARE_NAPI_FUNCTION("attach", Attach),
-        DECLARE_NAPI_FUNCTION("detach", Detach),
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
-        DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
-        DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
-        DECLARE_NAPI_FUNCTION("sync", Sync),
-        DECLARE_NAPI_FUNCTION("cloudSync", CloudSync),
-        DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime),
-        DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData),
-        DECLARE_NAPI_FUNCTION("on", OnEvent),
-        DECLARE_NAPI_FUNCTION("off", OffEvent),
-        DECLARE_NAPI_FUNCTION("emit", Notify),
-        DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource),
-#endif
-    };
-    napi_value cons = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_define_class(env, "RdbStore", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                                   sizeof(descriptors) / sizeof(napi_property_descriptor), descriptors, &cons));
-    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
+    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "RdbStore", GetDescriptors(), Initialize);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbStore", jsCtor));
 }
 
 napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
@@ -251,15 +268,14 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
         return nullptr;
     }
-    napi_value cons = nullptr;
-    napi_status status = napi_get_reference_value(env, constructor_, &cons);
-    if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::NewInstance get constructor failed! code:%{public}d!", status);
+    napi_value cons = JSUtils::GetClass(env, "ohos.data.relationalStore", "RdbStore");
+    if (cons == nullptr) {
+        LOG_ERROR("Constructor of ResultSet is nullptr!");
         return nullptr;
     }
 
     napi_value instance = nullptr;
-    status = napi_new_instance(env, cons, 0, nullptr, &instance);
+    auto status = napi_new_instance(env, cons, 0, nullptr, &instance);
     if (status != napi_ok) {
         LOG_ERROR("RdbStoreProxy::NewInstance napi_new_instance failed! code:%{public}d!", status);
         return nullptr;
@@ -291,7 +307,7 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
 int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<ContextBase> context)
 {
     RdbStoreProxy *obj = GetNativeInstance(env, self);
-    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "nullptr."));
+    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "not nullptr."));
     context->boundObj = obj;
     return OK;
 }
@@ -299,7 +315,7 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<Cont
 int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->tableName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
+    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty string."));
     return OK;
 }
 
@@ -307,7 +323,7 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 {
     double cursor = 0;
     auto status = JSUtils::Convert2Value(env, arg, cursor);
-    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "not invalid cursor"));
+    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "valid cursor."));
     context->cursor = static_cast<uint64_t>(cursor);
     return OK;
 }
@@ -315,14 +331,14 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->columnName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not string"));
+    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not empty string."));
     return OK;
 }
 
 int ParsePrimaryKey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     JSUtils::Convert2Value(env, arg, context->keys);
-    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "not number or string"));
+    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "number or string."));
     return OK;
 }
 
@@ -336,7 +352,7 @@ int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     int32_t ret = JSUtils::Convert2Value(env, arg, context->tablesNames);
-    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty"));
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty string."));
     return OK;
 }
 
@@ -1186,6 +1202,44 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
+napi_value RdbStoreProxy::QuerySync(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        if (IsNapiTypeString(env, argc, argv, 0)) {
+            context->isQuerySql = true;
+            CHECK_RETURN(OK == ParseSql(env, argv[0], context));
+            if (argc == 2) {
+                CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
+            }
+        } else {
+            CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
+            if (argc == 2) {
+                CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
+            }
+        }
+    };
+    auto exec = [context]() -> int {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
+        context->resultSet = context->isQuerySql
+                                 ? obj->GetInstance()->QueryByStep(context->sql, context->bindArgs)
+                                 : obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
+
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1548,8 +1602,14 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
     auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1], mode);
-    int errCode = GetInstance()->Subscribe(option, observer.get());
+    int errCode = E_OK;
+    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+        errCode = GetInstance()->SubscribeObserver(option, observer);
+    } else {
+        errCode = GetInstance()->Subscribe(option, observer.get());
+    }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
     LOG_INFO("subscribe success");
@@ -1604,6 +1664,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
 
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -1613,8 +1674,12 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
             ++it;
             continue;
         }
-
-        int errCode = GetInstance()->UnSubscribe(option, it->get());
+        int errCode = E_OK;
+        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+            errCode = GetInstance()->UnsubscribeObserver(option, *it);
+        } else {
+            errCode = GetInstance()->UnSubscribe(option, it->get());
+        }
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         it = observers_[mode].erase(it);
         LOG_DEBUG("observer unsubscribe success");
@@ -1891,6 +1956,74 @@ void RdbStoreProxy::SyncObserver::ProgressNotification(const Details &details)
                 argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
             });
     }
+}
+
+napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock)
+{
+    LOG_DEBUG("start");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
+    };
+    auto exec = [context, isLock]() -> int {
+        LOG_DEBUG("Async");
+        auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
+        CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
+        return obj->GetInstance()->ModifyLockStatus(*(context->rdbPredicates), isLock);
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+        LOG_DEBUG("end");
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
+
+napi_value RdbStoreProxy::LockRow(napi_env env, napi_callback_info info)
+{
+    return ModifyLockStatus(env, info, true);
+}
+
+napi_value RdbStoreProxy::UnlockRow(napi_env env, napi_callback_info info)
+{
+    return ModifyLockStatus(env, info, false);
+}
+
+napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1 to 2"));
+        CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
+        if (argc >= 2) {
+            CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
+        }
+    };
+    auto exec = [context]() -> int {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
+        CHECK_RETURN_ERR(context->rdbPredicates != nullptr);
+
+        context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
+        context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
+        context->resultSet = obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
 }
 #endif
 } // namespace RelationalStoreJsKit
