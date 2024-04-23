@@ -85,6 +85,7 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
       isWriter_(isWriteConnection),
       isReadOnly(false),
       openFlags(0),
+      maxVariableNumber_(0),
       filePath("")
 {
 }

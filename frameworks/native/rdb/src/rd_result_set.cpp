@@ -94,7 +94,7 @@ int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
         columnNames.push_back(columnName);
     }
     columnNames_ = columnNames;
-    columnCount_ = columnNames.size();
+    columnCount_ = static_cast<int>(columnNames.size());
     if (needReset) {
         rowPos_ = INIT_POS;
         return statement->ResetStatementAndClearBindings();

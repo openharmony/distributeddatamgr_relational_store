@@ -205,7 +205,7 @@ ValueObject::operator int64_t() const
 ValueObject::operator double() const
 {
     double val = 0.0L;
-    int type = value.index();
+    size_t type = value.index();
     if (type == ValueObject::TYPE_INT) {
         val = double(std::get<int64_t>(value));
     } else if (type == ValueObject::TYPE_DOUBLE) {
