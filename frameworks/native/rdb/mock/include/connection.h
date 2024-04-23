@@ -21,6 +21,7 @@
 #include <set>
 #include <string>
 
+#include "rdb_types.h"
 #include "rdb_store_config.h"
 #include "statement.h"
 namespace OHOS::NativeRdb {
@@ -47,6 +48,10 @@ public:
     virtual int SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
+    virtual int32_t Subscribe(const std::string &event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
+    virtual int32_t Unsubscribe(const std::string &event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
 private:
     int32_t id_ = 0;
 };

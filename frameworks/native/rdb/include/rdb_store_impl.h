@@ -168,6 +168,10 @@ public:
 
     int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
 
+    int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
+
+    int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
+
     int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
 
     int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
@@ -182,6 +186,7 @@ public:
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
+    int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
 
 protected:
     int InnerOpen();
@@ -216,12 +221,14 @@ private:
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
+    int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
 
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
     int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalSharedAll(const SubscribeOption& option);
+    int32_t UnsubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
@@ -233,10 +240,10 @@ private:
         const std::string &sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql, bool read = false) const;
     void RemoveDbFiles(std::string &path);
+    int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
-    static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
     static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 

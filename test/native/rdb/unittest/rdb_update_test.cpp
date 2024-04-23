@@ -231,6 +231,126 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_Update_005
+ * @tc.desc: test RdbStore insert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+
+    ValuesBucket values;
+    int changedRows;
+    int64_t id;
+
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Update(changedRows, "test", values, "id = ?",
+        std::vector<std::string>{ "1" });
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{});
+
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ERROR);
+
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_006
+ * @tc.desc: test RdbStore insert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+
+    ValuesBucket values;
+    int changedRows;
+    int64_t id;
+
+    values.Clear();
+    values.PutString("id", "2");
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Update(changedRows, "test", values, "id = ?",
+        std::vector<std::string>{ "1" });
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ERROR);
+
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_007
+ * @tc.desc: test RdbStore insert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+
+    ValuesBucket values;
+    int changedRows;
+    int64_t id;
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Update(changedRows, "test", values, "id = ?",
+        std::vector<std::string>{ "1" });
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ERROR);
+
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
  * @tc.name: RdbStore_UpdateWithConflictResolution_001
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC

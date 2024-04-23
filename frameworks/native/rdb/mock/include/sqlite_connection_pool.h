@@ -25,7 +25,7 @@
 #include <sstream>
 #include <stack>
 #include <vector>
-
+#include <atomic>
 #include "base_transaction.h"
 #include "connection.h"
 #include "rdb_common.h"
@@ -41,8 +41,8 @@ public:
     ~SqliteConnectionPool();
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
+    SharedConn AcquireRef(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
-    SharedConn AcquireByID(int32_t id);
     std::pair<int32_t, SharedConn> DisableWal();
     int32_t EnableWal();
     int RestartReaders();
@@ -65,7 +65,7 @@ private:
         std::shared_ptr<Connection> connect_;
 
         explicit ConnNode(std::shared_ptr<Connection> conn);
-        std::shared_ptr<Connection> GetConnect(bool justHold = false);
+        std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
         void Unused();
@@ -73,7 +73,10 @@ private:
 
     struct Container {
         using Creator = std::function<std::pair<int32_t, std::shared_ptr<Connection>>()>;
+        static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
+        bool disable_ = true;
         int max_ = 0;
+        int total_ = 0;
         int count_ = 0;
         int32_t left_ = 0;
         int32_t right_ = 0;
@@ -82,24 +85,31 @@ private:
         std::list<std::weak_ptr<ConnNode>> details_;
         std::mutex mutex_;
         std::condition_variable cond_;
-        int32_t Initialize(int32_t max, int32_t timeout, Creator creator);
-        std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
-            int32_t max, int32_t timeout, bool needAcquire, Creator creator);
+        Creator creator_ = nullptr;
+        std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(Creator creator, int32_t max, int32_t timeout,
+            bool disable, bool acquire = false);
         int32_t ConfigLocale(const std::string &locale);
         std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
-        std::shared_ptr<ConnNode> AcquireById(int32_t id);
+        std::list<std::shared_ptr<ConnNode>> AcquireAll(std::chrono::milliseconds milliS);
+
+        void Disable();
+        void Enable();
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
         int32_t Dump(const char *header);
+
+    private:
+        int32_t ExtendNode();
+        int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
 
     explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
-    int Init();
+    std::pair<int32_t, std::shared_ptr<Connection>> Init(const RdbStoreConfig &config, bool needWriter = false);
     int32_t GetMaxReaders(const RdbStoreConfig &config);
+    std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
     void RemoveDBFile();
-    void MarkRebuild(RebuiltType &type);
     void RemoveDBFile(const std::string &path);
 
     static constexpr int LIMITATION = 1024;

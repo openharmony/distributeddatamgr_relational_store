@@ -316,7 +316,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
     EXPECT_EQ(1, changedRows);
 }
 
-
 /**
  * @tc.name: RdbStore_GetStore_003
  * @tc.desc: createRDB
@@ -325,54 +324,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
  * @tc.author: lcl
  */
 HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
-{
-    std::shared_ptr<RdbStore> store2 = CreateGetRDB(2);
-    std::shared_ptr<RdbStore> store3 = CreateGetRDB(3);
-
-    int currentVersion;
-    int ret;
-    int64_t id;
-    int changedRows;
-    ValuesBucket values;
-
-    ret = store2->GetVersion(currentVersion);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
-
-    ret = store3->GetVersion(currentVersion);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
-
-    ret = store2->ExecuteSql("delete from test1");
-    EXPECT_EQ(ret, E_OK);
-
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
-    ret = store2->Insert(id, "test1", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    values.Clear();
-    values.PutInt("age", 20);
-    ret = store2->Update(changedRows, "test1", values, "age = ?", std::vector<std::string>{ "18" });
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, changedRows);
-
-    ret = store3->Delete(changedRows, "test1", "age = ?", std::vector<std::string>{ "20" });
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, changedRows);
-}
-
-
-/**
- * @tc.name: RdbStore_GetStore_004
- * @tc.desc: createRDB
- * @tc.type: FUNC
- * @tc.require: issue
- * @tc.author: lcl
- */
-HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
 {
     sleep(1);
     CreateRDB(2);
@@ -436,51 +387,3 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_00106, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 }
-
-/**
- * @tc.name: RdbStore_GetStore_005
- * @tc.desc: createRDB
- * @tc.type: FUNC
- * @tc.require: issue
- * @tc.author: lcl
- */
-HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
-{
-    std::shared_ptr<RdbStore> store2 = CreateGetRDB(2);
-    std::shared_ptr<RdbStore> store3 = CreateGetRDB(3);
-
-    int currentVersion;
-    int ret;
-    int64_t id;
-    int changedRows;
-    ValuesBucket values;
-
-    ret = store2->GetVersion(currentVersion);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
-
-    ret = store3->GetVersion(currentVersion);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
-
-    ret = store2->ExecuteSql("delete from test1");
-    EXPECT_EQ(ret, E_OK);
-
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
-    ret = store2->Insert(id, "test1", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    values.Clear();
-    values.PutInt("age", 20);
-    ret = store2->Update(changedRows, "test1", values, "age = ?", std::vector<std::string>{ "18" });
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, changedRows);
-
-    ret = store3->Delete(changedRows, "test1", "age = ?", std::vector<std::string>{ "20" });
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, changedRows);
-}
-

@@ -533,6 +533,22 @@ public:
     virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) = 0;
 
     /**
+     * @brief SubscribeObserver to event changes.
+     */
+    virtual int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+    {
+        return E_OK;
+    }
+
+    /**
+     * @brief UnsubscribeObserver to event changes.
+     */
+    virtual int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+    {
+        return E_OK;
+    }
+
+    /**
      * @brief Register message for auto sync operation.
      */
     virtual int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) = 0;
@@ -612,6 +628,16 @@ public:
     virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2)
     {
         return std::pair<int32_t, int32_t>(0, E_OK);
+    }
+
+    /**
+     * @brief Locks/Unlocks data from the database based on a specified instance object of AbsRdbPredicates.
+     *
+     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+     */
+    virtual int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock)
+    {
+        return E_ERROR;
     }
 };
 } // namespace OHOS::NativeRdb

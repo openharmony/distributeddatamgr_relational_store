@@ -1011,3 +1011,65 @@ HWTEST_F(RdbNativeStoreTest, Abnormal_RDB_OH_interface_test_022, TestSize.Level1
     errCode = OH_Rdb_CloseStore(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_023
+ * @tc.desc: Normal testCase of store for Lock/Unlock and QueryLockedRow.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
+{
+    EXPECT_NE(storeTestRdbStore_, nullptr);
+    char createTableSql[] = "CREATE TABLE lock_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, 0);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    EXPECT_NE(valueBucket, nullptr);
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "wanger");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "lock_test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("lock_test");
+    EXPECT_NE(predicates, nullptr);
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    EXPECT_NE(valueObject, nullptr);
+    const char *data1Value = "wanger";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+    errCode = OH_Rdb_LockRow(storeTestRdbStore_, predicates);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_ERROR);
+
+    predicates->clear(predicates);
+    OH_Cursor *cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, -1);
+
+    predicates->clear(predicates);
+    errCode = OH_Rdb_UnlockRow(storeTestRdbStore_, predicates);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_ERROR);
+
+    predicates->clear(predicates);
+    cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+
+    rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, -1);
+
+    valueObject->destroy(valueObject);
+    valueBucket->destroy(valueBucket);
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
