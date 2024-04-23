@@ -27,7 +27,7 @@ UvQueue::UvQueue(napi_env env) : env_(env)
     if (env != nullptr) {
         napi_get_uv_event_loop(env, &loop_);
     }
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner()); 
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
 }
 
 UvQueue::~UvQueue()
@@ -228,7 +228,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         if (entry == nullptr) {
             return;
         }
-       Scope scope(entry->env_);
+        Scope scope(entry->env_);
         napi_value method = entry->GetCallback();
         if (method == nullptr) {
             LOG_ERROR("the callback is invalid, maybe is cleared!");
