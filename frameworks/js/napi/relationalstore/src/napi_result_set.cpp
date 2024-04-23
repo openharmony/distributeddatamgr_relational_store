@@ -82,17 +82,18 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
-        if (data == nullptr) {
-            LOG_ERROR("ResultSetProxy finalize failed, data is null.");
+        if (data != hint) {
+            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
+                uintptr_t(data), uintptr_t(hint));
             return;
         }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         delete proxy;
     };
-    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
+    napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("ResultSetProxy napi_wrap failed! code:%{public}d!", status);
-        finalize(env, proxy, nullptr);
+        finalize(env, proxy, proxy);
         return nullptr;
     }
     return self;
