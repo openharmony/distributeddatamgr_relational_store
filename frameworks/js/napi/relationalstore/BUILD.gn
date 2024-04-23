@@ -22,7 +22,6 @@ ohos_copy("relational_store_declaration") {
 }
 
 sources = [
-  "../common/src/js_evt_handler.cpp",
   "../common/src/js_scope.cpp",
   "../common/src/js_utils.cpp",
   "../common/src/js_uv_queue.cpp",

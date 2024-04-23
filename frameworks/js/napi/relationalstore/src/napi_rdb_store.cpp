@@ -272,7 +272,6 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         return instance;
     }
     proxy->queue_ = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
-    proxy->handler_ = std::make_shared<AppDataMgrJsKit::EvtHandler>(env);
     proxy->SetInstance(std::move(value));
     proxy->isSystemAppCalled_ = isSystemAppCalled;
     return instance;
@@ -1442,12 +1441,12 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
-        auto async = [handler = obj->handler_, callback = context->asyncHolder](const Details &details) {
-            if (handler == nullptr || callback == nullptr) {
+        auto async = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
+            if (queue == nullptr || callback == nullptr) {
                 return;
             }
             bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
-            handler->PostTask({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
+            queue->AsyncCallInOrder({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
                 argc = 1;
                 argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
             });
