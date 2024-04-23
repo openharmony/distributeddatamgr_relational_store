@@ -60,7 +60,7 @@ public:
 private:
     struct ConnNode {
         bool using_ = false;
-        uint32_t tid_ = 0;
+        int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
         std::shared_ptr<Connection> connect_;

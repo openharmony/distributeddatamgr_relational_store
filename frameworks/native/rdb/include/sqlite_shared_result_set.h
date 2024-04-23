@@ -61,7 +61,7 @@ private:
     static constexpr int NO_COUNT = -1;
     // The pick position of the shared block for search
     static constexpr int PICK_POS = 3;
-    int resultSetBlockCapacity_;
+    uint32_t resultSetBlockCapacity_;
     // The number of rows in the cursor
     int rowNum_;
     std::string qrySql_;

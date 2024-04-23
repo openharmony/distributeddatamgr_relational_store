@@ -378,10 +378,11 @@ private:
         SharedBlock *&outSharedBlock);
 
     inline void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0) {
-        if (offset + bufferSize > mSize) {
+        uint32_t safeOffset = offset;
+        if (safeOffset + bufferSize > mSize) {
             return nullptr;
         }
-        return mData + offset;
+        return mData + safeOffset;
     }
 };
 } // namespace AppDataFwk
