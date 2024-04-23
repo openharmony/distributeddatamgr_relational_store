@@ -246,6 +246,11 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data != hint) {
+            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
+                uintptr_t(data), uintptr_t(hint));
+            return;
+        }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
         delete proxy;
     };
@@ -253,10 +258,10 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     if (proxy == nullptr) {
         return nullptr;
     }
-    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
+    napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
     if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::Initialize napi_wrap failed! code:%{public}d!", status);
-        finalize(env, proxy, nullptr);
+        LOG_ERROR("RdbStoreProxy napi_wrap failed! code:%{public}d!", status);
+        finalize(env, proxy, proxy);
         return nullptr;
     }
     return self;
