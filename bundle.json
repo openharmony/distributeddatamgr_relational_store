@@ -57,6 +57,7 @@
                 "common_event_service",
                 "c_utils",
                 "device_manager",
+                "eventhandler",
                 "hilog",
                 "hitrace",
                 "huks",
