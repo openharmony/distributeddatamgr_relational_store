@@ -320,6 +320,8 @@ static constexpr int E_DATABASE_CORRUPT = (E_BASE + 56);
  * @brief The error when unlocking data needs to be compensated sync
  */
 static constexpr int E_WAIT_COMPENSATED_SYNC = (E_BASE + 57);
+
+static constexpr int E_CONFIG_INVALID_CHANGE = (E_BASE + 58);
 } // namespace NativeRdb
 } // namespace OHOS
 

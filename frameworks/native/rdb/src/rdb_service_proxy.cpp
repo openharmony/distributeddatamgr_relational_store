@@ -320,10 +320,26 @@ void RdbServiceProxy::ImportObservers(Observers &observers)
     });
 }
 
-int32_t RdbServiceProxy::GetSchema(const RdbSyncerParam &param)
+int32_t RdbServiceProxy::BeforeOpen(RdbSyncerParam &param)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_SCHEMA), reply, param);
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_BEFORE_OPEN), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return status;
+    }
+    if (!ITypesUtil::Unmarshal(reply, param)) {
+        LOG_ERROR("read result failed");
+        status = RDB_ERROR;
+    }
+    return status;
+}
+
+int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_AFTER_OPEN), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
