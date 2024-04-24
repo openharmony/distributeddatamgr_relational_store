@@ -102,6 +102,12 @@ bool JSAbility::CheckContext(napi_env env, napi_callback_info info)
 
 std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
 {
+    return GetStageModeContext(env, value);
+}
+
+
+std::shared_ptr<Context> JSAbility::GetStageModeContext(napi_env env, napi_value value)
+{
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
     LOG_DEBUG("Get context as stage mode.");
     auto stageContext = AbilityRuntime::Platform::GetStageModeContext(env, value);
@@ -114,6 +120,14 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
     return std::make_shared<Context>();
 #endif
 }
+
+
+std::shared_ptr<Context> JSAbility::GetCurrentAbility(napi_env env, napi_value value)
+{
+    LOG_ERROR("Get context as feature ability mode.");
+    return std::make_shared<Context>();
+}
+
 
 bool Context::IsHasProxyDataConfig() const
 {
