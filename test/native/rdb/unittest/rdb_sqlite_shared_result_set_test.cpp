@@ -1543,3 +1543,21 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_035, TestSize.Le
 
     resultSet->Close();
 }
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_036
+ * @tc.desc: normal testcase of SqliteSharedResultSet for moveFirst
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_036, TestSize.Level1)
+{
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<ResultSet> rstSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(rstSet, nullptr);
+
+    int ret = rstSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_ERROR);
+    ret = rstSet->GoToLastRow();
+    EXPECT_EQ(ret, E_ERROR);
+}
