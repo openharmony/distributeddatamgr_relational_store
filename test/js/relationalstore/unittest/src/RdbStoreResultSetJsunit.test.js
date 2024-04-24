@@ -68,7 +68,7 @@ describe('rdbResultSetTest', function () {
             const valueBucket = {
                 "data1": "2",
                 "data2": -5,
-                "data3": 2.5,
+                "data3": 100000.5,
                 "data4": u8,
             }
             await rdbStore.insert("test", valueBucket)
@@ -78,7 +78,7 @@ describe('rdbResultSetTest', function () {
             const valueBucket = {
                 "data1": "hello world",
                 "data2": 3,
-                "data3": 1.8,
+                "data3": 100000,
                 "data4": u8,
             }
             await rdbStore.insert("test", valueBucket)
@@ -586,7 +586,7 @@ describe('rdbResultSetTest', function () {
         expect(true).assertEqual(resultSet.goToFirstRow())
         expect(true).assertEqual(resultSet.goToNextRow())
         const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
-        expect("2.5").assertEqual(data3);
+        expect("100000.5").assertEqual(data3);
 
         resultSet.close();
         resultSet = null
@@ -611,7 +611,7 @@ describe('rdbResultSetTest', function () {
         const data3 = resultSet.getString(resultSet.getColumnIndex("data3"))
         expect("hello world").assertEqual(data1);
         expect("3").assertEqual(data2);
-        expect("1.8").assertEqual(data3);
+        expect("100000").assertEqual(data3);
 
         resultSet.close();
         resultSet = null
@@ -1485,7 +1485,7 @@ describe('rdbResultSetTest', function () {
 
         resultSet.goTo(2)
         const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
-        expect(2.5).assertEqual(data3)
+        expect(100000.5).assertEqual(data3)
 
         resultSet.close()
         resultSet = null;
@@ -1507,7 +1507,7 @@ describe('rdbResultSetTest', function () {
 
         resultSet.goTo(3)
         const data3 = resultSet.getDouble(resultSet.getColumnIndex("data3"))
-        expect(1.8).assertEqual(data3)
+        expect(100000).assertEqual(data3)
 
         resultSet.close()
         resultSet = null;
