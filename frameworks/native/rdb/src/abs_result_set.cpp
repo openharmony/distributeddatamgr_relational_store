@@ -185,6 +185,9 @@ int AbsResultSet::GoToLastRow()
         LOG_ERROR("Failed to GetRowCount, ret is %{public}d", ret);
         return ret;
     }
+    if (rowCnt == 0) {
+        return E_ERROR;
+    }
 
     ret = GoToRow(rowCnt - 1);
     if (ret != E_OK) {
