@@ -286,6 +286,7 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
         { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
     };
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
@@ -330,6 +331,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_NONCE, .blob = blobNonce },
         { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
     };
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
@@ -384,6 +386,7 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
         { .tag = HKS_TAG_NONCE, .blob = blobNonce },
         { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
         { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
     };
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
@@ -475,6 +478,7 @@ int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlia
         { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
     };
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
