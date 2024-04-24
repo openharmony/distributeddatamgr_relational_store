@@ -27,12 +27,14 @@ UvQueue::UvQueue(napi_env env) : env_(env)
     if (env != nullptr) {
         napi_get_uv_event_loop(env, &loop_);
     }
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
 }
 
 UvQueue::~UvQueue()
 {
     LOG_DEBUG("no memory leak for queue-callback");
     env_ = nullptr;
+    handler_ = nullptr;
 }
 
 void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
@@ -65,6 +67,26 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
         LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
         delete entry;
         delete work;
+    }
+}
+
+void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
+{
+    if (handler_ == nullptr || callback.IsNull()) {
+        LOG_ERROR("handler_ or callback is nullptr");
+        return;
+    }
+    auto entry = std::make_shared<UvEntry>();
+    if (entry == nullptr) {
+        LOG_ERROR("no memory for UvEntry");
+        return;
+    }
+    entry->env_ = env_;
+    entry->callback_ = callback.callback_;
+    entry->repeat_ = callback.repeat_;
+    entry->args_ = std::move(args);
+    if (handler_ != nullptr) {
+        handler_->PostTask(GenCallbackTask(entry));
     }
 }
 
@@ -175,22 +197,7 @@ void UvQueue::DoUvCallback(uv_work_t *work, int status)
         delete work;
     });
 
-    Scope scope(entry->env_);
-    napi_value method = entry->GetCallback();
-    if (method == nullptr) {
-        LOG_ERROR("the callback is invalid, maybe is cleared!");
-        return;
-    }
-    napi_value argv[ARGC_MAX] = { nullptr };
-    auto argc = entry->GetArgv(argv, ARGC_MAX);
-    auto object = entry->GetObject();
-    napi_value promise = nullptr;
-    status = napi_call_function(entry->env_, object, method, argc, argv, &promise);
-    if (status != napi_ok) {
-        LOG_ERROR("notify data change failed status:%{public}d.", status);
-        return;
-    }
-    entry->BindPromise(promise);
+    GenCallbackTask(entry)();
 }
 
 void UvQueue::DoUvPromise(uv_work_t *work, int status)
@@ -215,14 +222,41 @@ void UvQueue::DoUvPromise(uv_work_t *work, int status)
     }
 }
 
+UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
+{
+    return [entry]() {
+        if (entry == nullptr) {
+            return;
+        }
+        Scope scope(entry->env_);
+        napi_value method = entry->GetCallback();
+        if (method == nullptr) {
+            LOG_ERROR("the callback is invalid, maybe is cleared!");
+            return;
+        }
+        napi_value argv[ARGC_MAX] = { nullptr };
+        auto argc = entry->GetArgv(argv, ARGC_MAX);
+        auto object = entry->GetObject();
+        napi_value promise = nullptr;
+        auto status = napi_call_function(entry->env_, object, method, argc, argv, &promise);
+        if (status != napi_ok) {
+            LOG_ERROR("notify data change failed status:%{public}d.", status);
+            return;
+        }
+        entry->BindPromise(promise);
+    };
+}
+
 UvQueue::UvEntry::~UvEntry()
 {
     if (callback_ == nullptr || repeat_) {
         return;
     }
     napi_delete_reference(env_, callback_);
+    callback_ = nullptr;
     if (object_ != nullptr) {
         napi_delete_reference(env_, object_);
+        object_ = nullptr;
     }
 }
 
