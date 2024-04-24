@@ -58,8 +58,8 @@ napi_value JsConfig::EnableCloud(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId, 1 is the index of argument switches
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+            "The type of accountId must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->tempSwitches);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of switches must be {[bundleName: string]: boolean}.");
@@ -109,8 +109,8 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+            "The type of accountId must be string and not empty.");
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "DisableCloud exit");
@@ -157,12 +157,12 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+            "The type of accountId must be string and not empty.");
         // 1 is the index of argument bundleName
         status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(), Status::INVALID_ARGUMENT,
+            "The type of bundleName must be string and not empty.");
         bool state = false;
         // 2 is the index of argument state
         status = JSUtils::Convert2Value(env, argv[2], state);
@@ -212,8 +212,8 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId, 1 is the index of argument
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+            "The type of accountId must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->appActions);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of actions must be {[bundleName: string]: int32_t}.");
@@ -272,15 +272,15 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         if (argc > 1 && napi_typeof(env, argv[0], &type) == napi_ok && type != napi_object) {
             // 0 is the index of argument accountId, 1 is the index of argument bundleName
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                "The type of accountId must be string.");
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+                "The type of accountId must be string and not empty.");
             status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                "The type of bundleName must be string.");
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(), Status::INVALID_ARGUMENT,
+                "The type of bundleName must be string and not empty.");
         } else {
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                "The type of extInfo must be Extradata.");
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && VerifyExtraData(ctxt->extInfo), Status::INVALID_ARGUMENT,
+                "The type of extInfo must be Extradata and not empty.");
             if (argc > 1) {
                 status = JSUtils::Convert2ValueExt(env, argv[1], ctxt->userId);
                 ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
@@ -311,6 +311,9 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
         LOG_DEBUG("NotifyDataChange return %{public}d", status);
         ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
             ? napi_ok : napi_generic_failure;
+        if (status == Status::INVALID_ARGUMENT) {
+            ctxt->error += "The parameter required is a valid value.";
+        }
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
@@ -335,12 +338,12 @@ napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-            "The type of accountId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT,
+            "The type of accountId must be string and not empty.");
         // 1 is the index of argument bundleName
         status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-            "The type of bundleName must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(), Status::INVALID_ARGUMENT,
+            "The type of bundleName must be string and not empty.");
         // 2 is the index of argument storeId
         if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
             // 2 is the index of argument storeId

@@ -57,16 +57,16 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
         // allocResourceAndShare storeId, predicates, participants 3 required parameter， columns 1 Optional parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->storeId);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
-            Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->storeId.empty(), Status::INVALID_ARGUMENT,
+            "The type of storeId must be string and not empty.");
         // 'argv[1]' represents a RdbPredicates parameter
         status = JSUtils::Convert2Value(env, argv[1], ctxt->predicates);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of predicates must be relationalStore.RdbPredicates");
         // 'argv[2]' represents a Participants parameter
         status = JSUtils::Convert2Value(env, argv[2], ctxt->participants);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK,
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(), Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
         // 'argv[3]' represents an optional std::vector<std::string> parameter
         if (argc > 3 && !JSUtils::IsNull(env, argv[3])) {
             // 'argv[3]' represents the columns optional parameter
@@ -123,10 +123,10 @@ napi_value Share(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
+            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "share exit");
 
@@ -174,10 +174,10 @@ napi_value Unshare(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
+            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "unShare exit");
     auto execute = [env, ctxt]() {
@@ -221,7 +221,7 @@ napi_value Exit(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "exit exit");
     auto execute = [env, ctxt]() {
@@ -270,10 +270,10 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant>.");
+            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "changePrivilege exit");
     auto execute = [env, ctxt]() {
@@ -317,7 +317,7 @@ napi_value Query(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "query exit");
     auto execute = [env, ctxt]() {
@@ -362,7 +362,7 @@ napi_value QueryByInvitation(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->invitationCode);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
-            Status::INVALID_ARGUMENT, "The type of invitationCode must be string.");
+            Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "queryByInvitation exit");
     auto execute = [env, ctxt]() {
@@ -408,7 +408,7 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->invitationCode);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
-        Status::INVALID_ARGUMENT, "The type of invitationCode must be string.");
+        Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
         int32_t confirmation;
         status = JSUtils::Convert2ValueExt(env, argv[1], confirmation);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK &&
@@ -460,7 +460,7 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string.");
+            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         int32_t confirmation;
         status = JSUtils::Convert2ValueExt(env, argv[1], confirmation);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK &&
