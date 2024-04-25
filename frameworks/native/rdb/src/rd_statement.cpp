@@ -307,7 +307,7 @@ int RdStatement::GetColumnString(int index, std::string &value) const
             break;
         }
         case ColumnType::TYPE_INTEGER: {
-            int64_t val = RdUtils::RdSqlColInt64(stmtHandle_, index);
+            int64_t val = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
             value = std::to_string(val);
             break;
         }
@@ -382,7 +382,7 @@ int RdStatement::GetColumnDouble(int index, double &value) const
     if (type == ColumnType::TYPE_FLOAT) {
         value = RdUtils::RdSqlColDouble(stmtHandle_, index);
     } else if (type == ColumnType::TYPE_INTEGER) {
-        int64_t val = RdUtils::RdSqlColInt64(stmtHandle_, index);
+        int64_t val = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
         value = static_cast<double>(val);
     } else if (type == ColumnType::TYPE_STRING) {
         auto val = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
