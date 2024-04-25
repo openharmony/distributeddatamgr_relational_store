@@ -229,6 +229,7 @@ protected:
     static const int INIT_POS = -1;
 private:
     int GetCustomerValue(int index, ValueObject &value, AppDataFwk::SharedBlock *block) const;
+    int32_t GetPrecision(double val);
 
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
     friend class ISharedResultSetStub;
