@@ -464,7 +464,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(const std::string& sql, 
     if (fieldSize == 0) {
         return ExecuteSqls();
     }
-    size_t rowNumbers = args.size() / fieldSize;
+    size_t rowNumbers = args.size() / static_cast<size_t>(fieldSize);
     size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
     size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
     size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
