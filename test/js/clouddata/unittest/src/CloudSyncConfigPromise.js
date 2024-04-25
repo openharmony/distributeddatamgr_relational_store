@@ -673,4 +673,71 @@ describe('CloudConfigPromiseTest', function () {
         console.log(TAG + "************* setGlobalCloudStrategyTest009 end *************");
     })
 
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest001
+     * @tc.desc Test Js Api QueryLastSyncInfo that accountId parameter is number
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest001', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest001');
+        try {
+            await cloudData.Config.queryLastSyncInfo(123, "bundleName");
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest001 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest002
+     * @tc.desc Test Js Api QueryLastSyncInfo that bundleName parameter is number
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest002', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest002');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id", 123);
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest002 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest003
+     * @tc.desc Test Js Api QueryLastSyncInfo that lack accountId parameter
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest003', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest003');
+        try {
+            await cloudData.Config.queryLastSyncInfo();
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest003 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest004
+     * @tc.desc Test Js Api QueryLastSyncInfo that lack bundleName parameter
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest004', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest004');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id");
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest004 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
 })

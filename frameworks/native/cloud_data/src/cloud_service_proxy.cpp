@@ -14,6 +14,7 @@
  */
 #define LOG_TAG "CloudServiceProxy"
 #include "cloud_service_proxy.h"
+
 #include "itypes_util.h"
 #include "logger.h"
 
@@ -258,5 +259,19 @@ int32_t CloudServiceProxy::SetCloudStrategy(Strategy strategy, const std::vector
             static_cast<uint32_t>(strategy), values.size());
     }
     return static_cast<Status>(status);
+}
+
+std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
+    const std::string &id, const std::string &bundleName, const std::string &storeId)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY_LAST_SYNC_INFO, reply, id, bundleName, storeId);
+    if (status != SUCCESS) {
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s storeId:%{public}.3s", status, id.c_str(),
+            bundleName.c_str(), storeId.c_str());
+    }
+    QueryLastResults results;
+    ITypesUtil::Unmarshal(reply, results);
+    return { status, results };
 }
 } // namespace OHOS::CloudData
