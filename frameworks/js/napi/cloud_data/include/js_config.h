@@ -55,6 +55,7 @@ public:
     static napi_value NotifyDataChange(napi_env env, napi_callback_info info);
     static napi_value QueryStatistics(napi_env env, napi_callback_info info);
     static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
+    static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
 };
 
 } // namespace OHOS::CloudData
