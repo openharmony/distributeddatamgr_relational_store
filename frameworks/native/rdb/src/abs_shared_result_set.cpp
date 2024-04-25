@@ -204,6 +204,8 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     } else if (type == Block::CELL_UNIT_TYPE_FLOAT) {
         double tempValue = cellUnit->cell.doubleValue;
         std::ostringstream os;
+        os.setf(std::ios::fixed);
+        os.precision(GetPrecision(tempValue));
         if (os << tempValue) {
             value = os.str();
         }
@@ -218,6 +220,22 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
         return E_ERROR;
     }
     return E_OK;
+}
+
+int32_t AbsSharedResultSet::GetPrecision(double val)
+{
+    int max = std::numeric_limits<double>::max_digits10;
+    int precision = 0;
+    val = val - int64_t(val);
+    for (int i = 0; i < max; ++i) {
+        // Loop to multiply the decimal part of val by 10 until it is no longer a decimal
+        val *= 10;
+        if (int64_t(val) > 0) {
+            precision = i + 1;
+        }
+        val -= int64_t(val);
+    }
+    return precision;
 }
 
 int AbsSharedResultSet::GetInt(int columnIndex, int &value)
