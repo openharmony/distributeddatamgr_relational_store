@@ -93,7 +93,7 @@ int RdbStoreImpl::InnerOpen()
 
     syncerParam_.roleType_ = config_.GetRoleType();
     if (config_.GetRoleType() == OWNER) {
-        GetSchema(config_);
+        AfterOpen(config_);
     }
 
     int errCode = RegisterDataChangeCallback();
@@ -115,7 +115,7 @@ std::string RdbStoreImpl::GetSecManagerName(const RdbStoreConfig &config)
     return name;
 }
 
-void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
+void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
 {
     std::vector<uint8_t> key = config.GetEncryptKey();
     RdbPassword rdbPwd;
@@ -139,9 +139,9 @@ void RdbStoreImpl::GetSchema(const RdbStoreConfig &config)
                 LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
                 return;
             }
-            err = service->GetSchema(param);
+            err = service->AfterOpen(param);
             if (err != E_OK) {
-                LOG_ERROR("GetSchema failed, err is %{public}d.", err);
+                LOG_ERROR("AfterOpen failed, err is %{public}d.", err);
             }
         });
     }

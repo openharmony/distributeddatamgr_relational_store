@@ -27,6 +27,7 @@ namespace OHOS::DistributedRdb {
 enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
+    RDB_NO_META,
 };
 
 enum RdbDistributedType {

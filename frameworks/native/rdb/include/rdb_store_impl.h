@@ -134,7 +134,6 @@ public:
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
-    void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
     std::string GetOrgPath();
     std::string GetFileType();
@@ -187,6 +186,7 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
+    void AfterOpen(const RdbStoreConfig &config);
 
 protected:
     int InnerOpen();

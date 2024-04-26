@@ -907,6 +907,53 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStoreConfig_020
+ * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_030, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test_1.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string bundleName = "com.ohos.config.test1";
+    config.SetBundleName(bundleName);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetArea(0);
+    config.SetEncryptStatus(false);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    store = nullptr;
+
+    auto invalidConfig1 = config;
+    invalidConfig1.SetSecurityLevel(SecurityLevel::S2);
+    store = RdbHelper::GetRdbStore(invalidConfig1, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    store = nullptr;
+
+    auto invalidConfig2 = config;
+    invalidConfig2.SetArea(1);
+    store = RdbHelper::GetRdbStore(invalidConfig2, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    store = nullptr;
+
+    auto invalidConfig3 = config;
+    invalidConfig3.SetEncryptStatus(true);
+    store = RdbHelper::GetRdbStore(invalidConfig3, 1, helper, errCode);
+    EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    store = nullptr;
+
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
  * @tc.name: RdbStoreConfigVisitor_001
  * @tc.desc: test RdbStoreConfigVisitor
  * @tc.type: FUNC
