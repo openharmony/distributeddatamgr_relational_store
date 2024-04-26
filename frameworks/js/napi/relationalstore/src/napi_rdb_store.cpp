@@ -1907,32 +1907,6 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
     return nullptr;
 }
 
-napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-    };
-    ExecuteAction exec;
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    if (obj != nullptr) {
-        auto store = obj->GetInstance();
-        obj->SetInstance(nullptr);
-        exec = [context, store]() mutable -> int {
-            store = nullptr;
-            return OK;
-        };
-    }
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_get_undefined(env, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
-}
-
 RdbStoreProxy::SyncObserver::SyncObserver(
     napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> queue)
     : env_(env), queue_(queue)
@@ -2031,5 +2005,30 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 #endif
+napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    ExecuteAction exec;
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    if (obj != nullptr) {
+        auto store = obj->GetInstance();
+        obj->SetInstance(nullptr);
+        exec = [context, store]() mutable -> int {
+            store = nullptr;
+            return OK;
+        };
+    }
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
