@@ -206,7 +206,6 @@ private:
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
-    ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
@@ -216,7 +215,6 @@ private:
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
     ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
-    inline std::string GetSqlArgs(size_t size);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
@@ -239,6 +237,15 @@ private:
     std::string GetSecManagerName(const RdbStoreConfig &config);
     void RemoveDbFiles(std::string &path);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
+    int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
+        ConflictResolution conflictResolution);
+    int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
+        ConflictResolution conflictResolution);
+    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
+    int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
+    std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
+        int64_t trxId);
     static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
