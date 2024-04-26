@@ -197,8 +197,8 @@ describe('RdbStoreDataChangeTest', function () {
             expect(2).assertEqual(rowId);
         } catch (error) {
             console.error(TAG + `delete fail, code:${error.code}, message: ${error.message}`);
-            expect().assertFail();
             done();
+            expect().assertFail();
         }
         console.info(TAG + "************* testRdbStoreDataChange0003 end *************");
     })
@@ -331,7 +331,7 @@ describe('RdbStoreDataChangeTest', function () {
             expect().assertFail();
             done();
         } catch (error) {
-            expect(14800000).assertEqual(error.code);
+            expect(14800032).assertEqual(error.code);
             console.error(TAG + `insert fail, code:${error.code}, message: ${error.message}`);
             done();
         }

@@ -225,12 +225,12 @@ describe('rdbStoreTest', function () {
     it('testRdbStore0009', 0, async function () {
         console.log(TAG + "************* testRdbStore0009 start *************");
         let config1 = {
-            name: "rdbstore.db",
+            name: "rdbstore9.db",
             securityLevel: data_relationalStore.SecurityLevel.S1,
         }
 
         let config2 = {
-            name: "rdbstore.db",
+            name: "rdbstore9.db",
             securityLevel: data_relationalStore.SecurityLevel.S2,
         }
 
@@ -239,7 +239,7 @@ describe('rdbStoreTest', function () {
         try {
             await data_relationalStore.getRdbStore(context, config2);
         } catch (err) {
-            expect(14800000).assertEqual(err.code)
+            expect(14800017).assertEqual(err.code)
             console.log(TAG + "************* testRdbStore0009 end   *************");
         }
     })
@@ -253,12 +253,12 @@ describe('rdbStoreTest', function () {
     it('testRdbStore0010', 0, async function (done) {
         console.log(TAG + "************* testRdbStore0010 start *************");
         let config1 = {
-            name: "rdbstore.db",
+            name: "rdbstore10.db",
             securityLevel: data_relationalStore.SecurityLevel.S1,
         }
 
         let config2 = {
-            name: "rdbstore.db",
+            name: "rdbstore10.db",
             securityLevel: data_relationalStore.SecurityLevel.S2,
         }
 
@@ -267,7 +267,7 @@ describe('rdbStoreTest', function () {
         data_relationalStore.getRdbStore(context, config2, async (err, rdbStore) => {
             if (err) {
                 done()
-                expect(14800000).assertEqual(err.code)
+                expect(14800017).assertEqual(err.code)
                 console.log(TAG + "************* testRdbStore0010 end   *************");
             } else {
                 console.log("Get RdbStore successfully.")

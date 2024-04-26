@@ -77,11 +77,6 @@ std::shared_ptr<RdbConnection> RdbConnectionPool::AcquireConnection(bool isReadO
     return AcquireConnectionByTrxId(isReadOnly, trxId);
 }
 
-std::shared_ptr<RdbConnection> RdbConnectionPool::AcquireByID(int32_t id)
-{
-    return nullptr;
-}
-
 int RdbConnectionPool::RestartReaders()
 {
     return E_NOT_SUPPORTED;

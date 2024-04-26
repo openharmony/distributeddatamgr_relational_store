@@ -65,14 +65,14 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     std::lock_guard<std::mutex> lock(mutex_);
     auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();
     bundleName_ = config.GetBundleName();
+    if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, config)) {
+        errCode = E_CONFIG_INVALID_CHANGE;
+        return nullptr;
+    }
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
             return rdbStore;
-        }
-        if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, config)) {
-            errCode = E_CONFIG_INVALID_CHANGE;
-            return nullptr;
         }
         // TOD reconfigure store should be repeated this
         storeCache_.erase(path);
@@ -126,6 +126,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, const RdbS
             return false;
         };
     };
+
     if (tempParam.level_ != param.level_ || tempParam.area_ != param.area_ ||
         tempParam.isEncrypt_ != param.isEncrypt_) {
         LOG_ERROR("Store config invalid change, storeName %{public}s, securitylevel: %{public}d -> %{public}d, "
@@ -184,6 +185,7 @@ void RdbStoreManager::Clear()
 bool RdbStoreManager::Remove(const std::string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    configCache_.Delete(path);
     if (storeCache_.find(path) != storeCache_.end()) {
         if (storeCache_[path].lock()) {
             LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
@@ -246,22 +248,18 @@ bool RdbStoreManager::Delete(const std::string &path)
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
         param.storeName_ = *tokens.rbegin();
-        std::lock_guard<std::mutex> lock(mutex_);
         param.bundleName_ = bundleName_;
-        TaskExecutor::GetInstance().GetExecutor()->Execute([param, path, this]() {
-            auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-            if (err != E_OK || service == nullptr) {
-                LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
-                return;
-            }
-            err = service->Delete(param);
-            if (err != E_OK) {
-                LOG_ERROR("service delete store, storeName:%{public}s, err = %{public}d",
-                    SqliteUtils::Anonymous(param.storeName_).c_str(), err);
-            } else {
-                configCache_.Delete(path);
-            }
-        });
+        auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        if (err != E_OK || service == nullptr) {
+            LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
+            return Remove(path);
+        }
+        err = service->Delete(param);
+        if (err != E_OK) {
+            LOG_ERROR("service delete store, storeName:%{public}s, err = %{public}d",
+                SqliteUtils::Anonymous(param.storeName_).c_str(), err);
+            return Remove(path);
+        }
     }
 #endif
     return Remove(path);

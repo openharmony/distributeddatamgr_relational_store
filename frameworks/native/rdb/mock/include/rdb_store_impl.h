@@ -149,7 +149,7 @@ private:
     static constexpr const char *ROW_ID = "ROWID";
 
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
-    ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
+    ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
 };
 } // namespace OHOS::NativeRdb
