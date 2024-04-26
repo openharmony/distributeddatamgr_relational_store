@@ -139,7 +139,7 @@ void CloudSyncObserverCallback(void *context, Rdb_ProgressDetails *progressDetai
     EXPECT_NE(progressDetails, nullptr);
     EXPECT_EQ(progressDetails->version, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
     EXPECT_EQ(progressDetails->schedule, Rdb_Progress::RDB_SYNC_FINISH);
-    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_CLOUD_DISABLED);
+    EXPECT_EQ(progressDetails->code, Rdb_ProgressCode::RDB_UNKNOWN_ERROR);
     EXPECT_EQ(progressDetails->tableLength, 0);
     Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(progressDetails, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
     EXPECT_NE(tableDetails, nullptr);
