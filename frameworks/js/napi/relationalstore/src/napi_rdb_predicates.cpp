@@ -100,7 +100,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
     if (is_constructor) {
         napi_valuetype valueType = napi_undefined;
         NAPI_CALL(env, napi_typeof(env, args[0], &valueType));
-        RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamError>("name", "not empty"));
+        RDB_NAPI_ASSERT(env, valueType == napi_string, std::make_shared<ParamError>("name", "a string"));
         std::string tableName = JSUtils::Convert2String(env, args[0]);
         RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamError>("name", "not empty"));
         auto *proxy = new (std::nothrow) RdbPredicatesProxy(tableName);

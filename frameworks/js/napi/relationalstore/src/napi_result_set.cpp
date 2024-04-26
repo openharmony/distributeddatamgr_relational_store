@@ -128,7 +128,7 @@ ResultSetProxy *ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_in
 
     ResultSetProxy *proxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, proxy && proxy->GetInstance(), std::make_shared<InnerError>(E_RESULT_GOTO_ERROR));
+    RDB_NAPI_ASSERT(env, proxy && proxy->GetInstance(), std::make_shared<InnerError>("napi_unwrap failed."));
     return proxy;
 }
 

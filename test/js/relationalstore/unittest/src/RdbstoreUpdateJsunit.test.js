@@ -151,7 +151,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect("401").assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates("test")
@@ -160,7 +160,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `aaa failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800021).assertEqual(err.code)
         }
         console.log(TAG + "************* testRdbStoreUpdate0002 end   *************");
     })
@@ -190,7 +190,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `wrongTable failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800021).assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates("test")
@@ -198,7 +198,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800021).assertEqual(err.code)
         }
         console.log(TAG + "************* testRdbStoreUpdate0003 end   *************");
     })
@@ -228,7 +228,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `test failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800021).assertEqual(err.code)
         }
         try {
             const emptyBucket = {};
@@ -239,7 +239,7 @@ describe('rdbStoreUpdateTest', function () {
             await rdbStore.update(emptyBucket, predicates)
         } catch (err) {
             console.log(TAG + `emptyBucket failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect('401').assertEqual(err.code)
         }
         console.log(TAG + "************* testRdbStoreUpdate0004 end   *************");
     })
@@ -586,7 +586,7 @@ describe('rdbStoreUpdateTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800032).assertEqual(err.code)
         }
 
         let predicates = new data_relationalStore.RdbPredicates("test")
@@ -802,7 +802,7 @@ describe('rdbStoreUpdateTest', function () {
                 expect().assertFail()
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
-                expect(14800000).assertEqual(err.code);
+                expect(14800032).assertEqual(err.code);
             }
         } catch (err) {
             console.log(TAG + `insert failed, err: ${JSON.stringify(err)}`)

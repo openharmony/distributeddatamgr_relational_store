@@ -208,7 +208,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
      * @tc.number rdbStoreResultSetGoToLastRow0001
      * @tc.desc resultSet goToFirstRow test
      */
-    it('rdbStoreInsertUndefinedValueTest0007', 0, async function (done) {
+    it('rdbStoreInsertUndefinedValueTest0007', 0, async function () {
         console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)

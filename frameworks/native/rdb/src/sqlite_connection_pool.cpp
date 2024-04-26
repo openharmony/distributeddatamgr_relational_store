@@ -531,7 +531,6 @@ int32_t ConnPool::Container::Clear()
         nodes = std::move(nodes_);
         details = std::move(details_);
         disable_ = true;
-        max_ = 0;
         total_ = 0;
         count_ = 0;
         if (right_ > MAX_RIGHT) {

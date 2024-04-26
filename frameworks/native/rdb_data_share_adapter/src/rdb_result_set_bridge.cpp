@@ -31,7 +31,6 @@ RdbResultSetBridge::RdbResultSetBridge(std::shared_ptr<ResultSet> resultSet) : r
 
 RdbResultSetBridge::~RdbResultSetBridge()
 {
-    rdbResultSet_->Close();
 }
 
 int RdbResultSetBridge::GetRowCount(int &count)

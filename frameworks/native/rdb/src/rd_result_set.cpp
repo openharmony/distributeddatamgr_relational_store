@@ -111,7 +111,7 @@ int RdSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
     int outputType;
     int errCode = statement->GetColumnType(columnIndex, outputType);
@@ -189,7 +189,7 @@ int RdSharedResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &va
     }
     if (AbsSharedResultSet::rowPos_ == RdSharedResultSet::INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
     return statement->GetFloat32Array(col, value);
 }
@@ -355,7 +355,7 @@ int RdSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
     }
     if (rowPos_ == INIT_POS) {
         LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
 
     return statement->GetColumnBlob(columnIndex, blob);
@@ -370,7 +370,7 @@ int RdSharedResultSet::GetString(int columnIndex, std::string &value)
     }
 
     if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
 
     int errCode = statement->GetColumnString(columnIndex, value);
@@ -389,7 +389,7 @@ int RdSharedResultSet::GetInt(int columnIndex, int &value)
         return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
 
     int64_t columnValue;
@@ -410,7 +410,7 @@ int RdSharedResultSet::GetLong(int columnIndex, int64_t &value)
         return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
     int errCode = statement->GetColumnLong(columnIndex, value);
     if (errCode != E_OK) {
@@ -428,7 +428,7 @@ int RdSharedResultSet::GetDouble(int columnIndex, double &value)
         return E_ALREADY_CLOSED;
     }
     if (rowPos_ == INIT_POS) {
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
     int errCode = statement->GetColumnDouble(columnIndex, value);
     if (errCode != E_OK) {
@@ -458,7 +458,7 @@ int RdSharedResultSet::GetSize(int columnIndex, size_t &size)
 
     if (rowPos_ == INIT_POS) {
         size = 0;
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
 
     return statement->GetSize(columnIndex, size);
@@ -504,7 +504,7 @@ std::pair<int, ValueObject> RdSharedResultSet::GetValueObject(int32_t col, size_
     }
 
     if (rowPos_ == INIT_POS) {
-        return { E_NOT_INIT, ValueObject() };
+        return { E_ROW_OUT_RANGE, ValueObject() };
     }
 
     ValueObject value;
