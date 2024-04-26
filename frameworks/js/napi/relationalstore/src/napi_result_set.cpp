@@ -171,6 +171,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(
 
 napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -185,6 +186,7 @@ napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info in
 
 napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -199,6 +201,7 @@ napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -214,6 +217,7 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -228,6 +232,7 @@ napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -242,6 +247,7 @@ napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -257,6 +263,7 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -271,6 +278,7 @@ napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -285,6 +293,7 @@ napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -299,6 +308,7 @@ napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -311,6 +321,7 @@ napi_value ResultSetProxy::Close(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t position;
     auto resultSetProxy = ParseInt32FieldByName(env, info, position, "position");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -321,6 +332,7 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t offset;
     auto resultSetProxy = ParseInt32FieldByName(env, info, offset, "offset");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -331,6 +343,7 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -340,6 +353,7 @@ napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -349,6 +363,7 @@ napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -358,6 +373,7 @@ napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -367,6 +383,7 @@ napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info
 
 napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -380,6 +397,7 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -474,6 +492,7 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -487,6 +506,7 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::string input;
     auto resultSetProxy = ParseFieldByName(env, info, input, "columnName");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -498,6 +518,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -513,6 +534,7 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -526,6 +548,7 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
@@ -537,6 +560,7 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int32_t columnIndex;
     auto resultSetProxy = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
@@ -549,6 +573,7 @@ napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
     bool result = resultSetProxy->GetInstance()->IsClosed();

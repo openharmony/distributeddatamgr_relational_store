@@ -118,7 +118,6 @@ private:
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
-    ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -126,14 +125,21 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
-    inline std::string GetSqlArgs(size_t size);
     int RegisterDataChangeCallback();
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
     void RemoveDbFiles(std::string &path);
-
+    int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
+        ConflictResolution conflictResolution);
+    int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
+        ConflictResolution conflictResolution);
+    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
+    int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
+    std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
+        int64_t trxId);
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;

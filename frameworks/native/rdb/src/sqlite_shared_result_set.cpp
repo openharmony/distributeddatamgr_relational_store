@@ -70,6 +70,8 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 std::pair<int, std::vector<std::string>> SqliteSharedResultSet::GetColumnNames()
 {
     if (isClosed_) {
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
+            E_ALREADY_CLOSED, qrySql_.c_str());
         return { E_ALREADY_CLOSED, {} };
     }
 
@@ -100,6 +102,8 @@ int SqliteSharedResultSet::GetRowCount(int &count)
     }
 
     if (isClosed_) {
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
+            E_ALREADY_CLOSED, qrySql_.c_str());
         return E_ALREADY_CLOSED;
     }
 
@@ -127,6 +131,8 @@ int SqliteSharedResultSet::Close()
 int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 {
     if (isClosed_) {
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
+            E_ALREADY_CLOSED, qrySql_.c_str());
         return E_ALREADY_CLOSED;
     }
     auto errCode = E_ERROR;

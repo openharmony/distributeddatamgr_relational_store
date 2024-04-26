@@ -21,7 +21,8 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using JsErrorCode = OHOS::RelationalStoreJsKit::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
-    { NativeRdb::E_NOT_SUPPORTED, 801, "Capability not supported." },
+    { E_NOT_STAGE_MODE, 14801001, "Only supported in stage mode." },
+    { E_DATA_GROUP_ID_INVALID, 14801002, "The data group id is invalid." },
     { NativeRdb::E_NOT_SELECT, 14800019, "The SQL must be a query statement." },
     { NativeRdb::E_COLUMN_OUT_RANGE, 14800013, "Column out of bounds." },
     { NativeRdb::E_INVALID_FILE_PATH, 14800010, "Invalid database path." },
@@ -49,8 +50,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_SQLITE_MISMATCH, 14800033, "SQLite: Data type mismatch." },
     { NativeRdb::E_SQLITE_MISUSE, 14800034, "SQLite: Library used incorrectly." },
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "Config changed." },
-    { E_NOT_STAGE_MODE, 14801001, "Only supported in stage mode." },
-    { E_DATA_GROUP_ID_INVALID, 14801002, "The data group id is invalid." },
+    { NativeRdb::E_NOT_SUPPORTED, 801, "Capability not supported." },
 };
 
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)

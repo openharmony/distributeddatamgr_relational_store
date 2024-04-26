@@ -40,6 +40,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 
 void RdbHelper::ClearCache()
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     RdbStoreManager::GetInstance().Clear();
 }
 

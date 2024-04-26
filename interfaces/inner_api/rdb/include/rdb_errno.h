@@ -15,10 +15,11 @@
 
 #ifndef NATIVE_RDB_RDB_ERRNO_H
 #define NATIVE_RDB_RDB_ERRNO_H
-
+#include <errors.h>
 namespace OHOS {
 namespace NativeRdb {
 
+constexpr ErrCode DISTRIBUTEDDATAMGR_RDB_ERR_OFFSET = ErrCodeOffset(SUBSYS_DISTRIBUTEDDATAMNG, 2);
 /**
 * @brief The error code in the correct case.
 */
@@ -27,12 +28,12 @@ constexpr int E_OK = 0;
 /**
 * @brief The base code of the exception error code.
 */
-constexpr int E_BASE = 14800000;
+constexpr int E_BASE = DISTRIBUTEDDATAMGR_RDB_ERR_OFFSET;
 
 /**
 * @brief The error when the capability not supported.
 */
-constexpr int E_NOT_SUPPORTED = 801;
+constexpr int E_NOT_SUPPORTED = (E_BASE + 801);
 
 /**
 * @brief The error code for common exceptions.

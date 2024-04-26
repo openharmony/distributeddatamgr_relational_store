@@ -43,6 +43,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
     if (pool == nullptr) {
         LOG_ERROR("ConnPool::Create new failed, pool is nullptr");
+        errCode = E_ERROR;
         return nullptr;
     }
     std::shared_ptr<Connection> conn;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "SqliteSqlBuilder"
 #include "sqlite_sql_builder.h"
 
 #include <list>
@@ -320,6 +320,63 @@ std::string SqliteSqlBuilder::BuildLockRowQueryString(
     AppendClause(sql, " LIMIT ", limitClause);
     AppendClause(sql, " OFFSET ", offsetClause);
     return sql;
+}
+
+std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
+{
+    std::string args((size << 1) - 1, '?');
+    for (size_t i = 1; i < size; ++i) {
+        args[(i << 1) - 1] = ',';
+    }
+    return args;
+}
+
+SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
+    const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit)
+{
+    if (fieldSize == 0) {
+        return ExecuteSqls();
+    }
+    size_t rowNumbers = args.size() / static_cast<size_t>(fieldSize);
+    size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
+    if (maxRowNumbersOneTimes == 0) {
+        return ExecuteSqls();
+    }
+    size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
+    size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
+    LOG_DEBUG("rowNumbers %{public}zu, maxRowNumbersOneTimes %{public}zu, executeTimes %{public}zu,"
+        "remainingRows %{public}zu, fieldSize %{public}d, limit %{public}d",
+        rowNumbers, maxRowNumbersOneTimes, executeTimes, remainingRows, fieldSize, limit);
+    std::string singleRowSqlArgs = "(" + SqliteSqlBuilder::GetSqlArgs(fieldSize) + ")";
+    auto appendAgsSql = [&singleRowSqlArgs, &sql] (size_t rowNumber) {
+        std::string sqlStr = sql;
+        for (size_t i = 0; i < rowNumber; ++i) {
+            sqlStr.append(singleRowSqlArgs).append(",");
+        }
+        sqlStr.pop_back();
+        return sqlStr;
+    };
+    std::string executeSql;
+    ExecuteSqls executeSqls;
+    auto start = args.begin();
+    if (executeTimes != 0) {
+        executeSql = appendAgsSql(maxRowNumbersOneTimes);
+        std::vector<std::vector<ValueObject>> sqlArgs;
+        size_t maxVariableNumbers = maxRowNumbersOneTimes * static_cast<size_t>(fieldSize);
+        for (size_t i = 0; i < executeTimes; ++i) {
+            std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
+            sqlArgs.emplace_back(std::move(bindValueArgs));
+            start += maxVariableNumbers;
+        }
+        executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
+    }
+
+    if (remainingRows != 0) {
+        executeSql = appendAgsSql(remainingRows);
+        std::vector<std::vector<ValueObject>> sqlArgs(1, std::vector<ValueObject>(start, args.end()));
+        executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
+    }
+    return executeSqls;
 }
 } // namespace NativeRdb
 } // namespace OHOS
