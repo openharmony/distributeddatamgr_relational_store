@@ -27,7 +27,7 @@ UvQueue::UvQueue(napi_env env) : env_(env)
     if (env != nullptr) {
         napi_get_uv_event_loop(env, &loop_);
     }
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    handler_ = AppExecFwk::EventHandler::Current();
 }
 
 UvQueue::~UvQueue()
