@@ -15,6 +15,8 @@
 
 #include "value_object.h"
 
+#include <iostream>
+#include <limits>
 #include <sstream>
 
 #include "rdb_errno.h"
@@ -231,9 +233,25 @@ ValueObject::operator bool() const
         val = std::get<bool>(value);
     } else if (type == ValueObject::TYPE_STRING) {
         auto temp = std::get<std::string>(value);
-        val = temp == "true";
+        val = (temp == "true" || temp != "0");
     }
     return val;
+}
+
+static int32_t GetPrecision(double val)
+{
+    int max = std::numeric_limits<double>::max_digits10;
+    int precision = 0;
+    val = val - int64_t(val);
+    for (int i = 0; i < max; ++i) {
+        // Loop to multiply the decimal part of val by 10 until it is no longer a decimal
+        val *= 10;
+        if (int64_t(val) > 0) {
+            precision = i + 1;
+        }
+        val -= int64_t(val);
+    }
+    return precision;
 }
 
 ValueObject::operator std::string() const
@@ -244,10 +262,12 @@ ValueObject::operator std::string() const
         auto temp = std::get<int64_t>(value);
         val = std::to_string(temp);
     } else if (type == ValueObject::TYPE_BOOL) {
-        val = std::get<bool>(value) ? "true" : "false";
+        val = std::get<bool>(value) ? "1" : "0";
     } else if (type == ValueObject::TYPE_DOUBLE) {
         double temp = std::get<double>(value);
         std::ostringstream os;
+        os.setf(std::ios::fixed);
+        os.precision(GetPrecision(temp));
         if (os << temp) {
             val = os.str();
         }

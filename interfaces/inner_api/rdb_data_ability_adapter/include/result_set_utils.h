@@ -25,11 +25,8 @@ class ResultSetUtils : public NativeRdb::AbsSharedResultSet {
     using DSResultSet = DataShare::ResultSet;
 public:
     ResultSetUtils(std::shared_ptr<DSResultSet> dbResultSet);
-    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetColumnCount(int &count) override;
     int GetColumnType(int columnIndex, NativeRdb::ColumnType &columnType) override;
-    int GetColumnIndex(const std::string &columnName, int &columnIndex) override;
-    int GetColumnName(int columnIndex, std::string &columnName) override;
     int GetRowCount(int &count) override;
     int GetRowIndex(int &position) const override;
     int GoTo(int offset) override;
@@ -42,14 +39,10 @@ public:
     int IsStarted(bool &result) const override;
     int IsAtFirstRow(bool &result) const override;
     int IsAtLastRow(bool &result) override;
-    int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
-    int GetString(int columnIndex, std::string &value) override;
-    int GetInt(int columnIndex, int &value) override;
-    int GetLong(int columnIndex, int64_t &value) override;
-    int GetDouble(int columnIndex, double &value) override;
-    int IsColumnNull(int columnIndex, bool &isNull) override;
-    bool IsClosed() const override;
     int Close() override;
+
+protected:
+    std::pair<int, std::vector<std::string>> GetColumnNames() override;
 
 private:
     std::shared_ptr<DSResultSet> resultSet_;

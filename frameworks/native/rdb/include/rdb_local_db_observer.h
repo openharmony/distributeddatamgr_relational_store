@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_LOCAL_DB_OBSERVER_H
 #define NATIVE_RDB_LOCAL_DB_OBSERVER_H
 
+#include <memory>
 #include "rdb_types.h"
 #include "store_observer.h"
 

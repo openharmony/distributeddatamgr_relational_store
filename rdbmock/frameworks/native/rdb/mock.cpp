@@ -17,44 +17,94 @@
 #include "relational_store_client.h"
 
 namespace OHOS {
+__attribute__((visibility("default"))) bool PathToRealPath(const std::string &path, std::string &realPath)
+{
+    realPath = path;
+    return true;
+}
+
+__attribute__((visibility("default"))) std::string ExtractFilePath(const std::string &fileFullName)
+{
+    return std::string(fileFullName).substr(0, fileFullName.rfind("/") + 1);
+}
+
 namespace NativeRdb {
+struct SharedBlockInfo;
+struct sqlite3_stmt;
 __attribute__((visibility("default"))) int gettid()
 {
     return 0;
 }
-
-DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db)
+#ifdef __cplusplus
+extern "C" {
+#endif
+__attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    return DistributedDB::DBStatus::OK;
+    (void)info;
+    (void)stmt;
+    return 0;
 }
 
-DistributedDB::DBStatus RegisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver)
+__attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    return DistributedDB::DBStatus::OK;
+    (void)info;
+    (void)stmt;
+    return 0;
 }
 
-DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver)
+__attribute__((visibility("default"))) bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    return DistributedDB::DBStatus::OK;
+    (void)info;
+    (void)stmt;
+    return true;
 }
 
-DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db)
-{
-    return DistributedDB::DBStatus::OK;
+#ifdef __cplusplus
+}
+#endif
+}
 }
 
-DistributedDB::DBStatus Lock(
+using namespace DistributedDB;
+__attribute__((visibility("default"))) DBStatus UnRegisterClientObserver(sqlite3 *db)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DBStatus RegisterStoreObserver(sqlite3 *db,
+    const std::shared_ptr<StoreObserver> &storeObserver)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(sqlite3 *db,
+    const std::shared_ptr<StoreObserver> &storeObserver)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(sqlite3 *db)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DBStatus Lock(const std::string &tableName,
+    const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DBStatus UnLock(
     const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
 {
-    return DistributedDB::DBStatus::OK;
+    return DBStatus::OK;
 }
 
-DistributedDB::DBStatus UnLock(
-    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+__attribute__((visibility("default"))) DBStatus DropLogicDeletedData(sqlite3 *db, const std::string &tableName,
+    uint64_t cursor)
 {
-    return DistributedDB::DBStatus::OK;
-}
-}
+    (void)db;
+    (void)tableName;
+    (void)cursor;
+    return DBStatus::OK;
 }

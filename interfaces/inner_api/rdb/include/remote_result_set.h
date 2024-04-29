@@ -65,10 +65,6 @@ public:
         CMD_GET_COLUMN_COUNT,
         /** Indicates the current CMD is CMD_GET_COLUMN_TYPE.*/
         CMD_GET_COLUMN_TYPE,
-        /** Indicates the current CMD is CMD_GET_COLUMN_INDEX.*/
-        CMD_GET_COLUMN_INDEX,
-        /** Indicates the current CMD is CMD_GET_COLUMN_NAME.*/
-        CMD_GET_COLUMN_NAME,
         /** Indicates the current CMD is CMD_GET_ROW_COUNT.*/
         CMD_GET_ROW_COUNT,
         /** Indicates the current CMD is CMD_GET_ROW_INDEX.*/
@@ -93,20 +89,10 @@ public:
         CMD_IS_AT_FIRST_ROW,
         /** Indicates the current CMD is CMD_IS_AT_LAST_ROW.*/
         CMD_IS_AT_LAST_ROW,
-        /** Indicates the current CMD is CMD_GET_BLOB.*/
-        CMD_GET_BLOB,
-        /** Indicates the current CMD is CMD_GET_STRING.*/
-        CMD_GET_STRING,
-        /** Indicates the current CMD is CMD_GET_INT.*/
-        CMD_GET_INT,
-        /** Indicates the current CMD is CMD_GET_LONG.*/
-        CMD_GET_LONG,
-        /** Indicates the current CMD is CMD_GET_DOUBLE.*/
-        CMD_GET_DOUBLE,
-        /** Indicates the current CMD is CMD_IS_COLUMN_NULL.*/
-        CMD_IS_COLUMN_NULL,
-        /** Indicates the current CMD is CMD_IS_CLOSED.*/
-        CMD_IS_CLOSED,
+        /** Indicates the current CMD is CMD_GET.*/
+        CMD_GET,
+        /** Indicates the current CMD is CMD_GET.*/
+        CMD_GET_SIZE,
         /** Indicates the current CMD is CMD_CLOSE.*/
         CMD_CLOSE,
         /** Indicates the current CMD is CMD_MAX.*/

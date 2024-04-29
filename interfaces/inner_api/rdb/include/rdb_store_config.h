@@ -477,7 +477,6 @@ public:
      */
     std::string GetCustomDir() const;
 
-
     /**
      * @brief Sets the visitorDir for the object.
      */
@@ -605,5 +604,4 @@ private:
     bool allowRebuilt_ = false;
 };
 } // namespace OHOS::NativeRdb
-
 #endif

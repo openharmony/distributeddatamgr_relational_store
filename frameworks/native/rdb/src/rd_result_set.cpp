@@ -29,7 +29,7 @@ using namespace OHOS::Rdb;
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql,
     const std::vector<ValueObject>& selectionArgs)
     : statement_(nullptr), args_(std::move(selectionArgs)), sql_(sql),
-      rdConnectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false), connId_(INIT_POS)
+      rdConnectionPool_(std::move(connectionPool)), rowCount_(INIT_POS), isAfterLast_(false)
 {
     int errCode = PrepareStep();
     if (errCode) {
@@ -40,7 +40,7 @@ RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connecti
 RdSharedResultSet::RdSharedResultSet(std::shared_ptr<RdbConnectionPool> connectionPool, const std::string &sql_,
     const std::vector<ValueObject>& selectionArgs, int rowCount)
     : statement_(nullptr), args_(std::move(selectionArgs)), sql_(sql_),
-      rdConnectionPool_(std::move(connectionPool)), rowCount_(rowCount), isAfterLast_(false), connId_(INIT_POS)
+      rdConnectionPool_(std::move(connectionPool)), rowCount_(rowCount), isAfterLast_(false)
 {
 }
 
@@ -49,57 +49,52 @@ RdSharedResultSet::~RdSharedResultSet()
     Close();
 }
 
-
-int RdSharedResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
+std::pair<int, std::vector<std::string>> RdSharedResultSet::GetColumnNames()
 {
-    if (!columnNames_.empty()) {
-        columnNames = columnNames_;
-        return E_OK;
-    }
     if (isClosed_) {
-        return E_ALREADY_CLOSED;
+        return { E_ALREADY_CLOSED, {} };
     }
+    std::vector<std::string> columnNames;
     int errCode = PrepareStep();
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("get all column names Step ret %{public}d", errCode);
-        return errCode;
+        return { errCode, {} };
     }
     auto [statement, connection] = GetStatement();
     if (statement == nullptr) {
-        return E_ALREADY_CLOSED;
+        return { E_ALREADY_CLOSED, {} };
     }
     bool needReset = false;
     if (rowPos_ == INIT_POS) {
         errCode = statement->Step();
         if (errCode != E_OK && errCode != E_NO_MORE_ROWS) {
-            return errCode;
+            return { errCode, {} };
         }
         needReset = true;
     }
     int columnCount = 0;
     errCode = statement->GetColumnCount(columnCount);
-    if (errCode) {
+    if (errCode != E_OK) {
         LOG_ERROR("GetColumnCount errCode is %{public}d", errCode);
-        return errCode;
+        return { errCode, {} };
     }
     columnNames.clear();
     for (int i = 0; i < columnCount; i++) {
         std::string columnName;
         errCode = statement->GetColumnName(i, columnName);
-        if (errCode) {
+        if (errCode != E_OK) {
             columnNames.clear();
             LOG_ERROR("GetColumnName errCode is %{public}d", errCode);
-            return errCode;
+            return { errCode, {} };
         }
         columnNames.push_back(columnName);
     }
-    columnNames_ = columnNames;
-    columnCount_ = static_cast<int>(columnNames.size());
     if (needReset) {
         rowPos_ = INIT_POS;
-        return statement->ResetStatementAndClearBindings();
+        errCode = statement->ResetStatementAndClearBindings();
     }
-    return E_OK;
+
+    return { errCode, std::move(columnNames) };
 }
 
 int RdSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
@@ -170,33 +165,9 @@ int RdSharedResultSet::GoToRow(int position)
     return E_OK;
 }
 
-int RdSharedResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
-{
-    return E_NOT_SUPPORT;
-}
-
-int RdSharedResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
-{
-    return E_NOT_SUPPORT;
-}
-
-int RdSharedResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("the resultSet is closed");
-        return E_ALREADY_CLOSED;
-    }
-    if (AbsSharedResultSet::rowPos_ == RdSharedResultSet::INIT_POS) {
-        LOG_ERROR("query not executed.");
-        return E_ROW_OUT_RANGE;
-    }
-    return statement->GetFloat32Array(col, value);
-}
-
 int RdSharedResultSet::GoToNextRow()
 {
-    if (AbsSharedResultSet::isClosed_) {
+    if (isClosed_) {
         LOG_ERROR("the resultSet is closed");
         return E_ALREADY_CLOSED;
     }
@@ -212,18 +183,18 @@ int RdSharedResultSet::GoToNextRow()
     }
     errCode = statement->Step();
     if (errCode == E_OK) {
-        AbsSharedResultSet::rowPos_++;
+        rowPos_++;
         return E_OK;
     } else if (errCode == E_NO_MORE_ROWS) {
         isAfterLast_ = true;
-        RdSharedResultSet::rowCount_ = AbsSharedResultSet::rowPos_ + 1;
+        RdSharedResultSet::rowCount_ = rowPos_ + 1;
         RdSharedResultSet::FinishStep();
-        AbsSharedResultSet::rowPos_ = RdSharedResultSet::rowCount_;
+        rowPos_ = RdSharedResultSet::rowCount_;
         return E_NO_MORE_ROWS;
     } else {
         LOG_ERROR("step errCode is %{public}d", errCode);
         RdSharedResultSet::FinishStep();
-        AbsSharedResultSet::rowPos_ = RdSharedResultSet::rowCount_;
+        rowPos_ = RdSharedResultSet::rowCount_;
         return errCode;
     }
 }
@@ -278,8 +249,6 @@ int RdSharedResultSet::Close()
     }
     auto args = std::move(args_);
     statement_ = nullptr;
-    connId_ = -1;
-    auto columnNames = std::move(columnNames_);
     isClosed_ = true;
     return FinishStep();
 }
@@ -300,7 +269,6 @@ int RdSharedResultSet::FinishStep()
             rdConnectionPool_->ReleaseConnection(conn_);
             conn_ = nullptr;
         }
-        connId_ = -1;
         if (connection != nullptr) {
             connection = nullptr;
         }
@@ -346,106 +314,9 @@ int RdSharedResultSet::IsAtFirstRow(bool &result) const
     return E_OK;
 }
 
-int RdSharedResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-    if (rowPos_ == INIT_POS) {
-        LOG_ERROR("query not executed.");
-        return E_ROW_OUT_RANGE;
-    }
-
-    return statement->GetColumnBlob(columnIndex, blob);
-}
-
-int RdSharedResultSet::GetString(int columnIndex, std::string &value)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-
-    if (rowPos_ == INIT_POS) {
-        return E_ROW_OUT_RANGE;
-    }
-
-    int errCode = statement->GetColumnString(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
-}
-
-int RdSharedResultSet::GetInt(int columnIndex, int &value)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-    if (rowPos_ == INIT_POS) {
-        return E_ROW_OUT_RANGE;
-    }
-
-    int64_t columnValue;
-    int errCode = statement->GetColumnLong(columnIndex, columnValue);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    value = static_cast<int>(columnValue);
-    return E_OK;
-}
-
-int RdSharedResultSet::GetLong(int columnIndex, int64_t &value)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-    if (rowPos_ == INIT_POS) {
-        return E_ROW_OUT_RANGE;
-    }
-    int errCode = statement->GetColumnLong(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
-}
-
-int RdSharedResultSet::GetDouble(int columnIndex, double &value)
-{
-    auto [statement, conn] = GetStatement();
-    if (statement == nullptr) {
-        LOG_ERROR("resultSet closed");
-        return E_ALREADY_CLOSED;
-    }
-    if (rowPos_ == INIT_POS) {
-        return E_ROW_OUT_RANGE;
-    }
-    int errCode = statement->GetColumnDouble(columnIndex, value);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    return E_OK;
-}
-
 int RdSharedResultSet::Get(int32_t col, ValueObject &value)
 {
     return GetValue(col, value);
-}
-
-int RdSharedResultSet::GetModifyTime(std::string &modifyTime)
-{
-    return E_NOT_SUPPORT;
 }
 
 int RdSharedResultSet::GetSize(int columnIndex, size_t &size)
@@ -462,26 +333,6 @@ int RdSharedResultSet::GetSize(int columnIndex, size_t &size)
     }
 
     return statement->GetSize(columnIndex, size);
-}
-
-int RdSharedResultSet::IsColumnNull(int columnIndex, bool &isNull)
-{
-    ColumnType columnType;
-    int errCode = GetColumnType(columnIndex, columnType);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    isNull = (columnType == ColumnType::TYPE_NULL);
-    return E_OK;
-}
-
-/**
- * Check whether the result set is over
- */
-bool RdSharedResultSet::IsClosed() const
-{
-    return isClosed_;
 }
 
 template<typename T>
@@ -522,6 +373,5 @@ std::pair<std::shared_ptr<RdbStatement>, std::shared_ptr<RdbConnection>> RdShare
     }
     return {statement_, conn_};
 }
-
 } // namespace NativeRdb
 } // namespace OHOS

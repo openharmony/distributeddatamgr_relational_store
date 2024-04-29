@@ -1544,6 +1544,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::GetModifyTime Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
         context->modifyTime = obj->GetInstance()->GetModifyTime(context->tableName, context->columnName, context->keys);
         return context->modifyTime.empty() ? E_ERROR : E_OK;
     };
@@ -1817,8 +1818,8 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
     RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
     auto *proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-
+    RDB_NAPI_ASSERT(env, proxy != nullptr && proxy->GetInstance() != nullptr,
+        std::make_shared<ParamError>("RdbStore", "valid"));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return nullptr;

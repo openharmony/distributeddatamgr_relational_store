@@ -162,16 +162,6 @@ public:
     API_EXPORT int Get(int32_t col, ValueObject &value) override;
 
     /**
-    * @brief Get the modify time of the cloud data.
-    *
-    * @param modifyTime Indicates the data modify utc time.
-    *
-    * @return Returns true if the value of the specified column in the current row is null;
-    * returns false otherwise.
-    */
-    API_EXPORT int GetModifyTime(std::string &modifyTime) override;
-
-    /**
     * @brief Checks whether the value of the specified column in the current row is null.
     *
     * @param columnIndex Indicates the specified column index, which starts from 0.
