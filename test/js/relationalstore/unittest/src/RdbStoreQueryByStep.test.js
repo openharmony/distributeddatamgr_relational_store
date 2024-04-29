@@ -134,7 +134,6 @@ describe('rdbStoreQueryByStepTest', function () {
             let resultSet = await rdbStore.queryByStep('select * from test');
             // resultSet.rowCount is 3
             expect(3).assertEqual(resultSet.rowCount);
-            resultSet.
             resultSet.close();
         } catch (err) {
             console.error(TAG + `query failed, err code:${err.code}, message:${err.message}`)

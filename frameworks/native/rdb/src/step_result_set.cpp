@@ -30,8 +30,8 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 StepResultSet::StepResultSet(
-    std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql_, const std::vector<ValueObject> &selectionArgs)
-    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql_), rowCount_(INIT_POS), isAfterLast_(false),
+    std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql, const std::vector<ValueObject> &selectionArgs)
+    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql), rowCount_(INIT_POS), isAfterLast_(false),
       isStarted_(false)
 {
     conn_ = pool->AcquireRef(true);
@@ -66,7 +66,7 @@ int StepResultSet::PrepareStep()
     auto type = SqliteUtils::GetSqlStatementType(sql_);
     if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
         LOG_ERROR("not a select sql_!");
-        return E_NOT_SELECT ;
+        return E_NOT_SELECT;
     }
 
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
@@ -130,7 +130,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     }
     if (rowPos_ == INIT_POS || isAfterLast_) {
         LOG_ERROR("query not executed.");
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
     auto statement = GetStatement();
     if (statement == nullptr) {
@@ -224,11 +224,10 @@ int StepResultSet::GoToRow(int position)
     while (position != rowPos_) {
         int errCode = GoToNextRow();
         if (errCode != E_OK) {
-            LOG_ERROR("GoToNextRow ret %{public}d", errCode);
-            return errCode;
+            LOG_WARN("GoToNextRow ret %{public}d", errCode);
+            return errCode == E_NO_MORE_ROWS ? E_ROW_OUT_RANGE :  errCode;
         }
     }
-
     return E_OK;
 }
 
@@ -519,7 +518,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     }
     if (rowPos_ == INIT_POS || isAfterLast_) {
         size = 0;
-        return E_NOT_INIT;
+        return E_ROW_OUT_RANGE;
     }
 
     auto statement = GetStatement();
@@ -567,7 +566,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
     if (rowPos_ == INIT_POS || isAfterLast_) {
-        return { E_NOT_INIT, ValueObject() };
+        return { E_ROW_OUT_RANGE, ValueObject() };
     }
     auto statement = GetStatement();
     if (statement == nullptr) {

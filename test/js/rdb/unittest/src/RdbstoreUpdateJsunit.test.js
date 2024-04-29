@@ -137,6 +137,7 @@ describe('rdbStoreUpdateTest', function () {
         } catch (err) {
             console.log(TAG + `test failed, errcode:${JSON.stringify(err)}.`);
         }
+
         try {
             let predicates = await new dataRdb.RdbPredicates("test")
             await predicates.equalTo("aaa", "null")

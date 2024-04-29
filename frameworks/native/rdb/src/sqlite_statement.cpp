@@ -98,15 +98,14 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 int SqliteStatement::IsValid(int index) const
 {
     if (stmt_ == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+        LOG_ERROR("statement already close.");
+        return E_ALREADY_CLOSED;
     }
 
     if (index >= columnCount_) {
         LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
-        return E_OUT_RANGE ;
+        return E_COLUMN_OUT_RANGE ;
     }
-
     return E_OK;
 }
 
@@ -300,11 +299,11 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 std::pair<int32_t, size_t> SqliteStatement::GetSize(int index) const
 {
     if (stmt_ == nullptr) {
-        return { E_INVALID_STATEMENT, 0 };
+        return { E_ALREADY_CLOSED, 0 };
     }
 
     if (index >= columnCount_) {
-        return { E_OUT_RANGE, 0 };
+        return { E_COLUMN_OUT_RANGE, 0 };
     }
 
     int type = sqlite3_column_type(stmt_, index);

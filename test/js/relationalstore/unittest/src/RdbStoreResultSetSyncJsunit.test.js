@@ -118,7 +118,9 @@ describe('rdbResultSetSyncTest', function () {
                 "data4": u8,
             });
         }
-        await rdbStore.batchInsert("test", valueBucketArray);
+        if (valueBucketArray.length != 0) {
+            await rdbStore.batchInsert("test", valueBucketArray);
+        }
     }
 
     /**
@@ -1600,7 +1602,7 @@ describe('rdbResultSetSyncTest', function () {
         try {
             expect(false).assertEqual(resultSet.isColumnNull(1));
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
         resultSet.close()
         resultSet = null;
@@ -1974,7 +1976,7 @@ describe('rdbResultSetSyncTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
         resultSet.close()
         expect(true).assertEqual(resultSet.isClosed)
@@ -2015,7 +2017,7 @@ describe('rdbResultSetSyncTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
 
         resultSet.close()
@@ -2210,31 +2212,26 @@ describe('rdbResultSetSyncTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0232
      * @tc.desc big resultSet data test
      */
-    it('testSyncBigData0013', 0, async function (done) {
+    it('testSyncBigData0013', 0, async function () {
         console.log(TAG + "************* testSyncBigData0013 start *************");
 
         await createBigData(200);
         let resultSet = rdbStore.querySqlSync("SELECT * FROM test");
         let count = resultSet.rowCount;
         expect(200).assertEqual(count);
-
         resultSet.goToFirstRow();
         let i = 0;
         while (resultSet.isEnded == false) {
             expect("test" + i++).assertEqual(resultSet.getString(1))
             resultSet.goToNextRow();
         }
-
         resultSet.goToRow(1);
         expect("test1").assertEqual(resultSet.getString(1))
-
         resultSet.goToRow(5);
         expect("test5").assertEqual(resultSet.getString(1))
-
         resultSet.close()
         expect(true).assertEqual(resultSet.isClosed)
         resultSet = null;
-        done();
         console.log(TAG + "************* testSyncBigData0013 end *************");
 
     })

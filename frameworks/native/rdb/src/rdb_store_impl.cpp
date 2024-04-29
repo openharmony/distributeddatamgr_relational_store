@@ -140,6 +140,7 @@ void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
                 return;
             }
             err = service->AfterOpen(param);
+            LOG_ERROR("AfterOpen RdbStoreImpl::AfterOpen leve %{public}d.", param.level_);
             if (err != E_OK) {
                 LOG_ERROR("AfterOpen failed, err is %{public}d.", err);
             }
@@ -322,7 +323,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_DATABASE_CORRUPT && config.GetAllowRebuild()) {
+    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild()) {
         auto realPath = config.GetPath();
         RemoveDbFiles(realPath);
         connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
@@ -837,7 +838,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
     }
     auto [err, statement] = GetStatement(sql, connection);
     if (statement == nullptr) {
-        return E_SQLITE_ERROR;
+        return err;
     }
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
@@ -956,7 +957,7 @@ int RdbStoreImpl::ExecuteAndGetString(
     }
     auto [err, statement] = GetStatement(sql, connection);
     if (err != E_OK) {
-        return E_SQLITE_ERROR;
+        return err;
     }
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
@@ -979,7 +980,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     }
     auto [errCode, statement] = GetStatement(sql, connect);
     if (statement == nullptr) {
-        return E_SQLITE_ERROR;
+        return errCode;
     }
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
@@ -1137,7 +1138,7 @@ int RdbStoreImpl::BeginExecuteSql(const std::string &sql, std::shared_ptr<Connec
 {
     int type = SqliteUtils::GetSqlStatementType(sql);
     if (SqliteUtils::IsSpecial(type)) {
-        return E_DATABASE_BUSY;
+        return E_NOT_SUPPORTED;
     }
 
     bool assumeReadOnly = SqliteUtils::IsSqlReadOnly(type);
@@ -1258,7 +1259,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
             err, config_.GetName().c_str(), attachName.c_str(), config.GetName().c_str());
         return { err, 0 };
     }
-    if (!attachedInfo_.Insert(attachName, config)) {
+    if (!attachedInfo_.Insert(attachName, dbPath)) {
         return { E_ATTACHED_DATABASE_EXIST, 0 };
     }
     return { E_OK, attachedInfo_.Size() };
@@ -1290,7 +1291,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     if (errCode != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
                   "[%{public}s]",
-            errCode, config_.GetName().c_str(), attachName.c_str(), iter.second.GetName().c_str());
+            errCode, config_.GetName().c_str(), attachName.c_str(), iter.second.c_str());
         return { errCode, 0 };
     }
 

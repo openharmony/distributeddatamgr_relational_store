@@ -118,7 +118,9 @@ describe('rdbResultSetTest', function () {
                 "data4": u8,
             });
         }
-        await rdbStore.batchInsert("test", valueBucketArray);
+        if (valueBucketArray.length != 0) {
+            await rdbStore.batchInsert("test", valueBucketArray);
+        }
     }
 
     /**
@@ -1600,7 +1602,7 @@ describe('rdbResultSetTest', function () {
         try {
             expect(false).assertEqual(resultSet.isColumnNull(1));
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
         resultSet.close()
         resultSet = null;
@@ -1974,7 +1976,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
         resultSet.close()
         expect(true).assertEqual(resultSet.isClosed)
@@ -2015,7 +2017,7 @@ describe('rdbResultSetTest', function () {
                 expect("").assertEqual(resultSet.getString(1))
             }
         } catch (e) {
-            expect(e.code).assertEqual("14800013");
+            expect(e.code).assertEqual("14800012");
         }
 
         resultSet.close()
