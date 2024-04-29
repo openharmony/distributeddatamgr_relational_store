@@ -34,7 +34,6 @@ using namespace OHOS;
 using namespace OHOS::NativeRdb;
 class RdbMultiThreadConnectionTest : public testing::Test {
 public:
-    static std::shared_ptr<ExecutorPool> executorPool_;
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
@@ -42,28 +41,28 @@ public:
     void GenerateData();
 
 protected:
-    std::shared_ptr<RdbStore> store_;
+    class Callback : public RdbOpenCallback {
+    public:
+        int OnCreate(RdbStore &rdbStore) override;
+        int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
+    };
+
     static constexpr const char *DATABASE_NAME = "connection_test.db";
-    static constexpr const char *CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS test "
-                                                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                    "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                                    "blobType BLOB)";
+    static constexpr const char *CREATE_TABLE_SQL = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, name "
+                                                    "TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
+    static constexpr int32_t MAX_THREAD = 5;
+    static constexpr int32_t MIN_THREAD = 0;
+
+    std::shared_ptr<RdbStore> store_;
+    std::shared_ptr<ExecutorPool> executors_;
 };
 
-std::shared_ptr<ExecutorPool> RdbMultiThreadConnectionTest::executorPool_ = std::make_shared<ExecutorPool>(5, 0);
-
-class SqliteSharedOpenCallback : public RdbOpenCallback {
-public:
-    int OnCreate(RdbStore &rdbStore) override;
-    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
-};
-
-int SqliteSharedOpenCallback::OnCreate(RdbStore &rdbStore)
+int RdbMultiThreadConnectionTest::Callback::OnCreate(RdbStore &rdbStore)
 {
     return E_OK;
 }
 
-int SqliteSharedOpenCallback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
+int RdbMultiThreadConnectionTest::Callback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
 {
     return E_OK;
 }
@@ -74,26 +73,27 @@ void RdbMultiThreadConnectionTest::SetUpTestCase(void)
 
 void RdbMultiThreadConnectionTest::TearDownTestCase(void)
 {
-    executorPool_ = nullptr;
 }
 
 void RdbMultiThreadConnectionTest::SetUp()
 {
+    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
     store_ = nullptr;
     RdbHelper::DeleteRdbStore(RDB_TEST_PATH + DATABASE_NAME);
-
     RdbStoreConfig sqliteSharedRstConfig(RDB_TEST_PATH + DATABASE_NAME);
-    SqliteSharedOpenCallback sqliteSharedRstHelper;
+    RdbMultiThreadConnectionTest::Callback sqliteSharedRstHelper;
     int errCode = E_OK;
     store_ = RdbHelper::GetRdbStore(sqliteSharedRstConfig, 1, sqliteSharedRstHelper, errCode);
     EXPECT_NE(store_, nullptr);
 
     auto ret = store_->ExecuteSql(CREATE_TABLE_SQL);
     EXPECT_EQ(ret, E_OK);
+    GenerateData();
 }
 
 void RdbMultiThreadConnectionTest::TearDown()
 {
+    executors_ = nullptr;
     store_ = nullptr;
     RdbHelper::DeleteRdbStore(RDB_TEST_PATH + DATABASE_NAME);
 }
@@ -130,10 +130,8 @@ void RdbMultiThreadConnectionTest::GenerateData()
  */
 HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Level2)
 {
-    GenerateData();
-
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
-    auto taskId1 = executorPool_->Execute([store = store_, block1]() {
+    auto taskId1 = executors_->Execute([store = store_, block1]() {
         constexpr const char *createTable = "CREATE TABLE test";
         constexpr const char *createTableColumn = " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
@@ -149,7 +147,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
     });
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
-    auto taskId2 = executorPool_->Execute([store = store_, block2]() {
+    auto taskId2 = executors_->Execute([store = store_, block2]() {
         int32_t errCode = E_ERROR;
         for (uint32_t i = 0; i < 2000; i++) {
             auto resultSet = store->QuerySql("SELECT * FROM test");
@@ -178,10 +176,8 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
  */
 HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Level2)
 {
-    GenerateData();
-
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
-    auto taskId1 = executorPool_->Execute([store = store_, block1]() {
+    auto taskId1 = executors_->Execute([store = store_, block1]() {
         constexpr const char *createTable = "CREATE TABLE test";
         constexpr const char *createTableColumn = " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
@@ -197,7 +193,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Lev
     });
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
-    auto taskId2 = executorPool_->Execute([store = store_, block2]() {
+    auto taskId2 = executors_->Execute([store = store_, block2]() {
         int32_t errCode = E_ERROR;
         for (uint32_t i = 0; i < 2000; i++) {
             auto resultSet = store->QueryByStep("SELECT * FROM test");

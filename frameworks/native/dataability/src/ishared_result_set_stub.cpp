@@ -40,8 +40,9 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
         return nullptr;
     }
     parcel.WriteRemoteObject(stub->AsObject());
-    if (result->sharedBlock_ != nullptr) {
-        result->sharedBlock_->WriteMessageParcel(parcel);
+    auto block = result->GetBlock();
+    if (block != nullptr) {
+        block->WriteMessageParcel(parcel);
     }
     return stub;
 }
@@ -99,15 +100,14 @@ int ISharedResultSetStub::HandleGetRowCountRequest(MessageParcel &data, MessageP
     return NO_ERROR;
 }
 
-int ISharedResultSetStub::HandleGetAllColumnNamesRequest(MessageParcel &data, MessageParcel &reply)
+int ISharedResultSetStub::HandleGetColumnNamesRequest(MessageParcel &data, MessageParcel &reply)
 {
-    std::vector<std::string> names;
-    int errCode = resultSet_->GetAllColumnNames(names);
+    auto [errCode, names] = GetColumnNames();
     reply.WriteInt32(errCode);
     if (errCode == E_OK) {
         reply.WriteStringVector(names);
     }
-    LOG_DEBUG("HandleGetAllColumnNamesRequest call %{public}d", errCode);
+    LOG_DEBUG("HandleGetColumnNamesRequest call %{public}d", errCode);
     return NO_ERROR;
 }
 
@@ -146,5 +146,10 @@ void ISharedResultSetStub::Run()
         isRunning = runnable();
     }
     LOG_ERROR("ISharedResultSetStub thread(%{public}" PRIx64 ") is exited", uint64_t(handle));
+}
+
+std::pair<int, std::vector<std::string>> ISharedResultSetStub::GetColumnNames()
+{
+    return resultSet_->GetColumnNames();
 }
 } // namespace OHOS::NativeRdb

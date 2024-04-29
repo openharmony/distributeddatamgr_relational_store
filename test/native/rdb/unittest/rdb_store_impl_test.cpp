@@ -546,13 +546,17 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
     tracker.tableName = "test_callback_t2";
     tracker.extendColName = "";
     tracker.trackerColNames = {"id", "timestamp"};
+    using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
-    DistributedDB::RelationalStoreDelegate::Option option;
-    DistributedDB::RelationalStoreDelegate *g_delegate = nullptr;
+    Delegate::Option option;
+    Delegate *g_delegate = nullptr;
     EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
     int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t2", option, g_delegate);
     EXPECT_EQ(E_OK, status);
-    int setStatus = g_delegate->SetTrackerTable(tracker);
+    auto delegatePtr = std::shared_ptr<Delegate>(g_delegate, [&rStoreManager](Delegate* delegate) {
+        rStoreManager.CloseStore(delegate);
+    });
+    int setStatus = delegatePtr->SetTrackerTable(tracker);
     EXPECT_EQ(E_OK, setStatus);
 
     int64_t rowId;
@@ -588,13 +592,17 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     tracker.tableName = "test_callback_t3";
     tracker.extendColName = "";
     tracker.trackerColNames = {"id", "timestamp"};
+    using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
-    DistributedDB::RelationalStoreDelegate::Option option;
-    DistributedDB::RelationalStoreDelegate *g_delegate = nullptr;
+    Delegate::Option option;
+    Delegate *g_delegate = nullptr;
     EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
     int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t3", option, g_delegate);
     EXPECT_EQ(E_OK, status);
-    int setStatus = g_delegate->SetTrackerTable(tracker);
+    auto delegatePtr = std::shared_ptr<Delegate>(g_delegate, [&rStoreManager](Delegate* delegate) {
+        rStoreManager.CloseStore(delegate);
+    });
+    int setStatus = delegatePtr->SetTrackerTable(tracker);
     EXPECT_EQ(E_OK, setStatus);
 
     int64_t rowId;

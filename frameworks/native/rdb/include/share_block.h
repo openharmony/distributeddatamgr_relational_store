@@ -33,7 +33,6 @@ enum FillOneRowResult {
 
 struct SharedBlockInfo {
     AppDataFwk::SharedBlock *sharedBlock = nullptr;
-    sqlite3_stmt *statement = nullptr;
 
     int startPos;
     int addedRows;
@@ -44,8 +43,7 @@ struct SharedBlockInfo {
     bool isFull;
     bool hasException;
 
-    SharedBlockInfo(AppDataFwk::SharedBlock* sharedBlock, sqlite3_stmt* statement)
-        : sharedBlock(sharedBlock), statement(statement)
+    SharedBlockInfo(AppDataFwk::SharedBlock* sharedBlock) : sharedBlock(sharedBlock)
     {
         startPos = 0;
         addedRows = 0;
@@ -69,7 +67,7 @@ int SeriPutNull(void *pCtx, int addedRows, int column);
 int SeriPutOther(void *pCtx, int addedRows, int column);
 int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock);
 int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum);
-int FillSharedBlockOpt(SharedBlockInfo *info);
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt);
 FillOneRowResult FillOneRowOfString(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
     int addedRows, int pos);
 FillOneRowResult FillOneRowOfLong(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
@@ -82,9 +80,9 @@ FillOneRowResult FillOneRowOfNull(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     int addedRows, int pos);
 FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns,
     int startPos, int addedRows);
-void FillRow(SharedBlockInfo *info);
-int FillSharedBlock(SharedBlockInfo *info);
-bool ResetStatement(SharedBlockInfo *sharedBlockInfo);
+void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt);
+bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt);
 int64_t GetCombinedData(int startPos, int totalRows);
 #ifdef __cplusplus
 }

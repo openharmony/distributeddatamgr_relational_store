@@ -135,17 +135,19 @@ int CacheResultSet::IsColumnNull(int columnIndex, bool &isNull)
 
 int CacheResultSet::GetRow(RowEntity &rowEntity)
 {
-    rowEntity.Clear();
     std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
     if (row_ < 0 || row_ >= maxRow_) {
         return E_ERROR;
     }
-    ValueObject object;
+    rowEntity.Clear(colNames_.size());
+    int32_t index = 0;
     for (auto &columnName : colNames_) {
+        ValueObject object;
         if (!valueBuckets_[row_].GetObject(columnName, object)) {
             return E_ERROR;
         }
-        rowEntity.Put(columnName, object);
+        rowEntity.Put(columnName, index, std::move(object));
+        index++;
     }
     return E_OK;
 }
@@ -275,11 +277,6 @@ bool CacheResultSet::IsClosed() const
 }
 
 int CacheResultSet::Close()
-{
-    return E_NOT_SUPPORT;
-}
-
-int CacheResultSet::GetModifyTime(std::string &modifyTime)
 {
     return E_NOT_SUPPORT;
 }

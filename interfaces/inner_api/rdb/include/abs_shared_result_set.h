@@ -52,18 +52,6 @@ public:
     API_EXPORT virtual ~AbsSharedResultSet();
 
     /**
-     * @brief Obtains the value of the specified column in the current row as a byte array.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the Blob type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a byte array.
-     */
-    API_EXPORT int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
-
-    /**
      * @brief Obtains the value of the specified column in the current row as string.
      *
      * The implementation class determines whether to throw an exception if the value of the specified column
@@ -74,66 +62,6 @@ public:
      * @return Returns the value of the specified column as a string.
      */
     API_EXPORT int GetString(int columnIndex, std::string &value) override;
-
-    /**
-     * @brief Obtains the value of the specified column in the current row as int.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the integer type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a int.
-     */
-    API_EXPORT int GetInt(int columnIndex, int &value) override;
-
-    /**
-     * @brief Obtains the value of the specified column in the current row as long.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the long type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a long.
-     */
-    API_EXPORT int GetLong(int columnIndex, int64_t &value) override;
-
-    /**
-     * @brief Obtains the value of the specified column in the current row as double.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a double.
-     */
-    API_EXPORT int GetDouble(int columnIndex, double &value) override;
-
-    /**
-     * @brief Obtains the value of the specified column in the current row as asset.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a double.
-     */
-    API_EXPORT int GetAsset(int32_t col, ValueObject::Asset &value) override;
-
-	/**
-     * @brief Obtains the value of the specified column in the current row as assets.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a double.
-     */
-    API_EXPORT int GetAssets(int32_t col, ValueObject::Assets &value) override;
 
     /**
      * @brief Obtains the value of the specified column in the current row as assets.
@@ -155,16 +83,6 @@ public:
     API_EXPORT int GetSize(int columnIndex, size_t &size) override;
 
     /**
-     * @brief Checks whether the value of the specified column in the current row is null.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns true if the value of the specified column in the current row is null;
-     * returns false otherwise.
-     */
-    API_EXPORT int IsColumnNull(int columnIndex, bool &isNull) override;
-
-    /**
      * @brief Obtains data type of the given column's value.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
@@ -183,11 +101,6 @@ public:
     API_EXPORT int GoToRow(int position) override;
 
     /**
-     * @brief Obtains the names of all columns in a result set.
-     */
-    API_EXPORT int GetAllColumnNames(std::vector<std::string> &columnNames) override;
-
-    /**
      * @brief Obtains the number of rows in the result set.
      */
     API_EXPORT int GetRowCount(int &count) override;
@@ -195,12 +108,12 @@ public:
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
      */
-    API_EXPORT AppDataFwk::SharedBlock *GetBlock() override;
+    API_EXPORT std::shared_ptr<AppDataFwk::SharedBlock> GetBlock() override;
 
     /**
      * @brief Called when the position of the result set changes.
      */
-    API_EXPORT int OnGo(int oldRowIndex, int newRowIndex) override;
+    API_EXPORT int32_t OnGo(int oldRowIndex, int newRowIndex) override;
 
     /**
      * @brief Allocates a new shared block to an {@link AbsSharedResultSet}
@@ -228,14 +141,13 @@ protected:
     // The default position of the cursor
     static const int INIT_POS = -1;
 private:
-    int GetCustomerValue(int index, ValueObject &value, AppDataFwk::SharedBlock *block) const;
-    int32_t GetPrecision(double val);
+    int GetCustomerValue(int index, ValueObject &value, AppDataFwk::SharedBlock *block);
 
     static const size_t DEFAULT_BLOCK_SIZE = 2 * 1024 * 1024;
     friend class ISharedResultSetStub;
     friend class ISharedResultSetProxy;
     // The SharedBlock owned by this AbsSharedResultSet
-    AppDataFwk::SharedBlock *sharedBlock_ = nullptr;
+    std::shared_ptr<AppDataFwk::SharedBlock> sharedBlock_ = nullptr;
     std::string sharedBlockName_ = "defaultSharedBlockName";
 };
 } // namespace NativeRdb

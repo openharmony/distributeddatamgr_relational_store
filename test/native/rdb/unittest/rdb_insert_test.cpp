@@ -772,7 +772,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize
 {
     std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
 
-    int64_t id;
+    int64_t id = 0;
     ValuesBucket values;
 
     values.PutInt("id", 1);
