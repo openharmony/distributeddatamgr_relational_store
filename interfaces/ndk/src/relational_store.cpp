@@ -374,7 +374,7 @@ static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedCo
     auto &[errCode, cfg] = result;
     switch (config->version) {
         case DISTRIBUTED_CONFIG_V0: {
-            const auto *realCfg = reinterpret_cast<const DistributedConfig_V0 *>(config);
+            const auto *realCfg = reinterpret_cast<const DistributedConfigV0 *>(config);
             cfg.version = realCfg->version;
             cfg.isAutoSync = realCfg->isAutoSync;
             errCode = OH_Rdb_ErrCode::RDB_OK;
@@ -540,19 +540,19 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
 {
     switch (paraVersion) {
         case TABLE_DETAIL_V0: {
-            auto length = sizeof(TableDetails_V0) * (tableLength + 1);
-            auto *detailsV0 = (TableDetails_V0 *)ResizeBuff(length);
+            auto length = sizeof(TableDetailsV0) * (tableLength + 1);
+            auto *detailsV0 = (TableDetailsV0 *)ResizeBuff(length);
             (void)memset_s(detailsV0, length, 0, length);
             int index = 0;
             for (const auto &pair : tableDetails_) {
                 detailsV0[index].table = pair.first.c_str();
-                detailsV0[index].upload = Statistic_V0{
+                detailsV0[index].upload = StatisticV0{
                     .total = (int)pair.second.upload.total,
                     .successful = (int)pair.second.upload.success,
                     .failed = (int)pair.second.upload.failed,
                     .remained = (int)pair.second.upload.untreated,
                 };
-                detailsV0[index].download = Statistic_V0{
+                detailsV0[index].download = StatisticV0{
                     .total = (int)pair.second.download.total,
                     .successful = (int)pair.second.download.success,
                     .failed = (int)pair.second.download.failed,

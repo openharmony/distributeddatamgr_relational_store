@@ -386,8 +386,9 @@ napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info inf
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int32_t strategy = -1;
         int status = JSUtils::Convert2ValueExt(env, argv[0], strategy);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && strategy >= 0 && strategy < Strategy::STRATEGY_BUTT,
-            Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && strategy >= 0 &&
+            strategy < static_cast<int32_t>(Strategy::STRATEGY_BUTT), Status::INVALID_ARGUMENT,
+            "The type of strategy must be StrategyType.");
         ctxt->strategy = static_cast<Strategy>(strategy);
         // 'argv[1]' represents a vector<CommonType::Value> param or null
         if (argc == 1 || JSUtils::IsNull(env, argv[1])) {
