@@ -139,7 +139,7 @@ describe('rdbStoreInsertSyncTest', function () {
             expect(null).assertFail()
         } catch (e) {
             console.log(TAG + `insert with wrong table ${e.code}, ${e.message}`);
-            expect(14800000).assertEqual(e.code)
+            expect(14800021).assertEqual(e.code)
         }
         done()
         console.log(TAG + "************* testSyncRdbStoreInsert0002 end   *************");
@@ -472,7 +472,7 @@ describe('rdbStoreInsertSyncTest', function () {
                 expect(null).assertFail()
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect(14800000).assertEqual(err.code)
+                expect(14800032).assertEqual(err.code)
                 done();
             }
         }
@@ -526,7 +526,7 @@ describe('rdbStoreInsertSyncTest', function () {
                 expect(null).assertFail();
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
-                expect(14800000).assertEqual(err.code);
+                expect(14800032).assertEqual(err.code);
                 rdbStore.rollBack();
             }
         }

@@ -12,11 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "event_handler.h"
 #define LOG_TAG "UvQueue"
 #include "js_uv_queue.h"
-
 #include <memory>
-
 #include "js_scope.h"
 #include "logger.h"
 namespace OHOS::AppDataMgrJsKit {

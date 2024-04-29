@@ -196,8 +196,8 @@ int RdStatement::Step() const
 int RdStatement::GetColumnCount(int &count) const
 {
     if (stmtHandle_ == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+        LOG_ERROR("statement already close.");
+        return E_ALREADY_CLOSED;
     }
     count = RdUtils::RdSqlColCnt(stmtHandle_);
     return E_OK;
@@ -471,8 +471,8 @@ bool RdStatement::IsReadOnly() const
 int RdStatement::IsValid(int index) const
 {
     if (stmtHandle_ == nullptr) {
-        LOG_ERROR("invalid statement.");
-        return E_INVALID_STATEMENT;
+        LOG_ERROR("statement already close.");
+        return E_ALREADY_CLOSED;
     }
     return E_OK;
 }

@@ -261,7 +261,7 @@ private:
     std::shared_ptr<std::set<std::string>> syncTables_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
-    ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
+    ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
 };
 } // namespace OHOS::NativeRdb

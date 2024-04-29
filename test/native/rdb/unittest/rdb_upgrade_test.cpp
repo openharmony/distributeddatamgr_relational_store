@@ -124,7 +124,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
     RdbHelper::ClearCache();
@@ -159,7 +159,7 @@ HWTEST_F(RdbUpgradeTest, RdbStore_Upgrade_001, TestSize.Level1)
     ret = upgradeResultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = upgradeResultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = upgradeResultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }

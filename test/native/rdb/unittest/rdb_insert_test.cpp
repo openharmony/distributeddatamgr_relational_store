@@ -39,12 +39,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const int E_SQLITE_CONSTRAINT; // errno SQLITE_CONSTRAINT
 };
 
 const std::string RdbStoreInsertTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
 std::shared_ptr<RdbStore> RdbStoreInsertTest::store = nullptr;
-const int RdbStoreInsertTest::E_SQLITE_CONSTRAINT = -19;
 
 class InsertTestOpenCallback : public RdbOpenCallback {
 public:
@@ -151,7 +149,7 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(position, -1);
 
     ret = resultSet->GetColumnType(0, columnType);
-    EXPECT_EQ(ret, E_INVALID_STATEMENT);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
@@ -180,10 +178,10 @@ void RdbStoreInsertTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     RdbStoreInsertTest::CheckBlob(resultSet);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_INVALID_STATEMENT);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -329,7 +327,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
     EXPECT_EQ(18, intVal);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -390,7 +388,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
     EXPECT_EQ(18, intVal);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -484,7 +482,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_005, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -542,7 +540,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_006, TestSize.Level1)
     EXPECT_EQ(3, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -578,7 +576,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, Test
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->InsertWithConflictResolution(id, "test", values);
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 }
 
 /**
@@ -609,7 +607,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, Test
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     ret = store->InsertWithConflictResolution(id, "test", values, ConflictResolution::ON_CONFLICT_ROLLBACK);
-    EXPECT_EQ(ret, RdbStoreInsertTest::E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 }
 
 /**
@@ -700,7 +698,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006, TestSize
     EXPECT_EQ(18, intVal);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -759,7 +757,7 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_007, TestSize
     EXPECT_EQ(6, blob[2]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

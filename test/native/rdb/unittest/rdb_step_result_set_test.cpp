@@ -1428,7 +1428,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     size_t size;
-    EXPECT_EQ(E_NOT_INIT, resultSet->GetSize(2, size));
+    EXPECT_EQ(E_ROW_OUT_RANGE, resultSet->GetSize(2, size));
 
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_EQ(true, resultSet->IsClosed());

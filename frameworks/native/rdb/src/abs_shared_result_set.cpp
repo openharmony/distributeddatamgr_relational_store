@@ -113,7 +113,7 @@ int AbsSharedResultSet::GoToRow(int position)
 
     if (position >= rowCnt) {
         rowPos_ = rowCnt;
-        return E_ERROR;
+        return E_ROW_OUT_RANGE;
     }
 
     if (rowPos_ <= INIT_POS) {
@@ -571,12 +571,12 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     int count = 0;
     GetRowCount(count);
     if (rowPos_ < 0 || rowPos_ >= count) {
-        return E_INVALID_STATEMENT;
+        return E_ROW_OUT_RANGE;
     }
 
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
-        return E_OUT_RANGE;
+        return E_COLUMN_OUT_RANGE;
     }
 
     return E_OK;

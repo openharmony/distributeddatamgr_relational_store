@@ -538,12 +538,12 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_key_numbers_to_strings, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
+    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
 
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("ValuesBucket is invalid."));
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value = nullptr;
         napi_get_property(env, arg, key, &value);
@@ -552,7 +552,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, valueObject);
         } else if (ret != napi_generic_failure) {
-            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "valid."));
+            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
         }
     }
     return OK;
@@ -562,18 +562,18 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
 {
     bool isArray = false;
     napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_SET(isArray, std::make_shared<ParamError>("values", "a ValuesBucket array."));
+    CHECK_RETURN_SET(isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
 
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "get array length."));
+    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid."));
 
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "get element."));
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
 
-        ParseValuesBucket(env, obj, context);
+        CHECK_RETURN_ERR(ParseValuesBucket(env, obj, context) == OK);
         context->valuesBuckets.push_back(context->valuesBucket);
         context->valuesBucket.Clear();
     }

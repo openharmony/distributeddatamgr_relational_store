@@ -53,7 +53,7 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
             errCode = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(config.GetPath(),
                 toSetLevel) ? E_OK : E_ERROR;
         } else {
-            errCode = currentLevel == toSetLevel ? E_OK : E_ERROR;
+            errCode = currentLevel == toSetLevel ? E_OK : E_CONFIG_INVALID_CHANGE;
         }
         if (errCode != E_OK) {
             LOG_ERROR("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),

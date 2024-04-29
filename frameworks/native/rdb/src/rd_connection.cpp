@@ -125,7 +125,7 @@ std::shared_ptr<RdbStatement> RdConnection::BeginStepQuery(int &errCode, const s
 {
     if (stepStatement_ == nullptr) {
         LOG_ERROR("RdConnection meets unexpected null");
-        errCode = E_INVALID_STATEMENT;
+        errCode = E_ROW_OUT_RANGE;
     }
     errCode = std::static_pointer_cast<RdStatement>(stepStatement_)->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
@@ -171,7 +171,7 @@ int RdConnection::EndStepQuery()
 {
     if (stepStatement_ == nullptr) {
         LOG_ERROR("RdConnection meets unexpected null");
-        return E_INVALID_STATEMENT;
+        return E_ALREADY_CLOSED;
     }
     return stepStatement_->ResetStatementAndClearBindings();
 }

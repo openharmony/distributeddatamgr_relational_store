@@ -108,7 +108,7 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.version = 5;
             let ret = rdbStore.executeSync("PRAGMA user_version");
             // get user_version 5
-            expect("5").assertEqual(ret);
+            expect(5).assertEqual(ret);
         } catch (err) {
             expect(null).assertFail();
             console.error(`get user_version failed, code:${err.code}, message: ${err.message}`);
