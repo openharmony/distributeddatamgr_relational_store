@@ -260,7 +260,7 @@ ValueObject::operator std::string() const
 ValueObject::operator Blob() const
 {
     Blob val;
-    int type = value.index();
+    int type = static_cast<int>(value.index());
     if (type == ValueObject::TYPE_BLOB) {
         val = std::get<std::vector<uint8_t>>(value);
     } else if (type == ValueObject::TYPE_STRING) {
