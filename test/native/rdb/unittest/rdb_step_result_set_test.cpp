@@ -528,7 +528,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
     EXPECT_EQ(1, iValue);
 
     iRet = resultSet->GetInt(3, iValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
@@ -587,7 +587,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
     EXPECT_EQ("1", strValue);
 
     iRet = resultSet->GetString(3, strValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
@@ -636,7 +636,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
     EXPECT_EQ(1.0, dValue);
 
     iRet = resultSet->GetDouble(3, dValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
     EXPECT_EQ(4, columnCount);
@@ -682,10 +682,10 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
     EXPECT_EQ("hello", strBlob);
 
     iRet = resultSet->GetBlob(1, blobValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     iRet = resultSet->GetBlob(2, blobValue);
-    EXPECT_NE(E_OK, iRet);
+    EXPECT_EQ(E_OK, iRet);
 
     iRet = resultSet->GetBlob(3, blobValue);
     EXPECT_EQ(E_OK, iRet);

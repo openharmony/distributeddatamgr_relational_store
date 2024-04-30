@@ -486,11 +486,17 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_014, TestSize.Level1)
 
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-    auto ret = RdbHelper::DeleteRdbStore(dbPath);
-    EXPECT_EQ(ret, E_OK);
-
+    // open the read only db failed, when the file is not exists;
+    store = nullptr;
     readOnly = true;
     config.SetReadOnly(readOnly);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    // open the read only db success, when the file is exists;
+    store = nullptr;
+    auto ret = RdbHelper::DeleteRdbStore(dbPath);
+    EXPECT_EQ(ret, E_OK);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
 }

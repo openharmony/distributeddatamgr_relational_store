@@ -29,33 +29,35 @@ class RdbStoreConfig;
 class Statement;
 class Connection {
 public:
+    using SConn = std::shared_ptr<Connection>;
+    using Stmt = std::shared_ptr<Statement>;
     using Notifier = std::function<void(const std::set<std::string> &tables)>;
-    using Creator = std::pair<int, std::shared_ptr<Connection>> (*)(const RdbStoreConfig& config, bool isWriter);
-    static std::pair<int, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWriter);
+    using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
+    static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t RegisterCreator(int32_t dbType, Creator creator);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
     virtual ~Connection() = default;
     virtual int32_t OnInitialize() = 0;
-    virtual std::pair<int, std::shared_ptr<Statement>> CreateStatement(
-        const std::string &sql, std::shared_ptr<Connection> conn) = 0;
+    virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
-    virtual int ReSetKey(const RdbStoreConfig &config) = 0;
-    virtual int TryCheckPoint() = 0;
-    virtual int LimitWalSize() = 0;
-    virtual int ConfigLocale(const std::string &localeStr) = 0;
-    virtual int CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
-    virtual int SubscribeTableChanges(const Notifier &notifier) = 0;
-    virtual int GetMaxVariable() const = 0;
+    virtual int32_t ReSetKey(const RdbStoreConfig &config) = 0;
+    virtual int32_t TryCheckPoint() = 0;
+    virtual int32_t LimitWalSize() = 0;
+    virtual int32_t ConfigLocale(const std::string &localeStr) = 0;
+    virtual int32_t CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
+    virtual int32_t SubscribeTableChanges(const Notifier &notifier) = 0;
+    virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
     virtual int32_t Subscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
+
 private:
     int32_t id_ = 0;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H

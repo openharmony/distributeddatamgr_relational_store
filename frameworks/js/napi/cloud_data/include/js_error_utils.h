@@ -59,7 +59,7 @@ napi_value GenerateErrorMsg(napi_env env, JsErrorCode jsInfo);
     do {                                                            \
         if (!(assertion)) {                                         \
             (ctxt)->isThrowError = true;                            \
-            ThrowNapiError((ctxt)->env, errorCode, message); \
+            ThrowNapiError((ctxt)->env, errorCode, message);        \
             return;                                                 \
         }                                                           \
     } while (0)

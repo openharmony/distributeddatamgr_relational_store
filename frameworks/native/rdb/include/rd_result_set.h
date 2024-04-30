@@ -38,7 +38,6 @@ public:
         const std::vector<ValueObject>& selectionArgs, int rowCount);
     ~RdSharedResultSet() override;
 
-    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GetRowCount(int &count) override;
     int GoToRow(int position) override;
@@ -46,22 +45,12 @@ public:
     int IsStarted(bool &result) const override;
     int IsAtFirstRow(bool &result) const override;
     int IsEnded(bool &result) override;
-    int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
-    int GetString(int columnIndex, std::string &value) override;
-    int GetInt(int columnIndex, int &value) override;
-    int GetLong(int columnIndex, int64_t &value) override;
-    int GetDouble(int columnIndex, double &value) override;
     int GetSize(int columnIndex, size_t &size) override;
-    int GetAsset(int32_t col, ValueObject::Asset &value) override;
-    int GetAssets(int32_t col, ValueObject::Assets &value) override;
     int Get(int32_t col, ValueObject &value) override;
-    int GetModifyTime(std::string &modifyTime) override;
-    int IsColumnNull(int columnIndex, bool &isNull) override;
-    bool IsClosed() const override;
     int Close() override;
-    int GetFloat32Array(int32_t col, ValueObject::FloatVector &value) override;
 
 protected:
+    std::pair<int, std::vector<std::string>> GetColumnNames() override;
     virtual int PrepareStep();
 
     template<typename T>
@@ -79,7 +68,6 @@ protected:
 
     std::shared_ptr<RdbStatement> statement_ = nullptr;
     std::shared_ptr<RdbConnection> conn_ = nullptr;
-    std::vector<std::string> columnNames_ = {};
     std::vector<ValueObject> args_ = {};
     std::string sql_ = "";
     std::shared_ptr<RdbConnectionPool> rdConnectionPool_ = nullptr;
@@ -87,7 +75,6 @@ protected:
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
-    int connId_;
 };
 
 

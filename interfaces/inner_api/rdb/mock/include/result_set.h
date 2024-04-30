@@ -26,12 +26,12 @@ namespace OHOS {
 namespace NativeRdb {
 struct RowEntity {
 public:
-    void Put(const std::string &name, const ValueObject &value);
+    void Put(const std::string &name, int32_t index, ValueObject &&value);
     ValueObject Get(const std::string &name) const;
     ValueObject Get(int index) const;
     const std::map<std::string, ValueObject> &Get() const;
     std::map<std::string, ValueObject> Steal();
-    void Clear();
+    void Clear(int32_t size);
 
 private:
     std::map<std::string, ValueObject> values_;
@@ -51,7 +51,6 @@ public:
      */
     virtual int GetRow(RowEntity &rowEntity) = 0;
     virtual int GetSize(int columnIndex, size_t &size) = 0;
-    virtual int GetModifyTime(std::string &modifyTime) = 0;
 };
 
 } // namespace NativeRdb

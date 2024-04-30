@@ -43,7 +43,7 @@ public:
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
      */
-    virtual AppDataFwk::SharedBlock *GetBlock() = 0;
+    virtual std::shared_ptr<AppDataFwk::SharedBlock> GetBlock() = 0;
 
     /**
      * @brief Called when the position of the result set changes.

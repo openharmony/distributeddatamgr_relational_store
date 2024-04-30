@@ -15,14 +15,14 @@
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <algorithm>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
+#include <cstring>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "logger.h"
 #include "rdb_errno.h"

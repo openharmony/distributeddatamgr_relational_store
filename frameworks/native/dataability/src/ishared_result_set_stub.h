@@ -29,10 +29,12 @@ public:
     ~ISharedResultSetStub();
     static sptr<ISharedResultSet> CreateStub(std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    
+
 protected:
+    std::pair<int, std::vector<std::string>> GetColumnNames() override;
+
     int HandleGetRowCountRequest(MessageParcel &data, MessageParcel &reply);
-    int HandleGetAllColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
+    int HandleGetColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
     int HandleOnGoRequest(MessageParcel &data, MessageParcel &reply);
     int HandleCloseRequest(MessageParcel &data, MessageParcel &reply);
     template<typename F, typename... Args>
@@ -59,7 +61,7 @@ private:
     std::thread thread_;
     static constexpr Handler handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)] {
         &ISharedResultSetStub::HandleGetRowCountRequest,
-        &ISharedResultSetStub::HandleGetAllColumnNamesRequest,
+        &ISharedResultSetStub::HandleGetColumnNamesRequest,
         &ISharedResultSetStub::HandleOnGoRequest,
         &ISharedResultSetStub::HandleCloseRequest,
     };

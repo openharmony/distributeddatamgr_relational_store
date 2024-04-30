@@ -41,8 +41,6 @@ public:
     int GetAsset(int32_t col, ValueObject::Asset &value) override;
     int GetAssets(int32_t col, ValueObject::Assets &value) override;
     int GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs) override;
-    int Get(int32_t col, ValueObject &value) override;
-    int GetModifyTime(std::string &modifyTime) override;
     int IsColumnNull(int columnIndex, bool &isNull) override;
     int GetRow(RowEntity &rowEntity) override;
     int GoToRow(int position) override;
@@ -64,19 +62,56 @@ public:
     int Close() override;
 
 protected:
+    template<typename Mtx>
+    class Lock {
+    public:
+        Lock(bool enable = false)
+        {
+            if (enable) {
+                mutex_ = new Mtx();
+            }
+        };
+        ~Lock()
+        {
+            delete mutex_;
+            mutex_ = nullptr;
+        }
+        void lock()
+        {
+            if (mutex_ != nullptr) {
+                mutex_->lock();
+            }
+        };
+        void unlock()
+        {
+            if (mutex_ != nullptr) {
+                mutex_->unlock();
+            }
+        };
+
+    private:
+        Mtx* mutex_ = nullptr;
+    };
+    using Mutex = Lock<std::mutex>;
+
+    virtual std::pair<int, std::vector<std::string>> GetColumnNames() = 0;
+
     // The default position of the result set
     static const int INIT_POS = -1;
 
-    // Indicates whether the result set is closed
-    std::mutex columnMapLock_;
-    int columnCount_ = -1;
+    Mutex globalMtx_;
     /*
      * The value can be in the range [-1 ~ n], where -1 represents the start flag position and N represents the data end
      * flag position, and [0, n-1] represents the real data index.
      */
-    int rowPos_;
-    std::map<std::string, int> columnMap_;
+    int rowPos_ = INIT_POS;
     bool isClosed_ = false;
+private:
+    int InitColumnNames();
+
+    // Indicates whether the result set is closed
+    int columnCount_ = -1;
+    std::map<std::string, int> columnMap_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
