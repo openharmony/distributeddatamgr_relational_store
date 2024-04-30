@@ -188,7 +188,7 @@ ValueObject::operator int() const
 ValueObject::operator int64_t() const
 {
     int64_t val = 0L;
-    int type = value.index();
+    int type = static_cast<int>(value.index());
     if (type == ValueObject::TYPE_INT) {
         val = std::get<int64_t>(value);
     } else if (type == ValueObject::TYPE_DOUBLE) {
