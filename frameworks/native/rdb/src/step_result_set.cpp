@@ -29,10 +29,9 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-StepResultSet::StepResultSet(
-    std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql, const std::vector<ValueObject> &selectionArgs)
-    : AbsResultSet(), args_(std::move(selectionArgs)), sql_(sql), rowCount_(INIT_POS), isAfterLast_(false),
-      isStarted_(false)
+StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
+    const std::vector<ValueObject> &args)
+    : AbsResultSet(), sql_(sql), args_(std::move(args)), rowCount_(INIT_POS), isAfterLast_(false), isStarted_(false)
 {
     conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
@@ -89,38 +88,31 @@ int StepResultSet::PrepareStep()
     return E_OK;
 }
 
-int StepResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
+std::pair<int, std::vector<std::string>> StepResultSet::GetColumnNames()
 {
-    if (!columnNames_.empty()) {
-        columnNames = columnNames_;
-        return E_OK;
-    }
-
-    int errorCode = PrepareStep();
-    if (errorCode != E_OK) {
-        return errorCode;
+    int errCode = PrepareStep();
+    if (errCode != E_OK) {
+        LOG_ERROR("get all column names Step ret %{public}d", errCode);
+        return { errCode, {} };
     }
 
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("Statement is nullptr");
-        return E_ALREADY_CLOSED;
+        return { E_ALREADY_CLOSED, {} };
     }
-
-    auto columnCount = statement->GetColumnCount();
-
-    columnNames.clear();
-    for (int i = 0; i < columnCount; i++) {
-        auto [errCode, columnName] = statement->GetColumnName(i);
-        if (errCode) {
-            columnNames.clear();
-            LOG_ERROR("GetColumnName ret %{public}d", errCode);
-            return errCode;
+    auto colCount = statement->GetColumnCount();
+    std::vector<std::string> names;
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = statement->GetColumnName(i);
+        if (code) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return { code, {} };
         }
-        columnNames.push_back(columnName);
+        names.push_back(colName);
     }
 
-    return E_OK;
+    return { E_OK, std::move(names) };
 }
 
 int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
@@ -171,6 +163,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
             break;
         default:
             columnType = ColumnType::TYPE_STRING;
+            break;
     }
 
     return E_OK;
@@ -297,7 +290,6 @@ int StepResultSet::Close()
     conn_ = nullptr;
     sqliteStatement_ = nullptr;
     auto args = std::move(args_);
-    auto columnNames = std::move(columnNames_);
     return FinishStep();
 }
 
@@ -351,158 +343,6 @@ int StepResultSet::IsAtFirstRow(bool &result) const
     return E_OK;
 }
 
-int StepResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
-{
-    ValueObject valueObject;
-    int errorCode = Get(columnIndex, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-    blob.resize(0);
-    int type = valueObject.GetType();
-    if (type == ValueObject::TYPE_BLOB) {
-        blob = std::get<std::vector<uint8_t>>(valueObject.value);
-        return E_OK;
-    } else if (type == ValueObject::TYPE_STRING) {
-        auto temp = std::get<std::string>(valueObject.value);
-        blob.assign(temp.begin(), temp.end());
-        return E_OK;
-    } else if (type == ValueObject::TYPE_NULL) {
-        return E_OK;
-    }
-    LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
-    return E_INVALID_OBJECT_TYPE;
-}
-
-int StepResultSet::GetString(int columnIndex, std::string &value)
-{
-    ValueObject valueObject;
-    int errorCode = Get(columnIndex, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-    int type = valueObject.GetType();
-    if (type == ValueObject::TYPE_INT) {
-        auto temp = std::get<int64_t>(valueObject.value);
-        value = std::to_string(temp);
-    } else if (type == ValueObject::TYPE_DOUBLE) {
-        double temp = std::get<double>(valueObject.value);
-        std::ostringstream os;
-        if (os << temp) {
-            value = os.str();
-        }
-    } else if (type == ValueObject::TYPE_STRING) {
-        value = std::get<std::string>(valueObject.value);
-    } else if (type == ValueObject::TYPE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        return E_ERROR;
-    }
-    return E_OK;
-}
-
-int StepResultSet::GetInt(int columnIndex, int &value)
-{
-    int64_t temp = 0;
-    int errCode = GetLong(columnIndex, temp);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    value = int32_t(temp);
-    return E_OK;
-}
-
-int StepResultSet::GetLong(int columnIndex, int64_t &value)
-{
-    ValueObject valueObject;
-    int errorCode = Get(columnIndex, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-    value = 0L;
-    int type = valueObject.GetType();
-    if (type == ValueObject::TYPE_INT) {
-        value = std::get<int64_t>(valueObject.value);
-    } else if (type == ValueObject::TYPE_DOUBLE) {
-        value = int64_t(std::get<double>(valueObject.value));
-    } else if (type == ValueObject::TYPE_STRING) {
-        auto temp = std::get<std::string>(valueObject.value);
-        value = temp.empty() ? 0L : (int64_t)strtoll(temp.c_str(), nullptr, 0);
-    } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
-        return E_INVALID_OBJECT_TYPE;
-    } else {
-        return E_ERROR;
-    }
-    return E_OK;
-}
-
-int StepResultSet::GetDouble(int columnIndex, double &value)
-{
-    ValueObject valueObject;
-    int errorCode = Get(columnIndex, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-    value = 0.0L;
-    int type = valueObject.GetType();
-    if (type == ValueObject::TYPE_INT) {
-        value = double(std::get<int64_t>(valueObject.value));
-    } else if (type == ValueObject::TYPE_DOUBLE) {
-        value = std::get<double>(valueObject.value);
-    } else if (type == ValueObject::TYPE_STRING) {
-        auto temp = std::get<std::string>(valueObject.value);
-        value = temp.empty() ? 0.0 : (double)strtod(temp.c_str(), nullptr);
-    } else if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
-        return E_INVALID_OBJECT_TYPE;
-    } else {
-        return E_ERROR;
-    }
-
-    return E_OK;
-}
-
-int StepResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
-{
-    ValueObject valueObject;
-    int errorCode = Get(col, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-
-    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
-        return E_NULL_OBJECT;
-    }
-
-    if (valueObject.GetType() != ValueObject::TYPE_ASSET) {
-        LOG_ERROR("the type is not assets, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
-        return E_INVALID_OBJECT_TYPE;
-    }
-    value = valueObject;
-    return E_OK;
-}
-
-int StepResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
-{
-    ValueObject valueObject;
-    int errorCode = Get(col, valueObject);
-    if (errorCode != E_OK) {
-        return errorCode;
-    }
-
-    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
-        return E_NULL_OBJECT;
-    }
-
-    if (valueObject.GetType() != ValueObject::TYPE_ASSETS) {
-        LOG_ERROR("the type is not assets, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
-        return E_INVALID_OBJECT_TYPE;
-    }
-    value = valueObject;
-    return E_OK;
-}
-
 int StepResultSet::Get(int32_t col, ValueObject &value)
 {
     if (isClosed_) {
@@ -529,26 +369,6 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     auto errCode = E_ERROR;
     std::tie(errCode, size) = statement->GetSize(columnIndex);
     return errCode;
-}
-
-int StepResultSet::IsColumnNull(int columnIndex, bool &isNull)
-{
-    ColumnType columnType = ColumnType::TYPE_NULL;
-    int errCode = GetColumnType(columnIndex, columnType);
-    if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
-        return errCode;
-    }
-    isNull = (columnType == ColumnType::TYPE_NULL);
-    return E_OK;
-}
-
-/**
- * Check whether the result set is over
- */
-bool StepResultSet::IsClosed() const
-{
-    return isClosed_;
 }
 
 template<typename T>

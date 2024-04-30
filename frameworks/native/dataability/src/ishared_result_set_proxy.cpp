@@ -41,38 +41,11 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
     }
     sptr<ISharedResultSet> result = iface_cast<ISharedResultSet>(remoter);
     if (result->GetBlock() == nullptr) {
-        AppDataFwk::SharedBlock::ReadMessageParcel(parcel, result->sharedBlock_);
+        AppDataFwk::SharedBlock *block = nullptr;
+        AppDataFwk::SharedBlock::ReadMessageParcel(parcel, block);
+        result->SetBlock(block);
     }
     return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result] (AbsSharedResultSet *) {});
-}
-
-int ISharedResultSetProxy::GetAllColumnNames(std::vector<std::string> &columnNames)
-{
-    LOG_DEBUG("GetAllColumnNames Begin");
-    if (!columnNames_.empty()) {
-        columnNames = columnNames_;
-        return E_OK;
-    }
-    MessageParcel request;
-    request.WriteInterfaceToken(GetDescriptor());
-    MessageParcel reply;
-    MessageOption msgOption;
-    int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(ResultSetCode::FUNC_GET_ALL_COLUMN_NAMES), request, reply, msgOption);
-    if (errCode != 0) {
-        LOG_ERROR("GetAllColumnNames IPC Error %{public}x", errCode);
-        return -errCode;
-    }
-    errCode = reply.ReadInt32();
-    if (errCode != E_OK) {
-        LOG_ERROR("GetAllColumnNames Reply Error %{public}d", errCode);
-        return errCode;
-    }
-    if (!reply.ReadStringVector(&columnNames)) {
-        return E_INVALID_PARCEL;
-    }
-    columnNames_ = columnNames;
-    return E_OK;
 }
 
 int ISharedResultSetProxy::GetRowCount(int &count)
@@ -134,5 +107,29 @@ int ISharedResultSetProxy::Close()
         return -errCode;
     }
     return reply.ReadInt32();
+}
+
+std::pair<int, std::vector<std::string>> ISharedResultSetProxy::GetColumnNames()
+{
+    MessageParcel request;
+    request.WriteInterfaceToken(GetDescriptor());
+    MessageParcel reply;
+    MessageOption msgOption;
+    int errCode = Remote()->SendRequest(
+        static_cast<uint32_t>(ResultSetCode::FUNC_GET_ALL_COLUMN_NAMES), request, reply, msgOption);
+    if (errCode != 0) {
+        LOG_ERROR("GetAllColumnNames IPC Error %{public}x", errCode);
+        return {-errCode, {}};
+    }
+    errCode = reply.ReadInt32();
+    if (errCode != E_OK) {
+        LOG_ERROR("GetAllColumnNames Reply Error %{public}d", errCode);
+        return {errCode, {}};
+    }
+    std::vector<std::string> colNames;
+    if (!reply.ReadStringVector(&colNames)) {
+        return {E_INVALID_PARCEL, {}};
+    }
+    return {errCode, std::move(colNames)};
 }
 } // namespace OHOS::NativeRdb

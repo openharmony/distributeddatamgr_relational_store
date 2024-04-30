@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 #define NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 
+#include <atomic>
 #include <condition_variable>
 #include <iostream>
 #include <iterator>
@@ -25,7 +26,7 @@
 #include <sstream>
 #include <stack>
 #include <vector>
-#include <atomic>
+
 #include "base_transaction.h"
 #include "connection.h"
 #include "rdb_common.h"
@@ -57,6 +58,7 @@ public:
     void CloseAllConnections();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
+
 private:
     struct ConnNode {
         bool using_ = false;

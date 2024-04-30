@@ -13,19 +13,20 @@
  * limitations under the License.
  */
 #include "connection.h"
-#include "rdb_store_config.h"
+
 #include "rdb_errno.h"
+#include "rdb_store_config.h"
 namespace OHOS::NativeRdb {
 static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
-std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig& config, bool isWriter)
+std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig &config, bool isWriter)
 {
     auto dbType = config.GetDBType();
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
-        return {E_INVALID_ARGS, nullptr};
+        return { E_INVALID_ARGS, nullptr };
     }
     auto creator = g_creators[dbType];
     if (creator == nullptr) {
-        return {E_ERROR, nullptr};
+        return { E_ERROR, nullptr };
     }
 
     return creator(config, isWriter);

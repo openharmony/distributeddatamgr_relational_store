@@ -88,7 +88,7 @@ private:
     int GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     bool HasRootKey();
-    std::vector<uint8_t> EncryptWorkKey(const std::vector<uint8_t> &key);
+    std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
     bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
     bool InitPath(const std::string &dbKeyDir);
@@ -100,7 +100,6 @@ private:
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     static bool IsKeyExpired(const time_t &createTime) ;
     std::string GetKeyPath(const std::string &dbPath, KeyFileType keyFileType);
-    int32_t MallocAndCheckBlobData(struct HksBlob *blob, const uint32_t blobSize);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
     int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,

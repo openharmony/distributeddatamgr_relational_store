@@ -36,13 +36,13 @@ public:
 
     SqliteStatement();
     ~SqliteStatement();
-    int Prepare(const std::string& sql) override;
-    int Bind(const std::vector<ValueObject>& args) override;
+    int Prepare(const std::string &sql) override;
+    int Bind(const std::vector<ValueObject> &args) override;
     int Step() override;
     int Reset() override;
     int Finalize() override;
-    int Execute(const std::vector<ValueObject>& args) override;
-    std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject>& args) override;
+    int Execute(const std::vector<ValueObject> &args) override;
+    std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args) override;
     int Changes() const override;
     int64_t LastInsertRowId() const override;
     int32_t GetColumnCount() const override;
@@ -52,9 +52,9 @@ public:
     std::pair<int32_t, ValueObject> GetColumn(int index) const override;
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
-    int32_t FillBlockInfo(SharedBlockInfo* info) const override;
-    int ModifyLockStatus(
-        const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock) override;
+    int32_t FillBlockInfo(SharedBlockInfo *info) const override;
+    int ModifyLockStatus(const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys,
+        bool isLock) override;
 
 private:
     friend class SqliteConnection;
@@ -63,35 +63,25 @@ private:
     using BigInt = ValueObject::BigInt;
     using Floats = ValueObject::FloatVector;
     using Action = int32_t (*)(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
-    static int32_t BindNil(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindInteger(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindDouble(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindText(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindBool(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindBlob(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindAsset(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindAssets(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindFloats(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
-    static int32_t BindBigInt(sqlite3_stmt* stat, int index, const ValueObject::Type& object);
+    static int32_t BindNil(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindInteger(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindDouble(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindText(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindBool(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindBlob(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindAsset(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindAssets(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindFloats(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
+    static int32_t BindBigInt(sqlite3_stmt *stat, int index, const ValueObject::Type &object);
     static const int SQLITE_SET_SHAREDBLOCK = 2004;
     static const int SQLITE_USE_SHAREDBLOCK = 2005;
-    static constexpr Action ACTIONS[ValueObject::TYPE_MAX] = {
-        BindNil,
-        BindInteger,
-        BindDouble,
-        BindText,
-        BindBool,
-        BindBlob,
-        BindAsset,
-        BindAssets,
-        BindFloats,
-        BindBigInt
-    };
+    static constexpr Action ACTIONS[ValueObject::TYPE_MAX] = { BindNil, BindInteger, BindDouble, BindText, BindBool,
+        BindBlob, BindAsset, BindAssets, BindFloats, BindBigInt };
 
-    int Prepare(sqlite3* dbHandle, const std::string& sql);
-    int BindArgs(const std::vector<ValueObject>& bindArgs);
+    int Prepare(sqlite3 *dbHandle, const std::string &sql);
+    int BindArgs(const std::vector<ValueObject> &bindArgs);
     int IsValid(int index) const;
-    ValueObject GetValueFromBlob(int index, const char* decl) const;
+    ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
 
     bool readOnly_;
     bool bound_ = false;
@@ -99,10 +89,9 @@ private:
     int numParameters_;
     sqlite3_stmt *stmt_;
     std::shared_ptr<Connection> conn_;
-
     std::string sql_;
+    mutable std::vector<int32_t> types_;
 };
-
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

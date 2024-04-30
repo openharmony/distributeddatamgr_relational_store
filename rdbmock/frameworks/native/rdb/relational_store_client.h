@@ -21,8 +21,6 @@
 #include "sqlite3sym.h"
 #include "store_observer.h"
 
-namespace OHOS {
-namespace NativeRdb {
 namespace DistributedDB {
 enum DBStatus {
     DB_ERROR = -1,
@@ -47,7 +45,6 @@ DistributedDB::DBStatus Lock(
 
 DistributedDB::DBStatus UnLock(
     const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db);
-}
-}
-
+DistributedDB::DBStatus DropLogicDeletedData(sqlite3* db,
+    const std::string& tableName, uint64_t cursor);
 #endif //RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H

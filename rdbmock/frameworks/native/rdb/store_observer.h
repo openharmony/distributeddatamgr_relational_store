@@ -20,8 +20,6 @@
 #include <variant>
 #include <vector>
 
-namespace OHOS {
-namespace NativeRdb {
 namespace DistributedDB {
 using Type = std::variant<std::monostate, std::string, int64_t, double>;
 
@@ -42,8 +40,6 @@ public:
     using StoreChangedInfo = std::vector<ChangedData>;
     virtual void OnChange(StoreChangedInfo &&data) {};
 };
-}
-}
 }
 
 #endif //RELATIONAL_STORE_OBSERVER_H
