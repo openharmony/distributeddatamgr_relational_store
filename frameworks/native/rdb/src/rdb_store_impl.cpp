@@ -487,7 +487,7 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::MakeExecuteSqls(const std::string& sql, 
     if (executeTimes != 0) {
         executeSql = appendAgsSql(maxRowNumbersOneTimes);
         std::vector<std::vector<ValueObject>> sqlArgs;
-        size_t maxVariableNumbers = static_cast<size_t>(maxRowNumbersOneTimes * fieldSize);
+        size_t maxVariableNumbers = maxRowNumbersOneTimes * static_cast<size_t>(fieldSize);
         for (size_t i = 0; i < executeTimes; ++i) {
             std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
             sqlArgs.emplace_back(std::move(bindValueArgs));
