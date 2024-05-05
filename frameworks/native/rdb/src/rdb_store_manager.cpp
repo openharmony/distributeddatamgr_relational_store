@@ -65,10 +65,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     std::lock_guard<std::mutex> lock(mutex_);
     auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();
     bundleName_ = config.GetBundleName();
-    if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, config)) {
-        errCode = E_CONFIG_INVALID_CHANGE;
-        return nullptr;
-    }
     if (storeCache_.find(path) != storeCache_.end()) {
         std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
         if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
