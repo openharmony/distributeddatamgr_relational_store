@@ -158,6 +158,7 @@ void SqliteSharedResultSet::FillSharedBlock(int requiredPos)
     }
     AppDataFwk::SharedBlock *sharedBlock = GetBlock();
     if (sharedBlock == nullptr) {
+        connectionPool_->ReleaseConnection(connection);
         return;
     }
     if (rowNum == NO_COUNT) {
