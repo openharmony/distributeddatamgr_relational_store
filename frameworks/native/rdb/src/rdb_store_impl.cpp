@@ -27,6 +27,7 @@
 #include <string>
 
 #include "cache_result_set.h"
+#include "directory_ex.h"
 #include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
@@ -39,8 +40,6 @@
 #include "step_result_set.h"
 #include "task_executor.h"
 #include "traits.h"
-
-#include "directory_ex.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
@@ -126,18 +125,25 @@ void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
     key.assign(key.size(), 0);
     if (pool_ != nullptr) {
         auto param = syncerParam_;
-        pool_->Execute([param]() {
-            auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-            if (err != E_OK || service == nullptr) {
-                LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
-                return;
-            }
-            err = service->AfterOpen(param);
-            LOG_ERROR("AfterOpen RdbStoreImpl::AfterOpen leve %{public}d.", param.level_);
-            if (err != E_OK) {
-                LOG_ERROR("AfterOpen failed, err is %{public}d.", err);
-            }
-        });
+        auto retry = 0;
+        pool_->Execute([param, retry]() { UploadSchema(param, retry); });
+    }
+}
+
+void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry)
+{
+    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (err != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err, param.storeName_.c_str());
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() { UploadSchema(param, retry); });
+        }
+        return;
+    }
+    err = service->AfterOpen(param);
+    if (err != E_OK) {
+        LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err, param.storeName_.c_str());
     }
 }
 
