@@ -239,10 +239,13 @@ private:
     std::string GetSecManagerName(const RdbStoreConfig &config);
     void RemoveDbFiles(std::string &path);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
+    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
+    static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
+    static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     std::shared_ptr<SqliteConnectionPool> connectionPool_ = nullptr;

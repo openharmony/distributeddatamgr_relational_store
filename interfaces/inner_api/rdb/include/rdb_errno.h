@@ -388,6 +388,11 @@ static constexpr int E_SQLITE_MISUSE = (E_BASE + 69);
  * @brief Config changed.
  */
 static constexpr int E_CONFIG_INVALID_CHANGE = (E_BASE + 70);
+
+/**
+ * @brief Not get service.
+ */
+static constexpr int E_SERVICE_NOT_FOUND = (E_BASE + 71);
 } // namespace NativeRdb
 } // namespace OHOS
 

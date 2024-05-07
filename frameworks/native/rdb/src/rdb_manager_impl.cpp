@@ -106,7 +106,7 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     }
     if (distributedDataMgr_ == nullptr) {
         LOG_ERROR("get distributed data manager failed");
-        return { E_ERROR, nullptr };
+        return { E_SERVICE_NOT_FOUND, nullptr };
     }
 
     auto remote = distributedDataMgr_->GetFeatureInterface(DistributedRdb::RdbService::SERVICE_NAME);

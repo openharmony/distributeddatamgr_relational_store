@@ -876,7 +876,7 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
                 oldAsset.size = newAsset.size;
                 oldAsset.hash = newAsset.hash;
                 oldAsset.path = newAsset.path;
-                oldAsset.status = Status ::STATUS_UPDATE;
+                oldAsset.status = Status::STATUS_UPDATE;
             }
             return;
         default:
