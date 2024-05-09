@@ -88,6 +88,7 @@ private:
         napi_value GetCallback();
         napi_value GetObject();
         void BindPromise(napi_value promise);
+        void DelReference();
         Result *StealResult();
         int32_t GetArgv(napi_value *argv, int32_t max);
     };
