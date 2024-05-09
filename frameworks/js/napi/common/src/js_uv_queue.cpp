@@ -230,6 +230,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         Scope scope(entry->env_);
         napi_value method = entry->GetCallback();
         if (method == nullptr) {
+            entry->DelReference();
             LOG_ERROR("the callback is invalid, maybe is cleared!");
             return;
         }
@@ -238,6 +239,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         auto object = entry->GetObject();
         napi_value promise = nullptr;
         auto status = napi_call_function(entry->env_, object, method, argc, argv, &promise);
+        entry->DelReference();
         if (status != napi_ok) {
             LOG_ERROR("notify data change failed status:%{public}d.", status);
             return;
@@ -248,11 +250,14 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
 
 UvQueue::UvEntry::~UvEntry()
 {
-    if (callback_ == nullptr || repeat_) {
-        return;
+}
+
+void UvQueue::UvEntry::DelReference()
+{
+    if (callback_ != nullptr && !repeat_) {
+        napi_delete_reference(env_, callback_);
+        callback_ = nullptr;
     }
-    napi_delete_reference(env_, callback_);
-    callback_ = nullptr;
     if (object_ != nullptr) {
         napi_delete_reference(env_, object_);
         object_ = nullptr;
