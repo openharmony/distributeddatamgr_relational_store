@@ -26,6 +26,7 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSqlBuilder {
 public:
+    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     SqliteSqlBuilder();
     ~SqliteSqlBuilder();
     static std::string BuildDeleteString(const std::string &tableName, const std::string &index,
@@ -51,7 +52,10 @@ public:
         const std::vector<std::string> &columns, const std::string &logTable, const std::pair<bool, bool> &queryStatus);
     static std::string BuildLockRowQueryString(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
+    static std::string GetSqlArgs(size_t size);
 
+    static ExecuteSqls MakeExecuteSqls(
+        const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit);
 private:
     static void AppendClause(std::string &builder, const std::string &name,
         const std::string &clause, const std::string &table = "");

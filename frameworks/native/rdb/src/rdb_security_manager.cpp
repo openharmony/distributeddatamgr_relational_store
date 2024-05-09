@@ -386,7 +386,7 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
         retryCount++;
         usleep(RETRY_TIME_INTERVAL_MILLISECOND);
     }
-    LOG_INFO("retry:%{public}u, error:%{public}d", retryCount, ret);
+    LOG_INFO("bundleName:%{public}s, retry:%{public}u, error:%{public}d", bundleName.c_str(), retryCount, ret);
     return ret;
 }
 
