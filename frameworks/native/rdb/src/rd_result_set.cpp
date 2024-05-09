@@ -52,6 +52,7 @@ RdSharedResultSet::~RdSharedResultSet()
 std::pair<int, std::vector<std::string>> RdSharedResultSet::GetColumnNames()
 {
     if (isClosed_) {
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, sql_.c_str());
         return { E_ALREADY_CLOSED, {} };
     }
     std::vector<std::string> columnNames;

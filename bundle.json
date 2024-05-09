@@ -64,7 +64,8 @@
                 "ipc",
                 "kv_store",
                 "napi",
-                "samgr"
+                "samgr",
+                "hisysevent"
             ],
             "third_party": [
                 "icu",
