@@ -19,6 +19,7 @@ let rpc = requireNapi('rpc');
 const TAG = 'cloudExtension';
 const INVALID_STATE = -1;
 const INVALID_STR = '';
+const MAX_SIZE = 1024 * 1024;
 
 export var cloudExtension;
 (function (a) {
@@ -212,6 +213,9 @@ export var cloudExtension;
             let c1 = {};
             let z1 = t.readInt();
             c1[z] = [];
+            if (z1 < 0 || z1 > MAX_SIZE) {
+                return c1;
+            }
             for (let a2 = 0; a2 < z1; a2++) {
                 c1[z].push(this.unMarshallingDatabase(t));
             }
@@ -221,10 +225,16 @@ export var cloudExtension;
         unMarshallingUnSubInfo(t) {
             let e1 = {};
             let b2 = t.readInt();
+            if (b2 < 0 || b2 > MAX_SIZE) {
+                return e1;
+            }
             for (let c2 = 0; c2 < b2; c2++) {
                 let d2 = t.readString();
                 e1[d2] = [];
                 let e2 = t.readInt();
+                if (e2 < 0 || e2 > MAX_SIZE) {
+                    continue;
+                }
                 for (let f2 = 0; f2 < e2; f2++) {
                     e1[d2].push(t.readString());
                 }
@@ -242,6 +252,9 @@ export var cloudExtension;
             h1.alias = t.readString();
             h1.tables = [];
             let g2 = t.readInt();
+            if (g2 < 0 || g2 > MAX_SIZE) {
+                return h1;
+            }
             for (let c2 = 0; c2 < g2; c2++) {
                 let h2 = t.readString();
                 let i2 = t.readString();
@@ -252,6 +265,9 @@ export var cloudExtension;
                 };
                 h1.tables.push(v1);
                 let j2 = t.readInt();
+                if (j2 < 0 || j2 > MAX_SIZE) {
+                    continue;
+                }
                 for (let k2 = 0; k2 < j2; k2++) {
                     let w1 = {
                         alias: t.readString(),
@@ -385,6 +401,9 @@ export var cloudExtension;
         unMarshallingFiledArray(t) {
             let v2 = [];
             let h3 = t.readInt();
+            if (h3 < 0 || h3 > MAX_SIZE) {
+                return v2;
+            }
             for (let f2 = 0; f2 < h3; f2++) {
                 v2.push(t.readString());
             }
@@ -398,6 +417,9 @@ export var cloudExtension;
         }
 
         marshallingResultValueBucket(u, i3) {
+            if (i3.length > MAX_SIZE) {
+                return;
+            }
             u.writeInt(i3.length);
             for (let f2 = 0; f2 < i3.length; f2++) {
                 u.writeInt(i3[f2].code);
@@ -491,6 +513,9 @@ export var cloudExtension;
         }
 
         marshallingValuesBuckets(u, m3) {
+            if (m3.length > MAX_SIZE) {
+                return;
+            }
             u.writeInt(m3.length);
             for (let f2 = 0; f2 < m3.length; f2++) {
                 this.marshallingValueBucket(u, m3[f2]);
@@ -500,6 +525,9 @@ export var cloudExtension;
         unMarshallingValuesBuckets(t) {
             let n3 = t.readInt();
             let m3 = [];
+            if (n3 < 0 || n3 > MAX_SIZE) {
+                return m3;
+            }
             for (let f2 = 0; f2 < n3; f2++) {
                 m3.push(this.unMarshallingValuesBucket(t));
             }
@@ -509,6 +537,9 @@ export var cloudExtension;
         unMarshallingValuesBucket(t) {
             let k3 = {};
             let n3 = t.readInt();
+            if (n3 < 0 || n3 > MAX_SIZE) {
+                return k3;
+            }
             for (let f2 = 0; f2 < n3; f2++) {
                 let s1 = t.readString();
                 let t1 = this.unMarshallingValueType(t);
@@ -547,6 +578,9 @@ export var cloudExtension;
                 case f.ASSETS: // Assets
                     let p3 = t.readInt();
                     let q3 = [];
+                    if (p3 < 0 || p3 > MAX_SIZE) {
+                        return q3;
+                    }
                     for (let c2 = 0; c2 < p3; c2++) {
                         q3.push({
                             name: t.readString(),
@@ -598,6 +632,9 @@ export var cloudExtension;
         unmarshallingAssets(t) {
             let h3 = t.readInt();
             let w3 = [];
+            if (h3 < 0 || h3 > MAX_SIZE) {
+                return w3;
+            }
             for (let f2 = 0; f2 < h3; f2++) {
                 w3.push({
                     name: t.readString(),
@@ -616,6 +653,9 @@ export var cloudExtension;
 
         marshallingAssets(u, q3) {
             u.writeInt(q3.length);
+            if (q3.length > MAX_SIZE) {
+                return;
+            }
             for (let f2 = 0; f2 < q3.length; f2++) {
                 u.writeInt(q3[f2].code);
                 u.writeString(q3[f2].value.name);
@@ -739,6 +779,9 @@ export var cloudExtension;
         unMarshallingParticipants(t) {
             let i5 = [];
             let h3 = t.readInt();
+            if (h3 < 0 || h3 > MAX_SIZE) {
+                return i5;
+            }
             for (let f2 = 0; f2 < h3; f2++) {
                 i5.push(this.unMarshallingParticipant(t));
             }
