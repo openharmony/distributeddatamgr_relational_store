@@ -204,6 +204,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("close", Close),
             DECLARE_NAPI_FUNCTION("attach", Attach),
             DECLARE_NAPI_FUNCTION("detach", Detach),
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
             DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
             DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
             DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
@@ -218,6 +219,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("lockRow", LockRow),
             DECLARE_NAPI_FUNCTION("unlockRow", UnlockRow),
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
+#endif
         };
         AddSyncFunctions(properties);
         return properties;
@@ -226,6 +228,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
 
 void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &properties)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
@@ -233,6 +236,7 @@ void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &prop
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySync, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QuerySync, SYNC));
+#endif
 }
 
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
@@ -1207,44 +1211,6 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
-napi_value RdbStoreProxy::QuerySync(napi_env env, napi_callback_info info)
-{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-        if (IsNapiTypeString(env, argc, argv, 0)) {
-            context->isQuerySql = true;
-            CHECK_RETURN(OK == ParseSql(env, argv[0], context));
-            if (argc == 2) {
-                CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
-            }
-        } else {
-            CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
-            if (argc == 2) {
-                CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
-            }
-        }
-    };
-    auto exec = [context]() -> int {
-        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
-        context->resultSet = context->isQuerySql
-                                 ? obj->GetInstance()->QueryByStep(context->sql, context->bindArgs)
-                                 : obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
-    };
-    auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
-}
-
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1994,6 +1960,44 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
         context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
         context->resultSet = obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
+
+napi_value RdbStoreProxy::QuerySync(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        if (IsNapiTypeString(env, argc, argv, 0)) {
+            context->isQuerySql = true;
+            CHECK_RETURN(OK == ParseSql(env, argv[0], context));
+            if (argc == 2) {
+                CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
+            }
+        } else {
+            CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
+            if (argc == 2) {
+                CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
+            }
+        }
+    };
+    auto exec = [context]() -> int {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
+        context->resultSet = context->isQuerySql
+                                 ? obj->GetInstance()->QueryByStep(context->sql, context->bindArgs)
+                                 : obj->GetInstance()->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
