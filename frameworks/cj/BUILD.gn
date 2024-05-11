@@ -1,0 +1,67 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+ohos_shared_library("cj_relational_store_ffi") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "${relational_store_common_path}/include",
+    "${relational_store_js_common_path}/include",
+    "${relational_store_napi_path}/relationalstore/include",
+  ]
+
+  if (product_name != "ohos-sdk") {
+    sources = [
+      "src/relational_store_ffi.cpp",
+      "src/relational_store_impl_rdbpredicatesproxy.cpp",
+      "src/relational_store_impl_rdbstore.cpp",
+      "src/relational_store_impl_resultsetproxy.cpp",
+      "src/relational_store_utils.cpp",
+    ]
+
+    deps = [
+      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+      "${relational_store_innerapi_path}/rdb:native_rdb",
+      "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
+      "${relational_store_napi_path}/rdb:napi_rdb",
+      "${relational_store_napi_path}/relationalstore:relationalstore",
+    ]
+
+    external_deps = [
+      "ability_runtime:abilitykit_native",
+      "ability_runtime:napi_base_context",
+      "c_utils:utils",
+      "common_event_service:cesfwk_innerkits",
+      "hilog:libhilog",
+      "hitrace:hitrace_meter",
+      "napi:ace_napi",
+      "napi:cj_bind_ffi",
+      "napi:cj_bind_native",
+    ]
+  } else {
+    defines += [ "PREVIEWER" ]
+    sources = [ "mock/relational_store_mock.cpp" ]
+  }
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}
