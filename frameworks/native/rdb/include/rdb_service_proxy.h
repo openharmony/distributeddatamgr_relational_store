@@ -65,7 +65,9 @@ public:
 
     void ImportObservers(Observers &observers);
 
-    int32_t GetSchema(const RdbSyncerParam &param) override;
+    int32_t BeforeOpen(RdbSyncerParam &param) override;
+
+    int32_t AfterOpen(const RdbSyncerParam &param) override;
 
     int32_t Delete(const RdbSyncerParam &param) override;
 

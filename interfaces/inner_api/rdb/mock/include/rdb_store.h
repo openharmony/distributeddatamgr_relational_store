@@ -36,9 +36,6 @@ public:
     using Date = DistributedRdb::Date;
 
     virtual ~RdbStore() {}
-#ifdef WINDOWS_PLATFORM
-    virtual void Clear();
-#endif
     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
         const std::vector<ValuesBucket> &values) = 0;

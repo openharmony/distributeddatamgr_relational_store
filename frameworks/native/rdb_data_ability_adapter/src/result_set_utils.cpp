@@ -20,11 +20,6 @@ ResultSetUtils::ResultSetUtils(std::shared_ptr<DSResultSet> dbResultSet) : resul
 {
 }
 
-int ResultSetUtils::GetAllColumnNames(std::vector<std::string> &columnNames)
-{
-    return resultSet_->GetAllColumnNames(columnNames);
-}
-
 int ResultSetUtils::GetColumnCount(int &count)
 {
     return resultSet_->GetColumnCount(count);
@@ -36,16 +31,6 @@ int ResultSetUtils::GetColumnType(int columnIndex, NativeRdb::ColumnType &column
     auto ret = resultSet_->GetDataType(columnIndex, dataType);
     columnType = NativeRdb::ColumnType(int32_t(dataType));
     return ret;
-}
-
-int ResultSetUtils::GetColumnIndex(const std::string &columnName, int &columnIndex)
-{
-    return resultSet_->GetColumnIndex(columnName, columnIndex);
-}
-
-int ResultSetUtils::GetColumnName(int columnIndex, std::string &columnName)
-{
-    return resultSet_->GetColumnName(columnIndex, columnName);
 }
 
 int ResultSetUtils::GetRowCount(int &count)
@@ -108,43 +93,19 @@ int ResultSetUtils::IsAtLastRow(bool &result)
     return resultSet_->IsAtLastRow(result);
 }
 
-int ResultSetUtils::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
-{
-    return resultSet_->GetBlob(columnIndex, blob);
-}
-
-int ResultSetUtils::GetString(int columnIndex, std::string &value)
-{
-    return resultSet_->GetString(columnIndex, value);
-}
-
-int ResultSetUtils::GetInt(int columnIndex, int &value)
-{
-    return resultSet_->GetInt(columnIndex, value);
-}
-
-int ResultSetUtils::GetLong(int columnIndex, int64_t &value)
-{
-    return resultSet_->GetLong(columnIndex, value);
-}
-
-int ResultSetUtils::GetDouble(int columnIndex, double &value)
-{
-    return resultSet_->GetDouble(columnIndex, value);
-}
-
-int ResultSetUtils::IsColumnNull(int columnIndex, bool &isNull)
-{
-    return resultSet_->IsColumnNull(columnIndex, isNull);
-}
-
-bool ResultSetUtils::IsClosed() const
-{
-    return resultSet_->IsClosed();
-}
-
 int ResultSetUtils::Close()
 {
-    return resultSet_->Close();
+    auto status = resultSet_->Close();
+    if (resultSet_->IsClosed()) {
+        AbsResultSet::Close();
+    }
+    return status;
+}
+
+std::pair<int, std::vector<std::string>> ResultSetUtils::GetColumnNames()
+{
+    std::vector<std::string> names;
+    auto errCode = resultSet_->GetAllColumnNames(names);
+    return {errCode, std::move(names)};
 }
 }

@@ -172,7 +172,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
     EXPECT_EQ("zhangsan", strVal);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
@@ -331,7 +331,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
     EXPECT_EQ(1, blob[0]);
 
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);

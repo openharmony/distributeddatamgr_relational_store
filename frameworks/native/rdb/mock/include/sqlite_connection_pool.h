@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 #define NATIVE_RDB_SQLITE_CONNECTION_POOL_H
 
+#include <atomic>
 #include <condition_variable>
 #include <iostream>
 #include <iterator>
@@ -25,7 +26,7 @@
 #include <sstream>
 #include <stack>
 #include <vector>
-#include <atomic>
+
 #include "base_transaction.h"
 #include "connection.h"
 #include "rdb_common.h"
@@ -41,6 +42,7 @@ public:
     ~SqliteConnectionPool();
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
+    // this interface is only provided for resultSet
     SharedConn AcquireRef(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
     std::pair<int32_t, SharedConn> DisableWal();
@@ -56,10 +58,11 @@ public:
     void CloseAllConnections();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
+
 private:
     struct ConnNode {
         bool using_ = false;
-        uint32_t tid_ = 0;
+        int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
         std::shared_ptr<Connection> connect_;

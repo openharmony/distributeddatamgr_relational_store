@@ -150,28 +150,6 @@ public:
     API_EXPORT int GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs) override;
 
     /**
-     * @brief Obtains the value of the specified column in the current row as ValueObject.
-     *
-     * The implementation class determines whether to throw an exception if the value of the specified column
-     * in the current row is null or the specified column is not of the double type.
-     *
-     * @param columnIndex Indicates the specified column index, which starts from 0.
-     *
-     * @return Returns the value of the specified column as a double.
-     */
-    API_EXPORT int Get(int32_t col, ValueObject &value) override;
-
-    /**
-     * @brief Get the modify time of the cloud data.
-     *
-     * @param modifyTime Indicates the data modify utc time.
-     *
-     * @return Returns true if the value of the specified column in the current row is null;
-     * returns false otherwise.
-     */
-    API_EXPORT int GetModifyTime(std::string &modifyTime) override;
-
-    /**
      * @brief Checks whether the value of the specified column in the current row is null.
      *
      * @param columnIndex Indicates the specified column index, which starts from 0.
@@ -319,19 +297,56 @@ public:
     API_EXPORT int Close() override;
 
 protected:
+    template<typename Mtx>
+    class Lock {
+    public:
+        Lock(bool enable = false)
+        {
+            if (enable) {
+                mutex_ = new Mtx();
+            }
+        };
+        ~Lock()
+        {
+            delete mutex_;
+            mutex_ = nullptr;
+        }
+        void lock()
+        {
+            if (mutex_ != nullptr) {
+                mutex_->lock();
+            }
+        };
+        void unlock()
+        {
+            if (mutex_ != nullptr) {
+                mutex_->unlock();
+            }
+        };
+
+    private:
+        Mtx* mutex_ = nullptr;
+    };
+    using Mutex = Lock<std::mutex>;
+
+    virtual std::pair<int, std::vector<std::string>> GetColumnNames();
+
     // The default position of the result set
     static const int INIT_POS = -1;
 
-    // Indicates whether the result set is closed
-    std::mutex columnMapLock_;
-    int columnCount_ = -1;
+    Mutex globalMtx_;
     /*
      * The value can be in the range [-1 ~ n], where -1 represents the start flag position and N represents the data end
      * flag position, and [0, n-1] represents the real data index.
      */
-    int rowPos_;
-    std::map<std::string, int> columnMap_;
+    int rowPos_ = INIT_POS;
     bool isClosed_ = false;
+private:
+    int InitColumnNames();
+
+    // Indicates whether the result set is closed
+    int columnCount_ = -1;
+    std::map<std::string, int> columnMap_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

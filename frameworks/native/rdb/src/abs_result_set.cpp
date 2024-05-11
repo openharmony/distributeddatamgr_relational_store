@@ -16,20 +16,22 @@
 #include "abs_result_set.h"
 
 #include <algorithm>
-
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "result_set.h"
 #include "sqlite_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-void RowEntity::Put(const std::string &name, const ValueObject &value)
+void RowEntity::Put(const std::string& name, int32_t index, ValueObject&& value)
 {
+    if (index < 0 || index >= static_cast<int>(indexs_.size())) {
+        return ;
+    }
     auto it = values_.emplace(name, std::move(value));
-    indexs_.push_back(it.first);
+    indexs_[index] = it.first;
 }
 
 ValueObject RowEntity::Get(const std::string &name) const
@@ -60,10 +62,11 @@ std::map<std::string, ValueObject> RowEntity::Steal()
     return std::move(values_);
 }
 
-void RowEntity::Clear()
+void RowEntity::Clear(int32_t size)
 {
     values_.clear();
     indexs_.clear();
+    indexs_.resize(size);
 }
 
 AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed_(false)
@@ -83,57 +86,164 @@ int AbsResultSet::GetRowCount(int &count)
 
 int AbsResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
+    int errCode = E_OK;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
+    }
+
+    if (columnCount_ < 0) {
+        return errCode;
+    }
+    columnNames.resize(columnCount_);
+    for (auto &[name, index] : columnMap_) {
+        if (index > columnCount_) {
+            continue;
+        }
+        columnNames[index] = name;
+    }
     return E_OK;
 }
 
-int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
+int AbsResultSet::InitColumnNames()
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
+
+    auto [errCode, names] = GetColumnNames();
+    if (errCode != E_OK) {
+        LOG_DEBUG("ret is %{public}d", errCode);
+        return errCode;
+    }
+
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    if (columnCount_ >= 0) {
+        return E_OK;
+    }
+
+    for (size_t i = 0; i < names.size(); ++i) {
+        columnMap_.insert(std::pair{names[i], i});
+    }
+    columnCount_ = static_cast<int>(names.size());
+    return E_OK;
+}
+
+int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t>& blob)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject object;
+    int errorCode = Get(columnIndex, object);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    blob = object;
+    int type = object.GetType();
+    if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
+        type == ValueObject::TYPE_VECS) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    }
+
     return E_OK;
 }
 
 int AbsResultSet::GetString(int columnIndex, std::string &value)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject object;
+    int errorCode = Get(columnIndex, object);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    value = static_cast<std::string>(object);
+    int type = object.GetType();
+    if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
+        type == ValueObject::TYPE_VECS) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    }
     return E_OK;
 }
 
 int AbsResultSet::GetInt(int columnIndex, int &value)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int64_t temp = 0;
+    int errCode = GetLong(columnIndex, temp);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    value = int32_t(temp);
     return E_OK;
 }
 
-int AbsResultSet::GetLong(int columnIndex, int64_t &value)
+int AbsResultSet::GetLong(int columnIndex, int64_t& value)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject object;
+    int errorCode = Get(columnIndex, object);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    value = object;
+    int type = object.GetType();
+    if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
+        type == ValueObject::TYPE_VECS) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    }
     return E_OK;
 }
 
-int AbsResultSet::GetDouble(int columnIndex, double &value)
+int AbsResultSet::GetDouble(int columnIndex, double& value)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject object;
+    int errorCode = Get(columnIndex, object);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+    value = object;
+    int type = object.GetType();
+    if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
+        type == ValueObject::TYPE_VECS) {
+        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        return E_INVALID_OBJECT_TYPE;
+    }
     return E_OK;
 }
 
 int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
+    ColumnType columnType;
+    int errCode = GetColumnType(columnIndex, columnType);
+    if (errCode != E_OK) {
+        LOG_ERROR("ret is %{public}d", errCode);
+        return errCode;
+    }
+    isNull = (columnType == ColumnType::TYPE_NULL);
     return E_OK;
 }
 
 int AbsResultSet::GetRow(RowEntity &rowEntity)
 {
-    rowEntity.Clear();
-    std::vector<std::string> columnNames;
-    int ret = GetAllColumnNames(columnNames);
-    if (ret != E_OK) {
-        LOG_ERROR("GetAllColumnNames::ret is %{public}d", ret);
-        return ret;
+    int errCode = E_OK;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
     }
-    int columnCount = static_cast<int>(columnNames.size());
-    for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-        ValueObject object;
-        ret = Get(columnIndex, object);
+
+    if (columnCount_ < 0) {
+        return errCode;
+    }
+    rowEntity.Clear(columnCount_);
+    for (auto &[name, index] : columnMap_) {
+        ValueObject value;
+        auto ret = Get(index, value);
         if (ret != E_OK) {
-            LOG_ERROR("Get::ret is %{public}d", ret);
+            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index, name.c_str(), ret);
             return ret;
         }
-        rowEntity.Put(columnNames[columnIndex], object);
+        rowEntity.Put(name, index, std::move(value));
     }
     return E_OK;
 }
@@ -157,23 +267,13 @@ int AbsResultSet::GetRowIndex(int &position) const
 int AbsResultSet::GoTo(int offset)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ + offset);
-    if (ret != E_OK) {
-        LOG_WARN("GoToRow ret is %{public}d", ret);
-        return ret;
-    }
-    return E_OK;
+    return GoToRow(rowPos_ + offset);
 }
 
 int AbsResultSet::GoToFirstRow()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int ret = GoToRow(0);
-    if (ret != E_OK) {
-        LOG_DEBUG("GoToRow ret is %{public}d", ret);
-        return ret;
-    }
-    return E_OK;
+    return GoToRow(0);
 }
 
 int AbsResultSet::GoToLastRow()
@@ -185,35 +285,23 @@ int AbsResultSet::GoToLastRow()
         LOG_ERROR("Failed to GetRowCount, ret is %{public}d", ret);
         return ret;
     }
-
-    ret = GoToRow(rowCnt - 1);
-    if (ret != E_OK) {
-        LOG_WARN("GoToRow ret is %{public}d", ret);
-        return ret;
+    if (rowCnt == 0) {
+        return E_ERROR;
     }
-    return E_OK;
+
+    return GoToRow(rowCnt - 1);
 }
 
 int AbsResultSet::GoToNextRow()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ + 1);
-    if (ret != E_OK) {
-        LOG_DEBUG("GoToRow ret is %{public}d", ret);
-        return ret;
-    }
-    return E_OK;
+    return GoToRow(rowPos_ + 1);
 }
 
 int AbsResultSet::GoToPreviousRow()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int ret = GoToRow(rowPos_ - 1);
-    if (ret != E_OK) {
-        LOG_WARN("GoToRow ret is %{public}d", ret);
-        return ret;
-    }
-    return E_OK;
+    return GoToRow(rowPos_ - 1);
 }
 
 int AbsResultSet::IsAtFirstRow(bool &result) const
@@ -248,80 +336,81 @@ int AbsResultSet::IsEnded(bool &result)
         LOG_ERROR("Failed to GetRowCount, ret is %{public}d", ret);
         return ret;
     }
-    result = (rowCnt == 0) ? true : (rowPos_ == rowCnt);
+    result = (rowCnt == 0) || (rowPos_ == rowCnt);
     return E_OK;
 }
 
 int AbsResultSet::GetColumnCount(int &count)
 {
-    if (columnCount_ != -1) {
+    if (columnCount_ >= 0) {
         count = columnCount_;
         return E_OK;
     }
-    std::vector<std::string> columnNames;
-    int ret = GetAllColumnNames(columnNames);
-    if (ret != E_OK) {
-        LOG_DEBUG("Failed to GetAllColumnNames, ret is %{public}d", ret);
-        return ret;
+    auto errCode = InitColumnNames();
+    if (errCode != E_OK) {
+        LOG_DEBUG("ret is %{public}d", errCode);
+        return errCode;
     }
-    columnCount_ = static_cast<int>(columnNames.size());
     count = columnCount_;
     return E_OK;
 }
 
 int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex)
 {
-    std::lock_guard<std::mutex> lock(columnMapLock_);
+    columnIndex = -1;
+    int errCode = E_OK;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
+    }
+    if (columnCount_ < 0) {
+        return errCode;
+    }
     auto it = columnMap_.find(columnName);
     if (it != columnMap_.end()) {
         columnIndex = it->second;
         return E_OK;
     }
 
-    auto periodIndex = columnName.rfind('.');
-    std::string columnNameLower = columnName;
+    std::string lowerName = columnName;
+    SqliteUtils::Replace(lowerName, SqliteUtils::REP, "");
+    auto periodIndex = lowerName.rfind('.');
     if (periodIndex != std::string::npos) {
-        columnNameLower = columnNameLower.substr(periodIndex + 1);
+        lowerName = lowerName.substr(periodIndex + 1);
     }
-    std::transform(columnNameLower.begin(), columnNameLower.end(), columnNameLower.begin(), ::tolower);
-    std::vector<std::string> columnNames;
-    int ret = GetAllColumnNames(columnNames);
-    if (ret != E_OK) {
-        LOG_ERROR("Failed to GetAllColumnNames, ret is %{public}d", ret);
-        return ret;
-    }
-    SqliteUtils::Replace(columnNameLower, SqliteUtils::REP, "");
-    columnIndex = 0;
-    for (const auto& name : columnNames) {
-        std::string lowerName = name;
-        transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
-        if (lowerName == columnNameLower) {
-            columnMap_.insert(std::make_pair(columnName, columnIndex));
+    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+    for (const auto& [name, index] : columnMap_) {
+        std::string temp = name;
+        std::transform(name.begin(), name.end(), temp.begin(), ::tolower);
+        if (lowerName == temp) {
+            columnIndex = index;
             return E_OK;
         }
-        columnIndex++;
     }
-    columnIndex = -1;
-    LOG_ERROR("GetColumnIndex failed, columnName is: %{public}s", columnName.c_str());
+    LOG_ERROR("failed, columnName is: %{public}s", columnName.c_str());
     return E_ERROR;
 }
 
 int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
 {
-    int rowCnt = 0;
-    int ret = GetColumnCount(rowCnt);
-    if (ret != E_OK) {
-        LOG_ERROR("Failed to GetColumnCount, ret is %{public}d", ret);
-        return ret;
+    int32_t errCode = 0;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
     }
-    if (columnIndex >= rowCnt || columnIndex < 0) {
-        LOG_ERROR("invalid column columnIndex as %{public}d", columnIndex);
-        return E_OUT_RANGE;
+    if (columnCount_ < 0) {
+        return errCode;
     }
-    std::vector<std::string> columnNames;
-    GetAllColumnNames(columnNames);
-    columnName = columnNames[columnIndex];
-    return E_OK;
+    if (columnCount_ <= columnIndex || columnIndex < 0) {
+        LOG_ERROR("invalid columnIndex %{public}d", columnIndex);
+        return E_COLUMN_OUT_RANGE;
+    }
+
+    for (const auto& [name, index] : columnMap_) {
+        if (index == columnIndex) {
+            columnName = name;
+            return E_OK;
+        }
+    }
+    return E_COLUMN_OUT_RANGE;
 }
 
 bool AbsResultSet::IsClosed() const
@@ -337,29 +426,71 @@ int AbsResultSet::Close()
     return E_OK;
 }
 
-int AbsResultSet::GetModifyTime(std::string &modifyTime)
-{
-    return E_NOT_SUPPORT;
-}
-
 int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
 {
-    return E_NOT_SUPPORT;
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject valueObject;
+    int errorCode = Get(col, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
+        return E_NULL_OBJECT;
+    }
+
+    if (valueObject.GetType() != ValueObject::TYPE_ASSET) {
+        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        return E_INVALID_OBJECT_TYPE;
+    }
+    value = valueObject;
+    return E_OK;
 }
 
 int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 {
-    return E_NOT_SUPPORT;
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject valueObject;
+    int errorCode = Get(col, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
+
+    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
+        return E_NULL_OBJECT;
+    }
+
+    if (valueObject.GetType() != ValueObject::TYPE_ASSETS) {
+        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        return E_INVALID_OBJECT_TYPE;
+    }
+    value = valueObject;
+    return E_OK;
 }
 
 int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
 {
-    return E_NOT_SUPPORT;
-}
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ValueObject valueObject;
+    int errorCode = Get(col, valueObject);
+    if (errorCode != E_OK) {
+        return errorCode;
+    }
 
-int AbsResultSet::Get(int32_t col, ValueObject &value)
+    if (valueObject.GetType() == ValueObject::TYPE_NULL) {
+        return E_NULL_OBJECT;
+    }
+
+    if (valueObject.GetType() != ValueObject::TYPE_VECS) {
+        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        return E_INVALID_OBJECT_TYPE;
+    }
+    value = valueObject;
+    return E_OK;
+}
+std::pair<int, std::vector<std::string>> AbsResultSet::GetColumnNames()
 {
-    return E_NOT_SUPPORT;
+    return { E_NOT_SUPPORT, {} };
 }
 } // namespace NativeRdb
 } // namespace OHOS

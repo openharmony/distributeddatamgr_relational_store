@@ -136,7 +136,7 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(-1, position);
 
     ret = resultSet->GetColumnType(0, columnType);
-    EXPECT_EQ(E_INVALID_STATEMENT, ret);
+    EXPECT_EQ(E_ROW_OUT_RANGE, ret);
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(E_OK, ret);

@@ -39,7 +39,6 @@ public:
     virtual std::shared_ptr<RdbConnection> AcquireNewConnection(bool isReadOnly, int64_t &trxId);
     virtual void ReleaseConnection(std::shared_ptr<RdbConnection> rdbConnection, int64_t trxId = 0);
     virtual std::shared_ptr<RdbConnection> AcquireConnection(bool isReadOnly, int64_t trxId = 0);
-    virtual std::shared_ptr<RdbConnection> AcquireByID(int32_t id);
     virtual int RestartReaders();
     virtual std::pair<std::shared_ptr<RdbConnection>, std::vector<std::shared_ptr<RdbConnection>>>
         AcquireAll(int32_t time);

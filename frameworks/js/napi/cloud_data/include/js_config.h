@@ -43,6 +43,11 @@ public:
         return (CLEAR_CLOUD_INFO <= type) && (type <= CLEAR_CLOUD_DATA_AND_INFO);
     }
 
+    static inline bool VerifyExtraData(const ExtraData &data)
+    {
+        return (!data.eventId.empty()) && (!data.extraData.empty());
+    }
+
     static napi_value EnableCloud(napi_env env, napi_callback_info info);
     static napi_value DisableCloud(napi_env env, napi_callback_info info);
     static napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info);
@@ -50,6 +55,7 @@ public:
     static napi_value NotifyDataChange(napi_env env, napi_callback_info info);
     static napi_value QueryStatistics(napi_env env, napi_callback_info info);
     static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
+    static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
 };
 
 } // namespace OHOS::CloudData

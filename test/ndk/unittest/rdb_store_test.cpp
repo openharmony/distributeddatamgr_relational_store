@@ -1477,20 +1477,21 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
 
     Rdb_DetailsObserver callback = LocalDataChangeObserverCallback7;
     Rdb_DataObserver observer1 = { nullptr, { callback } };
-    int errCode = OH_Rdb_Subscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_CLOUD-1), &observer1);
+    int errCode = OH_Rdb_Subscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_CLOUD - 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
-    errCode = OH_Rdb_Subscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS+1), &observer1);
+    errCode =
+        OH_Rdb_Subscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS + 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 
     Rdb_DataObserver observer2 = { nullptr, { nullptr } };
-    errCode = OH_Rdb_Subscribe(nullptr, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2);
+    errCode = OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, &observer2);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
     errCode = OH_Rdb_Subscribe(storeTestRdbStore_, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS, nullptr);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 
-    errCode = OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_CLOUD-1), &observer1);
+    errCode = OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_CLOUD - 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
     errCode =
-        OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS+1), &observer1);
+        OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS + 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 }

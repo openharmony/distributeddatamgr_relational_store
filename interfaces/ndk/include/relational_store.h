@@ -554,6 +554,7 @@ typedef enum Rdb_SubscribeType {
      * @brief Subscription to cloud data change details.
      */
     RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS,
+
     /**
      * @brief Subscription to local data change details.
      * @since 12

@@ -37,6 +37,7 @@ public:
         TRANS_NOTIFY_DATA_CHANGE,
         TRANS_NOTIFY_DATA_CHANGE_EXT,
         TRANS_QUERY_STATISTICS,
+        TRANS_QUERY_LAST_SYNC_INFO,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
         TRANS_CONFIG_BUTT,
         TRANS_SHARE_HEAD = TRANS_CONFIG_BUTT,
@@ -110,6 +111,8 @@ public:
         int32_t confirmation, std::pair<int32_t, std::string> &result) = 0;
 
     virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
+    virtual std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
+        const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };

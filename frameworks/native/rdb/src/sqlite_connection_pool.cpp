@@ -16,7 +16,6 @@
 #include "sqlite_connection_pool.h"
 
 #include <base_transaction.h>
-
 #include <condition_variable>
 #include <iterator>
 #include <mutex>
@@ -44,6 +43,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
     if (pool == nullptr) {
         LOG_ERROR("ConnPool::Create new failed, pool is nullptr");
+        errCode = E_ERROR;
         return nullptr;
     }
     std::shared_ptr<Connection> conn;
@@ -64,7 +64,10 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;
         std::tie(errCode, node) = writers_.Initialize(
-            [config]() { return Connection::Create(config, true); }, 1, config.GetWriteTime(), true, needWriter);
+            [config]() {
+                return Connection::Create(config, true);
+            },
+            1, config.GetWriteTime(), true, needWriter);
         conn = Convert2AutoConn(node);
         if (errCode != E_OK) {
             return result;
@@ -77,7 +80,10 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         return { E_ARGS_READ_CON_OVERLOAD, nullptr };
     }
     auto [ret, node] = readers_.Initialize(
-        [config]() { return Connection::Create(config, false); }, maxReader_, config.GetReadTime(), maxReader_ == 0);
+        [config]() {
+            return Connection::Create(config, false);
+        },
+        maxReader_, config.GetReadTime(), maxReader_ == 0);
     errCode = ret;
     return result;
 }
@@ -172,7 +178,7 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
     return result;
 }
 
-std::shared_ptr<Connection> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
+std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
 {
     Container *container = (isReadOnly && maxReader_ != 0) ? &readers_ : &writers_;
     auto node = container->Acquire(ms);
@@ -221,8 +227,9 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
 int ConnPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
-    if (transCondition_.wait_for(
-        lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] { return !transactionUsed_; })) {
+    if (transCondition_.wait_for(lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] {
+            return !transactionUsed_;
+        })) {
         transactionUsed_ = true;
         return E_OK;
     }
@@ -243,7 +250,10 @@ int ConnPool::RestartReaders()
 {
     readers_.Clear();
     auto [errCode, node] = readers_.Initialize(
-        [this]() { return Connection::Create(config_, false); }, maxReader_, config_.GetReadTime(), maxReader_ == 0);
+        [this]() {
+            return Connection::Create(config_, false);
+        },
+        maxReader_, config_.GetReadTime(), maxReader_ == 0);
     return errCode;
 }
 
@@ -262,8 +272,8 @@ int ConnPool::ConfigLocale(const std::string &localeStr)
 /**
  * Rename the backed up database.
  */
-int ConnPool::ChangeDbFileForRestore(
-    const std::string &newPath, const std::string &backupPath, const std::vector<uint8_t> &newKey)
+int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
+    const std::vector<uint8_t> &newKey)
 {
     if (!writers_.IsFull() || config_.GetPath() == backupPath || newPath == backupPath) {
         LOG_ERROR("Connection pool is busy now!");
@@ -344,8 +354,8 @@ bool ConnPool::ConnNode::IsWriter() const
     return false;
 }
 
-std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(
-    Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire)
+std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(Creator creator, int32_t max,
+    int32_t timeout, bool disable, bool acquire)
 {
     std::shared_ptr<ConnNode> connNode = nullptr;
     {
@@ -443,7 +453,9 @@ std::list<std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::AcquireAll(s
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     auto time = std::chrono::steady_clock::now() + interval;
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    while (count < total_ && cond_.wait_until(lock, time, [this]() { return count_ > 0; })) {
+    while (count < total_ && cond_.wait_until(lock, time, [this]() {
+        return count_ > 0;
+    })) {
         nodes.merge(std::move(nodes_));
         nodes_.clear();
         count += count_;
@@ -531,7 +543,6 @@ int32_t ConnPool::Container::Clear()
         nodes = std::move(nodes_);
         details = std::move(details_);
         disable_ = true;
-        max_ = 0;
         total_ = 0;
         count_ = 0;
         if (right_ > MAX_RIGHT) {

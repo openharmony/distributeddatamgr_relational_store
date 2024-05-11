@@ -415,7 +415,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 

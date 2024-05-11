@@ -15,6 +15,7 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #include <functional>
+#include "event_handler.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -56,6 +57,7 @@ public:
 
     napi_env GetEnv();
     void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result());
+    void AsyncCallInOrder(UvCallback callback, Args args = Args(), Result result = Result());
     void AsyncPromise(UvPromise promise, Args args = Args());
     void Execute(Task task);
 
@@ -86,11 +88,16 @@ private:
         napi_value GetCallback();
         napi_value GetObject();
         void BindPromise(napi_value promise);
+        void DelReference();
         Result *StealResult();
         int32_t GetArgv(napi_value *argv, int32_t max);
     };
+
+    static Task GenCallbackTask(std::shared_ptr<UvEntry> entry);
+
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H

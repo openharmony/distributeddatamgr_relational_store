@@ -199,7 +199,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 
     ret = store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
 /**

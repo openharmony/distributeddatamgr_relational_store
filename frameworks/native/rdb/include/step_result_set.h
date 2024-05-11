@@ -23,9 +23,7 @@
 
 #include "abs_result_set.h"
 #include "connection.h"
-#include "sqlite_connection.h"
 #include "sqlite_connection_pool.h"
-#include "sqlite_statement.h"
 #include "statement.h"
 
 namespace OHOS {
@@ -35,8 +33,6 @@ public:
     StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
         const std::vector<ValueObject> &selectionArgs);
     ~StepResultSet() override;
-
-    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GetRowCount(int &count) override;
     int GoToRow(int position) override;
@@ -44,18 +40,12 @@ public:
     int IsStarted(bool &result) const override;
     int IsAtFirstRow(bool &result) const override;
     int IsEnded(bool &result) override;
-    int GetBlob(int columnIndex, std::vector<uint8_t> &blob) override;
-    int GetString(int columnIndex, std::string &value) override;
-    int GetInt(int columnIndex, int &value) override;
-    int GetLong(int columnIndex, int64_t &value) override;
-    int GetDouble(int columnIndex, double &value) override;
     int GetSize(int columnIndex, size_t &size) override;
-    int GetAsset(int32_t col, ValueObject::Asset &value) override;
-    int GetAssets(int32_t col, ValueObject::Assets &value) override;
     int Get(int32_t col, ValueObject &value) override;
-    int IsColumnNull(int columnIndex, bool &isNull) override;
-    bool IsClosed() const override;
     int Close() override;
+
+protected:
+    std::pair<int, std::vector<std::string>> GetColumnNames() override;
 
 private:
     template<typename T>
@@ -74,16 +64,16 @@ private:
     static const int EMPTY_ROW_COUNT = 0;
 
     std::shared_ptr<Statement> sqliteStatement_;
-    std::vector<std::string> columnNames_;
-    std::vector<ValueObject> args_;
+    std::shared_ptr<Connection> conn_;
+
     std::string sql_;
+    std::vector<ValueObject> args_;
     // The value indicates the row count of the result set
     int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     bool isStarted_;
     mutable std::shared_mutex mutex_;
-    std::shared_ptr<Connection> conn_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
