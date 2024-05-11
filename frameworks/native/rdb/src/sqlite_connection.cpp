@@ -16,14 +16,12 @@
 #define LOG_TAG "SqliteConnection"
 #include "sqlite_connection.h"
 
-#include <sqlite3sym.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <cerrno>
 #include <memory>
+#include <sqlite3sym.h>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
 
 #include "sqlite3.h"
 #include "value_object.h"
@@ -43,11 +41,8 @@
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "directory_ex.h"
 #include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
-#include "share_block.h"
-#include "shared_block_serializer_info.h"
 #endif
 
 namespace OHOS {
@@ -59,12 +54,13 @@ using namespace std::chrono;
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 
-__attribute__((used)) int32_t g_reg = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
+__attribute__((used))
+const int32_t SqliteConnection::g_reg = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 
-std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig& config, bool isWrite)
+std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
-    auto& [errCode, conn] = result;
+    auto &[errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
         std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
         if (connection == nullptr) {
@@ -81,10 +77,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 }
 
 SqliteConnection::SqliteConnection(bool isWriteConnection)
-    : dbHandle(nullptr),
-      isWriter_(isWriteConnection),
-      isReadOnly(false),
-      openFlags(0),
+    : dbHandle(nullptr), isWriter_(isWriteConnection), isReadOnly(false), openFlags(0), maxVariableNumber_(0),
       filePath("")
 {
 }
@@ -105,9 +98,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     }
 #endif
     isReadOnly = !isWriter_ || config.IsReadOnly();
-    int openFileFlags = config.IsReadOnly() ?
-        (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX) :
-        (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+    int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
+                                            : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
@@ -166,7 +158,7 @@ static void CustomScalarFunctionCallback(sqlite3_context *ctx, int argc, sqlite3
 
     std::vector<std::string> argsVector;
     for (int i = 0; i < argc; ++i) {
-        auto arg = reinterpret_cast<const char*>(sqlite3_value_text(argv[i]));
+        auto arg = reinterpret_cast<const char *>(sqlite3_value_text(argv[i]));
         if (arg == nullptr) {
             LOG_ERROR("arg is nullptr, index is %{public}d", i);
             sqlite3_result_null(ctx);
@@ -271,14 +263,13 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
-
 int32_t SqliteConnection::OnInitialize()
 {
     return 0;
 }
 
-std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
-    const std::string &sql, std::shared_ptr<Connection> conn)
+std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(const std::string &sql,
+    std::shared_ptr<Connection> conn)
 {
     sqlite3_stmt *stmt = nullptr;
     int errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
@@ -296,6 +287,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     statement->readOnly_ = (sqlite3_stmt_readonly(stmt) != 0);
     statement->columnCount_ = sqlite3_column_count(stmt);
     statement->numParameters_ = sqlite3_bind_parameter_count(stmt);
+    statement->types_ = std::vector<int32_t>(statement->columnCount_, 0);
     statement->conn_ = conn;
     return { E_OK, statement };
 }
@@ -369,7 +361,6 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     return errCode;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter)
 {
     int errCode = E_ERROR;
@@ -411,6 +402,7 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t i
 
 int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
     if (!rdbPwd.IsValid()) {
         RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
@@ -428,9 +420,9 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     }
 
     RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
+#endif
     return E_OK;
 }
-#endif
 
 std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
 {
@@ -654,8 +646,8 @@ int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<Value
     return statement->Execute(bindArgs);
 }
 
-int SqliteConnection::ExecuteGetLong(int64_t& outValue, const std::string& sql,
-    const std::vector<ValueObject>& bindArgs)
+int SqliteConnection::ExecuteGetLong(int64_t &outValue, const std::string &sql,
+    const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = CreateStatement(sql, nullptr);
     if (statement == nullptr || errCode != E_OK) {
@@ -671,8 +663,8 @@ int SqliteConnection::ExecuteGetLong(int64_t& outValue, const std::string& sql,
     return errCode;
 }
 
-int SqliteConnection::ExecuteGetString(std::string& outValue, const std::string& sql,
-    const std::vector<ValueObject>& bindArgs)
+int SqliteConnection::ExecuteGetString(std::string &outValue, const std::string &sql,
+    const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = CreateStatement(sql, nullptr);
     if (statement == nullptr || errCode != E_OK) {
@@ -737,7 +729,7 @@ void LocalizedCollatorDestroy(UCollator *collator)
 /**
  * The database locale.
  */
-int SqliteConnection::ConfigLocale(const std::string& localeStr)
+int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
 #ifdef RDB_SUPPORT_ICU
     std::unique_lock<std::mutex> lock(mutex_);
@@ -763,7 +755,6 @@ int SqliteConnection::ConfigLocale(const std::string& localeStr)
     return E_OK;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
@@ -773,7 +764,6 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     auto status = DropLogicDeletedData(dbHandle, table, tmpCursor);
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
-#endif
 
 int SqliteConnection::TryCheckPoint()
 {
@@ -834,8 +824,8 @@ void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }
 
-void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset>& assets,
-    std::map<std::string, ValueObject::Asset>& newAssets)
+void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &assets,
+    std::map<std::string, ValueObject::Asset> &newAssets)
 {
     using Status = ValueObject::Asset::Status;
     auto oldIt = assets.begin();
@@ -862,7 +852,7 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset>& ass
     }
     for (auto &[key, value] : newAssets) {
         value.status = ValueObject::Asset::Status::STATUS_INSERT;
-        assets.insert(std::pair{key, std::move(value)});
+        assets.insert(std::pair{ key, std::move(value) });
     }
 }
 
@@ -871,11 +861,11 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
     using Status = ValueObject::Asset::Status;
     auto status = static_cast<int32_t>(oldAsset.status);
     switch (status) {
-        case Status::STATUS_UNKNOWN:         // fallthrough
-        case Status::STATUS_NORMAL:          // fallthrough
-        case Status::STATUS_ABNORMAL:        // fallthrough
-        case Status::STATUS_INSERT:          // fallthrough
-        case Status::STATUS_UPDATE:          // fallthrough
+        case Status::STATUS_UNKNOWN:  // fallthrough
+        case Status::STATUS_NORMAL:   // fallthrough
+        case Status::STATUS_ABNORMAL: // fallthrough
+        case Status::STATUS_INSERT:   // fallthrough
+        case Status::STATUS_UPDATE:   // fallthrough
             if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
                 oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path) {
                 oldAsset.version = newAsset.version;
@@ -886,7 +876,7 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
                 oldAsset.size = newAsset.size;
                 oldAsset.hash = newAsset.hash;
                 oldAsset.path = newAsset.path;
-                oldAsset.status = Status ::STATUS_UPDATE;
+                oldAsset.status = Status::STATUS_UPDATE;
             }
             return;
         default:

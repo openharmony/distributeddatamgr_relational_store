@@ -28,13 +28,13 @@ namespace NativeRdb {
 CacheResultSet::CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets)
     : row_(0), maxCol_(0), valueBuckets_(std::move(valueBuckets))
 {
-    maxRow_ = valueBuckets_.size();
+    maxRow_ = static_cast<int>(valueBuckets_.size());
     if (maxRow_ > 0) {
         for (auto it = valueBuckets_[0].values_.begin(); it != valueBuckets_[0].values_.end(); it++) {
             colNames_.push_back(it->first);
             colTypes_.push_back(it->second.GetType());
         }
-        maxCol_ = colNames_.size();
+        maxCol_ = static_cast<int>(colNames_.size());
     }
 }
 
@@ -135,17 +135,19 @@ int CacheResultSet::IsColumnNull(int columnIndex, bool &isNull)
 
 int CacheResultSet::GetRow(RowEntity &rowEntity)
 {
-    rowEntity.Clear();
     std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
     if (row_ < 0 || row_ >= maxRow_) {
         return E_ERROR;
     }
-    ValueObject object;
+    rowEntity.Clear(colNames_.size());
+    int32_t index = 0;
     for (auto &columnName : colNames_) {
+        ValueObject object;
         if (!valueBuckets_[row_].GetObject(columnName, object)) {
             return E_ERROR;
         }
-        rowEntity.Put(columnName, object);
+        rowEntity.Put(columnName, index, std::move(object));
+        index++;
     }
     return E_OK;
 }
@@ -275,11 +277,6 @@ bool CacheResultSet::IsClosed() const
 }
 
 int CacheResultSet::Close()
-{
-    return E_NOT_SUPPORT;
-}
-
-int CacheResultSet::GetModifyTime(std::string &modifyTime)
 {
     return E_NOT_SUPPORT;
 }

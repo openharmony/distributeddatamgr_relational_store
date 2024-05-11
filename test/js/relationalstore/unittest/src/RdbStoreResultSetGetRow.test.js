@@ -202,5 +202,19 @@ describe('rdbStoreResultSetGetRowTest', function () {
         done();
         console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0006 end   *************");
     })
+
+    /**
+     * @tc.name rdb store resultSet insert undefined value and verify test
+     * @tc.number rdbStoreResultSetGoToLastRow0001
+     * @tc.desc resultSet goToFirstRow test
+     */
+    it('rdbStoreInsertUndefinedValueTest0007', 0, async function () {
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 start *************");
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(false).assertEqual(resultSet.goToFirstRow());
+        expect(false).assertEqual(resultSet.goToLastRow());
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 end   *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })

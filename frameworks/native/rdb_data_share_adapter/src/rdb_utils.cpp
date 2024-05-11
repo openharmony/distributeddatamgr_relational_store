@@ -214,7 +214,6 @@ void RdbUtils::NotContains(const DataShare::OperationItem &item, RdbPredicates &
     predicates.NotContains(item.GetSingle(0), ToValueObject(item.singleParams[1]));
 }
 
-
 void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predicates)
 {
     predicates.Glob(item.GetSingle(0), ToValueObject(item.singleParams[1]));

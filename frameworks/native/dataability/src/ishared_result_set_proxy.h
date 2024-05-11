@@ -15,6 +15,8 @@
 
 #ifndef DATAABILITY_I_SHARED_RESULT_SET_PROXY_H
 #define DATAABILITY_I_SHARED_RESULT_SET_PROXY_H
+#include <abs_shared_result_set.h>
+
 #include "ishared_result_set.h"
 #include "iremote_proxy.h"
 #include "rdb_errno.h"
@@ -25,13 +27,15 @@ public:
     static std::shared_ptr<AbsSharedResultSet> CreateProxy(MessageParcel &parcel);
     explicit ISharedResultSetProxy(const sptr<IRemoteObject> &impl);
     virtual ~ISharedResultSetProxy() = default;
-    int GetAllColumnNames(std::vector<std::string> &columnNames) override;
     int GetRowCount(int &count) override;
     int OnGo(int oldRowIndex, int newRowIndex) override;
     int Close() override;
+
+protected:
+    std::pair<int, std::vector<std::string>> GetColumnNames() override;
+
 private:
     static BrokerDelegator<ISharedResultSetProxy> delegator_;
-    std::vector<std::string> columnNames_;
     int32_t rowCount_ = -1;
 };
 }

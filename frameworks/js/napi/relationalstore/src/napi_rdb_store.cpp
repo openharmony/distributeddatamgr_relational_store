@@ -246,6 +246,11 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data != hint) {
+            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
+                uintptr_t(data), uintptr_t(hint));
+            return;
+        }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
         delete proxy;
     };
@@ -253,10 +258,10 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     if (proxy == nullptr) {
         return nullptr;
     }
-    napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
+    napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
     if (status != napi_ok) {
-        LOG_ERROR("RdbStoreProxy::Initialize napi_wrap failed! code:%{public}d!", status);
-        finalize(env, proxy, nullptr);
+        LOG_ERROR("RdbStoreProxy napi_wrap failed! code:%{public}d!", status);
+        finalize(env, proxy, proxy);
         return nullptr;
     }
     return self;
@@ -307,7 +312,7 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
 int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<ContextBase> context)
 {
     RdbStoreProxy *obj = GetNativeInstance(env, self);
-    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "nullptr."));
+    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "not nullptr."));
     context->boundObj = obj;
     return OK;
 }
@@ -315,7 +320,7 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<Cont
 int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->tableName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty"));
+    CHECK_RETURN_SET(!context->tableName.empty(), std::make_shared<ParamError>("table", "not empty string."));
     return OK;
 }
 
@@ -323,7 +328,7 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 {
     double cursor = 0;
     auto status = JSUtils::Convert2Value(env, arg, cursor);
-    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "not invalid cursor"));
+    CHECK_RETURN_SET(status == napi_ok && cursor > 0, std::make_shared<ParamError>("cursor", "valid cursor."));
     context->cursor = static_cast<uint64_t>(cursor);
     return OK;
 }
@@ -331,14 +336,14 @@ int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->columnName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not string"));
+    CHECK_RETURN_SET(!context->columnName.empty(), std::make_shared<ParamError>("columnName", "not empty string."));
     return OK;
 }
 
 int ParsePrimaryKey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     JSUtils::Convert2Value(env, arg, context->keys);
-    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "not number or string"));
+    CHECK_RETURN_SET(!context->keys.empty(), std::make_shared<ParamError>("PRIKey", "number or string."));
     return OK;
 }
 
@@ -352,7 +357,7 @@ int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     int32_t ret = JSUtils::Convert2Value(env, arg, context->tablesNames);
-    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty"));
+    CHECK_RETURN_SET(ret == napi_ok, std::make_shared<ParamError>("tablesNames", "not empty string."));
     return OK;
 }
 
@@ -533,12 +538,12 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_key_numbers_to_strings, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
+    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
 
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "a ValuesBucket."));
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("ValuesBucket is invalid."));
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value = nullptr;
         napi_get_property(env, arg, key, &value);
@@ -547,7 +552,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, valueObject);
         } else if (ret != napi_generic_failure) {
-            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "valid."));
+            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
         }
     }
     return OK;
@@ -557,18 +562,18 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
 {
     bool isArray = false;
     napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_SET(isArray, std::make_shared<ParamError>("values", "a ValuesBucket array."));
+    CHECK_RETURN_SET(isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
 
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, arg, &arrLen);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "get array length."));
+    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid."));
 
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("values", "get element."));
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
 
-        ParseValuesBucket(env, obj, context);
+        CHECK_RETURN_ERR(ParseValuesBucket(env, obj, context) == OK);
         context->valuesBuckets.push_back(context->valuesBucket);
         context->valuesBucket.Clear();
     }
@@ -1495,20 +1500,20 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
-        auto aysnc = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
+        auto async = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
             if (queue == nullptr || callback == nullptr) {
                 return;
             }
             bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
-            queue->AsyncCall({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
+            queue->AsyncCallInOrder({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
                 argc = 1;
                 argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
             });
         };
         if (context->rdbPredicates == nullptr) {
-            context->execCode_ = obj->GetInstance()->Sync(option, context->tablesNames, aysnc);
+            context->execCode_ = obj->GetInstance()->Sync(option, context->tablesNames, async);
         } else {
-            context->execCode_ = obj->GetInstance()->Sync(option, *(context->rdbPredicates), aysnc);
+            context->execCode_ = obj->GetInstance()->Sync(option, *(context->rdbPredicates), async);
         }
         return OK;
     };
@@ -1539,6 +1544,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::GetModifyTime Async");
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
         context->modifyTime = obj->GetInstance()->GetModifyTime(context->tableName, context->columnName, context->keys);
         return context->modifyTime.empty() ? E_ERROR : E_OK;
     };
@@ -1812,8 +1818,8 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
     RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
     auto *proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-
+    RDB_NAPI_ASSERT(env, proxy != nullptr && proxy->GetInstance() != nullptr,
+        std::make_shared<ParamError>("RdbStore", "valid"));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return nullptr;
@@ -1900,32 +1906,6 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
         LOG_DEBUG("observer unsubscribe success");
     }
     return nullptr;
-}
-
-napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-    };
-    ExecuteAction exec;
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    if (obj != nullptr) {
-        auto store = obj->GetInstance();
-        obj->SetInstance(nullptr);
-        exec = [context, store]() mutable -> int {
-            store = nullptr;
-            return OK;
-        };
-    }
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_get_undefined(env, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
 }
 
 RdbStoreProxy::SyncObserver::SyncObserver(
@@ -2026,5 +2006,30 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 #endif
+napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    ExecuteAction exec;
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    if (obj != nullptr) {
+        auto store = obj->GetInstance();
+        obj->SetInstance(nullptr);
+        exec = [context, store]() mutable -> int {
+            store = nullptr;
+            return OK;
+        };
+    }
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

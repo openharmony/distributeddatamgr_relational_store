@@ -15,10 +15,11 @@
 
 #ifndef NATIVE_RDB_RDB_ERRNO_H
 #define NATIVE_RDB_RDB_ERRNO_H
-
+#include <errors.h>
 namespace OHOS {
 namespace NativeRdb {
 
+constexpr ErrCode DISTRIBUTEDDATAMGR_RDB_ERR_OFFSET = ErrCodeOffset(SUBSYS_DISTRIBUTEDDATAMNG, 2);
 /**
 * @brief The error code in the correct case.
 */
@@ -27,12 +28,12 @@ constexpr int E_OK = 0;
 /**
 * @brief The base code of the exception error code.
 */
-constexpr int E_BASE = 14800000;
+constexpr int E_BASE = DISTRIBUTEDDATAMGR_RDB_ERR_OFFSET;
 
 /**
 * @brief The error when the capability not supported.
 */
-constexpr int E_NOT_SUPPORTED = 801;
+constexpr int E_NOT_SUPPORTED = (E_BASE + 801);
 
 /**
 * @brief The error code for common exceptions.
@@ -75,9 +76,9 @@ constexpr int E_EMPTY_VALUES_BUCKET = (E_BASE + 6);
 constexpr int E_NOT_SELECT = (E_BASE + 7);
 
 /**
-* @brief The error code for the column index is invalid.
+* @brief The error code for the column out of bounds.
 */
-constexpr int E_OUT_RANGE = (E_BASE + 8);
+constexpr int E_COLUMN_OUT_RANGE = (E_BASE + 8);
 
 /**
 * @brief The error code for the column type is invalid.
@@ -100,9 +101,9 @@ constexpr int E_INVALID_FILE_PATH = (E_BASE + 11);
 constexpr int E_TRANSACTION_IN_EXECUTE = (E_BASE + 12);
 
 /**
-* @brief The error code for the current status is invalid.
+* @brief The error code for the row out of bounds.
 */
-constexpr int E_INVALID_STATEMENT = (E_BASE + 13);
+constexpr int E_ROW_OUT_RANGE = (E_BASE + 13);
 
 /**
 * @brief The error code when execute write operation in read connection.
@@ -295,9 +296,9 @@ static constexpr int E_GET_DATAOBSMGRCLIENT_FAIL = (E_BASE + 50);
 static constexpr int E_TYPE_MISMATCH = (E_BASE + 51);
 
 /**
- * @brief The error when database or disk is full.
+ * @brief Insertion failed because database is full.
  */
-static constexpr int E_DATABASE_FULL = (E_BASE + 52);
+static constexpr int E_SQLITE_FULL = (E_BASE + 52);
 
 /**
  * @brief The error when sql is not supported in execute
@@ -308,18 +309,91 @@ static constexpr int E_NOT_SUPPORT_THE_SQL = (E_BASE + 53);
  * @brief The database is already attached.
  */
 static constexpr int E_ATTACHED_DATABASE_EXIST = (E_BASE + 54);
+
 /**
- * @brief The error when sql is not supported in execute
+ * @brief Generic error.
  */
 static constexpr int E_SQLITE_ERROR = (E_BASE + 55);
+
 /**
- * @brief The error when sql is not supported in execute
+ * @brief The database disk image is malformed.
  */
-static constexpr int E_DATABASE_CORRUPT = (E_BASE + 56);
+static constexpr int E_SQLITE_CORRUPT = (E_BASE + 56);
+
 /**
  * @brief The error when unlocking data needs to be compensated sync
  */
 static constexpr int E_WAIT_COMPENSATED_SYNC = (E_BASE + 57);
+
+/**
+ * @brief Callback routine requested an abort.
+ */
+static constexpr int E_SQLITE_ABORT = (E_BASE + 58);
+
+/**
+ * @brief Access permission denied.
+ */
+static constexpr int E_SQLITE_PERM = (E_BASE + 59);
+
+/**
+ * @brief The database file is locked.
+ */
+static constexpr int E_SQLITE_BUSY = (E_BASE + 60);
+
+/**
+ * @brief A table in the database is locked.
+ */
+static constexpr int E_SQLITE_LOCKED = (E_BASE + 61);
+
+/**
+ * @brief A malloc() failed.
+ */
+static constexpr int E_SQLITE_NOMEM = (E_BASE + 62);
+
+/**
+ * @brief Attempt to write a readonly database.
+ */
+static constexpr int E_SQLITE_READONLY = (E_BASE + 63);
+
+/**
+ * @brief Some kind of disk I/O error occurred.
+ */
+static constexpr int E_SQLITE_IOERR = (E_BASE + 64);
+
+/**
+ * @brief Unable to open the database file.
+ */
+static constexpr int E_SQLITE_CANTOPEN = (E_BASE + 65);
+
+/**
+ * @brief String or BLOB exceeds size limit.
+ */
+static constexpr int E_SQLITE_TOOBIG = (E_BASE + 66);
+
+/**
+ * @brief Abort due to constraint violation.
+ */
+static constexpr int E_SQLITE_CONSTRAINT = (E_BASE + 67);
+
+/**
+ * @brief Data type mismatch.
+ */
+static constexpr int E_SQLITE_MISMATCH = (E_BASE + 68);
+
+/**
+ * @brief Library used incorrectly.
+ */
+static constexpr int E_SQLITE_MISUSE = (E_BASE + 69);
+
+/**
+ * @brief Config changed.
+ */
+static constexpr int E_CONFIG_INVALID_CHANGE = (E_BASE + 70);
+
+/**
+ * @brief Not get service.
+ */
+static constexpr int E_SERVICE_NOT_FOUND = (E_BASE + 71);
 } // namespace NativeRdb
 } // namespace OHOS
 

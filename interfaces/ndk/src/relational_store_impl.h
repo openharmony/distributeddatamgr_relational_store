@@ -52,7 +52,10 @@ public:
     bool operator==(const Rdb_DataObserver *other);
 
 private:
-    void ConvertKeyInfo(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
+    void ConvertKeyInfoData(Rdb_KeyInfo::Rdb_KeyData *keyInfoData,
+        std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
+    size_t GetKeyInfoSize(RdbStoreObserver::ChangeInfo &&changeInfo);
+    int32_t GetKeyDataType(std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     int mode_ = Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD;
     const Rdb_DataObserver *observer_;
 };

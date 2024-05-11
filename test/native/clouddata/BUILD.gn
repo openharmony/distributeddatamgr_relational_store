@@ -1,0 +1,66 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+module_output_path = "relational_store/native_clouddata"
+
+###############################################################################
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "${cloud_data_native_path}/include",
+    "${relational_store_common_path}/include",
+    "${relational_store_innerapi_path}/cloud_data/include",
+    "${relational_store_innerapi_path}/common_type/include",
+    "${relational_store_innerapi_path}/rdb/include",
+  ]
+}
+
+ohos_unittest("NativeCloudDataTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+    "${cloud_data_native_path}/src/cloud_types_util.cpp",
+    "unittest/cloud_data_test.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "kv_store:distributeddata_mgr",
+    "samgr:samgr_proxy",
+  ]
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "//third_party/googletest:gtest_main",
+  ]
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [ ":NativeCloudDataTest" ]
+}
+###############################################################################

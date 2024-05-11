@@ -21,24 +21,24 @@ extern "C" {
 #endif
 #endif
 #define TABLE_DETAIL_V0 1
-typedef struct Statistic_V0 {
+typedef struct StatisticV0 {
     int total;
     int successful;
     int failed;
     int remained;
-} Statistic_V0;
+} StatisticV0;
 
-typedef struct TableDetails_V0 {
+typedef struct TableDetailsV0 {
     const char *table;
-    Statistic_V0 upload;
-    Statistic_V0 download;
-} TableDetails_V0;
+    StatisticV0 upload;
+    StatisticV0 download;
+} TableDetailsV0;
 
 #define DISTRIBUTED_CONFIG_V0 1
-typedef struct DistributedConfig_V0 {
+typedef struct DistributedConfigV0 {
     int version;
     bool isAutoSync;
-} DistributedConfig_V0;
+} DistributedConfigV0;
 #ifndef __cplusplus
 #if __cplusplus
 }

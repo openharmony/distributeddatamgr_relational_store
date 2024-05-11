@@ -134,9 +134,7 @@ public:
     bool IsHoldingConnection() override;
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
-    void GetSchema(const RdbStoreConfig &config);
     std::string GetName();
-    std::string GetOrgPath();
     std::string GetFileType();
     std::shared_ptr<ResultSet> QueryByStep(const std::string& sql, const std::vector<std::string>& sqlArgs) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) override;
@@ -187,6 +185,7 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
+    void AfterOpen(const RdbStoreConfig &config);
 
 protected:
     int InnerOpen();
@@ -203,11 +202,10 @@ protected:
 
 private:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
+    using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
-    int BeginExecuteSql(const std::string &sql, std::shared_ptr<Connection> &connection);
-    int FreeTransaction(std::shared_ptr<Connection> connection, const std::string &sql);
+    std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
-    ExecuteSqls MakeExecuteSqls(const std::string& sql, std::vector<ValueObject>&& args, int fieldSize, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
@@ -217,7 +215,6 @@ private:
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
     ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
-    inline std::string GetSqlArgs(size_t size);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
@@ -233,18 +230,29 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
+    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
+    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(
-        const std::string &sql, std::shared_ptr<Connection> conn) const;
-    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql, bool read = false) const;
     void RemoveDbFiles(std::string &path);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
+    int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
+        ConflictResolution conflictResolution);
+    int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
+        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
+        ConflictResolution conflictResolution);
+    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
+    int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
+    std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
+        int64_t trxId);
+    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
+    static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
+    static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     std::shared_ptr<SqliteConnectionPool> connectionPool_ = nullptr;
@@ -261,7 +269,7 @@ private:
     std::shared_ptr<std::set<std::string>> syncTables_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
-    ConcurrentMap<std::string, const RdbStoreConfig> attachedInfo_;
+    ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
 };
 } // namespace OHOS::NativeRdb

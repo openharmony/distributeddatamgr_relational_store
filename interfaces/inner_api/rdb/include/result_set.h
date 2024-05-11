@@ -16,24 +16,22 @@
 #ifndef NATIVE_RDB_RESULT_SET_H
 #define NATIVE_RDB_RESULT_SET_H
 
-#include <map>
 #include <string>
 #include <vector>
-
-#include "rdb_errno.h"
+#include <map>
 #include "remote_result_set.h"
 #include "value_object.h"
-
+#include "rdb_errno.h"
 namespace OHOS {
 namespace NativeRdb {
 struct API_EXPORT RowEntity {
 public:
-    API_EXPORT void Put(const std::string &name, const ValueObject &value);
+    API_EXPORT void Put(const std::string &name, int32_t index, ValueObject &&value);
     API_EXPORT ValueObject Get(const std::string &name) const;
     API_EXPORT ValueObject Get(int index) const;
     API_EXPORT const std::map<std::string, ValueObject> &Get() const;
     API_EXPORT std::map<std::string, ValueObject> Steal();
-    API_EXPORT void Clear();
+    API_EXPORT void Clear(int32_t size);
 
 private:
     std::map<std::string, ValueObject> values_;
@@ -62,7 +60,6 @@ public:
      * @brief Gets the entire row of data for the current row from the result set.
      */
     virtual int GetRow(RowEntity &rowEntity) = 0;
-    virtual int GetModifyTime(std::string &modifyTime) = 0;
 
     /**
      * @brief Get the size of blob or text.

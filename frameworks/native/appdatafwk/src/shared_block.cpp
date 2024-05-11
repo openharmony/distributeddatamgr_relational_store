@@ -414,7 +414,8 @@ std::string SharedBlock::CellUnit::GetString(SharedBlock *block) const
 
 std::vector<uint8_t> SharedBlock::CellUnit::GetBlob(SharedBlock* block) const
 {
-    auto value = static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
+    auto value = reinterpret_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset,
+        cell.stringOrBlobValue.size));
     return std::vector<uint8_t>(value, value + cell.stringOrBlobValue.size);
 }
 

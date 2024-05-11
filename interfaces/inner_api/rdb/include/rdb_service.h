@@ -63,7 +63,9 @@ public:
 
     virtual int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) = 0;
 
-    virtual int32_t GetSchema(const RdbSyncerParam &param) = 0;
+    virtual int32_t BeforeOpen(RdbSyncerParam &param) = 0;
+
+    virtual int32_t AfterOpen(const RdbSyncerParam &param) = 0;
 
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;

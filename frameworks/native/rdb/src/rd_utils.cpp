@@ -236,7 +236,6 @@ int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindFloatVector(stmt, idx, val, dim, freeFunc));
 }
 
-
 int RdUtils::RdSqlStep(GRD_SqlStmt *stmt)
 {
     LOG_DEBUG("[RdUtils::RdSqlStep]");

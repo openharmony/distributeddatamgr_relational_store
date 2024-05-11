@@ -57,13 +57,15 @@
                 "common_event_service",
                 "c_utils",
                 "device_manager",
+                "eventhandler",
                 "hilog",
                 "hitrace",
                 "huks",
                 "ipc",
                 "kv_store",
                 "napi",
-                "samgr"
+                "samgr",
+                "hisysevent"
             ],
             "third_party": [
                 "icu",
@@ -169,6 +171,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/clouddata:cloudtest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",

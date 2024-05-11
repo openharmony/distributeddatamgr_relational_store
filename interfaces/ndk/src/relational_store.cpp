@@ -31,6 +31,7 @@
 #include "relational_values_bucket.h"
 #include "securec.h"
 #include "sqlite_global_config.h"
+#include "convertor_error_code.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -74,10 +75,10 @@ int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callb
     int errCode = store_->RegisterAutoSyncCallback(obs);
     if (errCode == NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed");
-        return errCode;
+        return ConvertorErrorCode::NativeToNdk(errCode);
     }
     callbacks_.push_back(std::move(obs));
-    return NativeRdb::E_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int RelationalStore::UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback)
@@ -92,12 +93,12 @@ int RelationalStore::UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *cal
         int errCode = store_->UnregisterAutoSyncCallback(*it);
         if (errCode != NativeRdb::E_OK) {
             LOG_ERROR("unsubscribe failed");
-            return errCode;
+            return ConvertorErrorCode::NativeToNdk(errCode);
         }
         it = callbacks_.erase(it);
         LOG_DEBUG("progress unsubscribe success");
     }
-    return NativeRdb::E_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 RelationalStore::~RelationalStore()
@@ -146,12 +147,12 @@ public:
 
 int MainOpenCallback::OnCreate(OHOS::NativeRdb::RdbStore &rdbStore)
 {
-    return OHOS::NativeRdb::E_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 int MainOpenCallback::OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion)
 {
-    return OHOS::NativeRdb::E_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
@@ -175,6 +176,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     std::string realPath =
         OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
     if (*errCode != 0) {
+        *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
         LOG_ERROR("Get database path failed, ret %{public}d ", *errCode);
         return nullptr;
     }
@@ -192,6 +194,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     MainOpenCallback callback;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store =
         OHOS::NativeRdb::RdbHelper::GetRdbStore(rdbStoreConfig, -1, callback, *errCode);
+    *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
     if (store == nullptr) {
         LOG_ERROR("Get RDB Store fail %{public}s", realPath.c_str());
         return nullptr;
@@ -219,9 +222,9 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
     std::string realPath =
         OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, errCode);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        return errCode;
+        return ConvertorErrorCode::NativeToNdk(errCode);
     }
-    return OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath);
+    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath));
 }
 
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket)
@@ -304,7 +307,8 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql)
     if (rdbStore == nullptr || sql == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>{});
+    return ConvertorErrorCode::NativeToNdk(
+        rdbStore->GetStore()->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>{}));
 }
 
 int OH_Rdb_BeginTransaction(OH_Rdb_Store *store)
@@ -313,7 +317,7 @@ int OH_Rdb_BeginTransaction(OH_Rdb_Store *store)
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->BeginTransaction();
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->BeginTransaction());
 }
 
 int OH_Rdb_RollBack(OH_Rdb_Store *store)
@@ -322,7 +326,7 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store)
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->RollBack();
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->RollBack());
 }
 
 int OH_Rdb_Commit(OH_Rdb_Store *store)
@@ -331,7 +335,7 @@ int OH_Rdb_Commit(OH_Rdb_Store *store)
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->Commit();
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Commit());
 }
 
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
@@ -340,7 +344,7 @@ int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
     if (rdbStore == nullptr || databasePath == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->Backup(databasePath);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Backup(databasePath));
 }
 
 int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
@@ -349,7 +353,7 @@ int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath)
     if (rdbStore == nullptr || databasePath == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->Restore(databasePath);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Restore(databasePath));
 }
 
 int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version)
@@ -358,7 +362,7 @@ int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version)
     if (rdbStore == nullptr || version == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->GetVersion(*version);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->GetVersion(*version));
 }
 
 int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
@@ -367,7 +371,7 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->SetVersion(version);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->SetVersion(version));
 }
 
 static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedConfig *config)
@@ -376,7 +380,7 @@ static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedCo
     auto &[errCode, cfg] = result;
     switch (config->version) {
         case DISTRIBUTED_CONFIG_V0: {
-            const auto *realCfg = reinterpret_cast<const DistributedConfig_V0 *>(config);
+            const auto *realCfg = reinterpret_cast<const DistributedConfigV0 *>(config);
             cfg.version = realCfg->version;
             cfg.isAutoSync = realCfg->isAutoSync;
             errCode = OH_Rdb_ErrCode::RDB_OK;
@@ -408,8 +412,8 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
         }
         tableNames.emplace_back(tables[i]);
     }
-    return rdbStore->GetStore()->SetDistributedTables(tableNames, DistributedTableType::DISTRIBUTED_CLOUD,
-                                                      { cfg.isAutoSync });
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->SetDistributedTables(tableNames,
+        DistributedTableType::DISTRIBUTED_CLOUD, { cfg.isAutoSync }));
 }
 
 OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName, OH_VObject *values)
@@ -437,7 +441,7 @@ int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_Data
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return (OH_Rdb_ErrCode)rdbStore->DoSubScribe(type, observer);
+    return rdbStore->DoSubScribe(type, observer);
 }
 
 int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_DataObserver *observer)
@@ -446,7 +450,7 @@ int OH_Rdb_Unsubscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_Da
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return (OH_Rdb_ErrCode)rdbStore->DoUnsubScribe(type, observer);
+    return rdbStore->DoUnsubScribe(type, observer);
 }
 
 int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver *observer)
@@ -456,6 +460,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
         observer->callback.detailsObserver == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
+
     std::lock_guard<decltype(mutex_)> lock(mutex_);
     auto result = std::any_of(dataObservers_[type].begin(), dataObservers_[type].end(),
                               [observer](const std::shared_ptr<NDKStoreObserver> &item) {
@@ -474,7 +479,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
     } else {
         dataObservers_[type].emplace_back(std::move(ndkObserver));
     }
-    return (OH_Rdb_ErrCode)subscribeResult;
+    return ConvertorErrorCode::NativeToNdk(subscribeResult);
 }
 
 int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserver *observer)
@@ -493,12 +498,12 @@ int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserve
             store_->UnsubscribeObserver(subscribeOption, *it) : store_->UnSubscribe(subscribeOption, it->get());
         if (errCode != NativeRdb::E_OK) {
             LOG_ERROR("unsubscribe failed");
-            return errCode;
+            return ConvertorErrorCode::NativeToNdk(errCode);
         }
         it = dataObservers_[type].erase(it);
         LOG_DEBUG("data observer unsubscribe success");
     }
-    return NativeRdb::E_OK;
+    return OH_Rdb_ErrCode::RDB_OK;
 }
 
 namespace {
@@ -545,19 +550,19 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
 {
     switch (paraVersion) {
         case TABLE_DETAIL_V0: {
-            auto length = sizeof(TableDetails_V0) * (tableLength + 1);
-            auto *detailsV0 = (TableDetails_V0 *)ResizeBuff(length);
+            auto length = sizeof(TableDetailsV0) * (tableLength + 1);
+            auto *detailsV0 = (TableDetailsV0 *)ResizeBuff(length);
             (void)memset_s(detailsV0, length, 0, length);
             int index = 0;
             for (const auto &pair : tableDetails_) {
                 detailsV0[index].table = pair.first.c_str();
-                detailsV0[index].upload = Statistic_V0{
+                detailsV0[index].upload = StatisticV0{
                     .total = (int)pair.second.upload.total,
                     .successful = (int)pair.second.upload.success,
                     .failed = (int)pair.second.upload.failed,
                     .remained = (int)pair.second.upload.untreated,
                 };
-                detailsV0[index].download = Statistic_V0{
+                detailsV0[index].download = StatisticV0{
                     .total = (int)pair.second.download.total,
                     .successful = (int)pair.second.download.success,
                     .failed = (int)pair.second.download.failed,
@@ -634,7 +639,7 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
             break;
         }
     };
-    return rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Sync(syncOption, tableNames, progressCallback));
 }
 
 int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObserver *callback)
@@ -643,7 +648,7 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObse
     if (rdbStore == nullptr || callback == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->SubscribeAutoSyncProgress(callback);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->SubscribeAutoSyncProgress(callback));
 }
 
 int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObserver *callback)
@@ -652,7 +657,7 @@ int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressOb
     if (rdbStore == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->UnsubscribeAutoSyncProgress(callback);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->UnsubscribeAutoSyncProgress(callback));
 }
 
 int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
@@ -662,7 +667,7 @@ int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
     if (rdbStore == nullptr || predicate == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), true);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), true));
 }
 
 int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
@@ -672,7 +677,7 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
     if (rdbStore == nullptr || predicate == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), false);
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->ModifyLockStatus(predicate->Get(), false));
 }
 
 OH_Cursor *OH_Rdb_QueryLockedRow(
@@ -731,11 +736,36 @@ void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
     if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD) {
         auto count = devices.size();
         std::unique_ptr<const char *[]> deviceIds = std::make_unique<const char *[]>(count);
-        for (auto i = 0; i < count; ++i) {
+        for (uint32_t i = 0; i < count; ++i) {
             deviceIds[i] = devices[i].c_str();
         }
         (*observer_->callback.briefObserver)(observer_->context, deviceIds.get(), count);
     }
+}
+
+size_t NDKStoreObserver::GetKeyInfoSize(RdbStoreObserver::ChangeInfo &&changeInfo)
+{
+    size_t size = 0;
+    for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
+        size += it->second[RdbStoreObserver::CHG_TYPE_INSERT].size() * sizeof(Rdb_KeyInfo::Rdb_KeyData);
+        size += it->second[RdbStoreObserver::CHG_TYPE_UPDATE].size() * sizeof(Rdb_KeyInfo::Rdb_KeyData);
+        size += it->second[RdbStoreObserver::CHG_TYPE_DELETE].size() * sizeof(Rdb_KeyInfo::Rdb_KeyData);
+    }
+    return size;
+}
+
+int32_t NDKStoreObserver::GetKeyDataType(std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
+{
+    if (primaryKey.size() == 0) {
+        return OH_ColumnType::TYPE_NULL;
+    }
+    if (std::holds_alternative<int64_t>(primaryKey[0]) || std::holds_alternative<double>(primaryKey[0])) {
+        return OH_ColumnType::TYPE_INT64;
+    }
+    if (std::holds_alternative<std::string>(primaryKey[0])) {
+        return OH_ColumnType::TYPE_TEXT;
+    }
+    return OH_ColumnType::TYPE_NULL;
 }
 
 void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::PrimaryFields &fields,
@@ -749,41 +779,41 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
 
     if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS ||
         mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
-        Rdb_ChangeInfo **infos =
-            (Rdb_ChangeInfo **)(malloc(count * (sizeof(Rdb_ChangeInfo *) +sizeof(Rdb_ChangeInfo))));
+        size_t size = count * (sizeof(Rdb_ChangeInfo *) + sizeof(Rdb_ChangeInfo)) +
+            GetKeyInfoSize(std::forward<RdbStoreObserver::ChangeInfo &&>(changeInfo));
+        std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(size);
+        Rdb_ChangeInfo **infos = (Rdb_ChangeInfo **)(buffer.get());
         if (infos == nullptr) {
             LOG_ERROR("Failed to allocate memory for Rdb_ChangeInfo");
             return;
         }
 
-        Rdb_ChangeInfo *detials = (Rdb_ChangeInfo *)(infos + count);
+        Rdb_ChangeInfo *details = (Rdb_ChangeInfo *)(infos + count);
+        Rdb_KeyInfo::Rdb_KeyData *data = (Rdb_KeyInfo::Rdb_KeyData *)(details + count);
 
         int index = 0;
         for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
-            infos[index] = &detials[index];
+            infos[index] = &details[index];
             infos[index]->version = DISTRIBUTED_CHANGE_INFO_VERSION;
             infos[index]->tableName = it->first.c_str();
             infos[index]->ChangeType = origin.dataType;
-            ConvertKeyInfo(infos[index]->inserted, it->second[RdbStoreObserver::CHG_TYPE_INSERT]);
-            ConvertKeyInfo(infos[index]->updated, it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
-            ConvertKeyInfo(infos[index]->deleted, it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
+            infos[index]->inserted.count = static_cast<int>(it->second[RdbStoreObserver::CHG_TYPE_INSERT].size());
+            infos[index]->inserted.type = GetKeyDataType(it->second[RdbStoreObserver::CHG_TYPE_INSERT]);
+            infos[index]->updated.count = static_cast<int>(it->second[RdbStoreObserver::CHG_TYPE_UPDATE].size());
+            infos[index]->updated.type = GetKeyDataType(it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
+            infos[index]->deleted.count = static_cast<int>(it->second[RdbStoreObserver::CHG_TYPE_DELETE].size());
+            infos[index]->deleted.type = GetKeyDataType(it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
+            ConvertKeyInfoData(data, it->second[RdbStoreObserver::CHG_TYPE_INSERT]);
+            infos[index]->inserted.data = data;
+            ConvertKeyInfoData(data+infos[index]->inserted.count, it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
+            infos[index]->updated.data = data+infos[index]->inserted.count;
+            ConvertKeyInfoData(data+infos[index]->inserted.count+infos[index]->updated.count,
+                it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
+            infos[index]->deleted.data = data+infos[index]->inserted.count+infos[index]->updated.count;
             index++;
         }
 
         (*observer_->callback.detailsObserver)(observer_->context, const_cast<const Rdb_ChangeInfo**>(infos), count);
-
-        for (uint32_t i = 0; i  < count; i++) {
-            if (infos[i]->inserted.data != nullptr) {
-                free(infos[i]->inserted.data);
-            }
-            if (infos[i]->updated.data != nullptr) {
-                free(infos[i]->updated.data);
-            }
-            if (infos[i]->deleted.data != nullptr) {
-                free(infos[i]->deleted.data);
-            }
-        }
-        free(infos);
     }
 }
 
@@ -792,38 +822,27 @@ void NDKStoreObserver::OnChange()
     RdbStoreObserver::OnChange();
 }
 
-void NDKStoreObserver::ConvertKeyInfo(Rdb_KeyInfo &keyInfo, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
+void NDKStoreObserver::ConvertKeyInfoData(Rdb_KeyInfo::Rdb_KeyData *keyInfoData,
+    std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
 {
-    keyInfo.count = static_cast<int>(primaryKey.size());
-    keyInfo.type = TYPE_NULL;
-    keyInfo.data = nullptr;
-    if (primaryKey.empty()) {
-        return;
-    }
-
-    Rdb_KeyInfo::Rdb_KeyData *keyInfoData =
-        (Rdb_KeyInfo::Rdb_KeyData *)(malloc(keyInfo.count * sizeof(Rdb_KeyInfo::Rdb_KeyData)));
-    if (keyInfoData == nullptr) {
-        LOG_ERROR("Failed to allocate memory for Rdb_KeyData");
+    if (keyInfoData == nullptr || primaryKey.empty()) {
+        LOG_WARN("no data, keyInfoData is nullptr:%{public}d", keyInfoData == nullptr);
         return;
     }
 
     for (size_t i = 0; i < primaryKey.size(); ++i) {
         const auto &key = primaryKey[i];
         if (auto val = std::get_if<double>(&key)) {
-            keyInfo.type = TYPE_REAL;
             keyInfoData[i].real = *val;
         } else if (auto val = std::get_if<int64_t>(&key)) {
-            keyInfo.type = TYPE_INT64;
             keyInfoData[i].integer = *val;
         } else if (auto val = std::get_if<std::string>(&key)) {
-            keyInfo.type = TYPE_TEXT;
             keyInfoData[i].text = val->c_str();
         } else {
+            LOG_ERROR("Not support the data type");
             return;
         }
     }
-    keyInfo.data = keyInfoData;
 }
 
 bool NDKStoreObserver::operator==(const Rdb_DataObserver *other)

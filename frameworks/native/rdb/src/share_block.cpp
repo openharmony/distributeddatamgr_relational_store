@@ -106,22 +106,22 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
     return status;
 }
 
-int FillSharedBlockOpt(SharedBlockInfo *info)
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    SharedBlockSerializerInfo serializer(info->sharedBlock, info->statement, info->columnNum, info->startPos);
+    SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
     Sqlite3SharedBlockMethods sqliteBlock = { 1, &serializer, info->isCountAllRows, info->startPos,
         info->requiredPos, SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob,
         SeriPutNull, SeriPutOther
     };
-    auto db = sqlite3_db_handle(info->statement);
-    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, &sqliteBlock);
+    auto db = sqlite3_db_handle(stmt);
+    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
     if (rc != SQLITE_OK) {
         LOG_ERROR("set sqlite shared block methods error. rc=%{private}d", rc);
         return SQLiteError::ErrNo(rc);
     }
     int retryCount = 0;
     while (true) {
-        int err = sqlite3_step(info->statement);
+        int err = sqlite3_step(stmt);
         if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");
             if (retryCount <= RETRY_TIME) {
@@ -136,7 +136,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info)
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
 
-    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, info->statement, nullptr);
+    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
     if (rc != SQLITE_OK) {
         LOG_ERROR("clear sqlite shared block methods error. rc=%{public}d", rc);
         return SQLiteError::ErrNo(rc);
@@ -144,21 +144,21 @@ int FillSharedBlockOpt(SharedBlockInfo *info)
     return E_OK;
 }
 
-int FillSharedBlock(SharedBlockInfo *info)
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;
     bool isFull = false;
     bool hasException = false;
     while (!hasException && (!isFull || info->isCountAllRows)) {
-        int err = sqlite3_step(info->statement);
+        int err = sqlite3_step(stmt);
         if (err == SQLITE_ROW) {
             retryCount = 0;
             info->totalRows += 1;
             if (info->startPos >= info->totalRows || isFull) {
                 continue;
             }
-            FillRow(info);
+            FillRow(info, stmt);
             isFull = info->isFull;
             hasException = info->hasException;
         } else if (err == SQLITE_DONE) {
@@ -182,10 +182,10 @@ int FillSharedBlock(SharedBlockInfo *info)
     return E_OK;
 }
 
-void FillRow(SharedBlockInfo *info)
+void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     FillOneRowResult fillOneRowResult =
-        FillOneRow(info->sharedBlock, info->statement, info->columnNum, info->startPos, info->addedRows);
+        FillOneRow(info->sharedBlock, stmt, info->columnNum, info->startPos, info->addedRows);
     if (fillOneRowResult == SHARED_BLOCK_IS_FULL && info->addedRows &&
         info->startPos + info->addedRows <= info->requiredPos) {
         info->sharedBlock->Clear();
@@ -193,7 +193,7 @@ void FillRow(SharedBlockInfo *info)
         info->startPos += info->addedRows;
         info->addedRows = 0;
         fillOneRowResult =
-            FillOneRow(info->sharedBlock, info->statement, info->columnNum, info->startPos, info->addedRows);
+            FillOneRow(info->sharedBlock, stmt, info->columnNum, info->startPos, info->addedRows);
     }
 
     if (fillOneRowResult == FILL_ONE_ROW_SUCESS) {
@@ -337,16 +337,14 @@ FillOneRowResult FillOneRowOfNull(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     return FILL_ONE_ROW_SUCESS;
 }
 
-bool ResetStatement(SharedBlockInfo *sharedBlockInfo)
+bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    sqlite3_reset(sharedBlockInfo->statement);
-
-    if (sharedBlockInfo->startPos > sharedBlockInfo->totalRows) {
-        LOG_ERROR("startPos %{public}d > actual rows %{public}d", sharedBlockInfo->startPos,
-            sharedBlockInfo->totalRows);
+    sqlite3_reset(stmt);
+    if (info->startPos > info->totalRows) {
+        LOG_ERROR("startPos %{public}d > actual rows %{public}d", info->startPos, info->totalRows);
     }
 
-    if (sharedBlockInfo->totalRows > 0 && sharedBlockInfo->addedRows == 0) {
+    if (info->totalRows > 0 && info->addedRows == 0) {
         return false;
     }
     return true;
