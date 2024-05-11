@@ -117,6 +117,7 @@ RdbStoreProxy::~RdbStoreProxy()
     if (rdbStore == nullptr) {
         return;
     }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -144,6 +145,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 RdbStoreProxy::RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore)
@@ -204,6 +206,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("close", Close),
             DECLARE_NAPI_FUNCTION("attach", Attach),
             DECLARE_NAPI_FUNCTION("detach", Detach),
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
             DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
             DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
             DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName),
@@ -218,6 +221,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("lockRow", LockRow),
             DECLARE_NAPI_FUNCTION("unlockRow", UnlockRow),
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
+#endif
         };
         AddSyncFunctions(properties);
         return properties;
@@ -226,6 +230,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
 
 void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &properties)
 {
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteSync", Delete, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
@@ -233,6 +238,7 @@ void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &prop
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySync, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QuerySync, SYNC));
+#endif
 }
 
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
@@ -1202,6 +1208,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 napi_value RdbStoreProxy::QuerySync(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1239,6 +1246,7 @@ napi_value RdbStoreProxy::QuerySync(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return AsyncCall::Call(env, context);
 }
+#endif
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
@@ -1902,32 +1910,6 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
     return nullptr;
 }
 
-napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-    };
-    ExecuteAction exec;
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    if (obj != nullptr) {
-        auto store = obj->GetInstance();
-        obj->SetInstance(nullptr);
-        exec = [context, store]() mutable -> int {
-            store = nullptr;
-            return OK;
-        };
-    }
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_get_undefined(env, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
-}
-
 RdbStoreProxy::SyncObserver::SyncObserver(
     napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> queue)
     : env_(env), queue_(queue)
@@ -2026,5 +2008,30 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
     return AsyncCall::Call(env, context);
 }
 #endif
+napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    ExecuteAction exec;
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    if (obj != nullptr) {
+        auto store = obj->GetInstance();
+        obj->SetInstance(nullptr);
+        exec = [context, store]() mutable -> int {
+            store = nullptr;
+            return OK;
+        };
+    }
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return AsyncCall::Call(env, context);
+}
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
