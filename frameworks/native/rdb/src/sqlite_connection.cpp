@@ -868,15 +868,18 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         case Status::STATUS_UPDATE:   // fallthrough
             if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
                 oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path) {
+                if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
+                    oldAsset.uri == newAsset.uri || oldAsset.path == newAsset.path) {
+                    oldAsset.expiresTime = newAsset.expiresTime;
+                    oldAsset.hash = newAsset.hash;
+                    oldAsset.status = Status::STATUS_UPDATE;
+                }
                 oldAsset.version = newAsset.version;
-                oldAsset.expiresTime = newAsset.expiresTime;
                 oldAsset.uri = newAsset.uri;
                 oldAsset.createTime = newAsset.createTime;
                 oldAsset.modifyTime = newAsset.modifyTime;
                 oldAsset.size = newAsset.size;
-                oldAsset.hash = newAsset.hash;
                 oldAsset.path = newAsset.path;
-                oldAsset.status = Status::STATUS_UPDATE;
             }
             return;
         default:
