@@ -16,75 +16,89 @@
 #include "napi_uv_queue.h"
 
 #include "logger.h"
-#include "uv.h"
 
 namespace OHOS::RelationalStoreJsKit {
 using namespace OHOS::Rdb;
 
-NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)
-    : env_(env)
+NapiUvQueue::NapiUvQueue(napi_env env) : env_(env)
 {
-    napi_create_reference(env, callback, 1, &callback_);
-    napi_get_uv_event_loop(env, &loop_);
+    if (env != nullptr) {
+        napi_get_uv_event_loop(env, &loop_);
+    }
 }
 
 NapiUvQueue::~NapiUvQueue()
 {
-    napi_delete_reference(env_, callback_);
+    env_ = nullptr;
 }
 
-bool NapiUvQueue::operator==(napi_value value)
+void NapiUvQueue::CallFunction(NapiCallbackGetter getter, NapiArgsGenerator genArgs)
 {
-    napi_value callback = nullptr;
-    napi_get_reference_value(env_, callback_, &callback);
-
-    bool isEquals = false;
-    napi_strict_equals(env_, value, callback, &isEquals);
-    return isEquals;
-}
-
-void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
-{
-    uv_work_t* work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
+    if (loop_ == nullptr || !getter) {
+        LOG_ERROR("loop_ or callback is nullptr");
         return;
     }
-    work->data = this;
-    this->args = std::move(genArgs);
 
-    int ret = uv_queue_work(loop_, work, [](uv_work_t* work) {}, [](uv_work_t* work, int st) {
-            auto queue = static_cast<NapiUvQueue*>(work->data);
-            napi_handle_scope scope = nullptr;
-            if (queue == nullptr) {
-                return;
-            }
-            napi_open_handle_scope(queue->env_, &scope);
-            if (scope == nullptr) {
-                delete work;
-                return;
-            }
-            int argc = 0;
-            napi_value argv[MAX_CALLBACK_ARG_NUM] = { nullptr };
-            if (queue->args) {
-                queue->args(queue->env_, argc, argv);
-            }
-
-            napi_value callback = nullptr;
-            napi_get_reference_value(queue->env_, queue->callback_, &callback);
-            napi_value global = nullptr;
-            napi_get_global(queue->env_, &global);
-            napi_value result = nullptr;
-            napi_status status = napi_call_function(queue->env_, global, callback, argc, argv, &result);
-            if (status != napi_ok) {
-                LOG_ERROR("napi_call_function failed, status=%{public}d", status);
-            }
-            napi_close_handle_scope(queue->env_, scope);
-            delete work;
-        });
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        LOG_ERROR("no memory for uv_work_t");
+        return;
+    }
+    work->data = new UvEntry{ env_, std::move(getter), std::move(genArgs) };
+    if (work->data == nullptr) {
+        LOG_ERROR("no memory for UvEntry");
+        delete work;
+        work = nullptr;
+        return;
+    }
+    int ret = uv_queue_work(loop_, work, [](uv_work_t *work) {}, NapiUvQueue::Work);
     if (ret < 0) {
         LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
-        delete static_cast<NapiUvQueue *>(work->data);
+        delete static_cast<UvEntry *>(work->data);
+        work->data = nullptr;
         delete work;
+        work = nullptr;
     }
+}
+
+void NapiUvQueue::Work(uv_work_t* work, int uvStatus)
+{
+    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry* data) {
+        delete data;
+        delete work;
+    });
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(entry->env, &scope);
+    if (scope == nullptr) {
+        delete work;
+        return;
+    }
+    napi_value method = entry->callback(entry->env);
+    if (method == nullptr) {
+        LOG_ERROR("the callback is invalid, maybe is cleared!");
+        if (scope != nullptr) {
+            napi_close_handle_scope(entry->env, scope);
+        }
+        return;
+    }
+    int argc = 0;
+    napi_value argv[MAX_CALLBACK_ARG_NUM] = {nullptr};
+    if (entry->args) {
+        entry->args(entry->env, argc, argv);
+    }
+
+    napi_value global = nullptr;
+    napi_get_global(entry->env, &global);
+    napi_value result = nullptr;
+    napi_status status = napi_call_function(entry->env, global, method, argc, argv, &result);
+    if (status != napi_ok) {
+        LOG_ERROR("napi_call_function failed, status=%{public}d", status);
+    }
+    napi_close_handle_scope(entry->env, scope);
+}
+
+napi_env NapiUvQueue::GetEnv()
+{
+    return env_;
 }
 } // namespace OHOS::RelationalStoreJsKit
