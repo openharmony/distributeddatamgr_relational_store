@@ -16,11 +16,14 @@
 #ifndef NAPI_RDB_STORE_OBSERVER_H
 #define NAPI_RDB_STORE_OBSERVER_H
 
+#include <list>
+
 #include "rdb_types.h"
 #include "napi_uv_queue.h"
 
 namespace OHOS::RelationalStoreJsKit  {
-class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
+class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver,
+    public std::enable_shared_from_this<NapiRdbStoreObserver> {
 public:
     using Origin = DistributedRdb::Origin;
     struct JSChangeInfo {
@@ -31,7 +34,8 @@ public:
         std::vector<PrimaryKey> updated;
         std::vector<PrimaryKey> deleted;
     };
-    explicit NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode = DistributedRdb::REMOTE);
+    explicit NapiRdbStoreObserver(napi_value callback, std::shared_ptr<NapiUvQueue> uvQueue,
+        int32_t mode = DistributedRdb::REMOTE);
     virtual ~NapiRdbStoreObserver() noexcept;
 
     void OnChange(const std::vector<std::string>& devices) override;
@@ -40,8 +44,12 @@ public:
 
     void OnChange() override;
 
+    bool operator==(napi_value value);
+
 private:
     int32_t mode_ = DistributedRdb::REMOTE;
+    std::shared_ptr<NapiUvQueue> uvQueue_;
+    napi_ref callback_;
 };
 } // namespace OHOS::RelationalStoreJsKit
 #endif

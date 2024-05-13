@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #define LOG_TAG "NapiRdbStoreObserver"
+
 #include "napi_rdb_store_observer.h"
 
 #include "js_utils.h"
@@ -22,9 +23,10 @@ using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS::RelationalStoreJsKit {
-NapiRdbStoreObserver::NapiRdbStoreObserver(napi_env env, napi_value callback, int32_t mode)
-    : NapiUvQueue(env, callback), mode_(mode)
+NapiRdbStoreObserver::NapiRdbStoreObserver(napi_value callback, std::shared_ptr<NapiUvQueue> uvQueue, int32_t mode)
+    : mode_(mode), uvQueue_(uvQueue)
 {
+    napi_create_reference(uvQueue_->GetEnv(), callback, 1, &callback_);
 }
 
 NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
@@ -34,10 +36,18 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
     LOG_INFO("NapiRdbStoreObserver::OnChange begin");
-    CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
-        argc = 1;
-        argv[0] = JSUtils::Convert2JSValue(env, devices);
-    });
+    uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
+                               if (observer->callback_ == nullptr) {
+                                   return nullptr;
+                               }
+                               napi_value callback = nullptr;
+                               napi_get_reference_value(env, observer->callback_, &callback);
+                               return callback;
+                           },
+                           [devices](napi_env env, int &argc, napi_value *argv) {
+                               argc = 1;
+                               argv[0] = JSUtils::Convert2JSValue(env, devices);
+                           });
 }
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
@@ -47,10 +57,19 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
         for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
             infos.push_back(JSChangeInfo(origin, it));
         }
-        CallFunction([infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
-            argc = 1;
-            argv[0] = JSUtils::Convert2JSValue(env, infos);
-        });
+
+        uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
+                                   if (observer->callback_ == nullptr) {
+                                       return nullptr;
+                                   }
+                                   napi_value callback = nullptr;
+                                   napi_get_reference_value(env, observer->callback_, &callback);
+                                   return callback;
+                               },
+                               [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
+                                   argc = 1;
+                                   argv[0] = JSUtils::Convert2JSValue(env, infos);
+                               });
         return;
     }
     RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
@@ -58,7 +77,15 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
 
 void NapiRdbStoreObserver::OnChange()
 {
-    CallFunction([](napi_env env, int &argc, napi_value *argv) {});
+    uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
+                               if (observer->callback_ == nullptr) {
+                                   return nullptr;
+                               }
+                               napi_value callback = nullptr;
+                               napi_get_reference_value(env, observer->callback_, &callback);
+                               return callback;
+                           },
+                           [](napi_env env, int &argc, napi_value *argv) {});
 }
 
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
@@ -68,5 +95,24 @@ NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInf
     inserted = std::move(info->second[CHG_TYPE_INSERT]);
     updated = std::move(info->second[CHG_TYPE_UPDATE]);
     deleted = std::move(info->second[CHG_TYPE_DELETE]);
+}
+
+bool NapiRdbStoreObserver::operator==(napi_value value)
+{
+    napi_value callback = nullptr;
+    napi_get_reference_value(uvQueue_->GetEnv(), callback_, &callback);
+
+    bool isEquals = false;
+    napi_strict_equals(uvQueue_->GetEnv(), value, callback, &isEquals);
+    return isEquals;
+}
+
+void NapiRdbStoreObserver::Clear()
+{
+    if (callback_ == nullptr) {
+        return;
+    }
+    napi_delete_reference(uvQueue_->GetEnv(), callback_);
+    callback_ = nullptr;
 }
 } // namespace OHOS::RelationalStoreJsKit
