@@ -32,7 +32,8 @@ public:
      * @brief Obtains an RDB store.
      *
      * You can set parameters of the RDB store as required. In general, this method is recommended
-     * to obtain a rdb store.
+     * to obtain a rdb store. BundleName is mandatory and must be the same for different RDB stores
+     * of the same application.
      *
      * @param config Indicates the {@link RdbStoreConfig} configuration of the database related to this RDB store.
      * @param version Indicates the database version for upgrade or downgrade.
