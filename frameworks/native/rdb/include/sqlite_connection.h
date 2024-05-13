@@ -53,6 +53,7 @@ public:
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
+    int32_t ClearCache() override;
     int32_t Subscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
     int32_t Unsubscribe(const std::string &event,
