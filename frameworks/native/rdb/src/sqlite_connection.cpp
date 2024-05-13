@@ -680,6 +680,14 @@ int SqliteConnection::ExecuteGetString(std::string &outValue, const std::string 
     return errCode;
 }
 
+int SqliteConnection::ClearCache()
+{
+    if (dbHandle != nullptr && mode_ == JournalMode::MODE_WAL) {
+        sqlite3_db_release_memory(dbHandle);
+    }
+    return E_OK;
+}
+
 void SqliteConnection::LimitPermission(const std::string &dbPath) const
 {
     struct stat st = { 0 };
