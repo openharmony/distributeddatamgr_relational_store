@@ -625,7 +625,7 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_PutAssets_test_010, TestSize.Level
     char table[] = "asset_table";
     int assetsCount = 2;
     int curRow = 3;
-    
+
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
 
     Data_Asset *asset = OH_Data_Asset_CreateOne();
