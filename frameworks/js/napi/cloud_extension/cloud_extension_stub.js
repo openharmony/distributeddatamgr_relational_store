@@ -19,7 +19,7 @@ let rpc = requireNapi('rpc');
 const TAG = 'cloudExtension';
 const INVALID_STATE = -1;
 const INVALID_STR = '';
-const MAX_SIZE = 1024 * 1024;
+const MAX_SIZE = 4 * 1024 * 1024 * 1024 - 1;
 
 export var cloudExtension;
 (function (a) {
