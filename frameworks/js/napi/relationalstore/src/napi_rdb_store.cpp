@@ -1575,7 +1575,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
     option.event = "dataChange";
-    auto uvQueue = std::make_shared<RelationalStoreJsKit::NapiUvQueue>(env);
+    auto uvQueue = std::make_shared<UvQueue>(env);
     auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
     int errCode = E_OK;
     if (option.mode == SubscribeMode::LOCAL_DETAIL) {
@@ -1602,7 +1602,7 @@ napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb:
         return nullptr;
     }
 
-    auto uvQueue = std::make_shared<RelationalStoreJsKit::NapiUvQueue>(env);
+    auto uvQueue = std::make_shared<UvQueue>(env);
     auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
     int errCode = GetInstance()->Subscribe(option, localObserver.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
