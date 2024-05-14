@@ -21,30 +21,24 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "uv.h"
 
 namespace OHOS::RelationalStoreJsKit {
 class NapiUvQueue {
     using NapiArgsGenerator = std::function<void(napi_env env, int &argc, napi_value *argv)>;
-    using NapiCallbackGetter = std::function<napi_value(napi_env env)>;
 
 public:
-    NapiUvQueue(napi_env env);
+    NapiUvQueue(napi_env env, napi_value callback);
 
     virtual ~NapiUvQueue();
 
-    void CallFunction(NapiCallbackGetter getter, NapiArgsGenerator genArgs = NapiArgsGenerator());
+    bool operator==(napi_value value);
 
-    napi_env GetEnv();
+    void CallFunction(NapiArgsGenerator genArgs = NapiArgsGenerator());
 
 private:
-    static void Work(uv_work_t* work, int uvStatus);
-    struct UvEntry {
-        napi_env env;
-        NapiCallbackGetter callback;
-        NapiArgsGenerator args;
-    };
     napi_env env_ = nullptr;
+    napi_ref callback_ = nullptr;
+    NapiArgsGenerator args;
     uv_loop_s *loop_ = nullptr;
 
     static constexpr int MAX_CALLBACK_ARG_NUM = 6;

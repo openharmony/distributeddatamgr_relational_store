@@ -23,7 +23,7 @@ using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS::RelationalStoreJsKit {
-NapiRdbStoreObserver::NapiRdbStoreObserver(napi_value callback, std::shared_ptr<NapiUvQueue> uvQueue, int32_t mode)
+NapiRdbStoreObserver::NapiRdbStoreObserver(napi_value callback, std::shared_ptr<UvQueue> uvQueue, int32_t mode)
     : mode_(mode), uvQueue_(uvQueue)
 {
     napi_create_reference(uvQueue_->GetEnv(), callback, 1, &callback_);
@@ -36,18 +36,18 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
     LOG_INFO("NapiRdbStoreObserver::OnChange begin");
-    uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
-                               if (observer->callback_ == nullptr) {
-                                   return nullptr;
-                               }
-                               napi_value callback = nullptr;
-                               napi_get_reference_value(env, observer->callback_, &callback);
-                               return callback;
-                           },
-                           [devices](napi_env env, int &argc, napi_value *argv) {
-                               argc = 1;
-                               argv[0] = JSUtils::Convert2JSValue(env, devices);
-                           });
+    uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
+                            if (observer->callback_ == nullptr) {
+                                return nullptr;
+                            }
+                            napi_value callback = nullptr;
+                            napi_get_reference_value(env, observer->callback_, &callback);
+                            return callback;
+                        }},
+                        [devices](napi_env env, int &argc, napi_value *argv) {
+                            argc = 1;
+                            argv[0] = JSUtils::Convert2JSValue(env, devices);
+                        });
 }
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
@@ -58,18 +58,18 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
             infos.push_back(JSChangeInfo(origin, it));
         }
 
-        uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
-                                   if (observer->callback_ == nullptr) {
-                                       return nullptr;
-                                   }
-                                   napi_value callback = nullptr;
-                                   napi_get_reference_value(env, observer->callback_, &callback);
-                                   return callback;
-                               },
-                               [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
-                                   argc = 1;
-                                   argv[0] = JSUtils::Convert2JSValue(env, infos);
-                               });
+        uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
+                                if (observer->callback_ == nullptr) {
+                                    return nullptr;
+                                }
+                                napi_value callback = nullptr;
+                                napi_get_reference_value(env, observer->callback_, &callback);
+                                return callback;
+                            }},
+                            [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
+                                argc = 1;
+                                argv[0] = JSUtils::Convert2JSValue(env, infos);
+                            });
         return;
     }
     RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
@@ -77,15 +77,15 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
 
 void NapiRdbStoreObserver::OnChange()
 {
-    uvQueue_->CallFunction([observer = shared_from_this()](napi_env env) -> napi_value {
-                               if (observer->callback_ == nullptr) {
-                                   return nullptr;
-                               }
-                               napi_value callback = nullptr;
-                               napi_get_reference_value(env, observer->callback_, &callback);
-                               return callback;
-                           },
-                           [](napi_env env, int &argc, napi_value *argv) {});
+    uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
+                            if (observer->callback_ == nullptr) {
+                                return nullptr;
+                            }
+                            napi_value callback = nullptr;
+                            napi_get_reference_value(env, observer->callback_, &callback);
+                            return callback;
+                        }},
+                        [](napi_env env, int &argc, napi_value *argv) {});
 }
 
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
