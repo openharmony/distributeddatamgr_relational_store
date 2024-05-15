@@ -38,8 +38,11 @@ namespace Relational {
     {
         std::vector<std::string> colNames;
         int errCode = resultSetValue->GetAllColumnNames(colNames);
-        if (errCode != RelationalStoreJsKit::OK || colNames.size() == 0) {
-            LOGE("GetAllColumnNames failed code: %{public}d, size: %{%{public}u}", errCode, colNames.size());
+        if (errCode != RelationalStoreJsKit::OK) {
+            LOGE("GetAllColumnNames failed code: %{public}d", errCode);
+            return CArrStr{nullptr, 0};
+        }
+        if (colNames.size() == 0) {
             return CArrStr{nullptr, 0};
         }
         char** result = static_cast<char**>(malloc(colNames.size() * sizeof(char*)));
