@@ -703,3 +703,31 @@ HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
     EXPECT_EQ(E_ERROR, errCode);
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }
+
+/* *
+ * @tc.name: ClearCacheTest_001
+ * @tc.desc: Normal testCase for ClearCache
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
+{
+    store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int errCode = E_OK;
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", std::string("zhangsan"));
+    valuesBucket.PutInt("data2", 10);
+    errCode = store_->Insert(id, "test", valuesBucket);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(1, id);
+
+    int rowCount;
+    std::shared_ptr<ResultSet> resultSet = store_->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 1);
+    int64_t currentMemory = sqlite3_memory_used();
+    EXPECT_EQ(E_OK, resultSet->Close());
+    EXPECT_LT(sqlite3_memory_used(), currentMemory);
+}
