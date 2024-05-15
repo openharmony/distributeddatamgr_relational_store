@@ -307,5 +307,38 @@ describe('rdbStoreQueryByStepTest', function () {
         done();
     })
 
+    /**
+     * @tc.number testRdbStoreQueryByStep0009
+     * @tc.name Normal test case of queryByStep, query all data
+     * @tc.desc 1. Execute queryByStep, sql is 'select * from test'
+     * @tc.size MediumTest
+     * @tc.type Function
+     * @tc.level Level 2
+     */
+    it('testRdbStoreQueryByStep0009', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreQueryByStep0009 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        let valuesBucket4 = {
+            "name": "",
+            "age": 21,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valuesBucket4);
+        let resultSet = await rdbStore.queryByStep('select * from test where name = ""');
+        try {
+            console.log(TAG + "resultSet queryByStep done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            expect("").assertEqual(name)
+        } catch (err) {
+            expect().assertFail();
+        }
+        resultSet.close()
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreQueryByStep0009 end   *************");
+    })
+
     console.info(TAG + "*************Unit Test End*************");
 })
