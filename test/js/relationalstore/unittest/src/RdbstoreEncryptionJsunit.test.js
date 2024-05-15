@@ -193,7 +193,7 @@ describe('rdbEncryptTest', function () {
             rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
             expect(false).assertTrue()
         } catch (err) {
-            expect(err.code).assertEqual(14800017);
+            expect(err.code).assertEqual(14800011);
         }
 
         await console.log(TAG + "************* RdbEncryptTest_0040 end *************")

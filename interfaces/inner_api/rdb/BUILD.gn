@@ -14,7 +14,6 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 base_sources = [
-  "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
   "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
@@ -117,6 +116,7 @@ if (is_ohos && !build_ohos_sdk) {
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
     sources += [
+      "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
       "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
@@ -150,6 +150,7 @@ if (is_ohos && !build_ohos_sdk) {
     external_deps = [
       "ability_base:zuri",
       "ability_runtime:dataobs_manager",
+      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
@@ -188,6 +189,7 @@ if (is_ohos && !build_ohos_sdk) {
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
+      "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
       "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
@@ -221,6 +223,7 @@ if (is_ohos && !build_ohos_sdk) {
     external_deps = [
       "ability_base:zuri",
       "ability_runtime:dataobs_manager",
+      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
@@ -303,8 +306,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
 
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
@@ -326,8 +331,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
 
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
@@ -403,8 +410,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
@@ -424,8 +433,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = base_deps
 
-    sources +=
-        [ "${relational_store_native_path}/rdb/mock/src/task_executor.cpp" ]
+    sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
+    ]
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
@@ -497,6 +508,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = base_deps
 
     sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
@@ -568,6 +580,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = base_deps
 
     sources += [
+      "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
