@@ -2404,3 +2404,81 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.
     resultSet->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
+
+/* *
+ * @tc.name: RdbStore_GetString_001
+ * @tc.desc: Normal testCase of RdbPredicates for GetString
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string(""));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int errCode = 0;
+    int columnIndex = 0;
+    RdbPredicates predicates("person");
+    predicates.EqualTo("name", "");
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(1, ResultSize(resultSet));
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(E_OK, ret);
+
+    std::string name;
+    errCode = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    ret = resultSet->GetString(columnIndex, name);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(name, "");
+    resultSet->Close();
+
+    store->ExecuteSql("DELETE FROM person");
+}
+
+/* *
+ * @tc.name: RdbStore_GetString_002
+ * @tc.desc: Normal testCase of RdbPredicates for GetString
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.Clear();
+    values.PutInt("id", 1);
+    values.PutString("name", std::string(""));
+    values.PutInt("age", 18);
+    values.PutInt("REAL", 100);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->QueryByStep("SELECT * FROM person");
+    EXPECT_EQ(1, ResultSize(resultSet));
+
+    int errCode = 0;
+    int columnIndex = 0;
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(E_OK, ret);
+
+    std::string name;
+    errCode = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    ret = resultSet->GetString(columnIndex, name);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(name, "");
+    resultSet->Close();
+
+    store->ExecuteSql("DELETE FROM person");
+}
