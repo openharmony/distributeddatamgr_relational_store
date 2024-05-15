@@ -14,16 +14,24 @@
  */
 
 #include "rdb_radar_reporter.h"
-#include "hisysevent.h"
 #include "rdb_errno.h"
+#include "hisysevent.h"
+#include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
 
 namespace OHOS::NativeRdb {
 
-RdbRadar::RdbRadar(Scene scene, const char* funcName) : scene_(scene), funcName_(funcName)
+using namespace Security::AccessToken;
+
+bool RdbRadar::hasHostPkg_ = false;
+std::string RdbRadar::hostPkg_{ "" };
+
+RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
 {
     if (funcName_ == nullptr) {
         funcName_ = UNKNOW;
     }
+    GetHostPkgInfo(bundleName);
     LocalReport(scene_, funcName_, STATE_START);
 }
 
@@ -56,10 +64,30 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         RdbRadar::ORG_PKG_LABEL, RdbRadar::ORG_PKG_VALUE,
         RdbRadar::FUNC_LABEL, funcName,
         RdbRadar::BIZ_SCENE_LABEL, bizSence,
-        RdbRadar::BIZ_STAGE_LABEL, LocalStage::LOCAL_IMPLEMENT,
+        RdbRadar::BIZ_STAGE_LABEL, SYNC_STAGE_RUN,
         RdbRadar::STAGE_RES_LABEL, stageRes,
         RdbRadar::ERROR_CODE_LABEL, errCode,
-        RdbRadar::BIZ_STATE_LABEL, state);
+        RdbRadar::BIZ_STATE_LABEL, state,
+        RdbRadar::HOST_PKG, hostPkg_.c_str());
     return;
+}
+
+void RdbRadar::GetHostPkgInfo(std::string bundleName)
+{
+    if (hasHostPkg_) {
+        return;
+    }
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
+        NativeTokenInfo tokenInfo;
+        if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
+            hostPkg_ = tokenInfo.processName;
+            hasHostPkg_ = true;
+        }
+    } else {
+        hostPkg_ = bundleName;
+        hasHostPkg_ = true;
+    }
 }
 }
