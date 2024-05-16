@@ -24,7 +24,6 @@
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
-#include "vdb_store_impl.h"
 #include "rdb_radar_reporter.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -75,9 +74,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         storeCache_.erase(path);
     }
 
-    std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    rdbStore = config.IsVector() ? std::make_shared<VdbStoreImpl>(config, errCode)
-                                 : std::make_shared<RdbStoreImpl>(config, errCode);
+    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;
@@ -91,6 +88,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             return nullptr;
         }
         if (config.IsVector()) {
+            storeCache_[path] = rdbStore;
             return rdbStore;
         }
         errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);

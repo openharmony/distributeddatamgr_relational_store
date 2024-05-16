@@ -29,10 +29,6 @@ using namespace OHOS::Rdb;
 
 static GRD_APIInfo GRD_KVApiInfo;
 
-const std::string RdUtils::BEGIN_TRANSACTION_SQL = "begin;";
-const std::string RdUtils::COMMIT_TRANSACTION_SQL = "commit;";
-const std::string RdUtils::ROLLBACK_TRANSACTION_SQL = "rollback;";
-
 struct GrdErrnoPair {
     int32_t grdCode;
     int kvDbCode;
@@ -135,6 +131,10 @@ int RdUtils::RdSqlFinalize(GRD_SqlStmt *stmt)
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlFinalize(stmt));
 }
 
+void RdSqlFreeBlob(void *blobElementSize)
+{
+    delete[] ((uint8_t *)blobElementSize);
+}
 
 int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *))
 {
@@ -145,7 +145,24 @@ int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (GRD_KVApiInfo.DBSqlBindBlob == nullptr) {
         return TransferGrdErrno(GRD_INNER_ERR);
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindBlob(stmt, idx, val, len, freeFunc));
+    if (len <= 0) {
+        LOG_ERROR("Invalid len %{public}d", len);
+        return E_INVALID_ARGS;
+    }
+    uint8_t *tmpVal = new uint8_t[len]();
+    if (tmpVal == nullptr) {
+        return E_ERROR;
+    }
+    errno_t err = memcpy_s(tmpVal, len * sizeof(uint8_t), val, len * sizeof(uint8_t));
+    if (err < 0) {
+        delete[] tmpVal;
+        LOG_ERROR("BindBlob failed due to memcpy %{public}d, len is %{public}d", err, len);
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    if (freeFunc == nullptr) {
+        freeFunc = RdSqlFreeBlob;
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindBlob(stmt, idx, tmpVal, len, freeFunc));
 }
 
 void RdSqlFreeCharStr(void *charStr)
@@ -162,7 +179,14 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (GRD_KVApiInfo.DBSqlBindText == nullptr) {
         return TransferGrdErrno(GRD_INNER_ERR);
     }
+    if (len <= 0) {
+        LOG_ERROR("Invalid len %{public}d", len);
+        return E_INVALID_ARGS;
+    }
     char *tmpVal = new char[len + 1]();
+    if (tmpVal == nullptr) {
+        return E_ERROR;
+    }
     errno_t err = strcpy_s(tmpVal, len + 1, (const char *)val);
     if (err < 0) {
         LOG_ERROR("BindText failed due to strycpy %{public}d, len is %{public}d", err, len + 1);
@@ -223,6 +247,11 @@ int RdUtils::RdSqlBindNull(GRD_SqlStmt *stmt, uint32_t idx)
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindNull(stmt, idx));
 }
 
+void RdSqlFreeFloatArr(void *floatElement)
+{
+    delete[] ((float *)floatElement);
+}
+
 int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
     uint32_t dim, void (*freeFunc)(void *))
 {
@@ -233,7 +262,24 @@ int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
         return TransferGrdErrno(GRD_INNER_ERR);
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindFloatVector(stmt, idx, val, dim, freeFunc));
+    if (dim <= 0) {
+        LOG_ERROR("Invalid dim %{public}d", dim);
+        return E_INVALID_ARGS;
+    }
+    float *tmpVal = new float[dim]();
+    if (tmpVal == nullptr) {
+        return E_ERROR;
+    }
+    errno_t err = memcpy_s(tmpVal, dim * sizeof(float), val, dim * sizeof(float));
+    if (err < 0) {
+        delete[] tmpVal;
+        LOG_ERROR("BindFloat failed due to memcpy %{public}d, dim is %{public}d", err, dim);
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    if (freeFunc == nullptr) {
+        freeFunc = RdSqlFreeFloatArr;
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindFloatVector(stmt, idx, tmpVal, dim, freeFunc));
 }
 
 int RdUtils::RdSqlStep(GRD_SqlStmt *stmt)
