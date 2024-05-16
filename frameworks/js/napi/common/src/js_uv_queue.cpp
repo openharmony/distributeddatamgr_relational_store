@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "event_handler.h"
 #define LOG_TAG "UvQueue"
-#include "js_uv_queue.h"
 #include <memory>
+
 #include "js_scope.h"
+#include "js_uv_queue.h"
 #include "logger.h"
 namespace OHOS::AppDataMgrJsKit {
 using namespace OHOS::Rdb;
@@ -71,7 +71,10 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
 
 void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
 {
-    if (handler_ == nullptr || callback.IsNull()) {
+    if (handler_ == nullptr) {
+        AsyncCall(std::move(callback), std::move(args), std::move(result));
+    }
+    if (callback.IsNull()) {
         LOG_ERROR("handler_ or callback is nullptr");
         return;
     }
