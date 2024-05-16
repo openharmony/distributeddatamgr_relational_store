@@ -32,6 +32,7 @@ public:
     ~ResultSetProxy();
     ResultSetProxy(std::shared_ptr<NativeRdb::ResultSet> resultSet);
     ResultSetProxy &operator=(std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value GetConstructor(napi_env env);
 
@@ -66,10 +67,12 @@ private:
     static napi_value GetBlob(napi_env env, napi_callback_info info);
     static napi_value GetAsset(napi_env env, napi_callback_info info);
     static napi_value GetAssets(napi_env env, napi_callback_info info);
+    static napi_value GetFloat32Array(napi_env env, napi_callback_info info);
     static napi_value GetString(napi_env env, napi_callback_info info);
     static napi_value GetDouble(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
+    static napi_value GetValue(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
 
     static napi_value GetSharedBlockName(napi_env env, napi_callback_info info);

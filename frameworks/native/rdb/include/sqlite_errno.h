@@ -41,6 +41,8 @@ const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_MISMATCH, E_SQLITE_MISMATCH },
     { SQLITE_MISUSE, E_SQLITE_MISUSE },
     { SQLITE_NOTADB, E_SQLITE_CORRUPT },
+    { SQLITE_DONE, E_NO_MORE_ROWS },
+    { SQLITE_ROW, E_OK },
 };
 class SQLiteError {
 public:
