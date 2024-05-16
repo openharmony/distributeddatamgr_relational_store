@@ -355,16 +355,12 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    RdbRadar ret(Scene::SCENE_INSERT, __FUNCTION__);
-    ret = InsertWithConflictResolutionEntry(outRowId, table, values, ConflictResolution::ON_CONFLICT_NONE);
-    return ret;
+    return InsertWithConflictResolutionEntry(outRowId, table, values, ConflictResolution::ON_CONFLICT_NONE);
 }
 
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, const std::vector<ValuesBucket> &values)
 {
-    RdbRadar ret(Scene::SCENE_BATCH_INSERT, __FUNCTION__);
-    ret = BatchInsertEntry(outInsertNum, table, values);
-    return ret;
+    return BatchInsertEntry(outInsertNum, table, values);
 }
 
 int RdbStoreImpl::BatchInsertEntry(int64_t &outInsertNum, const std::string &table,
@@ -457,17 +453,13 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values)
 {
-    RdbRadar ret(Scene::SCENE_REPLACE, __FUNCTION__);
-    ret = InsertWithConflictResolutionEntry(outRowId, table, values, ConflictResolution::ON_CONFLICT_REPLACE);
-    return ret;
+    return InsertWithConflictResolutionEntry(outRowId, table, values, ConflictResolution::ON_CONFLICT_REPLACE);
 }
 
 int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::string &table,
     const ValuesBucket &values, ConflictResolution conflictResolution)
 {
-    RdbRadar ret(Scene::SCENE_INSERT, __FUNCTION__);
-    ret = InsertWithConflictResolutionEntry(outRowId, table, values, conflictResolution);
-    return ret;
+    return InsertWithConflictResolutionEntry(outRowId, table, values, conflictResolution);
 }
 
 int RdbStoreImpl::InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table,
@@ -578,9 +570,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<ValueObject> &bindArgs, ConflictResolution conflictResolution)
 {
-    RdbRadar ret(Scene::SCENE_UPDATE, __FUNCTION__);
-    ret = UpdateWithConflictResolutionEntry(changedRows, table, values, whereClause, bindArgs, conflictResolution);
-    return ret;
+    return UpdateWithConflictResolutionEntry(changedRows, table, values, whereClause, bindArgs, conflictResolution);
 }
 
 int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table,
@@ -640,9 +630,7 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    RdbRadar ret(Scene::SCENE_DELETE, __FUNCTION__);
-    ret = Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
-    return ret;
+    return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
@@ -651,9 +639,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     std::vector<ValueObject> bindArgs;
     std::for_each(
         whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
-    RdbRadar ret(Scene::SCENE_DELETE, __FUNCTION__);
-    ret = Delete(deletedRows, table, whereClause, bindArgs);
-    return ret;
+    return Delete(deletedRows, table, whereClause, bindArgs);
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
@@ -800,9 +786,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
-    RdbRadar ret(Scene::SCENE_EXECUTE_SQL, __FUNCTION__);
-    ret = ExecuteSqlEntry(sql, bindArgs);
-    return ret;
+    return ExecuteSqlEntry(sql, bindArgs);
 }
 
 int RdbStoreImpl::ExecuteSqlEntry(const std::string &sql, const std::vector<ValueObject> &bindArgs)
@@ -845,10 +829,7 @@ int RdbStoreImpl::ExecuteSqlEntry(const std::string &sql, const std::vector<Valu
 std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const std::vector<ValueObject> &bindArgs,
     int64_t trxId)
 {
-    RdbRadar radarObj(Scene::SCENE_EXECUTE_SQL, __FUNCTION__);
-    auto [ret, object] =  ExecuteEntry(sql, bindArgs, trxId);
-    radarObj = ret;
-    return {ret, object};
+    return ExecuteEntry(sql, bindArgs, trxId);
 }
 
 std::pair<int32_t, ValueObject> RdbStoreImpl::ExecuteEntry(const std::string &sql,
@@ -1694,7 +1675,9 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
-    return InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
+    RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
+    ret = InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
+    return ret;
 }
 
 int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,

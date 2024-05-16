@@ -76,12 +76,10 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     }
 
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    RdbRadar radarObj(Scene::SCENE_OPEN_RDB, __FUNCTION__);
     rdbStore = config.IsVector() ? std::make_shared<VdbStoreImpl>(config, errCode)
                                  : std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
-        radarObj = errCode;
         return nullptr;
     }
 
@@ -90,7 +88,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d", config.GetName().c_str(),
                 config.GetSecurityLevel(), errCode);
-            radarObj = errCode;
             return nullptr;
         }
         if (config.IsVector()) {
@@ -100,7 +97,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
                 config.GetName().c_str(), config.GetPath().c_str(), errCode);
-            radarObj = errCode;
             return nullptr;
         }
     }
