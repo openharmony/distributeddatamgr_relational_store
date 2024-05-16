@@ -138,6 +138,11 @@ void ConnPool::SetInTransaction(bool isInTransaction)
     isInTransaction_.store(isInTransaction);
 }
 
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateConnection(bool isReadOnly)
+{
+    return Connection::Create(config_, true);
+}
+
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
 {
     return Acquire(isReadOnly);
