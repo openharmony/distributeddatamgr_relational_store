@@ -384,6 +384,7 @@ bool RdbStoreConfig::GetAutoClean() const
 void RdbStoreConfig::SetIsVector(bool isVector)
 {
     isVector_ = isVector;
+    isVector ? SetDBType(DB_VECTOR) : SetDBType(DB_SQLITE);
 }
 
 bool RdbStoreConfig::IsVector() const

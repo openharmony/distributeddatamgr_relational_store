@@ -141,6 +141,7 @@ private:
     };
 
     bool isSystemAppCalled_ = false;
+    int32_t dbType = NativeRdb::DB_SQLITE;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;

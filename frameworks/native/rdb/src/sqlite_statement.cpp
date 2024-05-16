@@ -25,6 +25,7 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "relational_store_client.h"
+#include "remote_result_set.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #include "sqlite3.h"
@@ -150,7 +151,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
 int SqliteStatement::Step()
 {
-    return sqlite3_step(stmt_);
+    return SQLiteError::ErrNo(sqlite3_step(stmt_));
 }
 
 int SqliteStatement::Reset()
@@ -272,6 +273,30 @@ std::pair<int32_t, std::string> SqliteStatement::GetColumnName(int index) const
     return { E_OK, std::string(name) };
 }
 
+static ColumnType ConvertSqliteTypeToRdbColumnType(int32_t sqliteType)
+{
+    switch (sqliteType) {
+        case SQLITE_INTEGER:
+            return ColumnType::TYPE_INTEGER;
+        case SQLITE_FLOAT:
+            return ColumnType::TYPE_FLOAT;
+        case SQLITE_BLOB:
+            return ColumnType::TYPE_BLOB;
+        case SqliteStatement::COLUMN_TYPE_ASSET:
+            return ColumnType::TYPE_ASSET;
+        case SqliteStatement::COLUMN_TYPE_ASSETS:
+            return ColumnType::TYPE_ASSETS;
+        case SqliteStatement::COLUMN_TYPE_FLOATS:
+            return ColumnType::TYPE_FLOAT32_ARRAY;
+        case SqliteStatement::COLUMN_TYPE_BIGINT:
+            return ColumnType::TYPE_BIGINT;
+        case SQLITE_NULL:
+            return ColumnType::TYPE_NULL;
+        default:
+            return ColumnType::TYPE_STRING;
+    }
+}
+
 std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 {
     int ret = IsValid(index);
@@ -306,7 +331,7 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
         types_[index] = SQLITE_BLOB;
     }
 
-    return { E_OK, types_[index] };
+    return { E_OK, int32_t(ConvertSqliteTypeToRdbColumnType(types_[index])) };
 }
 
 std::pair<int32_t, size_t> SqliteStatement::GetSize(int index) const

@@ -297,6 +297,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
         return instance;
     }
     proxy->queue_ = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
+    proxy->dbType = value->GetDbType();
     proxy->SetInstance(std::move(value));
     proxy->isSystemAppCalled_ = isSystemAppCalled;
     return instance;
@@ -803,6 +804,10 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
+        if (obj->dbType == DB_VECTOR) {
+            context->resultSet = obj->GetInstance()->QueryByStep(context->sql, context->bindArgs);
+            return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        }
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
         context->resultSet = obj->GetInstance()->QueryByStep(context->sql, context->bindArgs);
 #else
