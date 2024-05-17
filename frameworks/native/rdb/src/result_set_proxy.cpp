@@ -161,11 +161,14 @@ int ResultSetProxy::Send(uint32_t code, T &...output) const
 {
     MessageParcel reply;
     auto status = SendRequest(code, reply);
-    auto success = ITypesUtil::Unmarshal(reply, status, output...);
-    if (status != E_OK || !success) {
-        LOG_ERROR("Reply failed, status:%{public}d, code:%{public}d.", status, code);
+    if (status != E_OK) {
+        return status;
     }
-    return status;
+    if (!ITypesUtil::Unmarshal(reply, output...)) {
+        LOG_ERROR("Unmarshal failed, code:%{public}d.", code);
+        return E_ERROR;
+    }
+    return E_OK;
 }
 
 template<typename... T>
@@ -200,6 +203,7 @@ int ResultSetProxy::SendRequest(uint32_t code, MessageParcel &reply, const T &..
     }
     auto success = ITypesUtil::Unmarshal(reply, status);
     if (status != E_OK || !success) {
+        LOG_ERROR("Reply failed, status:%{public}d, code:%{public}d.", status, code);
         return E_ERROR;
     }
     return status;
