@@ -108,3 +108,9 @@ __attribute__((visibility("default"))) DBStatus DropLogicDeletedData(sqlite3 *db
     (void)cursor;
     return DBStatus::OK;
 }
+
+__attribute__((visibility("default"))) std::string DistributedDB::RelationalStoreManager::GetDistributedLogTableName(
+    const std::string &tableName)
+{
+    return "";
+}
