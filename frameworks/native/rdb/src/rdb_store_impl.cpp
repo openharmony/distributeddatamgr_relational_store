@@ -132,7 +132,7 @@ void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
     if (pool_ != nullptr) {
         auto param = syncerParam_;
         auto retry = 0;
-        pool_->Execute([param, retry]() { UploadSchema(param, retry); });
+        UploadSchema(param, retry);
     }
 }
 
