@@ -28,6 +28,10 @@ enum DBStatus {
     NOT_FOUND = 2,
     WAIT_COMPENSATED_SYNC = 57,
 };
+class RelationalStoreManager {
+public:
+    static std::string GetDistributedLogTableName(const std::string &tableName);
+};
 }
 
 DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db);
@@ -48,5 +52,4 @@ DistributedDB::DBStatus UnLock(
 DistributedDB::DBStatus DropLogicDeletedData(sqlite3* db,
     const std::string& tableName, uint64_t cursor);
 
-std::string GetDistributedLogTableName(const std::string &tableName);
 #endif //RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
