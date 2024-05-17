@@ -16,6 +16,7 @@
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
 #include <cstdint>
+#include <errors.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -67,9 +68,13 @@ public:
         SWITCH_OFF
     };
 
+    enum CloudSyncModule {
+        CLOUD_SYNC_MODULE_ID = 10,
+    };
+    static const ErrCode CLOUD_ERR_OFFSET = ErrCodeOffset(SUBSYS_DISTRIBUTEDDATAMNG, CLOUD_SYNC_MODULE_ID);
     enum Status : int32_t {
         SUCCESS = 0,
-        ERROR,
+        ERROR = CLOUD_ERR_OFFSET + 1,
         INVALID_ARGUMENT,
         SERVER_UNAVAILABLE,
         FEATURE_UNAVAILABLE,
@@ -79,7 +84,11 @@ public:
         IPC_ERROR,
         IPC_PARCEL_ERROR,
         PERMISSION_DENIED,
-        CLOUD_CONFIG_PERMISSION_DENIED
+        CLOUD_CONFIG_PERMISSION_DENIED,
+        NETWORK_ERROR,
+        CLOUD_INFO_INVALID,
+        SCHEMA_INVALID,
+        STRATEGY_BLOCKING,
     };
 
     static const int INVALID_USER_ID = -1;
