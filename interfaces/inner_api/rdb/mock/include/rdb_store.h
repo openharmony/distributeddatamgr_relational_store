@@ -60,6 +60,8 @@ public:
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql,
         const std::vector<std::string> &sqlArgs) = 0;
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) = 0;
+    virtual std::shared_ptr<ResultSet> QueryByStep(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
     virtual int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = {}) = 0;
     virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = {}, int64_t txId = 0) = 0;
