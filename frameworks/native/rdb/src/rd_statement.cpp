@@ -132,6 +132,10 @@ int RdStatement::IsValid(int index) const
         LOG_ERROR("invalid index %{public}d", index);
         return E_INVALID_ARGS;
     }
+    if (index >= columnCount_) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
+        return E_COLUMN_OUT_RANGE;
+    }
     return E_OK;
 }
 
