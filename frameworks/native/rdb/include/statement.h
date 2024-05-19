@@ -25,6 +25,7 @@ namespace OHOS::NativeRdb {
 struct SharedBlockInfo;
 class Statement {
 public:
+    static constexpr int32_t COLUMN_TYPE_INVALID = 0;
     static constexpr int32_t COLUMN_TYPE_ASSET = 1000;
     static constexpr int32_t COLUMN_TYPE_ASSETS = 1001;
     static constexpr int32_t COLUMN_TYPE_FLOATS = 1002;
