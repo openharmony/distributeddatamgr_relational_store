@@ -55,6 +55,8 @@ void GRD_DBApiInitEnhance(GRD_APIInfo &GRD_DBApiInfo)
     GRD_DBApiInfo.DBSqlColInt64 = (DBSqlColInt64)dlsym(g_library, "GRD_SqlColumnInt64");
     GRD_DBApiInfo.DBSqlColDouble = (DBSqlColDouble)dlsym(g_library, "GRD_SqlColumnDouble");
     GRD_DBApiInfo.DBSqlColumnFloatVector = (DBSqlColumnFloatVector)dlsym(g_library, "GRD_SqlColumnFloatVector");
+    GRD_DBApiInfo.DBBackupApi = (DBBackUp)dlsym(g_library, "GRD_DBBackUp");
+    GRD_DBApiInfo.DBRestoreApi = (DBRestore)dlsym(g_library, "GRD_DBRestore");
 #endif
 }
 

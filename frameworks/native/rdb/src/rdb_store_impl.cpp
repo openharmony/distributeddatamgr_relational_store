@@ -1092,6 +1092,20 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return E_NOT_SUPPORT;
     }
 
+    if (config_.GetDBType() == DB_VECTOR) {
+        auto conn = connectionPool_->AcquireConnection(false);
+        if (conn == nullptr) {
+            return E_BASE;
+        }
+
+        if (!destEncryptKey.empty() && isEncrypt_) {
+            errCode = conn->Backup(databasePath,destEncryptKey);
+        } else {
+            errCode = conn->Backup(databasePath,{});
+        }
+        return errCode;
+    }
+
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) {
         return E_BASE;
