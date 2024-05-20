@@ -58,6 +58,10 @@ public:
     static uint64_t RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx);
     static double RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx);
     static const float *RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
+
+    static int RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+    static int RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+    static int RenameFile(const std::string &srcFile, const std::string &destFile);
 };
 
 } // namespace NativeRdb

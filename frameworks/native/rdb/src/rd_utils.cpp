@@ -426,5 +426,33 @@ const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, ui
     return GRD_KVApiInfo.DBSqlColumnFloatVector(stmt, idx, dim);
 }
 
+int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen)
+{
+    LOG_DEBUG("[RdUtils::RdDbBackUp]");
+    if (GRD_KVApiInfo.DBBackUpApi == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBBackUpApi == nullptr) {
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBBackupApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
+}
+
+int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen)
+{
+    LOG_DEBUG("[RdUtils::RdDbRestore]");
+    if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
+}
+
+int RdUtils::RenameFile(const std::string &srcFile, const std::string &destFile)
+{
+    return rename(srcFile.c_str(), destFile.c_str());
+}
 } // namespace NativeRdb
 } // namespace OHOS
