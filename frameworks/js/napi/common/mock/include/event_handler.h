@@ -21,7 +21,9 @@ namespace OHOS {
 namespace AppExecFwk {
 using Callback = std::function<void()>;
 class EventHandler {
-    std::shared_ptr<EventHandler> Current() {
+public:
+    static std::shared_ptr<EventHandler> Current()
+    {
         return nullptr;
     }
 
