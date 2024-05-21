@@ -27,6 +27,7 @@
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rd_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {

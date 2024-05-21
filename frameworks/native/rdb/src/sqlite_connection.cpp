@@ -979,5 +979,15 @@ int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
     rdbStoreLocalDbObservers_.erase(event);
     return E_OK;
 }
+
+int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t SqliteConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+{
+    return E_NOT_SUPPORTED;
+};
 } // namespace NativeRdb
 } // namespace OHOS
