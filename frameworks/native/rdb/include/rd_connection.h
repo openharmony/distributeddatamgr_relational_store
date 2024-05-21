@@ -51,8 +51,8 @@ public:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
     int32_t Unsubscribe(const std::string& event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) const;
-    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) const;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
+    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;

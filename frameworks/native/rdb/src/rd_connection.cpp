@@ -167,19 +167,18 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
 {
     uint32_t size = 0;
     if ((size = destEncryptKey.size()) != 0) {
-        return RdUtils::RdDbBackup(dbHandle_,databasePath,&destEncryptKey[0],size);
+        return RdUtils::RdDbBackup(dbHandle_, databasePath, &destEncryptKey[0], size);
     } 
-    return RdUtils::RdDbBackup(dbHandle_,databasePath,nullptr,0);   
+    return RdUtils::RdDbBackup(dbHandle_, databasePath, nullptr, 0);   
 }
 
 int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
     uint32_t size = 0;
     if ((size = destEncryptKey.size()) != 0) {
-        return RdUtils::RdDbRestore(dbHandle_,databasePath,&destEncryptKey[0],size);
-    } 
-    
-    return RdUtils::RdDbRestore(dbHandle_,databasePath,nullptr,0);
+        return RdUtils::RdDbRestore(dbHandle_, databasePath, &destEncryptKey[0], size);
+    }
+    return RdUtils::RdDbRestore(dbHandle_, databasePath, nullptr, 0);
 }
 } // namespace NativeRdb
 } // namespace OHOS

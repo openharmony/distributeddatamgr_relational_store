@@ -296,12 +296,10 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
 
     if (config_.GetDBType() == DB_VECTOR) {
         retVal = RdUtils::RenameFile(backupPath, newPath);
-        //retVal = RdUtils::RdDbRestore(backupPath,newKey);
         if (retVal != E_OK) {
             LOG_ERROR("RenameFile error");
             return retVal;
         }
-        
     } else {
         retVal = SqliteUtils::RenameFile(backupPath, newPath);
         if (retVal != E_OK) {
