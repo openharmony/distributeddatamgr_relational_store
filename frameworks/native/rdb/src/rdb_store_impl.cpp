@@ -1100,9 +1100,9 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
 
         int errCode = E_OK;
         if (!destEncryptKey.empty() && isEncrypt_) {
-            errCode = conn->Backup(databasePath,destEncryptKey);
+            errCode = conn->Backup(databasePath, destEncryptKey);
         } else {
-            errCode = conn->Backup(databasePath,{});
+            errCode = conn->Backup(databasePath, {});
         }
         return errCode;
     }

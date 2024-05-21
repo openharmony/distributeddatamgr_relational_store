@@ -428,7 +428,7 @@ const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, ui
 
 int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen)
 {
-    LOG_DEBUG("[RdUtils::RdDbBackUp]");
+    LOG_DEBUG("[RdUtils::RdDbBackup]");
     if (GRD_KVApiInfo.DBBackupApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
