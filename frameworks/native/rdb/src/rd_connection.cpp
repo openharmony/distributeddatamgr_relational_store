@@ -167,16 +167,16 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
 {
     uint32_t size = 0;
     if ((size = destEncryptKey.size()) != 0) {
-        return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), &destEncryptKey[0], size);
+        return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), const_cast<uint8_t*>(&destEncryptKey[0]), size);
     }
-    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), nullptr, 0);   
+    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
 int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
     uint32_t size = 0;
     if ((size = destEncryptKey.size()) != 0) {
-        return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), &destEncryptKey[0], size);
+        return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), const_cast<uint8_t*>(&destEncryptKey[0]), size);
     }
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
