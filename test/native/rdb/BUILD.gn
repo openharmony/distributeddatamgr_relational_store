@@ -122,6 +122,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/sqlite_statement.cpp",
     "../../../frameworks/native/rdb/src/sqlite_utils.cpp",
     "../../../frameworks/native/rdb/src/string_utils.cpp",
+    "../../../frameworks/native/rdb/src/rd_utils.cpp",
   ]
 
   configs = [ ":module_private_config" ]
