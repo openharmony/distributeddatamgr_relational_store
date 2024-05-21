@@ -1484,27 +1484,26 @@ int RdbStoreImpl::Commit()
     size_t transactionId = connectionPool_->GetTransactionStack().size();
 
     if (connectionPool_->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
         return E_OK;
     }
     BaseTransaction transaction = connectionPool_->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_INFO("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
+        LOG_WARN("id: %{public}zu, storeName: %{public}s, sql: %{public}s",
+            transactionId, name_.c_str(), sqlStr.c_str());
         connectionPool_->GetTransactionStack().pop();
         return E_OK;
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
+        LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId, name_.c_str());
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
     connectionPool_->SetInTransaction(false);
     // 1 means the number of transactions in process
     if (transactionId > 1) {
-        LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
-            transactionId, name_.c_str(), errCode);
+        LOG_WARN("id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId, name_.c_str(), errCode);
     }
     connectionPool_->GetTransactionStack().pop();
     return E_OK;
