@@ -97,7 +97,7 @@ private:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     void ReadFile2Buffer(const char* fileName);
-    void PrintBuffer(unsigned char &array, int len);
+    void PrintBuffer(unsigned char *array, int len);
 
     static constexpr int BUFFER_LEN = 128;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
