@@ -113,6 +113,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
                 return E_INVALID_FILE_PATH;
             }
         }
+        if (errCode == SQLITE_NOTADB) {
+            ReadFile2Buffer(dbPath.c_str());
+        }
 #endif
         return SQLiteError::ErrNo(errCode);
     }
@@ -131,6 +134,51 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     openFlags = openFileFlags;
 
     return E_OK;
+}
+
+void SqliteConnection::ReadFile2Buffer(const char* fileName)
+{
+    unsigned char buffer[BUFFER_LEN] = {0x0};
+    FILE *file = fopen(fileName, "r");
+    if (file == nullptr) {
+        LOG_ERROR("open db file failed: %s", fileName);
+        return;
+    }
+    size_t readSize = fread(buffer, sizeof(unsigned char), BUFFER_LEN, file);
+    if (readSize != BUFFER_LEN) {
+        LOG_ERROR("read db file size: %{public}zu error", readSize);
+        fclose(file);
+        return;
+    }
+    PrintBuffer(buffer, BUFFER_LEN);
+    fclose(file);
+}
+
+void SqliteConnection::PrintBuffer(unsigned char &array, int len)
+{
+    constexpr int WIDTH = 4;
+    constexpr unsigned char MASK = 0x0F;
+    const char* hexCode = "0123456789abcdef";
+    unsigned char hash[BUFFER_LEN * 2 + 1] = "";
+    for (int i = 0; i < len; i++) {
+        unsigned char value = array[i];
+        hash[i * 2] = hexCode[(value >> WIDTH) & MASK];
+        hash[i * 2 + 1] = hexCode[value & mask];
+    }
+    hash[BUFFER_LEN * 2] = 0;
+    std::string str(reinterpret_cast<char *>(hash));
+    std::string output;
+    for (size_t i = 0; i < str.length();) {
+        output += str[i];
+        output += str[i + 1];
+        output += " ";
+        if (i != 0 && (i + 2) % 32 == 0) {
+            LOG_INFO("HEX code: %{public}s", output.c_str());
+            output = "";
+        }
+        i += 2;
+    }
+    LOG_INFO("HEX code: %{public}s", output.c_str());
 }
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
