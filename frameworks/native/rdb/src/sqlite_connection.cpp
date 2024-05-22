@@ -154,7 +154,7 @@ void SqliteConnection::ReadFile2Buffer(const char* fileName)
     fclose(file);
 }
 
-void SqliteConnection::PrintBuffer(unsigned char &array, int len)
+void SqliteConnection::PrintBuffer(unsigned char *array, int len)
 {
     constexpr int WIDTH = 4;
     constexpr unsigned char MASK = 0x0F;
@@ -163,7 +163,7 @@ void SqliteConnection::PrintBuffer(unsigned char &array, int len)
     for (int i = 0; i < len; i++) {
         unsigned char value = array[i];
         hash[i * 2] = hexCode[(value >> WIDTH) & MASK];
-        hash[i * 2 + 1] = hexCode[value & mask];
+        hash[i * 2 + 1] = hexCode[value & MASK];
     }
     hash[BUFFER_LEN * 2] = 0;
     std::string str(reinterpret_cast<char *>(hash));
