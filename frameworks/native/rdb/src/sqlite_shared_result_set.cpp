@@ -42,11 +42,6 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPoo
 }
 std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
-    auto type = SqliteUtils::GetSqlStatementType(qrySql_);
-    if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
-        LOG_ERROR("StoreSession BeginStepQuery fail : not select sql !");
-        return {nullptr, E_NOT_SELECT};
-    }
     if (conn_ == nullptr) {
         LOG_ERROR("Already close");
         return {nullptr, E_ALREADY_CLOSED};
@@ -55,6 +50,12 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
     if (statement == nullptr || errCode != E_OK) {
         return { nullptr, E_ERROR };
     }
+
+    if (!statement->ReadOnly()) {
+        LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(qrySql_).c_str());
+        return {nullptr, E_NOT_SELECT};
+    }
+
     errCode = statement->Bind(bindArgs_);
     if (errCode != E_OK) {
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
