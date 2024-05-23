@@ -1410,7 +1410,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_NOT_SELECT, resultSet->GetAllColumnNames(columnNames));
+    EXPECT_EQ(E_STATEMENT_NOT_PREPARED, resultSet->GetAllColumnNames(columnNames));
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }
@@ -1581,6 +1581,54 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
     EXPECT_NE(E_OK, ret);
 
     EXPECT_EQ(E_OK, resultSet->Close());
+}
+
+/* *
+ * @tc.name: testSqlStep021
+ * @tc.desc: normal testcase of SqlStep for QueryByStep, PRAGMA user_version
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep021, TestSize.Level1)
+{
+    // 2 is used to set the store version
+    int ret = store->ExecuteSql("PRAGMA user_version = 2");
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("PRAGMA user_version");
+
+    int64_t longValue;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GetLong(0, longValue));
+    EXPECT_EQ(2, longValue);
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: testSqlStep022
+ * @tc.desc: normal testcase of SqlStep for QueryByStep, PRAGMA table_info
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep022, TestSize.Level1)
+{
+    GenerateDefaultEmptyTable();
+    int ret = store->ExecuteSql("PRAGMA table_info(test)");
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("PRAGMA table_info(test)");
+
+    std::string strValue;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
+    EXPECT_EQ("id", strValue);
+    EXPECT_EQ(E_OK, resultSet->GetString(2, strValue));
+    EXPECT_EQ("INTEGER", strValue);
+
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
+    EXPECT_EQ("data1", strValue);
+    EXPECT_EQ(E_OK, resultSet->GetString(2, strValue));
+    EXPECT_EQ("TEXT", strValue);
+
+    resultSet->Close();
 }
 
 /**

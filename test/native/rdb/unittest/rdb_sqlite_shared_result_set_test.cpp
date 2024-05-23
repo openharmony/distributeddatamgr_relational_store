@@ -1158,7 +1158,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_021, TestSize.Le
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
-    EXPECT_EQ(E_NOT_SELECT, ret);
+    EXPECT_EQ(E_ERROR, ret);
     resultSet->Close();
 }
 
@@ -1560,4 +1560,51 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_036, TestSize.Le
     EXPECT_EQ(ret, E_ERROR);
     ret = rstSet->GoToLastRow();
     EXPECT_EQ(ret, E_ERROR);
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_037
+ * @tc.desc: normal testcase of SqliteSharedResultSet for PRAGMA user_version
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_037, TestSize.Level1)
+{
+    // 2 is used to set the store version
+    int ret = store->ExecuteSql("PRAGMA user_version = 2");
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("PRAGMA user_version");
+
+    int64_t longValue;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GetLong(0, longValue));
+    EXPECT_EQ(2, longValue);
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_038
+ * @tc.desc: normal testcase of SqliteSharedResultSet for PRAGMA table_info
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_038, TestSize.Level1)
+{
+    int ret = store->ExecuteSql("PRAGMA table_info(test)");
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("PRAGMA table_info(test)");
+
+    std::string strValue;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
+    EXPECT_EQ("id", strValue);
+    EXPECT_EQ(E_OK, resultSet->GetString(2, strValue));
+    EXPECT_EQ("INTEGER", strValue);
+
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    EXPECT_EQ(E_OK, resultSet->GetString(1, strValue));
+    EXPECT_EQ("data1", strValue);
+    EXPECT_EQ(E_OK, resultSet->GetString(2, strValue));
+    EXPECT_EQ("TEXT", strValue);
+
+    resultSet->Close();
 }
