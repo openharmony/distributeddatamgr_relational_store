@@ -24,7 +24,7 @@ class sptr {
 private:
     T* ptr;
 public:
-    explicit sptr(T* p) : ptr(p) {}
+    sptr(T* p) : ptr(p) {}
     ~sptr()
     {
         delete ptr;
