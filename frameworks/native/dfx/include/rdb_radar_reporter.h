@@ -16,17 +16,11 @@
 #ifndef DISTRIBUTEDDATAMGR_RDB_RADAR_REPORTER_H
 #define DISTRIBUTEDDATAMGR_RDB_RADAR_REPORTER_H
 
+#include <string>
 namespace OHOS::NativeRdb {
 
 enum Scene : int {
-    SCENE_OPEN_RDB = 1,
-    SCENE_INSERT = 2,
-    SCENE_UPDATE = 3,
-    SCENE_DELETE = 4,
-    SCENE_BATCH_INSERT = 5,
-    SCENE_EXECUTE_SQL = 6,
-    SCENE_EXECUTE = 7,
-    SCENE_REPLACE = 8
+    SCENE_SYNC = 1,
 };
 
 enum State : int {
@@ -34,8 +28,8 @@ enum State : int {
     STATE_FINISH = 2,
 };
 
-enum LocalStage : int {
-    LOCAL_IMPLEMENT = 1,
+enum SyncStage : int {
+    SYNC_STAGE_RUN = 1,
 };
 
 enum StageRes : int {
@@ -60,11 +54,12 @@ public:
     static constexpr char HOST_PKG_LABEL[] = "HOST_PKG";
     static constexpr char LOCAL_UUID_LABEL[] = "HOST_PKG";
     static constexpr char PEER_UUID_LABEL[] = "HOST_PKG";
-    static constexpr char EVENT_NAME[] = "DATABASE_RDB_BEHAVIOUR";
+    static constexpr char EVENT_NAME[] = "DISTRIBUTED_RDB_BEHAVIOR";
+    static constexpr char HOST_PKG[] = "HOST_PKG";
     static constexpr char UNKNOW[] = "unknow";
 
 public:
-    RdbRadar(Scene scene, const char *funcName);
+    RdbRadar(Scene scene, const char *funcName, std::string bundleName);
     ~RdbRadar();
 
     RdbRadar &operator=(int x);
@@ -75,7 +70,11 @@ private:
     Scene scene_;
     const char* funcName_;
 
+    static bool hasHostPkg_;
+    static std::string hostPkg_;
+
     void LocalReport(int bizSence, const char *funcName, int state, int errCode = 0);
+    void GetHostPkgInfo(std::string bundleName);
 };
 } // namespace OHOS::NativeRdb
 #endif //DISTRIBUTEDDATAMGR_RDB_RADAR_REPORTER_H

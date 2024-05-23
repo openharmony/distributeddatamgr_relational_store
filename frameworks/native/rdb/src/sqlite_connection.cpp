@@ -93,7 +93,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
-        LOG_ERROR("SqliteConnection InnerOpen db not exist");
+        LOG_ERROR("db not exist");
         return E_DB_NOT_EXIST;
     }
 #endif
@@ -102,7 +102,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
+        LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
+            errCode, dbPath.c_str(), openFileFlags, errno);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
         if (pos != std::string::npos) {

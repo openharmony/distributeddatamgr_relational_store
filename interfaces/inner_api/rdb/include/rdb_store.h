@@ -563,6 +563,11 @@ public:
      */
     virtual int Notify(const std::string &event) = 0;
 
+    virtual int32_t GetDbType() const
+    {
+        return DB_SQLITE;
+    }
+
     class ModifyTime {
     public:
         ModifyTime() = default;

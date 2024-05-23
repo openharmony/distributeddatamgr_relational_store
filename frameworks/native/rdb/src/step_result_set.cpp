@@ -62,15 +62,14 @@ int StepResultSet::PrepareStep()
         return E_ALREADY_CLOSED;
     }
 
-    auto type = SqliteUtils::GetSqlStatementType(sql_);
-    if (type != SqliteUtils::STATEMENT_SELECT && type != SqliteUtils::STATEMENT_OTHER) {
-        LOG_ERROR("not a select sql_!");
-        return E_NOT_SELECT;
-    }
-
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
         return E_STATEMENT_NOT_PREPARED;
+    }
+
+    if (!statement->ReadOnly()) {
+        LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(sql_).c_str());
+        return E_NOT_SELECT;
     }
 
     errCode = statement->Bind(args_);
@@ -130,42 +129,12 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         return E_ALREADY_CLOSED;
     }
 
-    auto [errCode, sqliteType] = statement->GetColumnType(columnIndex);
+    auto [errCode, outPutType] = statement->GetColumnType(columnIndex);
     if (errCode != E_OK) {
         LOG_ERROR("GetColumnType ret %{public}d", errCode);
         return errCode;
     }
-
-    switch (sqliteType) {
-        case SQLITE_INTEGER:
-            columnType = ColumnType::TYPE_INTEGER;
-            break;
-        case SQLITE_FLOAT:
-            columnType = ColumnType::TYPE_FLOAT;
-            break;
-        case SQLITE_BLOB:
-            columnType = ColumnType::TYPE_BLOB;
-            break;
-        case SqliteStatement::COLUMN_TYPE_ASSET:
-            columnType = ColumnType::TYPE_ASSET;
-            break;
-        case SqliteStatement::COLUMN_TYPE_ASSETS:
-            columnType = ColumnType::TYPE_ASSETS;
-            break;
-        case SqliteStatement::COLUMN_TYPE_FLOATS:
-            columnType = ColumnType::TYPE_FLOAT32_ARRAY;
-            break;
-        case SqliteStatement::COLUMN_TYPE_BIGINT:
-            columnType = ColumnType::TYPE_BIGINT;
-            break;
-        case SQLITE_NULL:
-            columnType = ColumnType::TYPE_NULL;
-            break;
-        default:
-            columnType = ColumnType::TYPE_STRING;
-            break;
-    }
-
+    columnType = static_cast<ColumnType>(outPutType);
     return E_OK;
 }
 
@@ -248,7 +217,7 @@ int StepResultSet::GoToNextRow()
     int retryCount = 0;
     errCode = statement->Step();
 
-    while (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
+    while (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         // The table is locked, retry
         if (retryCount > STEP_QUERY_RETRY_MAX_TIMES) {
             LOG_ERROR("Step in busy ret is %{public}d", errCode);
@@ -261,11 +230,11 @@ int StepResultSet::GoToNextRow()
         }
     }
 
-    if (errCode == SQLITE_ROW) {
+    if (errCode == E_OK) {
         rowPos_++;
         isStarted_ = true;
         return E_OK;
-    } else if (errCode == SQLITE_DONE) {
+    } else if (errCode == E_NO_MORE_ROWS) {
         if (!isAfterLast_ && rowCount_ != EMPTY_ROW_COUNT) {
             rowCount_ = rowPos_ + 1;
         }
@@ -277,7 +246,7 @@ int StepResultSet::GoToNextRow()
     } else {
         FinishStep();
         rowPos_ = rowCount_;
-        return SQLiteError::ErrNo(errCode);
+        return errCode;
     }
 }
 

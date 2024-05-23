@@ -34,6 +34,55 @@ const STORE_CONFIG = {
 var rdbStore = undefined
 var context = ability_featureAbility.getContext()
 var DOUBLE_MAX = 9223372036854775807;
+var u8 = new Uint8Array([1, 2, 3])
+const valueBucket1 = {
+    "integerValue": 2147483647,
+    "doubleValue": DOUBLE_MAX,
+    "booleanValue": true,
+    "floatValue": -0.123,
+    "longValue": 9223372036854775807,
+    "shortValue": 32767,
+    "characterValue": ' ',
+    "stringValue": "ABCDEFGHIJKLMN",
+    "blobValue": u8,
+    "byteValue": 127,
+}
+const valueBucket2 = {
+    "integerValue": 1,
+    "doubleValue": 1.0,
+    "booleanValue": false,
+    "floatValue": 1.0,
+    "longValue": 1,
+    "shortValue": 1,
+    "characterValue": '中',
+    "stringValue": "ABCDEFGHIJKLMN",
+    "blobValue": u8,
+    "byteValue": 1,
+}
+const valueBucket3 = {
+    "integerValue": -2147483648,
+    "doubleValue": Number.MIN_VALUE,
+    "booleanValue": false,
+    "floatValue": 0.1234567,
+    "longValue": -9223372036854775808,
+    "shortValue": -32768,
+    "characterValue": '#',
+    "stringValue": "ABCDEFGHIJKLMN",
+    "blobValue": u8,
+    "byteValue": -128,
+}
+const valueBucket4 = {
+    "integerValue": -2147483648,
+    "doubleValue": Number.MIN_VALUE,
+    "booleanValue": false,
+    "floatValue": 0.1234567,
+    "longValue": -9223372036854775808,
+    "shortValue": -32768,
+    "characterValue": '#',
+    "stringValue": "OPQRST",
+    "blobValue": u8,
+    "byteValue": -128,
+}
 describe('rdbPredicatesTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
@@ -60,62 +109,17 @@ describe('rdbPredicatesTest', function () {
 
     async function buildAllDataType1() {
         console.log(TAG + "buildAllDataType1 start");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "integerValue": 2147483647,
-                "doubleValue": DOUBLE_MAX,
-                "booleanValue": true,
-                "floatValue": -0.123,
-                "longValue": 9223372036854775807,
-                "shortValue": 32767,
-                "characterValue": ' ',
-                "stringValue": "ABCDEFGHIJKLMN",
-                "blobValue": u8,
-                "byteValue": 127,
-            }
-            await rdbStore.insert("AllDataType", valueBucket)
-        }
+        await rdbStore.insert("AllDataType", valueBucket1)
     }
 
     async function buildAllDataType2() {
         console.log(TAG + "buildAllDataType2 start");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "integerValue": 1,
-                "doubleValue": 1.0,
-                "booleanValue": false,
-                "floatValue": 1.0,
-                "longValue": 1,
-                "shortValue": 1,
-                "characterValue": '中',
-                "stringValue": "ABCDEFGHIJKLMN",
-                "blobValue": u8,
-                "byteValue": 1,
-            }
-            await rdbStore.insert("AllDataType", valueBucket)
-        }
+        await rdbStore.insert("AllDataType", valueBucket2)
     }
 
     async function buildAllDataType3() {
         console.log(TAG + "buildAllDataType3 start");
-        {
-            var u8 = new Uint8Array([1, 2, 3])
-            const valueBucket = {
-                "integerValue": -2147483648,
-                "doubleValue": Number.MIN_VALUE,
-                "booleanValue": false,
-                "floatValue": 0.1234567,
-                "longValue": -9223372036854775808,
-                "shortValue": -32768,
-                "characterValue": '#',
-                "stringValue": "ABCDEFGHIJKLMN",
-                "blobValue": u8,
-                "byteValue": -128,
-            }
-            await rdbStore.insert("AllDataType", valueBucket)
-        }
+        await rdbStore.insert("AllDataType", valueBucket3)
     }
 
     console.log(TAG + "*************Unit Test Begin*************");
@@ -2933,20 +2937,7 @@ describe('rdbPredicatesTest', function () {
         expect(2).assertEqual(result.rowCount);
         result.close()
         result = null
-        var u8 = new Uint8Array([1, 2, 3])
-        const valueBucket = {
-            "integerValue": -2147483648,
-            "doubleValue": Number.MIN_VALUE,
-            "booleanValue": false,
-            "floatValue": 0.1234567,
-            "longValue": -9223372036854775808,
-            "shortValue": -32768,
-            "characterValue": '#',
-            "stringValue": "OPQRST",
-            "blobValue": u8,
-            "byteValue": -128,
-        }
-        await rdbStore.insert("AllDataType", valueBucket)
+        await rdbStore.insert("AllDataType", valueBucket4)
         let predicatesInsert = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesInsert.notLike("characterValue", "#");
         result = await rdbStore.query(predicatesInsert);
@@ -2978,42 +2969,17 @@ describe('rdbPredicatesTest', function () {
         expect(2).assertEqual(result.rowCount);
         result.close()
         result = null
-        var u8 = new Uint8Array([1, 2, 3])
-        const valueBucket = {
-            "integerValue": -2147483648,
-            "doubleValue": Number.MIN_VALUE,
-            "booleanValue": false,
-            "floatValue": 0.1234567,
-            "longValue": -9223372036854775808,
-            "shortValue": -32768,
-            "characterValue": '#',
-            "stringValue": "OPQRST",
-            "blobValue": u8,
-            "byteValue": -128,
-        }
         predicates.equalTo("characterValue", "中");
-        await rdbStore.update(valueBucket, predicates);
+        await rdbStore.update(valueBucket4, predicates);
         let predicatesUpdate = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesUpdate.notLike("characterValue", "#");
         result = await rdbStore.query(predicatesUpdate);
         expect(1).assertEqual(result.rowCount);
-        const valueBucketBefore = {
-            "integerValue": 1,
-            "doubleValue": 1.0,
-            "booleanValue": false,
-            "floatValue": 1.0,
-            "longValue": 1,
-            "shortValue": 1,
-            "characterValue": '中',
-            "stringValue": "ABCDEFGHIJKLMN",
-            "blobValue": u8,
-            "byteValue": 1,
-        }
         result.close();
         result = null;
         let predicatesBefore = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesBefore.equalTo("stringValue", "OPQRST");
-        await rdbStore.update(valueBucketBefore, predicatesBefore);
+        await rdbStore.update(valueBucket2, predicatesBefore);
         done();
         console.log(TAG + "************* testNotLike0007 end *************");
     })
@@ -3044,20 +3010,7 @@ describe('rdbPredicatesTest', function () {
         expect(1).assertEqual(result.rowCount);
         result.close();
         result = null;
-        var u8 = new Uint8Array([1, 2, 3]);
-        const valueBucketBefore = {
-            "integerValue": 1,
-            "doubleValue": 1.0,
-            "booleanValue": false,
-            "floatValue": 1.0,
-            "longValue": 1,
-            "shortValue": 1,
-            "characterValue": '中',
-            "stringValue": "ABCDEFGHIJKLMN",
-            "blobValue": u8,
-            "byteValue": 1,
-        }
-        await rdbStore.insert("AllDataType", valueBucketBefore);
+        await rdbStore.insert("AllDataType", valueBucket2);
         done();
         console.log(TAG + "************* testNotLike0008 end *************");
     })
@@ -3185,20 +3138,7 @@ describe('rdbPredicatesTest', function () {
         expect(2).assertEqual(result.rowCount);
         result.close()
         result = null
-        var u8 = new Uint8Array([1, 2, 3])
-        const valueBucket = {
-            "integerValue": -2147483648,
-            "doubleValue": Number.MIN_VALUE,
-            "booleanValue": false,
-            "floatValue": 0.1234567,
-            "longValue": -9223372036854775808,
-            "shortValue": -32768,
-            "characterValue": '#',
-            "stringValue": "OPQRST",
-            "blobValue": u8,
-            "byteValue": -128,
-        }
-        await rdbStore.insert("AllDataType", valueBucket)
+        await rdbStore.insert("AllDataType", valueBucket4)
         let predicatesInsert = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesInsert.notContains("characterValue", "#");
         result = await rdbStore.query(predicatesInsert);
@@ -3230,42 +3170,17 @@ describe('rdbPredicatesTest', function () {
         expect(2).assertEqual(result.rowCount);
         result.close();
         result = null;
-        var u8 = new Uint8Array([1, 2, 3])
-        const valueBucket = {
-            "integerValue": -2147483648,
-            "doubleValue": Number.MIN_VALUE,
-            "booleanValue": false,
-            "floatValue": 0.1234567,
-            "longValue": -9223372036854775808,
-            "shortValue": -32768,
-            "characterValue": '#',
-            "stringValue": "OPQRST",
-            "blobValue": u8,
-            "byteValue": -128,
-        }
         predicates.equalTo("characterValue", "中")
-        await rdbStore.update(valueBucket, predicates)
+        await rdbStore.update(valueBucket4, predicates)
         let predicatesUpdate = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesUpdate.notContains("characterValue", "#");
         result = await rdbStore.query(predicatesUpdate);
         expect(1).assertEqual(result.rowCount);
         result.close();
         result = null;
-        const valueBucketBefore = {
-            "integerValue": 1,
-            "doubleValue": 1.0,
-            "booleanValue": false,
-            "floatValue": 1.0,
-            "longValue": 1,
-            "shortValue": 1,
-            "characterValue": '中',
-            "stringValue": "ABCDEFGHIJKLMN",
-            "blobValue": u8,
-            "byteValue": 1,
-        }
         let predicatesBefore = new data_relationalStore.RdbPredicates("AllDataType");
         predicatesBefore.equalTo("stringValue", "OPQRST");
-        await rdbStore.update(valueBucketBefore, predicatesBefore);
+        await rdbStore.update(valueBucket2, predicatesBefore);
         done();
         console.log(TAG + "************* testNotContains0007 end *************");
     })
@@ -3296,20 +3211,7 @@ describe('rdbPredicatesTest', function () {
         expect(1).assertEqual(result.rowCount);
         result.close();
         result = null;
-        var u8 = new Uint8Array([1, 2, 3]);
-        const valueBucketBefore = {
-            "integerValue": 1,
-            "doubleValue": 1.0,
-            "booleanValue": false,
-            "floatValue": 1.0,
-            "longValue": 1,
-            "shortValue": 1,
-            "characterValue": '中',
-            "stringValue": "ABCDEFGHIJKLMN",
-            "blobValue": u8,
-            "byteValue": 1,
-        }
-        await rdbStore.insert("AllDataType", valueBucketBefore);
+        await rdbStore.insert("AllDataType", valueBucket2);
         done();
         console.log(TAG + "************* testNotContains0008 end *************");
     })

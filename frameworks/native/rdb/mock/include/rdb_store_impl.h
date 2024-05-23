@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_RDB_STORE_IMPL_H
 #define NATIVE_RDB_RDB_STORE_IMPL_H
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <memory>
@@ -89,6 +90,8 @@ public:
         const std::vector<std::string> &sqlArgs) override;
     std::shared_ptr<ResultSet> QueryByStep(
         const std::string &sql, const std::vector<ValueObject> &args) override;
+    std::shared_ptr<ResultSet> QueryByStep(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     std::shared_ptr<ResultSet> Query(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
@@ -113,6 +116,13 @@ protected:
     std::string fileType_;
 
 private:
+    std::map<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+    std::atomic<int64_t> newTrxId_ = 1;
+    int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
+        const std::vector<ValueObject> &bindArgs = {});
+    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
+        const std::string &sql, const ValueObject &object, int sqlType);
+
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);

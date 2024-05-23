@@ -58,10 +58,6 @@ public:
     static uint64_t RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx);
     static double RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx);
     static const float *RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
-
-    static const std::string BEGIN_TRANSACTION_SQL;
-    static const std::string COMMIT_TRANSACTION_SQL;
-    static const std::string ROLLBACK_TRANSACTION_SQL;
 };
 
 } // namespace NativeRdb

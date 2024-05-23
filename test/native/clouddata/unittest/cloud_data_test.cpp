@@ -29,16 +29,109 @@ uint64_t g_selfTokenID = 0;
 static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
 static constexpr const char *TEST_ACCOUNT_ID = "testId";
 static constexpr const char *TEST_STORE_ID = "storeId";
-void AllocHapToken(HapPolicyParams policy)
+void AllocSystemHapToken(const HapPolicyParams &policy)
 {
-    HapInfoParams info = { .userID = 100,
+    HapInfoParams info = {
+        .userID = 100,
         .bundleName = "ohos.clouddatatest.demo",
         .instIndex = 0,
         .appIDDesc = "ohos.clouddatatest.demo",
-        .isSystemApp = true };
+        .isSystemApp = true
+    };
     auto token = AccessTokenKit::AllocHapToken(info, policy);
     SetSelfTokenID(token.tokenIDEx);
 }
+
+void AllocNormalHapToken(const HapPolicyParams &policy)
+{
+    HapInfoParams info = {
+        .userID = 100,
+        .bundleName = "ohos.clouddatatest.demo",
+        .instIndex = 0,
+        .appIDDesc = "ohos.clouddatatest.demo",
+        .isSystemApp = false
+    };
+    auto token = AccessTokenKit::AllocHapToken(info, policy);
+    SetSelfTokenID(token.tokenIDEx);
+}
+
+HapPolicyParams g_normalPolicy = {
+    .apl = APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {
+        {
+            .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
+            .bundleName = "ohos.clouddatatest.demo",
+            .grantMode = 1,
+            .availableLevel = APL_NORMAL,
+            .label = "label",
+            .labelId = 1,
+            .description = "ohos.clouddatatest.demo",
+            .descriptionId = 1
+        }
+    },
+    .permStateList = {
+        {
+            .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        }
+    }
+};
+
+HapPolicyParams g_systemPolicy = {
+    .apl = APL_SYSTEM_BASIC,
+    .domain = "test.domain",
+    .permList = {
+        {
+            .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
+            .bundleName = "ohos.clouddatatest.demo",
+            .grantMode = 1,
+            .availableLevel = APL_SYSTEM_BASIC,
+            .label = "label",
+            .labelId = 1,
+            .description = "ohos.clouddatatest.demo",
+            .descriptionId = 1
+        }
+    },
+    .permStateList = {
+        {
+            .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        }
+    }
+};
+
+HapPolicyParams g_notPermissonPolicy = {
+    .apl = APL_SYSTEM_BASIC,
+    .domain = "test.domain",
+    .permList = {
+        {
+            .permissionName = "ohos.permission.TEST",
+            .bundleName = "ohos.clouddatatest.demo",
+            .grantMode = 1,
+            .availableLevel = APL_SYSTEM_BASIC,
+            .label = "label",
+            .labelId = 1,
+            .description = "ohos.clouddatatest.demo",
+            .descriptionId = 1
+        }
+    },
+    .permStateList = {
+        {
+            .permissionName = "ohos.permission.TEST",
+            .isGeneral = true,
+            .resDeviceID = { "local" },
+            .grantStatus = { PermissionState::PERMISSION_GRANTED },
+            .grantFlags = { 1 }
+        }
+    }
+};
 
 class CloudDataTest : public testing::Test {
 public:
@@ -49,6 +142,7 @@ public:
     }
     void TearDown()
     {
+        SetSelfTokenID(g_selfTokenID);
     }
 };
 
@@ -70,6 +164,7 @@ void CloudDataTest::TearDownTestCase(void)
  */
 HWTEST_F(CloudDataTest, CloudDataTest_001, TestSize.Level0)
 {
+    AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (state != CloudService::SUCCESS) {
         EXPECT_TRUE(false);
@@ -88,22 +183,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_001, TestSize.Level0)
  */
 HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level0)
 {
-    HapPolicyParams policy = { .apl = APL_SYSTEM_BASIC,
-        .domain = "test.domain",
-        .permList = { { .permissionName = "ohos.permission.TEST",
-            .bundleName = "ohos.clouddatatest.demo",
-            .grantMode = 1,
-            .availableLevel = APL_SYSTEM_BASIC,
-            .label = "label",
-            .labelId = 1,
-            .description = "ohos.clouddatatest.demo",
-            .descriptionId = 1 } },
-        .permStateList = { { .permissionName = "ohos.permission.TEST",
-            .isGeneral = true,
-            .resDeviceID = { "local" },
-            .grantStatus = { PermissionState::PERMISSION_GRANTED },
-            .grantFlags = { 1 } } } };
-    AllocHapToken(policy);
+    AllocSystemHapToken(g_notPermissonPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (state != CloudService::SUCCESS) {
         EXPECT_TRUE(false);
@@ -122,28 +202,51 @@ HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level0)
  */
 HWTEST_F(CloudDataTest, CloudDataTest_003, TestSize.Level0)
 {
-    HapPolicyParams policy = { .apl = APL_SYSTEM_BASIC,
-        .domain = "test.domain",
-        .permList = { { .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
-            .bundleName = "ohos.clouddatatest.demo",
-            .grantMode = 1,
-            .availableLevel = APL_SYSTEM_BASIC,
-            .label = "label",
-            .labelId = 1,
-            .description = "ohos.clouddatatest.demo",
-            .descriptionId = 1 } },
-        .permStateList = { { .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
-            .isGeneral = true,
-            .resDeviceID = { "local" },
-            .grantStatus = { PermissionState::PERMISSION_GRANTED },
-            .grantFlags = { 1 } } } };
-    AllocHapToken(policy);
+    AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (state != CloudService::SUCCESS) {
         EXPECT_TRUE(false);
     } else {
         auto [status, info] = proxy->QueryStatistics(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
         EXPECT_EQ(status, CloudService::ERROR);
+        EXPECT_TRUE(info.empty());
+    }
+}
+
+/* *
+ * @tc.name: QueryLastSyncInfo001
+ * @tc.desc: Test the system application permissions of the QueryLastSyncInfo API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, QueryLastSyncInfo001, TestSize.Level0)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS) {
+        EXPECT_TRUE(false);
+    } else {
+        auto [status, info] = proxy->QueryLastSyncInfo(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
+        EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+        EXPECT_TRUE(info.empty());
+    }
+}
+
+/* *
+ * @tc.name: QueryLastSyncInfo002
+ * @tc.desc: Test the permission name of the QueryLastSyncInfo API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, QueryLastSyncInfo002, TestSize.Level0)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS) {
+        EXPECT_TRUE(false);
+    } else {
+        auto [status, info] = proxy->QueryLastSyncInfo(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, TEST_STORE_ID);
+        EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
         EXPECT_TRUE(info.empty());
     }
 }
