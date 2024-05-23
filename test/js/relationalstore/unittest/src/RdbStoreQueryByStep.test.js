@@ -307,6 +307,8 @@ describe('rdbStoreQueryByStepTest', function () {
         done();
     })
 
+    /**
+     * @tc.number testRdbStoreQueryByStep0009
      * @tc.name Normal test case of queryByStep, PRAGMA user_version
      * @tc.desc 1.Set user_version
      *          2.Get user_version
