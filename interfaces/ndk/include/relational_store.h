@@ -174,8 +174,8 @@ OH_VBucket *OH_Rdb_CreateValuesBucket();
  * @brief Creates an {@link OH_Predicates} instance.
  *
  * @param table Indicates the table name.
- * @return If the creation is successful, a pointer to the instance of the @link OH_Predicates} structure is returned,
- * otherwise NULL is returned.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_Predicates} structure is returned.
+ *         If the table name is nullptr, nullptr is returned.
  * @see OH_Predicates.
  * @since 10
  */
@@ -191,8 +191,9 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
  * Indicates the configuration of the database related to this RDB store.
  * @param errCode This parameter is the output parameter,
  * and the execution status of a function is written to this variable.
- * @return If the creation is successful, a pointer to the instance of the @link OH_Rdb_Store} structure is returned,
- * otherwise NULL is returned.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_Rdb_Store} structure is returned.
+ *         If the Config is empty, config.size does not match, or errCode is empty.
+ * Get database path failed.Get RDB Store fail. Nullptr is returned.
  * @see OH_Rdb_Config, OH_Rdb_Store.
  * @since 10
  */
@@ -203,6 +204,8 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Rdb_ErrCode.
  * @since 10
@@ -215,6 +218,8 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
  * @param config Represents a pointer to an {@link OH_Rdb_Config} instance.
  * Indicates the configuration of the database related to this RDB store.
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_ErrCode.
  * @since 10
@@ -228,6 +233,8 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config);
  * @param table Indicates the target table.
  * @param valuesBucket Indicates the row of data {@link OH_VBucket} to be inserted into the table.
  * @return Returns the rowId if success, returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_VBucket, OH_Rdb_ErrCode.
  * @since 10
@@ -242,6 +249,8 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBuck
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
  * Indicates the specified update condition.
  * @return Returns the number of rows changed if success, otherwise, returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Bucket, OH_Predicates, OH_Rdb_ErrCode.
  * @since 10
@@ -255,6 +264,8 @@ int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valuesBucket, OH_Predicates *
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
  * Indicates the specified delete condition.
  * @return Returns the number of rows changed if success, otherwise, returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
  * @since 10
@@ -269,8 +280,8 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
  * Indicates the specified query condition.
  * @param columnNames Indicates the columns to query. If the value is empty array, the query applies to all columns.
  * @param length Indicates the length of columnNames.
- * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
- * otherwise NULL is returned.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ *         If Get store failed or resultSet is nullptr, nullptr is returned.
  * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
  * @since 10
  */
@@ -282,6 +293,8 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param sql Indicates the SQL statement to execute.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -292,8 +305,8 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param sql Indicates the SQL statement to execute.
- * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
- * otherwise NULL is returned.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ *         If Get store failed,sql is nullptr or resultSet is nullptr, nullptr is returned.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -304,6 +317,8 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -314,6 +329,8 @@ int OH_Rdb_BeginTransaction(OH_Rdb_Store *store);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -324,6 +341,8 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store);
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -335,6 +354,8 @@ int OH_Rdb_Commit(OH_Rdb_Store *store);
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param databasePath Indicates the database file path.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -346,6 +367,8 @@ int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath);
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param databasePath Indicates the database file path.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -357,6 +380,8 @@ int OH_Rdb_Restore(OH_Rdb_Store *store, const char *databasePath);
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param version Indicates the version number.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -368,6 +393,8 @@ int OH_Rdb_GetVersion(OH_Rdb_Store *store, int *version);
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param version Indicates the version number.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @since 10
  */
@@ -416,6 +443,8 @@ typedef struct Rdb_DistributedConfig {
  * @param type Indicates the distributed type {@link Rdb_DistributedType}.
  * @param config Indicates the distributed config of the tables. For details, see {@link Rdb_DistributedConfig}.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @see Rdb_DistributedConfig.
  * @since 11
@@ -433,6 +462,7 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
  * @param values Indicates the primary keys of the rows to check.
  * If the table has no primary key , please pass in the row-ids of the rows to check.
  * @return If the operation is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ *         If Get store failed, nullptr is returned.
  * There are two columns, "data_key" and "timestamp". Otherwise NULL is returned.
  * @see OH_Rdb_Store.
  * @see OH_VObject.
@@ -626,6 +656,8 @@ typedef struct Rdb_DataObserver {
  * @param type Indicates the subscription type, which is defined in {@link Rdb_SubscribeType}.
  * @param observer The {@link Rdb_DataObserver} of change events in the database.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @see Rdb_DataObserver.
  * @since 11
@@ -640,6 +672,8 @@ int OH_Rdb_Subscribe(OH_Rdb_Store *store, Rdb_SubscribeType type, const Rdb_Data
  * @param observer The {@link Rdb_DataObserver} of change events in the database.
  * If this is nullptr, remove all observers of the type.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @see Rdb_DataObserver.
  * @since 11
@@ -820,7 +854,7 @@ typedef struct Rdb_ProgressDetails {
  * @param progress Represents a pointer to an {@link Rdb_ProgressDetails} instance.
  * @param version Indicates the version of current {@link Rdb_ProgressDetails}.
  * @return If the operation is successful, a pointer to the instance of the {@link Rdb_TableDetails}
- * structure is returned. Otherwise NULL is returned.
+ * structure is returned.If get details is failed, nullptr is returned.
  * @see Rdb_ProgressDetails
  * @see Rdb_TableDetails
  * @since 11
@@ -871,6 +905,8 @@ typedef struct Rdb_ProgressObserver {
  * @param count The count of tables to sync. If value equals 0, sync all tables of the store.
  * @param observer The {@link Rdb_ProgressObserver} of cloud sync progress.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store.
  * @see Rdb_ProgressObserver.
  * @since 11
@@ -886,6 +922,8 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
 * @param observer The {@link Rdb_SyncObserver} for the automatic synchornizaiton progress
 * Indicates the callback invoked to return the automatic synchronization progress.
 * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+*     {@link RDB_OK} - success.
+*     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
 * @see OH_Rdb_Store.
 * @see Rdb_ProgressObserver.
 * @since 11
@@ -899,6 +937,8 @@ int OH_Rdb_SubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressObse
 * @param observer Indicates the {@link Rdb_SyncObserver} callback for the automatic synchronization progress.
 * If it is a null pointer, all callbacks for the automatic synchronization progress will be unregistered.
 * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+*     {@link RDB_OK} - success.
+*     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
 * @see OH_Rdb_Store.
 * @see Rdb_ProgressObserver.
 * @since 11
@@ -912,6 +952,8 @@ int OH_Rdb_UnsubscribeAutoSyncProgress(OH_Rdb_Store *store, const Rdb_ProgressOb
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
  * Indicates the specified lock condition.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
  * @since 12
  */
@@ -924,6 +966,8 @@ int OH_Rdb_LockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
  * Indicates the specified unlock condition.
  * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode.
  * @since 12
  */
@@ -937,8 +981,8 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
  * Indicates the specified query condition.
  * @param columnNames Indicates the columns to query. If the value is empty array, the query applies to all columns.
  * @param length Indicates the length of columnNames.
- * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned,
- * otherwise NULL is returned.
+ * @return If the query is successful, a pointer to the instance of the @link OH_Cursor} structure is returned.
+ *         If Get store failed or resultSet is nullptr, nullptr is returned.
  * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
  * @since 12
  */

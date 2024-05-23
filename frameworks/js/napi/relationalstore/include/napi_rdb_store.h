@@ -51,7 +51,6 @@ private:
     static napi_value Insert(napi_env env, napi_callback_info info);
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
-    static napi_value QuerySync(napi_env env, napi_callback_info info);
     static napi_value RemoteQuery(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
@@ -141,6 +140,7 @@ private:
     };
 
     bool isSystemAppCalled_ = false;
+    int32_t dbType = NativeRdb::DB_SQLITE;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;

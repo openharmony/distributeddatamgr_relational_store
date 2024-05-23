@@ -16,40 +16,36 @@
 #include "rd_connection.h"
 
 #include "logger.h"
-#include "rdb_errno.h"
 #include "rd_statement.h"
-
+#include "rdb_errno.h"
+#include "sqlite_global_config.h"
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-std::shared_ptr<RdConnection> RdConnection::Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode)
+__attribute__((used))
+const int32_t RdConnection::reg_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
+std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
+    std::pair<int32_t, std::shared_ptr<Connection>> result;
+    auto& [errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
-        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(isWriteConnection);
+        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(isWrite);
         if (connection == nullptr) {
             LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
-            return nullptr;
+            return result;
         }
         errCode = connection->InnerOpen(config);
-        if (errCode == E_OK) {
-            return connection;
-        }
+        conn = connection;
+        break;
     }
-    return nullptr;
+    return result;
 }
 
-RdConnection::RdConnection(bool isWriteConnection)
-    : RdbConnection(isWriteConnection), inTransaction_(false)
-{
-}
+RdConnection::RdConnection(bool isWriter) : isWriter_(isWriter) {}
 
 RdConnection::~RdConnection()
 {
     if (dbHandle_ != nullptr) {
-        if (statement_ != nullptr) {
-            statement_ = nullptr;
-        }
         int errCode = RdUtils::RdDbClose(dbHandle_, 0);
         if (errCode != E_OK) {
             LOG_ERROR("~RdConnection ~RdConnection: could not close database err = %{public}d", errCode);
@@ -61,7 +57,7 @@ RdConnection::~RdConnection()
 int RdConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath = "";
-    int errCode = GetDbPath(config, dbPath);
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
     if (errCode != E_OK) {
         LOG_ERROR("Can not get db path");
         return errCode;
@@ -71,120 +67,100 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
         LOG_ERROR("Can not open rd db");
         return errCode;
     }
-    statement_ = std::make_shared<RdStatement>();
     return errCode;
 }
 
-int RdConnection::Prepare(const std::string &sql, bool &outIsReadOnly)
+int32_t RdConnection::OnInitialize()
 {
-    if (statement_ == nullptr) {
-        LOG_ERROR("RdConnection Prepare meets empty statement");
-        return E_ERROR;
-    }
-    int ret = std::static_pointer_cast<RdStatement>(statement_)->Prepare(dbHandle_, sql);
+    return E_NOT_SUPPORTED;
+}
+
+std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string& sql, Connection::SConn conn)
+{
+    auto stmt = std::make_shared<RdStatement>();
+    int32_t ret = stmt->Prepare(dbHandle_, sql);
     if (ret != E_OK) {
-        LOG_ERROR("RdConnection Unable to prepare statement");
-        return ret;
+        return { ret, nullptr };
     }
-    outIsReadOnly = IsWriteConnection();
-    return E_OK;
+    if (!isWriter_) {
+        ret = stmt->Step();
+        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+            return { ret, nullptr };
+        }
+        stmt->GetProperties();
+        ret = stmt->Reset();
+        if (ret != E_OK) {
+            return { ret, nullptr };
+        }
+    }
+    return { ret, stmt };
 }
 
-int RdConnection::PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+int32_t RdConnection::GetDBType() const
 {
-    if (statement_ == nullptr) {
-        LOG_ERROR("RdConnection PrepareAndBind meets empty statement");
-        return E_ERROR;
-    }
-    int errCode = std::static_pointer_cast<RdStatement>(statement_)->Prepare(dbHandle_, sql);
-    if (errCode != E_OK) {
-        LOG_ERROR("PrepareAndBind unable to prepare stmt : err %{public}d", errCode);
-        return errCode;
-    }
-    return statement_->BindArguments(bindArgs);
+    return DB_VECTOR;
 }
 
-int RdConnection::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+bool RdConnection::IsWriter() const
 {
-    int ret = PrepareAndBind(sql, bindArgs);
-    if (ret != E_OK) {
-        LOG_ERROR("RdConnection unable to prepare and bind stmt : err %{public}d", ret);
-        return ret;
-    }
-    ret = statement_->Step();
-    if (ret != E_OK && ret != E_NO_MORE_ROWS) {
-        LOG_ERROR("RdConnection Execute : err %{public}d", ret);
-        statement_->ResetStatementAndClearBindings();
-        return ret;
-    }
-    return statement_->ResetStatementAndClearBindings();
+    return isWriter_;
 }
 
-std::shared_ptr<RdbStatement> RdConnection::BeginStepQuery(int &errCode, const std::string &sql,
-    const std::vector<ValueObject> &args) const
+int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
 {
-    if (stepStatement_ == nullptr) {
-        LOG_ERROR("RdConnection meets unexpected null");
-        errCode = E_ROW_OUT_RANGE;
-    }
-    errCode = std::static_pointer_cast<RdStatement>(stepStatement_)->Prepare(dbHandle_, sql);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    errCode = stepStatement_->BindArguments(args);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    return stepStatement_;
+    return E_NOT_SUPPORTED;
 }
 
-int RdConnection::DesFinalize()
+int32_t RdConnection::TryCheckPoint()
 {
-    if (statement_ == nullptr) {
-        LOG_ERROR("RdConnection DesFinalize meets empty statement");
-        return E_ERROR;
-    }
-    int ret = 0;
-    ret = statement_->Finalize();
-    if (ret != E_OK) {
-        LOG_ERROR("RdConnection meets unexpected null");
-        return ret;
-    }
-    if (stepStatement_ == nullptr) {
-        return E_OK;
-    }
-    ret = stepStatement_->Finalize();
-    if (ret != E_OK) {
-        LOG_ERROR("RdConnection unable to finalize statement");
-        return ret;
-    }
-    if (dbHandle_ != nullptr) {
-        ret = RdUtils::RdDbClose(dbHandle_, 0);
-    }
-    if (ret != E_OK) {
-        LOG_ERROR("RdConnection unable to close db handle");
-    }
-    return ret;
+    return E_NOT_SUPPORTED;
 }
 
-int RdConnection::EndStepQuery()
+int32_t RdConnection::LimitWalSize()
 {
-    if (stepStatement_ == nullptr) {
-        LOG_ERROR("RdConnection meets unexpected null");
-        return E_ALREADY_CLOSED;
-    }
-    return stepStatement_->ResetStatementAndClearBindings();
+    return E_NOT_SUPPORTED;
 }
 
-void RdConnection::SetInTransaction(bool transaction)
+int32_t RdConnection::ConfigLocale(const std::string& localeStr)
 {
-    inTransaction_ = transaction;
+    return E_NOT_SUPPORTED;
 }
 
-bool RdConnection::IsInTransaction()
+int32_t RdConnection::CleanDirtyData(const std::string& table, uint64_t cursor)
 {
-    return inTransaction_;
+    return E_NOT_SUPPORTED;
 }
 
+int32_t RdConnection::SubscribeTableChanges(const Connection::Notifier& notifier)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t RdConnection::GetMaxVariable() const
+{
+    return MAX_VARIABLE_NUM;
+}
+
+int32_t RdConnection::GetJournalMode()
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t RdConnection::ClearCache()
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t RdConnection::Subscribe(const std::string& event,
+    const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t RdConnection::Unsubscribe(const std::string& event,
+    const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
+{
+    return E_NOT_SUPPORTED;
+}
 } // namespace NativeRdb
 } // namespace OHOS

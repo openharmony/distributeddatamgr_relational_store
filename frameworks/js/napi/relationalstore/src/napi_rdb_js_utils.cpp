@@ -416,6 +416,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
     rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
     rdbStoreConfig.SetIsVector(rdbConfig.vector);
+    rdbConfig.vector ? rdbStoreConfig.SetDBType(DB_VECTOR) : rdbStoreConfig.SetDBType(DB_SQLITE);
     rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
     rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
     rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);

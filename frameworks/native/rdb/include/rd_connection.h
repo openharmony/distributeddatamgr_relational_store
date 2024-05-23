@@ -21,44 +21,49 @@
 #include <vector>
 
 #include "rd_utils.h"
-#include "rdb_connection.h"
-#include "rdb_statement.h"
+#include "connection.h"
 #include "rdb_store_config.h"
-#include "sqlite_statement.h"
 #include "value_object.h"
-#include "shared_block.h"
 
 typedef struct ClientChangedData ClientChangedData;
 namespace OHOS {
 namespace NativeRdb {
 
-class RdConnection : public RdbConnection {
+class RdConnection : public Connection {
 public:
-    static std::shared_ptr<RdConnection> Open(const RdbStoreConfig &config, bool isWriteConnection, int &errCode);
+    static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     explicit RdConnection(bool isWriteConnection);
     ~RdConnection();
-    int Prepare(const std::string &sql, bool &outIsReadOnly) override;
-    int ExecuteSql(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
-
-    std::shared_ptr<RdbStatement> BeginStepQuery(int &errCode, const std::string &sql,
-        const std::vector<ValueObject> &args) const override;
-    int DesFinalize() override;
-    int EndStepQuery() override;
-
-    void SetInTransaction(bool transaction) override;
-    bool IsInTransaction() override;
-    GRD_DB *GetDbHandle()
-    {
-        return dbHandle_;
-    }
+    int32_t OnInitialize() override;
+    std::pair<int32_t, Stmt> CreateStatement(const std::string& sql, SConn conn) override;
+    int32_t GetDBType() const override;
+    bool IsWriter() const override;
+    int32_t ReSetKey(const RdbStoreConfig& config) override;
+    int32_t TryCheckPoint() override;
+    int32_t LimitWalSize() override;
+    int32_t ConfigLocale(const std::string& localeStr) override;
+    int32_t CleanDirtyData(const std::string& table, uint64_t cursor) override;
+    int32_t SubscribeTableChanges(const Notifier& notifier) override;
+    int32_t GetMaxVariable() const override;
+    int32_t GetJournalMode() override;
+    int32_t ClearCache() override;
+    int32_t Subscribe(const std::string& event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
+    int32_t Unsubscribe(const std::string& event,
+        const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
 private:
-    static constexpr const char *GRD_OPEN_CONFIG_STR = "{\"pageSize\":16, \"redoFlushByTrx\":1}";
+    static constexpr int MAX_VARIABLE_NUM = 500;
+    static constexpr const char *GRD_OPEN_CONFIG_STR =
+        "{\"pageSize\":16, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"maxConnNum\":500 }";
+    static constexpr uint32_t NO_ITER = 0;
+    static constexpr uint32_t ITER_V1 = 5000;
+    static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
+    static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
+    static const int32_t reg_;
 
-    int PrepareAndBind(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     int InnerOpen(const RdbStoreConfig &config);
+    bool isWriter_ = false;
     GRD_DB *dbHandle_ = nullptr;
-    bool inTransaction_;
     std::string configStr_ = GRD_OPEN_CONFIG_STR;
 };
 

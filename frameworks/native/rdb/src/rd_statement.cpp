@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "RdSharedResultSet"
+#define LOG_TAG "RdStatement"
 #include "rd_statement.h"
 
 #include <iomanip>
@@ -23,20 +23,10 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rd_utils.h"
-#include "rdb_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
-std::shared_ptr<RdStatement> RdStatement::CreateStatement(
-    std::shared_ptr<RdConnection> connection, const std::string &sql)
-{
-    (void)connection;
-    (void)sql;
-    return std::make_shared<RdStatement>();
-}
-
 RdStatement::RdStatement()
 {
 }
@@ -82,14 +72,6 @@ int RdStatement::Finalize()
     return E_OK;
 }
 
-int RdStatement::BindArguments(const std::vector<ValueObject> &bindArgs) const
-{
-    if (bindArgs.empty()) {
-        return E_OK;
-    }
-    return InnerBindArguments(bindArgs);
-}
-
 int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) const
 {
     int ret = E_OK;
@@ -108,7 +90,7 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
             break;
         }
         case ValueObjectType::TYPE_ASSET: {
-            Asset asset;
+            ValueObject::Asset asset;
             arg.GetAsset(asset);
             auto rawData = RawDataParser::PackageRawData(asset);
             ret = RdUtils::RdSqlBindBlob(stmtHandle_, index, static_cast<const void *>(rawData.data()),
@@ -116,7 +98,7 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
             break;
         }
         case ValueObjectType::TYPE_ASSETS: {
-            Assets assets;
+            ValueObject::Assets assets;
             arg.GetAssets(assets);
             auto rawData = RawDataParser::PackageRawData(assets);
             ret = RdUtils::RdSqlBindBlob(stmtHandle_, index, static_cast<const void *>(rawData.data()),
@@ -124,7 +106,7 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
             break;
         }
         case ValueObjectType::TYPE_VECS: {
-            FloatVector vectors;
+            ValueObject::FloatVector vectors;
             arg.GetVecs(vectors);
             ret = RdUtils::RdSqlBindFloatVector(stmtHandle_, index,
                 static_cast<float *>(vectors.data()), vectors.size(), nullptr);
@@ -140,11 +122,36 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
     return ret;
 }
 
-int RdStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs) const
+int RdStatement::IsValid(int index) const
+{
+    if (stmtHandle_ == nullptr) {
+        LOG_ERROR("statement already close.");
+        return E_ALREADY_CLOSED;
+    }
+    if (index < 0) {
+        LOG_ERROR("invalid index %{public}d", index);
+        return E_INVALID_ARGS;
+    }
+    if (index >= columnCount_) {
+        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
+        return E_COLUMN_OUT_RANGE;
+    }
+    return E_OK;
+}
+
+int32_t RdStatement::Prepare(const std::string& sql)
+{
+    if (dbHandle_ == nullptr) {
+        return E_ERROR;
+    }
+    return Prepare(dbHandle_, sql);
+}
+
+int32_t RdStatement::Bind(const std::vector<ValueObject>& args)
 {
     uint32_t index = 1;
     int ret = E_OK;
-    for (auto arg : bindArgs) {
+    for (auto &arg : args) {
         switch (arg.GetType()) {
             case ValueObjectType::TYPE_NULL: {
                 ret = RdUtils::RdSqlBindNull(stmtHandle_, index);
@@ -176,53 +183,85 @@ int RdStatement::InnerBindArguments(const std::vector<ValueObject> &bindArgs) co
     return E_OK;
 }
 
-int RdStatement::ResetStatementAndClearBindings() const
+int32_t RdStatement::Step()
 {
     if (stmtHandle_ == nullptr) {
         return E_OK;
     }
-    int ret = RdUtils::RdSqlReset(stmtHandle_);
+    return RdUtils::RdSqlStep(stmtHandle_);
+}
+
+int32_t RdStatement::Reset()
+{
+    if (stmtHandle_ == nullptr) {
+        return E_OK;
+    }
+    return RdUtils::RdSqlReset(stmtHandle_);
+}
+
+int32_t RdStatement::Execute(const std::vector<ValueObject>& args)
+{
+    int ret = Bind(args);
     if (ret != E_OK) {
-        LOG_ERROR("reset ret is %{public}d", ret);
+        LOG_ERROR("RdConnection unable to prepare and bind stmt : err %{public}d", ret);
+        return ret;
+    }
+    ret = Step();
+    if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+        LOG_ERROR("RdConnection Execute : err %{public}d", ret);
     }
     return ret;
 }
 
-int RdStatement::Step() const
+std::pair<int, ValueObject> RdStatement::ExecuteForValue(const std::vector<ValueObject>& args)
 {
-    return RdUtils::RdSqlStep(stmtHandle_);
-}
-
-int RdStatement::GetColumnCount(int &count) const
-{
-    if (stmtHandle_ == nullptr) {
-        LOG_ERROR("statement already close.");
-        return E_ALREADY_CLOSED;
+    int ret = Bind(args);
+    if (ret != E_OK) {
+        LOG_ERROR("RdConnection unable to prepare and bind stmt : err %{public}d", ret);
+        return { ret, ValueObject() };
     }
-    count = RdUtils::RdSqlColCnt(stmtHandle_);
-    return E_OK;
+    ret = Step();
+    if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+        LOG_ERROR("RdConnection Execute : err %{public}d", ret);
+        return { ret, ValueObject() };
+    }
+    return GetColumn(0);
 }
 
-int RdStatement::GetColumnName(int index, std::string &columnName) const
+int32_t RdStatement::Changes() const
+{
+    return 0;
+}
+
+int64_t RdStatement::LastInsertRowId() const
+{
+    return 0;
+}
+
+int32_t RdStatement::GetColumnCount() const
+{
+    return columnCount_;
+}
+
+std::pair<int32_t, std::string> RdStatement::GetColumnName(int32_t index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return ret;
+        return { ret, "" };
     }
-    const char *name = RdUtils::RdSqlColName(stmtHandle_, index);
+    const char* name = RdUtils::RdSqlColName(stmtHandle_, index);
     if (name == nullptr) {
         LOG_ERROR("column_name is null.");
-        return E_ERROR;
+        return { E_ERROR, "" };
     }
-    columnName = std::string(name);
-    return E_OK;
+    return { E_OK, name };
 }
 
-int RdStatement::GetColumnType(int index, int &columnType) const
+std::pair<int32_t, int32_t> RdStatement::GetColumnType(int32_t index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return ret;
+        return { ret, static_cast<int32_t>(ColumnType::TYPE_NULL) };
     }
     ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
     switch (type) {
@@ -230,210 +269,51 @@ int RdStatement::GetColumnType(int index, int &columnType) const
         case ColumnType::TYPE_FLOAT:
         case ColumnType::TYPE_NULL:
         case ColumnType::TYPE_STRING:
-            columnType = static_cast<int>(type);
-            return E_OK;
-        case ColumnType::TYPE_BLOB: {
-            // Attention! Grd can not distinguish assets type and blob type
-            columnType = static_cast<int>(type);
-            return E_OK;
-        }
-        case ColumnType::TYPE_FLOAT32_ARRAY: {
-            columnType = static_cast<int>(type);
-            return E_OK;
-        }
+        case ColumnType::TYPE_BLOB:
+        case ColumnType::TYPE_FLOAT32_ARRAY:
+            break;
         default:
             LOG_ERROR("invalid type %{public}d.", type);
-            return E_ERROR;
+            return { E_ERROR, static_cast<int32_t>(ColumnType::TYPE_NULL) };
     }
+    return { ret, static_cast<int32_t>(type) };
 }
 
-int RdStatement::GetFloat32Array(int index, std::vector<float> &vecs) const
+std::pair<int32_t, size_t> RdStatement::GetSize(int32_t index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        // It has already logged inside
-        return ret;
-    }
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    if (type != ColumnType::TYPE_FLOAT32_ARRAY) {
-        LOG_ERROR("invalid type %{public}d.", static_cast<int>(type));
-        return E_INVALID_COLUMN_TYPE;
-    }
-    uint32_t dim = 0;
-    const float *vec = RdUtils::RdSqlColumnFloatVector(stmtHandle_, index, &dim);
-    if (dim == 0 || vec == nullptr) {
-        vecs.resize(0);
-    } else {
-        vecs.resize(dim);
-        vecs.assign(vec, vec + dim);
-    }
-    return E_OK;
-}
-
-int RdStatement::GetColumnBlob(int index, std::vector<uint8_t> &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        // It has already logged inside
-        return ret;
-    }
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    if (type != ColumnType::TYPE_BLOB && type != ColumnType::TYPE_STRING && type != ColumnType::TYPE_NULL) {
-        LOG_ERROR("invalid type %{public}d.", type);
-        return E_INVALID_COLUMN_TYPE;
-    }
-    int size = RdUtils::RdSqlColBytes(stmtHandle_, index);
-    const uint8_t *blob = RdUtils::RdSqlColBlob(stmtHandle_, index);
-    if (size == 0 || blob == nullptr) {
-        value.resize(0);
-    } else {
-        value.resize(size);
-        value.assign(blob, blob + size);
-    }
-    return E_OK;
-}
-
-int RdStatement::GetColumnString(int index, std::string &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    switch (type) {
-        case ColumnType::TYPE_STRING: {
-            auto val = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
-            value = (val == nullptr) ? "" : std::string(val, RdUtils::RdSqlColBytes(stmtHandle_, index) - 1);
-            break;
-        }
-        case ColumnType::TYPE_INTEGER: {
-            int64_t val = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
-            value = std::to_string(val);
-            break;
-        }
-        case ColumnType::TYPE_FLOAT: {
-            double val = RdUtils::RdSqlColDouble(stmtHandle_, index);
-            std::ostringstream os;
-            if (os << std::setprecision(SET_DATA_PRECISION) << val)
-                value = os.str();
-            break;
-        }
-        case ColumnType::TYPE_NULL: {
-            value = "";
-            return E_OK;
-        }
-        case ColumnType::TYPE_BLOB: {
-            return E_INVALID_COLUMN_TYPE;
-        }
-        default:
-            return E_ERROR;
-    }
-    return E_OK;
-}
-
-int RdStatement::GetColumnInt(int index, int &value)
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    if (type != ColumnType::TYPE_INTEGER) {
-        return E_ERROR;
-    }
-    value = RdUtils::RdSqlColInt(stmtHandle_, index);
-    return E_OK;
-}
-
-int RdStatement::GetColumnLong(int index, int64_t &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-    char *errStr = nullptr;
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    if (type == ColumnType::TYPE_INTEGER) {
-        value = RdUtils::RdSqlColInt64(stmtHandle_, index);
-    } else if (type == ColumnType::TYPE_STRING) {
-        auto val = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
-        value = (val == nullptr) ? 0 : strtoll(val, &errStr, 0);
-    } else if (type == ColumnType::TYPE_FLOAT) {
-        double val = RdUtils::RdSqlColDouble(stmtHandle_, index);
-        value = static_cast<int64_t>(val);
-    } else if (type == ColumnType::TYPE_NULL) {
-        value = 0;
-    } else if (type == ColumnType::TYPE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        return E_ERROR;
-    }
-    return E_OK;
-}
-
-int RdStatement::GetColumnDouble(int index, double &value) const
-{
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
-    }
-    char *ptr = nullptr;
-    ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
-    if (type == ColumnType::TYPE_FLOAT) {
-        value = RdUtils::RdSqlColDouble(stmtHandle_, index);
-    } else if (type == ColumnType::TYPE_INTEGER) {
-        int64_t val = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
-        value = static_cast<double>(val);
-    } else if (type == ColumnType::TYPE_STRING) {
-        auto val = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
-        value = (val == nullptr) ? 0.0 : std::strtod(val, &ptr);
-    } else if (type == ColumnType::TYPE_NULL) {
-        value = 0.0;
-    } else if (type == ColumnType::TYPE_BLOB) {
-        return E_INVALID_COLUMN_TYPE;
-    } else {
-        LOG_ERROR("invalid type %{public}d.", type);
-        return E_ERROR;
-    }
-    return E_OK;
-}
-
-int RdStatement::GetSize(int index, size_t &size) const
-{
-    size = 0;
-    int ret = IsValid(index);
-    if (ret != E_OK) {
-        return ret;
+        return { ret, 0 };
     }
     ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
     if (type == ColumnType::TYPE_BLOB || type == ColumnType::TYPE_STRING || type == ColumnType::TYPE_NULL ||
         type == ColumnType::TYPE_FLOAT32_ARRAY) {
-        size = static_cast<size_t>(RdUtils::RdSqlColBytes(stmtHandle_, index));
-        return E_OK;
+        return { E_OK, static_cast<size_t>(RdUtils::RdSqlColBytes(stmtHandle_, index)) };
     }
-    return E_INVALID_COLUMN_TYPE;
+    return { E_INVALID_COLUMN_TYPE, 0 };
 }
 
-int RdStatement::GetColumn(int index, ValueObject &value) const
+std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
 {
+    ValueObject object;
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return ret;
+        return { ret, object };
     }
 
     ColumnType type = RdUtils::RdSqlColType(stmtHandle_, index);
     switch (type) {
         case ColumnType::TYPE_FLOAT:
-            value = RdUtils::RdSqlColDouble(stmtHandle_, index);
-            return E_OK;
+            object = RdUtils::RdSqlColDouble(stmtHandle_, index);
+            break;
         case ColumnType::TYPE_INTEGER:
-            value = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
-            return E_OK;
+            object = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
+            break;
         case ColumnType::TYPE_STRING:
-            value = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
-            return E_OK;
+            object = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
+            break;
         case ColumnType::TYPE_NULL:
-            return E_OK;
+            break;
         case ColumnType::TYPE_FLOAT32_ARRAY: {
             uint32_t dim = 0;
             auto vectors =
@@ -443,8 +323,8 @@ int RdStatement::GetColumn(int index, ValueObject &value) const
                 vecData.resize(dim);
                 vecData.assign(vectors, vectors + dim);
             }
-            value = std::move(vecData);
-            return E_OK;
+            object = std::move(vecData);
+            break;
         }
         case ColumnType::TYPE_BLOB: {
             int size = RdUtils::RdSqlColBytes(stmtHandle_, index);
@@ -454,27 +334,33 @@ int RdStatement::GetColumn(int index, ValueObject &value) const
                 rawData.resize(size);
                 rawData.assign(blob, blob + size);
             }
-            value = std::move(rawData);
-            return E_OK;
+            object = std::move(rawData);
+            break;
         }
         default:
             break;
     }
-    return E_OK;
+    return { ret, std::move(object) };
 }
 
-bool RdStatement::IsReadOnly() const
+bool RdStatement::ReadOnly() const
+{
+    return false;
+}
+
+bool RdStatement::SupportBlockInfo() const
+{
+    return false;
+}
+
+int32_t RdStatement::FillBlockInfo(SharedBlockInfo* info) const
 {
     return E_NOT_SUPPORT;
 }
 
-int RdStatement::IsValid(int index) const
+void RdStatement::GetProperties()
 {
-    if (stmtHandle_ == nullptr) {
-        LOG_ERROR("statement already close.");
-        return E_ALREADY_CLOSED;
-    }
-    return E_OK;
+    columnCount_ = RdUtils::RdSqlColCnt(stmtHandle_);
 }
 
 } // namespace NativeRdb

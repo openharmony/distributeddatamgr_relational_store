@@ -307,6 +307,50 @@ describe('rdbStoreQueryByStepTest', function () {
         done();
     })
 
+     * @tc.name Normal test case of queryByStep, PRAGMA user_version
+     * @tc.desc 1.Set user_version
+     *          2.Get user_version
+     */
+    it('testRdbStoreQueryByStep0009', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreQueryByStep0009 start *************");
+        // 2 is used to set the store version
+        await rdbStore.executeSql("PRAGMA user_version = 2")
+        let resultSet = await rdbStore.queryByStep("PRAGMA user_version");
+        resultSet.goToFirstRow();
+        expect(2).assertEqual(resultSet.getLong(0))
+        resultSet.close();
+        console.log(TAG + "************* testRdbStoreQueryByStep0009 end   *************");
+    })
+
+    /**
+     * @tc.number testRdbStoreQueryByStep0010
+     * @tc.name Normal test case of queryByStep, PRAGMA table_info
+     * @tc.desc 1.Get table_info
+     *          2.Check table_info
+     */
+    it('testRdbStoreQueryByStep0010', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreQueryByStep0010 start *************");
+        let resultSet = await rdbStore.queryByStep("PRAGMA table_info(test)");
+        resultSet.goToFirstRow();
+        expect("id").assertEqual(resultSet.getString(1))
+        expect("INTEGER").assertEqual(resultSet.getString(2))
+        resultSet.goToNextRow();
+        expect("name").assertEqual(resultSet.getString(1))
+        expect("TEXT").assertEqual(resultSet.getString(2))
+        expect(1).assertEqual(resultSet.getLong(3))
+        resultSet.goToNextRow();
+        expect("age").assertEqual(resultSet.getString(1))
+        expect("INTEGER").assertEqual(resultSet.getString(2))
+        resultSet.goToNextRow();
+        expect("salary").assertEqual(resultSet.getString(1))
+        expect("DOUBLE").assertEqual(resultSet.getString(2))
+        resultSet.goToNextRow();
+        expect("blobType").assertEqual(resultSet.getString(1))
+        expect("BLOB").assertEqual(resultSet.getString(2))
+        resultSet.close();
+        console.log(TAG + "************* testRdbStoreQueryByStep0010 end   *************");
+    })
+
     /**
      * @tc.number testRdbStoreQueryByStep0009
      * @tc.name Normal test case of queryByStep, query all data
@@ -315,8 +359,8 @@ describe('rdbStoreQueryByStepTest', function () {
      * @tc.type Function
      * @tc.level Level 2
      */
-    it('testRdbStoreQueryByStep0009', 0, async function (done) {
-        console.log(TAG + "************* testRdbStoreQueryByStep0009 start *************");
+    it('testRdbStoreQueryByStep0011', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreQueryByStep0011 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         let valuesBucket4 = {
             "name": "",
@@ -337,7 +381,7 @@ describe('rdbStoreQueryByStepTest', function () {
         resultSet.close()
         resultSet = null
         done()
-        console.log(TAG + "************* testRdbStoreQueryByStep0009 end   *************");
+        console.log(TAG + "************* testRdbStoreQueryByStep0011 end   *************");
     })
 
     console.info(TAG + "*************Unit Test End*************");

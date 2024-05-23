@@ -25,6 +25,7 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "relational_store_client.h"
+#include "remote_result_set.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #include "sqlite3.h"
@@ -67,7 +68,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     stmt_ = stmt;
     readOnly_ = (sqlite3_stmt_readonly(stmt_) != 0);
     columnCount_ = sqlite3_column_count(stmt_);
-    types_ = std::vector<int32_t>(columnCount_, 0);
+    types_ = std::vector<int32_t>(columnCount_, COLUMN_TYPE_INVALID);
     numParameters_ = sqlite3_bind_parameter_count(stmt_);
     return E_OK;
 }
@@ -150,7 +151,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
 int SqliteStatement::Step()
 {
-    return sqlite3_step(stmt_);
+    return SQLiteError::ErrNo(sqlite3_step(stmt_));
 }
 
 int SqliteStatement::Reset()
@@ -272,38 +273,56 @@ std::pair<int32_t, std::string> SqliteStatement::GetColumnName(int index) const
     return { E_OK, std::string(name) };
 }
 
+static int32_t Convert2ColumnType(int32_t type)
+{
+    switch (type) {
+        case SQLITE_INTEGER:
+            return int32_t(ColumnType::TYPE_INTEGER);
+        case SQLITE_FLOAT:
+            return int32_t(ColumnType::TYPE_FLOAT);
+        case SQLITE_BLOB:
+            return int32_t(ColumnType::TYPE_BLOB);
+        case SQLITE_TEXT:
+            return int32_t(ColumnType::TYPE_STRING);
+        default:
+            break;
+    }
+    return int32_t(ColumnType::TYPE_NULL);
+}
+
 std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 {
     int ret = IsValid(index);
     if (ret != E_OK) {
-        return { ret, SQLITE_NULL };
+        return { ret, int32_t(ColumnType::TYPE_NULL) };
     }
 
     int type = sqlite3_column_type(stmt_, index);
     if (type != SQLITE_BLOB) {
-        return { E_OK, type };
+        return { E_OK, Convert2ColumnType(type) };
     }
-    if (types_[index] != 0) {
+
+    if (types_[index] != COLUMN_TYPE_INVALID) {
         return { E_OK, types_[index] };
     }
 
     const char *decl = sqlite3_column_decltype(stmt_, index);
     if (decl == nullptr) {
         LOG_ERROR("invalid type %{public}d.", type);
-        return { E_ERROR, SQLITE_NULL };
+        return { E_ERROR, int32_t(ColumnType::TYPE_NULL) };
     }
 
     auto declType = SqliteUtils::StrToUpper(std::string(decl));
     if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
-        types_[index] = COLUMN_TYPE_ASSET;
+        types_[index] = int32_t(ColumnType::TYPE_ASSET);
     } else if (declType == ValueObject::DeclType<ValueObject::Assets>()) {
-        types_[index] = COLUMN_TYPE_ASSETS;
+        types_[index] = int32_t(ColumnType::TYPE_ASSETS);
     } else if (declType == ValueObject::DeclType<ValueObject::FloatVector>()) {
-        types_[index] = COLUMN_TYPE_FLOATS;
+        types_[index] = int32_t(ColumnType::TYPE_FLOAT32_ARRAY);
     } else if (declType == ValueObject::DeclType<ValueObject::BigInt>()) {
-        types_[index] = COLUMN_TYPE_BIGINT;
+        types_[index] = int32_t(ColumnType::TYPE_BIGINT);
     } else {
-        types_[index] = SQLITE_BLOB;
+        types_[index] = int32_t(ColumnType::TYPE_BLOB);
     }
 
     return { E_OK, types_[index] };
@@ -316,7 +335,8 @@ std::pair<int32_t, size_t> SqliteStatement::GetSize(int index) const
         return { errCode, 0 };
     }
 
-    if (type == SQLITE_TEXT || type == SQLITE_BLOB || type == SQLITE_NULL) {
+    if (type == int32_t(ColumnType::TYPE_STRING) || type == int32_t(ColumnType::TYPE_BLOB) ||
+        type == int32_t(ColumnType::TYPE_NULL)) {
         auto size = static_cast<size_t>(sqlite3_column_bytes(stmt_, index));
         return { E_OK, size };
     }
@@ -330,17 +350,17 @@ std::pair<int32_t, ValueObject> SqliteStatement::GetColumn(int index) const
         return { errCode, ValueObject() };
     }
 
-    switch (type) {
-        case SQLITE_FLOAT:
+    switch (static_cast<ColumnType>(type)) {
+        case ColumnType::TYPE_FLOAT:
             return { E_OK, ValueObject(sqlite3_column_double(stmt_, index)) };
-        case SQLITE_INTEGER:
+        case ColumnType::TYPE_INTEGER:
             return { E_OK, ValueObject(static_cast<int64_t>(sqlite3_column_int64(stmt_, index))) };
-        case SQLITE_TEXT: {
+        case ColumnType::TYPE_STRING: {
             int size = sqlite3_column_bytes(stmt_, index);
             auto text = reinterpret_cast<const char *>(sqlite3_column_text(stmt_, index));
             return { E_OK, ValueObject(text == nullptr ? std::string("") : std::string(text, size)) };
         }
-        case SQLITE_NULL:
+        case ColumnType::TYPE_NULL:
             return { E_OK, ValueObject() };
         default:
             break;
@@ -355,23 +375,23 @@ ValueObject SqliteStatement::GetValueFromBlob(int32_t index, int32_t type) const
     if (blob == nullptr || size <= 0) {
         return ValueObject();
     }
-    switch (type) {
-        case COLUMN_TYPE_ASSET: {
+    switch (static_cast<ColumnType>(type)) {
+        case ColumnType::TYPE_ASSET: {
             Asset asset;
             RawDataParser::ParserRawData(blob, size, asset);
             return ValueObject(std::move(asset));
         }
-        case COLUMN_TYPE_ASSETS: {
+        case ColumnType::TYPE_ASSETS: {
             Assets assets;
             RawDataParser::ParserRawData(blob, size, assets);
             return ValueObject(std::move(assets));
         }
-        case COLUMN_TYPE_FLOATS: {
+        case ColumnType::TYPE_FLOAT32_ARRAY: {
             Floats floats;
             RawDataParser::ParserRawData(blob, size, floats);
             return ValueObject(std::move(floats));
         }
-        case COLUMN_TYPE_BIGINT: {
+        case ColumnType::TYPE_BIGINT: {
             BigInt bigint;
             RawDataParser::ParserRawData(blob, size, bigint);
             return ValueObject(std::move(bigint));
