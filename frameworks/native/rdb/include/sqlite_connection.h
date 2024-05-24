@@ -98,7 +98,7 @@ private:
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     void ReadFile2Buffer(const char* fileName);
 
-    static constexpr int BUFFER_LEN = 16;
+    static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;
