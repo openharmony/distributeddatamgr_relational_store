@@ -168,7 +168,7 @@ int SqliteSharedResultSet::FillBlock(int requiredPos)
         if (errCode != E_OK) {
             return errCode;
         }
-        blockCapacity_ = static_cast<int>(block->GetRowNum());
+        blockCapacity_ = block->GetRowNum();
         rowNum_ = rowNum;
     } else {
         int startPos = isOnlyFillBlock_ ? requiredPos : PickFillBlockStartPosition(requiredPos, blockCapacity_);
