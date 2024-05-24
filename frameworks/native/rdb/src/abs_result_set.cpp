@@ -215,7 +215,7 @@ int AbsResultSet::GetDouble(int columnIndex, double& value)
 
 int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
-    ColumnType columnType;
+    ColumnType columnType = ColumnType::TYPE_NULL;
     int errCode = GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
         LOG_ERROR("ret is %{public}d", errCode);

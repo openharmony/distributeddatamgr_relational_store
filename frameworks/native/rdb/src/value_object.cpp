@@ -257,7 +257,7 @@ static int32_t GetPrecision(double val)
 ValueObject::operator std::string() const
 {
     std::string val;
-    int type = value.index();
+    int type = static_cast<int>(value.index());
     if (type == ValueObject::TYPE_INT) {
         auto temp = std::get<int64_t>(value);
         val = std::to_string(temp);

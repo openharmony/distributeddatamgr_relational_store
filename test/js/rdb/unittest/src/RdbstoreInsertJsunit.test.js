@@ -281,6 +281,39 @@ describe('rdbStoreInsertTest', function () {
     })
 
     /**
+     * @tc.name rdb getString test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_GetString_0001
+     * @tc.desc rdb getString test of the null value
+     */
+    it('testRdbStoreGetString0001', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreGetString0001 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "",
+            "age": 21,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket)
+        let predicates = new dataRdb.RdbPredicates("test");
+        predicates.equalTo("name", "")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "resultSet query done");
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            expect("").assertEqual(name)
+        } catch (e) {
+            console.log("insert error " + e);
+            expect().assertFail();
+        }
+        resultSet.close()
+        resultSet = null
+        done()
+        console.log(TAG + "************* testRdbStoreGetString0001 end   *************");
+    })
+
+    /**
      * @tc.name: rdb batchInsert test
      * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
      * @tc.desc: rdb batchInsert test
