@@ -147,15 +147,16 @@ void SqliteConnection::ReadFile2Buffer(const char* fileName)
     size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
     if (readSize != BUFFER_LEN) {
         LOG_ERROR("read db file size: %{public}zu error", readSize);
-        fclose(file);
+        (void)fclose(file);
         return;
     }
+    const int num = 4;
     for (int i = 0; i < BUFFER_LEN;) {
         LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
             i / 4, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
-        i += 4;
+        i += num;
     }
-    fclose(file);
+    (void)fclose(file);
 }
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
