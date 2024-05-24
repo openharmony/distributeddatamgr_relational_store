@@ -138,47 +138,24 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 
 void SqliteConnection::ReadFile2Buffer(const char* fileName)
 {
-    unsigned char buffer[BUFFER_LEN] = {0x0};
+    uint64_t buffer[BUFFER_LEN] = {0x0};
     FILE *file = fopen(fileName, "r");
     if (file == nullptr) {
         LOG_ERROR("open db file failed: %s", fileName);
         return;
     }
-    size_t readSize = fread(buffer, sizeof(unsigned char), BUFFER_LEN, file);
+    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
     if (readSize != BUFFER_LEN) {
         LOG_ERROR("read db file size: %{public}zu error", readSize);
         fclose(file);
         return;
     }
-    PrintBuffer(buffer, BUFFER_LEN);
+    for (int i = 0; i < len;) {
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
+            i / 4, array[i], array[i + 1], array[i + 2], array[i + 3]);
+        i += 4;
+    }
     fclose(file);
-}
-
-void SqliteConnection::PrintBuffer(unsigned char *array, int len)
-{
-    constexpr int WIDTH = 4;
-    constexpr unsigned char MASK = 0x0F;
-    const char* hexCode = "0123456789abcdef";
-    unsigned char hash[BUFFER_LEN * 2 + 1] = "";
-    for (int i = 0; i < len; i++) {
-        unsigned char value = array[i];
-        hash[i * 2] = hexCode[(value >> WIDTH) & MASK];
-        hash[i * 2 + 1] = hexCode[value & MASK];
-    }
-    hash[BUFFER_LEN * 2] = 0;
-    std::string str(reinterpret_cast<char *>(hash));
-    std::string output;
-    for (size_t i = 0; i < str.length();) {
-        output += str[i];
-        output += str[i + 1];
-        output += " ";
-        if (i != 0 && (i + 2) % 32 == 0) {
-            LOG_INFO("HEX code: %{public}s", output.c_str());
-            output = "";
-        }
-        i += 2;
-    }
-    LOG_INFO("HEX code: %{public}s", output.c_str());
 }
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
