@@ -150,9 +150,9 @@ void SqliteConnection::ReadFile2Buffer(const char* fileName)
         fclose(file);
         return;
     }
-    for (int i = 0; i < len;) {
+    for (int i = 0; i < BUFFER_LEN;) {
         LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
-            i / 4, array[i], array[i + 1], array[i + 2], array[i + 3]);
+            i / 4, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
         i += 4;
     }
     fclose(file);
