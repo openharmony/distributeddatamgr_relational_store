@@ -145,12 +145,5 @@ int SqliteUtils::GetFileSize(const std::string &fileName)
 
     return static_cast<int>(fileStat.st_size);
 }
-
-bool SqliteUtils::IsRead(const std::string &sql)
-{
-    auto type = GetSqlStatementType(sql);
-    return type == SqliteUtils::STATEMENT_SELECT || type == SqliteUtils::STATEMENT_OTHER ||
-           (type == SqliteUtils::STATEMENT_PRAGMA && sql.find("=") == std::string::npos);
-}
 } // namespace NativeRdb
 } // namespace OHOS
