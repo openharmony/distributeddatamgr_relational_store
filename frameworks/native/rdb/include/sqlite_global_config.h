@@ -60,7 +60,7 @@ public:
     SqliteGlobalConfig();
     ~SqliteGlobalConfig();
     static void InitSqliteGlobalConfig();
-    static void SqliteLogCallback(const void *data, int err, const char *msg);
+    static void Log(const void *data, int err, const char *msg);
     static int GetReadConnectionCount();
     static std::string GetMemoryDbPath();
     static int GetPageSize();

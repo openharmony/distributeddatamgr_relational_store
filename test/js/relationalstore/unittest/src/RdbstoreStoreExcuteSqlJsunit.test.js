@@ -293,7 +293,7 @@ describe('rdbStoreExcuteSqlTest', function () {
      * @tc.desc 1.Set user_version
      *          2.Get user_version
      */
-    it('ExcuteSqlTest0005', 0, async function (done) {
+    it('ExcuteSqlTest0005', 0, async function () {
         console.log(TAG + "************* ExcuteSqlTest0005 start *************");
         // 2 is used to set the store version
         await rdbStore.executeSql("PRAGMA user_version = 2")
@@ -310,7 +310,7 @@ describe('rdbStoreExcuteSqlTest', function () {
      * @tc.desc 1.Get table_info
      *          2.Check table_info
      */
-    it('ExcuteSqlTest0006', 0, async function (done) {
+    it('ExcuteSqlTest0006', 0, async function () {
         console.log(TAG + "************* ExcuteSqlTest0006 start *************");
         let resultSet = await rdbStore.querySql("PRAGMA table_info(test)");
         resultSet.goToFirstRow();
@@ -329,7 +329,7 @@ describe('rdbStoreExcuteSqlTest', function () {
         resultSet.goToNextRow();
         expect(3).assertEqual(resultSet.getLong(0))
         expect("salary").assertEqual(resultSet.getString(1))
-        expect("DOUBLE").assertEqual(resultSet.getString(2))
+        expect("REAL").assertEqual(resultSet.getString(2))
         resultSet.goToNextRow();
         expect(4).assertEqual(resultSet.getLong(0))
         expect("blobType").assertEqual(resultSet.getString(1))

@@ -206,9 +206,9 @@ int RdSharedResultSet::PrepareStep()
         LOG_INFO("statement_ is not nullptr");
         return E_OK;
     }
-    if (!SqliteUtils::IsRead(qrySql_)) {
-        LOG_ERROR("StoreSession BeginStepQuery fail : not query sql!");
-        return { nullptr, E_NOT_SELECT };
+    if (SqliteUtils::GetSqlStatementType(sql_) != SqliteUtils::STATEMENT_SELECT) {
+        LOG_ERROR("not a select sql_!");
+        return E_NOT_SELECT;
     }
 
     auto pool = rdConnectionPool_;
