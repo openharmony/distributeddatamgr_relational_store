@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "RdbSqlUtils"
 #include "rdb_sql_utils.h"
 
 #include <sys/stat.h>
@@ -22,10 +23,12 @@
 #include <cstdio>
 
 #include "acl.h"
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
 namespace OHOS {
+using namespace Rdb;
 namespace NativeRdb {
 using namespace OHOS::DATABASE_UTILS;
 constexpr int32_t SERVICE_GID = 3012;
@@ -48,6 +51,7 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
         databaseDirectory = databaseDirectory + "/" + directory;
         if (access(databaseDirectory.c_str(), F_OK) != 0) {
             if (MkDir(databaseDirectory)) {
+                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno, databaseDirectory.c_str());
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server
@@ -75,6 +79,10 @@ std::pair<std::string, int> RdbSqlUtils::GetDefaultDatabasePath(const std::strin
     databaseDir.append(baseDir).append("/rdb/").append(customDir);
 
     errorCode = CreateDirectory(databaseDir);
+    if (errorCode != E_OK) {
+        LOG_ERROR("failed errno[%{public}d] baseDir : %{public}s name : %{public}s customDir : %{public}s",
+            errno, baseDir.c_str(), name.c_str(), customDir.c_str());
+    }
     return std::make_pair(databaseDir.append("/").append(name), errorCode);
 }
 
@@ -85,6 +93,10 @@ std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, cons
 {
     std::string databaseDir = baseDir + "/rdb";
     errorCode = CreateDirectory(databaseDir);
+    if (errorCode != E_OK) {
+        LOG_ERROR(
+            "failed errno[%{public}d] baseDir : %{public}s name : %{public}s", errno, baseDir.c_str(), name.c_str());
+    }
     return databaseDir.append("/").append(name);
 }
 
