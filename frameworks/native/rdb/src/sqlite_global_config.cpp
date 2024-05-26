@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "SqliteGlobalConfig"
+#define LOG_TAG "Config"
 #include "sqlite_global_config.h"
 
 #include <sys/stat.h>
@@ -40,7 +40,7 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
-    sqlite3_config(SQLITE_CONFIG_LOG, &SqliteLogCallback,
+    sqlite3_config(SQLITE_CONFIG_LOG, &Log,
         GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
 
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
@@ -52,7 +52,7 @@ SqliteGlobalConfig::~SqliteGlobalConfig()
 {
 }
 
-void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char *msg)
+void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
 {
     bool verboseLog = (data != nullptr);
     auto errType = static_cast<unsigned int>(err);
@@ -60,12 +60,12 @@ void SqliteGlobalConfig::SqliteLogCallback(const void *data, int err, const char
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE
         || err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
-            LOG_INFO("SQLite Error(%{public}d) %{public}s ", err, msg);
+            LOG_INFO("Error(%{public}d) %{public}s ", err, msg);
         }
     } else if (errType == SQLITE_WARNING) {
-        LOG_WARN("SQLite WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
-        LOG_ERROR("SQLite Error(%{public}d) errno is:%{public}d %{public}s" PRIu64 ".", err, errno, msg);
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s" PRIu64 ".", err, errno, msg);
     }
 }
 
