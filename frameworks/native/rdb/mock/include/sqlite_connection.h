@@ -98,7 +98,9 @@ private:
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    void ReadFile2Buffer(const char* fileName);
 
+    static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;

@@ -96,6 +96,8 @@ typedef struct Data_Asset Data_Asset;
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param name Indicates the name to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -108,6 +110,8 @@ int OH_Data_Asset_SetName(Data_Asset *asset, const char *name);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param uri Indicates the uri to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -120,6 +124,8 @@ int OH_Data_Asset_SetUri(Data_Asset *asset, const char *uri);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param path Indicates the path to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -132,6 +138,8 @@ int OH_Data_Asset_SetPath(Data_Asset *asset, const char *path);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param createTime Indicates the create time to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -144,6 +152,8 @@ int OH_Data_Asset_SetCreateTime(Data_Asset *asset, int64_t createTime);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param modifyTime Indicates the create time to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -156,6 +166,8 @@ int OH_Data_Asset_SetModifyTime(Data_Asset *asset, int64_t modifyTime);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param size Indicates the size to set.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -168,6 +180,8 @@ int OH_Data_Asset_SetSize(Data_Asset *asset, size_t size);
  * @param asset Represents a pointer to an {@link Data_Asset} instance.
  * @param status Indicates the status to set. Specific status can be referenced {@link Data_AssetStatus}.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset, Data_AssetStatus
  * @since 11
@@ -182,6 +196,9 @@ int OH_Data_Asset_SetStatus(Data_Asset *asset, Data_AssetStatus status);
  * and the name of the asset as a char * is written to this variable.
  * @param length Indicates the length of the name.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -196,6 +213,9 @@ int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length);
  * and the uri of the asset as a char * is written to this variable.
  * @param length Indicates the length of the uri.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -210,6 +230,9 @@ int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length);
  * and the path of the asset as a char * is written to this variable.
  * @param length Indicates the length of the path.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -223,6 +246,9 @@ int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length);
  * @param createTime This parameter is the output parameter,
  * and the create time of the asset as a int64_t is written to this variable.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -236,6 +262,9 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime);
  * @param modifyTime This parameter is the output parameter,
  * and the create time of the asset as a int64_t is written to this variable.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -249,6 +278,9 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime);
  * @param size This parameter is the output parameter,
  * and the size of the asset as a size_t is written to this variable.
  * @return Returns a specific error code.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset
  * @since 11
@@ -262,6 +294,8 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size);
  * @param status This parameter is the output parameter,
  * and the size of the status as a {@link Data_AssetStatus} is written to this variable.
  * @return Returns a specific error code.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see Data_Asset Data_AssetStatus.
  * @since 11
@@ -293,8 +327,8 @@ int OH_Data_Asset_DestroyOne(Data_Asset *asset);
  * @brief Creates {@link Data_Asset} instances of given number.
  *
  * @param count Represents the count of {@link Data_Asset} to create.
- * @return If the creation is successful, a pointer to the instance of the @link Data_Asset} structure is returned,
- * otherwise NULL is returned.
+ * @return If the creation is successful, a pointer to the instance of the {@link Data_Asset} structure is returned.
+ *         If the creation is unsuccessful, nullptr is returned.
  * @see Data_Asset.
  * @since 11
  */
