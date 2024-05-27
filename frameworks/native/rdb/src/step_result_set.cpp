@@ -62,6 +62,12 @@ int StepResultSet::PrepareStep()
         return E_ALREADY_CLOSED;
     }
 
+    auto type = SqliteUtils::GetSqlStatementType(sql_);
+    if (type == SqliteUtils::STATEMENT_ERROR) {
+        LOG_ERROR("invalid sql_ %{public}s!", sql_.c_str());
+        return E_INVALID_ARGS;
+    }
+
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
         return E_STATEMENT_NOT_PREPARED;

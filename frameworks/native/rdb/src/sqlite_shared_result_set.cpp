@@ -44,8 +44,15 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
     if (conn_ == nullptr) {
         LOG_ERROR("Already close");
-        return {nullptr, E_ALREADY_CLOSED};
+        return { nullptr, E_ALREADY_CLOSED };
     }
+
+    auto type = SqliteUtils::GetSqlStatementType(qrySql_);
+    if (type == SqliteUtils::STATEMENT_ERROR) {
+        LOG_ERROR("invalid sql_ %{public}s!", qrySql_.c_str());
+        return { nullptr, E_INVALID_ARGS };
+    }
+
     auto [errCode, statement] = conn_->CreateStatement(qrySql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
         return { nullptr, E_ERROR };
@@ -53,7 +60,7 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 
     if (!statement->ReadOnly()) {
         LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(qrySql_).c_str());
-        return {nullptr, E_NOT_SELECT};
+        return { nullptr, E_NOT_SELECT };
     }
 
     errCode = statement->Bind(bindArgs_);
