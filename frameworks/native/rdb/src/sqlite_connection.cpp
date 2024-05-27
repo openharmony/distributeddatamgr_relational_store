@@ -93,7 +93,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
-        LOG_ERROR("SqliteConnection InnerOpen db not exist");
+        LOG_ERROR("db not exist");
         return E_DB_NOT_EXIST;
     }
 #endif
@@ -102,7 +102,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("SqliteConnection InnerOpen fail to open database err = %{public}d", errCode);
+        LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
+            errCode, dbPath.c_str(), openFileFlags, errno);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
         if (pos != std::string::npos) {
@@ -111,6 +112,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
                 LOG_ERROR("The path to the database file to be created is not valid, err = %{public}d", errno);
                 return E_INVALID_FILE_PATH;
             }
+        }
+        if (errCode == SQLITE_NOTADB) {
+            ReadFile2Buffer(dbPath.c_str());
         }
 #endif
         return SQLiteError::ErrNo(errCode);
@@ -130,6 +134,27 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     openFlags = openFileFlags;
 
     return E_OK;
+}
+
+void SqliteConnection::ReadFile2Buffer(const char* fileName)
+{
+    uint64_t buffer[BUFFER_LEN] = {0x0};
+    FILE *file = fopen(fileName, "r");
+    if (file == nullptr) {
+        LOG_ERROR("open db file failed: %s", fileName);
+        return;
+    }
+    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
+    if (readSize != BUFFER_LEN) {
+        LOG_ERROR("read db file size: %{public}zu error", readSize);
+        (void)fclose(file);
+        return;
+    }
+    for (uint32_t i = 0; i < BUFFER_LEN; i += 4) {
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
+            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+    }
+    (void)fclose(file);
 }
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
