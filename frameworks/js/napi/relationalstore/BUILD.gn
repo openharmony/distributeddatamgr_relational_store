@@ -182,6 +182,7 @@ if (is_ohos) {
     deps = [
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
+      "//commonlibrary/c_utils/base:utils",
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
     ]
 
@@ -216,6 +217,7 @@ if (is_ohos) {
     deps = [
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//commonlibrary/c_utils/base:utilsbase",
       "//plugins/libs/napi:napi_ios",
     ]
 
