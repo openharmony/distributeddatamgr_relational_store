@@ -96,6 +96,8 @@ private:
     int32_t UnsubscribeLocalDetail(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
