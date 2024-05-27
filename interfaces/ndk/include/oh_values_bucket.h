@@ -147,6 +147,8 @@ typedef struct OH_VBucket {
  * @param field Indicates the name of the column.
  * @param value Indicates the const {@link Data_Asset} * value.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_VBucket.
  * @since 11
  */
@@ -160,6 +162,8 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value
  * @param value Indicates the {@link Data_Asset} value of given count.
  * @param count Indicates the count of value.
  * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * @see OH_VBucket.
  * @since 11
  */

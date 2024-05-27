@@ -88,6 +88,31 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     return E_OK;
 }
 
+int AbsSharedResultSet::UpdateBlockPos(int position, int rowCnt)
+{
+    int ret = E_OK;
+    auto block = GetBlock();
+    if (block == nullptr || (uint32_t)position < block->GetStartPos() || (uint32_t)position >= block->GetLastPos() ||
+        rowPos_ == rowCnt) {
+        ret = OnGo(rowPos_, position);
+    } else {
+        uint32_t blockPos = block->GetBlockPos();
+        if (position > rowPos_) {
+            blockPos += (uint32_t)(position - rowPos_);
+        } else {
+            uint32_t offset = (uint32_t)(rowPos_ - position);
+            if (blockPos >= offset) {
+                blockPos -= offset;
+            } else {
+                LOG_ERROR("GoToRow failed of position= %{public}d, rowPos= %{public}d", position, rowPos_);
+                return E_ERROR;
+            }
+        }
+        block->SetBlockPos(blockPos);
+    }
+    return ret;
+}
+
 int AbsSharedResultSet::GoToRow(int position)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -105,9 +130,13 @@ int AbsSharedResultSet::GoToRow(int position)
 
     int rowCnt = 0;
     auto ret = GetRowCount(rowCnt);
-    if (ret != E_OK || rowCnt == 0) {
+    if (ret != E_OK) {
         LOG_ERROR("GetRowCount ret is %{public}d, rowCount is %{public}d", ret, rowCnt);
-        return ret == E_OK ? E_ERROR : ret;
+        return ret;
+    }
+
+    if (rowCnt == 0) {
+        return E_ERROR;
     }
 
     if (position >= rowCnt) {
@@ -119,26 +148,7 @@ int AbsSharedResultSet::GoToRow(int position)
         rowPos_ = 0;
     }
 
-    auto block = GetBlock();
-    if (block == nullptr || (uint32_t)position < block->GetStartPos() ||
-        (uint32_t)position >= block->GetLastPos() || rowPos_ == rowCnt) {
-        ret = OnGo(rowPos_, position);
-    } else {
-        uint32_t blockPos = block->GetBlockPos();
-        if (position > rowPos_) {
-            blockPos += (uint32_t)(position - rowPos_);
-        } else {
-            uint32_t offset = (uint32_t)(rowPos_ - position);
-            if (blockPos >= offset) {
-                blockPos -= offset;
-            } else {
-                LOG_ERROR("GoToRow failed of position= %{public}d, rowPos= %{public}d", position, rowPos_);
-                return E_ERROR;
-            }
-        }
-        block->SetBlockPos(blockPos);
-    }
-
+    ret = UpdateBlockPos(position, rowCnt);
     if (ret == E_OK) {
         rowPos_ = position;
     }
