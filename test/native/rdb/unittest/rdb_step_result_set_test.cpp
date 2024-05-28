@@ -1410,7 +1410,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
-    EXPECT_EQ(E_STATEMENT_NOT_PREPARED, resultSet->GetAllColumnNames(columnNames));
+    EXPECT_EQ(E_INVALID_ARGS, resultSet->GetAllColumnNames(columnNames));
 
     EXPECT_EQ(E_OK, resultSet->Close());
 }
