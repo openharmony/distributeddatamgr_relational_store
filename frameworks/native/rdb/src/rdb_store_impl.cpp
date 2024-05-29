@@ -1090,7 +1090,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
 {
     if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
-    }else if (config_.GetDBType() == DB_VECTOR) {
+    } else if (config_.GetDBType() == DB_VECTOR) {
         auto conn = connectionPool_->AcquireConnection(false);
         if (conn == nullptr) return E_BASE;
         if (!destEncryptKey.empty() && isEncrypt_) {
@@ -1100,9 +1100,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         }
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
-    if (statement == nullptr) {
-        return E_BASE;
-    }
+    if (statement == nullptr) return E_BASE;
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
     if (!destEncryptKey.empty() && !isEncrypt_) {
@@ -1120,12 +1118,9 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         std::string str = "";
         bindArgs.emplace_back(str);
     }
-
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
-    if (errCode != E_OK) {
-        return errCode;
-    }
+    if (errCode != E_OK) return errCode;
     errCode = statement->Prepare(GlobalExpr::EXPORT_SQL);
     int ret = statement->Execute();
     errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
@@ -1673,9 +1668,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
     std::string backupFilePath;
     int ret = GetDataBasePath(backupPath, backupFilePath);
-    if (ret != E_OK) {
-        return ret;
-    }
+    if (ret != E_OK)  return ret;
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
         LOG_ERROR("The backupFilePath does not exists.");
         return E_INVALID_FILE_PATH;
