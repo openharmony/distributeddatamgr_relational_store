@@ -300,7 +300,6 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             return retVal;
         }
         CloseAllConnections();
-
     } else {
         CloseAllConnections();
         RemoveDBFile();
