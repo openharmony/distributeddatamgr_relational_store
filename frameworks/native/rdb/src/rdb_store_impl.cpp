@@ -1088,25 +1088,17 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
  */
 int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
-    }
-
-    if (config_.GetDBType() == DB_VECTOR) {
+    }else if (config_.GetDBType() == DB_VECTOR) {
         auto conn = connectionPool_->AcquireConnection(false);
-        if (conn == nullptr) {
-            return E_BASE;
-        }
-
-        int errCode = E_OK;
+        if (conn == nullptr) return E_BASE;
         if (!destEncryptKey.empty() && isEncrypt_) {
-            errCode = conn->Backup(databasePath, destEncryptKey);
+            return conn->Backup(databasePath, destEncryptKey);
         } else {
-            errCode = conn->Backup(databasePath, {});
+            return conn->Backup(databasePath, {});
         }
-        return errCode;
     }
-
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) {
         return E_BASE;
@@ -1675,23 +1667,19 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         LOG_ERROR("The connection pool has been closed.");
         return E_ERROR;
     }
-
     if (connectionPool_ == nullptr) {
         LOG_ERROR("The connectionPool_ is null.");
         return E_ERROR;
     }
-
     std::string backupFilePath;
     int ret = GetDataBasePath(backupPath, backupFilePath);
     if (ret != E_OK) {
         return ret;
     }
-
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
         LOG_ERROR("The backupFilePath does not exists.");
         return E_INVALID_FILE_PATH;
     }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
