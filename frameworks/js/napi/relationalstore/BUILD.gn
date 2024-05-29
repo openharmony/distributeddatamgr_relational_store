@@ -183,7 +183,6 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
-      "//commonlibrary/c_utils/base:utils",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -218,7 +217,6 @@ if (is_ohos) {
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//plugins/libs/napi:napi_ios",
-      "//commonlibrary/c_utils/base:utilsbase",
     ]
 
     subsystem_name = "distributeddatamgr"
