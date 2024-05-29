@@ -37,6 +37,7 @@ enum class ConflictResolution {
 enum RebuiltType : uint32_t {
     NONE,
     REBUILT,
+    REPAIRED,
 };
 } // namespace NativeRdb
 } // namespace OHOS

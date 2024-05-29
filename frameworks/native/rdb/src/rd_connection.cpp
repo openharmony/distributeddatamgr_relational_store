@@ -24,6 +24,8 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 __attribute__((used))
 const int32_t RdConnection::reg_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
+Connection::RegisterRepairer(DB_VECTOR, RdConnection::Repair);
+
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
@@ -35,10 +37,27 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
             return result;
         }
         errCode = connection->InnerOpen(config);
-        conn = connection;
-        break;
+        if (errCode == E_OK) {
+            conn = connection;
+            break;
+        }
     }
     return result;
+}
+
+int32_t RdConnection::Repair(const RdbStoreConfig& config)
+{
+    std::string dbPath = "";
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
+    if (errCode != E_OK) {
+        LOG_ERROR("Can not get db path");
+        return errCode;
+    }
+    errCode = RdUtils::RdDbRepair(dbPath.c_str(), configStr_.c_str());
+    if (errCode != E_OK) {
+        LOG_ERROR("Fail to repair db");
+    }
+    return errCode;
 }
 
 RdConnection::RdConnection(bool isWriter) : isWriter_(isWriter) {}

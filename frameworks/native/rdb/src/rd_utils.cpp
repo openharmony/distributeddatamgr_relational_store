@@ -38,6 +38,7 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
     { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_INNER_ERR, E_ERROR },
+    { GRD_DATA_EXCEPTION, E_SQLITE_CORRUPT },
 };
 
 int RdUtils::TransferGrdErrno(int err)
@@ -93,6 +94,18 @@ int RdUtils::RdDbClose(GRD_DB *db, uint32_t flags)
         return TransferGrdErrno(GRD_INNER_ERR);
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBCloseApi(db, flags));
+}
+
+int RdUtils::RdDbRepair(const char *dbPath, const char *configStr)
+{
+    LOG_DEBUG("[RdUtils::RdDbRepair]");
+    if (GRD_KVApiInfo.DBRepairApi == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBRepairApi == nullptr) {
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBRepairApi(dbPath, configStr));
 }
 
 int RdUtils::RdSqlPrepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr)

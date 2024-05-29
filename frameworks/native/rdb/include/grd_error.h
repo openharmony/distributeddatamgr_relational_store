@@ -78,6 +78,9 @@ extern "C" {
 #define GRD_KEY_CONFLICT (-5016002)
 #define GRD_FIELD_TYPE_CONFLICT (-5016003)
 
+// data corruption
+#define GRD_DATA_EXCEPTION (-5017001)
+
 // Cursor or ResultSet not available
 #define GRD_RESULT_SET_NOT_AVAILABLE (-5019001)
 
