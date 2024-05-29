@@ -33,6 +33,7 @@ void GRD_DBApiInitEnhance(GRD_APIInfo &GRD_DBApiInfo)
 #ifndef _WIN32
     GRD_DBApiInfo.DBOpenApi = (DBOpen)dlsym(g_library, "GRD_DBOpen");
     GRD_DBApiInfo.DBCloseApi = (DBClose)dlsym(g_library, "GRD_DBClose");
+    GRD_DBApiInfo.DBRepairApi = (DBRepair)dlsym(g_library, "GRD_DBRepair");
     GRD_DBApiInfo.DBSqlPrepare = (DBSqlPrepare)dlsym(g_library, "GRD_SqlPrepare");
     GRD_DBApiInfo.DBSqlReset = (DBSqlReset)dlsym(g_library, "GRD_SqlReset");
     GRD_DBApiInfo.DBSqlFinalize = (DBSqlFinalize)dlsym(g_library, "GRD_SqlFinalize");

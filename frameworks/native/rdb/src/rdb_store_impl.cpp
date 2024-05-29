@@ -324,15 +324,8 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild()) {
-        auto realPath = config.GetPath();
-        RemoveDbFiles(realPath);
-        connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
-        if (errCode == E_OK) {
-            rebuild_ = RebuiltType::REBUILT;
-        }
-        LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
-            name_.c_str(), errCode, isEncrypt_);
+    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT) {
+        std::tie(rebuild_, connectionPool_) =  SqliteConnectionPool::HandleDataCorruption(config_, errCode);
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;

@@ -23,6 +23,7 @@ namespace NativeRdb {
 
 typedef int32_t (*DBOpen)(const char *dbPath, const char *configStr, uint32_t flags, GRD_DB **db);
 typedef int32_t (*DBClose)(GRD_DB *db, uint32_t flags);
+typedef int32_t (*DBRepair)(const char *dbPath, const char *configStr);
 
 typedef int (*DBSqlPrepare)(GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr);
 typedef int (*DBSqlReset)(GRD_SqlStmt *stmt);
@@ -52,6 +53,7 @@ typedef const float *(*DBSqlColumnFloatVector)(GRD_SqlStmt *stmt, uint32_t idx, 
 struct GRD_APIInfo {
     DBOpen DBOpenApi = nullptr;
     DBClose DBCloseApi = nullptr;
+    DBRepair DBRepairApi = nullptr;
     DBSqlPrepare DBSqlPrepare = nullptr;
     DBSqlReset DBSqlReset = nullptr;
     DBSqlFinalize DBSqlFinalize = nullptr;
