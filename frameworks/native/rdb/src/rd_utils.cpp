@@ -449,10 +449,5 @@ int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encrypte
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
 }
-
-int RdUtils::RenameFile(const std::string &srcFile, const std::string &destFile)
-{
-    return rename(srcFile.c_str(), destFile.c_str());
-}
 } // namespace NativeRdb
 } // namespace OHOS

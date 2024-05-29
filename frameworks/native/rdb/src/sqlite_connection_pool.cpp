@@ -27,7 +27,6 @@
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "rd_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -286,29 +285,39 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         return E_ERROR;
     }
 
-    CloseAllConnections();
-    RemoveDBFile();
-
-    if (config_.GetPath() != newPath) {
-        RemoveDBFile(newPath);
-    }
-
-    int retVal = E_OK;
-
     if (config_.GetDBType() == DB_VECTOR) {
-        retVal = RdUtils::RenameFile(backupPath, newPath);
-        if (retVal != E_OK) {
-            LOG_ERROR("RenameFile error");
+        CloseAllConnections();
+        auto [retVal, connection] = connectionPool_->CreateConnection(false);
+
+        if (connection == nullptr) {
+            LOG_ERROR("Get null connection");
             return retVal;
         }
+
+        retVal = coonnection->Restore(backupPath, newPath);
+
+        if (retVal != E_OK) {
+            LOG_ERROR("RdDbRestore error");
+            return retVal;
+        }
+        CloseAllConnections();
+        
     } else {
+        CloseAllConnections();
+        RemoveDBFile();
+
+        if (config_.GetPath() != newPath) {
+            RemoveDBFile(newPath);
+        }
+
+        int retVal = E_OK;
+
         retVal = SqliteUtils::RenameFile(backupPath, newPath);
         if (retVal != E_OK) {
             LOG_ERROR("RenameFile error");
             return retVal;
         }
     }
-
     auto [errCode, node] = Init(config_);
     return errCode;
 }

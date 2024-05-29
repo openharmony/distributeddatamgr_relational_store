@@ -61,7 +61,6 @@ public:
 
     static int RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
     static int RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
-    static int RenameFile(const std::string &srcFile, const std::string &destFile);
 };
 
 } // namespace NativeRdb
