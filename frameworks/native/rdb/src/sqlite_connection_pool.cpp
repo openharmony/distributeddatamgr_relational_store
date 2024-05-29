@@ -287,21 +287,20 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
 
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        auto [retVal, connection] = connectionPool_->CreateConnection(false);
+        auto [retVal, connection] = CreateConnection(false);
 
         if (connection == nullptr) {
             LOG_ERROR("Get null connection");
             return retVal;
         }
 
-        retVal = coonnection->Restore(backupPath, newPath);
-
+        retVal = connection->Restore(backupPath, newPath);
         if (retVal != E_OK) {
             LOG_ERROR("RdDbRestore error");
             return retVal;
         }
         CloseAllConnections();
-        
+
     } else {
         CloseAllConnections();
         RemoveDBFile();
