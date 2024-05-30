@@ -61,7 +61,7 @@ ohos_shared_library("cj_relational_store_ffi") {
     defines += [ "PREVIEWER" ]
     sources = [ "mock/relational_store_mock.cpp" ]
   }
-
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 }
