@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,50 +11,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/distributeddatamgr/data_share/datashare.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-module_output_path = "relational_store/rdb_data_ability_adapter"
+module_output_path = "relational_store/native_appdatafwk"
 
 ###############################################################################
 config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "${datashare_innerapi_path}/common/include",
-    "${relational_store_innerapi_path}/dataability/include",
-    "${relational_store_innerapi_path}/rdb_data_ability_adapter/include",
-    "//commonlibrary/c_utils/base/include",
+    "${relational_store_native_path}/appdatafwk/include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_innerapi_path}/rdb/src",
   ]
 }
 
-ohos_unittest("NativeDataAbilityAdapterTest") {
+ohos_unittest("NativeAppDataFwkTest") {
   module_out_path = module_output_path
 
-  sources = [ "unittest/data_ability_utils_test.cpp" ]
+  sources = [ "unittest/serializable_test.cpp" ]
 
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "ability_runtime:ability_manager",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:dataobs_manager",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
-    "c_utils:utils",
-    "data_share:datashare_common",
-    "data_share:datashare_consumer",
     "hilog:libhilog",
-    "relational_store:native_dataability",
-    "relational_store:rdb_data_ability_adapter",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
+    "relational_store:native_appdatafwk",
   ]
 
   deps = [
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     "${relational_store_innerapi_path}/rdb:native_rdb",
     "//third_party/googletest:gtest_main",
   ]
@@ -64,6 +51,6 @@ ohos_unittest("NativeDataAbilityAdapterTest") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":NativeDataAbilityAdapterTest" ]
+  deps = [ ":NativeAppDataFwkTest" ]
 }
 ###############################################################################
