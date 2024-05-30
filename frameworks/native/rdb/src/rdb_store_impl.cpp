@@ -27,7 +27,6 @@
 #include <string>
 
 #include "cache_result_set.h"
-#include "directory_ex.h"
 #include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
@@ -42,6 +41,8 @@
 #include "task_executor.h"
 #include "traits.h"
 #include "rdb_radar_reporter.h"
+
+#include "directory_ex.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"

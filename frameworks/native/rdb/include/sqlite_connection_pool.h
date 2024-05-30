@@ -40,7 +40,8 @@ public:
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
     static std::shared_ptr<SqliteConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
     ~SqliteConnectionPool();
-    static std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> HandleDataCorruption(const RdbStoreConfig &storeConfig, int &errCode);
+    static std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> HandleDataCorruption
+        (const RdbStoreConfig &storeConfig, int &errCode);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateConnection(bool isReadOnly);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
@@ -116,6 +117,7 @@ private:
     void ReleaseNode(std::shared_ptr<ConnNode> node);
     void RemoveDBFile();
     void RemoveDBFile(const std::string &path);
+    static void RemoveDBFiles(const std::string &path);
 
     static constexpr int LIMITATION = 1024;
     RdbStoreConfig config_;

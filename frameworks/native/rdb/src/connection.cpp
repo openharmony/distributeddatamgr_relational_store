@@ -45,7 +45,7 @@ int32_t Connection::Repair(const RdbStoreConfig &config)
         return E_ERROR;
     }
 
-    return repairer(config);  
+    return repairer(config);
 }
 
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
@@ -69,14 +69,17 @@ int32_t Connection::RegisterRepairer(int32_t dbType, Repairer repairer)
         return E_OK;
     }
     g_repairers[dbType] = repairer;
-    return E_OK;            
+    return E_OK;
 }
 
-static uint32_t GetCapability(const RdbStoreConfig &config)
+uint32_t Connection::GetCapability(const RdbStoreConfig &config)
 {
     uint32_t capability = 0;
-    if (config.GetDBType() == DB_VECTOR) {
-        capability |= RebuiltType::REPAIR;
+    auto dbType = config.GetDBType();
+    if (dbType >= static_cast<int32_t>(DB_SQLITE) && dbType < static_cast<int32_t>(DB_BUTT)) {
+        if (g_repairers[dbType] != nullptr) {
+            capability |= RebuiltType::REPAIRED;
+        }
     }
     if (config.GetAllowRebuild()) {
         capability |= RebuiltType::REBUILT;

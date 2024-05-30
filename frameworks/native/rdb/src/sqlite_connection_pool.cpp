@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "connection.h"
 #define LOG_TAG "SqliteConnectionPool"
 #include "sqlite_connection_pool.h"
 
@@ -49,6 +50,35 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<Connection> conn;
     std::tie(errCode, conn) = pool->Init(storeConfig);
     return errCode == E_OK ? pool : nullptr;
+}
+
+std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDataCorruption
+    (const RdbStoreConfig &storeConfig, int &errCode)
+{
+    std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> result;
+    auto &[rebuiltTpye, pool] = result;
+
+    if (Connection::GetCapability(storeConfig) & RebuiltType::REPAIRED) {
+        errCode = Connection::Repair(storeConfig);
+        if (errCode == E_OK) {
+            pool = Create(storeConfig, errCode);
+            if (errCode == E_OK) {
+                rebuiltTpye = RebuiltType::REPAIRED;
+                return result;
+            }
+        }
+    }
+    if (Connection::GetCapability(storeConfig) & RebuiltType::REBUILT) {
+        auto realPath = storeConfig.GetPath();
+        RemoveDBFiles(realPath);
+        pool = Create(storeConfig, errCode);
+        if (errCode == E_OK) {
+            rebuiltTpye = RebuiltType::REBUILT;
+        }
+        LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
+            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+    }
+    return result;
 }
 
 ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
@@ -614,5 +644,14 @@ void ConnPool::RemoveDBFile(const std::string &path)
     SqliteUtils::DeleteFile(path + "-wal");
     SqliteUtils::DeleteFile(path + "-journal");
 }
+
+void ConnPool::RemoveDBFiles(const std::string &path)
+{
+    SqliteUtils::DeleteFile(path);
+    SqliteUtils::DeleteFile(path + "-shm");
+    SqliteUtils::DeleteFile(path + "-wal");
+    SqliteUtils::DeleteFile(path + "-journal");    
+}
+
 } // namespace NativeRdb
 } // namespace OHOS
