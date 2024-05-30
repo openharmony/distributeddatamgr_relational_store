@@ -76,10 +76,6 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     return result;
 }
 
-int32_t SqliteConnection::Repair(const RdbStoreConfig& config) {
-    return E_NOT_SUPPORT;
-}
-
 SqliteConnection::SqliteConnection(bool isWriteConnection)
     : dbHandle(nullptr), isWriter_(isWriteConnection), isReadOnly(false), openFlags(0), maxVariableNumber_(0),
       filePath("")
