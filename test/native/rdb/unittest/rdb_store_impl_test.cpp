@@ -180,6 +180,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_003, TestSize.Level2)
     RdbStore::PRIKey key = result.GetOriginKey(std::vector<uint8_t>{});
     RdbStore::PRIKey monostate = std::monostate();
     EXPECT_EQ(monostate, key);
+    EXPECT_EQ(8, result.GetMaxOriginKeySize());
 
     store_->ExecuteSql("DROP TABLE IF EXISTS naturalbase_rdb_aux_rdbstoreimpltest_integer_log");
 }
