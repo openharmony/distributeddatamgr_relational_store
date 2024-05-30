@@ -38,7 +38,7 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
     { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_INNER_ERR, E_ERROR },
-    { GRD_DATA_EXCEPTION, E_SQLITE_CORRUPT },
+    { GRD_DATA_CORRUPTED, E_SQLITE_CORRUPT },
 };
 
 int RdUtils::TransferGrdErrno(int err)

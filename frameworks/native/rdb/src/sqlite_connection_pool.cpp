@@ -650,7 +650,7 @@ void ConnPool::RemoveDBFiles(const std::string &path)
     SqliteUtils::DeleteFile(path);
     SqliteUtils::DeleteFile(path + "-shm");
     SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");    
+    SqliteUtils::DeleteFile(path + "-journal");
 }
 
 } // namespace NativeRdb
