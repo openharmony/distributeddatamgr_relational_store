@@ -481,10 +481,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
-<<<<<<< HEAD
-=======
       "//commonlibrary/c_utils/base/include",
->>>>>>> !1354 修改ios平台cutils依赖
     ]
   }
 
@@ -509,10 +506,6 @@ if (is_ohos && !build_ohos_sdk) {
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
-<<<<<<< HEAD
-      "//commonlibrary/c_utils/base:utils",
-=======
->>>>>>> !1354 修改ios平台cutils依赖
       "//third_party/sqlite:sqlite_static",
     ]
     cflags_cc = [ "-std=c++17" ]
@@ -561,10 +554,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
-<<<<<<< HEAD
-=======
       "//commonlibrary/c_utils/base/include",
->>>>>>> !1354 修改ios平台cutils依赖
     ]
   }
 
