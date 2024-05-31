@@ -24,6 +24,8 @@ ohos_copy("relational_store_declaration") {
 ohos_shared_library("dataability") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
+    ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
