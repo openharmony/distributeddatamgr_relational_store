@@ -100,6 +100,8 @@ if (is_ohos && !build_ohos_sdk) {
   ohos_shared_library("native_rdb") {
     branch_protector_ret = "pac_ret"
     sanitize = {
+      boundary_sanitize = true
+      ubsan = true
       cfi = true
       cfi_cross_dso = true
       debug = false
@@ -169,6 +171,8 @@ if (is_ohos && !build_ohos_sdk) {
   ohos_static_library("native_rdb_static") {
     branch_protector_ret = "pac_ret"
     sanitize = {
+      boundary_sanitize = true
+      ubsan = true
       cfi = true
       cfi_cross_dso = true
       debug = false

@@ -17,6 +17,8 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_shared_library("cj_relational_store_ffi") {
   sanitize = {
+    boundary_sanitize = true
+    ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
