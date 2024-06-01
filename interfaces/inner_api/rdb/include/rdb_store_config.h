@@ -598,7 +598,7 @@ private:
     std::string customDir_;
     std::vector<uint8_t> encryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
-    
+
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;

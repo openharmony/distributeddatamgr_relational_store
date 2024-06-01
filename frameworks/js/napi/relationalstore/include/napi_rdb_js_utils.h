@@ -42,6 +42,7 @@ struct RdbConfig {
     bool isAutoClean = false;
     bool vector = false;
     bool allowRebuild = false;
+    bool isReadOnly = false;
     SecurityLevel securityLevel = SecurityLevel::LAST;
     std::string dataGroupId;
     std::string name;
