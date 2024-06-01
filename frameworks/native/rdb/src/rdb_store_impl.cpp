@@ -1094,8 +1094,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         auto conn = connectionPool_->AcquireConnection(false);
         if (conn == nullptr) return E_BASE;
         if (isEncrypt_) return E_NOT_SUPPORTED;
-        destEncryptKey = {};
-        return conn->Backup(databasePath, destEncryptKey);
+        return conn->Backup(databasePath, {}});
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) return E_BASE;

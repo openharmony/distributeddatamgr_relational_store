@@ -293,9 +293,8 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             LOG_ERROR("Get null connection");
             return retVal;
         }
-        newKey = {};
 
-        retVal = connection->Restore(backupPath, newKey);
+        retVal = connection->Restore(backupPath, {});
         if (retVal != E_OK) {
             LOG_ERROR("RdDbRestore error");
             return retVal;
