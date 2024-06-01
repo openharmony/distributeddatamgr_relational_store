@@ -60,7 +60,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
-    if (config.GetRoleType() == OWNER) {
+    if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;
         std::tie(errCode, node) = writers_.Initialize(
