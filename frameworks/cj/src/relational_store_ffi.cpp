@@ -416,10 +416,6 @@ extern "C" {
             *errCode = -1;
             return -1;
         }
-        if (nativeRdbStore == nullptr || nativeRdbPredicates == nullptr) {
-            *errCode = -1;
-            return -1;
-        }
         return nativeRdbStore->Delete(*nativeRdbPredicates, errCode);
     }
 

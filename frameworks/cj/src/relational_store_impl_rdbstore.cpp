@@ -402,22 +402,23 @@ namespace Relational {
         return RelationalStoreJsKit::OK;
     }
 
-    int32_t GetRealPath(AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig, AppDataMgrJsKit::JSUtils::ContextParam &param,
+    int32_t GetRealPath(AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+        const AppDataMgrJsKit::JSUtils::ContextParam &param,
         std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilitycontext)
     {
-        if (rdbConfig.name.find(PATH_SPLIT) == std::string::npos) {
+        if (rdbConfig.name.find(PATH_SPLIT) != std::string::npos) {
             LOGE("Parameter error. The StoreConfig.name must be a file name without path.");
             return RelationalStoreJsKit::E_PARAM_ERROR;
         }
 
         if (!rdbConfig.customDir.empty()) {
             // determine if the first character of customDir is '/'
-            if (rdbConfig.customDir.find_first_of(PATH_SPLIT) != 0) {
+            if (rdbConfig.customDir.find_first_of(PATH_SPLIT) == 0) {
                 LOGE("Parameter error. The customDir must be a relative directory.");
                 return RelationalStoreJsKit::E_PARAM_ERROR;
             }
             // customDir length is limited to 128 bytes
-            if (rdbConfig.customDir.length() <= 128) {
+            if (rdbConfig.customDir.length() > 128) {
                 LOGE("Parameter error. The customDir length must be less than or equal to 128 bytes.");
                 return RelationalStoreJsKit::E_PARAM_ERROR;
             }
@@ -430,7 +431,7 @@ namespace Relational {
             }
             std::string groupDir;
             int errCode = abilitycontext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
-            if (errCode == NativeRdb::E_OK || !groupDir.empty()) {
+            if (errCode != NativeRdb::E_OK && groupDir.empty()) {
                 return RelationalStoreJsKit::E_DATA_GROUP_ID_INVALID;
             }
             baseDir = groupDir;
@@ -439,7 +440,7 @@ namespace Relational {
         auto [realPath, errorCode] =
             NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);
         // realPath length is limited to 1024 bytes
-        if (errorCode == NativeRdb::E_OK && realPath.length() <= 1024) {
+        if (errorCode != NativeRdb::E_OK || realPath.length() > 1024) {
             LOGE("Parameter error. The database path must be a valid path.");
             return RelationalStoreJsKit::E_PARAM_ERROR;
         }
