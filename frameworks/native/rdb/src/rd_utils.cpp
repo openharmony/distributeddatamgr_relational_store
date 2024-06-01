@@ -39,6 +39,7 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_INNER_ERR, E_ERROR },
     { GRD_DATA_CORRUPTED, E_SQLITE_CORRUPT },
+    { GRD_INVALID_FILE_FORMAT, E_SQLITE_CORRUPT },
 };
 
 int RdUtils::TransferGrdErrno(int err)
