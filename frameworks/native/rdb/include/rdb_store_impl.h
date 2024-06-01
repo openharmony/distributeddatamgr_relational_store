@@ -35,6 +35,7 @@
 #include "sqlite_connection_pool.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
+#include "rd_statement.h"
 
 namespace OHOS {
 class ExecutorPool;
