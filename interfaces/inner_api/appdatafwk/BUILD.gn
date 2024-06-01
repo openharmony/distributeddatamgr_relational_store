@@ -73,6 +73,8 @@ if (is_android || is_ios) {
     if (is_ohos) {
       branch_protector_ret = "pac_ret"
       sanitize = {
+        boundary_sanitize = true
+        ubsan = true
         cfi = true
         cfi_cross_dso = true
         debug = false
@@ -107,6 +109,8 @@ if (is_android || is_ios) {
 ohos_shared_library("native_appdatafwk") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
+    ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
