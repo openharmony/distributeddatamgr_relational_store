@@ -117,7 +117,7 @@ private:
     void ReleaseNode(std::shared_ptr<ConnNode> node);
     void RemoveDBFile();
     void RemoveDBFile(const std::string &path);
-    static void RemoveDBFiles(const std::string &path);
+    static void RemoveDBFiles(const std::string &path, const RdbStoreConfig &config);
 
     static constexpr int LIMITATION = 1024;
     RdbStoreConfig config_;

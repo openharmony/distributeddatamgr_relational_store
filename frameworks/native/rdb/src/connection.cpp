@@ -72,21 +72,6 @@ int32_t Connection::RegisterRepairer(int32_t dbType, Repairer repairer)
     return E_OK;
 }
 
-uint32_t Connection::GetCapability(const RdbStoreConfig &config)
-{
-    uint32_t capability = 0;
-    auto dbType = config.GetDBType();
-    if (dbType >= static_cast<int32_t>(DB_SQLITE) && dbType < static_cast<int32_t>(DB_BUTT)) {
-        if (g_repairers[dbType] != nullptr) {
-            capability |= RebuiltType::REPAIRED;
-        }
-    }
-    if (config.GetAllowRebuild()) {
-        capability |= RebuiltType::REBUILT;
-    }
-    return capability;
-}
-
 int Connection::SetId(int id)
 {
     id_ = id;

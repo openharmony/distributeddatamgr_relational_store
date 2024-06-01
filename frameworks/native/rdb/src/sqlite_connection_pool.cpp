@@ -58,19 +58,23 @@ std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDa
     std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> result;
     auto &[rebuiltTpye, pool] = result;
 
-    if (Connection::GetCapability(storeConfig) & RebuiltType::REPAIRED) {
-        errCode = Connection::Repair(storeConfig);
+    errCode = Connection::Repair(storeConfig);
+    if (errCode == E_OK) {
+        pool = Create(storeConfig, errCode);
         if (errCode == E_OK) {
-            pool = Create(storeConfig, errCode);
-            if (errCode == E_OK) {
-                rebuiltTpye = RebuiltType::REPAIRED;
+            rebuiltTpye = RebuiltType::REPAIRED;
                 return result;
-            }
+        } else {
+        LOG_WARN("corrupted db %{public}s repaired, but open ret %{public}d, encrypt %{public}d",
+            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
         }
+    } else {
+        LOG_WARN("db %{public}s corrupt, repair ret %{public}d, encrypt %{public}d",
+            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
     }
-    if (Connection::GetCapability(storeConfig) & RebuiltType::REBUILT) {
+    if (storeConfig.GetAllowRebuild()) {
         auto realPath = storeConfig.GetPath();
-        RemoveDBFiles(realPath);
+        RemoveDBFiles(realPath, storeConfig);
         pool = Create(storeConfig, errCode);
         if (errCode == E_OK) {
             rebuiltTpye = RebuiltType::REBUILT;
@@ -645,12 +649,30 @@ void ConnPool::RemoveDBFile(const std::string &path)
     SqliteUtils::DeleteFile(path + "-journal");
 }
 
-void ConnPool::RemoveDBFiles(const std::string &path)
+static std::vector<std::string> rdPostFixes = {
+    "",
+    ".redo",
+    ".undo",
+    ".ctrl",
+    ".safe",
+    ".map",
+};
+
+void ConnPool::RemoveDBFiles(const std::string &path, const RdbStoreConfig &config)
 {
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
+    if (config.GetDBType() == DB_SQLITE) {
+        SqliteUtils::DeleteFile(path);
+        SqliteUtils::DeleteFile(path + "-shm");
+        SqliteUtils::DeleteFile(path + "-wal");
+        SqliteUtils::DeleteFile(path + "-journal");
+    } else if (config.GetDBType() == DB_VECTOR) {
+        for (std::string &postFix : rdPostFixes) {
+            std::string shmFilePath = path + postFix;
+            if (access(shmFilePath.c_str(), F_OK) == 0) {
+                remove(shmFilePath.c_str());
+            }
+        }
+    }
 }
 
 } // namespace NativeRdb

@@ -60,8 +60,8 @@ private:
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
-    static const int32_t reg_;
-    static const int32_t reg2_;
+    static const int32_t regCreator_;
+    static const int32_t regRepairer_;
 
     int InnerOpen(const RdbStoreConfig &config);
     bool isWriter_ = false;

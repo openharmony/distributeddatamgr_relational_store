@@ -38,7 +38,6 @@ public:
     static int32_t Repair(const RdbStoreConfig &config);
     static int32_t RegisterCreator(int32_t dbType, Creator creator);
     static int32_t RegisterRepairer(int32_t dbType, Repairer repairer);
-    static uint32_t GetCapability(const RdbStoreConfig &config);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
