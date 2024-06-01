@@ -1149,7 +1149,6 @@ std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::
         conn = nullptr;
         return GetStatement(sql, true);
     }
-
     return { errCode, statement };
 }
 
