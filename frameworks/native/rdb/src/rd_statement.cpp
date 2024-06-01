@@ -23,6 +23,7 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rd_utils.h"
+#include "rd_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
