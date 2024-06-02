@@ -20,6 +20,7 @@
 namespace OHOS::NativeRdb {
 static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
 static Connection::Repairer g_repairers[DB_BUTT] = { nullptr, nullptr };
+static Connection::Deleter g_fileDeleter[DB_BUTT] = { nullptr, nullptr };
 std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig &config, bool isWriter)
 {
     auto dbType = config.GetDBType();
@@ -48,6 +49,20 @@ int32_t Connection::Repair(const RdbStoreConfig &config)
     return repairer(config);
 }
 
+void DeleteDbFile(const RdbStoreConfig &config)
+{
+    auto dbType = config.GetDBType();
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return;
+    }
+    auto deleter = g_fileDeleter[dbType];
+    if (deleter == nullptr) {
+        return;
+    }
+    
+    deleter(config);    
+}
+
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
 {
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
@@ -69,6 +84,17 @@ int32_t Connection::RegisterRepairer(int32_t dbType, Repairer repairer)
         return E_OK;
     }
     g_repairers[dbType] = repairer;
+    return E_OK;
+}
+
+int32_t Connection::RegisterFileDeleter(int32_t dbType, Deleter deleter) {
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return E_INVALID_ARGS;
+    }
+    if (g_fileDeleter[dbType] != nullptr) {
+        return E_OK;
+    }
+    g_fileDeleter[dbType] = deleter;
     return E_OK;
 }
 
