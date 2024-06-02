@@ -1097,7 +1097,9 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return conn->Backup(databasePath, {});
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
-    if (statement == nullptr) return E_BASE;
+    if (statement == nullptr) {
+        return E_BASE;
+    }
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
     if (!destEncryptKey.empty() && !isEncrypt_) {
@@ -1117,7 +1119,9 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     }
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
-    if (errCode != E_OK) return errCode;
+    if (errCode != E_OK) {
+        return errCode;
+    }
     errCode = statement->Prepare(GlobalExpr::EXPORT_SQL);
     int ret = statement->Execute();
     errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
@@ -1148,6 +1152,7 @@ std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::
         conn = nullptr;
         return GetStatement(sql, true);
     }
+
     return { errCode, statement };
 }
 
@@ -1662,13 +1667,18 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         LOG_ERROR("The connectionPool_ is null.");
         return E_ERROR;
     }
+
     std::string backupFilePath;
     int ret = GetDataBasePath(backupPath, backupFilePath);
-    if (ret != E_OK)  return ret;
+    if (ret != E_OK) {
+        return ret;
+    }
+
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
         LOG_ERROR("The backupFilePath does not exists.");
         return E_INVALID_FILE_PATH;
     }
+    
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
