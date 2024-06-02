@@ -23,9 +23,9 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 __attribute__((used))
-int32_t RdConnection::regCreator_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
-int32_t RdConnection::regRepairer_ = Connection::RegisterRepairer(DB_VECTOR, RdConnection::Repair);
-int32_t RdConnection::regFileDeleter_ =
+const int32_t RdConnection::regCreator_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
+const int32_t RdConnection::regRepairer_ = Connection::RegisterRepairer(DB_VECTOR, RdConnection::Repair);
+const int32_t RdConnection::regFileDeleter_ =
     Connection::RegisterFileDeleter(DB_VECTOR, RdConnection::DeleteDbFile);
 
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
