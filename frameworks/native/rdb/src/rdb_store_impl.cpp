@@ -1092,8 +1092,12 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return E_NOT_SUPPORT;
     } else if (config_.GetDBType() == DB_VECTOR) {
         auto conn = connectionPool_->AcquireConnection(false);
-        if (conn == nullptr) return E_BASE;
-        if (isEncrypt_) return E_NOT_SUPPORTED;
+        if (conn == nullptr) {
+            return E_BASE;
+        }
+        if (isEncrypt_) {
+            return E_NOT_SUPPORTED;
+        }
         return conn->Backup(databasePath, {});
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
@@ -1678,7 +1682,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         LOG_ERROR("The backupFilePath does not exists.");
         return E_INVALID_FILE_PATH;
     }
-    
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
