@@ -285,19 +285,36 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         return E_ERROR;
     }
 
-    CloseAllConnections();
-    RemoveDBFile();
+    if (config_.GetDBType() == DB_VECTOR) {
+        CloseAllConnections();
+        auto [retVal, connection] = CreateConnection(false);
 
-    if (config_.GetPath() != newPath) {
-        RemoveDBFile(newPath);
+        if (connection == nullptr) {
+            LOG_ERROR("Get null connection");
+            return retVal;
+        }
+
+        retVal = connection->Restore(backupPath, {});
+        if (retVal != E_OK) {
+            LOG_ERROR("RdDbRestore error");
+            return retVal;
+        }
+        CloseAllConnections();
+    } else {
+        CloseAllConnections();
+        RemoveDBFile();
+
+        if (config_.GetPath() != newPath) {
+            RemoveDBFile(newPath);
+        }
+
+        auto retVal = SqliteUtils::RenameFile(backupPath, newPath);
+        if (retVal != E_OK) {
+            LOG_ERROR("RenameFile filed error:%{public}d, errno:%{public}d, path:%{public}s",
+                retVal, errno, newPath.c_str());
+            return retVal;
+        }
     }
-
-    int retVal = SqliteUtils::RenameFile(backupPath, newPath);
-    if (retVal != E_OK) {
-        LOG_ERROR("RenameFile error");
-        return retVal;
-    }
-
     auto [errCode, node] = Init(config_);
     return errCode;
 }

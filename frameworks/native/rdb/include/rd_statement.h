@@ -23,6 +23,7 @@
 #include "rd_utils.h"
 #include "statement.h"
 #include "value_object.h"
+#include "rd_connection.h"
 namespace OHOS {
 namespace NativeRdb {
 class RdStatement final : public Statement {

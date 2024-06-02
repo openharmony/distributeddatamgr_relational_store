@@ -31,6 +31,7 @@
 #include "connection.h"
 #include "rdb_common.h"
 #include "rdb_store_config.h"
+#include "rd_statement.h"
 namespace OHOS {
 namespace NativeRdb {
 class SqliteConnectionPool : public std::enable_shared_from_this<SqliteConnectionPool> {
