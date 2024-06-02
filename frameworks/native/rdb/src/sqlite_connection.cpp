@@ -35,7 +35,7 @@
 #include "file_ex.h"
 #include "logger.h"
 #include "raw_data_parser.h"
-#inlcude "rdb_config.h"
+#include "rdb_store_config.h"
 #include "rdb_errno.h"
 #include "relational_store_client.h"
 #include "sqlite_errno.h"
