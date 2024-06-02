@@ -71,6 +71,7 @@ int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
     if (g_creators[dbType] != nullptr) {
         return E_OK;
     }
+    
     g_creators[dbType] = creator;
     return E_OK;
 }
@@ -83,6 +84,7 @@ int32_t Connection::RegisterRepairer(int32_t dbType, Repairer repairer)
     if (g_repairers[dbType] != nullptr) {
         return E_OK;
     }
+
     g_repairers[dbType] = repairer;
     return E_OK;
 }
@@ -95,6 +97,7 @@ int32_t Connection::RegisterFileDeleter(int32_t dbType, Deleter deleter)
     if (g_fileDeleter[dbType] != nullptr) {
         return E_OK;
     }
+
     g_fileDeleter[dbType] = deleter;
     return E_OK;
 }
