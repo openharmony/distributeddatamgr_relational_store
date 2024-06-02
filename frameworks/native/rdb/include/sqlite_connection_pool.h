@@ -115,6 +115,7 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
+    
     void RemoveDBFile();
     void RemoveDBFile(const std::string &path);
  

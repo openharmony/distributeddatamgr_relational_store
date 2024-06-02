@@ -40,6 +40,7 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
+    static void DelelteDbFile(const RdbStoreConfig &config);
     ~SqliteConnection();
     int32_t OnInitialize() override;
     int TryCheckPoint() override;
@@ -90,7 +91,6 @@ private:
     static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets,
         std::map<std::string, ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
-    static void DelelteDbFile(const RdbStoreConfig &config);
 
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
