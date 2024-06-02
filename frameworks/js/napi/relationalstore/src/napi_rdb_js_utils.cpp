@@ -315,6 +315,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     GetNamedProperty(env, jsValue, "allowRebuild", rdbConfig.allowRebuild, true);
     ASSERT(OK == status, "get allowRebuild failed.", napi_invalid_arg);
+
+    GetNamedProperty(env, jsValue, "isReadOnly", rdbConfig.isReadOnly, true);
+    ASSERT(OK == status, "get isReadOnly failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -423,6 +426,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetName(rdbConfig.name);
     rdbStoreConfig.SetCustomDir(rdbConfig.customDir);
     rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
+    rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
 
     if (!param.bundleName.empty()) {
         rdbStoreConfig.SetBundleName(param.bundleName);

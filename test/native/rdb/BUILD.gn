@@ -88,6 +88,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_b_test.cpp",
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
+    "unittest/rdb_read_only_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",

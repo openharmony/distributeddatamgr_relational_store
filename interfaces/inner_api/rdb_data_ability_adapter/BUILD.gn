@@ -35,6 +35,8 @@ config("rdb_data_ability_adapter_public_config") {
 ohos_shared_library("rdb_data_ability_adapter") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
+    ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
