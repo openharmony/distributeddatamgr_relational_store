@@ -133,14 +133,11 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
 
 int SqliteUtils::GetFileSize(const std::string &fileName)
 {
-    if (fileName.empty() || access(fileName.c_str(), F_OK) != 0) {
-        return 0;
-    }
-
     struct stat fileStat;
-    if (stat(fileName.c_str(), &fileStat) < 0) {
-        LOG_ERROR("Failed to get file information, errno: %{public}d", errno);
-        return INT_MAX;
+    if (fileName.empty() || stat(fileName.c_str(), &fileStat) < 0) {
+        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s",
+                  errno, Anonymous(fileName).c_str());
+        return 0;
     }
 
     return static_cast<int>(fileStat.st_size);
