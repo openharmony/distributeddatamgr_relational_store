@@ -35,6 +35,7 @@
 #include "file_ex.h"
 #include "logger.h"
 #include "raw_data_parser.h"
+#inlcude "rdb_config.h"
 #include "rdb_errno.h"
 #include "relational_store_client.h"
 #include "sqlite_errno.h"
@@ -55,7 +56,9 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 
 __attribute__((used))
-const int32_t SqliteConnection::g_reg = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
+constexpr int32_t SqliteConnection::regCreater_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
+constexpr int32_t SqliteConnection::regFileDeleter_ = 
+    Connection::RegisterFileDeleter(DB_SQLITE, SqliteConnection::DeleteDbFile);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
@@ -918,6 +921,15 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         default:
             return;
     }
+}
+
+void SqliteConnection::DeleteDbFile(const RdbStoreConfig &config)
+{
+    auto path = config.GetPath();
+    SqliteUtils::DeleteFile(path);
+    SqliteUtils::DeleteFile(path + "-shm");
+    SqliteUtils::DeleteFile(path + "-wal");
+    SqliteUtils::DeleteFile(path + "-journal");
 }
 
 int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)

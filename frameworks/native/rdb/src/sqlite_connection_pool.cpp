@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "connection.h"
 #define LOG_TAG "SqliteConnectionPool"
 #include "sqlite_connection_pool.h"
 
@@ -24,6 +23,7 @@
 #include <vector>
 
 #include "logger.h"
+#include "connection.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
@@ -63,25 +63,24 @@ std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDa
         pool = Create(storeConfig, errCode);
         if (errCode == E_OK) {
             rebuiltTpye = RebuiltType::REPAIRED;
-                return result;
+            return result;
         } else {
-        LOG_WARN("corrupted db %{public}s repaired, but open ret %{public}d, encrypt %{public}d",
-            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+            LOG_WARN("corrupted db %{public}s repaired, but open ret %{public}d, encrypt %{public}d",
+                storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
         }
     } else {
-        LOG_WARN("db %{public}s corrupt, repair ret %{public}d, encrypt %{public}d",
-            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+        errCode = E_SQLITE_CORRUPT;
     }
-    if (storeConfig.GetAllowRebuild()) {
-        auto realPath = storeConfig.GetPath();
-        RemoveDBFiles(realPath, storeConfig);
-        pool = Create(storeConfig, errCode);
-        if (errCode == E_OK) {
-            rebuiltTpye = RebuiltType::REBUILT;
-        }
-        LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
-            storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+
+    auto realPath = storeConfig.GetPath();
+    Connection::DeleteDbFile(storeConfig);
+    pool = Create(storeConfig, errCode);
+    if (errCode == E_OK) {
+        rebuiltTpye = RebuiltType::REBUILT;
     }
+    LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
+        storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+
     return result;
 }
 
@@ -647,32 +646,6 @@ void ConnPool::RemoveDBFile(const std::string &path)
     SqliteUtils::DeleteFile(path + "-shm");
     SqliteUtils::DeleteFile(path + "-wal");
     SqliteUtils::DeleteFile(path + "-journal");
-}
-
-static std::vector<std::string> rdPostFixes = {
-    "",
-    ".redo",
-    ".undo",
-    ".ctrl",
-    ".safe",
-    ".map",
-};
-
-void ConnPool::RemoveDBFiles(const std::string &path, const RdbStoreConfig &config)
-{
-    if (config.GetDBType() == DB_SQLITE) {
-        SqliteUtils::DeleteFile(path);
-        SqliteUtils::DeleteFile(path + "-shm");
-        SqliteUtils::DeleteFile(path + "-wal");
-        SqliteUtils::DeleteFile(path + "-journal");
-    } else if (config.GetDBType() == DB_VECTOR) {
-        for (std::string &postFix : rdPostFixes) {
-            std::string shmFilePath = path + postFix;
-            if (access(shmFilePath.c_str(), F_OK) == 0) {
-                remove(shmFilePath.c_str());
-            }
-        }
-    }
 }
 
 } // namespace NativeRdb
