@@ -1284,6 +1284,7 @@ napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
         env, rdbStoreProxy && rdbStoreProxy->GetInstance(), std::make_shared<ParamError>("RdbStore", "valid"));
     int32_t version = 0;
     int out = rdbStoreProxy->GetInstance()->GetVersion(version);
+    RDB_NAPI_ASSERT(env, out == E_OK, std::make_shared<InnerError>(out));
     LOG_DEBUG("RdbStoreProxy::GetVersion out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, version);
 }
@@ -1313,6 +1314,7 @@ napi_value RdbStoreProxy::SetVersion(napi_env env, napi_callback_info info)
     napi_get_value_int32(env, args[0], &version);
     RDB_NAPI_ASSERT(env, version > 0, std::make_shared<ParamError>("version", "> 0"));
     int out = rdbStoreProxy->GetInstance()->SetVersion(version);
+    RDB_NAPI_ASSERT(env, out == E_OK, std::make_shared<InnerError>(out));
     LOG_DEBUG("RdbStoreProxy::SetVersion out is : %{public}d", out);
     return nullptr;
 }

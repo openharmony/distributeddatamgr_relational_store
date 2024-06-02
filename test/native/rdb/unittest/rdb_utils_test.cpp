@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <climits>
 #include <string>
 
 #include "sqlite_utils.h"
@@ -89,4 +90,25 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_004, TestSize.Level2)
 HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_005, TestSize.Level1)
 {
     EXPECT_EQ("\"AND\"", StringUtils::SurroundWithQuote("AND", "\""));
+}
+
+/**
+ * @tc.name: RdbStore_SqliteUtils_006
+ * @tc.desc: Normal testCase of string_utils, if fileName is ""
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_006, TestSize.Level1)
+{
+    // fileName size is 0
+    EXPECT_EQ(0, SqliteUtils::GetFileSize(""));
+}
+
+/**
+ * @tc.name: RdbStore_SqliteUtils_007
+ * @tc.desc: AbNormal testCase of string_utils, if fileName is ""
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_007, TestSize.Level1)
+{
+    EXPECT_EQ(INT_MAX, SqliteUtils::GetFileSize("act.txt"));
 }
