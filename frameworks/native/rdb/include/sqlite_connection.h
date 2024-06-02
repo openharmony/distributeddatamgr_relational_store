@@ -90,7 +90,7 @@ private:
     static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets,
         std::map<std::string, ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
-    static void DeleteDbFile(RdbStoreConfig &config);
+    static void DeleteDbFile(const RdbStoreConfig &config);
 
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);

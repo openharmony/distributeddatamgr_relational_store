@@ -56,8 +56,8 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
 
 __attribute__((used))
-constexpr int32_t SqliteConnection::regCreater_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
-constexpr int32_t SqliteConnection::regFileDeleter_ = 
+int32_t SqliteConnection::regCreater_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
+int32_t SqliteConnection::regFileDeleter_ =
     Connection::RegisterFileDeleter(DB_SQLITE, SqliteConnection::DeleteDbFile);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
