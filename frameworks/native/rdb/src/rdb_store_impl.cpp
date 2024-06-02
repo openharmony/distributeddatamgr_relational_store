@@ -325,7 +325,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild()) {
+    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
         std::tie(rebuild_, connectionPool_) =  SqliteConnectionPool::HandleDataCorruption(config_, errCode);
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
@@ -911,7 +911,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::ExecuteEntry(const std::string &sq
 
     auto connect = connectionPool_->AcquireConnection(false);
     if (connect == nullptr) {
-        return { E_CON_OVER_LIMIT, object };
+        return { E_DATABASE_BUSY, object };
     }
 
     auto [errCode, statement] = GetStatement(sql, connect);
@@ -1205,7 +1205,7 @@ int RdbStoreImpl::AttachInner(
 std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return { E_NOT_SUPPORT, 0 };
     }
     std::string dbPath;
@@ -1249,7 +1249,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
 
 std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, int32_t waitTime)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return { E_NOT_SUPPORT, 0 };
     }
     if (!attachedInfo_.Contains(attachName)) {
@@ -1296,9 +1296,11 @@ int RdbStoreImpl::GetVersion(int &version)
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, config_.GetRoleType() == VISITOR);
+
+    bool isRead = (config_.IsReadOnly()) || (config_.GetRoleType() == VISITOR);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isRead);
     if (statement == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return errCode;
     }
     ValueObject value;
     std::tie(errCode, value) = statement->ExecuteForValue();
@@ -1321,7 +1323,7 @@ int RdbStoreImpl::SetVersion(int version)
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return errCode;
     }
     return statement->Execute();
 }
@@ -1340,7 +1342,7 @@ int RdbStoreImpl::BeginTransaction()
     BaseTransaction transaction(connectionPool_->GetTransactionStack().size());
     auto [errCode, statement] = GetStatement(transaction.GetTransactionStr());
     if (statement == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return errCode;
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
@@ -1363,9 +1365,10 @@ int RdbStoreImpl::BeginTransaction()
 std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (!config_.IsVector()) {
+    if (!config_.IsVector() || config_.IsReadOnly()) {
         return {E_NOT_SUPPORT, 0};
     }
+
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     int64_t tmpTrxId = 0;
     auto [errCode, connection] = connectionPool_->CreateConnection(false);
@@ -1533,7 +1536,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
 
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     if (statement == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return errCode;
     }
 
     errCode = statement->Execute();
@@ -1650,6 +1653,10 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
+    if (config_.IsReadOnly()) {
+        return E_NOT_SUPPORT;
+    }
+
     if (!isOpen_) {
         LOG_ERROR("The connection pool has been closed.");
         return E_ERROR;
@@ -1709,7 +1716,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     const DistributedRdb::DistributedConfig &distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || config_.IsReadOnly()) {
         return E_NOT_SUPPORT;
     }
     if (tables.empty()) {
@@ -1865,7 +1872,7 @@ int32_t RdbStoreImpl::SubscribeLocalDetail(const SubscribeOption &option,
 {
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     int32_t errCode = connection->Subscribe(option.event, observer);
     if (errCode != E_OK) {
@@ -1998,7 +2005,7 @@ int32_t RdbStoreImpl::UnsubscribeLocalDetail(const SubscribeOption& option,
 {
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
-        return E_CON_OVER_LIMIT;
+        return E_DATABASE_BUSY;
     }
     int32_t errCode = connection->Unsubscribe(option.event, observer);
     if (errCode != E_OK) {
@@ -2125,7 +2132,8 @@ int RdbStoreImpl::RegisterDataChangeCallback()
     if (!config_.IsSearchable()) {
         return E_OK;
     }
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+
+    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
@@ -2223,7 +2231,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     const std::string &sql, std::shared_ptr<Connection> conn) const
 {
     if (conn == nullptr) {
-        return { E_CON_OVER_LIMIT, nullptr };
+        return { E_DATABASE_BUSY, nullptr };
     }
     return conn->CreateStatement(sql, conn);
 }
@@ -2232,7 +2240,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(const 
 {
     auto conn = connectionPool_->AcquireConnection(read);
     if (conn == nullptr) {
-        return { E_CON_OVER_LIMIT, nullptr };
+        return { E_DATABASE_BUSY, nullptr };
     }
     return conn->CreateStatement(sql, conn);
 }

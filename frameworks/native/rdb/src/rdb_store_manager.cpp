@@ -80,7 +80,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         return nullptr;
     }
 
-    if (config.GetRoleType() == OWNER) {
+    if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         errCode = SetSecurityLabel(config);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d", config.GetName().c_str(),
@@ -208,11 +208,6 @@ int RdbStoreManager::ProcessOpenCallback(
 
     if (version == currentVersion) {
         return openCallback.OnOpen(rdbStore);
-    }
-
-    if (config.IsReadOnly()) {
-        LOG_ERROR("RdbHelper ProcessOpenCallback Can't upgrade read-only store");
-        return E_CANNOT_UPDATE_READONLY;
     }
 
     if (currentVersion == 0) {
