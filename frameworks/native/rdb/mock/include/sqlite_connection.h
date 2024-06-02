@@ -40,7 +40,7 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
-    static void DelelteDbFile(const RdbStoreConfig &config);
+    static void DeleteDbFile(const RdbStoreConfig &config);
     ~SqliteConnection();
     int32_t OnInitialize() override;
     int TryCheckPoint() override;
