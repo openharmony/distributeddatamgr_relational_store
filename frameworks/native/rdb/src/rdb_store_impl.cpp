@@ -1057,7 +1057,7 @@ int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<Valu
  */
 int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if ((config_.GetRoleType() == VISITOR)) {
         return E_NOT_SUPPORT;
     }
     std::string backupFilePath;
@@ -1088,10 +1088,18 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
  */
 int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if (config_.GetRoleType() == VISITOR) {
         return E_NOT_SUPPORT;
+    } else if (config_.GetDBType() == DB_VECTOR) {
+        auto conn = connectionPool_->AcquireConnection(false);
+        if (conn == nullptr) {
+            return E_BASE;
+        }
+        if (isEncrypt_) {
+            return E_NOT_SUPPORTED;
+        }
+        return conn->Backup(databasePath, {});
     }
-
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) {
         return E_BASE;
@@ -1113,7 +1121,6 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         std::string str = "";
         bindArgs.emplace_back(str);
     }
-
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
@@ -1667,7 +1674,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         LOG_ERROR("The connection pool has been closed.");
         return E_ERROR;
     }
-
     if (connectionPool_ == nullptr) {
         LOG_ERROR("The connectionPool_ is null.");
         return E_ERROR;
