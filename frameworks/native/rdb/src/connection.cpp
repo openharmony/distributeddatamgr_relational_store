@@ -60,7 +60,7 @@ void DeleteDbFile(const RdbStoreConfig &config)
         return;
     }
     
-    deleter(config);    
+    deleter(config);
 }
 
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
@@ -87,7 +87,8 @@ int32_t Connection::RegisterRepairer(int32_t dbType, Repairer repairer)
     return E_OK;
 }
 
-int32_t Connection::RegisterFileDeleter(int32_t dbType, Deleter deleter) {
+int32_t Connection::RegisterFileDeleter(int32_t dbType, Deleter deleter)
+{
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
         return E_INVALID_ARGS;
     }
