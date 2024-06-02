@@ -49,7 +49,7 @@ int32_t Connection::Repair(const RdbStoreConfig &config)
     return repairer(config);
 }
 
-void DeleteDbFile(const RdbStoreConfig &config)
+void Connection::DeleteDbFile(const RdbStoreConfig &config)
 {
     auto dbType = config.GetDBType();
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
