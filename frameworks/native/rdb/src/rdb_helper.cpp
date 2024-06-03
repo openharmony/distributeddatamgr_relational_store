@@ -57,6 +57,7 @@ static std::vector<std::string> rdPostFixes = {
     ".undo",
     ".ctrl",
     ".safe",
+    ".map",
 };
 
 int DeleteRdFiles(const std::string &dbFileName)

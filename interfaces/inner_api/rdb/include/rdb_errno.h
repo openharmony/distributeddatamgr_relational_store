@@ -316,7 +316,7 @@ static constexpr int E_ATTACHED_DATABASE_EXIST = (E_BASE + 54);
 static constexpr int E_SQLITE_ERROR = (E_BASE + 55);
 
 /**
- * @brief The database disk image is malformed.
+ * @brief The database disk image is malformed. Used by vector db, too.
  */
 static constexpr int E_SQLITE_CORRUPT = (E_BASE + 56);
 

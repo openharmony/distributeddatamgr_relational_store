@@ -27,7 +27,6 @@
 #include <string>
 
 #include "cache_result_set.h"
-#include "directory_ex.h"
 #include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
@@ -42,6 +41,8 @@
 #include "task_executor.h"
 #include "traits.h"
 #include "rdb_radar_reporter.h"
+
+#include "directory_ex.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
@@ -325,14 +326,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
-        auto realPath = config.GetPath();
-        RemoveDbFiles(realPath);
-        connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
-        if (errCode == E_OK) {
-            rebuild_ = RebuiltType::REBUILT;
-        }
-        LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
-            name_.c_str(), errCode, isEncrypt_);
+        std::tie(rebuild_, connectionPool_) =  SqliteConnectionPool::HandleDataCorruption(config_, errCode);
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;

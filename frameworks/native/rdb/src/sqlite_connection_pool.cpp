@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "logger.h"
+#include "connection.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
@@ -49,6 +50,28 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<Connection> conn;
     std::tie(errCode, conn) = pool->Init(storeConfig);
     return errCode == E_OK ? pool : nullptr;
+}
+
+std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDataCorruption
+    (const RdbStoreConfig &storeConfig, int &errCode)
+{
+    std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> result;
+    auto &[rebuiltTpye, pool] = result;
+
+    errCode = Connection::Repair(storeConfig);
+    if (errCode == E_OK) {
+        rebuiltTpye = RebuiltType::REPAIRED;
+    } else {
+        Connection::DeleteDbFile(storeConfig);
+        rebuiltTpye = RebuiltType::REBUILT;
+    }
+    pool = Create(storeConfig, errCode);
+    if (errCode != E_OK) {
+        LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
+            rebuiltTpye, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
+    }
+
+    return result;
 }
 
 ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
@@ -631,5 +654,6 @@ void ConnPool::RemoveDBFile(const std::string &path)
     SqliteUtils::DeleteFile(path + "-wal");
     SqliteUtils::DeleteFile(path + "-journal");
 }
+
 } // namespace NativeRdb
 } // namespace OHOS
