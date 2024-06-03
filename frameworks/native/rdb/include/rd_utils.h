@@ -31,6 +31,7 @@ public:
     static int TransferGrdErrno(int err);
     static ColumnType TransferGrdTypeToColType(int grdColType);
     static int RdDbOpen(const char *dbPath, const char *configStr, uint32_t flags, GRD_DB **db);
+    static int RdDbRepair(const char *dbPath, const char *configStr);
     static int RdDbClose(GRD_DB *db, uint32_t flags);
     static int RdSqlPrepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr);
     static int RdSqlReset(GRD_SqlStmt *stmt);

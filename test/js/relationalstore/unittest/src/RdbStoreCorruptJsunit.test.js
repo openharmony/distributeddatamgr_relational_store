@@ -175,7 +175,7 @@ describe('RdbStoreCorruptTest', function () {
 
     /**
      * @tc.name the insert function
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_insert_002
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_insert_001
      * @tc.desc insert while corrupt
      */
     it('insertTest0001', 0, async function (done) {
