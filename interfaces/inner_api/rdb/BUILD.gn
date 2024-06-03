@@ -194,7 +194,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
       "${relational_store_native_path}/rdb/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/src/rd_statement.cpp",
-      "${relational_store_native_path}/rdb/src/rd_utils.cpp",      
+      "${relational_store_native_path}/rdb/src/rd_utils.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
