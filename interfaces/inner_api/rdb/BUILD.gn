@@ -481,6 +481,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
+      "//commonlibrary/c_utils/base/include",
     ]
   }
 
@@ -505,7 +506,6 @@ if (is_ohos && !build_ohos_sdk) {
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
-      "//commonlibrary/c_utils/base:utils",
       "//third_party/sqlite:sqlite_static",
     ]
     cflags_cc = [ "-std=c++17" ]
@@ -554,6 +554,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
+      "//commonlibrary/c_utils/base/include",
     ]
   }
 
@@ -577,7 +578,6 @@ if (is_ohos && !build_ohos_sdk) {
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
-      "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
     ]
     cflags_cc = [ "-std=c++17" ]
