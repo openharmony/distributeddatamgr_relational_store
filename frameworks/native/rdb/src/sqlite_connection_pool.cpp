@@ -60,26 +60,16 @@ std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDa
 
     errCode = Connection::Repair(storeConfig);
     if (errCode == E_OK) {
-        pool = Create(storeConfig, errCode);
-        if (errCode == E_OK) {
-            rebuiltTpye = RebuiltType::REPAIRED;
-            return result;
-        } else {
-            LOG_WARN("corrupted db %{public}s repaired, but open ret %{public}d, encrypt %{public}d",
-                storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
-        }
+        rebuiltTpye = RebuiltType::REPAIRED;
     } else {
-        errCode = E_SQLITE_CORRUPT;
-    }
-
-    auto realPath = storeConfig.GetPath();
-    Connection::DeleteDbFile(storeConfig);
-    pool = Create(storeConfig, errCode);
-    if (errCode == E_OK) {
+        Connection::DeleteDbFile(storeConfig);
         rebuiltTpye = RebuiltType::REBUILT;
     }
-    LOG_WARN("db %{public}s corrupt, rebuild ret %{public}d, encrypt %{public}d",
-        storeConfig.GetName().c_str(), errCode, storeConfig.IsEncrypt());
+    pool = Create(storeConfig, errCode);
+    if (errCode != E_OK) {
+        LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
+            rebuiltTpye, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
+    }
 
     return result;
 }
