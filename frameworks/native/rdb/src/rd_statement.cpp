@@ -347,6 +347,7 @@ std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
 bool RdStatement::ReadOnly() const
 {
     if (conn_ == nullptr) {
+        LOG_ERROR("Execute RdStatement::ReadOnly with empty connection.");
         return false;
     }
     return !conn_->IsWriter();
