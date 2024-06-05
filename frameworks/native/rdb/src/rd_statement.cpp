@@ -24,6 +24,7 @@
 #include "rdb_errno.h"
 #include "rd_utils.h"
 #include "rd_connection.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -54,6 +55,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     Finalize(); // Finalize original stmt
     sql_ = newSql;
     stmtHandle_ = tmpStmt;
+    readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT ? true : false;
     return E_OK;
 }
 
@@ -346,11 +348,7 @@ std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
 
 bool RdStatement::ReadOnly() const
 {
-    if (conn_ == nullptr) {
-        LOG_ERROR("Execute RdStatement::ReadOnly with empty connection.");
-        return false;
-    }
-    return !conn_->IsWriter();
+    return readOnly_;
 }
 
 bool RdStatement::SupportBlockInfo() const
