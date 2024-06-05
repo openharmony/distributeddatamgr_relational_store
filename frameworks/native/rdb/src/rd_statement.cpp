@@ -346,7 +346,10 @@ std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
 
 bool RdStatement::ReadOnly() const
 {
-    return false;
+    if (conn_ == nullptr) {
+        return false;
+    }
+    return !conn_->IsWriter();
 }
 
 bool RdStatement::SupportBlockInfo() const
