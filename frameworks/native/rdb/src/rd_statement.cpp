@@ -55,7 +55,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     Finalize(); // Finalize original stmt
     sql_ = newSql;
     stmtHandle_ = tmpStmt;
-    readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT ? true : false;
+    readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
     return E_OK;
 }
 
