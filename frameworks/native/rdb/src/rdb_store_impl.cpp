@@ -140,6 +140,9 @@ void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
 void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry)
 {
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (err == E_NOT_SUPPORTED) {
+        return;
+    }
     if (err != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err, param.storeName_.c_str());
         auto pool = TaskExecutor::GetInstance().GetExecutor();
@@ -735,6 +738,10 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (err == E_NOT_SUPPORTED) {
+        errCode = err;
+        return nullptr;
+    }
     if (err != E_OK) {
         LOG_ERROR("RdbStoreImpl::RemoteQuery get service failed");
         errCode = err;
@@ -1807,8 +1814,12 @@ int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,
     const DistributedRdb::PredicatesMemo &predicates, const RdbStore::AsyncDetail &async)
 {
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode == E_NOT_SUPPORTED) {
+        return errCode;
+    }
     if (errCode != E_OK) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.",
+            errCode, syncerParam_.bundleName_.c_str());
         return errCode;
     }
     errCode = service->Sync(syncerParam_, option, predicates, async);
@@ -2125,6 +2136,9 @@ void RdbStoreImpl::InitDelayNotifier()
     delayNotifier_->SetExecutorPool(pool_);
     delayNotifier_->SetTask([param = syncerParam_](const DistributedRdb::RdbChangedData& rdbChangedData) -> int {
         auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        if (errCode == E_NOT_SUPPORTED) {
+            return errCode;
+        }
         if (errCode != E_OK || service == nullptr) {
             LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
             return errCode;

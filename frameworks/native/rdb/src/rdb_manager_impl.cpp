@@ -114,11 +114,12 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         LOG_ERROR("get rdb service failed");
         return { E_NOT_SUPPORTED, nullptr };
     }
-    sptr<RdbServiceProxy> rdbService = nullptr;
-    if (remote->IsProxyObject()) {
-        rdbService = iface_cast<RdbServiceProxy>(remote);
+
+    if (!remote->IsProxyObject()) {
+        return { E_NOT_SUPPORTED, nullptr };
     }
 
+    sptr<RdbServiceProxy> rdbService = iface_cast<RdbServiceProxy>(remote);
     if (rdbService == nullptr) {
         rdbService = new (std::nothrow) RdbServiceProxy(remote);
     }
