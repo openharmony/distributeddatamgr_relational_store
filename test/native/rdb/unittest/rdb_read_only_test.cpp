@@ -223,6 +223,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0007, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
 
     auto resultSet = store->QuerySql("PRAGMA user_version");
+    
     EXPECT_NE(nullptr, resultSet);
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 

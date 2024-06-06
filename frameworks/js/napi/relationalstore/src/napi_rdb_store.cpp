@@ -15,21 +15,22 @@
 #define LOG_TAG "NapiRdbStore"
 #include "napi_rdb_store.h"
 
+#include <algorithm>
 #include <cinttypes>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "js_native_api_types.h"
 #include "js_utils.h"
-#include "napi_rdb_js_utils.h"
 #include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
+#include "rdb_sql_statistic.h"
 #include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1850,7 +1851,7 @@ napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_v
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("progress", "function"));
     bool result = std::any_of(syncObservers_.begin(), syncObservers_.end(), [argv](const auto &observer) {
-        return *observer == argv[1];
+        return *observer == argv[0];
     });
     if (result) {
         LOG_DEBUG("duplicate subscribe");
@@ -1878,17 +1879,108 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
             it = syncObservers_.erase(it);
             continue;
         }
-        if (isNotNull && !(**it == argv[1])) {
+        if (isNotNull && !(**it == argv[0])) {
             ++it;
             continue;
         }
 
         int errCode = GetInstance()->UnregisterAutoSyncCallback(*it);
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
         it = syncObservers_.erase(it);
         LOG_DEBUG("observer unsubscribe success");
     }
     return nullptr;
+}
+
+napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("statistics", "function"));
+    bool result = std::any_of(statisticses_.begin(), statisticses_.end(),
+        [argv](std::shared_ptr<NapiStatisticsObserver> obs) { return obs && *obs == argv[0]; });
+    if (result) {
+        LOG_DEBUG("duplicate subscribe");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
+    int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    statisticses_.push_back(std::move(observer));
+    LOG_DEBUG("statistics subscribe success");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
+        std::make_shared<ParamError>("statistics", "function"));
+
+    auto it = statisticses_.begin();
+    while (it != statisticses_.end()) {
+        if (*it == nullptr) {
+            it = statisticses_.erase(it);
+            LOG_WARN("statisticsObserver is nullptr.");
+            continue;
+        }
+        if (type == napi_function && !(**it == argv[0])) {
+            ++it;
+            continue;
+        }
+        int errCode = DistributedRdb::SqlStatistic::Unsubscribe(*it);
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = statisticses_.erase(it);
+    }
+    return nullptr;
+}
+
+RdbStoreProxy::NapiStatisticsObserver::NapiStatisticsObserver(
+    napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> queue)
+    : env_(env), queue_(queue)
+{
+    napi_create_reference(env, callback, 1, &callback_);
+}
+
+RdbStoreProxy::NapiStatisticsObserver::~NapiStatisticsObserver()
+{
+}
+
+void RdbStoreProxy::NapiStatisticsObserver::Clear()
+{
+    if (callback_ == nullptr) {
+        return;
+    }
+    napi_delete_reference(env_, callback_);
+    callback_ = nullptr;
+}
+
+bool RdbStoreProxy::NapiStatisticsObserver::operator==(napi_value value)
+{
+    return JSUtils::Equal(env_, callback_, value);
+}
+
+void RdbStoreProxy::NapiStatisticsObserver::OnStatistic(const SqlExecutionInfo &sqlExeInfo)
+{
+    auto queue = queue_;
+    if (queue == nullptr) {
+        return;
+    }
+    queue->AsyncCall({ [observer = shared_from_this()](napi_env env) -> napi_value {
+        if (observer->callback_ == nullptr) {
+            return nullptr;
+        }
+        napi_value callback = nullptr;
+        napi_get_reference_value(env, observer->callback_, &callback);
+        return callback;
+    } },
+        [infos = std::move(sqlExeInfo)](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            argv[0] = JSUtils::Convert2JSValue(env, infos);
+        });
 }
 
 RdbStoreProxy::SyncObserver::SyncObserver(
@@ -1900,9 +1992,15 @@ RdbStoreProxy::SyncObserver::SyncObserver(
 
 RdbStoreProxy::SyncObserver::~SyncObserver()
 {
-    if (env_ != nullptr && callback_ != nullptr) {
-        napi_delete_reference(env_, callback_);
+}
+
+void RdbStoreProxy::SyncObserver::Clear()
+{
+    if (callback_ == nullptr) {
+        return;
     }
+    napi_delete_reference(env_, callback_);
+    callback_ = nullptr;
 }
 
 bool RdbStoreProxy::SyncObserver::operator==(napi_value value)

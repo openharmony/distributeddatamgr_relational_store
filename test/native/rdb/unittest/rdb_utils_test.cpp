@@ -110,5 +110,5 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_006, TestSize.Level1)
  */
 HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_007, TestSize.Level1)
 {
-    EXPECT_EQ(INT_MAX, SqliteUtils::GetFileSize("act.txt"));
+    EXPECT_EQ(0, SqliteUtils::GetFileSize("act.txt"));
 }

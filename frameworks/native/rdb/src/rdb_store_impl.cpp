@@ -30,8 +30,11 @@
 #include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
+#include "rdb_radar_reporter.h"
+#include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
+#include "rdb_types.h"
 #include "relational_store_client.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
@@ -40,7 +43,6 @@
 #include "step_result_set.h"
 #include "task_executor.h"
 #include "traits.h"
-#include "rdb_radar_reporter.h"
 
 #include "directory_ex.h"
 
@@ -65,6 +67,7 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+using SqlStatistic = DistributedRdb::SqlStatistic;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -364,6 +367,7 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, const std::vector<ValuesBucket> &values)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return BatchInsertEntry(outInsertNum, table, values);
 }
 
@@ -469,6 +473,7 @@ int RdbStoreImpl::InsertWithConflictResolution(int64_t &outRowId, const std::str
 int RdbStoreImpl::InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table,
     const ValuesBucket &values, ConflictResolution conflictResolution)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
@@ -574,6 +579,7 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<ValueObject> &bindArgs, ConflictResolution conflictResolution)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return UpdateWithConflictResolutionEntry(changedRows, table, values, whereClause, bindArgs, conflictResolution);
 }
 
@@ -581,6 +587,7 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
     const ValuesBucket &values, const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
     ConflictResolution conflictResolution)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
@@ -634,12 +641,14 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
     const std::vector<std::string> &whereArgs)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::vector<ValueObject> bindArgs;
     std::for_each(
         whereArgs.begin(), whereArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
@@ -777,6 +786,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR) {
         return nullptr;
@@ -812,6 +822,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const std::vector<ValueObje
 
 int RdbStoreImpl::ExecuteSqlEntry(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
@@ -898,6 +909,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(std::share
 std::pair<int32_t, ValueObject> RdbStoreImpl::ExecuteEntry(const std::string &sql,
     const std::vector<ValueObject> &bindArgs, int64_t trxId)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
@@ -1707,6 +1719,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
     const std::vector<std::string> &sqlArgs)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::vector<ValueObject> bindArgs;
     std::for_each(sqlArgs.begin(), sqlArgs.end(), [&bindArgs](const auto &it) { bindArgs.push_back(ValueObject(it)); });
     return std::make_shared<StepResultSet>(connectionPool_, sql, bindArgs);
@@ -1714,6 +1727,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const std::vector<ValueObject> &args)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return std::make_shared<StepResultSet>(connectionPool_, sql, args);
 }
 
@@ -2192,8 +2206,9 @@ int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::
     }
     int count = 0;
     if (result->GetRowCount(count) != E_OK) {
-        return E_ERROR;
+        return E_NO_ROW_IN_QUERY;
     }
+
     if (count <= 0) {
         return E_NO_ROW_IN_QUERY;
     }

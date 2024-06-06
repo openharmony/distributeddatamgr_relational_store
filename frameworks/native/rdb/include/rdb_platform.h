@@ -45,6 +45,15 @@ static UNUSED_FUNCTION int MkDir(const std::string &filePath)
 #endif
 }
 
+static UNUSED_FUNCTION uint64_t GetThreadId()
+{
+#ifdef WINDOWS_PLATFORM
+    return 0;
+#else
+    return (uint64_t)pthread_self();
+#endif
+}
+
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

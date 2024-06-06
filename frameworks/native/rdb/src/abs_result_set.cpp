@@ -81,6 +81,16 @@ AbsResultSet::~AbsResultSet()
 
 int AbsResultSet::GetRowCount(int &count)
 {
+    count = rowCount_;
+    if (rowCount_ != NO_COUNT) {
+        return E_OK;
+    }
+
+    if (isClosed_) {
+        LOG_ERROR("fail, result set E_ALREADY_CLOSED");
+        return E_ALREADY_CLOSED;
+    }
+
     return E_OK;
 }
 
@@ -423,6 +433,9 @@ int AbsResultSet::Close()
     // clear columnMap_
     auto map = std::move(columnMap_);
     isClosed_ = true;
+    rowPos_ = INIT_POS;
+    rowCount_ = NO_COUNT;
+    columnCount_ = -1;
     return E_OK;
 }
 

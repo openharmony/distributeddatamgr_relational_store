@@ -37,8 +37,8 @@ public:
     virtual int32_t Step() = 0;
     virtual int32_t Reset() = 0;
     virtual int32_t Finalize() = 0;
-
     virtual int32_t Execute(const std::vector<ValueObject> &args = {}) = 0;
+
     virtual std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args = {}) = 0;
     virtual int32_t Changes() const = 0;
     virtual int64_t LastInsertRowId() const = 0;
