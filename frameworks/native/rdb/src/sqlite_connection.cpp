@@ -37,6 +37,7 @@
 #include "raw_data_parser.h"
 #include "rdb_store_config.h"
 #include "rdb_errno.h"
+#include "rdb_sql_statistic.h"
 #include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
@@ -296,26 +297,14 @@ int32_t SqliteConnection::OnInitialize()
     return 0;
 }
 
-std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(const std::string &sql,
-    std::shared_ptr<Connection> conn)
+std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
+    const std::string &sql, std::shared_ptr<Connection> conn)
 {
-    sqlite3_stmt *stmt = nullptr;
-    int errCode = sqlite3_prepare_v2(dbHandle, sql.c_str(), sql.length(), &stmt, nullptr);
-    if (errCode != SQLITE_OK) {
-        auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-        LOG_ERROR("prepare_v2 ret is %{public}d %{public}" PRIu64 ".", errCode, time);
-        if (stmt != nullptr) {
-            sqlite3_finalize(stmt);
-        }
-        return { SQLiteError::ErrNo(errCode), nullptr };
-    }
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>();
-    statement->stmt_ = stmt;
-    statement->sql_ = sql;
-    statement->readOnly_ = (sqlite3_stmt_readonly(stmt) != 0);
-    statement->columnCount_ = sqlite3_column_count(stmt);
-    statement->numParameters_ = sqlite3_bind_parameter_count(stmt);
-    statement->types_ = std::vector<int32_t>(statement->columnCount_, 0);
+    int errCode = statement->Prepare(dbHandle, sql);
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
+    }
     statement->conn_ = conn;
     return { E_OK, statement };
 }

@@ -36,6 +36,7 @@ using Error = RelationalStoreJsKit::Error;
 using SecurityLevel = NativeRdb::SecurityLevel;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
+using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -104,7 +105,8 @@ template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt &value);
 template<>
 std::string ToString(const PRIKey &key);
-
+template<>
+napi_value Convert2JSValue(napi_env env, const SqlExecInfo &sqlExeInfo);
 bool IsNapiString(napi_env env, napi_value value);
 
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(

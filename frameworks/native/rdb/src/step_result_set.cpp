@@ -31,10 +31,11 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
     const std::vector<ValueObject> &args)
-    : AbsResultSet(), sql_(sql), args_(std::move(args)), rowCount_(INIT_POS), isAfterLast_(false), isStarted_(false)
+    : AbsResultSet(), sql_(sql), args_(std::move(args)), isAfterLast_(false), isStarted_(false)
 {
     conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
+        isClosed_ = true;
         return;
     }
 
@@ -42,6 +43,7 @@ StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const s
     if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
     }
+    rowCount_ = InitRowCount();
 }
 
 StepResultSet::~StepResultSet()
@@ -49,6 +51,31 @@ StepResultSet::~StepResultSet()
     Close();
 }
 
+int StepResultSet::InitRowCount()
+{
+    auto statement = GetStatement();
+    if (statement == nullptr) {
+        return NO_COUNT;
+    }
+    int32_t count = NO_COUNT;
+    int32_t status = E_OK;
+    int32_t retry = 0;
+    do {
+        status = statement->Step();
+        if (status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) {
+            retry++;
+            usleep(STEP_QUERY_RETRY_INTERVAL);
+            continue;
+        }
+        count++;
+    } while (status == E_OK ||
+             ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < STEP_QUERY_RETRY_MAX_TIMES));
+    if (status != E_NO_MORE_ROWS) {
+        count = NO_COUNT;
+    }
+    statement->Reset();
+    return count;
+}
 /**
  * Obtain session and prepare precompile statement for step query
  */
@@ -141,32 +168,6 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
         return errCode;
     }
     columnType = static_cast<ColumnType>(outPutType);
-    return E_OK;
-}
-
-int StepResultSet::GetRowCount(int &count)
-{
-    if (isClosed_) {
-        return E_ALREADY_CLOSED;
-    }
-    if (rowCount_ != INIT_POS) {
-        count = rowCount_;
-        return E_OK;
-    }
-    int oldPosition = 0;
-    // Get the start position of the query result
-    GetRowIndex(oldPosition);
-
-    while (GoToNextRow() == E_OK) {
-    }
-    count = rowCount_;
-    // Reset the start position of the query result
-    if (oldPosition != INIT_POS) {
-        GoToRow(oldPosition);
-    } else {
-        Reset();
-        isStarted_ = false;
-    }
     return E_OK;
 }
 

@@ -22,6 +22,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <set>
 
 namespace OHOS::DistributedRdb {
 enum RdbStatus {
@@ -275,6 +276,19 @@ struct RdbChangeProperties {
 
 struct RdbChangedData {
     std::map<std::string, RdbChangeProperties> tableData;
+};
+
+class SqlObserver {
+public:
+    struct SqlExecutionInfo {
+        std::vector<std::string> sql_;
+        int64_t totalTime_;
+        int64_t waitTime_;
+        int64_t prepareTime_;
+        int64_t executeTime_;
+    };
+    virtual ~SqlObserver() = default;
+    virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
 };
 } // namespace OHOS::DistributedRdb
 #endif
