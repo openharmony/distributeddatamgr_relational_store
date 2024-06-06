@@ -120,7 +120,16 @@ int ResultSetProxy::IsAtLastRow(bool &result)
 
 int ResultSetProxy::Get(int32_t col, ValueObject &value)
 {
-    return Send(Code::CMD_GET, value);
+    MessageParcel reply;
+    int status = SendRequest(Code::CMD_GET, reply, col);
+    if (status != E_OK) {
+        return status;
+    }
+    
+    if (!ITypesUtil::Unmarshal(reply, value.value)) {
+        return E_ERROR;
+    }
+    return E_OK;
 }
 
 int ResultSetProxy::GetSize(int columnIndex, size_t &size)
