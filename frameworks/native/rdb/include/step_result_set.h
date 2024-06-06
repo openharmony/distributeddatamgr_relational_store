@@ -34,7 +34,6 @@ public:
         const std::vector<ValueObject> &selectionArgs);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
-    int GetRowCount(int &count) override;
     int GoToRow(int position) override;
     int GoToNextRow() override;
     int IsStarted(bool &result) const override;
@@ -53,10 +52,10 @@ private:
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
     std::shared_ptr<Statement> GetStatement();
     void Reset();
+    int InitRowCount();
     int FinishStep();
     int PrepareStep();
 
-    static const int INIT_POS = -1;
     // Max times of retrying step query
     static const int STEP_QUERY_RETRY_MAX_TIMES = 50;
     // Interval of retrying step query in millisecond
@@ -68,8 +67,6 @@ private:
 
     std::string sql_;
     std::vector<ValueObject> args_;
-    // The value indicates the row count of the result set
-    int rowCount_;
     // Whether reach the end of this result set or not
     bool isAfterLast_;
     bool isStarted_;

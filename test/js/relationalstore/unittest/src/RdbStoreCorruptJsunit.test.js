@@ -61,7 +61,7 @@ describe('RdbStoreCorruptTest', function () {
         let dir = await context.getFilesDir();
         console.log(TAG, `filepath is${dir},databaseDir is${context.databaseDir},dbpath is${dbPath}`)
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
-        rdbStore.executeSql(CREATE_TABLE_TEST, null);
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
         await createTest();
         let u8 = new Uint8Array([1, 2, 3]);
         const valueBucket = {

@@ -38,7 +38,6 @@ public:
         std::string sql, const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int Close() override;
-    int GetRowCount(int &count) override;
     int32_t OnGo(int oldPosition, int newPosition) override;
     void SetBlock(AppDataFwk::SharedBlock *block) override;
     int PickFillBlockStartPosition(int resultSetPosition, int blockCapacity) const;
@@ -49,16 +48,20 @@ protected:
     std::pair<int, std::vector<std::string>> GetColumnNames() override;
 
 private:
+    int InitRowCount();
     std::pair<std::shared_ptr<Statement>, int> PrepareStep();
     int32_t FillBlock(int requiredPos);
-    std::pair<int, int32_t> ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start, int required,
-        bool needCount);
+    int32_t ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start, int required);
 
 private:
     // The specified value is -1 when there is no data
     static constexpr int NO_COUNT = -1;
     // The pick position of the shared block for search
     static constexpr int PICK_POS = 3;
+    // Max times of retrying query
+    static const int MAX_RETRY_TIMES = 50;
+    // Interval of retrying query in millisecond
+    static const int RETRY_INTERVAL = 1000;
     // Controls fetching of rows relative to requested position
     bool isOnlyFillBlock_ = false;
     uint32_t blockCapacity_ = 0;
@@ -66,6 +69,7 @@ private:
     int rowNum_ = NO_COUNT;
 
     std::shared_ptr<Connection> conn_;
+    std::shared_ptr<Statement> statement_;
     std::string qrySql_;
     std::vector<ValueObject> bindArgs_;
     std::vector<std::string> columnNames_;

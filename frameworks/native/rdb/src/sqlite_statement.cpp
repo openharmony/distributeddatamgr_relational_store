@@ -24,6 +24,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "rdb_sql_statistic.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
 #include "share_block.h"
@@ -39,12 +40,18 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+using SqlStatistic = DistributedRdb::SqlStatistic;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
-SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("") {}
+SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
+{
+    seqId_ = SqlStatistic::GenerateId();
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_REF, seqId_);
+}
 
 SqliteStatement::~SqliteStatement()
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
     conn_ = nullptr;
 }
@@ -56,6 +63,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     }
     // prepare the new sqlite3_stmt
     sqlite3_stmt *stmt = nullptr;
+    SqlStatistic sqlStatistic(newSql, SqlStatistic::Step::STEP_PREPARE, seqId_);
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         if (stmt != nullptr) {
@@ -75,8 +83,10 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
 
 int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_PREPARE, seqId_);
     if (bound_) {
-        Reset();
+        sqlite3_reset(stmt_);
+        sqlite3_clear_bindings(stmt_);
     }
     bound_ = true;
     int index = 1;
@@ -151,6 +161,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
 int SqliteStatement::Step()
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     return SQLiteError::ErrNo(sqlite3_step(stmt_));
 }
 
@@ -163,12 +174,6 @@ int SqliteStatement::Reset()
     int errCode = sqlite3_reset(stmt_);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("reset ret is %{public}d", errCode);
-        return SQLiteError::ErrNo(errCode);
-    }
-
-    errCode = sqlite3_clear_bindings(stmt_);
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("clear_bindings ret is %{public}d", errCode);
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -218,10 +223,10 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
     if (errCode != E_OK) {
         return errCode;
     }
-    errCode = sqlite3_step(stmt_);
-    if (errCode != SQLITE_DONE && errCode != SQLITE_ROW) {
+    errCode = Step();
+    if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s", errCode, sql_.c_str());
-        return SQLiteError::ErrNo(errCode);
+        return errCode;
     }
     return E_OK;
 }
@@ -415,6 +420,7 @@ bool SqliteStatement::SupportBlockInfo() const
 
 int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     if (info == nullptr) {
         return E_ERROR;
     }

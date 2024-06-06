@@ -230,7 +230,7 @@ describe('rdbStoreLockRowTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `wrongTable failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800018).assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
@@ -239,7 +239,7 @@ describe('rdbStoreLockRowTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `aaa failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800018).assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
@@ -278,7 +278,7 @@ describe('rdbStoreLockRowTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `wrongTable failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800018).assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
@@ -287,7 +287,7 @@ describe('rdbStoreLockRowTest', function () {
             expect().assertFail()
         } catch (err) {
             console.log(TAG + `aaa failed, err: ${JSON.stringify(err)}`)
-            expect(14800000).assertEqual(err.code)
+            expect(14800018).assertEqual(err.code)
         }
         try {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)

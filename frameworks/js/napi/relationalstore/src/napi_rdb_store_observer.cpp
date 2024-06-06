@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define LOG_TAG "NapiRdbStoreObserver"
 
 #include "napi_rdb_store_observer.h"
 
+#include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
 
@@ -36,57 +38,71 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
     LOG_INFO("NapiRdbStoreObserver::OnChange begin");
-    uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
-                            if (observer->callback_ == nullptr) {
-                                return nullptr;
-                            }
-                            napi_value callback = nullptr;
-                            napi_get_reference_value(env, observer->callback_, &callback);
-                            return callback;
-                        }},
-                        [devices](napi_env env, int &argc, napi_value *argv) {
-                            argc = 1;
-                            argv[0] = JSUtils::Convert2JSValue(env, devices);
-                        });
+    auto uvQueue = uvQueue_;
+    if (uvQueue == nullptr) {
+        return;
+    }
+    uvQueue->AsyncCall({ [observer = shared_from_this()](napi_env env) -> napi_value {
+        if (observer->callback_ == nullptr) {
+            return nullptr;
+        }
+        napi_value callback = nullptr;
+        napi_get_reference_value(env, observer->callback_, &callback);
+        return callback;
+    } },
+        [devices](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            argv[0] = JSUtils::Convert2JSValue(env, devices);
+        });
 }
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
 {
-    if (mode_ == DistributedRdb::CLOUD_DETAIL || mode_ == DistributedRdb::LOCAL_DETAIL) {
-        std::vector<JSChangeInfo> infos;
-        for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
-            infos.push_back(JSChangeInfo(origin, it));
-        }
-
-        uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
-                                if (observer->callback_ == nullptr) {
-                                    return nullptr;
-                                }
-                                napi_value callback = nullptr;
-                                napi_get_reference_value(env, observer->callback_, &callback);
-                                return callback;
-                            }},
-                            [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
-                                argc = 1;
-                                argv[0] = JSUtils::Convert2JSValue(env, infos);
-                            });
+    if (mode_ != DistributedRdb::CLOUD_DETAIL && mode_ != DistributedRdb::LOCAL_DETAIL) {
+        RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
         return;
     }
-    RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
+    std::vector<JSChangeInfo> infos;
+    for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
+        infos.push_back(JSChangeInfo(origin, it));
+    }
+
+    auto uvQueue = uvQueue_;
+    if (uvQueue == nullptr) {
+        return;
+    }
+
+    uvQueue->AsyncCall({ [observer = shared_from_this()](napi_env env) -> napi_value {
+        if (observer->callback_ == nullptr) {
+            return nullptr;
+        }
+        napi_value callback = nullptr;
+        napi_get_reference_value(env, observer->callback_, &callback);
+        return callback;
+    } },
+        [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            argv[0] = JSUtils::Convert2JSValue(env, infos);
+        });
 }
 
 void NapiRdbStoreObserver::OnChange()
 {
-    uvQueue_->AsyncCall({[observer = shared_from_this()](napi_env env) -> napi_value {
-                            if (observer->callback_ == nullptr) {
-                                return nullptr;
-                            }
-                            napi_value callback = nullptr;
-                            napi_get_reference_value(env, observer->callback_, &callback);
-                            return callback;
-                        }},
-                        [](napi_env env, int &argc, napi_value *argv) {});
+    auto uvQueue = uvQueue_;
+    if (uvQueue == nullptr) {
+        return;
+    }
+    uvQueue->AsyncCall({ [observer = shared_from_this()](napi_env env) -> napi_value {
+        if (observer->callback_ == nullptr) {
+            return nullptr;
+        }
+        napi_value callback = nullptr;
+        napi_get_reference_value(env, observer->callback_, &callback);
+        return callback;
+    } },
+        [](napi_env env, int &argc, napi_value *argv) {});
 }
+
 
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
 {
@@ -100,10 +116,16 @@ NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInf
 bool NapiRdbStoreObserver::operator==(napi_value value)
 {
     napi_value callback = nullptr;
-    napi_get_reference_value(uvQueue_->GetEnv(), callback_, &callback);
+    napi_status status = napi_get_reference_value(uvQueue_->GetEnv(), callback_, &callback);
+    if (status != napi_ok) {
+        LOG_ERROR("call napi_get_reference_value failed status[%{public}d].", status);
+    }
 
     bool isEquals = false;
-    napi_strict_equals(uvQueue_->GetEnv(), value, callback, &isEquals);
+    status = napi_strict_equals(uvQueue_->GetEnv(), value, callback, &isEquals);
+    if (status != napi_ok) {
+        LOG_ERROR("call napi_strict_equals failed status[%{public}d].", status);
+    }
     return isEquals;
 }
 
