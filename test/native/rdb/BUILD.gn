@@ -116,6 +116,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rd_utils.cpp",
     "../../../frameworks/native/rdb/src/rdb_local_db_observer.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
+    "../../../frameworks/native/rdb/src/rdb_sql_statistic.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",
     "../../../frameworks/native/rdb/src/share_block.cpp",
     "../../../frameworks/native/rdb/src/shared_block_serializer_info.cpp",
@@ -127,6 +128,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/sqlite_statement.cpp",
     "../../../frameworks/native/rdb/src/sqlite_utils.cpp",
     "../../../frameworks/native/rdb/src/string_utils.cpp",
+    "../../../frameworks/native/rdb/src/task_executor.cpp",
   ]
 
   configs = [ ":module_private_config" ]

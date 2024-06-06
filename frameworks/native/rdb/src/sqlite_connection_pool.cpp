@@ -16,6 +16,7 @@
 #include "sqlite_connection_pool.h"
 
 #include <base_transaction.h>
+
 #include <condition_variable>
 #include <iterator>
 #include <mutex>
@@ -26,6 +27,7 @@
 #include "connection.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
+#include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
@@ -36,7 +38,7 @@ using Conn = Connection;
 using ConnPool = SqliteConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
 using SharedConns = std::vector<std::shared_ptr<Connection>>;
-
+using SqlStatistic = DistributedRdb::SqlStatistic;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 
 std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
@@ -168,11 +170,13 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateConnection(bool 
 
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
     return Acquire(isReadOnly);
 }
 
 std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
     using namespace std::chrono;
     std::pair<SharedConn, SharedConns> result;
     auto &[writer, readers] = result;
@@ -220,6 +224,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
 
 SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
     if (maxReader_ != 0) {
         return Acquire(isReadOnly, ms);
     }

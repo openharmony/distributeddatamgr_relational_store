@@ -23,6 +23,8 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
+#include "rdb_sql_statistic.h"
+#include "rdb_types.h"
 #include "result_set.h"
 
 #define NAPI_CALL_RETURN_ERR(theCall, retVal) \
@@ -181,6 +183,21 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &p
     napi_set_named_property(env, object, "schedule", schedule);
     napi_set_named_property(env, object, "code", code);
     napi_set_named_property(env, object, "details", details);
+    return object;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::SqlObserver::SqlExecutionInfo &sqlExeInfo)
+{
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
+
+    std::vector<std::string> sql(sqlExeInfo.sql_.begin(), sqlExeInfo.sql_.end());
+    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "sql", sql), object);
+    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "totalTime", sqlExeInfo.totalTime_), object);
+    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "waitTime", sqlExeInfo.waitTime_), object);
+    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "prepareTime", sqlExeInfo.prepareTime_), object);
+    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "executeTime", sqlExeInfo.executeTime_), object);
     return object;
 }
 

@@ -1045,7 +1045,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
     valueObject->putText(valueObject, data1Value);
     predicates->equalTo(predicates, "data1", valueObject);
     errCode = OH_Rdb_LockRow(storeTestRdbStore_, predicates);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_ERROR);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_NO_ROW_IN_QUERY);
 
     predicates->clear(predicates);
     OH_Cursor *cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
@@ -1057,7 +1057,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
 
     predicates->clear(predicates);
     errCode = OH_Rdb_UnlockRow(storeTestRdbStore_, predicates);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_ERROR);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_NO_ROW_IN_QUERY);
 
     predicates->clear(predicates);
     cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);

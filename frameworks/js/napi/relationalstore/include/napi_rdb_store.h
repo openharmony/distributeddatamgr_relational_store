@@ -94,7 +94,7 @@ private:
     static napi_value UnlockRow(napi_env env, napi_callback_info info);
     static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
 
-    static constexpr int EVENT_HANDLE_NUM = 2;
+    static constexpr int EVENT_HANDLE_NUM = 3;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 
@@ -113,6 +113,7 @@ private:
     public:
         SyncObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
         virtual ~SyncObserver();
+        void Clear();
         bool operator==(napi_value value);
         void ProgressNotification(const DistributedRdb::Details &details) override;
 
@@ -122,8 +123,25 @@ private:
         std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
     };
 
+    class NapiStatisticsObserver
+        : public DistributedRdb::SqlObserver, public std::enable_shared_from_this<NapiStatisticsObserver> {
+    public:
+        NapiStatisticsObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
+        virtual ~NapiStatisticsObserver();
+        void Clear();
+        bool operator==(napi_value value);
+        void OnStatistic(const SqlExecutionInfo &sqlExeInfo) override;
+
+    private:
+        napi_env env_ = nullptr;
+        napi_ref callback_ = nullptr;
+        std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
+    };
+
     napi_value RegisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
     napi_value UnregisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffStatistics(napi_env env, size_t argc, napi_value *argv);
 
     using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
     struct HandleInfo {
@@ -132,11 +150,13 @@ private:
     };
     static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OnRemote },
-        { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback }
+        { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback },
+        { "statistics", &RdbStoreProxy::OnStatistics }
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OffRemote },
-        { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback }
+        { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback },
+        { "statistics", &RdbStoreProxy::OffStatistics }
     };
 
     bool isSystemAppCalled_ = false;
@@ -146,6 +166,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::list<std::shared_ptr<SyncObserver>> syncObservers_;
+    std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

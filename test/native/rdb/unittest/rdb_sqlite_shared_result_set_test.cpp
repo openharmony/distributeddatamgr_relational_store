@@ -1177,7 +1177,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_022, TestSize.Le
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
-    EXPECT_EQ(E_ERROR, ret);
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
     resultSet->Close();
 }
 

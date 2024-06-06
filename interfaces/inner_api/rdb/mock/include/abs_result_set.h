@@ -98,6 +98,7 @@ protected:
 
     // The default position of the result set
     static const int INIT_POS = -1;
+    static constexpr int NO_COUNT = -1;
 
     Mutex globalMtx_;
     /*
@@ -106,6 +107,7 @@ protected:
      */
     int rowPos_ = INIT_POS;
     bool isClosed_ = false;
+    int rowCount_;
 private:
     int InitColumnNames();
 

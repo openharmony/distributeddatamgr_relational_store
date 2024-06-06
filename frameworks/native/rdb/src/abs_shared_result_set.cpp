@@ -49,7 +49,7 @@ AbsSharedResultSet::~AbsSharedResultSet()
 
 int AbsSharedResultSet::GetRowCount(int &count)
 {
-    return E_OK;
+    return AbsResultSet::GetRowCount(count);
 }
 
 int32_t AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)

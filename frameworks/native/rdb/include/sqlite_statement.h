@@ -87,6 +87,7 @@ private:
     bool bound_ = false;
     int columnCount_ = -1;
     int numParameters_;
+    uint32_t seqId_ = 0;
     sqlite3_stmt *stmt_;
     std::shared_ptr<Connection> conn_;
     std::string sql_;
