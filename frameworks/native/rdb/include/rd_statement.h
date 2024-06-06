@@ -55,6 +55,7 @@ private:
     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
     int IsValid(int index) const;
 
+    bool readOnly_;
     std::string sql_ = "";
     GRD_SqlStmt *stmtHandle_ = nullptr;
     GRD_DB *dbHandle_ = nullptr;
