@@ -85,7 +85,7 @@ void RdbExecuteRdTest::TearDown(void)
 
 /**
  * @tc.name: RdbStore_Execute_001
- * @tc.desc: test RdbStore Execute in vector mode 
+ * @tc.desc: test RdbStore Execute in vector mode
  * @tc.type: FUNC
  */
 HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_001, TestSize.Level1)
@@ -151,7 +151,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Execute_003
- * @tc.desc: test RdbStore Execute in vector mode. Repeatly require trx. 
+ * @tc.desc: test RdbStore Execute in vector mode. Repeatly require trx.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_003, TestSize.Level1)
@@ -273,7 +273,11 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_006, TestSize.Level1)
 
 std::string GetRandVector(uint32_t maxElementNum, uint16_t dim)
 {
-    unsigned int randomNumberSeed = time(nullptr);
+    if (maxElementNum == 0) {
+        return "[]";
+    }
+
+    unsigned int randomNumberSeed = static_cast<unsigned int>(time(nullptr));
     std::string res = "[";
     for (uint16_t i = 0; i < dim; i++) {
         uint32_t intPart = (rand_r(&randomNumberSeed) % maxElementNum);
@@ -296,7 +300,7 @@ std::shared_ptr<ResultSet> CreateIdxAndSelect(std::string &sqlSelect)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
-    std::string sqlCreateTable = 
+    std::string sqlCreateTable =
         "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
 
@@ -342,7 +346,7 @@ constexpr uint16_t SELECT_RES_NUM = 3;
 HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_007, TestSize.Level1)
 {
     std::string sqlSelect = "SELECT * FROM test ORDER BY repr <-> '" +
-                            GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "' LIMIT " + 
+                            GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "' LIMIT " +
                             std::to_string(SELECT_RES_NUM) + ";";
     std::shared_ptr<ResultSet> resultSet = CreateIdxAndSelect(sqlSelect);
     int columnIndex = 0;
@@ -410,7 +414,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_008, TestSize.Level1)
     int resCnt = 1;
     vecs.clear();
     EXPECT_EQ(E_OK, resultSet->GOToFirstRow());
-    while ((ret = resultSet->GoToNextRow() == E_OK )) {
+    while ((ret = resultSet->GoToNextRow() == E_OK)) {
         EXPECT_EQ(E_OK, resultSet->GetColumnIndex("repr", columnIndex));
         EXPECT_EQ(1, columnIndex); // 1是向量的列，columnIndex期望是1
 
@@ -442,7 +446,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_009, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
-    std::string sqlCreateTable = 
+    std::string sqlCreateTable =
         "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
     std::string sqlSelect = "SELECT * FROM test;";
@@ -545,7 +549,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
         EXPECT_EQ(res.first, E_OK);
     }
 
-    EXPECT_EQ(E_OK,store->Commit(trx.second));
+    EXPECT_EQ(E_OK, store->Commit(trx.second));
     std::shared_ptr<AbsSharedResultSet> ResultSet = store->QuerySql(sqlSelect.c_str(), std::vector<ValueObject>());
     EXPECT_NE(resultSet, nullptr);
 
@@ -600,7 +604,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_012, TestSize.Level1)
         res = store->Execute(sqlInsert.c_str(), {}, trx.second);
         EXPECT_EQ(res.first, E_OK);
     }
-    EXPECT_EQ(E_OK,store->RollBack(trx.second));
+    EXPECT_EQ(E_OK, store->RollBack(trx.second));
 
     res = store->Execute(sqlCreateIndex.c_str(), {});
     EXPECT_EQ(res.first, E_OK);
@@ -658,7 +662,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_014, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
-    std::string sqlCreateTable = "CREATE TABLE test(id int primary key, repr floatvector(" + 
+    std::string sqlCreateTable = "CREATE TABLE test(id int primary key, repr floatvector(" +
                                 std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
     std::string sqlSelect = "SELECT * FROM test;"
@@ -715,7 +719,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_015, TestSize.Level1)
     res = store->Execute(sqlCreateTable.c_str(), {});
     EXPECT_EQ(res.first, E_OK);
 
-    for(uint32_t i = 1; i < 10; i++){
+    for(uint32_t i = 1; i < 10; i++) {
         std::pair<int32_t, int64_t> trx = {};
         trx = store->BeginTrans();
         EXPECT_EQ(res.first, E_OK);
@@ -752,7 +756,7 @@ HWTEST_F(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
 
     std::vector<std::vector<float>> vectorSamples = {{1.0, 2.0, 3.0, 4.0}, {10, 20, 30, 40}, {100, 200, 300, 400}};
 
-    for(uint32_t i = 0; i < vectorSamples.size(); i++){
+    for(uint32_t i = 0; i < vectorSamples.size(); i++) {
         std::pair<int32_t, int64_t> trx = {};
         trx = store->BeginTrans();
         EXPECT_EQ(res.first, E_OK);
