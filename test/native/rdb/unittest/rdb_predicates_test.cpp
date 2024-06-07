@@ -586,7 +586,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
     EXPECT_EQ(true, hasSpecificField);
     std::shared_ptr<AbsSharedResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
     EXPECT_NE(nullptr, resultSet);
-    EXPECT_EQ(0, rdbresultSet->OnGo(0, 1));
+    EXPECT_EQ(0, resultSet->OnGo(0, 1));
     resultSet->Close();
 }
 
