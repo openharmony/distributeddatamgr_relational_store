@@ -991,6 +991,31 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_031, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStoreConfig_032
+ * @tc.desc: test RdbStoreConfig interfaces: SetWriteTime/GetWriteTime
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_032, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    int timeout = 10;
+    config.SetWriteTime(timeout);
+    EXPECT_EQ(timeout, config.GetWriteTime());
+
+    // 0 is used to test the situation when outTime is less than MIN_TIMEOUT.
+    timeout = 0;
+    config.SetWriteTime(timeout);
+    EXPECT_EQ(1, config.GetWriteTime());
+
+    // 301 is used to test the situation when outTime is greater than MAX_TIMEOUT.
+    timeout = 301;
+    config.SetWriteTime(timeout);
+    EXPECT_EQ(300, config.GetWriteTime());
+}
+
+/**
  * @tc.name: RdbStoreConfigVisitor_001
  * @tc.desc: test RdbStoreConfigVisitor
  * @tc.type: FUNC

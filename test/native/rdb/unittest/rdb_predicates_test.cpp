@@ -579,7 +579,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
-    
+
     // if predicates HasSpecificField
     predicates.OrderByAsc("#_number");
     bool hasSpecificField = predicates.HasSpecificField();
