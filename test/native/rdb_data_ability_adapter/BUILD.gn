@@ -36,22 +36,10 @@ ohos_unittest("NativeDataAbilityAdapterTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "ability_base:want",
-    "ability_base:zuri",
-    "ability_runtime:ability_manager",
-    "ability_runtime:abilitykit_native",
-    "ability_runtime:dataobs_manager",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "c_utils:utils",
-    "data_share:datashare_common",
-    "data_share:datashare_consumer",
     "hilog:libhilog",
     "relational_store:native_dataability",
     "relational_store:rdb_data_ability_adapter",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
   ]
 
   deps = [
