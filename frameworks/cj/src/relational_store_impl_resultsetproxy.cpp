@@ -240,7 +240,7 @@ namespace Relational {
         if (*rtnCode != RelationalStoreJsKit::OK || vec.size() == 0) {
             return CArrUI8{nullptr, 0};
         }
-        uint8_t* result = (uint8_t*)malloc(vec.size() * sizeof(uint8_t));
+        uint8_t* result = static_cast<uint8_t*>(malloc(vec.size() * sizeof(uint8_t)));
         if (result == nullptr) {
             return CArrUI8{nullptr, -1};
         }
@@ -263,7 +263,7 @@ namespace Relational {
         if (*rtnCode != RelationalStoreJsKit::OK || assets.size() == 0) {
             return Assets{nullptr, 0};
         }
-        Asset* result = (Asset*)malloc(assets.size() * sizeof(Asset));
+        Asset* result = static_cast<Asset*>(malloc(assets.size() * sizeof(Asset)));
         if (result == nullptr) {
             return Assets{nullptr, -1};
         }
@@ -290,7 +290,7 @@ namespace Relational {
         }
         const std::map<std::string, NativeRdb::ValueObject> map = rowEntity.Get();
         size_t size = map.size();
-        if (size <= 0) {
+        if (size == 0) {
             return ValuesBucket{nullptr, nullptr, 0};
         }
         ValuesBucket result = ValuesBucket {
