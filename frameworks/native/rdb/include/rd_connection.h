@@ -59,7 +59,8 @@ public:
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
-        "{\"pageSize\":16, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"maxConnNum\":500 }";
+        "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
+        "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
