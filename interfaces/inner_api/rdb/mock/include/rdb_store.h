@@ -105,6 +105,10 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) = 0;
     virtual std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) = 0;
     virtual int GetRebuilt(RebuiltType &rebuilt) = 0;
+    virtual int32_t GetDbType() const
+    {
+        return DB_SQLITE;
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif
