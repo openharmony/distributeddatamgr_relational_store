@@ -1402,8 +1402,8 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return {errCode, 0};
     }
-    tmpTrxId = newTrxId_;
-    newTrxId_++;
+    tmpTrxId = newTrxId_.fetch_add(1);
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     trxConnMap_[tmpTrxId] = connection;
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
