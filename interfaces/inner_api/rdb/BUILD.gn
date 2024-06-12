@@ -62,6 +62,7 @@ if (is_ohos && !build_ohos_sdk) {
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
+      "RDB_TRACE_ON",
     ]
 
     if (relational_store_rdb_support_icu) {

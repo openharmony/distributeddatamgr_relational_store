@@ -19,7 +19,11 @@
 
 #ifdef RDB_TRACE_ON
 #include "hitrace.h"
+
+#ifndef DISTRIBUTED_DATA_HITRACE
 #define DISTRIBUTED_DATA_HITRACE(trace) HiTrace hitrace(trace)
+#endif
+
 #else
 #define DISTRIBUTED_DATA_HITRACE(trace) DO_NOTHING
 #endif
