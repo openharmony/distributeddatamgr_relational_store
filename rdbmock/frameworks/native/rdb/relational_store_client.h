@@ -28,6 +28,10 @@ enum DBStatus {
     NOT_FOUND = 2,
     WAIT_COMPENSATED_SYNC = 57,
 };
+class RelationalStoreManager {
+public:
+    static std::string GetDistributedLogTableName(const std::string &tableName);
+};
 }
 
 DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db);

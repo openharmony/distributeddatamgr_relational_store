@@ -33,6 +33,7 @@
 #include "rdb_errno.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
+#include "relational_store_client.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_statement.h"
@@ -48,7 +49,6 @@
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
 #include "rdb_security_manager.h"
-#include "relational_store_client.h"
 #include "relational_store_manager.h"
 #include "runtime_config.h"
 #include "security_policy.h"
@@ -682,6 +682,21 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     return E_OK;
 }
 
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    std::string sql;
+    if (predicates.HasSpecificField()) {
+        std::string table = predicates.GetTableName();
+        std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
+        sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
+    } else {
+        sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    }
+    return QueryByStep(sql, predicates.GetBindArgs());
+}
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::Query(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
@@ -712,21 +727,6 @@ std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResourc
         return { status, nullptr };
     }
     return { status, resultSet };
-}
-
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
-{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    std::string sql;
-    if (predicates.HasSpecificField()) {
-        std::string table = predicates.GetTableName();
-        std::string logTable = DistributedDB::RelationalStoreManager::GetDistributedLogTableName(table);
-        sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
-    } else {
-        sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    }
-    return QueryByStep(sql, predicates.GetBindArgs());
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
