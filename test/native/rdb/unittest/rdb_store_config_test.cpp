@@ -898,11 +898,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_027, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStoreConfig_029
+ * @tc.name: RdbStoreConfig_028
  * @tc.desc: test RdbStoreConfig interfaces: SetDataGroupId/SetAutoClean
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_028, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
@@ -913,13 +913,13 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStoreConfig_030
+ * @tc.name: RdbStoreConfig_029
  * @tc.desc: test RdbStoreConfig interfaces: SetModuleName/GetModuleName
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_030, TestSize.Level1)
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
 {
-    const std::string dbPath = RDB_TEST_PATH + "config_test_30.db";
+    const std::string dbPath = RDB_TEST_PATH + "config_test_29.db";
     RdbStoreConfig config(dbPath);
 
     std::string bundleName = "com.ohos.config.test30";
@@ -947,6 +947,50 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_030, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStoreConfig_030
+ * @tc.desc: test RdbStoreConfig interfaces: SetReadTime/GetReadTime
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_030, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    int timeout = 10;
+    config.SetReadTime(timeout);
+    EXPECT_EQ(timeout, config.GetReadTime());
+
+    // 0 is used to test the situation when outTime is less than MIN_TIMEOUT.
+    timeout = 0;
+    config.SetReadTime(timeout);
+    EXPECT_EQ(1, config.GetReadTime());
+
+    // 301 is used to test the situation when outTime is greater than MAX_TIMEOUT.
+    timeout = 301;
+    config.SetReadTime(timeout);
+    EXPECT_EQ(300, config.GetReadTime());
+}
+
+/**
+ * @tc.name: RdbStoreConfig_031
+ * @tc.desc: test RdbStoreConfig interfaces: SetDataGroupId/SetAutoClean
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_031, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool allowRebuild = false;
+    config.SetAllowRebuild(allowRebuild);
+    EXPECT_EQ(allowRebuild, config.GetAllowRebuild());
+
+    allowRebuild = true;
+    config.SetAllowRebuild(allowRebuild);
+    EXPECT_EQ(allowRebuild, config.GetAllowRebuild());
+}
+
+/**
  * @tc.name: RdbStoreConfigVisitor_001
  * @tc.desc: test RdbStoreConfigVisitor
  * @tc.type: FUNC
@@ -970,6 +1014,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfigVisitor_001, TestSize.Level1)
     std::shared_ptr<RdbStore> visitorStore = RdbHelper::GetRdbStore(visitorConfig, 1, visitorHelper, errCode);
     EXPECT_NE(visitorStore, nullptr);
     EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(visitorDir, visitorConfig.GetVisitorDir());
 
     int64_t id;
     ValuesBucket values;
