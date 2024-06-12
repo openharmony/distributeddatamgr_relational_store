@@ -116,12 +116,13 @@ void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, nap
     }
 }
 
-napi_value AsyncCall::Call(napi_env env, std::shared_ptr<ContextBase> context)
+napi_value AsyncCall::Call(napi_env env, std::shared_ptr<ContextBase> context, const char *fun)
 {
     record_.total_.times_++;
     record_.total_.lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     context->executed_ = record_.executed_;
+    context->fun = (fun == nullptr || fun[0] == '\0') ? "RelationalStoreAsyncCall" : fun;
     return context->isAsync_ ? Async(env, context) : Sync(env, context);
 }
 
@@ -137,7 +138,7 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
     }
     context->keep_ = context;
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "RelationalStoreAsyncCall", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, context->fun, NAPI_AUTO_LENGTH, &resource);
     // create async work, execute function is OnExecute, complete function is OnComplete
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete,
         reinterpret_cast<void *>(context.get()), &context->work_);
