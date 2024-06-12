@@ -62,6 +62,9 @@ public:
 
     static int RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
     static int RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+
+    static int RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version);
+    static int RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version);
 };
 
 } // namespace NativeRdb

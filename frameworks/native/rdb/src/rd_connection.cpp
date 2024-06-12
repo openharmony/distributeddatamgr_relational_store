@@ -221,5 +221,17 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     }
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
+
+int32_t RdConnection::GetVersion(int &version)
+{
+    return RdUtils::RdDbGetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, version);
+}
+
+int32_t RdConnection::SetVersion(int version)
+{
+    return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, version);
+}
+
+
 } // namespace NativeRdb
 } // namespace OHOS

@@ -463,5 +463,33 @@ int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encrypte
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
 }
+
+int RdUtils::RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version)
+{
+    if (GRD_KVApiInfo.DBGetConfigApi == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBGetConfigApi == nullptr) {
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    GRD_DbValueT value = GRD_KVApiInfo.DBGetConfigApi(db, type);
+    version = value.value.longValue;
+    return E_OK;
+}
+
+int RdUtils::RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version)
+{
+    if (GRD_KVApiInfo.DBSetConfigApi == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBSetConfigApi == nullptr) {
+        return TransferGrdErrno(GRD_INNER_ERR);
+    }
+    GRD_DbValueT value;
+    value.type = GRD_SQL_DATATYPE_INTEGER;
+    value.value.longValue = version;
+    return TransferGrdErrno(GRD_KVApiInfo.DBSetConfigApi(db, type, value));
+}
+
 } // namespace NativeRdb
 } // namespace OHOS
