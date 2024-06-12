@@ -56,6 +56,11 @@ typedef enum {
     GRD_SQL_DATATYPE_NULL,
 } GRD_DbDataTypeE;
 
+typedef enum {
+    GRD_CONFIG_USER_VERSION,
+    GRD_CONFIG_BOTTOM,
+} GRD_ConfigTypeE;
+
 typedef struct GRD_DbValueT {
     GRD_DbDataTypeE type;
     union {

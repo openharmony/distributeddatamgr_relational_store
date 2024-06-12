@@ -56,6 +56,8 @@ public:
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     
+    int32_t GetVersion(int &version);
+    int32_t SetVersion(int version);
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
