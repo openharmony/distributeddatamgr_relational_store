@@ -233,7 +233,6 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0001, TestSize
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        int32_t errCode = E_ERROR;
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);
@@ -266,7 +265,6 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0002, TestSize
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        int32_t errCode = E_ERROR;
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);

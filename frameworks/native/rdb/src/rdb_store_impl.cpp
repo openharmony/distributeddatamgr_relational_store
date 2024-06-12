@@ -1460,6 +1460,8 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
     if (trxId == 0) {
         return E_INVALID_ARGS;
     }
+
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_); //doesn't matter if you lock twice in one thread
     if (trxConnMap_.find(trxId) == trxConnMap_.end()) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;
