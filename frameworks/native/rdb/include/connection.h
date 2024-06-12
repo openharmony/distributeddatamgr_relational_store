@@ -51,6 +51,7 @@ public:
     virtual int32_t SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
+    virtual int32_t ClearCache() = 0;
     virtual int32_t Subscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::string &event,
