@@ -38,6 +38,7 @@ extern bool g_sync;
 #define ASYNC &g_async
 #define SYNC &g_sync
 
+#define ASYNC_CALL(env, ctx) AsyncCall::Call(env, ctx, __FUNCTION__)
 class ContextBase {
 public:
     struct RecordData {
@@ -66,6 +67,7 @@ public:
     void *boundObj = nullptr;
     std::shared_ptr<Error> error;
     std::shared_ptr<RecordData> executed_;
+    const char *fun = nullptr;
 
     napi_ref self_ = nullptr;
     napi_ref callback_ = nullptr;
@@ -81,7 +83,7 @@ public:
 
 class AsyncCall final {
 public:
-    static napi_value Call(napi_env env, std::shared_ptr<ContextBase> context);
+    static napi_value Call(napi_env env, std::shared_ptr<ContextBase> context, const char *fun);
 
 private:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };

@@ -84,7 +84,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
@@ -120,7 +120,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value InitRdbHelper(napi_env env, napi_value exports)

@@ -621,7 +621,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
@@ -645,7 +645,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
@@ -674,7 +674,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
@@ -714,7 +714,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
@@ -751,7 +751,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -784,7 +784,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 #endif
 
@@ -821,7 +821,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
@@ -847,7 +847,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
@@ -886,7 +886,7 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
@@ -910,7 +910,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
@@ -934,7 +934,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
@@ -957,7 +957,7 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 struct AttachContext : public ContextBase {
@@ -1019,7 +1019,7 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Detach(napi_env env, napi_callback_info info)
@@ -1059,7 +1059,7 @@ napi_value RdbStoreProxy::Detach(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
@@ -1133,7 +1133,7 @@ napi_value RdbStoreProxy::BeginTrans(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
@@ -1172,7 +1172,7 @@ napi_value RdbStoreProxy::RollBackByTxId(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
@@ -1212,7 +1212,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
@@ -1249,7 +1249,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     };
     context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
@@ -1343,7 +1343,7 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1373,7 +1373,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback_info info)
@@ -1404,7 +1404,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
@@ -1436,7 +1436,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 InputAction GetCloudSyncInput(std::shared_ptr<RdbStoreContext> context)
@@ -1508,7 +1508,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
     };
     context->SetAll(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
@@ -1537,7 +1537,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
@@ -1566,7 +1566,7 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
@@ -1842,7 +1842,7 @@ napi_value RdbStoreProxy::QuerySharingResource(napi_env env, napi_callback_info 
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_value *argv)
@@ -2043,7 +2043,7 @@ napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value RdbStoreProxy::LockRow(napi_env env, napi_callback_info info)
@@ -2084,7 +2084,7 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 #endif
 
@@ -2111,7 +2111,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return AsyncCall::Call(env, context);
+    return ASYNC_CALL(env, context);
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
