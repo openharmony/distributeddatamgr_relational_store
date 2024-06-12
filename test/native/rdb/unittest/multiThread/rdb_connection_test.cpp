@@ -220,14 +220,14 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Lev
  * @tc.type: FUNC
  * @tc.author: zhangjiaxi
  */
-HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Level2)
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0001, TestSize.Level2)
 {
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId1 = executors_->Execute([store = store_, block1]() {
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block1->SetValue(trxid);
-        errCode = store->Commit();
+        errCode = store->Commit(trxid);
         EXPECT_EQ(errCode, E_OK);
     });
 
@@ -237,7 +237,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);
-        errCode = store->Commit();
+        errCode = store->Commit(trxid);
         EXPECT_EQ(errCode, E_OK);
     });
 
@@ -253,14 +253,14 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
  * @tc.type: FUNC
  * @tc.author: zhangjiaxi
  */
-HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Level2)
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0002, TestSize.Level2)
 {
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId1 = executors_->Execute([store = store_, block1]() {
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block1->SetValue(trxid);
-        errCode = store->RollBack();
+        errCode = store->RollBack(trxid);
         EXPECT_EQ(errCode, E_OK);
     });
 
@@ -270,7 +270,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
         auto [trxid, errCode] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);
-        errCode = store->RollBack();
+        errCode = store->RollBack(trxid);
         EXPECT_EQ(errCode, E_OK);
     });
 
