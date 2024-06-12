@@ -364,7 +364,6 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 
 int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return InsertWithConflictResolutionEntry(outRowId, table, values, ConflictResolution::ON_CONFLICT_NONE);
 }
 
@@ -558,7 +557,6 @@ int RdbStoreImpl::Update(int &changedRows, const std::string &table, const Value
 int RdbStoreImpl::Update(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<ValueObject> &bindArgs)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return UpdateWithConflictResolution(
         changedRows, table, values, whereClause, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
 }
@@ -643,7 +641,6 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
 
 int RdbStoreImpl::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
 }

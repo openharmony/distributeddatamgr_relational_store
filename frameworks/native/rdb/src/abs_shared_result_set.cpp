@@ -115,7 +115,6 @@ int AbsSharedResultSet::UpdateBlockPos(int position, int rowCnt)
 
 int AbsSharedResultSet::GoToRow(int position)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
@@ -162,7 +161,6 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
 
 int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto block = GetBlock();
     int errorCode = CheckState(col);
     if (errorCode != E_OK || block == nullptr) {

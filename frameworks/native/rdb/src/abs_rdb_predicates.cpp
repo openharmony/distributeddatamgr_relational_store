@@ -174,7 +174,6 @@ const DistributedRdb::PredicatesMemo& AbsRdbPredicates::GetDistributedPredicates
 
 AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
-    DISTRIBUTED_DATA_HITRACE("AbsRdbPredicates::EqualTo");
     if (auto pval = std::get_if<std::string>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, *pval);
     }
