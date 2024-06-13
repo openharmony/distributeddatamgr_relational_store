@@ -289,7 +289,8 @@ std::pair<int32_t, std::shared_ptr<RdbServiceProxy::ResultSet>> RdbServiceProxy:
         static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REMOTE_QUERY), reply, param, device, sql, selectionArgs);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s", status,
-            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), device.c_str());
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(),
+            SqliteUtils::Anonymous(device).c_str());
         return { status, nullptr };
     }
 
