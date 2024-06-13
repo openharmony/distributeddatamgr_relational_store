@@ -61,6 +61,9 @@ private:
     GRD_DB *dbHandle_ = nullptr;
     std::shared_ptr<Connection> conn_;
     int columnCount_ = 0;
+
+    std::map<std::string, std::function<int32_t(const int &value)>> setPragmas_;
+    std::map<std::string, std::function<int32_t(int &version)>> getPragmas_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

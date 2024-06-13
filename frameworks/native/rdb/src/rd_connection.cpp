@@ -119,6 +119,13 @@ int32_t RdConnection::OnInitialize()
 std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string& sql, Connection::SConn conn)
 {
     auto stmt = std::make_shared<RdStatement>();
+    stmt->conn_ = conn;
+    stmt->setPragmas_["user_version"] = ([this](const int &value) -> int32_t {
+        return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, value);
+    });
+    stmt->getPragmas_["user_version"] = ([this](int &version) -> int32_t {
+        return RdUtils::RdDbGetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, version);
+    });
     int32_t ret = stmt->Prepare(dbHandle_, sql);
     if (ret != E_OK) {
         return { ret, nullptr };
@@ -210,17 +217,6 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     }
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
-
-int32_t RdConnection::GetVersion(int &version)
-{
-    return RdUtils::RdDbGetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, version);
-}
-
-int32_t RdConnection::SetVersion(int version)
-{
-    return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, version);
-}
-
 
 } // namespace NativeRdb
 } // namespace OHOS
