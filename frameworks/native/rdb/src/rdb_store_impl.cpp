@@ -1411,7 +1411,6 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
     if (errCode != E_OK) {
         lock.lock();
         trxConnMap_.erase(tmpTrxId);
-        lock.unlock();
     }
     return {errCode, tmpTrxId};
 }
