@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <shared_mutex>
 
 #include "abs_shared_result_set.h"
 #include "concurrent_map.h"
@@ -160,8 +161,6 @@ private:
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
-
-    mutable std::shared_mutex rwMutex_;
 };
 } // namespace OHOS::NativeRdb
 #endif
