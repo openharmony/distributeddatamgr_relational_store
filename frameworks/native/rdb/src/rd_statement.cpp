@@ -56,6 +56,17 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     sql_ = newSql;
     stmtHandle_ = tmpStmt;
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
+    if (readOnly_) {
+        ret = Step();
+        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+            return ret;
+        }
+        GetProperties();
+        ret = Reset();
+        if (ret != E_OK) {
+            return ret;
+        }
+    }
     return E_OK;
 }
 
@@ -72,6 +83,7 @@ int RdStatement::Finalize()
     stmtHandle_ = nullptr;
     sql_ = "";
     columnCount_ = 0;
+    readOnly_ = false;
     return E_OK;
 }
 
