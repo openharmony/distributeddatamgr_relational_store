@@ -112,11 +112,11 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     auto remote = distributedDataMgr_->GetFeatureInterface(DistributedRdb::RdbService::SERVICE_NAME);
     if (remote == nullptr) {
         LOG_ERROR("get rdb service failed");
-        return { E_NOT_SUPPORTED, nullptr };
+        return { E_NOT_SUPPORT, nullptr };
     }
 
     if (!remote->IsProxyObject()) {
-        return { E_NOT_SUPPORTED, nullptr };
+        return { E_NOT_SUPPORT, nullptr };
     }
 
     sptr<RdbServiceProxy> rdbService = iface_cast<RdbServiceProxy>(remote);

@@ -142,7 +142,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0002, TestSize.Level1)
     ValuesBucket values;
     values.PutString("name", "liSi");
     int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -159,7 +159,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0003, TestSize.Level1)
     // salary is 300.5
     values.PutDouble("salary", 300.5);
     auto ret = store->Update(changedRows, "test", values);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -173,7 +173,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0004, TestSize.Level1)
 
     int deletedRows;
     auto ret = store->Delete(deletedRows, "test", "id = 1");
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -186,13 +186,13 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0005, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
 
     auto ret = store->BeginTransaction();
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 
     ret = store->Commit();
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 
     ret = store->RollBack();
-    EXPECT_EQ(E_NO_TRANSACTION_IN_SESSION, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -210,7 +210,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0006, TestSize.Level1)
     values.PutString("name", "zhangSan");
     valuesBuckets.push_back(std::move(values));
     int error = store->BatchInsert(number, "test", valuesBuckets);
-    EXPECT_EQ(E_DATABASE_BUSY, error);
+    EXPECT_EQ(E_NOT_SUPPORT, error);
 }
 
 /**
@@ -223,7 +223,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0007, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
 
     auto resultSet = store->QuerySql("PRAGMA user_version");
-    
+
     EXPECT_NE(nullptr, resultSet);
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
@@ -245,10 +245,10 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0008, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
 
     auto [ret, object] = store->Execute("PRAGMA user_version");
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 
     std::tie(ret, object) = store->Execute("PRAGMA user_version=2");
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -280,10 +280,10 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0010, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
 
     auto ret = store->ExecuteSql("PRAGMA user_version");
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 
     ret = store->ExecuteSql("SELECT * FROM test");
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -299,7 +299,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0011, TestSize.Level1)
     ValuesBucket values;
     values.PutString("name", "zhangSan");
     int ret = store->Replace(id, "test", values);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -347,7 +347,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0014, TestSize.Level1)
 
     int64_t outValue;
     int ret = store->ExecuteForLastInsertedRowId(outValue, "", {});
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -361,7 +361,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0015, TestSize.Level1)
 
     int64_t outValue;
     int ret = store->ExecuteForChangedRowCount(outValue, "", {});
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -391,7 +391,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0017, TestSize.Level1)
 
     int version = 2;
     auto ret = store->SetVersion(version);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -425,7 +425,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0018, TestSize.Level1)
     ValueObject obj;
     // id is 1
     std::tie(ret, obj) = store->Execute("PRAGMA user_version", {}, 1);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**
@@ -501,6 +501,6 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0022, TestSize.Level1)
 
     uint64_t cursor = 1;
     auto ret = store->CleanDirtyData("test", cursor);
-    EXPECT_EQ(E_DATABASE_BUSY, ret);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
