@@ -65,8 +65,6 @@ public:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
     virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
-    virtual int32_t GetVersion(int &version);
-    virtual int32_t SetVersion(int version);
 
 private:
     int32_t id_ = 0;
