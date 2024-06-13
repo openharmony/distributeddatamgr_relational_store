@@ -1097,7 +1097,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         }
         int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables res is : %{public}d", res);
-        return (res == E_OK || res == E_NOT_SUPPORTED) ? OK : ERR;
+        return (res == E_OK || res == E_NOT_SUPPORT) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_get_undefined(env, &result);

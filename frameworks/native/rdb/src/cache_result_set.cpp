@@ -309,7 +309,7 @@ int CacheResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 
 int CacheResultSet::GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int CacheResultSet::Get(int32_t col, ValueObject &value)
