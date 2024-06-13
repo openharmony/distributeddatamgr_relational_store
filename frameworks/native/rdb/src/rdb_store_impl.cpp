@@ -1403,7 +1403,7 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         return {errCode, 0};
     }
     tmpTrxId = newTrxId_.fetch_add(1);
-    std::unique_lock<std::shared_mutex> lock(rwMutex_);
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     trxConnMap_[tmpTrxId] = connection;
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
@@ -1461,7 +1461,7 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         return E_INVALID_ARGS;
     }
 
-    std::unique_lock<std::shared_mutex> lock(rwMutex_); //doesn't matter if you lock twice in one thread
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_); //doesn't matter if you lock twice in one thread
     if (trxConnMap_.find(trxId) == trxConnMap_.end()) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;

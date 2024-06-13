@@ -160,6 +160,8 @@ private:
     std::shared_ptr<SqliteConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+
+    mutable std::shared_mutex rwMutex_;
 };
 } // namespace OHOS::NativeRdb
 #endif
