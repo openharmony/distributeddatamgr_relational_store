@@ -1406,9 +1406,12 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
     tmpTrxId = newTrxId_.fetch_add(1);
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     trxConnMap_[tmpTrxId] = connection;
+    lock.unlock();
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
+        lock.lock();
         trxConnMap_.erase(tmpTrxId);
+        lock.unlock();
     }
     return {errCode, tmpTrxId};
 }
@@ -1462,13 +1465,14 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         return E_INVALID_ARGS;
     }
 
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_); //doesn't matter if you lock twice in one thread
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     if (trxConnMap_.find(trxId) == trxConnMap_.end()) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;
     }
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     auto connection = trxConnMap_[trxId];
+    lock.unlock();
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return E_ERROR;
@@ -1482,10 +1486,12 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         LOG_ERROR(
             "transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
             name_.c_str(), ret);
+        lock.lock();
         trxConnMap_.erase(trxId);
         return ret;
     }
     if (closeConnAfterExecute) {
+        lock.lock();
         trxConnMap_.erase(trxId);
     }
     return E_OK;
