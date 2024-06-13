@@ -25,7 +25,6 @@
 #include <mutex>
 #include <sstream>
 #include <string>
-#include <shared_mutex>
 
 #include "cache_result_set.h"
 #include "logger.h"
