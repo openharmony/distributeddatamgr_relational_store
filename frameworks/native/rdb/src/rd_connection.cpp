@@ -123,17 +123,6 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
     if (ret != E_OK) {
         return { ret, nullptr };
     }
-    if (!isWriter_) {
-        ret = stmt->Step();
-        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
-            return { ret, nullptr };
-        }
-        stmt->GetProperties();
-        ret = stmt->Reset();
-        if (ret != E_OK) {
-            return { ret, nullptr };
-        }
-    }
     return { ret, stmt };
 }
 

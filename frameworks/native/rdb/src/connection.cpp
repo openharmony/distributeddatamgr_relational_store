@@ -112,4 +112,15 @@ int Connection::GetId() const
 {
     return id_;
 }
+
+int32_t Connection::GetVersion(int &version)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int32_t Connection::SetVersion(int version)
+{
+    return E_NOT_SUPPORTED;
+}
+
 } // namespace OHOS::NativeRdb
