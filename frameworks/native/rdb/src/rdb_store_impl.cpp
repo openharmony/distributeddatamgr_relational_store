@@ -1461,7 +1461,7 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         return E_INVALID_ARGS;
     }
 
-    if (trxConnMap_.Find(trxId)) {
+    if (!trxConnMap_.Contains(trxId)) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;
     }
