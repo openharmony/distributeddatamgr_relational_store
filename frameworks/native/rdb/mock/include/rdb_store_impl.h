@@ -117,7 +117,7 @@ protected:
     std::string fileType_;
 
 private:
-    std::map<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+    ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::atomic<int64_t> newTrxId_ = 1;
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
