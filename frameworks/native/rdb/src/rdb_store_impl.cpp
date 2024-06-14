@@ -331,13 +331,21 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
+    if (errCode == E_OK) {
+        std::string outValue{"OK"};
+        auto ret = ExecuteAndGetString(outValue, "PRAGMA integrity_check", {});
+        if (ret == E_OK && outValue == "ERROR" && config.GetAllowRebuild() && !config.IsReadOnly()) {
+            LOG_ERROR("integrity check result is ERROR, rebuild database %{public}s", name_.c_str());
+            std::tie(rebuild_, connectionPool_) = SqliteConnectionPool::HandleDataCorruption(config_, errCode);
+        }
+    }
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
-        std::tie(rebuild_, connectionPool_) =  SqliteConnectionPool::HandleDataCorruption(config_, errCode);
+        LOG_ERROR("rebuild database %{public}s", name_.c_str());
+        std::tie(rebuild_, connectionPool_) = SqliteConnectionPool::HandleDataCorruption(config_, errCode);
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
-        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s",
-            errCode, path_.c_str());
+        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode, path_.c_str());
         return;
     }
 
