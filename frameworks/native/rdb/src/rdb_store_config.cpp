@@ -17,6 +17,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_security_manager.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -346,9 +347,65 @@ std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
     return encryptKey_;
 }
 
+void RdbStoreConfig::ChangeEncryptKey() const
+{
+    if (encryptKey_.size() == newEncryptKey_.size()) {
+        encryptKey_.assign(encryptKey_.size(), 0);
+        encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
+        newEncryptKey_.assign(newEncryptKey_.size(), 0);
+        newEncryptKey_.resize(0);
+    }
+}
+
+std::vector<uint8_t> RdbStoreConfig::GetNewEncryptKey() const
+{
+    return newEncryptKey_;
+}
+
+void RdbStoreConfig::Initialize() const
+{
+    GenerateEncryptedKey();
+}
+
+void RdbStoreConfig::GenerateEncryptedKey() const
+{
+    if (!isEncrypt_) {
+        return;
+    }
+
+    auto name = bundleName_;
+    if (name.empty()) {
+        name = std::string(path).substr(0, path.rfind("/") + 1);
+    }
+    auto errCode = RdbSecurityManager::GetInstance().Init(name);
+    if (errCode != E_OK) {
+        LOG_ERROR("generate root encrypt key failed, bundleName_:%{public}s", bundleName_.c_str());
+        return;
+    }
+    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    if (!rdbPwd.IsValid()) {
+        LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
+        return;
+    }
+    encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    rdbPwd.Clear();
+
+    if (rdbPwd.isKeyExpired) {
+        auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path,
+            RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
+        if (!rdbNewPwd.IsValid()) {
+            LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
+            return;
+        }
+        newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
+        rdbPwd.Clear();
+    }
+}
+
 void RdbStoreConfig::ClearEncryptKey()
 {
     encryptKey_.assign(encryptKey_.size(), 0);
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
 }
 
 void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)

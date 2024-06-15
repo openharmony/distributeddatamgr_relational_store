@@ -113,7 +113,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
 
 int32_t RdConnection::OnInitialize()
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string& sql, Connection::SConn conn)
@@ -149,32 +149,32 @@ bool RdConnection::IsWriter() const
 
 int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::TryCheckPoint()
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::LimitWalSize()
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::ConfigLocale(const std::string& localeStr)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::CleanDirtyData(const std::string& table, uint64_t cursor)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::SubscribeTableChanges(const Connection::Notifier& notifier)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::GetMaxVariable() const
@@ -184,24 +184,24 @@ int32_t RdConnection::GetMaxVariable() const
 
 int32_t RdConnection::GetJournalMode()
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::ClearCache()
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::Subscribe(const std::string& event,
     const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::Unsubscribe(const std::string& event,
     const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)

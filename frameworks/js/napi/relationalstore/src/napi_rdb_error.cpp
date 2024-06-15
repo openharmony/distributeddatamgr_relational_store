@@ -50,7 +50,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_SQLITE_MISMATCH, 14800033, "SQLite: Data type mismatch." },
     { NativeRdb::E_SQLITE_MISUSE, 14800034, "SQLite: Library used incorrectly." },
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "Config changed." },
-    { NativeRdb::E_NOT_SUPPORTED, 801, "Capability not supported." },
+    { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
 
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
