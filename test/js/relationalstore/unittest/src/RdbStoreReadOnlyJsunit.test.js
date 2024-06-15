@@ -124,7 +124,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `insert failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0002 end *************");
     })
@@ -146,7 +146,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `update failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0003 end *************");
     })
@@ -167,7 +167,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `delete failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0004 end *************");
     })
@@ -187,7 +187,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `begin transaction failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0005 end *************");
     })
@@ -251,7 +251,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `get user_version failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0008 end *************");
     })
@@ -272,7 +272,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `set user_version failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest009 end *************");
     })
@@ -292,7 +292,7 @@ describe('rdbStoreReadOnlyTest', function () {
             expect().assertFail();
         } catch (err) {
             console.error(TAG, `set user_version failed, errCode:${err.code}, message:${err.message}`);
-            expect(err.code == 14800015).assertTrue();
+            expect(err.code == 801).assertTrue();
         }
         console.info(TAG + "************* readOnlyTest0010 end *************");
     })

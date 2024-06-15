@@ -152,7 +152,7 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-    if (err == E_NOT_SUPPORTED) {
+    if (err == E_NOT_SUPPORT) {
         return E_ERROR;
     }
     if (err != E_OK || service == nullptr) {
