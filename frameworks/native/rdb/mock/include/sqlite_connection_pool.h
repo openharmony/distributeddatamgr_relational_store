@@ -120,7 +120,7 @@ private:
     void RemoveDBFile(const std::string &path);
 
     static constexpr int LIMITATION = 1024;
-    RdbStoreConfig config_;
+    const RdbStoreConfig &config_;
     Container writers_;
     Container readers_;
     int32_t maxReader_ = 0;

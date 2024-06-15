@@ -36,12 +36,12 @@ static UNUSED_FUNCTION uint32_t GetUid()
 #endif
 }
 
-static UNUSED_FUNCTION int MkDir(const std::string &filePath)
+static UNUSED_FUNCTION int MkDir(const std::string &filePath, mode_t dirRight = DIR_RIGHT)
 {
 #ifdef WINDOWS_PLATFORM
     return mkdir(filePath.c_str());
 #else
-    return mkdir(filePath.c_str(), DIR_RIGHT);
+    return mkdir(filePath.c_str(), dirRight);
 #endif
 }
 

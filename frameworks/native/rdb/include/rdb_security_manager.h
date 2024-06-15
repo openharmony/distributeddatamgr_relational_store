@@ -30,7 +30,7 @@
 #include <random>
 #include <vector>
 
-#include "hks_api.h"
+#include "hks_type.h"
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
