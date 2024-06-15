@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 
-#include "file_ex.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_store_config.h"
@@ -89,9 +88,9 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 {
     std::string dbPath;
-    auto ret = SqliteGlobalConfig::GetDbPath(config, dbPath);
-    if (ret != E_OK) {
-        return ret;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
+    if (errCode != E_OK) {
+        return errCode;
     }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -104,6 +103,35 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     isReadOnly = !isWriter_ || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+    errCode = OpenDatabase(dbPath, openFileFlags);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    maxVariableNumber_ = sqlite3_limit(dbHandle, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
+    errCode = Configure(config, retry, dbPath);
+    isConfigured_ = true;
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (isWriter_) {
+        TryCheckPoint();
+        auto [ret, object] = ExecuteSql("PRAGMA integrity_check");
+        if (ret == E_OK && static_cast<std::string>(object) != "ok") {
+            LOG_ERROR("integrity check result is %{public}s", static_cast<std::string>(object).c_str());
+            return E_SQLITE_CORRUPT;
+        }
+    }
+
+    filePath = dbPath;
+    openFlags = openFileFlags;
+
+    return E_OK;
+}
+
+int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
+{
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
@@ -123,20 +151,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #endif
         return SQLiteError::ErrNo(errCode);
     }
-    maxVariableNumber_ = sqlite3_limit(dbHandle, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
-    errCode = Configure(config, retry, dbPath);
-    isConfigured_ = true;
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    if (isWriter_) {
-        TryCheckPoint();
-    }
-
-    filePath = dbPath;
-    openFlags = openFileFlags;
-
     return E_OK;
 }
 
@@ -360,18 +374,17 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    int64_t value = 0;
-    int errCode = ExecuteGetLong(value, "PRAGMA page_size");
+    auto [errCode, object] = ExecuteSql("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
         return errCode;
     }
 
-    if (value == targetValue) {
+    if (static_cast<int64_t>(object) == targetValue) {
         return E_OK;
     }
 
-    errCode = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
+    std::tie(errCode, object) = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to set page size : %{public}d", errCode);
     }
@@ -381,34 +394,35 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter)
 {
     int errCode = E_ERROR;
+    ValueObject object;
     if (iter != NO_ITER) {
-        errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+        std::tie(errCode, object) = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
-        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
+        std::tie(errCode, object) = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
         }
     }
 
-    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    std::tie(errCode, object) = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
-    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
+    std::tie(errCode, object) = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
-    std::string version;
-    errCode = ExecuteGetString(version, GlobalExpr::PRAGMA_VERSION);
-    if (errCode != E_OK || version.empty()) {
+    ValueObject version;
+    std::tie(errCode, version) = ExecuteSql(GlobalExpr::PRAGMA_VERSION);
+    if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
         LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", iter, errCode,
             config.GetName().c_str());
         return errCode;
@@ -420,16 +434,9 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t i
 int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-    if (!rdbPwd.IsValid()) {
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-        LOG_ERROR("new key is not valid.");
-        return E_OK;
-    }
-
-    auto key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
-    key.assign(key.size(), 0);
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
+    newKey.assign(newKey.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("ReKey failed, err = %{public}d", errCode);
         RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
@@ -455,31 +462,17 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key = config.GetEncryptKey();
-    bool isKeyExpired = false;
-    int32_t errCode = E_OK;
-    if (config.IsEncrypt()) {
-        errCode = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
-        if (errCode != E_OK) {
-            key.assign(key.size(), 0);
-            return errCode;
-        }
-        auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE);
-        key.assign(key.size(), 0);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-        isKeyExpired = rdbPwd.isKeyExpired;
-    } else if (key.empty()) {
+    if (key.size() == 0) {
         return E_OK;
     }
 
-    errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    auto errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     key.assign(key.size(), 0);
     if (errCode != SQLITE_OK) {
         if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
-            auto rdbPwd =
-                RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-            key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-            errCode = sqlite3_key(dbHandle, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
-            key.assign(key.size(), 0);
+            std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+            errCode = sqlite3_key(dbHandle, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
+            newKey.assign(newKey.size(), 0);
             if (errCode != SQLITE_OK) {
                 LOG_ERROR("SqliteConnection SetEncryptKey fail with new key, err = %{public}d", errCode);
                 return SQLiteError::ErrNo(errCode);
@@ -498,9 +491,10 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
         return errCode;
     }
 
-    if (isKeyExpired) {
+    if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
         ReSetKey(config);
     }
+
 #endif
     return E_OK;
 }
@@ -541,27 +535,26 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     if (isReadOnly) {
         return E_OK;
     }
-    std::string currentMode;
-    int errCode = ExecuteGetString(currentMode, "PRAGMA journal_mode");
+
+    auto [errCode, object] = ExecuteSql("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
         return errCode;
     }
 
-    if (config.GetJournalMode().compare(currentMode) == 0) {
+    if (config.GetJournalMode().compare(static_cast<std::string>(object)) == 0) {
         return E_OK;
     }
 
-    currentMode = SqliteUtils::StrToUpper(currentMode);
+    std::string currentMode = SqliteUtils::StrToUpper(static_cast<std::string>(object));
     if (currentMode != config.GetJournalMode()) {
-        std::string result;
-        int errorCode = ExecuteGetString(result, "PRAGMA journal_mode=" + config.GetJournalMode());
+        auto [errorCode, journalMode] = ExecuteSql("PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
             return errorCode;
         }
 
-        if (SqliteUtils::StrToUpper(result) != config.GetJournalMode()) {
+        if (SqliteUtils::StrToUpper(static_cast<std::string>(journalMode)) != config.GetJournalMode()) {
             LOG_ERROR("SqliteConnection SetJournalMode: result incorrect");
             return E_EXECUTE_RESULT_INCORRECT;
         }
@@ -583,19 +576,17 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    int64_t currentValue = 0;
-    int errCode = ExecuteGetLong(currentValue, "PRAGMA journal_size_limit");
+    auto [errCode, currentValue] = ExecuteSql("PRAGMA journal_size_limit");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
         return errCode;
     }
 
-    if (currentValue == targetValue) {
+    if (static_cast<int64_t>(currentValue) == targetValue) {
         return E_OK;
     }
 
-    int64_t result;
-    errCode = ExecuteGetLong(result, "PRAGMA journal_size_limit=" + std::to_string(targetValue));
+    std::tie(errCode, currentValue) = ExecuteSql("PRAGMA journal_size_limit=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to set journal_size_limit : %{public}d", errCode);
     }
@@ -609,19 +600,17 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetWalAutoCheckpoint();
-    int64_t value = 0;
-    int errCode = ExecuteGetLong(value, "PRAGMA wal_autocheckpoint");
+    auto [errCode, value] = ExecuteSql("PRAGMA wal_autocheckpoint");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to get wal_autocheckpoint : %{public}d", errCode);
         return errCode;
     }
 
-    if (value == targetValue) {
+    if (static_cast<int64_t>(value) == targetValue) {
         return E_OK;
     }
 
-    int64_t result;
-    errCode = ExecuteGetLong(result, "PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
+    std::tie(errCode, value) = ExecuteSql("PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to set wal_autocheckpoint : %{public}d", errCode);
     }
@@ -635,66 +624,39 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
         targetValue = syncMode;
     }
 
-    std::string value;
-    int errCode = ExecuteGetString(value, "PRAGMA synchronous");
+    auto [errCode, object] = ExecuteSql("PRAGMA synchronous");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection setWalSyncMode fail to get synchronous mode : %{public}d", errCode);
         return errCode;
     }
 
-    value = SqliteUtils::StrToUpper(value);
-    if (value == targetValue) {
+    std::string walSyncMode = SqliteUtils::StrToUpper(static_cast<std::string>(object));
+    if (walSyncMode == targetValue) {
         return E_OK;
     }
 
-    errCode = ExecuteSql("PRAGMA synchronous=" + targetValue);
+    std::tie(errCode, object) = ExecuteSql("PRAGMA synchronous=" + targetValue);
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection setWalSyncMode fail to set synchronous mode : %{public}d", errCode);
     }
     return errCode;
 }
 
-int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
-{
-    auto [errCode, statement] = CreateStatement(sql, nullptr);
-    if (statement == nullptr || errCode != E_OK) {
-        return errCode;
-    }
-    return statement->Execute(bindArgs);
-}
-
-int SqliteConnection::ExecuteGetLong(int64_t &outValue, const std::string &sql,
+std::pair<int32_t, ValueObject> SqliteConnection::ExecuteSql(const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = CreateStatement(sql, nullptr);
     if (statement == nullptr || errCode != E_OK) {
-        return errCode;
+        return { static_cast<int32_t>(errCode), ValueObject() };
     }
-    ValueObject object;
-    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
-            bindArgs.size());
-    }
-    outValue = object;
-    return errCode;
-}
 
-int SqliteConnection::ExecuteGetString(std::string &outValue, const std::string &sql,
-    const std::vector<ValueObject> &bindArgs)
-{
-    auto [errCode, statement] = CreateStatement(sql, nullptr);
-    if (statement == nullptr || errCode != E_OK) {
-        return errCode;
-    }
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
-            bindArgs.size());
+        LOG_ERROR("execute sql failed, errCode:%{public}d, sql:%{public}s, args size:%{public}zu",
+            SQLiteError::ErrNo(errCode), sql.c_str(), bindArgs.size());
     }
-    outValue = static_cast<std::string>(object);
-    return errCode;
+    return { errCode, object };
 }
 
 int SqliteConnection::ClearCache()
@@ -1008,12 +970,12 @@ int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
 
 int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t SqliteConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -60,6 +60,16 @@ std::vector<std::string> StringUtils::Split(const std::string &str, const std::s
     return res;
 }
 
+std::string StringUtils::ExtractFilePath(const std::string& fileFullName)
+{
+    return std::string(fileFullName).substr(0, fileFullName.rfind("/") + 1);
+}
+
+std::string StringUtils::ExtractFileName(const std::string& fileFullName)
+{
+    return std::string(fileFullName).substr(fileFullName.rfind("/") + 1, fileFullName.size());
+}
+
 StringUtils::StringUtils() {}
 StringUtils::~StringUtils() {}
 } // namespace NativeRdb

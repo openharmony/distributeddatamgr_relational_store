@@ -63,10 +63,7 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
 
 protected:
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteGetLong(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteGetString(std::string &outValue, const std::string &sql,
+    std::pair<int32_t, ValueObject> ExecuteSql(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
     void SetInTransaction(bool transaction);
@@ -99,6 +96,7 @@ private:
     int32_t UnsubscribeLocalDetail(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
+    int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     void ReadFile2Buffer(const char* fileName);
 
     static constexpr uint32_t BUFFER_LEN = 16;
