@@ -428,6 +428,21 @@ public:
     std::vector<uint8_t> GetEncryptKey() const;
 
     /**
+     * @brief Changes the encrypt key in this {@code StoreConfig} object.
+     */
+    void ChangeEncryptKey() const;
+
+    /**
+     * @brief Obtains the new encrypt key in this {@code StoreConfig} object.
+     */
+    std::vector<uint8_t> GetNewEncryptKey() const;
+
+    /**
+     * @brief Obtains the encrypted key in this {@code StoreConfig} object.
+     */
+    void Initialize() const;
+
+    /**
      * @brief Sets the scalar function for the object.
      */
     API_EXPORT void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
@@ -566,6 +581,8 @@ public:
 
 private:
     void ClearEncryptKey();
+    void GenerateEncryptedKey() const;
+
     bool readOnly = false;
     bool isEncrypt_ = false;
     bool isCreateNecessary_;
@@ -596,7 +613,8 @@ private:
     std::string encryptAlgo;
     std::string dataGroupId_;
     std::string customDir_;
-    std::vector<uint8_t> encryptKey_{};
+    mutable std::vector<uint8_t> encryptKey_{};
+    mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds

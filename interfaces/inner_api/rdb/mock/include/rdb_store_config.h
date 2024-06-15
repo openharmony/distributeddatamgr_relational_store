@@ -97,6 +97,10 @@ public:
     std::string GetJournalMode() const;
     std::string GetSyncMode() const;
     std::vector<uint8_t> GetEncryptKey() const;
+    std::vector<uint8_t> GetNewEncryptKey() const;
+    void Initialize() const;
+    void ChangeEncryptKey() const;
+
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     std::string GetDatabaseFileType() const;
@@ -198,6 +202,8 @@ public:
     }
 
 private:
+    void GenerateEncryptedKey() const;
+
     bool readOnly = false;
     bool isEncrypt_ = false;
     bool isCreateNecessary_;
@@ -227,7 +233,8 @@ private:
     std::string encryptAlgo;
     std::string dataGroupId_;
     std::string customDir_;
-    std::vector<uint8_t> encryptKey_{};
+    mutable std::vector<uint8_t> encryptKey_{};
+    mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
