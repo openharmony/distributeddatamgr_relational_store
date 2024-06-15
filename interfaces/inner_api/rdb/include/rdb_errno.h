@@ -33,7 +33,7 @@ constexpr int E_BASE = DISTRIBUTEDDATAMGR_RDB_ERR_OFFSET;
 /**
 * @brief The error when the capability not supported.
 */
-constexpr int E_NOT_SUPPORTED = (E_BASE + 801);
+constexpr int E_NOT_SUPPORT = (E_BASE + 801);
 
 /**
 * @brief The error code for common exceptions.
@@ -243,7 +243,7 @@ constexpr int E_STORE_SESSION_NO_CURRENT_TRANSACTION = (E_BASE + 40);
 /**
 * @brief The error for not supported the current operation.
 */
-constexpr int E_NOT_SUPPORT = (E_BASE + 41);
+constexpr int E_NOT_SUPPORTED = (E_BASE + 41);
 
 /**
 * @brief The error for the current parcel is invalid.

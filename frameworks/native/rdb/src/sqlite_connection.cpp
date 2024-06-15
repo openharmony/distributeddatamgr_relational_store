@@ -1008,12 +1008,12 @@ int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
 
 int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 }
 
 int32_t SqliteConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    return E_NOT_SUPPORTED;
+    return E_NOT_SUPPORT;
 };
 } // namespace NativeRdb
 } // namespace OHOS

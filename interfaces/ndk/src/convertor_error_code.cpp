@@ -74,7 +74,7 @@ static constexpr NdkErrorCode ERROR_CODE_MAP[] = {
     { OHOS::NativeRdb::E_ARGS_READ_CON_OVERLOAD, RDB_E_ARGS_READ_CON_OVERLOAD },
     { OHOS::NativeRdb::E_WAL_SIZE_OVER_LIMIT, RDB_E_WAL_SIZE_OVER_LIMIT },
     { OHOS::NativeRdb::E_CON_OVER_LIMIT, RDB_E_CON_OVER_LIMIT },
-    { OHOS::NativeRdb::E_NOT_SUPPORTED, RDB_E_NOT_SUPPORTED },
+    { OHOS::NativeRdb::E_NOT_SUPPORT, RDB_E_NOT_SUPPORTED },
 };
 
 int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
