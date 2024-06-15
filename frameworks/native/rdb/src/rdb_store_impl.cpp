@@ -120,17 +120,6 @@ std::string RdbStoreImpl::GetSecManagerName(const RdbStoreConfig &config)
 void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
 {
     std::vector<uint8_t> key = config.GetEncryptKey();
-    RdbPassword rdbPwd;
-    if (config.IsEncrypt()) {
-        auto ret = RdbSecurityManager::GetInstance().Init(GetSecManagerName(config));
-        if (ret != E_OK) {
-            return;
-        }
-        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(),
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        key.assign(key.size(), 0);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    }
     syncerParam_.password_ = std::vector<uint8_t>(key.data(), key.data() + key.size());
     key.assign(key.size(), 0);
     if (pool_ != nullptr) {
@@ -1124,10 +1113,9 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         statement->Execute();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
-        RdbPassword rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
-            config_.GetPath(), RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        std::vector<uint8_t> key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        std::vector<uint8_t> key = config_.GetEncryptKey();
         bindArgs.emplace_back(key);
+        key.assign(key.size(), 0);
         statement->Execute();
 #endif
     } else {
@@ -1255,6 +1243,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
         RdbPassword rdbPwd =
             RdbSecurityManager::GetInstance().GetRdbPassword(dbPath, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        rdbPwd.Clear();
     }
 #endif
     err = AttachInner(attachName, dbPath, key, waitTime);
