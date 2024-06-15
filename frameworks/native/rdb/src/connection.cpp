@@ -59,7 +59,7 @@ void Connection::DeleteDbFile(const RdbStoreConfig &config)
     if (deleter == nullptr) {
         return;
     }
-    
+
     deleter(config);
 }
 
@@ -71,7 +71,7 @@ int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
     if (g_creators[dbType] != nullptr) {
         return E_OK;
     }
-    
+
     g_creators[dbType] = creator;
     return E_OK;
 }

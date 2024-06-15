@@ -83,14 +83,18 @@ ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreConfig &config, bool needWriter)
 {
+    if (config_.IsEncrypt()) {
+        config_.Initialize();
+    }
+
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
     if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;
         std::tie(errCode, node) = writers_.Initialize(
-            [config]() {
-                return Connection::Create(config, true);
+            [this]() {
+                return Connection::Create(config_, true);
             },
             1, config.GetWriteTime(), true, needWriter);
         conn = Convert2AutoConn(node);
@@ -99,14 +103,15 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         }
     }
 
+    config_.ChangeEncryptKey();
     maxReader_ = GetMaxReaders(config);
     // max read connect count is 64
     if (maxReader_ > 64) {
         return { E_ARGS_READ_CON_OVERLOAD, nullptr };
     }
     auto [ret, node] = readers_.Initialize(
-        [config]() {
-            return Connection::Create(config, false);
+        [this]() {
+            return Connection::Create(config_, false);
         },
         maxReader_, config.GetReadTime(), maxReader_ == 0);
     errCode = ret;

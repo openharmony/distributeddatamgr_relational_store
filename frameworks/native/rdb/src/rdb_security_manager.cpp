@@ -18,14 +18,18 @@
 #include <securec.h>
 
 #include <string>
+#include <unistd.h>
 #include <utility>
 
 #include "directory_ex.h"
 #include "file_ex.h"
+#include "hks_api.h"
 #include "hks_param.h"
 #include "logger.h"
+#include "rdb_platform.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -191,7 +195,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &dbPath, RdbSecur
     }
 
     key.assign(key.size(), 0);
-    if (!RdbSecurityManager::InitPath(ExtractFilePath(dbPath) + std::string("key/"))) {
+    if (!RdbSecurityManager::InitPath(StringUtils::ExtractFilePath(dbPath) + std::string("key/"))) {
         LOG_ERROR("InitPath err.");
         return false;
     }
@@ -437,7 +441,7 @@ bool RdbSecurityManager::InitPath(const std::string &dbKeyDir)
         return true;
     }
     umask(DEFAULT_UMASK);
-    if (mkdir(dbKeyDir.c_str(), (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
+    if (MkDir(dbKeyDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
         LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
         return false;
     }
@@ -447,7 +451,7 @@ bool RdbSecurityManager::InitPath(const std::string &dbKeyDir)
 RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &dbPath, KeyFileType keyFileType)
 {
     std::string keyPath = GetKeyPath(dbPath, keyFileType);
-    if (!FileExists(keyPath)) {
+    if (!(access(keyPath.c_str(), F_OK) == 0)) {
         LOG_ERROR("Key file not exists.");
         return {};
     }
@@ -555,8 +559,8 @@ static std::string RemoveSuffix(const std::string &name)
 
 std::pair<std::string, std::string> RdbSecurityManager::ConcatenateKeyPath(const std::string &dbPath)
 {
-    const std::string dbName = RemoveSuffix(ExtractFileName(dbPath));
-    const std::string dbKeyDir = ExtractFilePath(dbPath) + "key/";
+    const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
     const std::string keyPath = dbKeyDir + dbName + RdbSecurityManager::SUFFIX_PUB_KEY;
     const std::string newKeyPath = dbKeyDir + dbName + RdbSecurityManager::SUFFIX_PUB_KEY_NEW;
     return std::make_pair(keyPath, newKeyPath);
@@ -564,7 +568,7 @@ std::pair<std::string, std::string> RdbSecurityManager::ConcatenateKeyPath(const
 
 bool RdbSecurityManager::IsKeyFileExists(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType)
 {
-    return FileExists(GetKeyPath(dbPath, keyFileType));
+    return (access(GetKeyPath(dbPath, keyFileType).c_str(), F_OK) == 0);
 }
 
 std::string RdbSecurityManager::GetKeyPath(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType)
