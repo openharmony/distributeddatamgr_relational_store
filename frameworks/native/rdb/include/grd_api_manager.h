@@ -51,6 +51,8 @@ typedef double (*DBSqlColDouble)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef const float *(*DBSqlColumnFloatVector)(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
 typedef int (*DBBackup) (GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
 typedef int (*DBRestore) (GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+typedef GRD_DbValueT (*DBGetConfig) (GRD_DB *db, GRD_ConfigTypeE type);
+typedef int (*DBSetConfig) (GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
 
 struct GRD_APIInfo {
     DBOpen DBOpenApi = nullptr;
@@ -80,6 +82,8 @@ struct GRD_APIInfo {
     DBSqlColumnFloatVector DBSqlColumnFloatVector = nullptr;
     DBBackup DBBackupApi = nullptr;
     DBRestore DBRestoreApi = nullptr;
+    DBGetConfig DBGetConfigApi = nullptr;
+    DBSetConfig DBSetConfigApi = nullptr;
 };
 
 GRD_APIInfo GetApiInfoInstance();
