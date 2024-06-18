@@ -24,6 +24,7 @@
 #include "rdb_errno.h"
 #include "rd_utils.h"
 #include "rd_connection.h"
+#include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
@@ -38,8 +39,31 @@ RdStatement::~RdStatement()
     Finalize();
 }
 
+constexpr size_t pragmaVersionSqlLen = __builtin_strlen(GlobalExpr::PRAGMA_VERSION);
+
 int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
 {
+    if (newSql.find(GlobalExpr::PRAGMA_VERSION) == 0) {
+        // Indicates that sql is start with pragma version
+        if (newSql.length() == pragmaVersionSqlLen) {
+            // Indicates that sql is to get version
+            sql_ = newSql;
+            readOnly_ = true;
+            return E_OK;
+        }
+        // Indicates that sql is about to set the version, 3 is the length of " = "
+        if ((newSql.substr(pragmaVersionSqlLen, 3) != " = ") || (newSql.size() <= (pragmaVersionSqlLen + 3))) {
+            return E_INCORRECT_SQL;
+        }
+        char *endPtr = nullptr;
+        int version = strtol(newSql.substr(pragmaVersionSqlLen + 3).c_str(), &endPtr, 0);
+        if (*endPtr != '\0') {
+            return E_INCORRECT_SQL;
+        }
+        readOnly_ = false;
+        sql_ = newSql;
+        return setPragmas_["user_version"](version);
+    }
     if (sql_.compare(newSql) == 0) {
         return E_OK;
     }
@@ -56,6 +80,17 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     sql_ = newSql;
     stmtHandle_ = tmpStmt;
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
+    if (readOnly_) {
+        ret = Step();
+        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+            return ret;
+        }
+        GetProperties();
+        ret = Reset();
+        if (ret != E_OK) {
+            return ret;
+        }
+    }
     return E_OK;
 }
 
@@ -72,6 +107,7 @@ int RdStatement::Finalize()
     stmtHandle_ = nullptr;
     sql_ = "";
     columnCount_ = 0;
+    readOnly_ = false;
     return E_OK;
 }
 
@@ -204,6 +240,12 @@ int32_t RdStatement::Reset()
 
 int32_t RdStatement::Execute(const std::vector<ValueObject>& args)
 {
+    if (!readOnly_ && strcmp(sql_.c_str(), GlobalExpr::PRAGMA_VERSION) == 0) {
+        // It has already set version in prepare procedure
+        // Current modification is only temporary for unification between rd and sqlite,
+        // rd kernal will support pragma in later version
+        return E_OK;
+    }
     int ret = Bind(args);
     if (ret != E_OK) {
         LOG_ERROR("RdConnection unable to prepare and bind stmt : err %{public}d", ret);
@@ -218,7 +260,17 @@ int32_t RdStatement::Execute(const std::vector<ValueObject>& args)
 
 std::pair<int, ValueObject> RdStatement::ExecuteForValue(const std::vector<ValueObject>& args)
 {
-    int ret = Bind(args);
+    int ret = E_OK;
+    if (readOnly_ && strcmp(sql_.c_str(), GlobalExpr::PRAGMA_VERSION) == 0) {
+        int version = 0;
+        ret = getPragmas_["user_version"](version);
+        if (ret != E_OK) {
+            LOG_ERROR("RdConnection unable to GetVersion : err %{public}d", ret);
+            return { ret, ValueObject() };
+        }
+        return { ret, ValueObject(version) };
+    }
+    ret = Bind(args);
     if (ret != E_OK) {
         LOG_ERROR("RdConnection unable to prepare and bind stmt : err %{public}d", ret);
         return { ret, ValueObject() };
