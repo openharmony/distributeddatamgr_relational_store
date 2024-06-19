@@ -1309,10 +1309,6 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
-    if (config_.GetDBType() == DB_VECTOR) {
-        return E_NOT_SUPPORT;
-    }
-
     bool isRead = (config_.IsReadOnly()) || (config_.GetRoleType() == VISITOR);
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isRead);
     if (statement == nullptr) {
@@ -1332,10 +1328,9 @@ int RdbStoreImpl::GetVersion(int &version)
  */
 int RdbStoreImpl::SetVersion(int version)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if ((config_.GetRoleType() == VISITOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
     }
-
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {

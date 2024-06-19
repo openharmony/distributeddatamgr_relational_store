@@ -117,7 +117,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 
     if (isWriter_) {
         TryCheckPoint();
-        auto [ret, object] = ExecuteSql("PRAGMA integrity_check");
+        auto [ret, object] = ExecuteForValue("PRAGMA integrity_check");
         if (ret == E_OK && static_cast<std::string>(object) != "ok") {
             LOG_ERROR("integrity check result is %{public}s", static_cast<std::string>(object).c_str());
             return E_SQLITE_CORRUPT;
@@ -374,7 +374,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    auto [errCode, object] = ExecuteSql("PRAGMA page_size");
+    auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
         return errCode;
@@ -384,7 +384,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    std::tie(errCode, object) = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
+    errCode = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to set page size : %{public}d", errCode);
     }
@@ -394,34 +394,33 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter)
 {
     int errCode = E_ERROR;
-    ValueObject object;
     if (iter != NO_ITER) {
-        std::tie(errCode, object) = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+        errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
-        std::tie(errCode, object) = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
         }
     }
 
-    std::tie(errCode, object) = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
-    std::tie(errCode, object) = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
+    errCode = ExecuteSql(GlobalExpr::CODEC_REKEY_HMAC_ALGO);
     if (errCode != E_OK) {
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
     ValueObject version;
-    std::tie(errCode, version) = ExecuteSql(GlobalExpr::PRAGMA_VERSION);
+    std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
     if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
         LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", iter, errCode,
             config.GetName().c_str());
@@ -536,7 +535,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    auto [errCode, object] = ExecuteSql("PRAGMA journal_mode");
+    auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
         return errCode;
@@ -548,7 +547,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 
     std::string currentMode = SqliteUtils::StrToUpper(static_cast<std::string>(object));
     if (currentMode != config.GetJournalMode()) {
-        auto [errorCode, journalMode] = ExecuteSql("PRAGMA journal_mode=" + config.GetJournalMode());
+        auto [errorCode, journalMode] = ExecuteForValue("PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
             return errorCode;
@@ -576,7 +575,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    auto [errCode, currentValue] = ExecuteSql("PRAGMA journal_size_limit");
+    auto [errCode, currentValue] = ExecuteForValue("PRAGMA journal_size_limit");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
         return errCode;
@@ -586,7 +585,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    std::tie(errCode, currentValue) = ExecuteSql("PRAGMA journal_size_limit=" + std::to_string(targetValue));
+    std::tie(errCode, currentValue) = ExecuteForValue("PRAGMA journal_size_limit=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to set journal_size_limit : %{public}d", errCode);
     }
@@ -600,7 +599,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetWalAutoCheckpoint();
-    auto [errCode, value] = ExecuteSql("PRAGMA wal_autocheckpoint");
+    auto [errCode, value] = ExecuteForValue("PRAGMA wal_autocheckpoint");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to get wal_autocheckpoint : %{public}d", errCode);
         return errCode;
@@ -610,7 +609,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    std::tie(errCode, value) = ExecuteSql("PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
+    std::tie(errCode, value) = ExecuteForValue("PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to set wal_autocheckpoint : %{public}d", errCode);
     }
@@ -624,9 +623,9 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
         targetValue = syncMode;
     }
 
-    auto [errCode, object] = ExecuteSql("PRAGMA synchronous");
+    auto [errCode, object] = ExecuteForValue("PRAGMA synchronous");
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection setWalSyncMode fail to get synchronous mode : %{public}d", errCode);
+        LOG_ERROR("get wal sync mode fail, errCode:%{public}d", errCode);
         return errCode;
     }
 
@@ -635,14 +634,23 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
         return E_OK;
     }
 
-    std::tie(errCode, object) = ExecuteSql("PRAGMA synchronous=" + targetValue);
+    errCode = ExecuteSql("PRAGMA synchronous=" + targetValue);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection setWalSyncMode fail to set synchronous mode : %{public}d", errCode);
+        LOG_ERROR("set wal sync mode fail, errCode:%{public}d", errCode);
     }
     return errCode;
 }
 
-std::pair<int32_t, ValueObject> SqliteConnection::ExecuteSql(const std::string &sql,
+int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs)
+{
+    auto [errCode, statement] = CreateStatement(sql, nullptr);
+    if (statement == nullptr || errCode != E_OK) {
+        return errCode;
+    }
+    return statement->Execute(bindArgs);
+}
+
+std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = CreateStatement(sql, nullptr);
