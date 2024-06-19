@@ -63,8 +63,9 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
 
 protected:
-    std::pair<int32_t, ValueObject> ExecuteSql(const std::string &sql,
+    std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
+    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
     void SetInTransaction(bool transaction);
 
