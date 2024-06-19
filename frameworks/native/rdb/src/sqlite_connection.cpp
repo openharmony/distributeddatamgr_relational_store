@@ -88,9 +88,9 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 {
     std::string dbPath;
-    auto ret = SqliteGlobalConfig::GetDbPath(config, dbPath);
-    if (ret != E_OK) {
-        return ret;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
+    if (errCode != E_OK) {
+        return errCode;
     }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -103,6 +103,35 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
     isReadOnly = !isWriter_ || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+    errCode = OpenDatabase(dbPath, openFileFlags);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    maxVariableNumber_ = sqlite3_limit(dbHandle, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
+    errCode = Configure(config, retry, dbPath);
+    isConfigured_ = true;
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (isWriter_) {
+        TryCheckPoint();
+        auto [ret, object] = ExecuteForValue("PRAGMA integrity_check");
+        if (ret == E_OK && static_cast<std::string>(object) != "ok") {
+            LOG_ERROR("integrity check result is %{public}s", static_cast<std::string>(object).c_str());
+            return E_SQLITE_CORRUPT;
+        }
+    }
+
+    filePath = dbPath;
+    openFlags = openFileFlags;
+
+    return E_OK;
+}
+
+int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
+{
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
@@ -122,20 +151,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #endif
         return SQLiteError::ErrNo(errCode);
     }
-    maxVariableNumber_ = sqlite3_limit(dbHandle, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
-    errCode = Configure(config, retry, dbPath);
-    isConfigured_ = true;
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    if (isWriter_) {
-        TryCheckPoint();
-    }
-
-    filePath = dbPath;
-    openFlags = openFileFlags;
-
     return E_OK;
 }
 
@@ -359,14 +374,13 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    int64_t value = 0;
-    int errCode = ExecuteGetLong(value, "PRAGMA page_size");
+    auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
         return errCode;
     }
 
-    if (value == targetValue) {
+    if (static_cast<int64_t>(object) == targetValue) {
         return E_OK;
     }
 
@@ -405,9 +419,9 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t i
         return errCode;
     }
 
-    std::string version;
-    errCode = ExecuteGetString(version, GlobalExpr::PRAGMA_VERSION);
-    if (errCode != E_OK || version.empty()) {
+    ValueObject version;
+    std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
+    if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
         LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", iter, errCode,
             config.GetName().c_str());
         return errCode;
@@ -520,27 +534,26 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     if (isReadOnly) {
         return E_OK;
     }
-    std::string currentMode;
-    int errCode = ExecuteGetString(currentMode, "PRAGMA journal_mode");
+
+    auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
         return errCode;
     }
 
-    if (config.GetJournalMode().compare(currentMode) == 0) {
+    if (config.GetJournalMode().compare(static_cast<std::string>(object)) == 0) {
         return E_OK;
     }
 
-    currentMode = SqliteUtils::StrToUpper(currentMode);
+    std::string currentMode = SqliteUtils::StrToUpper(static_cast<std::string>(object));
     if (currentMode != config.GetJournalMode()) {
-        std::string result;
-        int errorCode = ExecuteGetString(result, "PRAGMA journal_mode=" + config.GetJournalMode());
+        auto [errorCode, journalMode] = ExecuteForValue("PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
             return errorCode;
         }
 
-        if (SqliteUtils::StrToUpper(result) != config.GetJournalMode()) {
+        if (SqliteUtils::StrToUpper(static_cast<std::string>(journalMode)) != config.GetJournalMode()) {
             LOG_ERROR("SqliteConnection SetJournalMode: result incorrect");
             return E_EXECUTE_RESULT_INCORRECT;
         }
@@ -562,19 +575,17 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    int64_t currentValue = 0;
-    int errCode = ExecuteGetLong(currentValue, "PRAGMA journal_size_limit");
+    auto [errCode, currentValue] = ExecuteForValue("PRAGMA journal_size_limit");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
         return errCode;
     }
 
-    if (currentValue == targetValue) {
+    if (static_cast<int64_t>(currentValue) == targetValue) {
         return E_OK;
     }
 
-    int64_t result;
-    errCode = ExecuteGetLong(result, "PRAGMA journal_size_limit=" + std::to_string(targetValue));
+    std::tie(errCode, currentValue) = ExecuteForValue("PRAGMA journal_size_limit=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to set journal_size_limit : %{public}d", errCode);
     }
@@ -588,19 +599,17 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     }
 
     int targetValue = SqliteGlobalConfig::GetWalAutoCheckpoint();
-    int64_t value = 0;
-    int errCode = ExecuteGetLong(value, "PRAGMA wal_autocheckpoint");
+    auto [errCode, value] = ExecuteForValue("PRAGMA wal_autocheckpoint");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to get wal_autocheckpoint : %{public}d", errCode);
         return errCode;
     }
 
-    if (value == targetValue) {
+    if (static_cast<int64_t>(value) == targetValue) {
         return E_OK;
     }
 
-    int64_t result;
-    errCode = ExecuteGetLong(result, "PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
+    std::tie(errCode, value) = ExecuteForValue("PRAGMA wal_autocheckpoint=" + std::to_string(targetValue));
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to set wal_autocheckpoint : %{public}d", errCode);
     }
@@ -614,21 +623,20 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
         targetValue = syncMode;
     }
 
-    std::string value;
-    int errCode = ExecuteGetString(value, "PRAGMA synchronous");
+    auto [errCode, object] = ExecuteForValue("PRAGMA synchronous");
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection setWalSyncMode fail to get synchronous mode : %{public}d", errCode);
+        LOG_ERROR("get wal sync mode fail, errCode:%{public}d", errCode);
         return errCode;
     }
 
-    value = SqliteUtils::StrToUpper(value);
-    if (value == targetValue) {
+    std::string walSyncMode = SqliteUtils::StrToUpper(static_cast<std::string>(object));
+    if (walSyncMode == targetValue) {
         return E_OK;
     }
 
     errCode = ExecuteSql("PRAGMA synchronous=" + targetValue);
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection setWalSyncMode fail to set synchronous mode : %{public}d", errCode);
+        LOG_ERROR("set wal sync mode fail, errCode:%{public}d", errCode);
     }
     return errCode;
 }
@@ -642,38 +650,21 @@ int SqliteConnection::ExecuteSql(const std::string &sql, const std::vector<Value
     return statement->Execute(bindArgs);
 }
 
-int SqliteConnection::ExecuteGetLong(int64_t &outValue, const std::string &sql,
+std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = CreateStatement(sql, nullptr);
     if (statement == nullptr || errCode != E_OK) {
-        return errCode;
+        return { static_cast<int32_t>(errCode), ValueObject() };
     }
-    ValueObject object;
-    std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
-            bindArgs.size());
-    }
-    outValue = object;
-    return errCode;
-}
 
-int SqliteConnection::ExecuteGetString(std::string &outValue, const std::string &sql,
-    const std::vector<ValueObject> &bindArgs)
-{
-    auto [errCode, statement] = CreateStatement(sql, nullptr);
-    if (statement == nullptr || errCode != E_OK) {
-        return errCode;
-    }
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("failed, %{public}d sql:%{public}s, args size:%{public}zu", SQLiteError::ErrNo(errCode), sql.c_str(),
-            bindArgs.size());
+        LOG_ERROR("execute sql failed, errCode:%{public}d, sql:%{public}s, args size:%{public}zu",
+            SQLiteError::ErrNo(errCode), sql.c_str(), bindArgs.size());
     }
-    outValue = static_cast<std::string>(object);
-    return errCode;
+    return { errCode, object };
 }
 
 int SqliteConnection::ClearCache()
