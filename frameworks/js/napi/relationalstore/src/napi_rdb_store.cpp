@@ -316,7 +316,8 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
 int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<ContextBase> context)
 {
     RdbStoreProxy *obj = GetNativeInstance(env, self);
-    CHECK_RETURN_SET(obj && obj->GetInstance(), std::make_shared<ParamError>("RdbStore", "not nullptr."));
+    CHECK_RETURN_SET(obj, std::make_shared<ParamError>("RdbStore", "not nullptr."));
+    CHECK_RETURN_SET(obj->GetInstance(), std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     context->boundObj = obj;
     return OK;
 }
@@ -1103,8 +1104,9 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     napi_value thisObj = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(
-        env, rdbStoreProxy && rdbStoreProxy->GetInstance(), std::make_shared<ParamError>("RdbStore", "valid"));
+        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->BeginTransaction();
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
@@ -1141,8 +1143,9 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(
-        env, rdbStoreProxy && rdbStoreProxy->GetInstance(), std::make_shared<ParamError>("RdbStore", "valid"));
+        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->RollBack();
     NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
@@ -1184,8 +1187,9 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(
         env, status == napi_ok && (argc == 0 || argc == 1), std::make_shared<ParamError>("parameter", "1 to 2"));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
+    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(
-        env, rdbStoreProxy && rdbStoreProxy->GetInstance(), std::make_shared<ParamError>("RdbStore", "valid"));
+        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     if (argc == 0) {
         int errCode = rdbStoreProxy->GetInstance()->Commit();
         NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
@@ -1727,6 +1731,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
 
     auto proxy = GetNativeInstance(env, self);
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
 
     std::string event;
     // 'argv[0]' represents a event
@@ -1765,6 +1770,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 
     auto proxy = GetNativeInstance(env, self);
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
 
     std::string event;
     status = JSUtils::Convert2Value(env, argv[0], event);
@@ -1802,8 +1808,9 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
     RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
     auto *proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr && proxy->GetInstance() != nullptr,
-        std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(
+        env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     return nullptr;
@@ -2094,16 +2101,12 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
     };
-    ExecuteAction exec;
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    if (obj != nullptr) {
-        auto store = obj->GetInstance();
+    auto exec = [context]() -> int {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_ERR(obj != nullptr && obj->GetInstance() != nullptr);
         obj->SetInstance(nullptr);
-        exec = [context, store]() mutable -> int {
-            store = nullptr;
-            return OK;
-        };
-    }
+        return OK;
+    };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
