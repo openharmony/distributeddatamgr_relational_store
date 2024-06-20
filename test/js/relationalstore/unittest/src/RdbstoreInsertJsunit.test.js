@@ -27,6 +27,7 @@ const STORE_CONFIG = {
 }
 
 var rdbStore = undefined
+var rdbStore1 = undefined
 var context = ability_featureAbility.getContext()
 
 describe('rdbStoreInsertTest', function () {
@@ -451,6 +452,42 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStoreInsert0009 end  *************");
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name Abnormal test case of insert, if store is closed
+     * @tc.desc 1.close store
+     *          2.Execute insert
+     */
+    it('testRdbStoreInsert0010', 0, async function () {
+        console.log(TAG + "************* testRdbStoreInsert0010 start *************");
+        const STORE_CONFIG1 = {
+            name: "InsertTest1.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        };
+        rdbStore1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
+        await rdbStore1.executeSql(CREATE_TABLE_TEST, null);
+        await rdbStore1.close().then(() => {
+            console.info(`close succeeded`);
+          }).catch((err) => {
+            console.error(`close failed, code is ${err.code},message is ${err.message}`);
+          })
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": new Date(),
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        try {
+            await rdbStore1.insert("test", valueBucket)
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+        await data_relationalStore.deleteRdbStore(context, "InsertTest1.db");
+        console.log(TAG + "************* testRdbStoreInsert0010 end  *************");
+    })
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0001

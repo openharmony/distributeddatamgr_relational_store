@@ -552,5 +552,30 @@ describe('RdbStoreStatisticsTest', function () {
         let ret = await rdbStore.executeSql("with test1 as (select * from test) select * from test");
         console.info(TAG + "************* testRdbStoreStatistics0015 end *************");
     })
+
+    /**
+     * @tc.name AbNormal case for Statistics when store is closed
+     * @tc.number testRdbStoreStatistics0016
+     * @tc.desc 1. close store
+     *          2. Register callback for statistics
+     *
+     */
+    it('testRdbStoreStatistics0016', 0, async function () {
+        console.info(TAG + "************* testRdbStoreStatistics0016 start *************");
+        await rdbStore.close().then(() => {
+            console.info(`close succeeded`);
+        }).catch((err) => {
+            console.error(`close failed, code is ${err.code},message is ${err.message}`);
+        })
+        
+        try {
+            rdbStore.on('statistics', (SqlExeInfo) => {
+            })
+        } catch (err) {
+            console.error(TAG + `on statistics fail, code:${err.code}, message: ${err.message}`);
+            expect('14800014').assertEqual(err.code);
+        }
+        console.info(TAG + "************* testRdbStoreStatistics0016 end *************");
+    })
     console.info(TAG + "*************Unit Test End*************");
 })
