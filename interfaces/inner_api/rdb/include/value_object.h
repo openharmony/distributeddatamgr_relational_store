@@ -33,13 +33,13 @@ public:
     /**
      * @brief Use Type replace std::variant.
      */
-    using Nil = std::monostate;
+    using Nill = std::monostate;
     using Blob = std::vector<uint8_t>;
     using Asset = AssetValue;
     using Assets = std::vector<Asset>;
     using BigInt = BigInteger;
     using FloatVector = std::vector<float>;
-    using Type = std::variant<Nil, int64_t, double, std::string, bool, Blob, Asset, Assets, FloatVector, BigInt>;
+    using Type = std::variant<Nill, int64_t, double, std::string, bool, Blob, Asset, Assets, FloatVector, BigInt>;
     template<typename Tp, typename... Types>
     struct index_of : std::integral_constant<size_t, 0> {};
 
@@ -77,7 +77,7 @@ public:
      * */
     enum TypeId : int32_t {
         /** Indicates the ValueObject type is NULL.*/
-        TYPE_NULL = TYPE_INDEX<Nil>,
+        TYPE_NULL = TYPE_INDEX<Nill>,
         /** Indicates the ValueObject type is int.*/
         TYPE_INT = TYPE_INDEX<int64_t>,
         /** Indicates the ValueObject type is double.*/
