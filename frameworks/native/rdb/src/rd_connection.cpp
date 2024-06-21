@@ -67,6 +67,7 @@ static std::vector<std::string> rdPostFixes = {
     ".redo",
     ".undo",
     ".ctrl",
+    ".ctrl.dwr",
     ".safe",
     ".map",
 };
