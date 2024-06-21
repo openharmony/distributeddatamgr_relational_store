@@ -193,6 +193,7 @@ static napi_value ExportRebuiltType(napi_env env)
 
     SET_NAPI_PROPERTY(rebuiltType, "NONE", int32_t(NativeRdb::RebuiltType::NONE));
     SET_NAPI_PROPERTY(rebuiltType, "REBUILT", int32_t(NativeRdb::RebuiltType::REBUILT));
+    SET_NAPI_PROPERTY(rebuiltType, "REPAIRED", int32_t(NativeRdb::RebuiltType::REPAIRED));
 
     napi_object_freeze(env, rebuiltType);
     return rebuiltType;
