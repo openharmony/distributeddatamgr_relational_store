@@ -116,14 +116,14 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     auto db = sqlite3_db_handle(stmt);
     int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
     if (rc != SQLITE_OK) {
-        LOG_ERROR("set sqlite shared block methods error. rc=%{private}d", rc);
+        LOG_ERROR("set sqlite shared block methods error. rc=%{public}d, errno=%{public}d", rc, errno);
         return SQLiteError::ErrNo(rc);
     }
     int retryCount = 0;
     while (true) {
         int err = sqlite3_step(stmt);
         if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
-            LOG_WARN("Database locked, retrying");
+            LOG_WARN("Database locked, retrying err=%{public}d, errno=%{public}d", err, errno);
             if (retryCount <= RETRY_TIME) {
                 usleep(SLEEP_TIME);
                 retryCount++;
@@ -138,10 +138,9 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 
     rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
     if (rc != SQLITE_OK) {
-        LOG_ERROR("clear sqlite shared block methods error. rc=%{public}d", rc);
-        return SQLiteError::ErrNo(rc);
+        LOG_ERROR("clear sqlite shared block methods error. rc=%{public}d, errno=%{public}d", rc, errno);
     }
-    return E_OK;
+    return SQLiteError::ErrNo(rc);
 }
 
 int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
