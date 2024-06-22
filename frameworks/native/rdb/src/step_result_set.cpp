@@ -31,7 +31,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
     const std::vector<ValueObject> &args)
-    : AbsResultSet(), sql_(sql), args_(std::move(args)), isAfterLast_(false), isStarted_(false)
+    : AbsResultSet(), sql_(sql), args_(std::move(args))
 {
     conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
@@ -152,7 +152,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (rowPos_ == INIT_POS || isAfterLast_) {
+    if (rowPos_ == INIT_POS || IsEnded().second) {
         LOG_ERROR("query not executed.");
         return E_ROW_OUT_RANGE;
     }
@@ -179,13 +179,13 @@ int StepResultSet::GoToRow(int position)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (position < 0) {
-        LOG_ERROR("position %{public}d.", position);
-        return E_ERROR;
+
+    if (position >= rowCount_ || position < 0) {
+        rowPos_ = (position >= rowCount_ && rowCount_ != 0) ? rowCount_ : rowPos_;
+        LOG_ERROR("position[%{public}d] rowCount[%{public}d] rowPos_[%{public}d]!", position, rowCount_, rowPos_);
+        return E_ROW_OUT_RANGE;
     }
-    if (position == rowPos_) {
-        return E_OK;
-    }
+
     if (position < rowPos_) {
         Reset();
         return GoToRow(position);
@@ -194,7 +194,7 @@ int StepResultSet::GoToRow(int position)
         int errCode = GoToNextRow();
         if (errCode != E_OK) {
             LOG_WARN("GoToNextRow ret %{public}d", errCode);
-            return errCode == E_NO_MORE_ROWS ? E_ROW_OUT_RANGE :  errCode;
+            return errCode;
         }
     }
     return E_OK;
@@ -239,19 +239,12 @@ int StepResultSet::GoToNextRow()
 
     if (errCode == E_OK) {
         rowPos_++;
-        isStarted_ = true;
         return E_OK;
     } else if (errCode == E_NO_MORE_ROWS) {
-        if (!isAfterLast_ && rowCount_ != EMPTY_ROW_COUNT) {
-            rowCount_ = rowPos_ + 1;
-        }
-        isAfterLast_ = rowCount_ != EMPTY_ROW_COUNT;
-        isStarted_ = true;
-        FinishStep();
-        rowPos_ = rowCount_;
-        return E_NO_MORE_ROWS;
+        rowPos_ = rowCount_ != 0 ? rowCount_ : rowPos_;
+        return E_ROW_OUT_RANGE;
     } else {
-        FinishStep();
+        Reset();
         rowPos_ = rowCount_;
         return errCode;
     }
@@ -266,56 +259,20 @@ int StepResultSet::Close()
     conn_ = nullptr;
     sqliteStatement_ = nullptr;
     auto args = std::move(args_);
-    return FinishStep();
-}
-
-/**
- * Release resource of step result set, this method can be called more than once
- */
-int StepResultSet::FinishStep()
-{
-    auto statement = GetStatement();
-    if (statement != nullptr) {
-        statement->Reset();
-        sqliteStatement_ = nullptr;
-    }
-    rowPos_ = INIT_POS;
+    Reset();
     return E_OK;
 }
 
 /**
  * Reset the statement
  */
-void StepResultSet::Reset()
+int StepResultSet::Reset()
 {
-    FinishStep();
-    isAfterLast_ = false;
-}
-
-/**
- * Checks whether the result set is positioned after the last row
- */
-int StepResultSet::IsEnded(bool &result)
-{
-    result = isAfterLast_;
-    return E_OK;
-}
-
-/**
- * Checks whether the result set is moved
- */
-int StepResultSet::IsStarted(bool &result) const
-{
-    result = isStarted_;
-    return E_OK;
-}
-
-/**
- * Check whether the result set is in the first row
- */
-int StepResultSet::IsAtFirstRow(bool &result) const
-{
-    result = (rowPos_ == 0) && (rowCount_ != 0);
+    rowPos_ = INIT_POS;
+    auto statement = GetStatement();
+    if (statement != nullptr) {
+        return statement->Reset();
+    }
     return E_OK;
 }
 
@@ -332,7 +289,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (rowPos_ == INIT_POS || isAfterLast_) {
+    if (rowPos_ == INIT_POS || IsEnded().second) {
         size = 0;
         return E_ROW_OUT_RANGE;
     }
@@ -361,7 +318,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
-    if (rowPos_ == INIT_POS || isAfterLast_) {
+    if (rowPos_ == INIT_POS || IsEnded().second) {
         return { E_ROW_OUT_RANGE, ValueObject() };
     }
     auto statement = GetStatement();

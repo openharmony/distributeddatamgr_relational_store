@@ -90,25 +90,14 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
 
 int AbsSharedResultSet::UpdateBlockPos(int position, int rowCnt)
 {
-    int ret = E_OK;
     auto block = GetBlock();
-    if (block == nullptr || (uint32_t)position < block->GetStartPos() || (uint32_t)position >= block->GetLastPos() ||
-        rowPos_ == rowCnt) {
-        ret = OnGo(rowPos_, position);
-    } else {
+    auto ret = OnGo(rowPos_, position);
+    if (ret == E_OK) {
+        uint32_t startPos = block->GetStartPos();
         uint32_t blockPos = block->GetBlockPos();
-        if (position > rowPos_) {
-            blockPos += (uint32_t)(position - rowPos_);
-        } else {
-            uint32_t offset = (uint32_t)(rowPos_ - position);
-            if (blockPos >= offset) {
-                blockPos -= offset;
-            } else {
-                LOG_ERROR("GoToRow failed of position= %{public}d, rowPos= %{public}d", position, rowPos_);
-                return E_ERROR;
-            }
+        if (static_cast<uint32_t>(position) != startPos + blockPos) {
+            block->SetBlockPos(position - startPos);
         }
-        block->SetBlockPos(blockPos);
     }
     return ret;
 }
@@ -118,14 +107,6 @@ int AbsSharedResultSet::GoToRow(int position)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (position == rowPos_) {
-        return E_OK;
-    }
-
-    if (position < 0) {
-        LOG_ERROR("Invalid position %{public}d!", position);
-        return E_ERROR;
-    }
 
     int rowCnt = 0;
     auto ret = GetRowCount(rowCnt);
@@ -134,17 +115,14 @@ int AbsSharedResultSet::GoToRow(int position)
         return ret;
     }
 
-    if (rowCnt == 0) {
-        return E_ERROR;
-    }
-
-    if (position >= rowCnt) {
-        rowPos_ = rowCnt;
+    if (position >= rowCnt || position < 0) {
+        rowPos_ = (position >= rowCnt && rowCnt != 0) ? rowCnt : rowPos_;
+        LOG_ERROR("position[%{public}d] rowCnt[%{public}d] rowPos[%{public}d]!", position, rowCnt, rowPos_);
         return E_ROW_OUT_RANGE;
     }
 
-    if (rowPos_ <= INIT_POS) {
-        rowPos_ = 0;
+    if (position == rowPos_) {
+        return E_OK;
     }
 
     ret = UpdateBlockPos(position, rowCnt);
