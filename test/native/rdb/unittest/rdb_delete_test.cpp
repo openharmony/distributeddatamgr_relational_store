@@ -116,7 +116,7 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
         store->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "1" });
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
@@ -188,7 +188,7 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }

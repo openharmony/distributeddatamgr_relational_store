@@ -12,15 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define LOG_TAG "AbsResultSet"
 #include "abs_result_set.h"
 
 #include <algorithm>
+#include <tuple>
+#include <utility>
+
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
 #include "result_set.h"
 #include "sqlite_utils.h"
+
 
 namespace OHOS {
 namespace NativeRdb {
@@ -140,7 +145,6 @@ int AbsResultSet::InitColumnNames()
 
 int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t>& blob)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int errorCode = Get(columnIndex, object);
     if (errorCode != E_OK) {
@@ -159,7 +163,6 @@ int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t>& blob)
 
 int AbsResultSet::GetString(int columnIndex, std::string &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int errorCode = Get(columnIndex, object);
     if (errorCode != E_OK) {
@@ -177,7 +180,6 @@ int AbsResultSet::GetString(int columnIndex, std::string &value)
 
 int AbsResultSet::GetInt(int columnIndex, int &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int64_t temp = 0;
     int errCode = GetLong(columnIndex, temp);
     if (errCode != E_OK) {
@@ -189,7 +191,6 @@ int AbsResultSet::GetInt(int columnIndex, int &value)
 
 int AbsResultSet::GetLong(int columnIndex, int64_t& value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int errorCode = Get(columnIndex, object);
     if (errorCode != E_OK) {
@@ -207,7 +208,6 @@ int AbsResultSet::GetLong(int columnIndex, int64_t& value)
 
 int AbsResultSet::GetDouble(int columnIndex, double& value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int errorCode = Get(columnIndex, object);
     if (errorCode != E_OK) {
@@ -276,19 +276,16 @@ int AbsResultSet::GetRowIndex(int &position) const
 
 int AbsResultSet::GoTo(int offset)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return GoToRow(rowPos_ + offset);
 }
 
 int AbsResultSet::GoToFirstRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return GoToRow(0);
 }
 
 int AbsResultSet::GoToLastRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int rowCnt = 0;
     int ret = GetRowCount(rowCnt);
     if (ret != E_OK) {
@@ -304,13 +301,11 @@ int AbsResultSet::GoToLastRow()
 
 int AbsResultSet::GoToNextRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return GoToRow(rowPos_ + 1);
 }
 
 int AbsResultSet::GoToPreviousRow()
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return GoToRow(rowPos_ - 1);
 }
 
@@ -338,16 +333,22 @@ int AbsResultSet::IsStarted(bool &result) const
     return E_OK;
 }
 
-int AbsResultSet::IsEnded(bool &result)
+std::pair<int, bool> AbsResultSet::IsEnded()
 {
     int rowCnt = 0;
     int ret = GetRowCount(rowCnt);
     if (ret != E_OK) {
         LOG_ERROR("Failed to GetRowCount, ret is %{public}d", ret);
-        return ret;
+        return { ret, true };
     }
-    result = (rowCnt == 0) || (rowPos_ == rowCnt);
-    return E_OK;
+    return { E_OK, (rowCnt == 0) || (rowPos_ == rowCnt) };
+}
+
+int AbsResultSet::IsEnded(bool &result)
+{
+    int res = E_OK;
+    std::tie(res, result) = IsEnded();
+    return res;
 }
 
 int AbsResultSet::GetColumnCount(int &count)
@@ -441,7 +442,6 @@ int AbsResultSet::Close()
 
 int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject valueObject;
     int errorCode = Get(col, valueObject);
     if (errorCode != E_OK) {
@@ -462,7 +462,6 @@ int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
 
 int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject valueObject;
     int errorCode = Get(col, valueObject);
     if (errorCode != E_OK) {
@@ -483,7 +482,6 @@ int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 
 int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject valueObject;
     int errorCode = Get(col, valueObject);
     if (errorCode != E_OK) {

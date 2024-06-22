@@ -253,13 +253,8 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
-
     bool result = false;
-    int errCode = resultSetProxy->GetInstance()->IsEnded(result);
-    if (errCode != E_OK) {
-        LOG_ERROR("IsEnded failed code:%{public}d", errCode);
-        result = true;
-    }
+    resultSetProxy->GetInstance()->IsEnded(result);
 
     return JSUtils::Convert2JSValue(env, result);
 }

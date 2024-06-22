@@ -114,14 +114,14 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
         SeriPutNull, SeriPutOther
     };
     auto db = sqlite3_db_handle(stmt);
-    int rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
-    if (rc != SQLITE_OK) {
-        LOG_ERROR("set sqlite shared block methods error. rc=%{public}d, errno=%{public}d", rc, errno);
-        return SQLiteError::ErrNo(rc);
+    int err = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("set sqlite shared block methods error. err=%{public}d, errno=%{public}d", err, errno);
+        return SQLiteError::ErrNo(err);
     }
     int retryCount = 0;
     while (true) {
-        int err = sqlite3_step(stmt);
+        err = sqlite3_step(stmt);
         if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying err=%{public}d, errno=%{public}d", err, errno);
             if (retryCount <= RETRY_TIME) {
@@ -136,11 +136,11 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
 
-    rc = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        LOG_ERROR("clear sqlite shared block methods error. rc=%{public}d, errno=%{public}d", rc, errno);
+    err = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("clear sqlite shared block methods error. err=%{public}d, errno=%{public}d", err, errno);
     }
-    return SQLiteError::ErrNo(rc);
+    return SQLiteError::ErrNo(err);
 }
 
 int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
