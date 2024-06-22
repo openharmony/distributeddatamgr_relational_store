@@ -103,11 +103,13 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
 
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
-    if (GetInstance() == nullptr) {
+    auto instance = GetInstance();
+    if (instance == nullptr) {
         LOG_ERROR("resultSet_ is null");
         return nullptr;
     }
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(GetInstance());
+    SetInstance(nullptr);
+    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(instance);
 }
 #endif
 
