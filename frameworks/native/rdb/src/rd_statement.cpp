@@ -39,27 +39,82 @@ RdStatement::~RdStatement()
     Finalize();
 }
 
-constexpr size_t pragmaVersionSqlLen = __builtin_strlen(GlobalExpr::PRAGMA_VERSION);
+constexpr size_t PRAGMA_VERSION_SQL_LEN = __builtin_strlen(GlobalExpr::PRAGMA_VERSION);
+
+static bool TryEatSymbol(const std::string &str, char symbol, size_t &curIdx)
+{
+    size_t idx = curIdx;
+    while (idx < str.length()) {
+        if (str[idx] == ' ') {
+            idx++;
+            continue;
+        }
+        if (str[idx] == symbol) {
+            curIdx = idx + 1;
+            return true;
+        }
+        break;
+    }
+    return false;
+}
+
+static int TryEatNumber(const std::string &str, int &outNumber, size_t &curIdx)
+{
+    size_t idx = curIdx;
+    uint32_t numSpace = 0;
+    bool hasMeetDigit = false;
+    while (idx < str.length()) {
+        if (str[idx] == ' ' && !hasMeetDigit) {
+            idx++;
+            numSpace++;
+            continue;
+        }
+        if (isdigit(str[idx]) != 0) {
+            idx++;
+            hasMeetDigit = true;
+            continue;
+        }
+        // Indicates that meet first not-digit-char
+        break;
+    }
+    if (!hasMeetDigit) {
+        return false;
+    }
+    outNumber = atoi(str.substr(curIdx).c_str());
+    curIdx = idx;
+    return true;
+}
+
+static int EndWithNull(const std::string &str, size_t curIdx)
+{
+    size_t idx = curIdx;
+    while (idx < str.length()) {
+        if (str[idx] == ' ') {
+            idx++;
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
 
 int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
 {
     if (newSql.find(GlobalExpr::PRAGMA_VERSION) == 0) {
         // Indicates that sql is start with pragma version
-        if (newSql.length() == pragmaVersionSqlLen) {
+        if (newSql.length() == PRAGMA_VERSION_SQL_LEN) {
             // Indicates that sql is to get version
             sql_ = newSql;
             readOnly_ = true;
             return E_OK;
         }
-        // Indicates that sql is about to set the version, 3 is the length of " = "
-        if ((newSql.substr(pragmaVersionSqlLen, 3) != " = ") || (newSql.size() <= (pragmaVersionSqlLen + 3))) {
+        size_t curIdx = PRAGMA_VERSION_SQL_LEN;
+        int version = 0;
+        if ((!TryEatSymbol(newSql, '=', curIdx)) || (!TryEatNumber(newSql, version, curIdx)) ||
+            (!EndWithNull(newSql, curIdx) && !TryEatSymbol(newSql, ';', curIdx))) {
             return E_INCORRECT_SQL;
         }
-        char *endPtr = nullptr;
-        int version = strtol(newSql.substr(pragmaVersionSqlLen + 3).c_str(), &endPtr, 0);
-        if (*endPtr != '\0') {
-            return E_INCORRECT_SQL;
-        }
+        
         readOnly_ = false;
         sql_ = newSql;
         return setPragmas_["user_version"](version);
