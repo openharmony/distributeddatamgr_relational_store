@@ -98,7 +98,7 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
         }
         auto errCode = action(stmt_, index, arg.value);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("Bind has error: %{public}d, sql: %{public}s", errCode, sql_.c_str());
+            LOG_ERROR("Bind has error: %{public}d, sql: %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
             return SQLiteError::ErrNo(errCode);
         }
         index++;
@@ -173,7 +173,7 @@ int SqliteStatement::Reset()
 
     int errCode = sqlite3_reset(stmt_);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("reset ret is %{public}d", errCode);
+        LOG_ERROR("reset ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -193,7 +193,7 @@ int SqliteStatement::Finalize()
     numParameters_ = 0;
     types_ = std::vector<int32_t>();
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("finalize ret is %{public}d", errCode);
+        LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -225,7 +225,7 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
     }
     errCode = Step();
     if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
-        LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s", errCode, sql_.c_str());
+        LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
         return errCode;
     }
     return E_OK;
@@ -313,7 +313,7 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
 
     const char *decl = sqlite3_column_decltype(stmt_, index);
     if (decl == nullptr) {
-        LOG_ERROR("invalid type %{public}d.", type);
+        LOG_ERROR("invalid type %{public}d, errno %{public}d.", type, errno);
         return { E_ERROR, int32_t(ColumnType::TYPE_NULL) };
     }
 

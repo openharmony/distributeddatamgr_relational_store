@@ -96,7 +96,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
-        LOG_ERROR("db not exist");
+        LOG_ERROR("db not exist errno is %{public}d", errno);
         return E_DB_NOT_EXIST;
     }
 #endif
@@ -159,12 +159,12 @@ void SqliteConnection::ReadFile2Buffer(const char* fileName)
     uint64_t buffer[BUFFER_LEN] = {0x0};
     FILE *file = fopen(fileName, "r");
     if (file == nullptr) {
-        LOG_ERROR("open db file failed: %s", fileName);
+        LOG_ERROR("open db file failed: %{public}s, errno is %{public}d", fileName, errno);
         return;
     }
     size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
     if (readSize != BUFFER_LEN) {
-        LOG_ERROR("read db file size: %{public}zu error", readSize);
+        LOG_ERROR("read db file size: %{public}zu, errno is %{public}d", readSize, errno);
         (void)fclose(file);
         return;
     }
@@ -203,7 +203,7 @@ static void CustomScalarFunctionCallback(sqlite3_context *ctx, int argc, sqlite3
     for (int i = 0; i < argc; ++i) {
         auto arg = reinterpret_cast<const char *>(sqlite3_value_text(argv[i]));
         if (arg == nullptr) {
-            LOG_ERROR("arg is nullptr, index is %{public}d", i);
+            LOG_ERROR("arg is nullptr, index is %{public}d, errno is %{public}d", i, errno);
             sqlite3_result_null(ctx);
             return;
         }
@@ -223,7 +223,7 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
     int err = sqlite3_create_function_v2(dbHandle, functionName.c_str(), argc, SQLITE_UTF8, function,
         &CustomScalarFunctionCallback, nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) {
-        LOG_ERROR("SetCustomScalarFunction errCode is %{public}d", err);
+        LOG_ERROR("SetCustomScalarFunction errCode is %{public}d, errno is %{public}d.", err, errno);
     }
     return err;
 }
@@ -301,7 +301,8 @@ SqliteConnection::~SqliteConnection()
 
         int errCode = sqlite3_close_v2(dbHandle);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d", errCode);
+            LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database "
+                "err = %{public}d, errno = %{public}d", errCode, errno);
         }
     }
 }
@@ -437,7 +438,7 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     int errCode = sqlite3_rekey(dbHandle, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
     newKey.assign(newKey.size(), 0);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+        LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
         RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
         return E_OK;
     }
@@ -473,13 +474,14 @@ int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config, uint32_t iter)
             errCode = sqlite3_key(dbHandle, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
             newKey.assign(newKey.size(), 0);
             if (errCode != SQLITE_OK) {
-                LOG_ERROR("SqliteConnection SetEncryptKey fail with new key, err = %{public}d", errCode);
+                LOG_ERROR("SqliteConnection SetEncryptKey fail with new key, err = %{public}d errno = %{public}d",
+                    errCode, errno);
                 return SQLiteError::ErrNo(errCode);
             }
             RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
         }
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d", errCode);
+            LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d, errno = %{public}d", errCode, errno);
             return SQLiteError::ErrNo(errCode);
         }
     }
@@ -513,7 +515,7 @@ int SqliteConnection::SetBusyTimeout(int timeout)
 {
     auto errCode = sqlite3_busy_timeout(dbHandle, timeout);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("set buys timeout failed, errCode=%{public}d", errCode);
+        LOG_ERROR("set buys timeout failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
         return errCode;
     }
     return E_OK;
