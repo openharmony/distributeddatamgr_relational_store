@@ -1936,12 +1936,12 @@ describe('rdbResultSetSyncTest', function () {
         expect(0).assertEqual(count);
 
         resultSet.goToFirstRow();
-        expect(true).assertEqual(resultSet.isStarted);
+        expect(false).assertEqual(resultSet.isStarted);
         console.log(TAG + "************* testSyncBigData0004 after goto first row *************");
         let rows = [1, 2, 0, -1, -2];
         for (const i of rows) {
             resultSet.goToRow(i);
-            expect(true).assertEqual(resultSet.isStarted);
+            expect(false).assertEqual(resultSet.isStarted);
         }
 
         resultSet.close()

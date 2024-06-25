@@ -36,9 +36,6 @@ public:
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
     int GoToNextRow() override;
-    int IsStarted(bool &result) const override;
-    int IsAtFirstRow(bool &result) const override;
-    int IsEnded(bool &result) override;
     int GetSize(int columnIndex, size_t &size) override;
     int Get(int32_t col, ValueObject &value) override;
     int Close() override;
@@ -51,9 +48,8 @@ private:
     int GetValue(int32_t col, T &value);
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
     std::shared_ptr<Statement> GetStatement();
-    void Reset();
+    int Reset();
     int InitRowCount();
-    int FinishStep();
     int PrepareStep();
 
     // Max times of retrying step query
@@ -67,9 +63,6 @@ private:
 
     std::string sql_;
     std::vector<ValueObject> args_;
-    // Whether reach the end of this result set or not
-    bool isAfterLast_;
-    bool isStarted_;
     mutable std::shared_mutex mutex_;
 };
 } // namespace NativeRdb

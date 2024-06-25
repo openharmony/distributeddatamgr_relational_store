@@ -54,6 +54,7 @@ bool SharedBlock::Init()
     if (mHeader == nullptr) {
         return false;
     }
+    Clear();
     return true;
 }
 
