@@ -118,6 +118,7 @@ namespace Relational {
         int errCode = resultSetValue->IsEnded(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("IsEnded failed code:%{public}d", errCode);
+            result = true;
         }
         return result;
     }
@@ -183,6 +184,9 @@ namespace Relational {
     {
         NativeRdb::ValueObject::Asset asset;
         *rtnCode = resultSetValue->GetAsset(columnIndex, asset);
+        if (*rtnCode != RelationalStoreJsKit::OK) {
+            return Asset{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0};
+        }
         Asset result = {
             .name= MallocCString(asset.name),
             .uri= MallocCString(asset.uri),
