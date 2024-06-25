@@ -33,9 +33,9 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "//third_party/skia/third_party/externals/swiftshader/third_party/SPIRV-Headers/tools/buildHeaders/jsoncpp/dist/json",
     "//third_party/jsoncpp/include/json",
     "//third_party/grpc/src/core/lib/json",
-    "//foundation/systemabilitymgr/safwk/services/safwk/include",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//base/security/dataclassification/interfaces/innerkits/datatransmitmgr/include",
+    "${foundation_systemabilitymgr_path}/safwk/services/safwk/include",
+    "${foundation_systemabilitymgr_path}/samgr/interfaces/innerkits/samgr_proxy/include",
+    "${base_security_dataclassification_path}/interfaces/innerkits/datatransmitmgr/include",
     "//third_party/json/single_include",
     "//third_party/googletest/googletest/include/gtest",
   ]
