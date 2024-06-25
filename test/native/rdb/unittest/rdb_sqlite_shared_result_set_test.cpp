@@ -1235,7 +1235,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_025, TestSize.Le
     EXPECT_NE(resultSet, nullptr);
 
     int ret = resultSet->GoToRow(-10);
-    EXPECT_EQ(E_ERROR, ret);
+    EXPECT_EQ(E_ROW_OUT_RANGE, ret);
     resultSet->Close();
 }
 
@@ -1557,7 +1557,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_036, TestSize.Le
     EXPECT_NE(rstSet, nullptr);
 
     int ret = rstSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = rstSet->GoToLastRow();
     EXPECT_EQ(ret, E_ERROR);
 }

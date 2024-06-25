@@ -160,15 +160,14 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
             E_ALREADY_CLOSED, qrySql_.c_str());
         return E_ALREADY_CLOSED;
     }
-    auto errCode = E_ERROR;
     if (GetBlock() == nullptr) {
-        return FillBlock(newPosition);
+        return E_ERROR;
     }
     if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos()
         || oldPosition == rowCount_) {
-        errCode = FillBlock(newPosition);
+        return FillBlock(newPosition);
     }
-    return errCode;
+    return E_OK;
 }
 
 /**
@@ -245,7 +244,6 @@ int32_t SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk::SharedBlock *bl
         LOG_ERROR("SetColumnNum %{public}d.", code);
         return E_ERROR;
     }
-
     errCode = statement->FillBlockInfo(&blockInfo);
     if (errCode != E_OK) {
         LOG_ERROR("Fill shared block failed, ret is %{public}d", errCode);
