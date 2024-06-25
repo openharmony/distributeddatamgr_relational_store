@@ -557,28 +557,31 @@ extern "C" {
         return nativeResultSet->GetAllColumnNames();
     }
 
-    int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id)
+    int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id, int32_t *errCode)
     {
         auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
         if (nativeResultSet == nullptr) {
+            *errCode = -1;
             return -1;
         }
         return nativeResultSet->GetColumnCount();
     }
 
-    int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id)
+    int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id, int32_t *errCode)
     {
         auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
         if (nativeResultSet == nullptr) {
+            *errCode = -1;
             return -1;
         }
         return nativeResultSet->GetRowCount();
     }
 
-    int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id)
+    int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id, int32_t *errCode)
     {
         auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
         if (nativeResultSet == nullptr) {
+            *errCode = -1;
             return -1;
         }
         return nativeResultSet->GetRowIndex();
