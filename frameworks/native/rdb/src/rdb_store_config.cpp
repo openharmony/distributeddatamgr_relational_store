@@ -528,4 +528,14 @@ bool RdbStoreConfig::GetAllowRebuild() const
 {
     return allowRebuilt_;
 }
+
+void RdbStoreConfig::SetIntegrityCheck(IntegrityCheck checkType)
+{
+    checkType_ = checkType;
+}
+
+IntegrityCheck RdbStoreConfig::GetIntegrityCheck() const
+{
+    return checkType_;
+}
 } // namespace OHOS::NativeRdb
