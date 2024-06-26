@@ -56,11 +56,11 @@ extern "C" {
 
     FFI_EXPORT CArrStr FfiOHOSRelationalStoreGetAllColumnNames(int64_t id);
 
-    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id);
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id, int32_t *errCode);
 
-    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id);
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id, int32_t *errCode);
 
-    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id);
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id, int32_t *errCode);
 
     FFI_EXPORT bool FfiOHOSRelationalStoreIsAtFirstRow(int64_t id, int32_t *errCode);
 
