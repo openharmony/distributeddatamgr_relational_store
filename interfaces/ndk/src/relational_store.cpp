@@ -173,6 +173,11 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         return nullptr;
     }
 
+    if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        return nullptr;
+    }
+
     std::string realPath =
         OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
     if (*errCode != 0) {
