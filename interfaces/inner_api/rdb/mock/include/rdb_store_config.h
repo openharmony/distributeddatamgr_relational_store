@@ -22,6 +22,12 @@
 #include <functional>
 
 namespace OHOS::NativeRdb {
+enum class IntegrityCheck {
+    NONE,
+    QUICK,
+    FULL,
+};
+
 // indicates the type of the storage
 enum class StorageMode {
     MODE_MEMORY = 101,
@@ -167,6 +173,8 @@ public:
     bool GetAllowRebuild() const;
     void SetDBType(int32_t dbType);
     int32_t GetDBType() const;
+    void SetIntegrityCheck(IntegrityCheck checkType);
+    IntegrityCheck GetIntegrityCheck() const;
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -221,6 +229,7 @@ private:
     SecurityLevel securityLevel = SecurityLevel::LAST;
     RoleType role_ = OWNER;
     StorageMode storageMode;
+    IntegrityCheck checkType_ = IntegrityCheck::NONE;
     std::string name;
     std::string path;
     std::string journalMode;

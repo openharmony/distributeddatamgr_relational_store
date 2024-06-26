@@ -51,6 +51,8 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 
+constexpr const char *INTEGRITIES[] = {nullptr, "PRAGMA quick_check", "PRAGMA integrity_check"};
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 #endif
@@ -117,10 +119,18 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config, uint32_t retry)
 
     if (isWriter_) {
         TryCheckPoint();
-        auto [ret, object] = ExecuteForValue("PRAGMA integrity_check");
-        if (ret == E_OK && static_cast<std::string>(object) != "ok") {
-            LOG_ERROR("integrity check result is %{public}s", static_cast<std::string>(object).c_str());
-            return E_SQLITE_CORRUPT;
+        ValueObject checkResult{"ok"};
+        auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
+        if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
+            auto sql = INTEGRITIES[index];
+            if (sql != nullptr) {
+                std::tie(errCode, checkResult) = ExecuteForValue(sql);
+            }
+            if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
+                LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s", config.GetName().c_str(),
+                    static_cast<std::string>(checkResult).c_str(), sql);
+                return E_SQLITE_CORRUPT;
+            }
         }
     }
 

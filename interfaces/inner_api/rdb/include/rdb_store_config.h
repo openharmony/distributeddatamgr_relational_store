@@ -23,6 +23,18 @@
 
 namespace OHOS::NativeRdb {
 /**
+ * @brief Indicates the mode of detecting the database corruption.
+ */
+enum class IntegrityCheck {
+    /** Indicates the database does not perform integrity check.*/
+    NONE,
+    /** Indicates the database perform quick integrity check.*/
+    QUICK,
+    /** Indicates the database perform full integrity check.*/
+    FULL,
+};
+
+/**
  * @brief Indicates the type of the storage.
  */
 enum class StorageMode {
@@ -579,6 +591,10 @@ public:
 
     int32_t GetDBType() const;
 
+    void SetIntegrityCheck(IntegrityCheck checkMode);
+
+    IntegrityCheck GetIntegrityCheck() const;
+
 private:
     void ClearEncryptKey();
     void GenerateEncryptedKey() const;
@@ -601,6 +617,7 @@ private:
     RoleType role_ = OWNER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode;
+    IntegrityCheck checkType_ = IntegrityCheck::NONE;
     std::string name;
     std::string path;
     std::string journalMode;
