@@ -1495,3 +1495,39 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
         OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS + 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_034
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    int errCode = E_OK;
+    OH_Rdb_Store *rdbStore;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    config.securityLevel = 0;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    config.securityLevel = 5;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    MockHap();
+    InitRdbConfig();
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    mkdir(config_.dataBaseDir, 0770);
+    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_NE(rdbStore, NULL);
+    EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+}
+
