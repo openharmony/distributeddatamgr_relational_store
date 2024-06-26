@@ -213,6 +213,9 @@ namespace Relational {
     {
         std::vector<NativeRdb::ValuesBucket> valuesVector;
         std::string tableNameStr = tableName;
+        if (tableNameStr.empty()) {
+            return RelationalStoreJsKit::E_PARAM_ERROR;
+        }
         for (int64_t i = 0; i < valuesSize; i++) {
             NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBuckets[i]);
             valuesVector.push_back(nativeValuesBucket);
