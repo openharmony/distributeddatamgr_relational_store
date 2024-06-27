@@ -1510,7 +1510,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     OH_Rdb_Store *rdbStore;
     rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
-    if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
+    if (config.securityLevel < OH_Rdb_SecurityLevel::S1 || config.securityLevel > OH_Rdb_SecurityLevel::S4) {
         EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     } else {
         EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
