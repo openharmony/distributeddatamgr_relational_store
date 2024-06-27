@@ -1387,12 +1387,11 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return {errCode, 0};
     }
-    tmpTrxId = newTrxId_;
-    newTrxId_++;
+    tmpTrxId = newTrxId_.fetch_add(1);
     trxConnMap_[tmpTrxId] = connection;
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
-        trxConnMap_.erase(tmpTrxId);
+        trxConnMap_.Erase(tmpTrxId);
     }
     return {errCode, tmpTrxId};
 }
@@ -1445,7 +1444,8 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
     if (trxId == 0) {
         return E_INVALID_ARGS;
     }
-    if (trxConnMap_.find(trxId) == trxConnMap_.end()) {
+
+    if (!trxConnMap_.Contains(trxId)) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;
     }
@@ -1464,11 +1464,11 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         LOG_ERROR(
             "transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
             name_.c_str(), ret);
-        trxConnMap_.erase(trxId);
+        trxConnMap_.Erase(trxId);
         return ret;
     }
     if (closeConnAfterExecute) {
-        trxConnMap_.erase(trxId);
+        trxConnMap_.Erase(trxId);
     }
     return E_OK;
 }
