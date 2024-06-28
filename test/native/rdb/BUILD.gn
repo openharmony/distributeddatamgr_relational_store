@@ -169,7 +169,9 @@ group("fuzztest") {
   deps = []
   deps += [
     "fuzztest/rdbimpl_fuzzer:fuzztest",
+    "fuzztest/rdbrdutils_fuzzer:fuzztest",
     "fuzztest/rdbstore_fuzzer:fuzztest",
+    "fuzztest/rdstatement_fuzzer:fuzztest",
   ]
 }
 

@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RdbImplFuzzTest") {
+ohos_fuzztest("RdbRdUtilsTransferGrdErrnoFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [
@@ -47,10 +47,9 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  fuzz_config_file =
-      "${relational_store_base_path}/test/native/rdb/fuzztest/rdbimpl_fuzzer"
+  fuzz_config_file = "${relational_store_base_path}/test/native/rdb/fuzztest/rdbrdutils_fuzzer/transfergrderrno_fuzzer"
 
-  sources = [ "rdbimpl_fuzzer.cpp" ]
+  sources = [ "transfergrderrno_fuzzer.cpp" ]
 
   deps = [
     "${distributeddata_base_path}/kv_store/frameworks/libs/distributeddb:distributeddb",
@@ -73,7 +72,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":RdbImplFuzzTest",
+    ":RdbRdUtilsTransferGrdErrnoFuzzTest",
   ]
 }
 ###############################################################################
