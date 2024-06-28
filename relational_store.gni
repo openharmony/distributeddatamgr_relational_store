@@ -53,3 +53,7 @@ distributedfile_path =
 sdk_c_path = "//interface/sdk_c/distributeddatamgr"
 
 plugins_path = "//plugins"
+
+foundation_systemabilitymgr_path = "//foundation/systemabilitymgr/"
+
+base_security_dataclassification_path = "//base/security/dataclassification"
