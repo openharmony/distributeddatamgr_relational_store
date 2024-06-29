@@ -433,6 +433,71 @@ describe('rdbStoreUpdateSyncTest', function () {
     })
 
     /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Update_0009
+     * @tc.name Abnormal test case of updateSync, if rdbStore is already close
+     * @tc.desc 1.Create value
+     *          2.Close rdbStore
+     *          3.Configure predicates
+     *          4.Execute update
+     */
+    it('testSyncRdbStoreUpdate0009', 0, async function () {
+        console.log(TAG + "************* testSyncRdbStoreUpdate0009 start *************");
+
+        const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+        const STORE_NAME = "AfterCloseTest.db";
+        const rdbStore = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S1
+            }
+        )
+        await rdbStore.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3]);
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await rdbStore.insert("test", valueBucket)
+        } catch (err) {
+            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
+            expect().assertFail()
+        }
+        
+        await rdbStore.close().then(() => {
+            console.info(`close succeeded`);
+        }).catch((err) => {
+            console.error(`close failed, code is ${err.code},message is ${err.message}`);
+        })
+
+        try {
+            var u8 = new Uint8Array([4, 5, 6])
+            const valueBucket = {
+                "name": "lisi",
+                "age": 20,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            let predicates = new data_relationalStore.RdbPredicates("test")
+            predicates.equalTo("id", "1")
+            let ret = rdbStore.updateSync(valueBucket, predicates)
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+        
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        console.log(TAG + "************* testSyncRdbStoreUpdate0009 end   *************");
+    })
+
+    /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0001
      * @tc.name Normal test case of update
      * @tc.desc 1.Insert data

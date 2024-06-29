@@ -339,5 +339,58 @@ describe('rdbStoreDeleteSyncTest', function () {
         console.log(TAG + "************* testSyncRdbStoreDelete0007 end *************");
     })
 
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Delete_0008
+     * @tc.name Abnormal test case of delete, if rdbStore is already close
+     * @tc.desc 1.Configure predicates (Calling system application)
+     *          2.Close rdbStore
+     * 		    3.Execute deleteSync
+     */
+    it('testSyncRdbStoreDelete0008', 0, async function (done) {
+        console.log(TAG + "************* testSyncRdbStoreDelete0008 start *************");
+
+        const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+        const STORE_NAME = "AfterCloseTest.db";
+        const rdbStore = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S1
+            }
+        )
+        await rdbStore.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket);
+
+        await rdbStore.close().then(() => {
+            console.info(`${TAG} close succeeded`);
+        }).catch((err) => {
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        })
+
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("age", 18);
+        try {
+            const ret = rdbStore.deleteSync(predicates);
+            console.log(TAG + "delete done: " + ret);
+            expect(null).assertFail();
+        } catch (err) {
+            console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
+            expect("14800014").assertEqual(err.code);
+        }
+        
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        done();
+        console.log(TAG + "************* testSyncRdbStoreDelete0008 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })

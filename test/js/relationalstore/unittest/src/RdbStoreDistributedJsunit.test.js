@@ -548,5 +548,39 @@ describe('rdbStoreDistributedTest', function () {
         }
         console.log(TAG + "************* testRdbStoreDistributed0025 end *************");
     })
+
+    /**
+     * @tc.name subscribe test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Distributed_0026
+     * @tc.desc Abnormal testcase of setDistributedTables after RDB Closed
+     */
+    it('testRdbStoreDistributed0026', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreDistributed0026 start *************");
+
+        const config = {
+            "name": "AfterCloseTest.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+        const rdbStore = await data_relationalStore.getRdbStore(context, config);
+
+        try {
+            await rdbStore.close();
+            console.info(`${TAG} close succeeded`);
+        } catch (err) {
+            expect(null).assertFail();
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        }
+
+        try {
+            await rdbStore.setDistributedTables(['employee'])
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        done();
+        console.log(TAG + "************* testRdbStoreDistributed0026 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })
