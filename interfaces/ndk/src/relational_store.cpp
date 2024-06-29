@@ -174,6 +174,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     }
 
     if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
+        LOG_ERROR("Parameters set error:config->securityLevel is valid, %{public}d", config->securityLevel);
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         return nullptr;
     }
