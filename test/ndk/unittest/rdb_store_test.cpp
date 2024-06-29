@@ -1508,24 +1508,18 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     OH_Rdb_Config config;
     int errCode = E_OK;
     OH_Rdb_Store *rdbStore;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
-    EXPECT_EQ(rdbStore, nullptr);
-    if (config.securityLevel < OH_Rdb_SecurityLevel::S1 || config.securityLevel > OH_Rdb_SecurityLevel::S4) {
-        EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    } else {
-        EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    }
-    
-
     config.securityLevel = 0;
     rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+    
 
     config.securityLevel = 5;
     rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
 
     MockHap();
     InitRdbConfig();
@@ -1534,5 +1528,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_NE(rdbStore, NULL);
     EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_CloseStore(rdbStore);
+    OH_Rdb_DeleteStore(&config);
 }
 
