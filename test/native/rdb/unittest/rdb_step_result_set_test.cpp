@@ -866,7 +866,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    AssetValue asset;
+    ValueObject::Asset asset;
     // if columnIndex < 0
     EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(-1, asset));
     // if columnIndex > colNames_.size
@@ -886,7 +886,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    AssetValue asset;
+    ValueObject::Asset asset;
     // if columnIndex < 0
     EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, asset));
     // if columnIndex > colNames_.size
