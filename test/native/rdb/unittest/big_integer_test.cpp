@@ -53,6 +53,4 @@ HWTEST_F(BigIntegerTest, Big_Integer_001, TestSize.Level1)
     bool isEqual = (bigInt1 == bigInt2);
     EXPECT_TRUE(isEqual);
 }
-}
-
-
+} // namespace Test
