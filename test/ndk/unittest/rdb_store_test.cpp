@@ -1506,28 +1506,31 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
 {
     OH_Rdb_Config config;
-    int errCode = E_OK;
-    OH_Rdb_Store *rdbStore;
+    config.selfSize = sizeof(OH_Rdb_Config);
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_ndk_api_test.db";
+    config.bundleName = "com.ohos.example.distributedndk";
+    config.moduleName = "distributedndk";
+    config.isEncrypt = false;
     config.securityLevel = 0;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    config.area = RDB_SECURITY_AREA_EL1;
+
+    int errCode = E_OK;
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
     
-
     config.securityLevel = 5;
     rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
 
-    MockHap();
-    InitRdbConfig();
     config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    mkdir(config_.dataBaseDir, 0770);
     rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_NE(rdbStore, NULL);
-    EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(errCode, E_OK);
     OH_Rdb_CloseStore(rdbStore);
     OH_Rdb_DeleteStore(&config);
 }

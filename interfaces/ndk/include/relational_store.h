@@ -126,7 +126,7 @@ typedef struct {
      */
     bool isEncrypt;
     /**
-     * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database.
+     * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. It is mandatory.
      */
     int securityLevel;
     /**
