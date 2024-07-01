@@ -1508,7 +1508,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     OH_Rdb_Config config;
     config.selfSize = sizeof(OH_Rdb_Config);
     config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = "rdb_ndk_api_test.db";
+    config.storeName = "rdb_ut_test.db";
     config.bundleName = "com.ohos.example.distributedndk";
     config.moduleName = "distributedndk";
     config.isEncrypt = false;
