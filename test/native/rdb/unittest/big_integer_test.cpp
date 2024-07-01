@@ -20,7 +20,7 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-
+namespace Test {
 class BigIntegerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -53,4 +53,6 @@ HWTEST_F(BigIntegerTest, Big_Integer_001, TestSize.Level1)
     bool isEqual = (bigInt1 == bigInt2);
     EXPECT_TRUE(isEqual);
 }
+}
+
 
