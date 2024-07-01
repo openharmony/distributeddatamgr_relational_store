@@ -1388,7 +1388,7 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         return {errCode, 0};
     }
     tmpTrxId = newTrxId_.fetch_add(1);
-    trxConnMap_.InsertOrAssign(tmpTrxId, std::move(connection));
+    trxConnMap_.Insert(tmpTrxId, connection);
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
         trxConnMap_.Erase(tmpTrxId);
