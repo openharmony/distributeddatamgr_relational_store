@@ -63,10 +63,8 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_002, TestSize.Level1)
 HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
 {
     std::string dbPath = "/data/test/test.db";
-    std::string configStr =
-        "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
-        "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
-    
+    std::string configStr = "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
+                            "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
 
     int ret = E_OK;
     GRD_DB *dbHandle_ = nullptr;
@@ -77,8 +75,8 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
 
     GRD_SqlStmt *stmtHandle = nullptr;
     int index = 1;
-    std::string data = "123456"; 
-    ret = RdUtils::RdSqlBindBlob(stmtHandle, index, static_cast<const void*>(data.c_str()), data.size(), nullptr);
+    std::string data = "123456";
+    ret = RdUtils::RdSqlBindBlob(stmtHandle, index, static_cast<const void *>(data.c_str()), data.size(), nullptr);
     EXPECT_EQ(ret, E_OK);
     ret = RdUtils::RdSqlBindInt(stmtHandle, index, 123456);
     EXPECT_EQ(ret, E_OK);
@@ -89,5 +87,4 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
     ret = RdUtils::RdSqlBindNull(stmtHandle, index);
     EXPECT_EQ(ret, E_OK);
     RdUtils::RdDbClose(dbHandle_, index);
-    
 }
