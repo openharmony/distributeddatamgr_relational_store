@@ -1876,18 +1876,18 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
     // if columnIndex < 0
     ValueObject::Asset asset;
     errCode = resultSet->GetAsset(-1, asset);
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_COLUMN_OUT_RANGE);
     // if columnIndex > colNames_.size
     errCode = resultSet->GetAsset(5, asset);
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_COLUMN_OUT_RANGE);
 
     // if columnIndex < 0
     ValueObject::Assets assets;
     errCode = resultSet->GetAssets(-1, assets);
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_COLUMN_OUT_RANGE);
     // if columnIndex > colNames_.size
     errCode = resultSet->GetAssets(5, assets);
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_COLUMN_OUT_RANGE);
 
     // if columnIndex < 0
     ValueObject valueobject;
