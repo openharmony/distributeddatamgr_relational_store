@@ -886,11 +886,11 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
     EXPECT_NE(resultSet, nullptr);
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
-    ValueObject::Asset asset;
+    ValueObject::Assets assets;
     // if columnIndex < 0
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, asset));
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, assets));
     // if columnIndex > colNames_.size
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(4, asset));
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(4, assets));
 }
 
 /* *
