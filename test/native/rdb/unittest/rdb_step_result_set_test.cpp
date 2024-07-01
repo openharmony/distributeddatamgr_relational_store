@@ -867,7 +867,10 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     AssetValue asset;
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset("data111", asset));
+    // if columnIndex < 0
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(-1, asset));
+    // if columnIndex > colNames_.size
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(4, asset));
 }
 
 /* *
@@ -884,7 +887,10 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     AssetValue asset;
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets("data111", asset));
+    // if columnIndex < 0
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, asset));
+    // if columnIndex > colNames_.size
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(4, asset));
 }
 
 /* *
