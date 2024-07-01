@@ -281,6 +281,11 @@ int StepResultSet::Get(int32_t col, ValueObject &value)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
+    auto statement = GetStatement();
+    auto colCount = statement->GetColumnCount();
+    if (col >= colCount || col < 0) {
+        return E_COLUMN_OUT_RANGE;
+    }
     return GetValue(col, value);
 }
 
