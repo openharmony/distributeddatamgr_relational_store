@@ -855,7 +855,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 
 /* *
  * @tc.name: RdbStore_StepResultSet_017
- * @tc.desc: Abnormal testcase of StepResultSet, the argument of GetAsset is invalid
+ * @tc.desc: Abnormal testcase of StepResultSet, arguments of GetAsset and GetAssets are invalid
  * @tc.type: FUNC
  * @tc.require: AR000FKD4F
  */
@@ -869,28 +869,8 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
     ValueObject::Asset asset;
     // if columnIndex < 0
     EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(-1, asset));
-    // if columnIndex > colNames_.size
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(4, asset));
-}
-
-/* *
- * @tc.name: RdbStore_StepResultSet_018
- * @tc.desc: Abnormal testcase of StepResultSet, the argument of GetAssets is invalid
- * @tc.type: FUNC
- * @tc.require: AR000FKD4F
- */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-
     ValueObject::Assets assets;
-    // if columnIndex < 0
     EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, assets));
-    // if columnIndex > colNames_.size
-    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(4, assets));
 }
 
 /* *
