@@ -61,8 +61,10 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPoo
     int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - queryStart).count();
     if (totalCostTime >= TIME_OUT) {
         int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - queryStart).count();
-        int64_t preparCost = std::chrono::duration_cast<std::chrono::milliseconds>(initCountStart - preparStart).count();
-        int64_t initCountCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - initCountStart).count();
+        int64_t preparCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(initCountStart - preparStart).count();
+        int64_t initCountCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - initCountStart).count();
         LOG_WARN("query totalCostTime[%{public}lld] acquirCost[%{public}lld] preparCost[%{public}lld] "
                  "initCountCost[%{public}lld] rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
             totalCostTime, acquirCost, preparCost, initCountCost, rowCount_, qrySql_.c_str(), path.c_str());
