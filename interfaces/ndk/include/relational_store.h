@@ -106,31 +106,31 @@ typedef struct {
      */
     int selfSize;
     /**
-     * Indicates the directory of the database.
+     * Indicates the directory of the database. It is mandatory, must be initialized, and cannot be null.
      */
     const char *dataBaseDir;
     /**
-     * Indicates the name of the database.
+     * Indicates the name of the database. It is mandatory, must be initialized, and cannot be null.
      */
     const char *storeName;
     /**
-     * Indicates the bundle name of the application.
+     * Indicates the bundle name of the application. It is mandatory, must be initialized, and cannot be null.
      */
     const char *bundleName;
     /**
-     * Indicates the module name of the application.
+     * Indicates the module name of the application. It is mandatory, must be initialized, and can be null.
      */
     const char *moduleName;
     /**
-     * Indicates whether the database is encrypted.
+     * Indicates whether the database is encrypted. It is mandatory, must be initialized to true or false.
      */
     bool isEncrypt;
     /**
-     * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. It is mandatory.
+     * Indicates the security level {@link OH_Rdb_SecurityLevel} of the database. It is mandatory, must be initialized.
      */
     int securityLevel;
     /**
-     * Indicates the security area {@link Rdb_SecurityArea} of the database.
+     * Indicates the security area {@link Rdb_SecurityArea} of the database. It is mandatory, must be initialized.
      *
      * @since 11
      */

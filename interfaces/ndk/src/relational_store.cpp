@@ -173,8 +173,33 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         return nullptr;
     }
 
+    if (config->dataBaseDir == nullptr) {
+        LOG_ERROR("OH_Rdb_Config field set error: dataBaseDir is not valid, %{public}s", config->dataBaseDir);
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        return nullptr;
+    }
+
+    if (config->storeName == nullptr) {
+        LOG_ERROR("OH_Rdb_Config field set error: storeName is not valid, %{public}s", config->storeName);
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        return nullptr;
+    }
+
+    if (config->bundleName == nullptr) {
+        LOG_ERROR("OH_Rdb_Config field set error: bundleName is not valid, %{public}s", config->bundleName);
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        return nullptr;
+    }
+
     if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
-        LOG_ERROR("Parameters set error:config->securityLevel is not valid, %{public}d", config->securityLevel);
+        LOG_ERROR("OH_Rdb_Config field set error: securityLevel is not valid, %{public}d", config->securityLevel);
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        return nullptr;
+    }
+
+    if (config->selfSize > RDB_CONFIG_SIZE_V0 && (config->area < Rdb_SecurityArea::RDB_SECURITY_AREA_EL1 ||
+                                                     config->area > Rdb_SecurityArea::RDB_SECURITY_AREA_EL4)) {
+        LOG_ERROR("OH_Rdb_Config field set error: area is not valid, %{public}d", config->area);
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         return nullptr;
     }
@@ -190,11 +215,9 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
     if (config->selfSize > RDB_CONFIG_SIZE_V0) {
-        rdbStoreConfig.SetArea(config->area);
+        rdbStoreConfig.SetArea(config->area - 1); // -1 is because SetArea implementation not be modifiled
     }
-    if (config->bundleName != nullptr) {
-        rdbStoreConfig.SetBundleName(config->bundleName);
-    }
+    rdbStoreConfig.SetBundleName(config->bundleName);
     rdbStoreConfig.SetName(config->storeName);
 
     MainOpenCallback callback;
