@@ -47,6 +47,7 @@ public:
         config_.selfSize = sizeof(OH_Rdb_Config);
         config_.area = RDB_SECURITY_AREA_EL1;
     }
+    void InitRdbConfigStruct(OH_Rdb_Config& config);
     static OH_Rdb_Config config_;
     static void MockHap(void);
 };
@@ -132,6 +133,18 @@ void RdbNativeStoreTest::TearDown(void)
     char dropTableSql[] = "DROP TABLE IF EXISTS store_test";
     int errCode = OH_Rdb_Execute(storeTestRdbStore_, dropTableSql);
     EXPECT_EQ(errCode, 0);
+}
+
+void RdbNativeStoreTest::InitRdbConfigStruct(OH_Rdb_Config& config)
+{
+    config.selfSize = sizeof(OH_Rdb_Config);
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_ut_test.db";
+    config.bundleName = "com.ohos.example.distributedndk";
+    config.moduleName = "distributedndk";
+    config.isEncrypt = false;
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
 }
 
 void CloudSyncObserverCallback(void *context, Rdb_ProgressDetails *progressDetails)
@@ -1506,14 +1519,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
 {
     OH_Rdb_Config config;
-    config.selfSize = sizeof(OH_Rdb_Config);
-    config.dataBaseDir = RDB_TEST_PATH;
-    config.storeName = "rdb_ut_test.db";
-    config.bundleName = "com.ohos.example.distributedndk";
-    config.moduleName = "distributedndk";
-    config.isEncrypt = false;
-    config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    config.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
+    InitRdbConfigStruct(config);
 
     int errCode = E_OK;
     OH_Rdb_Store *rdbStore = nullptr;
