@@ -41,29 +41,18 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-
-    static const std::string databaseName = RDB_TEST_PATH + "execute_test.db";
+    static const std::string databaseName;
+    
     static constexpr int32_t MAX_THREAD = 5;
     static constexpr int32_t MIN_THREAD = 0;
 
     std::shared_ptr<RdbStore> store_;
     std::shared_ptr<ExecutorPool> executors_;
+
+    RdbMultiThreadConnectionRdTest();
 };
 
-RdbMultiThreadConnectionRdTest::RdbMultiThreadConnectionRdTest()
-{
-    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
-    store_ = nullptr;
-    RdbHelper::DeleteRdbStore(databaseName);
-    RdbStoreConfig config(databaseName);
-    config.SetIsVector(true);
-    config.SetSecurityLevel(SecurityLevel::S4);
-    Callback helper;
-    int errCode = E_OK;
-    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store_, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-}
+const std::string databaseName = RDB_TEST_PATH + "execute_test.db";
 
 class Callback : public RdbOpenCallback {
 public:
@@ -79,6 +68,21 @@ int Callback::OnCreate(RdbStore &store)
 int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
+}
+
+RdbMultiThreadConnectionRdTest::RdbMultiThreadConnectionRdTest()
+{
+    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(databaseName);
+    RdbStoreConfig config(databaseName);
+    config.SetIsVector(true);
+    config.SetSecurityLevel(SecurityLevel::S4);
+    Callback helper;
+    int errCode = E_OK;
+    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store_, nullptr);
+    EXPECT_EQ(errCode, E_OK);
 }
 
 void RdbMultiThreadConnectionRdTest::SetUpTestCase(void)
@@ -110,14 +114,13 @@ void RdbMultiThreadConnectionRdTest::TearDown(void)
  */
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSize.Level2)
 {
-    int count = 2000;
     auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < count ; i++) {
+        for (int i = 0; i < 2000 ; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
-            errCode = store->Commit(res.seoncd);
+            errCode = store->Commit(res.second);
             EXPECT_EQ(errCode, E_OK);
         }
     });
@@ -125,10 +128,10 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
     auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0 ; i < count; i++) {
+        for (int i = 0 ; i < 2000; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
-            errCode = store->Commit(res.seoncd);
+            errCode = store->Commit(res.second);
             EXPECT_EQ(errCode, E_OK);
         }
     });
@@ -145,14 +148,13 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
  */
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSize.Level2)
 {
-    int count = 2000;
     auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < count ; i++) {
+        for (int i = 0; i < 2000 ; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
-            errCode = store->RollBack(res.seoncd);
+            errCode = store->RollBack(res.second);
             EXPECT_EQ(errCode, E_OK);
         }
     });
@@ -160,10 +162,10 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
     auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < count ; i++) {
+        for (int i = 0; i < 2000 ; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
-            errCode = store->RollBack(res.seoncd);
+            errCode = store->RollBack(res.second);
             EXPECT_EQ(errCode, E_OK);
         }
     });
