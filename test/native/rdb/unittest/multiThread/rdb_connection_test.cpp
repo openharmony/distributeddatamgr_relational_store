@@ -224,7 +224,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0001, TestSize
 {
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId1 = executors_->Execute([store = store_, block1]() {
-        auto [trxid, errCode] = store->BeginTrans();
+        auto [errCode, trxid] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block1->SetValue(trxid);
         errCode = store->Commit(trxid);
@@ -233,7 +233,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0001, TestSize
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        auto [trxid, errCode] = store->BeginTrans();
+        auto [errCode, trxid] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);
         errCode = store->Commit(trxid);
@@ -256,7 +256,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0002, TestSize
 {
     std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId1 = executors_->Execute([store = store_, block1]() {
-        auto [trxid, errCode] = store->BeginTrans();
+        auto [errCode, trxid] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block1->SetValue(trxid);
         errCode = store->RollBack(trxid);
@@ -265,7 +265,7 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_BeginTransTest_0002, TestSize
 
     std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        auto [trxid, errCode] = store->BeginTrans();
+        auto [errCode, trxid] = store->BeginTrans();
         EXPECT_EQ(errCode, E_OK);
         block2->SetValue(trxid);
         errCode = store->RollBack(trxid);

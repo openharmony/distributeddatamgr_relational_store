@@ -1388,7 +1388,7 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         return {errCode, 0};
     }
     tmpTrxId = newTrxId_.fetch_add(1);
-    trxConnMap_[tmpTrxId] = connection;
+    trxConnMap_.Insert(tmpTrxId, connection);
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);
     if (errCode != E_OK) {
         trxConnMap_.Erase(tmpTrxId);
@@ -1450,7 +1450,8 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         return E_INVALID_ARGS;
     }
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-    auto connection = trxConnMap_[trxId];
+    auto result = trxConnMap_.Find(trxId);
+    auto connection = result.second;
     if (connection == nullptr) {
         LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
         return E_ERROR;
