@@ -181,7 +181,7 @@ int VerifyRdbConfigV0(const RdbConfigV0 *config)
 
 int VerifyRdbConfigV1(const RdbConfigV1 *config)
 {
-    int errCode = VerifyRdbConfigV0(static_cast<RdbConfigV0*>(config));
+    int errCode = VerifyRdbConfigV0(reinterpret_cast<const RdbConfigV0*>(config));
     if (errCode != OH_Rdb_ErrCode::RDB_OK) {
         return errCode;
     }
@@ -197,9 +197,9 @@ int VerifyRdbConfigV1(const RdbConfigV1 *config)
 int VerifyRdbConfig(const OH_Rdb_Config *config)
 {
     if (config->selfSize == RDB_CONFIG_SIZE_V0) {
-        return VerifyRdbConfigV0(static_cast<RdbConfigV0*>(config));
+        return VerifyRdbConfigV0(reinterpret_cast<const RdbConfigV0*>(config));
     } else if (config->selfSize == RDB_CONFIG_SIZE_V1) {
-        return VerifyRdbConfigV1(static_cast<RdbConfigV1*>(config));
+        return VerifyRdbConfigV1(reinterpret_cast<const RdbConfigV1*>(config));
     } else {
         LOG_ERROR("OH_Rdb_Config field set error: selfSize is not valid, %{public}d", config->selfSize);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
