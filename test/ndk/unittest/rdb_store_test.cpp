@@ -1512,11 +1512,36 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     config.bundleName = "com.ohos.example.distributedndk";
     config.moduleName = "distributedndk";
     config.isEncrypt = false;
-    config.securityLevel = 0;
-    config.area = RDB_SECURITY_AREA_EL1;
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
 
     int errCode = E_OK;
-    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    OH_Rdb_Store *rdbStore = nullptr;
+
+    config.dataBaseDir = nullptr;
+    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = nullptr;
+    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+
+    config.storeName = "rdb_ut_test.db";
+    config.bundleName = nullptr;
+    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+
+    config.bundleName = "com.ohos.example.distributedndk";
+
+    config.securityLevel = 0;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
@@ -1527,7 +1552,20 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
 
+    config.area = 0;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+
+    config.area = 5;
+    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+
     config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
     rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_NE(rdbStore, NULL);
     EXPECT_EQ(errCode, E_OK);
