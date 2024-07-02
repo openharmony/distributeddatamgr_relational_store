@@ -52,7 +52,7 @@ public:
     RdbMultiThreadConnectionRdTest();
 };
 
-const std::string databaseName = RDB_TEST_PATH + "execute_test.db";
+const std::string RdbMultiThreadConnectionRdTest::databaseName = RDB_TEST_PATH + "execute_test.db";
 
 class Callback : public RdbOpenCallback {
 public:
