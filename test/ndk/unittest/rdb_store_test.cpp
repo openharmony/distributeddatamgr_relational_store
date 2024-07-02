@@ -1522,10 +1522,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     InitRdbConfigStruct(config);
 
     int errCode = E_OK;
-    OH_Rdb_Store *rdbStore = nullptr;
-
     config.dataBaseDir = nullptr;
-    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
