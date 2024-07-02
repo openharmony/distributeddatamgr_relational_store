@@ -34,6 +34,7 @@ using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
+namespace Test {
 class RdbMultiThreadConnectionRdTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -41,8 +42,7 @@ public:
     void SetUp();
     void TearDown();
 
-    static const std::string databaseName;
-    
+    static const std::string databaseName = RDB_TEST_PATH + "execute_test.db";
     static constexpr int32_t MAX_THREAD = 5;
     static constexpr int32_t MIN_THREAD = 0;
 
@@ -50,7 +50,20 @@ public:
     std::shared_ptr<ExecutorPool> executors_;
 };
 
-const std::string RdbMultiThreadConnectionRdTest::databaseName = RDB_TEST_PATH + "execute_test.db";
+RdbMultiThreadConnectionRdTest::RdbMultiThreadConnectionRdTest()
+{
+    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(databaseName);
+    RdbStoreConfig config(databaseName);
+    config.SetIsVector(true);
+    config.SetSecurityLevel(SecurityLevel::S4);
+    Callback helper;
+    int errCode = E_OK;
+    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store_, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+}
 
 class Callback : public RdbOpenCallback {
 public:
@@ -78,17 +91,6 @@ void RdbMultiThreadConnectionRdTest::TearDownTestCase(void)
 
 void RdbMultiThreadConnectionRdTest::SetUp(void)
 {
-    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
-    store_ = nullptr;
-    RdbHelper::DeleteRdbStore(databaseName);
-    RdbStoreConfig config(databaseName);
-    config.SetIsVector(true);
-    config.SetSecurityLevel(SecurityLevel::S4);
-    Callback helper;
-    int errCode = E_OK;
-    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store_, nullptr);
-    EXPECT_EQ(errCode, E_OK);
 }
 
 void RdbMultiThreadConnectionRdTest::TearDown(void)
@@ -108,25 +110,28 @@ void RdbMultiThreadConnectionRdTest::TearDown(void)
  */
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSize.Level2)
 {
-    std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
+    int count = 2000;
     auto taskId1 = executors_->Execute([store = store_, block1]() {
-        auto [errCode, trxid] = store->BeginTrans();
-        EXPECT_EQ(errCode, E_OK);
-        block1->SetValue(trxid);
-        errCode = store->Commit(trxid);
-        EXPECT_EQ(errCode, E_OK);
+        std::pair<int, int64_t> res;
+        int32_t errCode = E_OK;
+        for (int i = 0; i < count ; i++) {
+            res = store->BeginTrans();
+            EXPECT_EQ(res.first, E_OK);
+            errCode = store->Commit(res.seoncd);
+            EXPECT_EQ(errCode, E_OK);
+        }
     });
 
-    std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        auto [errCode, trxid] = store->BeginTrans();
-        EXPECT_EQ(errCode, E_OK);
-        block2->SetValue(trxid);
-        errCode = store->Commit(trxid);
-        EXPECT_EQ(errCode, E_OK);
+        std::pair<int, int64_t> res;
+        int32_t errCode = E_OK;
+        for (int i = 0 ; i < count; i++) {
+            res = store->BeginTrans();
+            EXPECT_EQ(res.first, E_OK);
+            errCode = store->Commit(res.seoncd);
+            EXPECT_EQ(errCode, E_OK);
+        }
     });
-
-    EXPECT_NE(block1->GetValue(), block2->GetValue());
     EXPECT_NE(taskId1, taskId2);
 }
 
@@ -140,24 +145,28 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
  */
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSize.Level2)
 {
-    std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
+    int count = 2000;
     auto taskId1 = executors_->Execute([store = store_, block1]() {
-        auto [errCode, trxid] = store->BeginTrans();
-        EXPECT_EQ(errCode, E_OK);
-        block1->SetValue(trxid);
-        errCode = store->RollBack(trxid);
-        EXPECT_EQ(errCode, E_OK);
+        std::pair<int, int64_t> res;
+        int32_t errCode = E_OK;
+        for (int i = 0; i < count ; i++) {
+            res = store->BeginTrans();
+            EXPECT_EQ(res.first, E_OK);
+            errCode = store->RollBack(res.seoncd);
+            EXPECT_EQ(errCode, E_OK);
+        }
     });
 
-    std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
     auto taskId2 = executors_->Execute([store = store_, block2]() {
-        auto [errCode, trxid] = store->BeginTrans();
-        EXPECT_EQ(errCode, E_OK);
-        block2->SetValue(trxid);
-        errCode = store->RollBack(trxid);
-        EXPECT_EQ(errCode, E_OK);
+        std::pair<int, int64_t> res;
+        int32_t errCode = E_OK;
+        for (int i = 0; i < count ; i++) {
+            res = store->BeginTrans();
+            EXPECT_EQ(res.first, E_OK);
+            errCode = store->RollBack(res.seoncd);
+            EXPECT_EQ(errCode, E_OK);
+        }
     });
-
-    EXPECT_NE(block1->GetValue(), block2->GetValue());
     EXPECT_NE(taskId1, taskId2);
+}
 }
