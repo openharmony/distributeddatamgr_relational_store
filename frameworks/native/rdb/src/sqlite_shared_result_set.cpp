@@ -35,21 +35,38 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+
+constexpr int64_t TIME_OUT = 1500;
 SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
     std::string sql, const std::vector<ValueObject>& bindArgs)
     : AbsSharedResultSet(path), isOnlyFillBlock_(false), blockCapacity_(0), qrySql_(std::move(sql)),
       bindArgs_(std::move(bindArgs))
 {
+    auto queryStart = std::chrono::steady_clock::now();
     conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
         isClosed_ = true;
+        return;
     }
+    auto preparStart = std::chrono::steady_clock::now();
     auto [statement, errCode] = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
+        return;
     }
     statement_ = statement;
+    auto initCountStart = std::chrono::steady_clock::now();
     rowCount_ = InitRowCount();
+    auto queryEnd = std::chrono::steady_clock::now();
+    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - queryStart).count();
+    if (totalCostTime >= TIME_OUT) {
+        int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - queryStart).count();
+        int64_t preparCost = std::chrono::duration_cast<std::chrono::milliseconds>(initCountStart - preparStart).count();
+        int64_t initCountCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - initCountStart).count();
+        LOG_WARN("query totalCostTime[%{public}lld] acquirCost[%{public}lld] preparCost[%{public}lld] "
+                 "initCountCost[%{public}lld] rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
+            totalCostTime, acquirCost, preparCost, initCountCost, rowCount_, qrySql_.c_str(), path.c_str());
+    }
 }
 
 int SqliteSharedResultSet::InitRowCount()
