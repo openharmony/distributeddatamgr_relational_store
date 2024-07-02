@@ -214,9 +214,8 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         return nullptr;
     }
 
-    int ret = VerifyRdbConfig(config);
-    if (ret != OH_Rdb_ErrCode::RDB_OK) {
-        *errCode = ret;
+    *errCode = VerifyRdbConfig(config);
+    if (*errCode != OH_Rdb_ErrCode::RDB_OK) {
         return nullptr;
     }
 
