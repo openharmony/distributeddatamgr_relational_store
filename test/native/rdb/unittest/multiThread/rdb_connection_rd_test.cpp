@@ -111,7 +111,7 @@ void RdbMultiThreadConnectionRdTest::TearDown(void)
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSize.Level2)
 {
     int count = 2000;
-    auto taskId1 = executors_->Execute([store = store_, block1]() {
+    auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
         for (int i = 0; i < count ; i++) {
@@ -122,7 +122,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
         }
     });
 
-    auto taskId2 = executors_->Execute([store = store_, block2]() {
+    auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
         for (int i = 0 ; i < count; i++) {
@@ -146,7 +146,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
 HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSize.Level2)
 {
     int count = 2000;
-    auto taskId1 = executors_->Execute([store = store_, block1]() {
+    auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
         for (int i = 0; i < count ; i++) {
@@ -157,7 +157,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
         }
     });
 
-    auto taskId2 = executors_->Execute([store = store_, block2]() {
+    auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
         for (int i = 0; i < count ; i++) {
