@@ -1,0 +1,163 @@
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <gtest/gtest.h>
+
+#include <iostream>
+#include <string>
+#include <string_view>
+
+#include "../common.h"
+#include "rd_utils.h"
+#include "block_data.h"
+#include "executor_pool.h"
+#include "rdb_errno.h"
+#include "rdb_helper.h"
+#include "rdb_open_callback.h"
+#include "shared_block.h"
+#include "sqlite_shared_result_set.h"
+#include "step_result_set.h"
+
+using namespace testing::ext;
+using namespace OHOS;
+using namespace OHOS::NativeRdb;
+
+class RdbMultiThreadConnectionRdTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+
+    static const std::string databaseName;
+    
+    static constexpr int32_t MAX_THREAD = 5;
+    static constexpr int32_t MIN_THREAD = 0;
+
+    std::shared_ptr<RdbStore> store_;
+    std::shared_ptr<ExecutorPool> executors_;
+};
+
+const std::string RdbMultiThreadConnectionRdTest::databaseName = RDB_TEST_PATH + "execute_test.db";
+
+class Callback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+};
+
+int Callback::OnCreate(RdbStore &store)
+{
+    return E_OK;
+}
+
+int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
+    return E_OK;
+}
+
+void RdbMultiThreadConnectionRdTest::SetUpTestCase(void)
+{
+}
+
+void RdbMultiThreadConnectionRdTest::TearDownTestCase(void)
+{
+}
+
+void RdbMultiThreadConnectionRdTest::SetUp(void)
+{
+    executors_ = std::make_shared<ExecutorPool>(MAX_THREAD, MIN_THREAD);
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(databaseName);
+    RdbStoreConfig config(databaseName);
+    config.SetIsVector(true);
+    config.SetSecurityLevel(SecurityLevel::S4);
+    Callback helper;
+    int errCode = E_OK;
+    store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store_, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+void RdbMultiThreadConnectionRdTest::TearDown(void)
+{
+    executors_ = nullptr;
+    store_ = nullptr;
+    RdbHelper::DeleteRdbStore(RdbMultiThreadConnectionRdTest::databaseName);
+}
+
+/**
+ * @tc.name: MultiThread_Connection_0001
+ *           test if two threads can begin trans and commit in order without conflicting
+ * @tc.desc: 1.thread 1: begin trans and commit
+ *           2.thread 2: begin trans and commit
+ * @tc.type: FUNC
+ * @tc.author: zhangjiaxi
+ */
+HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSize.Level2)
+{
+    std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
+    auto taskId1 = executors_->Execute([store = store_, block1]() {
+        auto [errCode, trxid] = store->BeginTrans();
+        EXPECT_EQ(errCode, E_OK);
+        block1->SetValue(trxid);
+        errCode = store->Commit(trxid);
+        EXPECT_EQ(errCode, E_OK);
+    });
+
+    std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
+    auto taskId2 = executors_->Execute([store = store_, block2]() {
+        auto [errCode, trxid] = store->BeginTrans();
+        EXPECT_EQ(errCode, E_OK);
+        block2->SetValue(trxid);
+        errCode = store->Commit(trxid);
+        EXPECT_EQ(errCode, E_OK);
+    });
+
+    EXPECT_NE(block1->GetValue(), block2->GetValue());
+    EXPECT_NE(taskId1, taskId2);
+}
+
+/**
+ * @tc.name: MultiThread_Connection_0002
+ *           test if two threads can begin trans and rollback in order without conflicting
+ * @tc.desc: 1.thread 1: begin trans and rollback
+ *           2.thread 2: begin trans and rollback
+ * @tc.type: FUNC
+ * @tc.author: zhangjiaxi
+ */
+HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSize.Level2)
+{
+    std::shared_ptr<BlockData<int32_t>> block1 = std::make_shared<BlockData<int32_t>>(3, false);
+    auto taskId1 = executors_->Execute([store = store_, block1]() {
+        auto [errCode, trxid] = store->BeginTrans();
+        EXPECT_EQ(errCode, E_OK);
+        block1->SetValue(trxid);
+        errCode = store->RollBack(trxid);
+        EXPECT_EQ(errCode, E_OK);
+    });
+
+    std::shared_ptr<BlockData<int32_t>> block2 = std::make_shared<BlockData<int32_t>>(3, false);
+    auto taskId2 = executors_->Execute([store = store_, block2]() {
+        auto [errCode, trxid] = store->BeginTrans();
+        EXPECT_EQ(errCode, E_OK);
+        block2->SetValue(trxid);
+        errCode = store->RollBack(trxid);
+        EXPECT_EQ(errCode, E_OK);
+    });
+
+    EXPECT_NE(block1->GetValue(), block2->GetValue());
+    EXPECT_NE(taskId1, taskId2);
+}
