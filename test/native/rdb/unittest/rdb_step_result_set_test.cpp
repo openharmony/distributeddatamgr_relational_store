@@ -854,6 +854,26 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RdbStore_StepResultSet_017
+ * @tc.desc: Abnormal testcase of StepResultSet, arguments of GetAsset and GetAssets are invalid
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    ValueObject::Asset asset;
+    // if columnIndex < 0
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAsset(-1, asset));
+    ValueObject::Assets assets;
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, resultSet->GetAssets(-1, assets));
+}
+
+/* *
  * @tc.name: testGetRowCount003
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC

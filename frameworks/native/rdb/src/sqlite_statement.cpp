@@ -114,8 +114,8 @@ int SqliteStatement::IsValid(int index) const
         return E_ALREADY_CLOSED;
     }
 
-    if (index >= columnCount_) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
+    if (index >= columnCount_ || index < 0) {
+        LOG_ERROR("index (%{public}d) is out of range [0, %{public}d]", index, columnCount_ - 1);
         return E_COLUMN_OUT_RANGE;
     }
     return E_OK;
