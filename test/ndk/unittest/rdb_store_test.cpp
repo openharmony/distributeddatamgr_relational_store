@@ -1509,6 +1509,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 }
 
+
 /**
  * @tc.name: RDB_Native_store_test_034
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
@@ -1522,58 +1523,168 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     InitRdbConfigStruct(config);
 
     int errCode = E_OK;
+    config.selfSize = 0;
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_EQ(rdbStore, nullptr);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_Rdb_DeleteStore(&config);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_035
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_035, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.dataBaseDir = nullptr;
     OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
-    config.dataBaseDir = RDB_TEST_PATH;
+/**
+ * @tc.name: RDB_Native_store_test_036
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_036, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.storeName = nullptr;
-    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
-    config.storeName = "rdb_ut_test.db";
+/**
+ * @tc.name: RDB_Native_store_test_037
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.bundleName = nullptr;
-    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
-    config.bundleName = "com.ohos.example.distributedndk";
+/**
+ * @tc.name: RDB_Native_store_test_038
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
 
+    int errCode = E_OK;
     config.securityLevel = 0;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
-    
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_039
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_039, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.securityLevel = 5;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
+/**
+ * @tc.name: RDB_Native_store_test_040
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.area = 0;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
+/**
+ * @tc.name: RDB_Native_store_test_041
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_041, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+
+    int errCode = E_OK;
     config.area = 5;
-    rdbStore = OH_Rdb_GetOrOpen(&config, &errCode);
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_EQ(rdbStore, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_Rdb_DeleteStore(&config);
+}
 
-    config.securityLevel = OH_Rdb_SecurityLevel::S1;
-    config.area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
-    rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
+/**
+ * @tc.name: RDB_Native_store_test_042
+ * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
+ *           1.config->securityLevel is not assign value
+ *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_042, TestSize.Level1)
+{
+    OH_Rdb_Config config;
+    InitRdbConfigStruct(config);
+    int errCode = E_OK;
+    OH_Rdb_Store *rdbStore = OH_Rdb_GetOrOpen(&config_, &errCode);
     EXPECT_NE(rdbStore, NULL);
     EXPECT_EQ(errCode, E_OK);
     OH_Rdb_CloseStore(rdbStore);
     OH_Rdb_DeleteStore(&config);
 }
-

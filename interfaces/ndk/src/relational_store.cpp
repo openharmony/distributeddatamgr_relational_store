@@ -172,6 +172,11 @@ int VerifyRdbConfigV0(const RdbConfigV0 *config)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
+    if (config->isEncrypt != true && config->isEncrypt != false) {
+        LOG_ERROR("OH_Rdb_Config field set error: isEncrypt is not valid, %{public}d", config->isEncrypt);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
     if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
         LOG_ERROR("OH_Rdb_Config field set error: securityLevel is not valid, %{public}d", config->securityLevel);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
