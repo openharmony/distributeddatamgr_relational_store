@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <tuple>
+#include <cinttypes>
 
 #include "logger.h"
 #include "rdb_sql_utils.h"
@@ -65,8 +66,9 @@ SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPoo
             std::chrono::duration_cast<std::chrono::milliseconds>(initCountStart - preparStart).count();
         int64_t initCountCost =
             std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - initCountStart).count();
-        LOG_WARN("query totalCostTime[%{public}lld] acquirCost[%{public}lld] preparCost[%{public}lld] "
-                 "initCountCost[%{public}lld] rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
+        LOG_WARN("query totalCostTime[%{public}" PRId64 "] acquirCost[%{public}" PRId64 "] preparCost[%{public}" PRId64
+            "] "
+            "initCountCost[%{public}" PRId64 "] rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
             totalCostTime, acquirCost, preparCost, initCountCost, rowCount_, qrySql_.c_str(), path.c_str());
     }
 }
