@@ -21,6 +21,7 @@ extern "C" {
 #endif
 #endif
 
+#pragma pack(1)
 typedef struct {
     int selfSize;
     const char *dataBaseDir;
@@ -41,6 +42,7 @@ typedef struct {
     int securityLevel;
     int area;
 } RdbConfigV1;
+#pragma pack()
 
 #define RDB_CONFIG_SIZE_V0 sizeof(RdbConfigV0)
 #define RDB_CONFIG_SIZE_V1 sizeof(RdbConfigV1)
