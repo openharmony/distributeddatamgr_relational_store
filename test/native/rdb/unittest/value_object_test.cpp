@@ -23,6 +23,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+namespace Test {
 class ValueObjectTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -72,3 +73,4 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
     ValueObject obj1;
     EXPECT_TRUE(static_cast<BigInteger>(obj) == bigInt);
 }
+} // namespace Test

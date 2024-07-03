@@ -24,7 +24,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-
+namespace Test {
 class ConnectionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -77,3 +77,4 @@ HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
     ret = Connection::Repair(config);
     EXPECT_EQ(ret, E_ERROR);
 }
+} // namespace Test
