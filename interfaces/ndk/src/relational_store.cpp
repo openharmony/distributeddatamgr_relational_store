@@ -234,8 +234,8 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         return nullptr;
     }
 
-    std::string realPath =
-        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(currentConfig.dataBaseDir, currentConfig.storeName, *errCode);
+    std::string realPath = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(
+        currentConfig.dataBaseDir, currentConfig.storeName, *errCode);
     if (*errCode != 0) {
         *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
         LOG_ERROR("Get database path failed, ret %{public}d ", *errCode);
