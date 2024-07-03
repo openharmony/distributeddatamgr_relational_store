@@ -1513,7 +1513,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_034
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->selfSize is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1533,7 +1533,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_035
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->dataBaseDir is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1553,7 +1553,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_035, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_036
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->storeName is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1573,7 +1573,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_036, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_037
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->bundleName is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1593,7 +1593,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_038
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->securityLevel is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1613,7 +1613,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_039
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->securityLevel is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1633,7 +1633,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_039, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_040
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->area is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1653,7 +1653,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_041
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
+ *           1.config->area is assigned invalid value
  *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
  * @tc.type: FUNC
  */
@@ -1673,8 +1673,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_041, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_042
  * @tc.desc: abNormal testCase for OH_Rdb_GetOrOpen.
- *           1.config->securityLevel is not assign value
- *           2.then return nullptr and errCode is OH_Rdb_ErrCode::RDB_E_INVALID_ARGS
+ *           1.config all fileds is assigned valid value
+ *           2.then return not nullptr and errCode is E_OK
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_042, TestSize.Level1)
