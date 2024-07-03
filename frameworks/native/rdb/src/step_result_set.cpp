@@ -278,9 +278,6 @@ int StepResultSet::Reset()
 
 int StepResultSet::Get(int32_t col, ValueObject &value)
 {
-    if (col < 0) {
-        return E_COLUMN_OUT_RANGE;
-    }
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
