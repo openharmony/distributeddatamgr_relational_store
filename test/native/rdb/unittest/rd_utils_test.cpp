@@ -22,6 +22,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+namespace Test {
 class RdUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -88,3 +89,4 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     RdUtils::RdDbClose(dbHandle_, index);
 }
+} // namespace Test
