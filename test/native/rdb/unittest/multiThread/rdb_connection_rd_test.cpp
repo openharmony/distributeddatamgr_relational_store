@@ -135,6 +135,8 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
             EXPECT_EQ(errCode, E_OK);
         }
     });
+    executors_.Remove(taskId1, true);
+    executors_.Remove(taskId2, true);
     EXPECT_NE(taskId1, taskId2);
 }
 
@@ -169,6 +171,8 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
             EXPECT_EQ(errCode, E_OK);
         }
     });
+    executors_.Remove(taskId1, true);
+    executors_.Remove(taskId2, true);
     EXPECT_NE(taskId1, taskId2);
 }
 }
