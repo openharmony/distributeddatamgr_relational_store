@@ -766,5 +766,50 @@ describe('rdbStoreInsertSyncTest', function () {
             console.log(TAG + "************* testRdbStoreSyncbatchInsert001 end *************");
         })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_batchInsert_0002
+     * @tc.name Normal test case of batchInsertSync
+     * @tc.desc 1.Create valueBucket
+     *          2.Execute push
+     *          3.BatchInsert data
+     *          4.Query data
+     */
+    it('testRdbStoreBatchInsertSync002', 0, async function () {
+        console.log(TAG + "************* testRdbStoreBatchInsertSync002 start *************");
+
+        const STORE_NAME = "AfterCloseTest.db";
+        const STORE_CONFIG1 = {
+            name: STORE_NAME,
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        };
+        const rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
+        await rdbStore.close().then(() => {
+            console.info(`close succeeded`);
+        }).catch((err) => {
+            console.error(`close failed, code is ${err.code},message is ${err.message}`);
+        })
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        let valueBucketArray = new Array();
+        for (let i = 0; i < 100; i++) {
+            valueBucketArray.push(valueBucket);
+        }
+        try {
+            await rdbStore.batchInsertSync("test", valueBucketArray);
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        console.log(TAG + "************* testRdbStoreBatchInsertSync002 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
