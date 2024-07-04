@@ -683,6 +683,7 @@ describe('CloudConfigPromiseTest', function () {
         console.info('QueryLastSyncInfoInvalidArgsTest001');
         try {
             await cloudData.Config.queryLastSyncInfo(123, "bundleName");
+            expect(false).assertTrue();
         } catch (e) {
             console.error('QueryLastSyncInfoInvalidArgsTest001 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
@@ -700,6 +701,7 @@ describe('CloudConfigPromiseTest', function () {
         console.info('QueryLastSyncInfoInvalidArgsTest002');
         try {
             await cloudData.Config.queryLastSyncInfo("id", 123);
+            expect(false).assertTrue();
         } catch (e) {
             console.error('QueryLastSyncInfoInvalidArgsTest002 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
@@ -717,6 +719,7 @@ describe('CloudConfigPromiseTest', function () {
         console.info('QueryLastSyncInfoInvalidArgsTest003');
         try {
             await cloudData.Config.queryLastSyncInfo();
+            expect(false).assertTrue();
         } catch (e) {
             console.error('QueryLastSyncInfoInvalidArgsTest003 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
@@ -734,9 +737,82 @@ describe('CloudConfigPromiseTest', function () {
         console.info('QueryLastSyncInfoInvalidArgsTest004');
         try {
             await cloudData.Config.queryLastSyncInfo("id");
+            expect(false).assertTrue();
         } catch (e) {
             console.error('QueryLastSyncInfoInvalidArgsTest004 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest005
+     * @tc.desc Test Js Api QueryLastSyncInfo that storeName parameter is undefined
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest005', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest005');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id", "bundleName", undefined);
+            expect(false).assertTrue();
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest005 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoInvalidArgsTest006
+     * @tc.desc Test Js Api QueryLastSyncInfo that storeName parameter is null
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoInvalidArgsTest006', 0, async function (done) {
+        console.info('QueryLastSyncInfoInvalidArgsTest006');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id", "bundleName", null);
+            expect(false).assertTrue();
+        } catch (e) {
+            console.error('QueryLastSyncInfoInvalidArgsTest006 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoValidArgsTest001
+     * @tc.desc Test Js Api QueryLastSyncInfo that all parameters is valid
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoValidArgsTest001', 0, async function (done) {
+        console.info('QueryLastSyncInfoValidArgsTest001');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id", "bundleName", "storeId");
+            expect(false).assertTrue();
+        } catch (e) {
+            console.error('QueryLastSyncInfoValidArgsTest001 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
+        }
+        done();
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoValidArgsTest002
+     * @tc.desc Test Js Api QueryLastSyncInfo that lack storeId parameter
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoValidArgsTest002', 0, async function (done) {
+        console.info('QueryLastSyncInfoValidArgsTest002');
+        try {
+            await cloudData.Config.queryLastSyncInfo("id", "bundleName");
+            expect(false).assertTrue();
+        } catch (e) {
+            console.error('QueryLastSyncInfoValidArgsTest002 fail' + `, error code is ${e.code}, message is ${e.message}`);
+            expect(e.code == 201).assertTrue();
         }
         done();
     })
