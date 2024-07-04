@@ -209,7 +209,7 @@ int VerifyRdbConfig(const OH_Rdb_Config *config, OH_Rdb_Config *currentConfig)
     currentConfig->isEncrypt = config->isEncrypt;
     currentConfig->securityLevel = config->securityLevel;
     if (currentConfig->selfSize == RDB_CONFIG_SIZE_V0) {
-        currentConfig->area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL1;
+        currentConfig->area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL2;
         return VerifyRdbConfigV0(reinterpret_cast<RdbConfigV0*>(currentConfig));
     } else if (currentConfig->selfSize == RDB_CONFIG_SIZE_V1) {
         currentConfig->area = config->area;
