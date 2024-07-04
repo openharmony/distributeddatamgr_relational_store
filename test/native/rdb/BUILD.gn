@@ -73,8 +73,11 @@ ohos_unittest("NativeRdbTest") {
   module_out_path = module_output_path
 
   sources = [
+    "unittest/big_integer_test.cpp",
     "unittest/cache_result_set_test.cpp",
     "unittest/common.cpp",
+    "unittest/connection_test.cpp",
+    "unittest/rd_utils_test.cpp",
     "unittest/rdb_attach_test.cpp",
     "unittest/rdb_bigint_test.cpp",
     "unittest/rdb_delete_test.cpp",
@@ -89,6 +92,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_read_only_test.cpp",
+    "unittest/rdb_sql_utils_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",
@@ -104,6 +108,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_utils_test.cpp",
     "unittest/rdb_value_bucket_test.cpp",
     "unittest/rdb_wal_limit_test.cpp",
+    "unittest/value_object_test.cpp",
   ]
 
   sources += [
