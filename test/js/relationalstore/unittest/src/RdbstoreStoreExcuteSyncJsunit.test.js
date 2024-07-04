@@ -460,5 +460,78 @@ describe('rdbStoreExcuteTest', function () {
         console.info(TAG + "************* testSyncExecute0016 end   *************");
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name Abnormal test case of sync
+     * @tc.desc 1.Close rdbStore
+     *          2.Call beginTransaction
+     */
+    it('testSyncExecute0017', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0017 start *************");
+
+        const STORE_NAME = "AfterCloseTest.db"
+        const config = {
+            "name": STORE_NAME,
+            securityLevel: relationalStore.SecurityLevel.S1,
+        }
+        const rdbStore = await relationalStore.getRdbStore(context, config);
+
+        try {
+            await rdbStore.close();
+            console.info(`${TAG} close succeeded`);
+        } catch (err) {
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        }
+
+        try {
+            const predicates = new relationalStore.RdbPredicates('test');
+            predicates.inDevices(['573f'])
+            await rdbStore.sync(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates)
+            expect(null).assertFail();
+        } catch (err) {
+            console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+
+        await relationalStore.deleteRdbStore(context, STORE_NAME);
+        console.log(TAG + "************* testSyncExecute0017 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.name Normal test case of ExecuteSql
+     * @tc.desc 1.Close rdbStore
+     *          2.Call beginTransaction
+     */
+    it('testSyncExecute0018', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0018 start *************");
+
+        const STORE_NAME = "AfterCloseTest.db"
+        const config = {
+            "name": STORE_NAME,
+            securityLevel: relationalStore.SecurityLevel.S1,
+        }
+        const rdbStore = await relationalStore.getRdbStore(context, config);
+
+        try {
+            await rdbStore.close();
+            console.info(`${TAG} close succeeded`);
+        } catch (err) {
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        }
+
+        try {
+            const predicates = new relationalStore.RdbPredicates('test');
+            predicates.inDevices(['573f'])
+            await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_PUSH, () => {})
+            expect(null).assertFail();
+        } catch (err) {
+            console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
+
+        await relationalStore.deleteRdbStore(context, STORE_NAME);
+        console.log(TAG + "************* testSyncExecute0018 end *************");
+    })
     console.info(TAG + "*************Unit Test End*************");
 })
