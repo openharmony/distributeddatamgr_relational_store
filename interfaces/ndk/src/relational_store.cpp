@@ -32,12 +32,11 @@
 #include "securec.h"
 #include "sqlite_global_config.h"
 #include "convertor_error_code.h"
+#include "rdb_config_version_define.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
 constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
-constexpr int RDB_CONFIG_SIZE_V0 = 41;
-constexpr int RDB_CONFIG_SIZE_V1 = 45;
 OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
@@ -164,32 +163,90 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
     return static_cast<RelationalStore *>(store);
 }
 
+int VerifyRdbConfigV0(const RdbConfigV0 *config)
+{
+    if (config->dataBaseDir == nullptr || config->storeName == nullptr || config->bundleName == nullptr) {
+        LOG_ERROR("OH_Rdb_Config field set error: dataBaseDir is NULL ? %{public}d, storeName is NULL ? %{public}d, "
+                  "bundleName is NULL ? %{public}d",
+            (config->dataBaseDir == nullptr), (config->storeName == nullptr), (config->bundleName == nullptr));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    if (config->isEncrypt != true && config->isEncrypt != false) {
+        LOG_ERROR("OH_Rdb_Config field set error: isEncrypt is not valid, %{public}d", config->isEncrypt);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    if (config->securityLevel < OH_Rdb_SecurityLevel::S1 || config->securityLevel > OH_Rdb_SecurityLevel::S4) {
+        LOG_ERROR("OH_Rdb_Config field set error: securityLevel is not valid, %{public}d", config->securityLevel);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int VerifyRdbConfigV1(const RdbConfigV1 *config)
+{
+    int errCode = VerifyRdbConfigV0(reinterpret_cast<const RdbConfigV0*>(config));
+    if (errCode != OH_Rdb_ErrCode::RDB_OK) {
+        return errCode;
+    }
+
+    if (config->area < Rdb_SecurityArea::RDB_SECURITY_AREA_EL1 ||
+        config->area > Rdb_SecurityArea::RDB_SECURITY_AREA_EL4) {
+        LOG_ERROR("OH_Rdb_Config field set error: area is not valid, %{public}d", config->area);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int VerifyRdbConfig(const OH_Rdb_Config *config, OH_Rdb_Config *currentConfig)
+{
+    currentConfig->selfSize = config->selfSize;
+    currentConfig->dataBaseDir = config->dataBaseDir;
+    currentConfig->storeName = config->storeName;
+    currentConfig->bundleName = config->bundleName;
+    currentConfig->moduleName = config->moduleName;
+    currentConfig->isEncrypt = config->isEncrypt;
+    currentConfig->securityLevel = config->securityLevel;
+    if (currentConfig->selfSize == RDB_CONFIG_SIZE_V0) {
+        currentConfig->area = Rdb_SecurityArea::RDB_SECURITY_AREA_EL2;
+        return VerifyRdbConfigV0(reinterpret_cast<RdbConfigV0*>(currentConfig));
+    } else if (currentConfig->selfSize == RDB_CONFIG_SIZE_V1) {
+        currentConfig->area = config->area;
+        return VerifyRdbConfigV1(reinterpret_cast<RdbConfigV1*>(currentConfig));
+    } else {
+        LOG_ERROR("OH_Rdb_Config field set error: selfSize is not valid, %{public}d", currentConfig->selfSize);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+}
+
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
-    if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
-        LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
-                  "errCode is NULL ? %{public}d ",
-                  (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
+    if (config == nullptr || errCode == nullptr) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or errCode is NULL ? %{public}d ",
+            (config == nullptr), (errCode == nullptr));
         return nullptr;
     }
 
-    std::string realPath =
-        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
+    OH_Rdb_Config currentConfig;
+    *errCode = VerifyRdbConfig(config, &currentConfig);
+    if (*errCode != OH_Rdb_ErrCode::RDB_OK) {
+        return nullptr;
+    }
+
+    std::string realPath = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(
+        currentConfig.dataBaseDir, currentConfig.storeName, *errCode);
     if (*errCode != 0) {
         *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
         LOG_ERROR("Get database path failed, ret %{public}d ", *errCode);
         return nullptr;
     }
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
-    rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
-    rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
-    if (config->selfSize > RDB_CONFIG_SIZE_V0) {
-        rdbStoreConfig.SetArea(config->area);
-    }
-    if (config->bundleName != nullptr) {
-        rdbStoreConfig.SetBundleName(config->bundleName);
-    }
-    rdbStoreConfig.SetName(config->storeName);
+    rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(currentConfig.securityLevel));
+    rdbStoreConfig.SetEncryptStatus(currentConfig.isEncrypt);
+    rdbStoreConfig.SetArea(currentConfig.area - 1); // -1 is here, because the SetArea implementation cannot be modified
+    rdbStoreConfig.SetBundleName(currentConfig.bundleName);
+    rdbStoreConfig.SetName(currentConfig.storeName);
 
     MainOpenCallback callback;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store =
