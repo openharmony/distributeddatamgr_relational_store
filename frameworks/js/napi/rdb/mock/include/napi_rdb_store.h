@@ -64,7 +64,6 @@ private:
     static napi_value IsOpen(napi_env env, napi_callback_info info);
     static napi_value GetVersion(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
-    int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
 };
