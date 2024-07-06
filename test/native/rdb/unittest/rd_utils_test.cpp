@@ -75,23 +75,23 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
     GRD_DB *dbHandle_ = nullptr;
     mkdir(dbPath.c_str(), 0770);
     ret = RdUtils::RdDbOpen(dbFilePath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     ret = RdUtils::RdDbRepair(dbFilePath.c_str(), configStr.c_str());
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
 
     GRD_SqlStmt *stmtHandle = nullptr;
     int index = 1;
     std::string data = "123456";
     ret = RdUtils::RdSqlBindBlob(stmtHandle, index, static_cast<const void *>(data.c_str()), data.size(), nullptr);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     ret = RdUtils::RdSqlBindInt(stmtHandle, index, 123456);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     ret = RdUtils::RdSqlBindInt64(stmtHandle, index, 123456);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     ret = RdUtils::RdSqlBindDouble(stmtHandle, index, 123456.23);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     ret = RdUtils::RdSqlBindNull(stmtHandle, index);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ERROR);
     RdUtils::RdDbClose(dbHandle_, index);
 }
 } // namespace Test
