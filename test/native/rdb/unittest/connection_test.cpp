@@ -54,7 +54,7 @@ HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
     EXPECT_EQ(errCode, E_INVALID_ARGS);
     EXPECT_EQ(connection, nullptr);
 
-    config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     auto [errCode1, connection1] = Connection::Create(config, true);
     EXPECT_EQ(errCode1, E_ERROR);
     EXPECT_EQ(connection1, nullptr);
@@ -73,7 +73,7 @@ HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
     int ret= Connection::Repair(config);
     EXPECT_EQ(ret, E_INVALID_ARGS);
 
-    config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     ret = Connection::Repair(config);
     EXPECT_EQ(ret, E_ERROR);
 }
