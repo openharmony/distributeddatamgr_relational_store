@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include <climits>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "rd_utils.h"
 #include "grd_type_export.h"
 
@@ -63,15 +65,18 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_002, TestSize.Level1)
 
 HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
 {
-    std::string dbPath = "/data/test/test.db";
+    std::string dbPath = "/data/test/";
+    std::string dbFileName = "test.db";
+    std::string dbFilePath = dbPath + dbFileName;
     std::string configStr = "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
                             "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
 
     int ret = E_OK;
     GRD_DB *dbHandle_ = nullptr;
-    ret = RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    mkdir(dbPath.c_str(), 0770);
+    ret = RdUtils::RdDbOpen(dbFilePath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
     EXPECT_EQ(ret, E_OK);
-    ret = RdUtils::RdDbRepair(dbPath.c_str(), configStr.c_str());
+    ret = RdUtils::RdDbRepair(dbFilePath.c_str(), configStr.c_str());
     EXPECT_EQ(ret, E_OK);
 
     GRD_SqlStmt *stmtHandle = nullptr;

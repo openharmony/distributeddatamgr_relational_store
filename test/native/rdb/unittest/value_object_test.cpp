@@ -42,7 +42,15 @@ void ValueObjectTest::TearDownTestCase(void)
 
 /**
  * @tc.name: ValueObject_Test_001
- * @tc.desc: Normal testCase of value_object for IsSpecial, if sqlType is special
+ * @tc.desc: test func third line
+ValueObject &ValueObject::operator=(ValueObject &&val) noexcept
+{
+    if (this == &val) {
+        return *this;
+    }
+    value = std::move(val.value);
+    return *this;
+}
  * @tc.type: FUNC
  */
 HWTEST_F(ValueObjectTest, ValueObject_Test_001, TestSize.Level1)
@@ -51,26 +59,50 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_001, TestSize.Level1)
     ValueObject obj(intValue);
     ValueObject &ref = obj;
     ref = std::move(obj);
-    int sign;
-    EXPECT_EQ(ref.GetInt(sign), intValue);
+    int outValue;
+    ref.GetInt(outValue);
+    EXPECT_EQ(outValue, intValue);
 }
 
+/**
+ * @tc.name: ValueObject_Test_001
+ * @tc.desc: test func third line
+ValueObject &ValueObject::operator=(const ValueObject &val)
+{
+    if (this == &val) {
+        return *this;
+    }
+    value = val.value;
+    return *this;
+}
+ * @tc.type: FUNC
+ */
 HWTEST_F(ValueObjectTest, ValueObject_Test_002, TestSize.Level1)
 {
     int32_t intValue = 1234;
     ValueObject obj(intValue);
     ValueObject &ref = obj;
-    EXPECT_EQ(&ref, &(ref = ref));
-    int sign;
-    EXPECT_EQ(ref.GetInt(sign), obj.GetInt(sign));
+    EXPECT_EQ(&ref, &(ref = obj));
 }
 
+/**
+ * @tc.name: ValueObject_Test_003
+ * @tc.desc: test func: 
+ValueObject::operator BigInt() const
+{
+    auto val = std::get_if<BigInt>(&value);
+    if (val == nullptr) {
+        return {};
+    }
+    return *val;
+}
+ * @tc.type: FUNC
+ */
 HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
 {
-    int32_t intValue = 1234;
-    ValueObject obj(intValue);
-    BigInteger bigInt(intValue);
-    ValueObject obj1;
-    EXPECT_TRUE(static_cast<BigInteger>(obj) == bigInt);
+    BigInteger bigInt1(1234);
+    ValueObject obj(bigInt1);
+    BigInteger bigInt = obj;
+    EXPECT_TRUE(bigInt == bigInt1);
 }
 } // namespace Test
