@@ -87,7 +87,7 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_002, TestSize.Level1)
 
 /**
  * @tc.name: ValueObject_Test_003
- * @tc.desc: test func: 
+ * @tc.desc: test func fouth line
 ValueObject::operator BigInt() const
 {
     auto val = std::get_if<BigInt>(&value);
