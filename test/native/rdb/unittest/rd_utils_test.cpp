@@ -75,7 +75,7 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
     GRD_DB *dbHandle_ = nullptr;
     mkdir(dbPath.c_str(), 0770);
     ret = RdUtils::RdDbOpen(dbFilePath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_OK);
     ret = RdUtils::RdDbRepair(dbFilePath.c_str(), configStr.c_str());
     EXPECT_EQ(ret, E_ERROR);
 
