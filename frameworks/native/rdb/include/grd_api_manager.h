@@ -35,7 +35,7 @@ typedef int (*DBSqlBindInt64)(GRD_SqlStmt *stmt, uint32_t idx, int64_t val);
 typedef int (*DBSqlBindDouble)(GRD_SqlStmt *stmt, uint32_t idx, double val);
 typedef int (*DBSqlBindNull)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef int (*DBSqlBindFloatVector)(
-    GRD_SqlStmt *stmt, uint32_t idx, float *val, uint32_t dim, void (*freeFunc)(void *));
+    GRD_SqlStmt *stmt, uint32_t idx, const float *val, uint32_t dim, void (*freeFunc)(void *));
 
 typedef int (*DBSqlStep)(GRD_SqlStmt *stmt);
 typedef uint32_t (*DBSqlColCnt)(GRD_SqlStmt *stmt);
