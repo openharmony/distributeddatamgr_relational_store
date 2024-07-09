@@ -40,14 +40,6 @@ struct JsErrorCode {
 };
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
 
-#define ASSERT(condition, message, retVal)                             \
-    do {                                                               \
-        if (!(condition)) {                                            \
-            LOG_ERROR("test (" #condition ") failed: " message);       \
-            return retVal;                                             \
-        }                                                              \
-    } while (0)
-
 #define RDB_REVT_NOTHING
 #define RDB_DO_NOTHING
 

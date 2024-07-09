@@ -20,8 +20,8 @@
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_js_utils.h"
 #include "napi_rdb_trace.h"
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
 #include "string_ex.h"
@@ -556,6 +556,18 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
 
+napi_value ResultSetProxy::GetSendableRow(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
+
+    RowEntity rowEntity;
+    int errCode = resultSetProxy->GetInstance()->GetRow(rowEntity);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    return JSUtils::Convert2Sendable(env, rowEntity);
+}
+
 napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -604,6 +616,7 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
             DECLARE_NAPI_FUNCTION("getValue", GetValue),
             DECLARE_NAPI_FUNCTION("getRow", GetRow),
+            DECLARE_NAPI_FUNCTION("getSendableRow", GetSendableRow),
 
             DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
             DECLARE_NAPI_GETTER("columnCount", GetColumnCount),
