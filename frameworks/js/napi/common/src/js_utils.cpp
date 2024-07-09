@@ -13,18 +13,22 @@
  * limitations under the License.
  */
 #define LOG_TAG "JSUtils"
+
 #include "js_utils.h"
+
+#include <cstring>
+
 #include "js_native_api_types.h"
 #include "logger.h"
-#include <cstring>
+#include "securec.h"
 using namespace OHOS::Rdb;
 
-#define CHECK_RETURN_RET(assertion, message, revt)                       \
-    do {                                                                 \
-        if (!(assertion)) {                                              \
-            LOG_WARN("assertion (" #assertion ") failed: " message);     \
-            return revt;                                                 \
-        }                                                                \
+#define CHECK_RETURN_RET(assertion, message, revt)                   \
+    do {                                                             \
+        if (!(assertion)) {                                          \
+            LOG_WARN("assertion (" #assertion ") failed: " message); \
+            return revt;                                             \
+        }                                                            \
     } while (0)
 
 namespace OHOS {
@@ -47,15 +51,15 @@ const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const st
         [](const JsFeatureSpace &JsFeatureSpace1, const JsFeatureSpace &JsFeatureSpace2) {
             return strcmp(JsFeatureSpace1.spaceName, JsFeatureSpace2.spaceName) < 0;
         });
-    if (iter < FEATURE_NAME_SPACES + sizeof(FEATURE_NAME_SPACES) / sizeof(FEATURE_NAME_SPACES[0])
-        && strcmp(iter->spaceName, name.data()) == 0) {
+    if (iter < FEATURE_NAME_SPACES + sizeof(FEATURE_NAME_SPACES) / sizeof(FEATURE_NAME_SPACES[0]) &&
+        strcmp(iter->spaceName, name.data()) == 0) {
         return *iter;
     }
     return std::nullopt;
 }
 
 std::pair<napi_status, napi_value> JSUtils::GetInnerValue(
-    napi_env env, napi_value in, const std::string& prop, bool optional)
+    napi_env env, napi_value in, const std::string &prop, bool optional)
 {
     bool hasProp = false;
     napi_status status = napi_has_named_property(env, in, prop.c_str(), &hasProp);
@@ -202,8 +206,9 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<flo
         return napi_invalid_arg;
     }
 
-    output = (tmp != nullptr ? std::vector<float>(static_cast<float*>(tmp),
-        static_cast<float*>(tmp) + length / sizeof(float)) : std::vector<float>());
+    output = (tmp != nullptr
+                  ? std::vector<float>(static_cast<float *>(tmp), static_cast<float *>(tmp) + length / sizeof(float))
+                  : std::vector<float>());
     return status;
 }
 
@@ -257,8 +262,8 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<uin
         return napi_invalid_arg;
     }
 
-    output = (tmp != nullptr ? std::vector<uint8_t>(static_cast<uint8_t*>(tmp),
-        static_cast<uint8_t*>(tmp) + length) : std::vector<uint8_t>());
+    output = (tmp != nullptr ? std::vector<uint8_t>(static_cast<uint8_t *>(tmp), static_cast<uint8_t *>(tmp) + length)
+                             : std::vector<uint8_t>());
     return status;
 }
 
@@ -332,20 +337,6 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         output.insert(std::pair<std::string, bool>(key, val));
     }
     return napi_ok;
-}
-
-napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<std::string> &value)
-{
-    napi_value jsValue = nullptr;
-    napi_status status = napi_create_array_with_length(env, value.size(), &jsValue);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-
-    for (size_t i = 0; i < value.size(); ++i) {
-        napi_set_element(env, jsValue, i, Convert2JSValue(env, value[i]));
-    }
-    return jsValue;
 }
 
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::string &value)
@@ -600,6 +591,113 @@ bool JSUtils::Equal(napi_env env, napi_ref ref, napi_value value)
     bool isEquals = false;
     napi_strict_equals(env, value, callback, &isEquals);
     return isEquals;
+}
+
+napi_value JSUtils::ToJsObject(napi_env env, napi_value sendableValue)
+{
+    LOG_DEBUG("sendableObject -> jsObject");
+    napi_value keys = nullptr;
+    napi_status status = napi_get_all_property_names(env, sendableValue, napi_key_own_only,
+        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
+    ASSERT(status == napi_ok, "napi_get_all_property_names failed", nullptr);
+    uint32_t length = 0;
+    status = napi_get_array_length(env, keys, &length);
+    ASSERT(status == napi_ok, "napi_get_array_length failed", nullptr);
+    std::vector<napi_property_descriptor> descriptors;
+    // keysHold guarantees that the string address is valid before create the sendable object.
+    std::vector<std::string> keysHold(length, "");
+    for (uint32_t i = 0; i < length; ++i) {
+        napi_value key = nullptr;
+        status = napi_get_element(env, keys, i, &key);
+        ASSERT(status == napi_ok, "napi_get_element failed", nullptr);
+        JSUtils::Convert2Value(env, key, keysHold[i]);
+        napi_value value = nullptr;
+        status = napi_get_named_property(env, sendableValue, keysHold[i].c_str(), &value);
+        ASSERT(status == napi_ok, "napi_get_named_property failed", nullptr);
+        descriptors.emplace_back(DECLARE_JS_PROPERTY(env, keysHold[i].c_str(), value));
+    }
+    napi_value jsObject = nullptr;
+    status = napi_create_object_with_properties(env, &jsObject, descriptors.size(), descriptors.data());
+    ASSERT(status == napi_ok, "napi_create_object_with_properties failed", nullptr);
+    return jsObject;
+}
+
+napi_value JSUtils::ToJsArray(napi_env env, napi_value sendableValue)
+{
+    LOG_DEBUG("sendableArray -> jsArray");
+    uint32_t arrLen = 0;
+    napi_status status = napi_get_array_length(env, sendableValue, &arrLen);
+    ASSERT(status == napi_ok, "napi_get_array_length failed", nullptr);
+    napi_value jsArray = nullptr;
+    status = napi_create_array_with_length(env, arrLen, &jsArray);
+    ASSERT(status == napi_ok, "napi_create_array_with_length failed", nullptr);
+    for (size_t i = 0; i < arrLen; ++i) {
+        napi_value element;
+        status = napi_get_element(env, sendableValue, i, &element);
+        ASSERT(status == napi_ok, "napi_get_element failed", nullptr);
+        status = napi_set_element(env, jsArray, i, Convert2JSValue(env, element));
+        ASSERT(status == napi_ok, "napi_set_element failed", nullptr);
+    }
+    return jsArray;
+}
+
+napi_value JSUtils::ToJsTypedArray(napi_env env, napi_value sendableValue)
+{
+    LOG_DEBUG("sendableTypedArray -> jsTypedArray");
+    napi_typedarray_type type;
+    size_t length = 0;
+    void *tmp = nullptr;
+    napi_status status = napi_get_typedarray_info(env, sendableValue, &type, &length, &tmp, nullptr, nullptr);
+    ASSERT(status == napi_ok, "napi_get_typedarray_info failed", nullptr);
+
+    if (type != napi_uint8_array && type != napi_float32_array) {
+        LOG_ERROR("type is invalid %{public}d", type);
+        return nullptr;
+    }
+    napi_value jsTypedArray = nullptr;
+    void *native = nullptr;
+    napi_value buffer = nullptr;
+    status = napi_create_arraybuffer(env, length, (void **)&native, &buffer);
+    ASSERT(status == napi_ok, "napi_create_arraybuffer failed", nullptr);
+    if (length > 0) {
+        errno_t result = memcpy_s(native, length, tmp, length);
+        if (result != EOK) {
+            LOG_ERROR("memcpy_s failed, result is %{public}d", result);
+            return nullptr;
+        }
+    }
+    auto size = (type == napi_uint8_array) ? length : length / sizeof(float);
+    status = napi_create_typedarray(env, type, size, buffer, 0, &jsTypedArray);
+    ASSERT(status == napi_ok, "napi_create_typedarray failed", nullptr);
+    return jsTypedArray;
+}
+
+napi_value JSUtils::Convert2JSValue(napi_env env, napi_value sendableValue)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, sendableValue, &type);
+    ASSERT(status == napi_ok, "napi_typeof failed", nullptr);
+    if (type != napi_object) {
+        return sendableValue;
+    }
+    bool result = false;
+    status = napi_is_sendable(env, sendableValue, &result);
+    ASSERT(status == napi_ok, "napi_is_sendable failed", nullptr);
+    if (!result) {
+        return sendableValue;
+    }
+
+    status = napi_is_array(env, sendableValue, &result);
+    ASSERT(status == napi_ok, "napi_is_array failed", nullptr);
+    if (result) {
+        return ToJsArray(env, sendableValue);
+    }
+    status = napi_is_typedarray(env, sendableValue, &result);
+    ASSERT(status == napi_ok, "napi_is_typedarray failed", nullptr);
+    if (result) {
+        return ToJsTypedArray(env, sendableValue);
+    }
+    return ToJsObject(env, sendableValue);
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

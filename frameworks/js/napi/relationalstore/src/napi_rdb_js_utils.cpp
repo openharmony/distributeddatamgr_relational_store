@@ -22,8 +22,8 @@
 #include "js_native_api_types.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_sql_utils.h"
 #include "rdb_types.h"
 #include "result_set.h"
 
@@ -113,91 +113,104 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value)
 {
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "name", value.name), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "uri", value.uri), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "createTime", value.createTime), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "modifyTime", value.modifyTime), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "size", value.size), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "path", value.path), object);
     auto outputStatus = value.status & ~0xF0000000;
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "status", outputStatus), object);
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "name", value.name),
+        DECLARE_JS_PROPERTY(env, "uri", value.uri),
+        DECLARE_JS_PROPERTY(env, "createTime", value.createTime),
+        DECLARE_JS_PROPERTY(env, "modifyTime", value.modifyTime),
+        DECLARE_JS_PROPERTY(env, "size", value.size),
+        DECLARE_JS_PROPERTY(env, "path", value.path),
+        DECLARE_JS_PROPERTY(env, "status", outputStatus),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 {
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
+    std::vector<napi_property_descriptor> descriptors;
     auto &values = rowEntity.Get();
     for (auto const &[key, value] : values) {
-        NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, key.c_str(), value), object);
+        descriptors.emplace_back(DECLARE_JS_PROPERTY(env, key.c_str(), value));
     }
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const ValueObject &valueObject)
+napi_value Convert2JSValue(napi_env env, const ValueObject &value)
 {
-    return JSUtils::Convert2JSValue(env, valueObject.value);
+    return Convert2JSValue(env, value.value);
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic)
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value)
 {
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "total", value.total),
+        DECLARE_JS_PROPERTY(env, "success", value.success),
+        DECLARE_JS_PROPERTY(env, "successful", value.success),
+        DECLARE_JS_PROPERTY(env, "failed", value.failed),
+        DECLARE_JS_PROPERTY(env, "remained", value.untreated),
+    };
 
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "total", statistic.total), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "success", statistic.success), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "successful", statistic.success), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "failed", statistic.failed), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "remained", statistic.untreated), object);
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail)
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &value)
 {
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "upload", value.upload),
+        DECLARE_JS_PROPERTY(env, "download", value.download),
+    };
+
     napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "upload", tableDetail.upload), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "download", tableDetail.download), object);
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail)
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &value)
 {
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "schedule", value.progress),
+        DECLARE_JS_PROPERTY(env, "code", value.code),
+        DECLARE_JS_PROPERTY(env, "details", value.details),
+    };
 
-    napi_value schedule = Convert2JSValue(env, progressDetail.progress);
-    napi_value code = Convert2JSValue(env, progressDetail.code);
-    napi_value details = Convert2JSValue(env, progressDetail.details);
-    if (details == nullptr) {
-        return nullptr;
-    }
-    napi_set_named_property(env, object, "schedule", schedule);
-    napi_set_named_property(env, object, "code", code);
-    napi_set_named_property(env, object, "details", details);
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::SqlObserver::SqlExecutionInfo &sqlExeInfo)
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::SqlObserver::SqlExecutionInfo &value)
 {
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "sql", value.sql_),
+        DECLARE_JS_PROPERTY(env, "totalTime", value.totalTime_),
+        DECLARE_JS_PROPERTY(env, "waitTime", value.waitTime_),
+        DECLARE_JS_PROPERTY(env, "prepareTime", value.prepareTime_),
+        DECLARE_JS_PROPERTY(env, "executeTime", value.executeTime_),
+    };
 
-    std::vector<std::string> sql(sqlExeInfo.sql_.begin(), sqlExeInfo.sql_.end());
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "sql", sql), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "totalTime", sqlExeInfo.totalTime_), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "waitTime", sqlExeInfo.waitTime_), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "prepareTime", sqlExeInfo.prepareTime_), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "executeTime", sqlExeInfo.executeTime_), object);
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
@@ -210,13 +223,17 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 template<>
 napi_value Convert2JSValue(napi_env env, const JSChangeInfo &value)
 {
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "table", value.table),
+        DECLARE_JS_PROPERTY(env, "type", value.type),
+        DECLARE_JS_PROPERTY(env, "inserted", value.inserted),
+        DECLARE_JS_PROPERTY(env, "updated", value.updated),
+        DECLARE_JS_PROPERTY(env, "deleted", value.deleted),
+    };
+
     napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "table", value.table), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "type", value.type), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "inserted", value.inserted), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "updated", value.updated), object);
-    NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, "deleted", value.deleted), object);
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
@@ -228,7 +245,7 @@ napi_value Convert2JSValue(napi_env env, const Date &date)
     return jsDeta;
 }
 template<>
-napi_value Convert2JSValue(napi_env env, const BigInt& value)
+napi_value Convert2JSValue(napi_env env, const BigInt &value)
 {
     napi_value val = nullptr;
     napi_status status = napi_create_bigint_words(env, value.Sign(), value.Size(), value.TrueForm(), &val);
@@ -239,7 +256,7 @@ napi_value Convert2JSValue(napi_env env, const BigInt& value)
 }
 
 template<>
-int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt& value)
+int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt &value)
 {
     napi_valuetype type = napi_undefined;
     napi_status status = napi_typeof(env, jsValue, &type);
@@ -403,7 +420,8 @@ std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
             std::make_tuple(ERR, std::make_shared<ParamError>("customDir", "a relative directory.")));
         // customDir length is limited to 128 bytes
         CHECK_RETURN_CORE(rdbConfig.customDir.length() <= 128, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<ParamError>("customDir length", "less than or equal to 128 bytes.")));
+            std::make_tuple(ERR, std::make_shared<ParamError>("customDir length", "less than or equal to 128 "
+                                                                                  "bytes.")));
     }
 
     std::string baseDir = param.baseDir;

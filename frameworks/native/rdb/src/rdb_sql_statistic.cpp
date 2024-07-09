@@ -16,12 +16,14 @@
 #define LOG_TAG "RdbSqlStatistic"
 
 #include "rdb_sql_statistic.h"
-#include "task_executor.h"
-#include "rdb_errno.h"
-#include "rdb_platform.h"
-#include "logger.h"
+
 #include <thread>
 
+#include "concurrent_map.h"
+#include "logger.h"
+#include "rdb_errno.h"
+#include "rdb_platform.h"
+#include "task_executor.h"
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;

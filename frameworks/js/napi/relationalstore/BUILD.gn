@@ -61,6 +61,8 @@ if (is_ohos) {
 
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
+      "${relational_store_js_common_path}/src/js_sendable_utils.cpp",
+      "src/napi_rdb_sendable_utils.cpp",
       "src/napi_rdb_store_observer.cpp",
     ]
 

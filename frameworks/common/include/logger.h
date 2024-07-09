@@ -32,6 +32,13 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
     return { LOG_CORE, 0xD001656, "RdbNdk" };
 }
 } // namespace RdbNdk
+
+namespace SendableRdb {
+static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
+{
+    return { LOG_CORE, 0xD001650, "SRdb" };
+}
+} // namespace Rdb
 } // namespace OHOS
 
 #define LOG_DEBUG(fmt, ...)                                                    \
