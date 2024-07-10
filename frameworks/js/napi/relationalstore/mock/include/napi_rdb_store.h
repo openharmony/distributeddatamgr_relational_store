@@ -76,6 +76,7 @@ private:
     static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
 
+    int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
