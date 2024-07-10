@@ -67,7 +67,7 @@ GRD_APIInfo GetApiInfoInstance()
 {
     GRD_APIInfo GRD_TempApiStruct;
 #ifndef _WIN32
-    g_library = dlopen("libgaussdb_rd_vector.z.so", RTLD_LAZY);
+    g_library = dlopen("libarkdata_db_core.z.so", RTLD_LAZY);
     if (g_library != nullptr) {
         GRD_DBApiInitEnhance(GRD_TempApiStruct);
     } else {
