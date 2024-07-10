@@ -550,6 +550,9 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReadFile2Buffer(config.GetPath().c_str());
+        }
         return errCode;
     }
 
