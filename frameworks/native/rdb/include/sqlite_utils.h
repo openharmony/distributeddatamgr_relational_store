@@ -37,6 +37,9 @@ public:
     static constexpr int STATEMENT_ERROR = 11;
     static constexpr int STATEMENT_OTHER = 99;
     static constexpr int CONFLICT_CLAUSE_COUNT = 6;
+    static constexpr int DISABLE_LOAD_EXTENSION = 0;
+    static constexpr int ENABLE_LOAD_EXTENSION = 1;
+    static constexpr int MAX_LOAD_EXTENSION_COUNT = 16;
     static constexpr const char* REP = "#_";
 
     static int GetSqlStatementType(const std::string &sql);

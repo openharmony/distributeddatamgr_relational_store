@@ -295,8 +295,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, uint32_t retry, st
     if (errCode != E_OK) {
         return errCode;
     }
-
-    return E_OK;
+    return LoadExtension(config, dbHandle);
 }
 
 SqliteConnection::~SqliteConnection()
@@ -997,5 +996,43 @@ int32_t SqliteConnection::Restore(const std::string &databasePath, const std::ve
 {
     return E_NOT_SUPPORT;
 };
+
+int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle)
+{
+    if (config.GetPluginLibs().empty() || dbHandle == nullptr) {
+        return E_OK;
+    }
+    if (config.GetPluginLibs().size() > SqliteUtils::MAX_LOAD_EXTENSION_COUNT) {
+        LOG_ERROR("failed, size %{public}zu is too large", config.GetPluginLibs().size());
+        return E_INVALID_ARGS;
+    }
+    int err = sqlite3_db_config(dbHandle, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::ENABLE_LOAD_EXTENSION,
+        nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
+        return SQLiteError::ErrNo(err);
+    }
+    for (auto &path : config.GetPluginLibs()) {
+        if (path.empty()) {
+            continue;
+        }
+        if (access(path.c_str(), F_OK) != 0) {
+            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, path.c_str());
+            return E_INVALID_FILE_PATH;
+        }
+        err = sqlite3_load_extension(dbHandle, path.c_str(), nullptr, nullptr);
+        if (err != SQLITE_OK) {
+            LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s",
+                err, errno, sqlite3_errmsg(dbHandle), path.c_str());
+            break;
+        }
+    }
+    int ret = sqlite3_db_config(dbHandle, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::DISABLE_LOAD_EXTENSION,
+        nullptr);
+    if (ret != SQLITE_OK) {
+        LOG_ERROR("disable failed, err=%{public}d, errno=%{public}d", err, errno);
+    }
+    return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
+}
 } // namespace NativeRdb
 } // namespace OHOS

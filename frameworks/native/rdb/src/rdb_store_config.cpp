@@ -538,4 +538,14 @@ IntegrityCheck RdbStoreConfig::GetIntegrityCheck() const
 {
     return checkType_;
 }
+
+void RdbStoreConfig::SetPluginLibs(const std::vector<std::string> &pluginLibs)
+{
+    pluginLibs_ = pluginLibs;
+}
+
+std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
+{
+    return pluginLibs_;
+}
 } // namespace OHOS::NativeRdb
