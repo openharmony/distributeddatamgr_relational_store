@@ -603,10 +603,12 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
     const char *split = "";
     for (auto &[key, val] : values.values_) {
         sql.append(split);
-        if (val.GetType() != ValueObject::TYPE_ASSETS) {
-            sql.append(key).append("=?"); // columnName
-        } else {
+        if (val.GetType() == ValueObject::TYPE_ASSETS) {
             sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
+        } else if (val.GetType() == ValueObject::TYPE_ASSET) {
+            sql.append(key).append("=merge_asset(").append(key).append(", ?)"); // columnName
+        } else {
+            sql.append(key).append("=?"); // columnName
         }
         tmpBindArgs.push_back(val); // columnValue
         split = ",";
