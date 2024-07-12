@@ -32,8 +32,6 @@ public:
     void SetUp(void) {};
     void TearDown(void) {};
 };
-static constexpr std::string RDB_TEST_PATH = "/data/test/";
-static constexpr std::string DATABASE_NAME = RDB_TEST_PATH + "connection_ut_test.db";
 
 void ConnectionTest::SetUpTestCase(void)
 {
@@ -50,7 +48,7 @@ void ConnectionTest::TearDownTestCase(void)
  */
 HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
 {
-    RdbStoreConfig config(DATABASE_NAME);
+    RdbStoreConfig config("/data/test/connection_ut_test.db");
     config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
     auto [errCode, connection] = Connection::Create(config, true);
     EXPECT_EQ(errCode, E_INVALID_ARGS);
@@ -70,7 +68,7 @@ HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
  */
 HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
 {
-    RdbStoreConfig config(DATABASE_NAME);
+    RdbStoreConfig config("/data/test/connection_ut_test.db");
     config.SetDBType(-1);
     int ret= Connection::Repair(config);
     EXPECT_EQ(ret, E_INVALID_ARGS);
