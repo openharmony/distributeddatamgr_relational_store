@@ -32,10 +32,10 @@ public:
     void SetUp(void) {};
     void TearDown(void) {};
 
-    static const std::string DATABASE_NAME;
+    static constexpr std::string DATABASE_NAME;
 };
-static const std::string RDB_TEST_PATH = "/data/test/";
-const std::string ConnectionTest::DATABASE_NAME = RDB_TEST_PATH + "update_test.db";
+static constexpr std::string RDB_TEST_PATH = "/data/test/";
+constexpr std::string ConnectionTest::DATABASE_NAME = RDB_TEST_PATH + "connection_ut_test.db";
 
 void ConnectionTest::SetUpTestCase(void)
 {
