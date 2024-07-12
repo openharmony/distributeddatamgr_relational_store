@@ -35,7 +35,16 @@
 namespace OHOS {
 namespace AppDataMgrJsKit {
 namespace JSUtils {
+#define DECLARE_JS_PROPERTY(env, key, value) \
+    napi_property_descriptor(DECLARE_NAPI_DEFAULT_PROPERTY((key), Convert2JSValue((env), (value))))
 
+#define ASSERT(condition, message, retVal)                       \
+    do {                                                         \
+        if (!(condition)) {                                      \
+            LOG_ERROR("test (" #condition ") failed: " message); \
+            return retVal;                                       \
+        }                                                        \
+    } while (0)
 static constexpr int OK = 0;
 static constexpr int ERR = -1;
 static constexpr uint32_t ASYNC_RST_SIZE = 2;
@@ -47,10 +56,6 @@ struct JsFeatureSpace {
     const char *nameBase64;
     bool isComponent;
 };
-
-int32_t Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output);
-int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output);
-int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output);
 
 int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
@@ -73,6 +78,10 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, T &output);
 template<typename T>
 int32_t Convert2ValueExt(napi_env env, napi_value jsValue, T &output);
 
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output);
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int32_t &output);
+int32_t Convert2ValueExt(napi_env env, napi_value jsValue, int64_t &output);
+
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
 
@@ -94,7 +103,6 @@ int32_t Convert2JSValue(napi_env env, std::string value, napi_value &output);
 int32_t Convert2JSValue(napi_env env, bool value, napi_value &output);
 int32_t Convert2JSValue(napi_env env, double value, napi_value &output);
 
-napi_value Convert2JSValue(napi_env env, const std::vector<std::string> &value);
 napi_value Convert2JSValue(napi_env env, const std::string &value);
 napi_value Convert2JSValue(napi_env env, const std::vector<uint8_t> &value);
 napi_value Convert2JSValue(napi_env env, const std::vector<float> &value);
@@ -199,6 +207,11 @@ inline int32_t SetNamedProperty(napi_env env, napi_value in, const std::string &
 {
     return napi_set_named_property(env, in, prop.c_str(), Convert2JSValue(env, value));
 };
+
+napi_value ToJsObject(napi_env env, napi_value sendableValue);
+napi_value ToJsArray(napi_env env, napi_value sendableValue);
+napi_value ToJsTypedArray(napi_env env, napi_value sendableValue);
+napi_value Convert2JSValue(napi_env env, napi_value sendableValue);
 } // namespace JSUtils
 
 template<typename T>
