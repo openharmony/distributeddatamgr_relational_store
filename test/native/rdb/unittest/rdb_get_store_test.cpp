@@ -417,3 +417,54 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_010, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 }
+
+/**
+ * @tc.name: RdbStore_GetStore_011
+ * @tc.desc: use libs as relative path to get rdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_011, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
+    std::vector<std::string> paths = { "./" };
+    config.SetPluginLibs(paths);
+    GetOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
+    EXPECT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_GetStore_012
+ * @tc.desc: use libs as empty path to get rdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_012, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
+    std::vector<std::string> paths = { "", "" };
+    config.SetPluginLibs(paths);
+    GetOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_GetStore_013
+ * @tc.desc: use libs as invalid path to get rdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_013, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
+    std::vector<std::string> paths = { "", "/data/errPath/libErr.so" };
+    config.SetPluginLibs(paths);
+    GetOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
+    EXPECT_EQ(store, nullptr);
+}
