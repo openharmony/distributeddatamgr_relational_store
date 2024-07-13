@@ -19,13 +19,11 @@
 #include <chrono>
 #include <memory>
 
+#include "concurrent_map.h"
 #include "rdb_types.h"
 #include "rdb_visibility.h"
 
-namespace OHOS {
-template<typename _Key, typename _Tp>
-class ConcurrentMap;
-namespace DistributedRdb {
+namespace OHOS::DistributedRdb {
 class SqlStatistic  {
 public:
     enum Step : int32_t {
@@ -55,6 +53,5 @@ private:
     std::chrono::steady_clock::time_point time_;
     std::shared_ptr<SqlExecInfo> execInfo_;
 };
-}
 }
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_SQL_STATISTIC_H

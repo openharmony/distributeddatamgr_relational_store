@@ -12,17 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #define LOG_TAG "NapiRdbStore"
 #include "napi_rdb_store.h"
 
 #include <algorithm>
 #include <cinttypes>
-#include <cstdint>
 #include <string>
 #include <vector>
 
-#include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
@@ -63,8 +60,6 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-constexpr int32_t KEY_INDEX = 0;
-constexpr int32_t VALUE_INDEX = 1;
 struct RdbStoreContext : public ContextBase {
     std::string device;
     std::string tableName;
@@ -540,55 +535,14 @@ int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
     return OK;
 }
 
-int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context)
-{
-    uint32_t length = 0;
-    napi_status status = napi_map_get_size(env, map, &length);
-    auto error = std::make_shared<ParamError>("ValuesBucket is invalid.");
-    CHECK_RETURN_SET(status == napi_ok && length > 0, error);
-    napi_value entries = nullptr;
-    status = napi_map_get_entries(env, map, &entries);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_map_get_entries failed."));
-    for (uint32_t i = 0; i < length; ++i) {
-        napi_value iter = nullptr;
-        status = napi_map_iterator_get_next(env, entries, &iter);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_map_iterator_get_next failed."));
-        napi_value values = nullptr;
-        status = napi_get_named_property(env, iter, "value", &values);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_named_property value failed."));
-        napi_value key = nullptr;
-        status = napi_get_element(env, values, KEY_INDEX, &key);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
-        std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value = nullptr;
-        status = napi_get_element(env, values, VALUE_INDEX, &value);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
-        ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (ret == napi_ok) {
-            context->valuesBucket.Put(keyStr, valueObject);
-        } else if (ret != napi_generic_failure) {
-            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
-        }
-    }
-    return OK;
-}
-
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    bool isMap = false;
-    napi_status status = napi_is_map(env, arg, &isMap);
-    CHECK_RETURN_SET(
-        status == napi_ok, std::make_shared<InnerError>("call napi_is_map failed" + std::to_string(status)));
-    if (isMap) {
-        return ParseSendableValuesBucket(env, arg, context);
-    }
     napi_value keys = nullptr;
     napi_get_all_property_names(env, arg, napi_key_own_only,
         static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols),
         napi_key_numbers_to_strings, &keys);
     uint32_t arrLen = 0;
-    status = napi_get_array_length(env, keys, &arrLen);
+    napi_status status = napi_get_array_length(env, keys, &arrLen);
     CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
 
     for (size_t i = 0; i < arrLen; ++i) {
