@@ -17,9 +17,7 @@
 #define RDB_JSKIT_NAPI_RDB_JS_UTILS_H
 
 #include <stdint.h>
-
 #include "asset_value.h"
-#include "js_sendable_utils.h"
 #include "js_utils.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_store_observer.h"
@@ -90,12 +88,11 @@ template<>
 napi_value Convert2JSValue(napi_env env, const ValueObject &value);
 
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value);
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &statistic);
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &value);
-
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &tableDetail);
 template<>
-napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &value);
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &progressDetail);
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details);
 template<>
@@ -109,7 +106,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, BigInt &value);
 template<>
 std::string ToString(const PRIKey &key);
 template<>
-napi_value Convert2JSValue(napi_env env, const SqlExecInfo &value);
+napi_value Convert2JSValue(napi_env env, const SqlExecInfo &sqlExeInfo);
 bool IsNapiString(napi_env env, napi_value value);
 
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(

@@ -150,6 +150,7 @@ int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
         LOG_ERROR("cellUnit is null, col is %{public}d!", col);
         return E_ERROR;
     }
+
     switch (cellUnit->type) {
         case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL:
             break;

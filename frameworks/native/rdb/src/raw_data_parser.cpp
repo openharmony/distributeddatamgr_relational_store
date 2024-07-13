@@ -138,13 +138,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteg
     if (sizeof(BIG_INT) > length - used) {
         return 0;
     }
-    std::vector<uint8_t> copiedData;
-    const uint8_t *alignData = data;
-    if ((reinterpret_cast<uintptr_t>(data) & (sizeof(uintptr_t) - 1)) != 0) {
-        copiedData.assign(data, data + length);
-        alignData = copiedData.data();
-    }
-    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&BIG_INT)>(alignData)));
+    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&BIG_INT)>(data)));
     used += sizeof(BIG_INT);
     if (magic != BIG_INT) {
         return 0;
@@ -153,20 +147,19 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteg
     if (sizeof(uint32_t) > length - used) {
         return 0;
     }
-
-    uint32_t sign = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(alignData + used)));
+    uint32_t sign = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(data + used)));
     used += sizeof(uint32_t);
 
     if (sizeof(uint64_t) > length - used) {
         return 0;
     }
-    uint64_t count = Endian::LeToH(*(reinterpret_cast<const uint64_t *>(alignData + used)));
+    uint64_t count = Endian::LeToH(*(reinterpret_cast<const uint64_t *>(data + used)));
     used += sizeof(uint64_t);
 
     if (sizeof(uint64_t) * count > length - used) {
         return 0;
     }
-    const uint64_t *temp = (reinterpret_cast<const uint64_t *>(alignData + used));
+    const uint64_t *temp = (reinterpret_cast<const uint64_t *>(data + used));
     std::vector<uint64_t> trueFrom(temp, temp + count);
     used += sizeof(uint64_t) * count;
     for (size_t i = 0; i < trueFrom.size(); ++i) {
@@ -182,13 +175,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataP
     if (sizeof(FLOUT32_ARRAY) > length - used) {
         return 0;
     }
-    std::vector<uint8_t> copiedData;
-    const uint8_t *alignData = data;
-    if ((reinterpret_cast<uintptr_t>(data) & (sizeof(uintptr_t) - 1)) != 0) {
-        copiedData.assign(data, data + length);
-        alignData = copiedData.data();
-    }
-    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&FLOUT32_ARRAY)>(alignData)));
+    auto magic = Endian::LeToH(*(reinterpret_cast<decltype(&FLOUT32_ARRAY)>(data)));
     used += sizeof(FLOUT32_ARRAY);
     if (magic != FLOUT32_ARRAY) {
         return 0;
@@ -198,13 +185,13 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataP
         return 0;
     }
 
-    uint32_t count = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(alignData + used)));
+    uint32_t count = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(data + used)));
     used += sizeof(uint32_t);
 
     if (sizeof(float) * count > length - used) {
         return 0;
     }
-    auto values = reinterpret_cast<const float *>(alignData + used);
+    auto values = reinterpret_cast<const float *>(data + used);
     floats.assign(values, values + count);
     used += sizeof(float) * count;
     return used;
