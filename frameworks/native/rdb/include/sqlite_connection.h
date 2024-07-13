@@ -71,6 +71,7 @@ protected:
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
+    static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
     explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
     int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
@@ -88,6 +89,7 @@ private:
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     static void MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv);
+    static void MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value **argv);
     static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets,
         std::map<std::string, ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
