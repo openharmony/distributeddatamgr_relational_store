@@ -69,7 +69,7 @@ HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
 HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
 {
     RdbStoreConfig config("/data/test/connection_ut_test.db");
-    config.SetDBType(-1);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
     int ret= Connection::Repair(config);
     EXPECT_EQ(ret, E_INVALID_ARGS);
 
