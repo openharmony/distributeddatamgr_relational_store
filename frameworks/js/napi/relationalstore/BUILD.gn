@@ -76,6 +76,7 @@ if (is_ohos) {
       "ability_runtime:abilitykit_native",
       "ability_runtime:extensionkit_native",
       "ability_runtime:napi_base_context",
+      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
       "eventhandler:libeventhandler",
@@ -119,6 +120,8 @@ if (is_ohos) {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
+    external_deps = [ "bounds_checking_function:libsec_static" ]
+
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
     relative_install_dir = "module/data"
@@ -151,6 +154,8 @@ if (is_ohos) {
       "//foundation/arkui/napi:ace_napi",
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
+
+    external_deps = [ "bounds_checking_function:libsec_static" ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -190,6 +195,8 @@ if (is_ohos) {
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
     ]
 
+    external_deps = [ "bounds_checking_function:libsec_static" ]
+
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
   }
@@ -224,7 +231,10 @@ if (is_ohos) {
       "//plugins/libs/napi:napi_ios",
     ]
 
-    external_deps = [ "c_utils:utils" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "c_utils:utils",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
