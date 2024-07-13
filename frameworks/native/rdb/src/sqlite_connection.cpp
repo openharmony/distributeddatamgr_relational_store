@@ -537,8 +537,20 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
         return SQLITE_OK;
     }
     // The number of parameters is 2
-    return sqlite3_create_function_v2(dbHandle, MERGE_ASSETS_FUNC, 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
-        &MergeAssets, nullptr, nullptr, nullptr);
+    int errCode = sqlite3_create_function_v2(dbHandle, MERGE_ASSETS_FUNC, 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+        nullptr, &MergeAssets, nullptr, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("register function mergeAssets failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
+        return errCode;
+    }
+    // The number of parameters is 2
+    errCode = sqlite3_create_function_v2(dbHandle, MERGE_ASSET_FUNC, 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
+        &MergeAsset, nullptr, nullptr, nullptr);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("register function mergeAsset failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
+        return errCode;
+    }
+    return SQLITE_OK;
 }
 
 int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
@@ -828,6 +840,35 @@ void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value
     }
     CompAssets(assets, newAssets);
     auto blob = RawDataParser::PackageRawData(assets);
+    sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
+}
+
+void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value **argv)
+{
+    // 2 is the number of parameters
+    if (ctx == nullptr || argc != 2 || argv == nullptr) {
+        LOG_ERROR("Parameter does not meet restrictions.");
+        return;
+    }
+    ValueObject::Asset asset;
+    auto data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[0]));
+    if (data != nullptr) {
+        int len = sqlite3_value_bytes(argv[0]);
+        RawDataParser::ParserRawData(data, len, asset);
+    }
+    ValueObject::Asset newAsset;
+    data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
+    if (data != nullptr) {
+        int len = sqlite3_value_bytes(argv[1]);
+        RawDataParser::ParserRawData(data, len, newAsset);
+    }
+    if (asset.name != newAsset.name) {
+        LOG_ERROR("name change! old:%{public}s, new:%{public}s", SqliteUtils::Anonymous(asset.name).c_str(),
+            SqliteUtils::Anonymous(newAsset.name).c_str());
+        return;
+    }
+    MergeAsset(asset, newAsset);
+    auto blob = RawDataParser::PackageRawData(asset);
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }
 
