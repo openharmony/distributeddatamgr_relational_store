@@ -101,6 +101,7 @@ private:
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     void ReadFile2Buffer(const char* fileName);
+    int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;

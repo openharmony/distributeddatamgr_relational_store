@@ -51,6 +51,7 @@ struct RdbConfig {
     std::string name;
     std::string customDir;
     std::string path;
+    std::vector<std::string> pluginLibs = {};
 };
 
 struct ContextParam {

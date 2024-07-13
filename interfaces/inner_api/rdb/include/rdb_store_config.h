@@ -547,7 +547,7 @@ public:
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize == config.journalSize && this->pageSize == config.pageSize
                && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
-               && this->allowRebuilt_ == config.allowRebuilt_;
+               && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_;
     }
 
     /**
@@ -595,6 +595,10 @@ public:
 
     IntegrityCheck GetIntegrityCheck() const;
 
+    void SetPluginLibs(const std::vector<std::string> &pluginLibs);
+
+    std::vector<std::string> GetPluginLibs() const;
+
 private:
     void ClearEncryptKey();
     void GenerateEncryptedKey() const;
@@ -633,6 +637,7 @@ private:
     mutable std::vector<uint8_t> encryptKey_{};
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    std::vector<std::string> pluginLibs_{};
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
