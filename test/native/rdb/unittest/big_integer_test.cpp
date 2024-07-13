@@ -51,13 +51,8 @@ bool BigInteger::operator==(const BigInteger& other)
  */
 HWTEST_F(BigIntegerTest, Big_Integer_001, TestSize.Level1)
 {
-    int64_t number = 100;
-    BigInteger bigInt1 = BigInteger(number);
-
-    std::vector<uint64_t> intVec;
-    intVec.push_back(number);
-    BigInteger bigInt2 = BigInteger(1, std::move(intVec));
-    bool isEqual = (bigInt1 == bigInt2);
-    EXPECT_FALSE(isEqual);
+    BigInteger bigInt1 = BigInteger(100);
+    BigInteger bigInt2 = BigInteger(-100);
+    EXPECT_FALSE(bigInt1 == bigInt2);
 }
 } // namespace Test
