@@ -22,15 +22,6 @@ ohos_copy("relational_store_declaration") {
 }
 
 ohos_shared_library("clouddata") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   sources = [
     "${cloud_data_napi_path}/src/entry_point.cpp",
     "${cloud_data_napi_path}/src/js_client.cpp",
