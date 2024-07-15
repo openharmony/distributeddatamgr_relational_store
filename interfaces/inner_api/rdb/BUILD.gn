@@ -487,6 +487,7 @@ if (is_ohos && !build_ohos_sdk) {
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
+      "${relational_store_mock_path}/frameworks/native/rdb",
     ]
   }
 
@@ -560,6 +561,7 @@ if (is_ohos && !build_ohos_sdk) {
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
+      "${relational_store_mock_path}/frameworks/native/rdb",
     ]
   }
 

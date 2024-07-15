@@ -78,6 +78,7 @@ private:
 
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
+    int32_t dbType = NativeRdb::DB_SQLITE;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     
     static constexpr int WAIT_TIME_DEFAULT = 2;
