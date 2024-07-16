@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "SqliteConnectionPool"
-#include "sqlite_connection_pool.h"
+#define LOG_TAG "ConnectionPool"
+#include "connection_pool.h"
 
 #include <base_transaction.h>
 
@@ -35,7 +35,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using Conn = Connection;
-using ConnPool = SqliteConnectionPool;
+using ConnPool = ConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
 using SharedConns = std::vector<std::shared_ptr<Connection>>;
 using SqlStatistic = DistributedRdb::SqlStatistic;
@@ -50,33 +50,39 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
         return nullptr;
     }
     std::shared_ptr<Connection> conn;
-    std::tie(errCode, conn) = pool->Init(storeConfig);
+    for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
+        std::tie(errCode, conn) = pool->Init(storeConfig);
+        if (errCode == E_OK) {
+            break;
+        }
+        storeConfig.SetIter(ITER_V1);
+    }
     return errCode == E_OK ? pool : nullptr;
 }
 
-std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> ConnPool::HandleDataCorruption
+std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorruption
     (const RdbStoreConfig &storeConfig, int &errCode)
 {
-    std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> result;
-    auto &[rebuiltTpye, pool] = result;
+    std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> result;
+    auto &[rebuiltType, pool] = result;
 
     errCode = Connection::Repair(storeConfig);
     if (errCode == E_OK) {
-        rebuiltTpye = RebuiltType::REPAIRED;
+        rebuiltType = RebuiltType::REPAIRED;
     } else {
         Connection::DeleteDbFile(storeConfig);
-        rebuiltTpye = RebuiltType::REBUILT;
+        rebuiltType = RebuiltType::REBUILT;
     }
     pool = Create(storeConfig, errCode);
     if (errCode != E_OK) {
         LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
-            rebuiltTpye, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
+            rebuiltType, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
     }
 
     return result;
 }
 
-ConnPool::SqliteConnectionPool(const RdbStoreConfig &storeConfig)
+ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
     : config_(storeConfig), writers_(), readers_(), transactionStack_(), transactionUsed_(false)
 {
 }
@@ -118,7 +124,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
     return result;
 }
 
-ConnPool::~SqliteConnectionPool()
+ConnPool::~ConnectionPool()
 {
     CloseAllConnections();
 }
@@ -577,7 +583,7 @@ int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
     return E_OK;
 }
 
-int32_t SqliteConnectionPool::Container::RelDetails(std::shared_ptr<ConnNode> node)
+int32_t ConnectionPool::Container::RelDetails(std::shared_ptr<ConnNode> node)
 {
     for (auto it = details_.begin(); it != details_.end();) {
         auto detailNode = it->lock();

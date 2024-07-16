@@ -406,13 +406,13 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
 }
 
 /* *
- * @tc.name: Rdb_SqlitConnectionPoolTest_001
+ * @tc.name: Rdb_ConnectionPoolTest_001
  * @tc.desc: Abnormal testCase for ConfigLocale
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_001, TestSize.Level2)
 {
-    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionOpenTest.db";
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "ConnectionOpenTest.db";
     int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
@@ -422,7 +422,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(E_OK, errCode);
 
-    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = ConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -437,18 +437,18 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_001, TestSize.Level2)
 }
 
 /* *
- * @tc.name: Rdb_SqlitConnectionPoolTest_002
+ * @tc.name: Rdb_ConnectionPoolTest_002
  * @tc.desc: Abnormal testCase for AcquireConnection/AcquireTransaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_002, TestSize.Level2)
 {
-    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionTest.db";
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "ConnectionTest.db";
     int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = ConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -478,18 +478,18 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_002, TestSize.Level2)
 
 
 /* *
- * @tc.name: Rdb_SqlitConnectionPoolTest_003
+ * @tc.name: Rdb_ConnectionPoolTest_003
  * @tc.desc: Abnormal testCase for ChangeDbFileForRestore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionPoolTest_0023, TestSize.Level2)
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
 {
-    const std::string DATABASE_NAME = RDB_TEST_PATH + "SqlitConnectionTest.db";
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "ConnectionTest.db";
     int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    auto connectionPool = SqliteConnectionPool::Create(config, errCode);
+    auto connectionPool = ConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 

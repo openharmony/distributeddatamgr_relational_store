@@ -34,15 +34,15 @@
 #include "rd_statement.h"
 namespace OHOS {
 namespace NativeRdb {
-class SqliteConnectionPool : public std::enable_shared_from_this<SqliteConnectionPool> {
+class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
-    static std::shared_ptr<SqliteConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
-    ~SqliteConnectionPool();
-    static std::pair<RebuiltType, std::shared_ptr<SqliteConnectionPool>> HandleDataCorruption
+    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
+    static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
+    ~ConnectionPool();
     std::pair<int32_t, std::shared_ptr<Connection>> CreateConnection(bool isReadOnly);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
@@ -111,16 +111,17 @@ private:
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
 
-    explicit SqliteConnectionPool(const RdbStoreConfig &storeConfig);
+    explicit ConnectionPool(const RdbStoreConfig &storeConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> Init(const RdbStoreConfig &config, bool needWriter = false);
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
-
     void RemoveDBFile();
     void RemoveDBFile(const std::string &path);
 
     static constexpr int LIMITATION = 1024;
+    static constexpr uint32_t ITER_V1 = 5000;
+    static constexpr uint32_t ITERS_COUNT = 2;
     const RdbStoreConfig &config_;
     Container writers_;
     Container readers_;

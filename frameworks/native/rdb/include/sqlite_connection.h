@@ -66,18 +66,18 @@ protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteEncryptSql(const RdbStoreConfig &config, uint32_t iter);
+    int ExecuteEncryptSql(const RdbStoreConfig &config);
     void SetInTransaction(bool transaction);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
     explicit SqliteConnection(bool isWriteConnection);
-    int InnerOpen(const RdbStoreConfig &config, uint32_t retry);
-    int Configure(const RdbStoreConfig &config, uint32_t retry, std::string &dbPath);
+    int InnerOpen(const RdbStoreConfig &config);
+    int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    int SetEncryptKey(const RdbStoreConfig &config, uint32_t iter);
+    int SetEncryptKey(const RdbStoreConfig &config);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
@@ -106,15 +106,12 @@ private:
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr uint32_t NO_ITER = 0;
-    static constexpr uint32_t ITER_V1 = 5000;
-    static constexpr uint32_t ITERS[] = { NO_ITER, ITER_V1 };
-    static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
-    static const int32_t regCreater_;
-    static const int32_t regFileDeleter_;
+    static const int32_t regCreator_;
+    static const int32_t regDeleter_;
 
-    sqlite3 *dbHandle;
+    sqlite3 *dbHandle_;
     bool isWriter_;
-    bool isReadOnly;
+    bool isReadOnly_;
     bool isConfigured_ = false;
     bool hasClientObserver_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
