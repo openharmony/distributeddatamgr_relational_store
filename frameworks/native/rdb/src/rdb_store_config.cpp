@@ -29,8 +29,8 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
     : readOnly(isReadOnly),
       isCreateNecessary_(isCreateNecessary),
       autoCheck_(autoCheck),
-      journalSize(journalSize),
-      pageSize(pageSize),
+      journalSize_(journalSize),
+      pageSize_(pageSize),
       securityLevel(securityLevel),
       storageMode(storageMode),
       name(name),
@@ -153,19 +153,19 @@ void RdbStoreConfig::SetAutoCheck(bool autoCheck)
 }
 int RdbStoreConfig::GetJournalSize() const
 {
-    return journalSize;
+    return journalSize_;
 }
 void RdbStoreConfig::SetJournalSize(int journalSize)
 {
-    this->journalSize = journalSize;
+    this->journalSize_ = journalSize;
 }
 int RdbStoreConfig::GetPageSize() const
 {
-    return pageSize;
+    return pageSize_;
 }
 void RdbStoreConfig::SetPageSize(int pageSize)
 {
-    this->pageSize = pageSize;
+    this->pageSize_ = pageSize;
 }
 const std::string RdbStoreConfig::GetEncryptAlgo() const
 {
@@ -547,5 +547,15 @@ void RdbStoreConfig::SetPluginLibs(const std::vector<std::string> &pluginLibs)
 std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
 {
     return pluginLibs_;
+}
+
+int32_t RdbStoreConfig::GetIter() const
+{
+    return iter_;
+}
+
+void RdbStoreConfig::SetIter(int32_t iter) const
+{
+    iter_ = iter;
 }
 } // namespace OHOS::NativeRdb

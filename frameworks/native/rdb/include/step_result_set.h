@@ -23,14 +23,14 @@
 
 #include "abs_result_set.h"
 #include "connection.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "statement.h"
 
 namespace OHOS {
 namespace NativeRdb {
 class StepResultSet : public AbsResultSet {
 public:
-    StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
+    StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::string &sql,
         const std::vector<ValueObject> &selectionArgs);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;

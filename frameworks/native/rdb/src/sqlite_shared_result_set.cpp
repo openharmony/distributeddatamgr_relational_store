@@ -38,7 +38,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
-SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
+SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<ConnectionPool> pool, std::string path,
     std::string sql, const std::vector<ValueObject>& bindArgs)
     : AbsSharedResultSet(path), isOnlyFillBlock_(false), blockCapacity_(0), qrySql_(std::move(sql)),
       bindArgs_(std::move(bindArgs))
@@ -166,8 +166,8 @@ std::pair<int, std::vector<std::string>> SqliteSharedResultSet::GetColumnNames()
 int SqliteSharedResultSet::Close()
 {
     AbsSharedResultSet::Close();
-    conn_ = nullptr;
     statement_ = nullptr;
+    conn_ = nullptr;
     rowCount_ = NO_COUNT;
     auto qrySql = std::move(qrySql_);
     auto bindArgs = std::move(bindArgs_);
