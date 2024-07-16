@@ -116,6 +116,7 @@ ohos_unittest("NativeRdbTest") {
   sources += [
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../frameworks/native/rdb/src/connection.cpp",
+    "../../../frameworks/native/rdb/src/connection_pool.cpp",
     "../../../frameworks/native/rdb/src/grd_api_manager.cpp",
     "../../../frameworks/native/rdb/src/raw_data_parser.cpp",
     "../../../frameworks/native/rdb/src/rd_connection.cpp",
@@ -128,7 +129,6 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/share_block.cpp",
     "../../../frameworks/native/rdb/src/shared_block_serializer_info.cpp",
     "../../../frameworks/native/rdb/src/sqlite_connection.cpp",
-    "../../../frameworks/native/rdb/src/sqlite_connection_pool.cpp",
     "../../../frameworks/native/rdb/src/sqlite_global_config.cpp",
     "../../../frameworks/native/rdb/src/sqlite_shared_result_set.cpp",
     "../../../frameworks/native/rdb/src/sqlite_sql_builder.cpp",

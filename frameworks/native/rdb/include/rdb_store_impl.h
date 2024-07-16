@@ -32,7 +32,7 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "refbase.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
 #include "rd_statement.h"
@@ -264,7 +264,7 @@ private:
     static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
-    std::shared_ptr<SqliteConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     DistributedRdb::RdbSyncerParam syncerParam_;
 
     std::shared_ptr<ExecutorPool> pool_;

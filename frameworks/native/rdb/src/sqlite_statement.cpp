@@ -32,7 +32,7 @@
 #include "sqlite3.h"
 #include "sqlite3ext.h"
 #include "sqlite_connection.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
 

@@ -177,6 +177,8 @@ public:
     IntegrityCheck GetIntegrityCheck() const;
     void SetPluginLibs(const std::vector<std::string> &pluginLibs);
     std::vector<std::string> GetPluginLibs() const;
+    void SetIter(int32_t iter) const;
+    int32_t GetIter() const;
 
     bool operator==(const RdbStoreConfig &config) const
     {
@@ -206,7 +208,7 @@ public:
                && this->storageMode == config.storageMode && this->journalMode == config.journalMode
                && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
-               && this->journalSize == config.journalSize && this->pageSize == config.pageSize
+               && this->journalSize_ == config.journalSize_ && this->pageSize_ == config.pageSize_
                && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
                && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_;
     }
@@ -221,8 +223,9 @@ private:
     bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
-    int32_t journalSize;
-    int32_t pageSize;
+    mutable int32_t iter_ = 0;
+    int32_t journalSize_;
+    int32_t pageSize_;
     int32_t readConSize_ = 4;
     int32_t area_ = 0;
     int32_t writeTimeout_ = 2; // seconds

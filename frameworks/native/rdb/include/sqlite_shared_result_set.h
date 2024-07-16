@@ -26,7 +26,7 @@
 #include "abs_shared_result_set.h"
 #include "connection.h"
 #include "shared_block.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "statement.h"
 #include "value_object.h"
 
@@ -34,7 +34,7 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<SqliteConnectionPool> pool, std::string path,
+    SqliteSharedResultSet(std::shared_ptr<ConnectionPool> pool, std::string path,
         std::string sql, const std::vector<ValueObject> &bindArgs);
     ~SqliteSharedResultSet() override;
     int Close() override;

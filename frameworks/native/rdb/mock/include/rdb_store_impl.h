@@ -27,7 +27,7 @@
 #include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "sqlite_statement.h"
 #include "rd_statement.h"
 
@@ -157,7 +157,7 @@ private:
     static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 
-    std::shared_ptr<SqliteConnectionPool> connectionPool_;
+    std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
 };
