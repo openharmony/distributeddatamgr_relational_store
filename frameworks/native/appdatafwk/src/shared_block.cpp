@@ -84,7 +84,7 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outS
 
     sptr<Ashmem> ashmem = Ashmem::CreateAshmem(ashmemName.c_str(), size);
     if (ashmem == nullptr) {
-        LOG_ERROR("SharedBlock: CreateAshmem function error.");
+        LOG_ERROR("failed to create ashmem errno %{public}d", errno);
         return SHARED_BLOCK_ASHMEM_ERROR;
     }
 
