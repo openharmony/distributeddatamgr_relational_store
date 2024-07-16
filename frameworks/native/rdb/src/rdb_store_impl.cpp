@@ -319,10 +319,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
       rebuild_(RebuiltType::NONE)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
-    connectionPool_ = SqliteConnectionPool::Create(config_, errCode);
+    connectionPool_ = ConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
         LOG_ERROR("database corrupt, rebuild database %{public}s", name_.c_str());
-        std::tie(rebuild_, connectionPool_) = SqliteConnectionPool::HandleDataCorruption(config_, errCode);
+        std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
@@ -1062,6 +1062,7 @@ int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<Valu
  */
 int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
+    LOG_INFO("Backup db: %{public}s.", config_.GetName().c_str());
     if ((config_.GetRoleType() == VISITOR)) {
         return E_NOT_SUPPORT;
     }
@@ -1667,6 +1668,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
+    LOG_INFO("Restore db: %{public}s.", config_.GetName().c_str());
     if (config_.IsReadOnly()) {
         return E_NOT_SUPPORT;
     }

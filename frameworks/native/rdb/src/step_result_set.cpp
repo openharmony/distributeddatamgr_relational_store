@@ -20,7 +20,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
-#include "sqlite_connection_pool.h"
+#include "connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_statement.h"
 #include "sqlite_utils.h"
@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-StepResultSet::StepResultSet(std::shared_ptr<SqliteConnectionPool> pool, const std::string &sql,
+StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::string &sql,
     const std::vector<ValueObject> &args)
     : AbsResultSet(), sql_(sql), args_(std::move(args))
 {
