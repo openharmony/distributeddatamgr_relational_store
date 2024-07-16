@@ -428,7 +428,7 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config)
         std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
         if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
             LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", config.GetIter(), errCode,
-            config.GetName().c_str());
+                config.GetName().c_str());
             return errCode;
         }
     }
