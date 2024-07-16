@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
+#include "napi_rdb_sendable_utils.h"
 #include "napi_rdb_trace.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
