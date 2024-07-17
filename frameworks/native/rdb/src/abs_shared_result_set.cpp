@@ -32,8 +32,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using Block = AppDataFwk::SharedBlock;
-
+using SharedBlock = AppDataFwk::SharedBlock;
 AbsSharedResultSet::AbsSharedResultSet(std::string name) : sharedBlock_(nullptr), sharedBlockName_(std::move(name))
 {
 }
@@ -60,15 +59,18 @@ int32_t AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)
 /**
  * Get current shared block
  */
-std::shared_ptr<AppDataFwk::SharedBlock> AbsSharedResultSet::GetBlock()
+std::shared_ptr<SharedBlock> AbsSharedResultSet::GetBlock()
 {
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     if (sharedBlock_ != nullptr || isClosed_) {
         return sharedBlock_;
     }
-    AppDataFwk::SharedBlock *block = nullptr;
-    AppDataFwk::SharedBlock::Create(sharedBlockName_, DEFAULT_BLOCK_SIZE, block);
-    sharedBlock_ = std::shared_ptr<AppDataFwk::SharedBlock>(block);
+    SharedBlock *block = nullptr;
+    auto errcode = SharedBlock::Create(sharedBlockName_, DEFAULT_BLOCK_SIZE, block);
+    if (errcode != SharedBlock::SHARED_BLOCK_OK) {
+        return nullptr;
+    }
+    sharedBlock_ = std::shared_ptr<SharedBlock>(block);
     return sharedBlock_;
 }
 
@@ -79,7 +81,7 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    Block::CellUnit* cellUnit = block->GetCellUnit(block->GetBlockPos(), (uint32_t)columnIndex);
+    SharedBlock::CellUnit* cellUnit = block->GetCellUnit(block->GetBlockPos(), (uint32_t)columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetColumnType cellUnit is null!");
         return E_ERROR;
@@ -151,18 +153,18 @@ int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
         return E_ERROR;
     }
     switch (cellUnit->type) {
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL:
+        case SharedBlock::CELL_UNIT_TYPE_NULL:
             break;
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_INTEGER:
+        case SharedBlock::CELL_UNIT_TYPE_INTEGER:
             value = cellUnit->cell.longValue;
             break;
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOAT:
+        case SharedBlock::CELL_UNIT_TYPE_FLOAT:
             value = cellUnit->cell.doubleValue;
             break;
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING:
+        case SharedBlock::CELL_UNIT_TYPE_STRING:
             value = cellUnit->GetString(block.get());
             break;
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB:
+        case SharedBlock::CELL_UNIT_TYPE_BLOB:
             value = cellUnit->GetBlob(block.get());
             break;
         default:
@@ -187,9 +189,9 @@ int AbsSharedResultSet::GetSize(int columnIndex, size_t &size)
     }
 
     int type = cellUnit->type;
-    if (type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_STRING
-        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BLOB
-        || type == AppDataFwk::SharedBlock::CELL_UNIT_TYPE_NULL) {
+    if (type == SharedBlock::CELL_UNIT_TYPE_STRING
+        || type == SharedBlock::CELL_UNIT_TYPE_BLOB
+        || type == SharedBlock::CELL_UNIT_TYPE_NULL) {
         size = cellUnit->cell.stringOrBlobValue.size;
         return E_OK;
     }
@@ -210,11 +212,11 @@ int AbsSharedResultSet::Close()
 /**
  * Allocates a new shared block to an {@link AbsSharedResultSet}
  */
-void AbsSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)
+void AbsSharedResultSet::SetBlock(SharedBlock *block)
 {
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     if (sharedBlock_.get() != block) {
-        sharedBlock_ = std::shared_ptr<AppDataFwk::SharedBlock>(block);
+        sharedBlock_ = std::shared_ptr<SharedBlock>(block);
     }
 }
 
@@ -248,7 +250,7 @@ void AbsSharedResultSet::Finalize()
     Close();
 }
 
-int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataFwk::SharedBlock *block)
+int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, SharedBlock *block)
 {
     auto *cellUnit = block->GetCellUnit(block->GetBlockPos(), index);
     if (cellUnit == nullptr) {
@@ -259,25 +261,25 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, AppDataF
     size_t size = cellUnit->cell.stringOrBlobValue.size;
     auto data = cellUnit->GetRawData(block);
     switch (cellUnit->type) {
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSET: {
+        case SharedBlock::CELL_UNIT_TYPE_ASSET: {
             ValueObject::Asset asset;
             RawDataParser::ParserRawData(data, size, asset);
             value = std::move(asset);
             break;
         }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_ASSETS: {
+        case SharedBlock::CELL_UNIT_TYPE_ASSETS: {
             ValueObject::Assets assets;
             RawDataParser::ParserRawData(data, size, assets);
             value = std::move(assets);
             break;
         }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_FLOATS: {
+        case SharedBlock::CELL_UNIT_TYPE_FLOATS: {
             ValueObject::FloatVector floats;
             RawDataParser::ParserRawData(data, size, floats);
             value = std::move(floats);
             break;
         }
-        case AppDataFwk::SharedBlock::CELL_UNIT_TYPE_BIGINT: {
+        case SharedBlock::CELL_UNIT_TYPE_BIGINT: {
             ValueObject::BigInt bigInt;
             RawDataParser::ParserRawData(data, size, bigInt);
             value = std::move(bigInt);
