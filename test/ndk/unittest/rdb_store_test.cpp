@@ -416,7 +416,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_005, TestSize.Level1)
 
     // Continuous restore
     errCode = OH_Rdb_Restore(storeTestRdbStore_, backupPath3.c_str());
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_FILE_PATH);
+    EXPECT_EQ(errCode, 0);
     cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 4);

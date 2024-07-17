@@ -341,11 +341,9 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             RemoveDBFile(newPath);
         }
 
-        auto retVal = SqliteUtils::RenameFile(backupPath, newPath);
-        if (retVal != E_OK) {
-            LOG_ERROR("RenameFile filed error:%{public}d, errno:%{public}d, path:%{public}s",
-                retVal, errno, newPath.c_str());
-            return retVal;
+        if (!SqliteUtils::CopyFile(backupPath, newPath)) {
+            auto [errCode, node] = Init(config_);
+            return E_ERROR;
         }
     }
     auto [errCode, node] = Init(config_);

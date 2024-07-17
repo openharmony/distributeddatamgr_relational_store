@@ -497,6 +497,7 @@ int RdbStoreImpl::InsertWithConflictResolutionEntry(int64_t &outRowId, const std
         if (val.GetType() == ValueObject::TYPE_ASSET || val.GetType() == ValueObject::TYPE_ASSETS) {
             SetAssetStatus(val, AssetValue::STATUS_INSERT);
         }
+
         bindArgs.push_back(val);  // columnValue
         split = ",";
     }
@@ -1068,21 +1069,34 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     if (ret != E_OK) {
         return ret;
     }
-    std::string tempPath = backupFilePath + "temp";
-    while (access(tempPath.c_str(), F_OK) == E_OK) {
-        tempPath += "temp";
-    }
-    if (access(backupFilePath.c_str(), F_OK) == E_OK) {
-        SqliteUtils::RenameFile(backupFilePath, tempPath);
-        ret = InnerBackup(backupFilePath, destEncryptKey);
-        if (ret == E_OK) {
-            SqliteUtils::DeleteFile(tempPath);
-        } else {
-            SqliteUtils::RenameFile(tempPath, backupFilePath);
+
+    auto deleteDirtyFiles = [&backupFilePath] {
+        auto res = SqliteUtils::DeleteFile(backupFilePath);
+        res = SqliteUtils::DeleteFile(backupFilePath + "-shm") && res;
+        res = SqliteUtils::DeleteFile(backupFilePath + "-wal") && res;
+        return res;
+    };
+
+    auto walFile = backupFilePath + "-wal";
+    if (access(walFile.c_str(), F_OK) == E_OK) {
+        if (!deleteDirtyFiles()) {
+            return E_ERROR;
         }
-        return ret;
+    }
+    std::string tempPath = backupFilePath + ".tmp";
+    if (access(tempPath.c_str(), F_OK) == E_OK) {
+        SqliteUtils::DeleteFile(backupFilePath);
+    } else {
+        SqliteUtils::RenameFile(backupFilePath, tempPath);
     }
     ret = InnerBackup(backupFilePath, destEncryptKey);
+    if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
+        if (deleteDirtyFiles()) {
+            SqliteUtils::RenameFile(tempPath, backupFilePath);
+        }
+    } else {
+        SqliteUtils::DeleteFile(tempPath);
+    }
     return ret;
 }
 
@@ -1682,6 +1696,16 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     int ret = GetDataBasePath(backupPath, backupFilePath);
     if (ret != E_OK) {
         return ret;
+    }
+
+    std::string tempPath = backupFilePath + ".tmp";
+    if (access(tempPath.c_str(), F_OK) == E_OK) {
+        backupFilePath = tempPath;
+    } else {
+        auto walFile = backupFilePath + "-wal";
+        if (access(walFile.c_str(), F_OK) == E_OK) {
+            return E_ERROR;
+        }
     }
 
     if (access(backupFilePath.c_str(), F_OK) != E_OK) {
