@@ -42,7 +42,7 @@ using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
-    bool isAutoClean = false;
+    bool isAutoClean = true;
     bool vector = false;
     bool allowRebuild = false;
     bool isReadOnly = false;
