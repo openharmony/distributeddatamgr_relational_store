@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "RdbPassword"
+#define LOG_TAG "RdbSecurityManager"
 #include "rdb_security_manager.h"
 
 #include <securec.h>
@@ -510,7 +510,7 @@ RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, RdbSec
 {
     if (!IsKeyFileExists(dbPath, keyFileType)) {
         if (!SaveSecretKeyToFile(dbPath, keyFileType)) {
-            LOG_ERROR("Failed to save key.");
+            LOG_ERROR("Failed to save key type:%{public}d err:%{public}d.", keyFileType, errno);
             return {};
         }
     }
@@ -591,7 +591,7 @@ void RdbSecurityManager::UpdateKeyFile(const std::string &dbPath)
 {
     auto keyPaths = ConcatenateKeyPath(dbPath);
     if (SqliteUtils::RenameFile(keyPaths.second, keyPaths.first) != E_OK) {
-        LOG_ERROR("Rename key file failed.");
+        LOG_ERROR("failed, errno=%{public}d path=%{public}s.", errno, keyPaths.first.c_str());
         return;
     }
 }

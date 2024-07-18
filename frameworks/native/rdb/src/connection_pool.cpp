@@ -89,12 +89,13 @@ ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreConfig &config, bool needWriter)
 {
-    if (config_.IsEncrypt()) {
-        config_.Initialize();
-    }
-
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
+    errCode = config_.Initialize();
+    if (errCode != E_OK) {
+        return result;
+    }
+
     if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;

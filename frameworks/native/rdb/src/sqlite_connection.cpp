@@ -64,7 +64,7 @@ const int32_t SqliteConnection::regDeleter_ =
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
-    std::pair<int32_t, std::shared_ptr<Connection>> result;
+    std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
     std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
     if (connection == nullptr) {
@@ -265,7 +265,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return errCode;
     }
 
-    errCode = SetEncryptKey(config);
+    errCode = SetEncrypt(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -304,8 +304,8 @@ SqliteConnection::~SqliteConnection()
 
         int errCode = sqlite3_close_v2(dbHandle_);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database "
-                "err = %{public}d, errno = %{public}d", errCode, errno);
+            LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d, errno = "
+                      "%{public}d", errCode, errno);
         }
     }
 }
@@ -380,7 +380,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     int targetValue = config.GetPageSize();
     auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetPageSize fail to get page size : %{public}d", errCode);
+        LOG_ERROR("SetPageSize fail to get page size : %{public}d", errCode);
         return errCode;
     }
 
@@ -390,21 +390,21 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 
     errCode = ExecuteSql("PRAGMA page_size=" + std::to_string(targetValue));
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetPageSize fail to set page size : %{public}d", errCode);
+        LOG_ERROR("SetPageSize fail to set page size : %{public}d", errCode);
     }
     return errCode;
 }
 
-int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config)
+int SqliteConnection::SetEncryptAgo(int32_t iter)
 {
     int errCode = E_ERROR;
-    if (config.GetIter() != NO_ITER) {
+    if (iter != NO_ITER) {
         errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
-        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(config.GetIter()));
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
@@ -422,23 +422,14 @@ int SqliteConnection::ExecuteEncryptSql(const RdbStoreConfig &config)
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
-
-    if (IsWriter()) {
-        ValueObject version;
-        std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-        if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
-            LOG_ERROR("test failed, iter = %{public}d, err = %{public}d, name = %{public}s", config.GetIter(), errCode,
-                config.GetName().c_str());
-            return errCode;
-        }
-    }
-
-    return errCode;
+    return E_OK;
 }
 
 int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    if (!IsWriter()) {
+        return E_OK;
+    }
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
     newKey.assign(newKey.size(), 0);
@@ -449,7 +440,6 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     }
 
     RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
-#endif
     return E_OK;
 }
 
@@ -463,46 +453,57 @@ std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
     return name;
 }
 
-int SqliteConnection::SetEncryptKey(const RdbStoreConfig &config)
+int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     std::vector<uint8_t> key = config.GetEncryptKey();
-    if (key.size() == 0) {
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    if (key.empty() && newKey.empty()) {
         return E_OK;
     }
 
-    auto errCode = sqlite3_key(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
-    key.assign(key.size(), 0);
-    if (errCode != SQLITE_OK) {
-        if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
-            std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-            errCode = sqlite3_key(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
-            newKey.assign(newKey.size(), 0);
-            if (errCode != SQLITE_OK) {
-                LOG_ERROR("SqliteConnection SetEncryptKey fail with new key, err = %{public}d errno = %{public}d",
-                    errCode, errno);
-                return SQLiteError::ErrNo(errCode);
-            }
-            RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
-        }
-        if (errCode != SQLITE_OK) {
-            LOG_ERROR("SqliteConnection SetEncryptKey fail, err = %{public}d, errno = %{public}d", errCode, errno);
-            return SQLiteError::ErrNo(errCode);
-        }
-    }
-
-    errCode = ExecuteEncryptSql(config);
+    auto errCode = SetEncryptAgo(config.GetIter());
     if (errCode != E_OK) {
-        LOG_ERROR("execute encrypt sql failed, err = %{public}d", errCode);
         return errCode;
     }
 
-    if (RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY)) {
-        ReSetKey(config);
+    errCode = SetEncryptKey(key);
+    key.assign(key.size(), 0);
+    if (errCode != E_OK) {
+        if (!newKey.empty()) {
+            errCode = SetEncryptKey(newKey);
+        }
+        newKey.assign(newKey.size(), 0);
+        if (errCode != E_OK) {
+            LOG_ERROR("fail, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
+                errCode, errno, config.GetName().c_str());
+            return errCode;
+        }
+        RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
+        newKey = {};
     }
 
-#endif
+    if (!newKey.empty()) {
+        ReSetKey(config);
+    }
+    newKey.assign(newKey.size(), 0);
     return E_OK;
+}
+
+int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key)
+{
+    auto errCode = sqlite3_key(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    if (errCode != SQLITE_OK) {
+        return SQLiteError::ErrNo(errCode);
+    }
+
+    if (IsWriter()) {
+        ValueObject version;
+        std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
+        if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
+            return errCode;
+        }
+    }
+    return errCode;
 }
 
 int SqliteConnection::SetPersistWal()
@@ -945,8 +946,8 @@ int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_
         return E_OK;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    rdbStoreLocalDbObservers_.try_emplace(event);
-    auto &list = rdbStoreLocalDbObservers_.find(event)->second;
+    observers_.try_emplace(event);
+    auto &list = observers_.find(event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->GetObserver() == observer) {
             LOG_ERROR("duplicate subscribe");
@@ -959,7 +960,7 @@ int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_
         LOG_ERROR("subscribe failed.");
         return errCode;
     }
-    rdbStoreLocalDbObservers_[event].push_back(std::move(localStoreObserver));
+    observers_[event].push_back(std::move(localStoreObserver));
     return E_OK;
 }
 
@@ -978,8 +979,8 @@ int32_t SqliteConnection::UnsubscribeLocalDetail(const std::string &event,
     const std::shared_ptr<RdbStoreObserver> &observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto observers = rdbStoreLocalDbObservers_.find(event);
-    if (observers == rdbStoreLocalDbObservers_.end()) {
+    auto observers = observers_.find(event);
+    if (observers == observers_.end()) {
         return E_OK;
     }
 
@@ -996,7 +997,7 @@ int32_t SqliteConnection::UnsubscribeLocalDetail(const std::string &event,
         }
     }
     if (list.empty()) {
-        rdbStoreLocalDbObservers_.erase(event);
+        observers_.erase(event);
     }
     return E_OK;
 }
@@ -1004,8 +1005,8 @@ int32_t SqliteConnection::UnsubscribeLocalDetail(const std::string &event,
 int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto observers = rdbStoreLocalDbObservers_.find(event);
-    if (observers == rdbStoreLocalDbObservers_.end()) {
+    auto observers = observers_.find(event);
+    if (observers == observers_.end()) {
         return E_OK;
     }
 
@@ -1020,7 +1021,7 @@ int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
         it = list.erase(it);
     }
 
-    rdbStoreLocalDbObservers_.erase(event);
+    observers_.erase(event);
     return E_OK;
 }
 

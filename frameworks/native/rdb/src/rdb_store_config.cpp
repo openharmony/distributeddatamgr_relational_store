@@ -362,44 +362,45 @@ std::vector<uint8_t> RdbStoreConfig::GetNewEncryptKey() const
     return newEncryptKey_;
 }
 
-void RdbStoreConfig::Initialize() const
+int32_t RdbStoreConfig::Initialize() const
 {
-    GenerateEncryptedKey();
+    return GenerateEncryptedKey();
 }
 
-void RdbStoreConfig::GenerateEncryptedKey() const
+int32_t RdbStoreConfig::GenerateEncryptedKey() const
 {
     if (!isEncrypt_) {
-        return;
+        return E_OK;
     }
 
     auto name = bundleName_;
     if (name.empty()) {
         name = std::string(path).substr(0, path.rfind("/") + 1);
     }
+    using KeyFileType = RdbSecurityManager::KeyFileType;
     auto errCode = RdbSecurityManager::GetInstance().Init(name);
     if (errCode != E_OK) {
         LOG_ERROR("generate root encrypt key failed, bundleName_:%{public}s", bundleName_.c_str());
-        return;
+        return errCode;
     }
-    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-    if (!rdbPwd.IsValid()) {
-        LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
-        return;
+    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE);
+    if (rdbPwd.IsValid()) {
+        encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
-    encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     rdbPwd.Clear();
-
-    if (rdbPwd.isKeyExpired) {
-        auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path,
-            RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
-        if (!rdbNewPwd.IsValid()) {
-            LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
-            return;
+    if (rdbPwd.isKeyExpired ||
+        RdbSecurityManager::GetInstance().IsKeyFileExists(path, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
+        auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE_NEW_KEY);
+        if (rdbNewPwd.IsValid()) {
+            newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
         }
-        newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
         rdbPwd.Clear();
     }
+    if (encryptKey_.empty() && newEncryptKey_.empty()) {
+        LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
+        return E_ERROR;
+    }
+    return E_OK;
 }
 
 void RdbStoreConfig::ClearEncryptKey()

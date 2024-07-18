@@ -452,7 +452,7 @@ public:
     /**
      * @brief Obtains the encrypted key in this {@code StoreConfig} object.
      */
-    void Initialize() const;
+    int32_t Initialize() const;
 
     /**
      * @brief Sets the scalar function for the object.
@@ -605,7 +605,7 @@ public:
 
 private:
     void ClearEncryptKey();
-    void GenerateEncryptedKey() const;
+    int32_t GenerateEncryptedKey() const;
 
     bool readOnly = false;
     bool isEncrypt_ = false;
