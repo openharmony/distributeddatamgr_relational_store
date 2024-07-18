@@ -66,8 +66,6 @@ protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteEncryptSql(const RdbStoreConfig &config);
-    void SetInTransaction(bool transaction);
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
@@ -77,7 +75,9 @@ private:
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    int SetEncryptKey(const RdbStoreConfig &config);
+    int SetEncrypt(const RdbStoreConfig &config);
+    int SetEncryptKey(const std::vector<uint8_t> &key);
+    int SetEncryptAgo(int32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
@@ -120,7 +120,7 @@ private:
     std::mutex mutex_;
     std::string filePath;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> rdbStoreLocalDbObservers_;
+    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
