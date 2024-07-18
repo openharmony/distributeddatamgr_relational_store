@@ -331,6 +331,7 @@ protected:
 
     virtual std::pair<int, std::vector<std::string>> GetColumnNames();
     std::pair<int, bool> IsEnded();
+
     // The default position of the result set
     static const int INIT_POS = -1;
     static constexpr int NO_COUNT = -1;

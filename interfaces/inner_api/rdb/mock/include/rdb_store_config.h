@@ -102,10 +102,6 @@ public:
     StorageMode GetStorageMode() const;
     std::string GetJournalMode() const;
     std::string GetSyncMode() const;
-    std::vector<uint8_t> GetEncryptKey() const;
-    std::vector<uint8_t> GetNewEncryptKey() const;
-    void Initialize() const;
-    void ChangeEncryptKey() const;
 
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
@@ -122,10 +118,8 @@ public:
     void SetReadOnly(bool readOnly);
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
-    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void SetSecurityLevel(SecurityLevel secLevel);
-    void ClearEncryptKey();
-
+    void SetCreateNecessary(bool isCreateNecessary);
     // distributed rdb
     int SetBundleName(const std::string &bundleName);
     std::string GetBundleName() const;
@@ -134,12 +128,6 @@ public:
     void SetServiceName(const std::string& serviceName);
     void SetArea(int32_t area);
     int32_t GetArea() const;
-    void SetCreateNecessary(bool isCreateNecessary);
-    void SetAutoClean(bool isAutoClean);
-    bool GetAutoClean() const;
-    void SetIsVector(bool isVector);
-    bool IsVector() const;
-
     static std::string GetJournalModeValue(JournalMode journalMode);
     static std::string GetSyncModeValue(SyncMode syncMode);
     static std::string GetDatabaseFileTypeValue(DatabaseFileType databaseFileType);
@@ -153,33 +141,25 @@ public:
     void SetEncryptAlgo(const std::string &encryptAlgo);
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
+    void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
+    std::vector<uint8_t> GetEncryptKey() const;
+    void ChangeEncryptKey() const;
+    std::vector<uint8_t> GetNewEncryptKey() const;
+    int32_t Initialize() const;
     void SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function);
+
+    std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
     void SetDataGroupId(const std::string &dataGroupId);
     std::string GetDataGroupId() const;
+    void SetAutoClean(bool isAutoClean);
+    bool GetAutoClean() const;
+    void SetIsVector(bool isVector);
+    bool IsVector() const;
+
     void SetCustomDir(const std::string &customDir);
     std::string GetCustomDir() const;
-    std::map<std::string, ScalarFunctionInfo> GetScalarFunctions() const;
-    bool IsSearchable() const;
-    void SetSearchable(bool searchable);
-    int GetWriteTime() const;
-    void SetWriteTime(int timeout);
-    int GetReadTime() const;
-    void SetReadTime(int timeout);
     void SetVisitorDir(const std::string &visitorDir);
     std::string GetVisitorDir() const;
-    void SetRoleType(RoleType role);
-    uint32_t GetRoleType() const;
-    void SetAllowRebuild(bool allowRebuild);
-    bool GetAllowRebuild() const;
-    void SetDBType(int32_t dbType);
-    int32_t GetDBType() const;
-    void SetIntegrityCheck(IntegrityCheck checkType);
-    IntegrityCheck GetIntegrityCheck() const;
-    void SetPluginLibs(const std::vector<std::string> &pluginLibs);
-    std::vector<std::string> GetPluginLibs() const;
-    void SetIter(int32_t iter) const;
-    int32_t GetIter() const;
-
     bool operator==(const RdbStoreConfig &config) const
     {
         if (this->customScalarFunctions.size() != config.customScalarFunctions.size()) {
@@ -213,8 +193,28 @@ public:
                && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_;
     }
 
+    bool IsSearchable() const;
+    void SetSearchable(bool searchable);
+    int GetWriteTime() const;
+    void SetWriteTime(int timeout);
+    int GetReadTime() const;
+    void SetReadTime(int timeout);
+    void SetRoleType(RoleType role);
+    uint32_t GetRoleType() const;
+    void SetAllowRebuild(bool allowRebuild);
+    bool GetAllowRebuild() const;
+    void SetDBType(int32_t dbType);
+    int32_t GetDBType() const;
+    void SetIntegrityCheck(IntegrityCheck checkType);
+    IntegrityCheck GetIntegrityCheck() const;
+    void SetPluginLibs(const std::vector<std::string> &pluginLibs);
+    std::vector<std::string> GetPluginLibs() const;
+    void SetIter(int32_t iter) const;
+    int32_t GetIter() const;
+
 private:
-    void GenerateEncryptedKey() const;
+    void ClearEncryptKey();
+    int32_t GenerateEncryptedKey() const;
 
     bool readOnly = false;
     bool isEncrypt_ = false;

@@ -110,7 +110,6 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         }
     }
 
-    config_.ChangeEncryptKey();
     maxReader_ = GetMaxReaders(config);
     // max read connect count is 64
     if (maxReader_ > 64) {

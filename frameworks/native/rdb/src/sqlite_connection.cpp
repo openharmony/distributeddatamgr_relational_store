@@ -438,7 +438,7 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
         RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
         return E_OK;
     }
-
+    config.ChangeEncryptKey();
     RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
     return E_OK;
 }
@@ -463,6 +463,8 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 
     auto errCode = SetEncryptAgo(config.GetIter());
     if (errCode != E_OK) {
+        key.assign(key.size(), 0);
+        newKey.assign(newKey.size(), 0);
         return errCode;
     }
 
@@ -479,6 +481,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
             return errCode;
         }
         RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
+        config.ChangeEncryptKey();
         newKey = {};
     }
 
