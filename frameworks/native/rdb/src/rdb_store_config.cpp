@@ -349,12 +349,13 @@ std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 
 void RdbStoreConfig::ChangeEncryptKey() const
 {
-    if (encryptKey_.size() == newEncryptKey_.size()) {
-        encryptKey_.assign(encryptKey_.size(), 0);
-        encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
-        newEncryptKey_.assign(newEncryptKey_.size(), 0);
-        newEncryptKey_.resize(0);
+    if (newEncryptKey_.empty()) {
+        return;
     }
+    encryptKey_.assign(encryptKey_.size(), 0);
+    encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
+    newEncryptKey_.resize(0);
 }
 
 std::vector<uint8_t> RdbStoreConfig::GetNewEncryptKey() const

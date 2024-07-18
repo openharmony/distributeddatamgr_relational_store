@@ -51,7 +51,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     }
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
-        std::tie(errCode, conn) = pool->Init(storeConfig);
+        std::tie(errCode, conn) = pool->Init();
         if (errCode == E_OK) {
             break;
         }
@@ -83,15 +83,18 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
 }
 
 ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
-    : config_(storeConfig), writers_(), readers_(), transactionStack_(), transactionUsed_(false)
+    : config_(storeConfig), attachConfig_(storeConfig), writers_(), readers_(), transactionStack_(),
+      transactionUsed_(false)
 {
+    attachConfig_.SetJournalMode(JournalMode::MODE_TRUNCATE);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreConfig &config, bool needWriter)
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bool needWriter)
 {
+    const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
-    errCode = config_.Initialize();
+    errCode = config.Initialize();
     if (errCode != E_OK) {
         return result;
     }
@@ -100,8 +103,9 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;
         std::tie(errCode, node) = writers_.Initialize(
-            [this]() {
-                return Connection::Create(config_, true);
+            [this, isAttach]() {
+                const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
+                return Connection::Create(config, true);
             },
             1, config.GetWriteTime(), true, needWriter);
         conn = Convert2AutoConn(node);
@@ -116,8 +120,9 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         return { E_ARGS_READ_CON_OVERLOAD, nullptr };
     }
     auto [ret, node] = readers_.Initialize(
-        [this]() {
-            return Connection::Create(config_, false);
+        [this, isAttach]() {
+            const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
+            return Connection::Create(config, false);
         },
         maxReader_, config.GetReadTime(), maxReader_ == 0);
     errCode = ret;
@@ -354,7 +359,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             return retVal;
         }
     }
-    auto [errCode, node] = Init(config_);
+    auto [errCode, node] = Init();
     return errCode;
 }
 
@@ -370,14 +375,12 @@ std::mutex &ConnPool::GetTransactionStackMutex()
 
 std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
 {
-    RdbStoreConfig config = config_;
-    config.SetJournalMode(JournalMode::MODE_TRUNCATE);
-    return Init(config, true);
+    return Init(true, true);
 }
 
 int ConnPool::EnableWal()
 {
-    auto [errCode, node] = Init(config_);
+    auto [errCode, node] = Init();
     return errCode;
 }
 
