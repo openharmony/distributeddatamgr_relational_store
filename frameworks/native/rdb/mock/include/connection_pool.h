@@ -40,9 +40,9 @@ public:
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
     static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
+    ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
-    ~ConnectionPool();
     std::pair<int32_t, std::shared_ptr<Connection>> CreateConnection(bool isReadOnly);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
