@@ -590,7 +590,7 @@ void RdbSecurityManager::DelRdbSecretDataFile(const std::string &dbPath, RdbSecu
 void RdbSecurityManager::UpdateKeyFile(const std::string &dbPath)
 {
     auto keyPaths = ConcatenateKeyPath(dbPath);
-    if (SqliteUtils::RenameFile(keyPaths.second, keyPaths.first) != E_OK) {
+    if (!SqliteUtils::RenameFile(keyPaths.second, keyPaths.first)) {
         LOG_ERROR("Rename key file failed.");
         return;
     }
