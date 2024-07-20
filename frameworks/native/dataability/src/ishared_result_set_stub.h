@@ -37,28 +37,10 @@ protected:
     int HandleGetColumnNamesRequest(MessageParcel &data, MessageParcel &reply);
     int HandleOnGoRequest(MessageParcel &data, MessageParcel &reply);
     int HandleCloseRequest(MessageParcel &data, MessageParcel &reply);
-    template<typename F, typename... Args>
-    auto Submit(F&& func, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
-    {
-        auto exec = std::bind(std::forward<F>(func), std::forward<Args>(args)...);
-        auto task = std::make_shared<std::packaged_task<typename std::result_of<F(Args...)>::type()>>(std::move(exec));
-        auto future = task->get_future();
-        runnables_.Push([task, this] {
-            bool isRunning = isRunning_;
-            (*task)();
-            return isRunning;
-        });
-        return future;
-    }
 
 private:
-    void Run();
     using Handler = int(ISharedResultSetStub::*)(MessageParcel &request, MessageParcel &reply);
-    static constexpr int MAX_RUNNABLE = 1024;
     std::shared_ptr<AbsSharedResultSet> resultSet_;
-    SafeBlockQueue<std::function<bool()>> runnables_;
-    bool isRunning_ = true;
-    std::thread thread_;
     static constexpr Handler handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)] {
         &ISharedResultSetStub::HandleGetRowCountRequest,
         &ISharedResultSetStub::HandleGetColumnNamesRequest,

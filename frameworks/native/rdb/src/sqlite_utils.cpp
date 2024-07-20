@@ -26,7 +26,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-
+#include <fstream>
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
 #endif
@@ -110,12 +110,41 @@ const char *SqliteUtils::GetConflictClause(int conflictResolution)
 
 bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
-    return remove(filePath.c_str()) == 0;
+    auto ret = remove(filePath.c_str());
+    if (ret != 0) {
+        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, filePath.c_str());
+        return false;
+    }
+    return true;
 }
 
-int SqliteUtils::RenameFile(const std::string &srcFile, const std::string &destFile)
+bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &destFile)
 {
-    return rename(srcFile.c_str(), destFile.c_str());
+    auto ret = rename(srcFile.c_str(), destFile.c_str());
+    if (ret != 0) {
+        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
+            destFile.c_str(), srcFile.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFile)
+{
+    std::ifstream src(srcFile.c_str(), std::ios::binary);
+    if (!src.is_open()) {
+        LOG_WARN("open srcFile failed errno %{public}d %{public}s", errno, srcFile.c_str());
+        return false;
+    }
+    std::ofstream dst(destFile.c_str(), std::ios::binary);
+    if (!src.is_open()) {
+        LOG_WARN("open destFile failed errno %{public}d %{public}s", errno, destFile.c_str());
+        return false;
+    }
+    dst << src.rdbuf();
+    src.close();
+    dst.close();
+    return true;
 }
 
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
