@@ -95,9 +95,11 @@ ContextBase::~ContextBase()
     }
     if (work_ != nullptr) {
         napi_delete_async_work(env_, work_);
+        work_ = nullptr;
     }
     if (callback_ != nullptr) {
         napi_delete_reference(env_, callback_);
+        callback_ = nullptr;
     }
     napi_delete_reference(env_, self_);
     env_ = nullptr;
