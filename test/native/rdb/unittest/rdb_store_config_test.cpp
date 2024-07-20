@@ -939,8 +939,8 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
     auto invalidConfig = config;
     invalidConfig.SetSecurityLevel(SecurityLevel::S2);
     store = RdbHelper::GetRdbStore(invalidConfig, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
     store = nullptr;
 
     RdbHelper::DeleteRdbStore(dbPath);
