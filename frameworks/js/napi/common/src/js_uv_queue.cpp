@@ -210,11 +210,6 @@ void UvQueue::DoUvPromise(uv_work_t *work, int status)
     });
 
     Scope scope(entry->env_);
-    napi_value method = entry->GetCallback();
-    if (method == nullptr) {
-        LOG_ERROR("the callback is invalid, maybe is cleared!");
-        return;
-    }
     napi_value argv[ARG_BUTT] = { nullptr };
     auto argc = entry->GetArgv(argv, ARG_BUTT);
     if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
