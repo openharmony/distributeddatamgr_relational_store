@@ -40,7 +40,7 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
-    static void DeleteDbFile(const RdbStoreConfig &config);
+    static int32_t Delete(const RdbStoreConfig &config);
     ~SqliteConnection();
     int32_t OnInitialize() override;
     int TryCheckPoint() override;
@@ -76,7 +76,7 @@ private:
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncrypt(const RdbStoreConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &key);
+    int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
     int SetEncryptAgo(int32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
@@ -115,7 +115,6 @@ private:
     bool isConfigured_ = false;
     bool hasClientObserver_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
-    int openFlags;
     int maxVariableNumber_;
     std::mutex mutex_;
     std::string filePath;

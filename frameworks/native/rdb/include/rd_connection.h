@@ -33,7 +33,7 @@ class RdConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     static int32_t Repair(const RdbStoreConfig& config);
-    static void DeleteDbFile(const RdbStoreConfig& config);
+    static int32_t Delete(const RdbStoreConfig& config);
     explicit RdConnection(bool isWriteConnection);
     ~RdConnection();
     int32_t OnInitialize() override;
@@ -67,7 +67,7 @@ private:
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
-    static const int32_t regFileDeleter_;
+    static const int32_t regDeleter_;
 
     int InnerOpen(const RdbStoreConfig &config);
     bool isWriter_ = false;

@@ -32,6 +32,7 @@
 
 #include <unistd.h>
 
+#include "file_ex.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_store_config.h"
@@ -55,8 +56,8 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 constexpr const char *INTEGRITIES[] = {nullptr, "PRAGMA quick_check", "PRAGMA integrity_check"};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
-const int32_t SqliteConnection::regDeleter_ =
-    Connection::RegisterFileDeleter(DB_SQLITE, SqliteConnection::DeleteDbFile);
+__attribute__((used))
+const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
@@ -74,8 +75,18 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     return result;
 }
 
+int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
+{
+    auto path = config.GetPath();
+    SqliteUtils::DeleteFile(path);
+    SqliteUtils::DeleteFile(path + "-shm");
+    SqliteUtils::DeleteFile(path + "-wal");
+    SqliteUtils::DeleteFile(path + "-journal");
+    return E_OK;
+}
+
 SqliteConnection::SqliteConnection(bool isWriteConnection)
-    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), openFlags(0), maxVariableNumber_(0),
+    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
       filePath("")
 {
 }
@@ -128,8 +139,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     filePath = dbPath;
-    openFlags = openFileFlags;
-
     return E_OK;
 }
 
@@ -455,18 +464,11 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
         return E_OK;
     }
 
-    auto errCode = SetEncryptAgo(config.GetIter());
-    if (errCode != E_OK) {
-        key.assign(key.size(), 0);
-        newKey.assign(newKey.size(), 0);
-        return errCode;
-    }
-
-    errCode = SetEncryptKey(key);
+    auto errCode = SetEncryptKey(key, config.GetIter());
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
         if (!newKey.empty()) {
-            errCode = SetEncryptKey(newKey);
+            errCode = SetEncryptKey(newKey, config.GetIter());
         }
         newKey.assign(newKey.size(), 0);
         if (errCode != E_OK) {
@@ -486,11 +488,20 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     return E_OK;
 }
 
-int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key)
+int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter)
 {
+    if (key.empty()) {
+        return E_INVALID_ARGS;
+    }
+
     auto errCode = sqlite3_key(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     if (errCode != SQLITE_OK) {
         return SQLiteError::ErrNo(errCode);
+    }
+
+    errCode = SetEncryptAgo(iter);
+    if (errCode != E_OK) {
+        return errCode;
     }
 
     if (IsWriter()) {
@@ -926,15 +937,6 @@ void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Ass
         default:
             return;
     }
-}
-
-void SqliteConnection::DeleteDbFile(const RdbStoreConfig &config)
-{
-    auto path = config.GetPath();
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
 }
 
 int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
