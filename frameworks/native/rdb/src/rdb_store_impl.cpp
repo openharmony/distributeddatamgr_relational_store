@@ -1265,7 +1265,8 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     }
 #endif
     err = AttachInner(attachName, dbPath, key, waitTime);
-    if (err == SQLITE_ERROR) {
+    key.assign(key.size(), 0);
+    if (err == E_SQLITE_ERROR) {
         // only when attachName is already in use, SQLITE-ERROR will be reported here.
         return { E_ATTACHED_DATABASE_EXIST, 0 };
     } else if (err != E_OK) {

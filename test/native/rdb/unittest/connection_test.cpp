@@ -75,6 +75,6 @@ HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
 
     config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     ret = Connection::Repair(config);
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
 }
 } // namespace Test

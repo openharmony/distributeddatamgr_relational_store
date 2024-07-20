@@ -44,10 +44,8 @@ public:
     static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
     static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
     static constexpr char JOURNAL_MODE_WAL[] = "WAL";
-    static constexpr char JOURNAL_MODE_DELETE[] = "DELETE";
     static constexpr char DEFAULE_SYNC_MODE[] = "FULL";
     static constexpr char MEMORY_DB_PATH[] = ":memory:";
-    static constexpr char ENCRYPT_ALGO[] = "sha256";
     static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
     static constexpr char CODEC_REKEY_HMAC_ALGO[] = "PRAGMA codec_rekey_hmac_algo=sha256";
     static constexpr char CIPHER_DEFAULT_ALGO[] = "PRAGMA codec_cipher='aes-256-gcm'";
@@ -61,7 +59,6 @@ public:
     ~SqliteGlobalConfig();
     static void InitSqliteGlobalConfig();
     static void Log(const void *data, int err, const char *msg);
-    static int GetReadConnectionCount();
     static std::string GetMemoryDbPath();
     static int GetPageSize();
     static std::string GetSyncMode();

@@ -51,7 +51,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     }
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
-        std::tie(errCode, conn) = pool->Init(storeConfig);
+        std::tie(errCode, conn) = pool->Init();
         if (errCode == E_OK) {
             break;
         }
@@ -70,37 +70,42 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     if (errCode == E_OK) {
         rebuiltType = RebuiltType::REPAIRED;
     } else {
-        Connection::DeleteDbFile(storeConfig);
+        Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
     }
     pool = Create(storeConfig, errCode);
     if (errCode != E_OK) {
         LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
-            rebuiltType, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
+            static_cast<uint32_t>(rebuiltType), storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
     }
 
     return result;
 }
 
 ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
-    : config_(storeConfig), writers_(), readers_(), transactionStack_(), transactionUsed_(false)
+    : config_(storeConfig), attachConfig_(storeConfig), writers_(), readers_(), transactionStack_(),
+      transactionUsed_(false)
 {
+    attachConfig_.SetJournalMode(JournalMode::MODE_TRUNCATE);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreConfig &config, bool needWriter)
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bool needWriter)
 {
-    if (config_.IsEncrypt()) {
-        config_.Initialize();
-    }
-
+    const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
+    errCode = config.Initialize();
+    if (errCode != E_OK) {
+        return result;
+    }
+
     if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         // write connect count is 1
         std::shared_ptr<ConnPool::ConnNode> node;
         std::tie(errCode, node) = writers_.Initialize(
-            [this]() {
-                return Connection::Create(config_, true);
+            [this, isAttach]() {
+                const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
+                return Connection::Create(config, true);
             },
             1, config.GetWriteTime(), true, needWriter);
         conn = Convert2AutoConn(node);
@@ -109,15 +114,15 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(const RdbStoreCon
         }
     }
 
-    config_.ChangeEncryptKey();
     maxReader_ = GetMaxReaders(config);
     // max read connect count is 64
     if (maxReader_ > 64) {
         return { E_ARGS_READ_CON_OVERLOAD, nullptr };
     }
     auto [ret, node] = readers_.Initialize(
-        [this]() {
-            return Connection::Create(config_, false);
+        [this, isAttach]() {
+            const RdbStoreConfig &config = isAttach ? attachConfig_ : config_;
+            return Connection::Create(config, false);
         },
         maxReader_, config.GetReadTime(), maxReader_ == 0);
     errCode = ret;
@@ -341,18 +346,20 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
     } else {
         CloseAllConnections();
-        RemoveDBFile();
+        Connection::Delete(config_);
 
         if (config_.GetPath() != newPath) {
-            RemoveDBFile(newPath);
+            RdbStoreConfig config(newPath);
+            config.SetPath(newPath);
+            Connection::Delete(config);
         }
 
         if (!SqliteUtils::CopyFile(backupPath, newPath)) {
-            auto [errCode, node] = Init(config_);
+            auto [errCode, node] = Init();
             return E_ERROR;
         }
     }
-    auto [errCode, node] = Init(config_);
+    auto [errCode, node] = Init();
     return errCode;
 }
 
@@ -368,14 +375,12 @@ std::mutex &ConnPool::GetTransactionStackMutex()
 
 std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
 {
-    RdbStoreConfig config = config_;
-    config.SetJournalMode(JournalMode::MODE_TRUNCATE);
-    return Init(config, true);
+    return Init(true, true);
 }
 
 int ConnPool::EnableWal()
 {
-    auto [errCode, node] = Init(config_);
+    auto [errCode, node] = Init();
     return errCode;
 }
 
@@ -655,19 +660,5 @@ int32_t ConnPool::Container::Dump(const char *header)
     LOG_WARN("%{public}s: %{public}s", header, info.c_str());
     return 0;
 }
-
-void ConnPool::RemoveDBFile()
-{
-    RemoveDBFile(config_.GetPath());
-}
-
-void ConnPool::RemoveDBFile(const std::string &path)
-{
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
-}
-
 } // namespace NativeRdb
 } // namespace OHOS
