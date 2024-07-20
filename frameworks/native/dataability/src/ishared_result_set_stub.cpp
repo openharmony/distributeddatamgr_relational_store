@@ -48,20 +48,11 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
 }
 
 ISharedResultSetStub::ISharedResultSetStub(std::shared_ptr<AbsSharedResultSet> resultSet)
-    : resultSet_(std::move(resultSet)),
-      runnables_(MAX_RUNNABLE),
-      thread_(&ISharedResultSetStub::Run, this)
+    : resultSet_(std::move(resultSet))
 {
-    thread_.detach();
-    LOG_ERROR("ISharedResultSetStub start thread(%{public}" PRIx64 ")", uint64_t(thread_.native_handle()));
 }
 ISharedResultSetStub::~ISharedResultSetStub()
 {
-    auto handle = thread_.native_handle();
-    isRunning_ = false;
-    // do not delete this code, this code is waiting the thread exit.
-    isRunning_ = Submit([this]() -> bool { return isRunning_;}).get();
-    LOG_ERROR("~ISharedResultSetStub thread(%{public}" PRIx64 ")", uint64_t(handle));
 }
 
 int ISharedResultSetStub::OnRemoteRequest(uint32_t code, OHOS::MessageParcel &data,
@@ -81,11 +72,7 @@ int ISharedResultSetStub::OnRemoteRequest(uint32_t code, OHOS::MessageParcel &da
         LOG_ERROR("OnRemoteRequest method code(%{public}d) is not support", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-
-    auto future = Submit([this, &data, &reply, handler]() -> int {
-        return (this->*handler)(data, reply);
-    });
-    return future.get();
+    return (this->*handler)(data, reply);
 }
 
 int ISharedResultSetStub::HandleGetRowCountRequest(MessageParcel &data, MessageParcel &reply)
@@ -127,25 +114,6 @@ int ISharedResultSetStub::HandleCloseRequest(MessageParcel &data, MessageParcel 
     reply.WriteInt32(errCode);
     LOG_DEBUG("HandleCloseRequest call %{public}d", errCode);
     return NO_ERROR;
-}
-
-void ISharedResultSetStub::Run()
-{
-#if defined(MAC_PLATFORM)
-    pthread_setname_np("RDB_DataAbility");
-#else
-    pthread_setname_np(pthread_self(), "RDB_DataAbility");
-#endif
-    auto handle = thread_.native_handle();
-    bool isRunning = true;
-    while (isRunning) {
-        auto runnable = runnables_.Pop();
-        if (runnable == nullptr) {
-            continue;
-        }
-        isRunning = runnable();
-    }
-    LOG_ERROR("ISharedResultSetStub thread(%{public}" PRIx64 ") is exited", uint64_t(handle));
 }
 
 std::pair<int, std::vector<std::string>> ISharedResultSetStub::GetColumnNames()
