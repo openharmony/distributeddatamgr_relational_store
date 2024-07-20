@@ -299,8 +299,7 @@ SqliteConnection::~SqliteConnection()
 
         int errCode = sqlite3_close_v2(dbHandle_);
         if (errCode != SQLITE_OK) {
-            LOG_ERROR("SqliteConnection ~SqliteConnection: could not close database err = %{public}d, errno = "
-                      "%{public}d", errCode, errno);
+            LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }
     }
 }
