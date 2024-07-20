@@ -13,9 +13,10 @@
 * limitations under the License.
 */
 
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <string>
-#include <sys/types.h>
 
 #include "common.h"
 #include "file_ex.h"
@@ -37,6 +38,7 @@ public:
     static std::string RemoveSuffix(const std::string &name);
     static std::chrono::system_clock::time_point GetKeyFileDate(const std::string &dbName);
     static bool ChangeKeyFileDate(const std::string &dbName, int rep);
+    static bool SaveNewKey(const std::string &dbName);
     static RdbStoreConfig GetRdbConfig(const std::string &name);
     static void InsertData(std::shared_ptr<RdbStore> &store);
     static void CheckQueryData(std::shared_ptr<RdbStore> &store);
@@ -47,6 +49,7 @@ public:
     static const std::string encryptedDatabaseMockName;
     static const std::string encryptedDatabaseMockPath;
     static constexpr int HOURS_EXPIRED = (24 * 365) + 1;
+    static constexpr int HOURS_LONG_LONG_AGO = 30 * (24 * 365);
     static constexpr int HOURS_NOT_EXPIRED = (24 * 30);
 };
 
@@ -86,6 +89,8 @@ void RdbRekeyTest::TearDownTestCase() {}
 
 void RdbRekeyTest::SetUp()
 {
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(RdbRekeyTest::encryptedDatabasePath);
     RdbStoreConfig config = GetRdbConfig(encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode;
@@ -153,6 +158,24 @@ bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 
     auto saved = OHOS::SaveBufferToFile(keyPath, content);
     return saved;
+}
+
+bool RdbRekeyTest::SaveNewKey(const string &dbName)
+{
+    std::string name = RemoveSuffix(dbName);
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
+    auto newKeyPath = RDB_TEST_PATH + "key/" + name + ".pub_key.new";
+    if (!OHOS::FileExists(keyPath)) {
+        return false;
+    }
+    std::vector<char> content;
+    auto loaded = OHOS::LoadBufferFromFile(keyPath, content);
+    if (!loaded) {
+        return false;
+    }
+    OHOS::SaveBufferToFile(newKeyPath, content);
+    content[content.size() - 1] = 'E';
+    return OHOS::SaveBufferToFile(keyPath, content);
 }
 
 RdbStoreConfig RdbRekeyTest::GetRdbConfig(const std::string &name)
@@ -223,9 +246,10 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 
     RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
-    int errCode;
+    int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
 
     isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -256,9 +280,10 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 
     RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
-    int errCode;
+    int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
 
@@ -282,10 +307,11 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
     ASSERT_FALSE(isFileExists);
 
     RekeyTestOpenCallback helper;
-    int errCode;
+    int errCode = E_OK;
     RdbStoreConfig config = GetRdbConfig(encryptedDatabasePath);
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_EQ(store, nullptr);
+    ASSERT_NE(errCode, E_OK);
 }
 
 /**
@@ -323,5 +349,41 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
     keyFileDate = GetKeyFileDate(encryptedDatabaseName);
     ASSERT_EQ(changedDate, keyFileDate);
 
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Rekey_RenameFailed_05
+* @tc.desc: re key and rename failed the new key file.
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    auto keyFileDate = GetKeyFileDate(encryptedDatabaseName);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_LONG_LONG_AGO);
+    ASSERT_TRUE(isFileDateChanged);
+
+    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_GT(keyFileDate, changedDate);
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    for (int i = 0; i < 50; ++i) {
+        auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+        ASSERT_NE(store, nullptr);
+        ASSERT_EQ(errCode, E_OK);
+        store = nullptr;
+        SaveNewKey(encryptedDatabaseName);
+    }
+
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     CheckQueryData(store);
 }

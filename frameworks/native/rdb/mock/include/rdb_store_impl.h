@@ -25,11 +25,10 @@
 
 #include "abs_shared_result_set.h"
 #include "concurrent_map.h"
+#include "connection_pool.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
-#include "connection_pool.h"
 #include "sqlite_statement.h"
-#include "rd_statement.h"
 
 namespace OHOS::NativeRdb {
 class RdbStoreImpl : public RdbStore {

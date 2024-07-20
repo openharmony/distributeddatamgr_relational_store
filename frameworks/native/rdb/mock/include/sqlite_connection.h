@@ -40,7 +40,7 @@ using DataChangeCallback = std::function<void(ClientChangedData &clientChangedDa
 class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
-    static void DeleteDbFile(const RdbStoreConfig &config);
+    static int32_t Delete(const RdbStoreConfig &config);
     ~SqliteConnection();
     int32_t OnInitialize() override;
     int TryCheckPoint() override;
@@ -54,19 +54,18 @@ public:
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
-    int ClearCache() override;
+    int32_t ClearCache() override;
     int32_t Subscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
     int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
         const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
-    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs =
-std::vector<ValueObject>());
-    int ExecuteEncryptSql(const RdbStoreConfig &config);
-    void SetInTransaction(bool transaction);
+    int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
 
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
@@ -76,7 +75,9 @@ private:
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    int SetEncryptKey(const RdbStoreConfig &config);
+    int SetEncrypt(const RdbStoreConfig &config);
+    int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
+    int SetEncryptAgo(int32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
@@ -98,8 +99,6 @@ private:
     int32_t UnsubscribeLocalDetail(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
-    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     void ReadFile2Buffer(const char* fileName);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
@@ -116,12 +115,11 @@ private:
     bool isConfigured_ = false;
     bool hasClientObserver_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
-    int openFlags;
     int maxVariableNumber_;
     std::mutex mutex_;
     std::string filePath;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> rdbStoreLocalDbObservers_;
+    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

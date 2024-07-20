@@ -65,7 +65,7 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     } else if (errType == SQLITE_WARNING) {
         LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
-        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s" PRIu64 ".", err, errno, msg);
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, msg);
     }
 }
 

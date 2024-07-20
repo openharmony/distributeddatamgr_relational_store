@@ -21,6 +21,7 @@
 #include <sstream>
 #include <utility>
 
+#include "connection_pool.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
@@ -32,7 +33,6 @@
 #include "sqlite3.h"
 #include "sqlite3ext.h"
 #include "sqlite_connection.h"
-#include "connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
 

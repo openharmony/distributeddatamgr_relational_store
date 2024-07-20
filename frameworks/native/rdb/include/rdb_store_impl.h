@@ -24,6 +24,7 @@
 #include <thread>
 
 #include "concurrent_map.h"
+#include "connection_pool.h"
 #include "data_ability_observer_stub.h"
 #include "dataobs_mgr_client.h"
 #include "rdb_errno.h"
@@ -32,10 +33,8 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "refbase.h"
-#include "connection_pool.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
-#include "rd_statement.h"
 
 namespace OHOS {
 class ExecutorPool;

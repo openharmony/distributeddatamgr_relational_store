@@ -24,9 +24,10 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 __attribute__((used))
 const int32_t RdConnection::regCreator_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
+__attribute__((used))
 const int32_t RdConnection::regRepairer_ = Connection::RegisterRepairer(DB_VECTOR, RdConnection::Repair);
-const int32_t RdConnection::regFileDeleter_ =
-    Connection::RegisterFileDeleter(DB_VECTOR, RdConnection::DeleteDbFile);
+__attribute__((used))
+const int32_t RdConnection::regDeleter_ = Connection::RegisterDeleter(DB_VECTOR, RdConnection::Delete);
 
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
@@ -62,7 +63,7 @@ int32_t RdConnection::Repair(const RdbStoreConfig& config)
     return errCode;
 }
 
-static std::vector<std::string> rdPostFixes = {
+static constexpr const char *RD_POST_FIXES[] = {
     "",
     ".redo",
     ".undo",
@@ -72,15 +73,16 @@ static std::vector<std::string> rdPostFixes = {
     ".map",
 };
 
-void RdConnection::DeleteDbFile(const RdbStoreConfig& config)
+int32_t RdConnection::Delete(const RdbStoreConfig &config)
 {
     auto path = config.GetPath();
-    for (std::string &postFix : rdPostFixes) {
+    for (auto postFix : RD_POST_FIXES) {
         std::string shmFilePath = path + postFix;
         if (access(shmFilePath.c_str(), F_OK) == 0) {
             remove(shmFilePath.c_str());
         }
     }
+    return E_OK;
 }
 
 RdConnection::RdConnection(bool isWriter) : isWriter_(isWriter) {}

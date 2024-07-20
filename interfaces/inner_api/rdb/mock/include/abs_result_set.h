@@ -94,7 +94,7 @@ protected:
     };
     using Mutex = Lock<std::mutex>;
 
-    virtual std::pair<int, std::vector<std::string>> GetColumnNames() = 0;
+    virtual std::pair<int, std::vector<std::string>> GetColumnNames();
     std::pair<int, bool> IsEnded();
 
     // The default position of the result set
@@ -108,7 +108,7 @@ protected:
      */
     int rowPos_ = INIT_POS;
     bool isClosed_ = false;
-    int rowCount_;
+    int rowCount_ = NO_COUNT;
 private:
     int InitColumnNames();
 

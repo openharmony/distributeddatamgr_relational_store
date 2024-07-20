@@ -34,13 +34,13 @@ public:
     using Notifier = std::function<void(const std::set<std::string> &tables)>;
     using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
     using Repairer = int32_t (*)(const RdbStoreConfig &config);
-    using Deleter = void (*)(const RdbStoreConfig &config);
+    using Deleter = int32_t (*)(const RdbStoreConfig &config);
     static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t Repair(const RdbStoreConfig &config);
-    static void DeleteDbFile(const RdbStoreConfig &config);
+    static int32_t Delete(const RdbStoreConfig &config);
     static int32_t RegisterCreator(int32_t dbType, Creator creator);
     static int32_t RegisterRepairer(int32_t dbType, Repairer repairer);
-    static int32_t RegisterFileDeleter(int32_t dbType, Deleter deleter);
+    static int32_t RegisterDeleter(int32_t dbType, Deleter deleter);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
@@ -58,7 +58,6 @@ public:
     virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
     virtual int32_t ClearCache() = 0;
-    
     virtual int32_t Subscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::string &event,
