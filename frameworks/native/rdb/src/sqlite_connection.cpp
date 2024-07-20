@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 
-#include "file_ex.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_store_config.h"
