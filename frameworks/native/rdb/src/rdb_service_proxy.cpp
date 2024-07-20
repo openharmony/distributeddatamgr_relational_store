@@ -498,11 +498,12 @@ void RdbServiceProxy::OnSyncComplete(const std::string &storeName, Details &&res
     });
 }
 
-int32_t RdbServiceProxy::NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData)
+int32_t RdbServiceProxy::NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData,
+    uint32_t delay)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_NOTIFY_DATA_CHANGE),
-        reply, param, rdbChangedData);
+        reply, param, rdbChangedData, delay);
     if (status != RDB_OK) {
         LOG_ERROR("RdbServiceProxy NotifyDataChange fail, status:%{public}d, "
                   "bundleName:%{public}s, storeName:%{public}s",

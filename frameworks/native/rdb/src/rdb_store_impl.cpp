@@ -2162,7 +2162,8 @@ void RdbStoreImpl::InitDelayNotifier()
         return;
     }
     delayNotifier_->SetExecutorPool(pool_);
-    delayNotifier_->SetTask([param = syncerParam_](const DistributedRdb::RdbChangedData& rdbChangedData) -> int {
+    delayNotifier_->SetTask([param = syncerParam_]
+        (const DistributedRdb::RdbChangedData& rdbChangedData, uint32_t delay) -> int {
         auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (errCode == E_NOT_SUPPORT) {
             return errCode;
@@ -2171,7 +2172,7 @@ void RdbStoreImpl::InitDelayNotifier()
             LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
             return errCode;
         }
-        return service->NotifyDataChange(param, rdbChangedData);
+        return service->NotifyDataChange(param, rdbChangedData, delay);
     });
 }
 

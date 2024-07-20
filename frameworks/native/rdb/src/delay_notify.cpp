@@ -30,12 +30,10 @@ DelayNotify::~DelayNotify()
         pool_->Remove(delaySyncTaskId_);
     }
     if (task_ != nullptr && changedData_.tableData.size() > 0) {
-        pool_->Schedule(std::chrono::milliseconds(AUTO_SYNC_INTERVAL), [task = task_, changedData = changedData_]() {
-            auto errCode = task(changedData);
-            if (errCode != 0) {
-                LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
-            }
-        });
+        auto errCode = task_(changedData_, 0);
+        if (errCode != 0) {
+            LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
+        }
     }
 }
 
@@ -70,15 +68,35 @@ void DelayNotify::SetTask(Task task)
 
 void DelayNotify::StartTimer()
 {
+    auto changedData = changedData_;
     if (pool_ == nullptr) {
         return;
     }
+
     if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
         delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
             [this]() { ExecuteTask(); });
     } else {
         delaySyncTaskId_ =
             pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
+    }
+
+    if (autoSyncInterval_ == AUTO_SYNC_INTERVAL || changedData.tableData.empty()) {
+        return;
+    }
+
+    if (!isInitialized_) {
+        task_(changedData, SERVICE_INTERVAL);
+        lastTimePoint_ = std::chrono::steady_clock::now();
+        isInitialized_ = true;
+        return;
+    }
+
+    Time curTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - lastTimePoint_);
+    if (duration >= std::chrono::milliseconds(MAX_NOTIFY_INTERVAL)) {
+        task_(changedData, SERVICE_INTERVAL);
+        lastTimePoint_ = std::chrono::steady_clock::now();
     }
 }
 
@@ -101,7 +119,7 @@ void DelayNotify::ExecuteTask()
         StopTimer();
     }
     if (task_ != nullptr && changedData.tableData.size() > 0) {
-        int errCode = task_(changedData);
+        int errCode = task_(changedData, 0);
         if (errCode != 0) {
             LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
             std::lock_guard<std::mutex> lock(mutex_);
