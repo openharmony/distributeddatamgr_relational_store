@@ -353,7 +353,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
 
         if (!SqliteUtils::CopyFile(backupPath, newPath)) {
-            auto [errCode, node] = Init(config_);
+            auto [errCode, node] = Init();
             return E_ERROR;
         }
     }
