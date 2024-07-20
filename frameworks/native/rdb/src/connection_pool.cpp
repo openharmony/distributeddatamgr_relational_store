@@ -70,13 +70,13 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     if (errCode == E_OK) {
         rebuiltType = RebuiltType::REPAIRED;
     } else {
-        Connection::DeleteDbFile(storeConfig);
+        Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
     }
     pool = Create(storeConfig, errCode);
     if (errCode != E_OK) {
         LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
-            rebuiltType, storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
+            static_cast<uint32_t>(rebuiltType), storeConfig.GetName().c_str(), storeConfig.IsEncrypt(), errCode, errno);
     }
 
     return result;
@@ -346,10 +346,12 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
     } else {
         CloseAllConnections();
-        RemoveDBFile();
+        Connection::Delete(config_);
 
         if (config_.GetPath() != newPath) {
-            RemoveDBFile(newPath);
+            RdbStoreConfig config(newPath);
+            config.SetPath(newPath);
+            Connection::Delete(config);
         }
 
         if (!SqliteUtils::CopyFile(backupPath, newPath)) {
@@ -658,19 +660,5 @@ int32_t ConnPool::Container::Dump(const char *header)
     LOG_WARN("%{public}s: %{public}s", header, info.c_str());
     return 0;
 }
-
-void ConnPool::RemoveDBFile()
-{
-    RemoveDBFile(config_.GetPath());
-}
-
-void ConnPool::RemoveDBFile(const std::string &path)
-{
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
-}
-
 } // namespace NativeRdb
 } // namespace OHOS

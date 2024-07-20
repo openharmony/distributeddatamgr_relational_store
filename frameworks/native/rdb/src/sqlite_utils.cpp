@@ -52,12 +52,12 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
     }
     /* analyze the sql type through first 3 character */
     std::string prefixSql = StrToUpper(sql.substr(0, 3));
-    SqlType type = { prefixSql.c_str(), STATEMENT_OTHER};
-    auto it = std::lower_bound(SQL_TYPE_MAP, SQL_TYPE_MAP + TYPE_SIZE, type,
-        [](const SqlType& first, const SqlType& second) {
-            return strcmp(first.sql, second.sql) < 0;
-        });
-    if (it < SQL_TYPE_MAP + TYPE_SIZE) {
+    SqlType type = { prefixSql.c_str(), STATEMENT_OTHER };
+    auto comp = [](const SqlType &first, const SqlType &second) {
+        return strcmp(first.sql, second.sql) < 0;
+    };
+    auto it = std::lower_bound(SQL_TYPE_MAP, SQL_TYPE_MAP + TYPE_SIZE, type, comp);
+    if (it < SQL_TYPE_MAP + TYPE_SIZE && !comp(*it, type)) {
         return it->type;
     }
     return STATEMENT_OTHER;
