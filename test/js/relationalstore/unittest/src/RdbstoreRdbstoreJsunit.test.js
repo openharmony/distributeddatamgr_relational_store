@@ -238,7 +238,6 @@ describe('rdbStoreTest', function () {
 
         try {
             await data_relationalStore.getRdbStore(context, config2);
-            done();
         } catch (err) {
             console.log(TAG + "************* testRdbStore0009 end   *************");
         }
