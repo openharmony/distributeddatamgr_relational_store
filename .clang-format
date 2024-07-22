@@ -50,7 +50,7 @@ BreakConstructorInitializers: BeforeColon
 
 BreakInheritanceList: BeforeComma
 BreakAfterJavaFieldAnnotations: false
-BreakStringLiterals: true
+BreakStringLiterals: false
 
 ColumnLimit: 119
 
