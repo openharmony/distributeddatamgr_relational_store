@@ -42,13 +42,13 @@ describe('rdbStoreExcuteTest', function () {
     })
 
     beforeEach(async function () {
-        await rdbStore.executeSql(CREATE_TABLE_TEST);
         console.info(TAG + 'beforeEach')
+        await rdbStore.executeSql(CREATE_TABLE_TEST);
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
-        await rdbStore.executeSql("DROP TABLE IF EXISTS test")
+        await rdbStore.executeSql("DROP TABLE IF EXISTS test");
     })
 
     afterAll(async function () {
