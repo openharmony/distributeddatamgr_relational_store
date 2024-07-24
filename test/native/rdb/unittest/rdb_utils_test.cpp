@@ -112,3 +112,32 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_007, TestSize.Level1)
 {
     EXPECT_EQ(0, SqliteUtils::GetFileSize("act.txt"));
 }
+
+/**
+ * @tc.name: GetSqlStatementType_001
+ * @tc.desc: AbNormal testCase of string_utils, if fileName is ""
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::STATEMENT_SELECT, SqliteUtils::GetSqlStatementType("select * from text"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("update test set id = ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("delete from test where id = ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("Replace INTO test"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_ATTACH, SqliteUtils::GetSqlStatementType("attach database ? as ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_DETACH, SqliteUtils::GetSqlStatementType("detach database ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_BEGIN, SqliteUtils::GetSqlStatementType("BEGIN TRANSACTION"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_BEGIN, SqliteUtils::GetSqlStatementType("SAVEPOINT 1"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_COMMIT, SqliteUtils::GetSqlStatementType("END TRANSACTION"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_COMMIT, SqliteUtils::GetSqlStatementType("COMMIT"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_ROLLBACK, SqliteUtils::GetSqlStatementType("ROLLBACK"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_PRAGMA, SqliteUtils::GetSqlStatementType("PRAGMA user_version"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_DDL, SqliteUtils::GetSqlStatementType("CREATE TABLE"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_DDL, SqliteUtils::GetSqlStatementType("CREATE TRIGGER"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_DDL, SqliteUtils::GetSqlStatementType("DROP TABLE"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_DDL, SqliteUtils::GetSqlStatementType("ALTER TABLE"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_INSERT, SqliteUtils::GetSqlStatementType("INSERT INTO test"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("EXPLAIN SELECT * FROM test"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAZZZZZZZ"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAAAAAAAA"));
+}
