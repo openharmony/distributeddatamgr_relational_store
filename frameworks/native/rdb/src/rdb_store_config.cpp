@@ -181,7 +181,6 @@ void RdbStoreConfig::SetReadOnly(bool readOnly)
     this->readOnly = readOnly;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type != DistributedType::RDB_DEVICE_COLLABORATION) {
@@ -196,7 +195,6 @@ DistributedType RdbStoreConfig::GetDistributedType() const
 {
     return distributedType_;
 }
-#endif
 
 int RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {
