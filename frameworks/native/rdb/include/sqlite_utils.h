@@ -74,6 +74,7 @@ private:
         { "PRA", SqliteUtils::STATEMENT_PRAGMA },
         { "REP", SqliteUtils::STATEMENT_UPDATE },
         { "ROL", SqliteUtils::STATEMENT_ROLLBACK },
+        { "SAV", SqliteUtils::STATEMENT_BEGIN },
         { "SEL", SqliteUtils::STATEMENT_SELECT },
         { "UPD", SqliteUtils::STATEMENT_UPDATE }
     };
