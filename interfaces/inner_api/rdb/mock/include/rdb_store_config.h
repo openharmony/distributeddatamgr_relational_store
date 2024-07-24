@@ -75,6 +75,11 @@ enum DBType : uint32_t {
     DB_BUTT
 };
 
+enum DistributedType {
+    RDB_DEVICE_COLLABORATION = 10,
+    RDB_DISTRIBUTED_TYPE_MAX
+};
+
 using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
 
 struct ScalarFunctionInfo {
@@ -211,6 +216,8 @@ public:
     std::vector<std::string> GetPluginLibs() const;
     void SetIter(int32_t iter) const;
     int32_t GetIter() const;
+    int SetDistributedType(DistributedType type);
+    DistributedType GetDistributedType() const;
 
 private:
     void ClearEncryptKey();
@@ -235,6 +242,7 @@ private:
     RoleType role_ = OWNER;
     StorageMode storageMode;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
+    DistributedType distributedType_ = DistributedType::RDB_DEVICE_COLLABORATION;
     std::string name;
     std::string path;
     std::string journalMode;
