@@ -14,6 +14,7 @@
  */
 #define LOG_TAG "RdbDataShareAdapterTest"
 #include <gtest/gtest.h>
+
 #include <string>
 
 #include "datashare_predicates.h"
@@ -108,29 +109,28 @@ void RdbDataShareAdapterTest::GenerateDefaultTable()
     uint8_t uValue = 66;
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
-        ValueObject(std::string("hello")), ValueObject((int)10),
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string("hello")), ValueObject((int)10),
         ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob)
     });
 
     /* insert second entry data */
     typeBlob.clear();
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{
         ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
         ValueObject() // set double value 2.5
     });
 
     /* insert third entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{
         ValueObject(std::string("hello world")), ValueObject((int)3), ValueObject((double)1.8),
-        ValueObject(std::vector<uint8_t> { 4, 5, 6 }) // set int value 3, double 1.8
+        ValueObject(std::vector<uint8_t>{ 4, 5, 6 }) // set int value 3, double 1.8
     });
 
     /* insert four entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject> {
-        ValueObject(std::string("new world")), ValueObject((int)5),
-        ValueObject((double)5.8), ValueObject() // set int value 5, double 5.8
-    });
+    store->ExecuteSql(insertSql, std::vector<ValueObject>{
+                                     ValueObject(std::string("new world")), ValueObject((int)5),
+                                     ValueObject((double)5.8), ValueObject() // set int value 5, double 5.8
+                                 });
 }
 
 void RdbDataShareAdapterTest::GenerateDefaultEmptyTable()
@@ -232,7 +232,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_004, TestSize.Level1)
     std::string table = "test";
     OHOS::DataShare::DataSharePredicates predicates;
     predicates.SetWhereClause("`data2` > ?");
-    predicates.SetWhereArgs(std::vector<std::string> { "-5" });
+    predicates.SetWhereArgs(std::vector<std::string>{ "-5" });
     predicates.SetOrder("data3");
     std::vector<std::string> columns;
     auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
@@ -282,7 +282,7 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
     values.Put("data1", std::string("tulip"));
     values.Put("data2", 100);
     values.Put("data3", 50.5);
-    values.Put("data4", std::vector<uint8_t> { 20, 21, 22 });
+    values.Put("data4", std::vector<uint8_t>{ 20, 21, 22 });
 
     int ret = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
     EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
@@ -302,9 +302,9 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_005, TestSize.Level1)
 
     values.Clear();
     values.Put("data3", 300.5);
-    values.Put("data4", std::vector<uint8_t> { 17, 18, 19 });
+    values.Put("data4", std::vector<uint8_t>{ 17, 18, 19 });
     ret = store->Update(
-        changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string> { "tulip" });
+        changedRows, "test", RdbUtils::ToValuesBucket(values), "data1 = ?", std::vector<std::string>{ "tulip" });
     EXPECT_EQ(ret, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -392,7 +392,6 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_007, TestSize.Level1)
     EXPECT_EQ(ret2, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(2, id);
 
-
     std::string table = "test";
     OHOS::DataShare::DataSharePredicates predicates;
     std::vector<std::string> columns;
@@ -442,8 +441,13 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_008, TestSize.Level1)
     EXPECT_EQ(1, id);
 
     OHOS::DataShare::DataSharePredicates predicates;
-    predicates.BeginWrap()->EqualTo("data1", data1)->And()
-        ->EqualTo("data2", data2)->And()->EqualTo("data3", data3)->EndWrap();
+    predicates.BeginWrap()
+        ->EqualTo("data1", data1)
+        ->And()
+        ->EqualTo("data2", data2)
+        ->And()
+        ->EqualTo("data3", data3)
+        ->EndWrap();
     std::vector<std::string> columns;
     auto allDataTypes = store->Query(RdbUtils::ToPredicates(predicates, tableName), columns);
     int rowCount;

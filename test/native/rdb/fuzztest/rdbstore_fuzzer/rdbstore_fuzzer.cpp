@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "rdb_store.h"
-#include "rdb_helper.h"
-#include "rdb_errno.h"
-#include "rdb_open_callback.h"
 #include "rdbstore_fuzzer.h"
+
+#include "rdb_errno.h"
+#include "rdb_helper.h"
+#include "rdb_open_callback.h"
+#include "rdb_store.h"
 
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
@@ -92,7 +93,7 @@ bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
+    values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
 
     return store->Insert(id, tableName, values);
 }
@@ -166,10 +167,9 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t> (data, data + size));
+    values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
 
-    errCode = store->Update(changedRows, tableName, values, whereClause,
-        std::vector<std::string> { valName });
+    errCode = store->Update(changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
     if (errCode != E_OK) {
         result = false;
     }
@@ -342,39 +342,39 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     AbsRdbPredicates predicates(tableName);
 
     predicates.EqualTo("name", ValueObject(valName));
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotEqualTo("name", ValueObject(valName));
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Contains("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.BeginsWith("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.EndsWith("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Like("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotLike("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotContains("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Glob("name", valName);
-    store->Query(predicates, {vectorElem});
+    store->Query(predicates, { vectorElem });
     store->ExecuteSql("DELETE FROM test");
 }
 
@@ -395,8 +395,8 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     std::string valName(data, data + size);
     ValueObject valAge(std::string(data, data + size));
     ValueObject valAgeChange(std::string(data, data + size));
-    std::vector<std::string> bindaArgs({std::string(data, data + size)});
-    std::vector<ValueObject> vectorElem({std::string(data, data + size)});
+    std::vector<std::string> bindaArgs({ std::string(data, data + size) });
+    std::vector<ValueObject> vectorElem({ std::string(data, data + size) });
 
     AbsRdbPredicates predicates(tableName);
 
@@ -433,10 +433,10 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     store->Query(predicates, bindaArgs);
     store->ExecuteSql("DELETE FROM test");
 }
-}
+} // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::RdbStoreFuzzTest::SetUpTestCase();

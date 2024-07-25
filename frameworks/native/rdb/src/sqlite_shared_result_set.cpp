@@ -100,7 +100,7 @@ int SqliteSharedResultSet::InitRowCount()
 std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
     if (conn_ == nullptr) {
-        LOG_ERROR("Already close");
+        LOG_ERROR("Already close.");
         return { nullptr, E_ALREADY_CLOSED };
     }
 

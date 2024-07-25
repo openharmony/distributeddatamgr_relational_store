@@ -68,13 +68,13 @@ int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callb
         return *observer == callback;
     });
     if (result) {
-        LOG_INFO("duplicate subscribe");
+        LOG_INFO("duplicate subscribe.");
         return OH_Rdb_ErrCode::RDB_OK;
     }
     auto obs = std::make_shared<NDKDetailProgressObserver>(callback);
     int errCode = store_->RegisterAutoSyncCallback(obs);
     if (errCode == NativeRdb::E_OK) {
-        LOG_ERROR("subscribe failed");
+        LOG_ERROR("subscribe failed.");
         return ConvertorErrorCode::NativeToNdk(errCode);
     }
     callbacks_.push_back(std::move(obs));
@@ -92,11 +92,11 @@ int RelationalStore::UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *cal
 
         int errCode = store_->UnregisterAutoSyncCallback(*it);
         if (errCode != NativeRdb::E_OK) {
-            LOG_ERROR("unsubscribe failed");
+            LOG_ERROR("unsubscribe failed.");
             return ConvertorErrorCode::NativeToNdk(errCode);
         }
         it = callbacks_.erase(it);
-        LOG_DEBUG("progress unsubscribe success");
+        LOG_DEBUG("progress unsubscribe success.");
     }
     return OH_Rdb_ErrCode::RDB_OK;
 }
@@ -467,7 +467,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
                                   return *item.get() == observer;
                               });
     if (result) {
-        LOG_INFO("duplicate subscribe");
+        LOG_INFO("duplicate subscribe.");
         return OH_Rdb_ErrCode::RDB_OK;
     }
     auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
@@ -475,7 +475,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
     int subscribeResult = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ?
         store_->SubscribeObserver(subscribeOption, ndkObserver) : store_->Subscribe(subscribeOption, ndkObserver.get());
     if (subscribeResult != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("subscribe failed");
+        LOG_ERROR("subscribe failed.");
     } else {
         dataObservers_[type].emplace_back(std::move(ndkObserver));
     }
@@ -497,11 +497,11 @@ int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserve
         int errCode = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ?
             store_->UnsubscribeObserver(subscribeOption, *it) : store_->UnSubscribe(subscribeOption, it->get());
         if (errCode != NativeRdb::E_OK) {
-            LOG_ERROR("unsubscribe failed");
+            LOG_ERROR("unsubscribe failed.");
             return ConvertorErrorCode::NativeToNdk(errCode);
         }
         it = dataObservers_[type].erase(it);
-        LOG_DEBUG("data observer unsubscribe success");
+        LOG_DEBUG("data observer unsubscribe success.");
     }
     return OH_Rdb_ErrCode::RDB_OK;
 }
@@ -626,11 +626,11 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
 
     auto progressCallback = [cxt = (*observer).context, cb = (*observer).callback](Details &&details) {
         if (details.size() > 1) {
-            LOG_ERROR("Not support edge to edge detail notify");
+            LOG_ERROR("Not support edge to edge detail notify.");
             return;
         }
         if (details.empty()) {
-            LOG_ERROR("No device or cloud synced");
+            LOG_ERROR("No device or cloud synced.");
             return;
         }
         for (auto &[device, detail] : details) {
@@ -773,7 +773,7 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
 {
     uint32_t count = changeInfo.size();
     if (count == 0) {
-        LOG_ERROR("No any infos");
+        LOG_ERROR("No any infos.");
         return;
     }
 
@@ -784,7 +784,7 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
         std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(size);
         Rdb_ChangeInfo **infos = (Rdb_ChangeInfo **)(buffer.get());
         if (infos == nullptr) {
-            LOG_ERROR("Failed to allocate memory for Rdb_ChangeInfo");
+            LOG_ERROR("Failed to allocate memory for Rdb_ChangeInfo.");
             return;
         }
 
@@ -839,7 +839,7 @@ void NDKStoreObserver::ConvertKeyInfoData(Rdb_KeyInfo::Rdb_KeyData *keyInfoData,
         } else if (auto val = std::get_if<std::string>(&key)) {
             keyInfoData[i].text = val->c_str();
         } else {
-            LOG_ERROR("Not support the data type");
+            LOG_ERROR("Not support the data type.");
             return;
         }
     }

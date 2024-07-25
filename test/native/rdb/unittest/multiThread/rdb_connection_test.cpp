@@ -134,8 +134,8 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
     auto taskId1 = executors_->Execute([store = store_, block1]() {
         constexpr const char *createTable = "CREATE TABLE test";
         constexpr const char *createTableColumn = " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                          "blobType BLOB)";
+                                                  "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                  "blobType BLOB)";
         int32_t errCode = E_ERROR;
         for (uint32_t i = 0; i < 2000; i++) {
             errCode = store->ExecuteSql(createTable + std::to_string(i) + createTableColumn);
@@ -180,8 +180,8 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Lev
     auto taskId1 = executors_->Execute([store = store_, block1]() {
         constexpr const char *createTable = "CREATE TABLE test";
         constexpr const char *createTableColumn = " (id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                          "blobType BLOB)";
+                                                  "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                  "blobType BLOB)";
         int32_t errCode = E_ERROR;
         for (uint32_t i = 0; i < 2000; i++) {
             errCode = store->ExecuteSql(createTable + std::to_string(i) + createTableColumn);

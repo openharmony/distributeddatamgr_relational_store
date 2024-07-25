@@ -103,7 +103,7 @@ public:
 
     int OnCreate(OHOS::NativeRdb::RdbStore &rdbStore) override
     {
-        LOG_DEBUG("OnCreate Callback");
+        LOG_DEBUG("OnCreate Callback.");
         callbacks_.emplace_back([this]() -> int {
             napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -130,7 +130,7 @@ public:
 
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
-        LOG_DEBUG("OnUpgrade Callback");
+        LOG_DEBUG("OnUpgrade Callback.");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
             napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -165,7 +165,7 @@ public:
 
     int OnDowngrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
-        LOG_DEBUG("OnDowngrade Callback");
+        LOG_DEBUG("OnDowngrade Callback.");
         callbacks_.emplace_back([this, oldVersion, newVersion]() -> int {
             napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -200,7 +200,7 @@ public:
 
     int OnOpen(OHOS::NativeRdb::RdbStore &rdbStore) override
     {
-        LOG_DEBUG("OnOpen Callback");
+        LOG_DEBUG("OnOpen Callback.");
         callbacks_.emplace_back([this]() -> int {
             napi_value self = nullptr;
             napi_status status = napi_get_reference_value(env_, ref_, &self);
@@ -358,7 +358,7 @@ int ParseSecurityLevel(const napi_env &env, const napi_value &object, std::share
     }
     context->config.SetSecurityLevel(sl);
 
-    LOG_DEBUG("ParseSecurityLevel end");
+    LOG_DEBUG("ParseSecurityLevel end.");
     return OK;
 }
 
@@ -427,7 +427,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     ParseStoreConfigFunction parseStoreConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbJsKit::GetRdbStore start");
+    LOG_DEBUG("RdbJsKit::GetRdbStore start.");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
     auto input = [context, parseStoreConfig](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -447,7 +447,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
         return OK;
     };
     auto exec = [context]() -> int {
-        LOG_DEBUG("RdbJsKit::GetRdbStore Async");
+        LOG_DEBUG("RdbJsKit::GetRdbStore Async.");
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy = RdbHelper::GetRdbStore(context->config, context->version, callback, errCode);
@@ -458,7 +458,7 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     auto output = [context](napi_env env, napi_value &result) -> int {
         result = RdbStoreProxy::NewInstance(env, context->proxy, context->apiversion);
         context->openCallback.DelayNotify();
-        LOG_DEBUG("RdbJsKit::GetRdbStore end");
+        LOG_DEBUG("RdbJsKit::GetRdbStore end.");
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -487,7 +487,7 @@ napi_value GetRdbStoreV9(napi_env env, napi_callback_info info)
 napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::shared_ptr<HelperRdbContext> context)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    LOG_DEBUG("RdbJsKit::DeleteRdbStore start");
+    LOG_DEBUG("RdbJsKit::DeleteRdbStore start.");
     context->iscontext = JSAbility::CheckContext(env, info);
     // context: Context, config: StoreConfig, version: number
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> int {
@@ -512,7 +512,7 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_create_int64(env, OK, &result);
-        LOG_DEBUG("RdbJsKit::DeleteRdbStore end");
+        LOG_DEBUG("RdbJsKit::DeleteRdbStore end.");
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);

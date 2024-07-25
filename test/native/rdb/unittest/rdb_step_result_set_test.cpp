@@ -106,7 +106,7 @@ void RdbStepResultSetTest::TearDown(void)
 void RdbStepResultSetTest::GenerateDefaultTable()
 {
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
-        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+                                 std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 
     std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
@@ -135,7 +135,7 @@ void RdbStepResultSetTest::GenerateDefaultTable()
 void RdbStepResultSetTest::GenerateDefaultEmptyTable()
 {
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
-        std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+                                 std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 }
 
@@ -471,7 +471,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
     GenerateDefaultEmptyTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
-
 
     EXPECT_NE(E_OK, resultSet->GoToFirstRow());
     int position = INT_MIN;
@@ -1477,10 +1476,10 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     std::vector<std::string> columns;
     std::string logTable = "naturalbase_rdb_aux_test_log";
     std::string sqlstr;
-    std::pair<bool, bool> queryStatus = {false, false};
+    std::pair<bool, bool> queryStatus = { false, false };
 
     // logtable is empty && tableName is not empty
-    queryStatus = {false, true};
+    queryStatus = { false, true };
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "", queryStatus);
     EXPECT_EQ("", sqlstr);
 
@@ -1527,10 +1526,10 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
     std::vector<std::string> columns;
     std::string logTable = "naturalbase_rdb_aux_test_log";
     std::string sqlstr;
-    std::pair<bool, bool> queryStatus = {true, false};
+    std::pair<bool, bool> queryStatus = { true, false };
 
     //Distinct is false, columns has spacial field
-    queryStatus = {true, false};
+    queryStatus = { true, false };
     columns.push_back("name");
     columns.push_back("#_sharing_resource_field");
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
@@ -1548,7 +1547,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
     EXPECT_EQ(value, sqlstr);
 
     //Distinct is true, columns and predicates have spacial fields
-    queryStatus = {true, true};
+    queryStatus = { true, true };
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field, "
             "naturalbase_rdb_aux_test_log.cursor, CASE "

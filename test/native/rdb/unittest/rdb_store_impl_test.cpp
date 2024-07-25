@@ -13,19 +13,20 @@
  * limitations under the License.
  */
 
+#include "rdb_store_impl.h"
+
 #include <gtest/gtest.h>
 
-#include <string>
 #include <map>
+#include <string>
 
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "rdb_store_impl.h"
-#include "sqlite_connection.h"
-#include "relational_store_manager.h"
 #include "relational_store_delegate.h"
+#include "relational_store_manager.h"
+#include "sqlite_connection.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -61,9 +62,13 @@ int RdbStoreImplTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int
     return E_OK;
 }
 
-void RdbStoreImplTest::SetUpTestCase(void) {}
+void RdbStoreImplTest::SetUpTestCase(void)
+{
+}
 
-void RdbStoreImplTest::TearDownTestCase(void) {}
+void RdbStoreImplTest::TearDownTestCase(void)
+{
+}
 
 void RdbStoreImplTest::SetUp(void)
 {
@@ -93,14 +98,13 @@ void RdbStoreImplTest::TearDown(void)
 HWTEST_F(RdbStoreImplTest, GetModifyTimeByRowIdTest_001, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
-        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
     valuesBucket.PutInt("timestamp", ValueObject(1000000000));
-    int errorCode = store_->Insert(rowId,
-        "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    int errorCode = store_->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
     EXPECT_EQ(E_OK, errorCode);
     EXPECT_EQ(1, rowId);
 
@@ -198,7 +202,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_001, TestSize.Level2)
                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
     // table name is ""
-    std::vector<RdbStore::PRIKey> PKey = {1};
+    std::vector<RdbStore::PRIKey> PKey = { 1 };
     std::map<RdbStore::PRIKey, RdbStore::Date> result = store_->GetModifyTime("", "data_key", PKey);
     int size = result.size();
     EXPECT_EQ(0, size);
@@ -233,7 +237,7 @@ HWTEST_F(RdbStoreImplTest, GetModifyTime_002, TestSize.Level2)
                        "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, hash_key INTEGER, "
                        "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
 
-    std::vector<RdbStore::PRIKey> PKey = {1};
+    std::vector<RdbStore::PRIKey> PKey = { 1 };
     std::map<RdbStore::PRIKey, RdbStore::Date> result =
         store_->GetModifyTime("rdbstoreimpltest_integer", "data3", PKey);
     EXPECT_EQ(0, result.size());
@@ -277,8 +281,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QueryTest_002, TestSize.Level2)
     store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
                        "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
-    store_->Query(errCode, true, "test", {},
-        "", std::vector<ValueObject> {}, "", "", "", 1, 0);
+    store_->Query(errCode, true, "test", {}, "", std::vector<ValueObject>{}, "", "", "", 1, 0);
     EXPECT_EQ(E_OK, errCode);
 
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
@@ -476,7 +479,6 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_002, TestSize.Level2)
     connectionPool->ReleaseTransaction();
 }
 
-
 /* *
  * @tc.name: Rdb_ConnectionPoolTest_003
  * @tc.desc: Abnormal testCase for ChangeDbFileForRestore
@@ -492,7 +494,6 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
     auto connectionPool = ConnectionPool::Create(config, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
-
 
     const std::string newPath = DATABASE_NAME;
     const std::string backupPath = DATABASE_NAME;
@@ -540,13 +541,13 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
     EXPECT_NE(nullptr, store);
     store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t2;");
     store->ExecuteSql("CREATE TABLE if not exists test_callback_t2 "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                      "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     // set TrackerTable
     DistributedDB::TrackerSchema tracker;
     tracker.tableName = "test_callback_t2";
     tracker.extendColName = "";
-    tracker.trackerColNames = {"id", "timestamp"};
+    tracker.trackerColNames = { "id", "timestamp" };
     using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
     Delegate::Option option;
@@ -554,9 +555,8 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
     EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
     int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t2", option, g_delegate);
     EXPECT_EQ(E_OK, status);
-    auto delegatePtr = std::shared_ptr<Delegate>(g_delegate, [&rStoreManager](Delegate* delegate) {
-        rStoreManager.CloseStore(delegate);
-    });
+    auto delegatePtr = std::shared_ptr<Delegate>(
+        g_delegate, [&rStoreManager](Delegate *delegate) { rStoreManager.CloseStore(delegate); });
     int setStatus = delegatePtr->SetTrackerTable(tracker);
     EXPECT_EQ(E_OK, setStatus);
 
@@ -586,13 +586,13 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     store->ExecuteSql("DROP TABLE IF EXISTS test_callback_t3;");
 
     store->ExecuteSql("CREATE TABLE if not exists test_callback_t3 "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                      "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     // set TrackerTable
     DistributedDB::TrackerSchema tracker;
     tracker.tableName = "test_callback_t3";
     tracker.extendColName = "";
-    tracker.trackerColNames = {"id", "timestamp"};
+    tracker.trackerColNames = { "id", "timestamp" };
     using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
     Delegate::Option option;
@@ -600,9 +600,8 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     EXPECT_EQ(RdbStoreImplTest::DATABASE_NAME, "/data/test/stepResultSet_impl_test.db");
     int status = rStoreManager.OpenStore(RdbStoreImplTest::DATABASE_NAME, "test_callback_t3", option, g_delegate);
     EXPECT_EQ(E_OK, status);
-    auto delegatePtr = std::shared_ptr<Delegate>(g_delegate, [&rStoreManager](Delegate* delegate) {
-        rStoreManager.CloseStore(delegate);
-    });
+    auto delegatePtr = std::shared_ptr<Delegate>(
+        g_delegate, [&rStoreManager](Delegate *delegate) { rStoreManager.CloseStore(delegate); });
     int setStatus = delegatePtr->SetTrackerTable(tracker);
     EXPECT_EQ(E_OK, setStatus);
 
@@ -663,8 +662,8 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
     store->ExecuteSql("CREATE TABLE test_resource "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
-    "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                      "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t rowId;
     ValuesBucket valuesBucket;
     valuesBucket.PutInt("data_key", ValueObject(1));
@@ -690,7 +689,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_QuerySharingResourceTest_002, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
 
     // tabel is empty
@@ -713,7 +712,7 @@ HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
 {
     store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int errCode = E_OK;
     int64_t id;
     ValuesBucket valuesBucket;

@@ -214,7 +214,7 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
     int idValueByIndex = rowEntity.Get(0);
     std::string data1ValueByIndex = rowEntity.Get(1);
     int data2ValueByIndex = rowEntity.Get(2);
-    double data3ValueByIndex  = rowEntity.Get(3);
+    double data3ValueByIndex = rowEntity.Get(3);
     std::vector<uint8_t> data4ValueByIndex = rowEntity.Get(4);
     int data5ValueByIndex = rowEntity.Get(5);
     EXPECT_EQ(1, idValueByIndex);

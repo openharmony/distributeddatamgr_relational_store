@@ -50,7 +50,7 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
 
 int ISharedResultSetProxy::GetRowCount(int &count)
 {
-    LOG_DEBUG("GetRowCount Begin");
+    LOG_DEBUG("GetRowCount Begin.");
     if (rowCount_ >= 0) {
         count = rowCount_;
         return E_OK;
@@ -78,7 +78,7 @@ int ISharedResultSetProxy::GetRowCount(int &count)
 
 int ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
 {
-    LOG_DEBUG("OnGo Begin");
+    LOG_DEBUG("OnGo Begin.");
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());
     request.WriteInt32(oldRowIndex);
@@ -95,7 +95,7 @@ int ISharedResultSetProxy::OnGo(int oldRowIndex, int newRowIndex)
 
 int ISharedResultSetProxy::Close()
 {
-    LOG_DEBUG("Close Begin");
+    LOG_DEBUG("Close Begin.");
     AbsSharedResultSet::Close();
     MessageParcel request;
     request.WriteInterfaceToken(GetDescriptor());

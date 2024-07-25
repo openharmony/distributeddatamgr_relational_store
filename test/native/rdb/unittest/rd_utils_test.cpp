@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#include "rd_utils.h"
+
 #include <gtest/gtest.h>
-#include <climits>
-#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "rd_utils.h"
+
+#include <climits>
+#include <string>
+
 #include "grd_type_export.h"
 
 using namespace testing::ext;
@@ -29,8 +32,8 @@ class RdUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void RdUtilsTest::SetUpTestCase(void)

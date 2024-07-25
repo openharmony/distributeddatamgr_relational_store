@@ -68,7 +68,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     auto instance = GetInstance();
     if (instance == nullptr) {
-        LOG_ERROR("resultSet is null");
+        LOG_ERROR("resultSet is null.");
         return nullptr;
     }
     SetInstance(nullptr);
@@ -82,7 +82,7 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
     auto *proxy = new (std::nothrow) ResultSetProxy();
     if (proxy == nullptr) {
-        LOG_ERROR("ResultSetProxy::Initialize new failed, proxy is nullptr");
+        LOG_ERROR("ResultSetProxy::Initialize new failed, proxy is nullptr.");
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
@@ -432,7 +432,7 @@ napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
     Asset result;
     int errCode = resultSetProxy->GetInstance()->GetAsset(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
-        LOG_DEBUG("getAsset col %{public}d is null ", columnIndex);
+        LOG_DEBUG("getAsset col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
@@ -450,7 +450,7 @@ napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
     Assets result;
     int errCode = resultSetProxy->GetInstance()->GetAssets(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
-        LOG_DEBUG("getAssets col %{public}d is null ", columnIndex);
+        LOG_DEBUG("getAssets col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
@@ -468,7 +468,7 @@ napi_value ResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info info
     FloatVector result = {};
     int errCode = resultSetProxy->GetInstance()->GetFloat32Array(columnIndex, result);
     if (errCode == E_NULL_OBJECT) {
-        LOG_DEBUG("GetFloat32Array col %{public}d is null ", columnIndex);
+        LOG_DEBUG("GetFloat32Array col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
@@ -635,7 +635,7 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
     auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "ResultSet", lambda, Initialize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "ResultSet", jsCtor));
 
-    LOG_DEBUG("ResultSetProxy::Init end");
+    LOG_DEBUG("ResultSetProxy::Init end.");
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

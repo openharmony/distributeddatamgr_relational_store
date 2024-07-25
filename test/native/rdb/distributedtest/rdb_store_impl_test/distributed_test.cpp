@@ -15,10 +15,13 @@
 
 #include <gtest/gtest.h>
 
+#include <regex>
 #include <string>
 #include <vector>
+
 #include "device_manager.h"
 #include "device_manager_callback.h"
+#include "distributed_major.h"
 #include "dm_device_info.h"
 #include "hilog/log.h"
 #include "rdb_errno.h"
@@ -28,10 +31,6 @@
 #include "rdb_types.h"
 #include "result_set_proxy.h"
 
-#include <regex>
-
-#include "distributed_major.h"
-
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
@@ -39,9 +38,9 @@ using namespace testing::ext;
 using namespace OHOS::DistributeSystemTest;
 using namespace OHOS::DistributedHardware;
 using namespace OHOS::HiviewDFX;
-namespace  {
+namespace {
 const int MSG_LENGTH = 100;
-constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTest"};
+constexpr HiLogLabel LABEL = { LOG_CORE, 0, "DistributedTest" };
 static const std::string RDB_TEST_PATH = "/data/test/";
 constexpr const char *PKG_NAME = "rdb_store_distributed_test";
 class DistributedTest : public DistributeTest {
@@ -53,7 +52,7 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
-    static std::vector <DmDeviceInfo> deviceInfos_;
+    static std::vector<DmDeviceInfo> deviceInfos_;
     static void InitDevManager();
 };
 
@@ -63,17 +62,31 @@ std::vector<DmDeviceInfo> DistributedTest::deviceInfos_;
 
 class DMStateCallback : public DeviceStateCallback {
 public:
-    explicit DMStateCallback() {}
-    void OnDeviceOnline(const DmDeviceInfo &deviceInfo) override {}
-    void OnDeviceOffline(const DmDeviceInfo &deviceInfo) override {}
-    void OnDeviceChanged(const DmDeviceInfo &deviceInfo) override {}
-    void OnDeviceReady(const DmDeviceInfo &deviceInfo) override {}
+    explicit DMStateCallback()
+    {
+    }
+    void OnDeviceOnline(const DmDeviceInfo &deviceInfo) override
+    {
+    }
+    void OnDeviceOffline(const DmDeviceInfo &deviceInfo) override
+    {
+    }
+    void OnDeviceChanged(const DmDeviceInfo &deviceInfo) override
+    {
+    }
+    void OnDeviceReady(const DmDeviceInfo &deviceInfo) override
+    {
+    }
 };
 
 class DmDeathCallback : public DmInitCallback {
 public:
-    explicit DmDeathCallback() {}
-    void OnRemoteDied() override {}
+    explicit DmDeathCallback()
+    {
+    }
+    void OnRemoteDied() override
+    {
+    }
 };
 
 void DistributedTest::InitDevManager()
@@ -92,10 +105,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                              "name TEXT NOT NULL, age INTEGER, salary "
-                                                                              "REAL, blobType BLOB)");
+const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int DistributedTestOpenCallback::OnCreate(RdbStore &store_)
 {
@@ -131,7 +144,8 @@ void DistributedTest::SetUp(void)
 }
 
 void DistributedTest::TearDown(void)
-{}
+{
+}
 
 /**
  * @tc.name: RemoteQuery001
@@ -145,12 +159,11 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     int ret;
     std::string returvalue;
     std::string msgBuf = "recall function message test.";
-    ret = SendMessage(AGENT_NO::ONE, msgBuf, MSG_LENGTH,
-        [&](const std::string &szreturnbuf, int rlen)->bool {
+    ret = SendMessage(AGENT_NO::ONE, msgBuf, MSG_LENGTH, [&](const std::string &szreturnbuf, int rlen) -> bool {
         returvalue = szreturnbuf;
         return true;
     });
-    std::vector<std::string> tables = {"test"};
+    std::vector<std::string> tables = { "test" };
     DeviceManager::GetInstance().GetTrustedDeviceList(PKG_NAME, "", deviceInfos_);
     int errCode = E_ERROR;
     std::string test = store_->ObtainDistributedTableName(deviceInfos_[0].networkId, tables[0], errCode);
@@ -163,7 +176,6 @@ HWTEST_F(DistributedTest, RemoteQuery001, TestSize.Level1)
     EXPECT_TRUE(ret > 0);
     EXPECT_EQ(returvalue, "zhangsan");
 }
-
 
 /**
  * @tc.name: ResultSetProxy001
@@ -206,7 +218,7 @@ HWTEST_F(DistributedTest, ResultSetProxy001, TestSize.Level1)
     errCode = resultSet->IsColumnNull(1, isNull);
     EXPECT_NE(E_OK, errCode);
 }
-}
+} // namespace
 
 int main(int argc, char *argv[])
 {

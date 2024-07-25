@@ -92,7 +92,7 @@ int AbsResultSet::GetRowCount(int &count)
     }
 
     if (isClosed_) {
-        LOG_ERROR("fail, result set E_ALREADY_CLOSED");
+        LOG_ERROR("fail, result set E_ALREADY_CLOSED.");
         return E_ALREADY_CLOSED;
     }
 

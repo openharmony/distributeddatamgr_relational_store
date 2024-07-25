@@ -16,6 +16,7 @@
 #include "raw_data_parser.h"
 
 #include <gtest/gtest.h>
+
 #include "value_object.h"
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;

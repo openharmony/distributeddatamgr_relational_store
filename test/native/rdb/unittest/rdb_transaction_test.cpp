@@ -47,11 +47,11 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string TransactionTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                   + std::string("(id INTEGER PRIMARY KEY "
-                                                                                 "AUTOINCREMENT, name TEXT NOT NULL, "
-                                                                                 "age INTEGER, salary REAL, blobType "
-                                                                                 "BLOB)");
+const std::string TransactionTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY "
+                                                                  "AUTOINCREMENT, name TEXT NOT NULL, "
+                                                                  "age INTEGER, salary REAL, blobType "
+                                                                  "BLOB)");
 
 int TransactionTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -88,7 +88,6 @@ void RdbTransactionTest::SetUp(void)
 void RdbTransactionTest::TearDown(void)
 {
 }
-
 
 /**
  * @tc.name: RdbStore_Transaction_001
@@ -218,7 +217,6 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(deletedRows, 0);
 }
-
 
 /**
  * @tc.name: RdbStore_NestedTransaction_001
@@ -456,7 +454,6 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_001, TestSize.Level1)
     EXPECT_EQ(100, rowCount);
 }
 
-
 /**
  * @tc.name: RdbStore_BatchInsert_002
  * @tc.desc: test RdbStore BatchInsert
@@ -491,7 +488,6 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_002, TestSize.Level1)
     EXPECT_EQ(100, rowCount);
 }
 
-
 /**
  * @tc.name: RdbStore_BatchInsert_003
  * @tc.desc: test RdbStore BatchInsert
@@ -510,7 +506,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     std::vector<uint8_t> blob = { 1, 2, 3 };
     std::vector<ValuesBucket> valuesBuckets;
     for (int i = 0; i < 100; i++) {
-        RowData rowData1 = {id + i, name, age + i, salary + i, blob};
+        RowData rowData1 = { id + i, name, age + i, salary + i, blob };
         ValuesBucket values = UTUtils::SetRowData(rowData1);
         valuesBuckets.push_back(std::move(values));
     }
@@ -527,7 +523,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 
     valuesBuckets.clear();
     for (int i = 50; i < 100; i++) {
-        RowData rowData2 = {id + i, name, age + i, salary + i, blob};
+        RowData rowData2 = { id + i, name, age + i, salary + i, blob };
         ValuesBucket values = UTUtils::SetRowData(rowData2);
         valuesBuckets.push_back(std::move(values));
     }

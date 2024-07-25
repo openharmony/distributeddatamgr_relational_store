@@ -352,8 +352,7 @@ void RdbAttachTest::DeleteCheck(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
 
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
     EXPECT_NE(resultSet, nullptr);
     int count = 0;
     resultSet->GetRowCount(count);
@@ -366,8 +365,7 @@ void RdbAttachTest::DeleteCheck(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows2, 1);
 
-    std::shared_ptr<ResultSet> resultSet2 =
-        store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
+    std::shared_ptr<ResultSet> resultSet2 = store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
     EXPECT_NE(resultSet2, nullptr);
     int count2 = 0;
     resultSet2->GetRowCount(count2);
@@ -385,8 +383,7 @@ void RdbAttachTest::UpdateCheck(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
 
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1 where name = 'lisi_update1'");
     EXPECT_NE(resultSet, nullptr);
     int count = 0;
     resultSet->GetRowCount(count);
@@ -401,8 +398,7 @@ void RdbAttachTest::UpdateCheck(std::shared_ptr<RdbStore> &store) const
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows2, 1);
 
-    std::shared_ptr<ResultSet> resultSet2 =
-        store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
+    std::shared_ptr<ResultSet> resultSet2 = store->QuerySql("SELECT * FROM test2 where name = 'lisi_update2'");
     EXPECT_NE(resultSet2, nullptr);
     int count2 = 0;
     resultSet2->GetRowCount(count2);

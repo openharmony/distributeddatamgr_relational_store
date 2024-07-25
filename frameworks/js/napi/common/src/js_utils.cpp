@@ -277,7 +277,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
         value = std::monostate();
         return napi_ok;
     }
-    LOG_DEBUG("jsValue is not null");
+    LOG_DEBUG("jsValue is not null.");
     return napi_invalid_arg;
 }
 
@@ -466,7 +466,7 @@ int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &ou
 {
     std::string tempStr = std::string(value);
     if (napi_create_string_utf8(env, tempStr.c_str(), tempStr.size(), &output) != napi_ok) {
-        LOG_ERROR("Convert2JSValue create JS string failed");
+        LOG_ERROR("Convert2JSValue create JS string failed.");
         return ERR;
     }
     return napi_ok;
@@ -475,7 +475,7 @@ int32_t JSUtils::Convert2JSValue(napi_env env, std::string value, napi_value &ou
 int32_t JSUtils::Convert2JSValue(napi_env env, bool value, napi_value &output)
 {
     if (napi_get_boolean(env, value, &output) != napi_ok) {
-        LOG_ERROR("Convert2JSValue create JS bool failed");
+        LOG_ERROR("Convert2JSValue create JS bool failed.");
         return ERR;
     }
     return napi_ok;
@@ -484,7 +484,7 @@ int32_t JSUtils::Convert2JSValue(napi_env env, bool value, napi_value &output)
 int32_t JSUtils::Convert2JSValue(napi_env env, double value, napi_value &output)
 {
     if (napi_create_double(env, value, &output) != napi_ok) {
-        LOG_ERROR("Convert2JSValue create JS double failed");
+        LOG_ERROR("Convert2JSValue create JS double failed.");
         return ERR;
     }
     return napi_ok;
