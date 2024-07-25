@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <iostream>
 #include <string>
 
@@ -35,14 +35,16 @@ public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp();
-    void TearDown() {}
+    void TearDown()
+    {
+    }
 
     void InsertValue(std::shared_ptr<RdbStore> &store);
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
 
     static constexpr int ddmsGroupId_ = 1000;
     static const std::string DRDB_NAME;
-    static const  std::string DRDB_PATH;
+    static const std::string DRDB_PATH;
 };
 
 const std::string RdbStoreDistributedTest::DRDB_NAME = "distributed_rdb.db";
@@ -50,7 +52,7 @@ const std::string RdbStoreDistributedTest::DRDB_PATH = "/data/test/";
 
 class TestOpenCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore& store) override
+    int OnCreate(RdbStore &store) override
     {
         std::string sql = "CREATE TABLE IF NOT EXISTS employee ("
                           "id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -62,12 +64,12 @@ public:
         return 0;
     }
 
-    int OnOpen(RdbStore& store) override
+    int OnOpen(RdbStore &store) override
     {
         return 0;
     }
 
-    int OnUpgrade(RdbStore& store, int currentVersion, int targetVersion) override
+    int OnUpgrade(RdbStore &store, int currentVersion, int targetVersion) override
     {
         return 0;
     }
@@ -113,7 +115,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18); // 18 age
+    values.PutInt("age", 18);          // 18 age
     values.PutDouble("salary", 100.5); // 100.5
     values.PutBlob("data", std::vector<uint8_t>{ 1, 2, 3 });
     EXPECT_EQ(E_OK, store->Insert(id, "employee", values));

@@ -242,7 +242,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
         tmp[columnName] = value;
         auto hashKey = DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(tmp);
         if (hashKey.empty()) {
-            LOG_DEBUG("hash key fail");
+            LOG_DEBUG("hash key fail.");
             continue;
         }
         hashKeys.emplace_back(ValueObject(hashKey));
@@ -1675,7 +1675,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     }
 
     if (connectionPool_ == nullptr) {
-        LOG_ERROR("connectionPool_ is null");
+        LOG_ERROR("connectionPool_ is null.");
         return E_ERROR;
     }
     return connectionPool_->ConfigLocale(localeStr);
@@ -1795,7 +1795,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
         DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
     errCode = deviceManager.GetEncryptedUuidByNetworkId(device, uuid);
     if (errCode != E_OK) {
-        LOG_ERROR("GetUuid is failed");
+        LOG_ERROR("GetUuid is failed.");
         return "";
     }
 
@@ -1877,7 +1877,7 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption& option, RdbStoreObserver
     auto &list = localObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
-            LOG_ERROR("duplicate subscribe");
+            LOG_ERROR("duplicate subscribe.");
             return E_OK;
         }
     }
@@ -1893,7 +1893,7 @@ int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreOb
     auto &list = localSharedObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
-            LOG_ERROR("duplicate subscribe");
+            LOG_ERROR("duplicate subscribe.");
             return E_OK;
         }
     }
@@ -2159,7 +2159,7 @@ void RdbStoreImpl::InitDelayNotifier()
         delayNotifier_ = std::make_shared<DelayNotify>();
     }
     if (delayNotifier_ == nullptr) {
-        LOG_ERROR("Init delay notifier failed");
+        LOG_ERROR("Init delay notifier failed.");
         return;
     }
     delayNotifier_->SetExecutorPool(pool_);

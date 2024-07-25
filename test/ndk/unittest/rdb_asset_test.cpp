@@ -14,9 +14,10 @@
  */
 
 #include <gtest/gtest.h>
-#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <string>
 
 #include "common.h"
 #include "relational_store.h"
@@ -70,9 +71,13 @@ void RdbNativeAssetTest::TearDownTestCase(void)
     EXPECT_EQ(errCode, 0);
 }
 
-void RdbNativeAssetTest::SetUp(void) {}
+void RdbNativeAssetTest::SetUp(void)
+{
+}
 
-void RdbNativeAssetTest::TearDown(void) {}
+void RdbNativeAssetTest::TearDown(void)
+{
+}
 
 void RdbNativeAssetTest::CreateAssetTable()
 {

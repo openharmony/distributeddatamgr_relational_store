@@ -45,7 +45,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
 {
     std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
     if (pool == nullptr) {
-        LOG_ERROR("ConnPool::Create new failed, pool is nullptr");
+        LOG_ERROR("ConnPool::Create new failed, pool is nullptr.");
         errCode = E_ERROR;
         return nullptr;
     }
@@ -334,13 +334,13 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         auto [retVal, connection] = CreateConnection(false);
 
         if (connection == nullptr) {
-            LOG_ERROR("Get null connection");
+            LOG_ERROR("Get null connection.");
             return retVal;
         }
 
         retVal = connection->Restore(backupPath, {});
         if (retVal != E_OK) {
-            LOG_ERROR("RdDbRestore error");
+            LOG_ERROR("RdDbRestore error.");
             return retVal;
         }
         CloseAllConnections();

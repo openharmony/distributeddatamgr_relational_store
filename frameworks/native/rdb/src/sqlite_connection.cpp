@@ -64,7 +64,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     auto &[errCode, conn] = result;
     std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
     if (connection == nullptr) {
-        LOG_ERROR("connection is nullptr");
+        LOG_ERROR("connection is nullptr.");
         return result;
     }
     errCode = connection->InnerOpen(config);
@@ -201,12 +201,12 @@ int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)
 static void CustomScalarFunctionCallback(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
     if (ctx == nullptr || argv == nullptr) {
-        LOG_ERROR("ctx or argv is nullptr");
+        LOG_ERROR("ctx or argv is nullptr.");
         return;
     }
     auto function = static_cast<ScalarFunction *>(sqlite3_user_data(ctx));
     if (function == nullptr) {
-        LOG_ERROR("function is nullptr");
+        LOG_ERROR("function is nullptr.");
         return;
     }
 
@@ -518,7 +518,7 @@ int SqliteConnection::SetPersistWal()
     int opcode = 1;
     int errCode = sqlite3_file_control(dbHandle_, "main", SQLITE_FCNTL_PERSIST_WAL, &opcode);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("failed");
+        LOG_ERROR("failed.");
         return E_SET_PERSIST_WAL;
     }
     return E_OK;
@@ -581,7 +581,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
         }
 
         if (SqliteUtils::StrToUpper(static_cast<std::string>(journalMode)) != config.GetJournalMode()) {
-            LOG_ERROR("SqliteConnection SetJournalMode: result incorrect");
+            LOG_ERROR("SqliteConnection SetJournalMode: result incorrect.");
             return E_EXECUTE_RESULT_INCORRECT;
         }
     }
@@ -948,7 +948,7 @@ int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_
     auto &list = observers_.find(event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->GetObserver() == observer) {
-            LOG_ERROR("duplicate subscribe");
+            LOG_ERROR("duplicate subscribe.");
             return E_OK;
         }
     }

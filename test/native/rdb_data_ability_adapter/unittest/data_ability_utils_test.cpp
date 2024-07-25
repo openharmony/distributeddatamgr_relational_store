@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <vector>
 
 #include "abs_rdb_predicates.h"
@@ -36,10 +37,18 @@ public:
     void TearDown();
 };
 
-void DataAbilityUtilsTest::SetUpTestCase(void) {}
-void DataAbilityUtilsTest::TearDownTestCase(void) {}
-void DataAbilityUtilsTest::SetUp(void) {}
-void DataAbilityUtilsTest::TearDown(void) {}
+void DataAbilityUtilsTest::SetUpTestCase(void)
+{
+}
+void DataAbilityUtilsTest::TearDownTestCase(void)
+{
+}
+void DataAbilityUtilsTest::SetUp(void)
+{
+}
+void DataAbilityUtilsTest::TearDown(void)
+{
+}
 
 /* *
  * @tc.name: DataAbilityUtilsTest_001

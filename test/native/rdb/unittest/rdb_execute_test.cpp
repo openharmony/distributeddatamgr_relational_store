@@ -319,7 +319,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(ValueObjectType::TYPE_INT, outValue.GetType());
 
-    int64_t outputResult {0};
+    int64_t outputResult{ 0 };
     outValue.GetLong(outputResult);
     EXPECT_EQ(5, outputResult);
 
@@ -349,8 +349,8 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0011, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
 
-    std::vector<ValueObject> args = {
-        ValueObject(std::string("tt")), ValueObject(int(28)), ValueObject(double(50000.0)) };
+    std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
+        ValueObject(double(50000.0)) };
     auto [ret, outValue] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?);", args);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(ValueObjectType::TYPE_INT, outValue.GetType());

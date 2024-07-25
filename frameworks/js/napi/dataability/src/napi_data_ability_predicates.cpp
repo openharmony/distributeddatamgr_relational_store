@@ -95,7 +95,7 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
     if (is_constructor) {
         auto *proxy = new (std::nothrow) DataAbilityPredicatesProxy();
         if (proxy == nullptr) {
-            LOG_ERROR("DataAbilityPredicatesProxy::New new failed, proxy is nullptr");
+            LOG_ERROR("DataAbilityPredicatesProxy::New new failed, proxy is nullptr.");
             return nullptr;
         }
         napi_status status = napi_wrap(env, thiz, proxy, DataAbilityPredicatesProxy::Destructor, nullptr, nullptr);

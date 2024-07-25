@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#include "rdb_sql_utils.h"
+
 #include <gtest/gtest.h>
+
 #include <climits>
 #include <string>
-#include "rd_utils.h"
+
 #include "grd_type_export.h"
-#include "rdb_sql_utils.h"
+#include "rd_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -27,8 +30,8 @@ class RdbSqlUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void RdbSqlUtilsTest::SetUpTestCase(void)

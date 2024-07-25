@@ -32,11 +32,11 @@ NapiRdbStoreObserver::~NapiRdbStoreObserver() noexcept
 
 void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
-    LOG_INFO("NapiRdbStoreObserver::OnChange begin");
+    LOG_INFO("NapiRdbStoreObserver::OnChange begin.");
     CallFunction([devices](napi_env env, int &argc, napi_value *argv) {
         argc = 1;
         if (argv == nullptr) {
-            LOG_ERROR("NapiRdbStoreObserver::CallFunction error");
+            LOG_ERROR("NapiRdbStoreObserver::CallFunction error.");
             return;
         }
         argv[0] = JSUtils::Convert2JSValue(env, devices);

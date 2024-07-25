@@ -347,9 +347,9 @@ HWTEST_F(RdbEncryptTest, AbnomalRdbStore_RdbPassword_001, TestSize.Level2)
     RdbPassword password1;
     RdbPassword password2;
     int errCode = E_OK;
-    uint8_t inputData[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    uint8_t inputData[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     std::ostringstream ss;
-    std::copy(inputData, inputData+sizeof(inputData), std::ostream_iterator<int>(ss));
+    std::copy(inputData, inputData + sizeof(inputData), std::ostream_iterator<int>(ss));
 
     // if size_t > 128
     errCode = password1.SetValue(inputData, 256);

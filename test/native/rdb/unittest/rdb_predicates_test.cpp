@@ -13,23 +13,25 @@
  * limitations under the License.
  */
 
+#include "rdb_predicates.h"
+
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <string>
-#include <vector>
-#include <sstream>
+
 #include <algorithm>
 #include <climits>
 #include <ctime>
+#include <sstream>
+#include <string>
+#include <vector>
 
+#include "abs_rdb_predicates.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "rdb_predicates.h"
-#include "abs_rdb_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -328,7 +330,8 @@ public:
 
 std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
 const std::string RdbStorePredicateTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_test.db";
-const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL = "CREATE TABLE IF NOT EXISTS AllDataType "
+const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL =
+    "CREATE TABLE IF NOT EXISTS AllDataType "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, integerValue INTEGER , longValue INTEGER , "
     "shortValue INTEGER , booleanValue INTEGER , doubleValue REAL , floatValue REAL , "
     "stringValue TEXT , blobValue BLOB , clobValue TEXT , byteValue INTEGER , "
@@ -338,10 +341,12 @@ const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL = "CREATE TABLE IF NOT EXISTS A
     "primBooleanValue INTEGER  NOT NULL, primByteValue INTEGER  NOT NULL, "
     "primCharValue TEXT, `orderr` INTEGER);";
 
-const std::string CREATE_TABLE_PERSON_SQL = "CREATE TABLE IF NOT EXISTS person "
-   "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT , age INTEGER , REAL INTEGER);";
+const std::string CREATE_TABLE_PERSON_SQL =
+    "CREATE TABLE IF NOT EXISTS person "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT , age INTEGER , REAL INTEGER);";
 
-const std::string ALL_DATA_TYPE_INSERT_SQL = "INSERT INTO AllDataType (id, integerValue, longValue, "
+const std::string ALL_DATA_TYPE_INSERT_SQL =
+    "INSERT INTO AllDataType (id, integerValue, longValue, "
     "shortValue, booleanValue, doubleValue, floatValue, stringValue, blobValue, "
     "clobValue, byteValue, timeValue, characterValue, primIntValue, primLongValue, "
     "primShortValue, primFloatValue, primDoubleValue, "
@@ -365,7 +370,8 @@ int PredicateTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int ne
 }
 
 void RdbStorePredicateTest::SetUpTestCase()
-{}
+{
+}
 
 void RdbStorePredicateTest::TearDownTestCase()
 {
@@ -387,7 +393,9 @@ void RdbStorePredicateTest::SetUp()
     RdbStorePredicateTest::GenerateAllDataTypeTable();
 }
 
-void RdbStorePredicateTest::TearDown(void) {}
+void RdbStorePredicateTest::TearDown(void)
+{
+}
 
 void RdbStorePredicateTest::GenerateAllDataTypeTable()
 {
@@ -407,7 +415,7 @@ void RdbStorePredicateTest::GenerateAllDataTypeTable()
 
 AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
 {
-    std::vector<uint8_t> blob = {1, 2, 3};
+    std::vector<uint8_t> blob = { 1, 2, 3 };
     AllDataType dataType;
     dataType.SetId(1); // 1 means Id of the AllDataType object is 1
     dataType.SetIntegerValue(INT_MAX);
@@ -422,7 +430,7 @@ AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
     dataType.SetClobValue("ABCDEFGHIJKLMN");
     dataType.SetByteValue(INT8_MAX);
 
-    std::vector<int> date = {2019, 7, 10};
+    std::vector<int> date = { 2019, 7, 10 };
     time_t timeValue = RdbStorePredicateTest::DateMakeTime(date);
     dataType.SetTimeValue(timeValue);
 
@@ -439,7 +447,7 @@ AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
 
 AllDataType RdbStorePredicateTest::BuildAllDataType2()
 {
-    std::vector<uint8_t> blob = {1, 2, 3};
+    std::vector<uint8_t> blob = { 1, 2, 3 };
     AllDataType dataType2;
     dataType2.SetId(2); // 2 means Id of the AllDataType object is 2
     dataType2.SetIntegerValue(1);
@@ -454,7 +462,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType2()
     dataType2.SetClobValue("ABCDEFGHIJKLMN");
     dataType2.SetByteValue(INT8_MIN);
 
-    std::vector<int> date = {2019, 7, 17};
+    std::vector<int> date = { 2019, 7, 17 };
     time_t timeValue2 = RdbStorePredicateTest::DateMakeTime(date);
     dataType2.SetTimeValue(timeValue2);
 
@@ -471,7 +479,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType2()
 
 AllDataType RdbStorePredicateTest::BuildAllDataType3()
 {
-    std::vector<uint8_t> blob = {1, 2, 3};
+    std::vector<uint8_t> blob = { 1, 2, 3 };
     AllDataType dataType3;
     dataType3.SetId(3); // 3 means Id of the AllDataType object is 3
     dataType3.SetIntegerValue(INT_MIN);
@@ -486,7 +494,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType3()
     dataType3.SetClobValue("ABCDEFGHIJKLMN");
     dataType3.SetByteValue(INT8_MIN);
 
-    std::vector<int> date = {2019, 6, 10};
+    std::vector<int> date = { 2019, 6, 10 };
     time_t timeValue3 = RdbStorePredicateTest::DateMakeTime(date);
     dataType3.SetTimeValue(timeValue3);
 
@@ -541,7 +549,7 @@ void RdbStorePredicateTest::InsertDates(std::vector<AllDataType> dataTypes)
         strByte.str("");
         strByte << dataTypes[i].GetPrimDoubleValue();
         objects.push_back(ValueObject(strByte.str()));
-        objects.push_back(ValueObject(dataTypes[i].IsPrimBooleanValue() ? (char) 1 : (char) 0));
+        objects.push_back(ValueObject(dataTypes[i].IsPrimBooleanValue() ? (char)1 : (char)0));
         objects.push_back(ValueObject(dataTypes[i].GetPrimByteValue()));
 
         strByte.str("");
@@ -555,7 +563,7 @@ void RdbStorePredicateTest::InsertDates(std::vector<AllDataType> dataTypes)
 
 time_t RdbStorePredicateTest::DateMakeTime(std::vector<int> data)
 {
-    struct tm t1 = {0};
+    struct tm t1 = { 0 };
     t1.tm_year = data[0] - 1990;
     t1.tm_mon = data[1] - 1;
     t1.tm_hour = data[2];
@@ -597,7 +605,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_002, TestSize.Level1)
 {
     std::vector<std::string> tableEmpty;
-    std::vector<std::string> tables({"AllDataType", "person"});
+    std::vector<std::string> tables({ "AllDataType", "person" });
 
     AbsRdbPredicates predicates1(tableEmpty);
     AbsRdbPredicates predicates2(tables);
@@ -668,7 +676,7 @@ void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
     std::vector<std::string> columns;
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 7, 17};
+    std::vector<int> date = { 2019, 7, 17 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
 
     predicates1.EqualTo("timeValue", std::to_string(calendarTime));
@@ -733,7 +741,7 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     EXPECT_EQ(3, valueInt);
 
     predicates1.Clear();
-    predicates1.EqualTo("blobValue", std::vector<uint8_t>{1, 2, 3});
+    predicates1.EqualTo("blobValue", std::vector<uint8_t>{ 1, 2, 3 });
     std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
     // 3 rows in the resultSet when blobValue={1, 2, 3}
     EXPECT_EQ(3, ResultSize(allDataTypes9));
@@ -838,7 +846,7 @@ void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
     std::vector<std::string> columns;
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 7, 17};
+    std::vector<int> date = { 2019, 7, 17 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
 
     predicates1.NotEqualTo("timeValue", std::to_string(calendarTime));
@@ -966,7 +974,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
     EXPECT_EQ(2, ResultSize(allDataTypes5));
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 6, 9};
+    std::vector<int> date = { 2019, 6, 9 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.GreaterThan("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
@@ -1014,7 +1022,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 6, 9};
+    std::vector<int> date = { 2019, 6, 9 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.GreaterThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
@@ -1068,7 +1076,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 6, 9};
+    std::vector<int> date = { 2019, 6, 9 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.LessThan("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
@@ -1116,7 +1124,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
     EXPECT_EQ(1, ResultSize(allDataTypes5));
 
     predicates1.Clear();
-    std::vector<int> date = {2019, 6, 9};
+    std::vector<int> date = { 2019, 6, 9 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     predicates1.LessThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
@@ -1167,9 +1175,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
-    std::vector<int> lowCalendar = {2019, 6, 9};
+    std::vector<int> lowCalendar = { 2019, 6, 9 };
     time_t lowCalendarTime = RdbStorePredicateTest::DateMakeTime(lowCalendar);
-    std::vector<int> highCalendar = {2019, 7, 17};
+    std::vector<int> highCalendar = { 2019, 7, 17 };
     time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
     predicates1.Between("timeValue", std::to_string(lowCalendarTime).c_str(), std::to_string(highCalendarTime).c_str());
     std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
@@ -1252,11 +1260,11 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
-    ->BeginWrap()
-    ->EqualTo("integerValue", "1")
-    ->Or()
-    ->EqualTo("integerValue", std::to_string(INT_MAX))
-    ->EndWrap();
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap();
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
@@ -1278,11 +1286,11 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
-    ->BeginWrap()
-    ->EqualTo("integerValue", "1")
-    ->Or()
-    ->EqualTo("integerValue", std::to_string(INT_MAX))
-    ->EndWrap();
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap();
 
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
@@ -1460,9 +1468,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
     std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
-    std::vector<int> lowCalendar = {2019, 6, 9};
+    std::vector<int> lowCalendar = { 2019, 6, 9 };
     time_t lowCalendarTime = RdbStorePredicateTest::DateMakeTime(lowCalendar);
-    std::vector<int> highCalendar = {2019, 7, 17};
+    std::vector<int> highCalendar = { 2019, 7, 17 };
     time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
     predicates1.Clear();
     predicates1.NotBetween("timeValue", std::to_string(lowCalendarTime), std::to_string(highCalendarTime));
@@ -1481,8 +1489,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
     RdbPredicates predicates1("AllDataType");
     std::vector<std::string> columns;
 
-    predicates1.Glob("stringValue", "ABC*")->EqualTo("booleanValue", "1")
-    ->NotBetween("longValue", "0", "2");
+    predicates1.Glob("stringValue", "ABC*")->EqualTo("booleanValue", "1")->NotBetween("longValue", "0", "2");
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
@@ -1510,13 +1517,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
-    ->BeginWrap()
-    ->EqualTo("integerValue", "1")
-    ->Or()
-    ->EqualTo("integerValue", std::to_string(INT_MAX))
-    ->EndWrap()
-    ->OrderByDesc("integerValue")
-    ->Limit(2);
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(2);
 
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
@@ -1550,8 +1557,8 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     predicates1.Clear();
     EXPECT_EQ("AllDataType", predicates1.GetTableName());
     EXPECT_EQ(-2147483648, predicates1.GetLimit());
-    EXPECT_EQ(true,  predicates1.GetWhereClause().empty());
-    EXPECT_EQ(true,  predicates1.GetWhereArgs().empty());
+    EXPECT_EQ(true, predicates1.GetWhereClause().empty());
+    EXPECT_EQ(true, predicates1.GetWhereArgs().empty());
 
     EXPECT_EQ(true, predicates1.GetJoinTableNames().empty());
     EXPECT_EQ(0, predicates1.GetJoinCount());
@@ -1572,7 +1579,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
 {
     RdbPredicates rdbPredicates1("AllDataType");
     std::vector<std::string> columns;
-    std::vector<std::string> agrs = {std::to_string(INT_MAX)};
+    std::vector<std::string> agrs = { std::to_string(INT_MAX) };
     rdbPredicates1.In("integerValue", agrs);
     std::shared_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
     int count = 0;
@@ -1599,7 +1606,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
     resultSet4->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    std::vector<int> date = {2019, 6, 10};
+    std::vector<int> date = { 2019, 6, 10 };
     time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
     RdbPredicates rdbPredicates5("AllDataType");
     agrs[0] = std::to_string(calendarTime);
@@ -1618,7 +1625,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
 {
     std::vector<std::string> columns;
-    std::vector<std::string> agrs = {std::to_string(INT_MAX), std::to_string(INT_MIN)};
+    std::vector<std::string> agrs = { std::to_string(INT_MAX), std::to_string(INT_MIN) };
     std::stringstream tempValue;
 
     RdbPredicates rdbPredicates1("AllDataType");
@@ -1667,13 +1674,15 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 {
     RdbPredicates predicates1("AllDataType");
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
-    ->BeginWrap()
-    ->EqualTo("integerValue", "1")
-    ->Or()
-    ->EqualTo("integerValue", std::to_string(INT_MAX))
-    ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", std::to_string(INT_MAX))
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(2);
 
-    std::vector<std::string> columns = {"booleanValue", "doubleValue", "orderr"};
+    std::vector<std::string> columns = { "booleanValue", "doubleValue", "orderr" };
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
     int count = ResultSize(allDataTypes1);
@@ -1756,9 +1765,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Le
     std::vector<std::string> devices;
     devices.push_back("7001005458323933328a071dab423800");
     devices.push_back("7001005458323933328a268fa2fa3900");
-    AbsRdbPredicates* absRdbPredicates = predicates.InDevices(devices);
+    AbsRdbPredicates *absRdbPredicates = predicates.InDevices(devices);
     EXPECT_NE(absRdbPredicates, nullptr);
-    AbsRdbPredicates* absRdbPredicates1 = predicates.InAllDevices();
+    AbsRdbPredicates *absRdbPredicates1 = predicates.InAllDevices();
     EXPECT_NE(absRdbPredicates1, nullptr);
     EXPECT_EQ(absRdbPredicates, absRdbPredicates1);
 }
@@ -1810,7 +1819,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
     resultSet2->Close();
 }
 
-
 /* *
  * @tc.name: RdbStore_NotContain_029
  * @tc.desc: Normal testCase of RdbPredicates for Not Contain
@@ -1826,7 +1834,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotContain_029, TestSize.Level1)
     std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
-
 
 /* *
  * @tc.name: RdbStore_NotLike_030
@@ -2246,7 +2253,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_001, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_002, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.GroupBy({"idx"});
+    predicates.GroupBy({ "idx" });
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
@@ -2262,7 +2269,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_002, TestSize.Level1)
 HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_003, TestSize.Level1)
 {
     RdbPredicates predicates("AllDataType");
-    predicates.GroupBy({""});
+    predicates.GroupBy({ "" });
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);

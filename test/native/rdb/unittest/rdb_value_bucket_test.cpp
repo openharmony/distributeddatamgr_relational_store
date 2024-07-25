@@ -21,10 +21,10 @@
 #include "message_parcel.h"
 #include "parcel.h"
 #include "raw_data_parser.h"
+#include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "value_object.h"
 #include "values_bucket.h"
-#include "rdb_errno.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -364,8 +364,8 @@ HWTEST_F(ValuesBucketTest, Convert_To_Subset, TestSize.Level1)
     auto *blob = std::get_if<std::vector<uint8_t>>(&output);
     EXPECT_TRUE(blob != nullptr);
     EXPECT_TRUE(*blob == std::vector<uint8_t>(10, 'm'));
-    AssetValue value{.version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12"};
-    input = value ;
+    AssetValue value{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" };
+    input = value;
     output = {};
     RawDataParser::Convert(input, output);
     nil = std::get_if<std::monostate>(&output);
@@ -390,7 +390,7 @@ HWTEST_F(ValuesBucketTest, Explicit_Conversion, TestSize.Level1)
     auto transformedBlob = ValueObject::Blob(valueObject);
     ASSERT_EQ(transformedBlob.size(), 10);
 
-    AssetValue asset{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12"};
+    AssetValue asset{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" };
     valueObject = ValueObject(asset);
     auto transformedAsset = ValueObject::Asset(valueObject);
     ASSERT_EQ(transformedAsset.version, asset.version);

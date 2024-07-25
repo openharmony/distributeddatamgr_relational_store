@@ -14,9 +14,10 @@
  */
 
 #include <gtest/gtest.h>
-#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <string>
 
 #include "common.h"
 #include "relational_store.h"
@@ -102,9 +103,13 @@ void RdbNativeCursorTest::TearDownTestCase(void)
     OH_Rdb_DeleteStore(&config_);
 }
 
-void RdbNativeCursorTest::SetUp(void) {}
+void RdbNativeCursorTest::SetUp(void)
+{
+}
 
-void RdbNativeCursorTest::TearDown(void) {}
+void RdbNativeCursorTest::TearDown(void)
+{
+}
 
 void RdbNativeCursorTest::CreateAssetTable()
 {
@@ -418,7 +423,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    const char *columnNames[] = {"data1", "data2", "data3", "data4"};
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);

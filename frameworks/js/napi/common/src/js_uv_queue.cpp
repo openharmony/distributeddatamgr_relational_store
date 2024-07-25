@@ -31,7 +31,7 @@ UvQueue::UvQueue(napi_env env) : env_(env)
 
 UvQueue::~UvQueue()
 {
-    LOG_DEBUG("no memory leak for queue-callback");
+    LOG_DEBUG("no memory leak for queue-callback.");
     env_ = nullptr;
     handler_ = nullptr;
 }
@@ -39,18 +39,18 @@ UvQueue::~UvQueue()
 void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
 {
     if (loop_ == nullptr || callback.IsNull()) {
-        LOG_ERROR("loop_ or callback is nullptr");
+        LOG_ERROR("loop_ or callback is nullptr.");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for UvEntry");
+        LOG_ERROR("no memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -75,12 +75,12 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
         AsyncCall(std::move(callback), std::move(args), std::move(result));
     }
     if (callback.IsNull()) {
-        LOG_ERROR("handler_ or callback is nullptr");
+        LOG_ERROR("handler_ or callback is nullptr.");
         return;
     }
     auto entry = std::make_shared<UvEntry>();
     if (entry == nullptr) {
-        LOG_ERROR("no memory for UvEntry");
+        LOG_ERROR("no memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -95,18 +95,18 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
 void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
 {
     if (loop_ == nullptr || promise.IsNull()) {
-        LOG_ERROR("loop_ or promise is nullptr");
+        LOG_ERROR("loop_ or promise is nullptr.");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for UvEntry");
+        LOG_ERROR("no memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -124,18 +124,18 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
 void UvQueue::Execute(UvQueue::Task task)
 {
     if (loop_ == nullptr || !task) {
-        LOG_ERROR("loop_ or task is nullptr");
+        LOG_ERROR("loop_ or task is nullptr.");
         return;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t");
+        LOG_ERROR("no memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) Task();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for Task");
+        LOG_ERROR("no memory for Task.");
         return;
     }
     *entry = task;

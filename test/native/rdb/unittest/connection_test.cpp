@@ -13,13 +13,16 @@
  * limitations under the License.
  */
 
+#include "connection.h"
+
 #include <gtest/gtest.h>
+
 #include <climits>
 #include <string>
-#include "connection.h"
+
 #include "grd_type_export.h"
-#include "rdb_store_config.h"
 #include "rdb_errno.h"
+#include "rdb_store_config.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -29,8 +32,8 @@ class ConnectionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void ConnectionTest::SetUpTestCase(void)
@@ -60,7 +63,6 @@ HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
     EXPECT_NE(connection1, nullptr);
 }
 
-
 /**
  * @tc.name: Connection_Test_002
  * @tc.desc: Normal testCase of sqlite_utils for IsSpecial, if sqlType is special
@@ -70,7 +72,7 @@ HWTEST_F(ConnectionTest, Connection_Test_002, TestSize.Level1)
 {
     RdbStoreConfig config("/data/test/connection_ut_test.db");
     config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
-    int ret= Connection::Repair(config);
+    int ret = Connection::Repair(config);
     EXPECT_EQ(ret, E_INVALID_ARGS);
 
     config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);

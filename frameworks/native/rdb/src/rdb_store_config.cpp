@@ -185,7 +185,7 @@ void RdbStoreConfig::SetReadOnly(bool readOnly)
 int RdbStoreConfig::SetDistributedType(DistributedType type)
 {
     if (type != DistributedType::RDB_DEVICE_COLLABORATION) {
-        LOG_ERROR("type is invalid");
+        LOG_ERROR("type is invalid.");
         return E_ERROR;
     }
     distributedType_ = type;
@@ -201,7 +201,7 @@ DistributedType RdbStoreConfig::GetDistributedType() const
 int RdbStoreConfig::SetBundleName(const std::string &bundleName)
 {
     if (bundleName.empty()) {
-        LOG_ERROR("bundleName is empty");
+        LOG_ERROR("bundleName is empty.");
         return E_ERROR;
     }
     bundleName_ = bundleName;

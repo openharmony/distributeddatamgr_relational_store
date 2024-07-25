@@ -74,13 +74,13 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
             OnDataChange(origin, primaries, std::move(changeInfo));
         });
     if (notifier_ == nullptr) {
-        LOG_ERROR("create notifier failed");
+        LOG_ERROR("create notifier failed.");
         return RDB_ERROR;
     }
 
     if (InitNotifier(param, notifier_->AsObject()) != RDB_OK) {
         notifier_ = nullptr;
-        LOG_ERROR("init notifier error");
+        LOG_ERROR("init notifier error.");
         return RDB_ERROR;
     }
 
@@ -121,7 +121,7 @@ std::pair<int32_t, Details> RdbServiceProxy::DoSync(const RdbSyncerParam& param,
     }
 
     if (!ITypesUtil::Unmarshal(reply, details)) {
-        LOG_ERROR("read result failed");
+        LOG_ERROR("read result failed.");
         status = RDB_ERROR;
         return result;
     }
@@ -133,10 +133,10 @@ int32_t RdbServiceProxy::DoSync(const RdbSyncerParam &param, const Option &optio
 {
     auto [status, details] = DoSync(param, option, predicates);
     if (status != RDB_OK) {
-        LOG_INFO("failed");
+        LOG_INFO("failed.");
         return RDB_ERROR;
     }
-    LOG_INFO("success");
+    LOG_INFO("success.");
     if (async != nullptr) {
         async(std::move(details));
     }
@@ -215,7 +215,7 @@ int32_t RdbServiceProxy::Subscribe(const RdbSyncerParam &param, const SubscribeO
         return RDB_ERROR;
     }
     if (option.mode < SubscribeMode::REMOTE || option.mode >= SUBSCRIBE_MODE_MAX) {
-        LOG_ERROR("subscribe mode invalid");
+        LOG_ERROR("subscribe mode invalid.");
         return RDB_ERROR;
     }
     if (DoSubscribe(param, option) != RDB_OK) {
@@ -251,7 +251,7 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
                                      RdbStoreObserver *observer)
 {
     if (observer == nullptr) {
-        LOG_ERROR("observer is null");
+        LOG_ERROR("observer is null.");
         return RDB_ERROR;
     }
     if (DoUnSubscribe(param) != RDB_OK) {
@@ -296,7 +296,7 @@ std::pair<int32_t, std::shared_ptr<RdbServiceProxy::ResultSet>> RdbServiceProxy:
 
     sptr<IRemoteObject> remote = reply.ReadRemoteObject();
     if (remote == nullptr) {
-        LOG_ERROR("read remote object is null");
+        LOG_ERROR("read remote object is null.");
         return { RDB_ERROR, nullptr };
     }
     sptr<NativeRdb::ResultSetProxy> instance = new NativeRdb::ResultSetProxy(remote);
@@ -331,7 +331,7 @@ int32_t RdbServiceProxy::BeforeOpen(RdbSyncerParam &param)
         return status;
     }
     if (!ITypesUtil::Unmarshal(reply, param)) {
-        LOG_ERROR("read result failed");
+        LOG_ERROR("read result failed.");
         status = RDB_ERROR;
     }
     return status;
