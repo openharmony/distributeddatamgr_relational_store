@@ -854,10 +854,11 @@ void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value 
         return;
     }
     ValueObject::Asset asset;
+    size_t size = 0;
     auto data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[0]));
     if (data != nullptr) {
         int len = sqlite3_value_bytes(argv[0]);
-        RawDataParser::ParserRawData(data, len, asset);
+        size = RawDataParser::ParserRawData(data, len, asset);
     }
     ValueObject::Asset newAsset;
     data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
@@ -865,7 +866,7 @@ void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value 
         int len = sqlite3_value_bytes(argv[1]);
         RawDataParser::ParserRawData(data, len, newAsset);
     }
-    if (asset.name != newAsset.name) {
+    if ((size != 0) && (asset.name != newAsset.name)) {
         LOG_ERROR("name change! old:%{public}s, new:%{public}s", SqliteUtils::Anonymous(asset.name).c_str(),
             SqliteUtils::Anonymous(newAsset.name).c_str());
         return;
