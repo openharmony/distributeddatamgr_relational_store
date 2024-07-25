@@ -115,7 +115,7 @@ int StepResultSet::PrepareStep()
 
     sqliteStatement_ = std::move(statement);
     if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("sqliteStatement_ is nullptr");
+        LOG_ERROR("sqliteStatement_ is nullptr.");
     }
     return E_OK;
 }
@@ -130,7 +130,7 @@ std::pair<int, std::vector<std::string>> StepResultSet::GetColumnNames()
 
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("Statement is nullptr");
+        LOG_ERROR("Statement is nullptr.");
         return { E_ALREADY_CLOSED, {} };
     }
     auto colCount = statement->GetColumnCount();
@@ -158,7 +158,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     }
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("Statement is nullptr");
+        LOG_ERROR("Statement is nullptr.");
         return E_ALREADY_CLOSED;
     }
 
@@ -206,7 +206,7 @@ int StepResultSet::GoToRow(int position)
 int StepResultSet::GoToNextRow()
 {
     if (isClosed_) {
-        LOG_ERROR("resultSet closed");
+        LOG_ERROR("resultSet closed.");
         return E_ALREADY_CLOSED;
     }
 
@@ -217,7 +217,7 @@ int StepResultSet::GoToNextRow()
 
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("Statement is nullptr");
+        LOG_ERROR("Statement is nullptr.");
         return E_ALREADY_CLOSED;
     }
 
@@ -296,7 +296,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
 
     auto statement = GetStatement();
     if (statement == nullptr) {
-        LOG_ERROR("Statement is nullptr");
+        LOG_ERROR("Statement is nullptr.");
         return E_ALREADY_CLOSED;
     }
     auto errCode = E_ERROR;

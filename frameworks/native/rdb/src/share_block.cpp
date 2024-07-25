@@ -161,12 +161,12 @@ int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
             isFull = info->isFull;
             hasException = info->hasException;
         } else if (err == SQLITE_DONE) {
-            LOG_WARN("Processed all rows");
+            LOG_WARN("Processed all rows.");
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");
             if (retryCount > RETRY_TIME) {
-                LOG_ERROR("Bailing on database busy retry");
+                LOG_ERROR("Bailing on database busy retry.");
                 hasException = true;
                 return E_DATABASE_BUSY;
             } else {

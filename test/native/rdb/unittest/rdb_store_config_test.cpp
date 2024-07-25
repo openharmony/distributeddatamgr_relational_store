@@ -43,10 +43,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string ConfigTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string ConfigTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int ConfigTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -876,7 +876,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_026, TestSize.Level1)
         EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
         resultSets.push_back(resultSet);
     }
-    for (const auto &resultSet: resultSets) {
+    for (const auto &resultSet : resultSets) {
         EXPECT_EQ(E_OK, resultSet->Close());
     }
     store = nullptr;

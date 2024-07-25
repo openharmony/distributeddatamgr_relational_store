@@ -39,7 +39,7 @@ bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
     auto localDescriptor = GetDescriptor();
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (remoteDescriptor != localDescriptor) {
-        LOG_ERROR("interface token is not equal");
+        LOG_ERROR("interface token is not equal.");
         return false;
     }
     return true;
@@ -65,7 +65,7 @@ int32_t RdbNotifierStub::OnCompleteInner(MessageParcel &data, MessageParcel &rep
     uint32_t seqNum = 0;
     Details result;
     if (!ITypesUtil::Unmarshal(data, seqNum, result)) {
-        LOG_ERROR("read sync result failed");
+        LOG_ERROR("read sync result failed.");
         return RDB_ERROR;
     }
     return OnComplete(seqNum, std::move(result));
@@ -101,7 +101,7 @@ int32_t RdbNotifierStub::OnChangeInner(MessageParcel &data, MessageParcel &reply
     PrimaryFields primaries;
     ChangeInfo changeInfo;
     if (!ITypesUtil::Unmarshal(data, origin, primaries, changeInfo)) {
-        LOG_ERROR("read sync result failed");
+        LOG_ERROR("read sync result failed.");
         return RDB_ERROR;
     }
     return OnChange(origin, primaries, std::move(changeInfo));
@@ -112,7 +112,7 @@ int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessagePar
     std::string storeName;
     Details result;
     if (!ITypesUtil::Unmarshal(data, storeName, result)) {
-        LOG_ERROR("read sync result failed");
+        LOG_ERROR("read sync result failed.");
         return RDB_ERROR;
     }
     return OnComplete(storeName, std::move(result));

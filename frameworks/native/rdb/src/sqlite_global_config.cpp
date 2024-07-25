@@ -116,7 +116,7 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
         }
         dbPath = SqliteGlobalConfig::GetMemoryDbPath();
     } else if (path.empty() || (path.front() != '/' && path.at(1) != ':')) {
-        LOG_ERROR("SqliteConnection GetDbPath input empty database path");
+        LOG_ERROR("SqliteConnection GetDbPath input empty database path.");
         return E_INVALID_FILE_PATH;
     } else {
         dbPath = path;

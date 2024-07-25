@@ -51,10 +51,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string InsertTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string InsertTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int InsertTestOpenCallback::OnCreate(RdbStore &store)
 {

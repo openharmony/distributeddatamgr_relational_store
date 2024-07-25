@@ -17,18 +17,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <string>
-#include <vector>
-#include <sstream>
+
 #include <algorithm>
 #include <ctime>
+#include <sstream>
+#include <string>
+#include <vector>
 
+#include "abs_predicates.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
-#include "abs_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -64,7 +65,6 @@ public:
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
 
-
 int PredicateJoinTestOpenCallback::OnCreate(RdbStore &store)
 {
     return E_OK;
@@ -75,9 +75,13 @@ int PredicateJoinTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, in
     return E_OK;
 }
 
-void RdbStorePredicateJoinTest::SetUpTestCase(void) {}
+void RdbStorePredicateJoinTest::SetUpTestCase(void)
+{
+}
 
-void RdbStorePredicateJoinTest::TearDownTestCase(void) {}
+void RdbStorePredicateJoinTest::TearDownTestCase(void)
+{
+}
 
 void RdbStorePredicateJoinTest::SetUp(void)
 {
@@ -105,7 +109,7 @@ void RdbStorePredicateJoinTest::GenerateAllTables()
 
 void RdbStorePredicateJoinTest::InsertUserDates()
 {
-    int64_t  id;
+    int64_t id;
     ValuesBucket values;
 
     values.PutInt("userId", 1);
@@ -150,7 +154,7 @@ void RdbStorePredicateJoinTest::InsertUserDates()
 
 void RdbStorePredicateJoinTest::InsertBookDates()
 {
-    int64_t  id;
+    int64_t id;
     ValuesBucket values;
 
     values.PutInt("id", 1);
@@ -470,7 +474,7 @@ HWTEST_F(RdbStorePredicateJoinTest, RdbStore_LeftOuterJoin_009, TestSize.Level1)
     EXPECT_EQ(2, predicates.GetJoinCount());
     predicates.Using(fields)->EqualTo("name", "SanGuo");
 
-    std::vector<std::string> joinTypes{"LEFT OUTER JOIN", "LEFT OUTER JOIN"};
+    std::vector<std::string> joinTypes{ "LEFT OUTER JOIN", "LEFT OUTER JOIN" };
     EXPECT_EQ(joinTypes, predicates.GetJoinTypes());
     EXPECT_EQ(0, predicates.GetJoinCount());
 

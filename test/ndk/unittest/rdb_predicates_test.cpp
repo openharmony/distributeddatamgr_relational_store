@@ -14,13 +14,14 @@
  */
 
 #include <gtest/gtest.h>
-
-#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <string>
+
 #include "common.h"
-#include "relational_store.h"
 #include "oh_value_object.h"
+#include "relational_store.h"
 #include "relational_store_error_code.h"
 
 using namespace testing::ext;
@@ -46,7 +47,7 @@ public:
 };
 
 OH_Rdb_Store *predicatesTestRdbStore_;
-OH_Rdb_Config RdbNativePredicatesTest::config_ = {0};
+OH_Rdb_Config RdbNativePredicatesTest::config_ = { 0 };
 void RdbNativePredicatesTest::SetUpTestCase(void)
 {
     InitRdbConfig();
@@ -65,7 +66,7 @@ void RdbNativePredicatesTest::SetUpTestCase(void)
     valueBucket->putText(valueBucket, "data1", "zhangSan");
     valueBucket->putInt64(valueBucket, "data2", 12800);
     valueBucket->putReal(valueBucket, "data3", 100.1);
-    uint8_t arr[] = {1, 2, 3, 4, 5};
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
     int len = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "data4", arr, len);
     valueBucket->putText(valueBucket, "data5", "ABCDEFG");
@@ -354,11 +355,11 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_009, TestSize.Level
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    int64_t data2Value[] = {12000, 13000};
+    int64_t data2Value[] = { 12000, 13000 };
     uint32_t len = sizeof(data2Value) / sizeof(data2Value[0]);
     valueObject->putInt64(valueObject, data2Value, len);
     predicates->between(predicates, "data2", valueObject);
-    double data3Value[] = {0.1, 101.1};
+    double data3Value[] = { 0.1, 101.1 };
     len = sizeof(data3Value) / sizeof(data3Value[0]);
     valueObject->putDouble(valueObject, data3Value, len);
     predicates->between(predicates, "data3", valueObject);
@@ -384,7 +385,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_010, TestSize.Level
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    int64_t data2Value[] = {12000, 13000};
+    int64_t data2Value[] = { 12000, 13000 };
     int len = sizeof(data2Value) / sizeof(data2Value[0]);
     valueObject->putInt64(valueObject, data2Value, len);
     predicates->notBetween(predicates, "data2", valueObject);
@@ -442,7 +443,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_012, TestSize.Level
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    const char *data1Value[] = {"zhangSan", "liSi"};
+    const char *data1Value[] = { "zhangSan", "liSi" };
     int len = sizeof(data1Value) / sizeof(data1Value[0]);
     valueObject->putTexts(valueObject, data1Value, len);
     predicates->in(predicates, "data1", valueObject);
@@ -468,7 +469,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_013, TestSize.Level
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    const char *data1Value[] = {"zhangSan", "liSi"};
+    const char *data1Value[] = { "zhangSan", "liSi" };
     int len = sizeof(data1Value) / sizeof(data1Value[0]);
     valueObject->putTexts(valueObject, data1Value, len);
     predicates->notIn(predicates, "data1", valueObject);
@@ -521,7 +522,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_015, TestSize.Level
 {
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    const char *columnNames[] = {"data1", "data2"};
+    const char *columnNames[] = { "data1", "data2" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     predicates->groupBy(predicates, columnNames, len);
 
@@ -648,7 +649,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
     predicates->like(predicates, nullptr, valueObject);
     predicates->like(predicates, "data5", nullptr);
 
-    int64_t data2Value[] = {12000, 13000};
+    int64_t data2Value[] = { 12000, 13000 };
     uint32_t len = sizeof(data2Value) / sizeof(data2Value[0]);
     valueObject->putInt64(valueObject, data2Value, len);
     predicates->between(nullptr, "data2", valueObject);
@@ -657,7 +658,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
     predicates->notBetween(nullptr, "data2", valueObject);
     predicates->notBetween(predicates, nullptr, valueObject);
     predicates->notBetween(predicates, "data2", nullptr);
-    int64_t data2Value_1[] = {12000};
+    int64_t data2Value_1[] = { 12000 };
     len = sizeof(data2Value_1) / sizeof(data2Value_1[0]);
     valueObject->putInt64(valueObject, data2Value_1, len);
     predicates->between(predicates, "data2", valueObject);
@@ -703,13 +704,13 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level
     predicates->limit(nullptr, 1);
     predicates->offset(nullptr, 1);
 
-    const char *columnNames[] = {"data1", "data2"};
+    const char *columnNames[] = { "data1", "data2" };
     uint32_t len = sizeof(columnNames) / sizeof(columnNames[0]);
     predicates->groupBy(nullptr, columnNames, len);
     predicates->groupBy(predicates, nullptr, len);
     predicates->groupBy(predicates, columnNames, 0);
 
-    const char *data1ValueIn[] = {"zhangSan", "liSi"};
+    const char *data1ValueIn[] = { "zhangSan", "liSi" };
     len = sizeof(data1ValueIn) / sizeof(data1ValueIn[0]);
     valueObject->putTexts(valueObject, data1ValueIn, len);
     predicates->in(nullptr, "data1", valueObject);
@@ -734,7 +735,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level
 HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_021, TestSize.Level1)
 {
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    int64_t data2Value[] = {12000, 13000};
+    int64_t data2Value[] = { 12000, 13000 };
     uint32_t len = sizeof(data2Value) / sizeof(data2Value[0]);
     int errCode = valueObject->putInt64(nullptr, data2Value, len);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
@@ -756,7 +757,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_021, TestSize.Level
     valueObject->putText(nullptr, data1Value);
     valueObject->putText(valueObject, nullptr);
 
-    const char *data1ValueTexts[] = {"zhangSan", "liSi"};
+    const char *data1ValueTexts[] = { "zhangSan", "liSi" };
     len = sizeof(data1ValueTexts) / sizeof(data1ValueTexts[0]);
     errCode = valueObject->putTexts(nullptr, data1ValueTexts, len);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);

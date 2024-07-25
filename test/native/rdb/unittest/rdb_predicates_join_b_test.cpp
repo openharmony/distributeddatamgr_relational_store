@@ -17,18 +17,19 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <string>
-#include <vector>
-#include <sstream>
+
 #include <algorithm>
 #include <ctime>
+#include <sstream>
+#include <string>
+#include <vector>
 
+#include "abs_predicates.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
-#include "abs_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -56,25 +57,25 @@ protected:
 
 const std::string RdbStorePredicateJoinBTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_join_b_test.db";
 
-const std::string CREATE_TABLE_DEPT_SQL = std::string("CREATE TABLE IF NOT EXISTS dept ") +
-      std::string("(id INTEGER PRIMARY KEY , dName TEXT , loc TEXT)");
+const std::string CREATE_TABLE_DEPT_SQL =
+    std::string("CREATE TABLE IF NOT EXISTS dept ") + std::string("(id INTEGER PRIMARY KEY , dName TEXT , loc TEXT)");
 const std::string CREATE_TABLE_JOB_SQL = std::string("CREATE TABLE IF NOT EXISTS job ") +
-      std::string("(id INTEGER PRIMARY KEY , jName TEXT , description TEXT)");
-const std::string CREATE_TABLE_EMP_SQL = std::string("CREATE TABLE IF NOT EXISTS emp ") +
-      std::string("(id INTEGER PRIMARY KEY ,eName TEXT, jobId INTEGER , ") +
-      std::string("mgr INTEGER, joinDate TEXT, salary REAL, bonus REAL, deptId INTEGER,") +
-      std::string("FOREIGN KEY (jobId) REFERENCES job (id) ON UPDATE NO ACTION ON DELETE CASCADE,") +
-      std::string("FOREIGN KEY (deptId) REFERENCES dept (id) ON UPDATE NO ACTION ON DELETE CASCADE)");
-const std::string CREATE_TABLE_SALARYGRADE_SQL = std::string("CREATE TABLE IF NOT EXISTS salarygrade") +
-      std::string("(grade INTEGER PRIMARY KEY,loSalary INTEGER, hiSalary INTEGER)");
-
+                                         std::string("(id INTEGER PRIMARY KEY , jName TEXT , description TEXT)");
+const std::string CREATE_TABLE_EMP_SQL =
+    std::string("CREATE TABLE IF NOT EXISTS emp ") +
+    std::string("(id INTEGER PRIMARY KEY ,eName TEXT, jobId INTEGER , ") +
+    std::string("mgr INTEGER, joinDate TEXT, salary REAL, bonus REAL, deptId INTEGER,") +
+    std::string("FOREIGN KEY (jobId) REFERENCES job (id) ON UPDATE NO ACTION ON DELETE CASCADE,") +
+    std::string("FOREIGN KEY (deptId) REFERENCES dept (id) ON UPDATE NO ACTION ON DELETE CASCADE)");
+const std::string CREATE_TABLE_SALARYGRADE_SQL =
+    std::string("CREATE TABLE IF NOT EXISTS salarygrade") +
+    std::string("(grade INTEGER PRIMARY KEY,loSalary INTEGER, hiSalary INTEGER)");
 
 class PredicateJoinBTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
-
 
 int PredicateJoinBTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -91,7 +92,9 @@ void RdbStorePredicateJoinBTest::SetUpTestCase(void)
     RdbHelper::DeleteRdbStore(RdbStorePredicateJoinBTest::DATABASE_NAME);
 }
 
-void RdbStorePredicateJoinBTest::TearDownTestCase(void) {}
+void RdbStorePredicateJoinBTest::TearDownTestCase(void)
+{
+}
 
 void RdbStorePredicateJoinBTest::SetUp(void)
 {
@@ -128,7 +131,7 @@ void RdbStorePredicateJoinBTest::GenerateAllTables()
 
 void RdbStorePredicateJoinBTest::InsertDeptDates()
 {
-    int64_t  id;
+    int64_t id;
     ValuesBucket values;
 
     values.PutInt("id", 10);
@@ -157,7 +160,7 @@ void RdbStorePredicateJoinBTest::InsertDeptDates()
 
 void RdbStorePredicateJoinBTest::InsertJobDates()
 {
-    int64_t  id;
+    int64_t id;
     ValuesBucket values;
 
     values.PutInt("id", 1);
@@ -197,7 +200,7 @@ void RdbStorePredicateJoinBTest::InsertEmpDates()
 
 void RdbStorePredicateJoinBTest::InsertSalarygradeDates()
 {
-    int64_t  id;
+    int64_t id;
     ValuesBucket values;
 
     values.PutInt("grade", 1);
@@ -407,7 +410,6 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_003, TestSize.Level1)
     EXPECT_EQ(12000, hiSalary);
 }
 
-
 /* *
  * @tc.name: RdbStore_InnerJoinB_004
  * @tc.desc: Normal testCase of RdbPredicates for InnerJoin
@@ -432,7 +434,7 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_004, TestSize.Level1)
     EXPECT_EQ("", predicates.GetJoinConditions()[1]);
     EXPECT_EQ("ON(t1.jobId = t2.id AND t1.deptId = t3.id AND t1.salary BETWEEN "
               "t4.losalary AND t4.hisalary)",
-              predicates.GetJoinConditions()[2]);
+        predicates.GetJoinConditions()[2]);
 
     std::vector<std::string> columns;
     columns.push_back("t1.eName");
@@ -474,7 +476,6 @@ HWTEST_F(RdbStorePredicateJoinBTest, RdbStore_InnerJoinB_004, TestSize.Level1)
     EXPECT_EQ(E_OK, allDataTypes->GetInt(6, grade));
     EXPECT_EQ(1, grade);
 }
-
 
 /* *
  * @tc.name: RdbStore_LeftOuterJoinB_005

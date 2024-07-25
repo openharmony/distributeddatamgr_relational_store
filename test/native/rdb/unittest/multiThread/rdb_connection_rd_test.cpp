@@ -20,9 +20,9 @@
 #include <string_view>
 
 #include "../common.h"
-#include "rd_utils.h"
 #include "block_data.h"
 #include "executor_pool.h"
+#include "rd_utils.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -42,7 +42,7 @@ public:
     void SetUp();
     void TearDown();
     static const std::string databaseName;
-    
+
     static constexpr int32_t MAX_THREAD = 5;
     static constexpr int32_t MIN_THREAD = 0;
 
@@ -117,7 +117,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
     auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < 2000 ; i++) {
+        for (int i = 0; i < 2000; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
             errCode = store->Commit(res.second);
@@ -128,7 +128,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
     auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0 ; i < 2000; i++) {
+        for (int i = 0; i < 2000; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
             errCode = store->Commit(res.second);
@@ -153,7 +153,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
     auto taskId1 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < 2000 ; i++) {
+        for (int i = 0; i < 2000; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
             errCode = store->RollBack(res.second);
@@ -164,7 +164,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
     auto taskId2 = executors_->Execute([store = store_]() {
         std::pair<int, int64_t> res;
         int32_t errCode = E_OK;
-        for (int i = 0; i < 2000 ; i++) {
+        for (int i = 0; i < 2000; i++) {
             res = store->BeginTrans();
             EXPECT_EQ(res.first, E_OK);
             errCode = store->RollBack(res.second);
@@ -175,4 +175,4 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0002, TestSi
     executors_->Remove(taskId2, true);
     EXPECT_NE(taskId1, taskId2);
 }
-}
+} // namespace Test

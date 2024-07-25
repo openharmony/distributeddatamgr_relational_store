@@ -31,8 +31,7 @@ class RdbStoreUpdateTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    static void ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-        const RowData &expect);
+    static void ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, const RowData &expect);
     void SetUp();
     void TearDown();
 
@@ -50,10 +49,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string UpdateTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT UNIQUE, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+const std::string UpdateTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT UNIQUE, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int UpdateTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -114,8 +113,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Update(changedRows, "test", values, "id = ?",
-                std::vector<std::string>{ "1" });
+    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -124,7 +122,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -166,11 +164,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 300.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "lisi", 19, 300.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -243,8 +241,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Update(changedRows, "test", values, "id = ?",
-        std::vector<std::string>{ "1" });
+    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_EMPTY_VALUES_BUCKET);
 }
 
@@ -271,8 +268,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Update(changedRows, "test", values, "id = ?",
-        std::vector<std::string>{ "1" });
+    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -281,7 +277,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "lisi", 20, 200.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -326,11 +322,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -366,8 +362,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
-        std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_NONE);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+        ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
@@ -375,11 +371,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -415,8 +411,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
-        std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+        ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -425,11 +421,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -465,8 +461,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
-        std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+        ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
@@ -474,11 +470,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "lisi", 19, 200.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -514,8 +510,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
-        std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_REPLACE);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+        ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
@@ -524,11 +520,11 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 1, "zhangsan", 18, 100.5, std::vector<uint8_t>{ 1, 2, 3 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 3, "wangjing", 20, 300.5, std::vector<uint8_t>{ 7, 8, 9 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -562,8 +558,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?",
-        std::vector<std::string>{ "19" }, ConflictResolution::ON_CONFLICT_REPLACE);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+        ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
 
@@ -573,7 +569,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_OK);
 
-    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{2, "zhangsan", 20, 300.5, std::vector<uint8_t>{ 4, 5, 6 }});
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ 2, "zhangsan", 20, 300.5, std::vector<uint8_t>{ 4, 5, 6 } });
 
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -595,17 +591,17 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateSqlBuilder_001, TestSize.Level1)
     values.PutDouble("salary", 300.5);
 
     std::vector<ValueObject> bindArgs;
-    std::string updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{ "19" },
-        "", "age = ?", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    std::string updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{ "19" }, "",
+        "age = ?", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=? WHERE age = ?");
 
-    updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{},
-        "", "", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{}, "", "", "", "",
+        INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=?");
 }
 
-void RdbStoreUpdateTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet,
-    const RowData &expect)
+void RdbStoreUpdateTest::ExpectValue(
+    const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, const RowData &expect)
 {
     EXPECT_NE(nullptr, resultSet);
     int columnIndex;

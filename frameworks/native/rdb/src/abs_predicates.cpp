@@ -112,7 +112,7 @@ AbsPredicates *AbsPredicates::BeginWrap()
 AbsPredicates *AbsPredicates::EndWrap()
 {
     if (!isNeedAnd) {
-        LOG_WARN("fail to add EndWrap.");
+        LOG_WARN("Fail to add EndWrap.");
         return this;
     }
     whereClause += " ) ";
@@ -122,7 +122,7 @@ AbsPredicates *AbsPredicates::EndWrap()
 AbsPredicates *AbsPredicates::Or()
 {
     if (!isNeedAnd) {
-        LOG_WARN("fail to add Or.");
+        LOG_WARN("Fail to add Or.");
         return this;
     }
     whereClause += " OR ";
@@ -499,7 +499,7 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
         return this;
     }
     if (values.empty()) {
-        LOG_WARN("fails as values is null.");
+        LOG_WARN("Fails as values is null.");
         return this;
     }
     CheckIsNeedAnd();

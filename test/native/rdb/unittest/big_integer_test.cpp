@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#include "big_integer.h"
+
 #include <gtest/gtest.h>
+
 #include <climits>
 #include <string>
-#include "big_integer.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -25,8 +27,8 @@ class BigIntegerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void BigIntegerTest::SetUpTestCase(void)

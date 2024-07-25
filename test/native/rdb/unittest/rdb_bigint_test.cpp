@@ -14,7 +14,7 @@
  */
 #define LOG_TAG "RdbBigIntTest"
 #include <gtest/gtest.h>
-#include "rdb_helper.h"
+
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -31,11 +31,11 @@ public:
 protected:
     class RdbCallback : public RdbOpenCallback {
     public:
-        int OnCreate(RdbStore& store) override
+        int OnCreate(RdbStore &store) override
         {
             return E_OK;
         }
-        int OnUpgrade(RdbStore& store, int oldVersion, int newVersion) override
+        int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
         {
             return E_OK;
         }
@@ -154,8 +154,8 @@ HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT64, TestSize.Level1)
 HWTEST_F(RdbBigIntTest, Insert_BigInt_INT128, TestSize.Level1)
 {
     int64_t outRowId = -1;
-    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
-    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
     ValuesBucket bucket;
     bucket.Put("value1", value1);
     bucket.Put("value2", value2);
@@ -190,8 +190,8 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INT128, TestSize.Level1)
 HWTEST_F(RdbBigIntTest, GetValue_BigInt_INT128, TestSize.Level1)
 {
     int64_t outRowId = -1;
-    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
-    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
     ValuesBucket bucket;
     bucket.Put("value1", value1);
     bucket.Put("value2", value2);
@@ -226,8 +226,8 @@ HWTEST_F(RdbBigIntTest, GetValue_BigInt_INT128, TestSize.Level1)
 HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INT128, TestSize.Level1)
 {
     int64_t outRowId = -1;
-    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
-    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{158, 0xDEADDEADDEADDEAD});
+    BigInteger value1 = BigInteger(0, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
+    BigInteger value2 = BigInteger(1, std::vector<uint64_t>{ 158, 0xDEADDEADDEADDEAD });
     ValuesBucket bucket;
     bucket.Put("value1", value1);
     bucket.Put("value2", value2);
@@ -266,7 +266,7 @@ HWTEST_F(RdbBigIntTest, Insert_BigInt_INTRand, TestSize.Level1)
     for (int i = 0; i < u64Val.size(); ++i) {
         uint64_t high = uint64_t(rand());
         uint64_t low = uint64_t(rand());
-        u64Val[i] = (high << 32) |  low;
+        u64Val[i] = (high << 32) | low;
     }
     BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
     BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
@@ -308,7 +308,7 @@ HWTEST_F(RdbBigIntTest, Insert_Step_BigInt_INTRand, TestSize.Level1)
     for (int i = 0; i < u64Val.size(); ++i) {
         uint64_t high = uint64_t(rand());
         uint64_t low = uint64_t(rand());
-        u64Val[i] = (high << 32) |  low;
+        u64Val[i] = (high << 32) | low;
     }
     BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
     BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
@@ -350,7 +350,7 @@ HWTEST_F(RdbBigIntTest, Insert_Floats, TestSize.Level1)
     for (int i = 0; i < u64Val.size(); ++i) {
         uint64_t high = uint64_t(rand());
         uint64_t low = uint64_t(rand());
-        u64Val[i] = (high << 32) |  low;
+        u64Val[i] = (high << 32) | low;
     }
     BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
     BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
@@ -388,7 +388,7 @@ HWTEST_F(RdbBigIntTest, Insert_Step_Floats, TestSize.Level1)
     for (int i = 0; i < u64Val.size(); ++i) {
         uint64_t high = uint64_t(rand());
         uint64_t low = uint64_t(rand());
-        u64Val[i] = (high << 32) |  low;
+        u64Val[i] = (high << 32) | low;
     }
     BigInteger value1 = BigInteger(0, std::vector<uint64_t>(u64Val));
     BigInteger value2 = BigInteger(1, std::vector<uint64_t>(u64Val));
@@ -413,4 +413,4 @@ HWTEST_F(RdbBigIntTest, Insert_Step_Floats, TestSize.Level1)
         }
     }
 }
-}
+} // namespace Test

@@ -32,11 +32,11 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsShare
 {
     sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
     if (stub == nullptr) {
-        LOG_ERROR("stub is nullptr");
+        LOG_ERROR("stub is nullptr.");
         return nullptr;
     }
     if (result == nullptr) {
-        LOG_ERROR("result is nullptr");
+        LOG_ERROR("result is nullptr.");
         return nullptr;
     }
     parcel.WriteRemoteObject(stub->AsObject());
@@ -59,17 +59,17 @@ int ISharedResultSetStub::OnRemoteRequest(uint32_t code, OHOS::MessageParcel &da
     OHOS::MessageParcel &reply, OHOS::MessageOption &option)
 {
     if (GetDescriptor() != data.ReadInterfaceToken()) {
-        LOG_ERROR("IPC descriptor is  not equal");
+        LOG_ERROR("IPC descriptor is  not equal.");
         return INVALID_FD;
     }
 
     if (code >= static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)) {
-        LOG_ERROR("OnRemoteRequest method code(%{public}d) out of range", code);
+        LOG_ERROR("OnRemoteRequest method code(%{public}d) out of range.", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     Handler handler = handlers[code];
     if (handler == nullptr) {
-        LOG_ERROR("OnRemoteRequest method code(%{public}d) is not support", code);
+        LOG_ERROR("OnRemoteRequest method code(%{public}d) is not support.", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return (this->*handler)(data, reply);

@@ -13,8 +13,9 @@
 * limitations under the License.
 */
 
-#include <fstream>
 #include <gtest/gtest.h>
+
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -83,9 +84,13 @@ int RekeyTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVer
     return E_OK;
 }
 
-void RdbRekeyTest::SetUpTestCase() {}
+void RdbRekeyTest::SetUpTestCase()
+{
+}
 
-void RdbRekeyTest::TearDownTestCase() {}
+void RdbRekeyTest::TearDownTestCase()
+{
+}
 
 void RdbRekeyTest::SetUp()
 {
