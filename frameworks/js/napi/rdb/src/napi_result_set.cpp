@@ -105,7 +105,7 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     auto instance = GetInstance();
     if (instance == nullptr) {
-        LOG_ERROR("resultSet_ is null");
+        LOG_ERROR("resultSet_ is null.");
         return nullptr;
     }
     SetInstance(nullptr);
@@ -173,7 +173,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
     auto *proxy = new (std::nothrow) ResultSetProxy();
     if (proxy == nullptr) {
-        LOG_ERROR("ResultSetProxy::InnerInitialize new failed, proxy is nullptr");
+        LOG_ERROR("ResultSetProxy::InnerInitialize new failed, proxy is nullptr.");
         return nullptr;
     }
     proxy->apiversion = version;
@@ -183,7 +183,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
     };
     napi_status status = napi_wrap(env, self, proxy, finalize, nullptr, nullptr);
     if (status != napi_ok) {
-        LOG_ERROR("ResultSetProxy napi_wrap failed! code:%{public}d!, version:%{public}d", status, version);
+        LOG_ERROR("ResultSetProxy napi_wrap failed! code:%{public}d!, version:%{public}d.", status, version);
         finalize(env, proxy, nullptr);
         return nullptr;
     }
@@ -281,7 +281,7 @@ napi_value ResultSetProxy::GetAllColumnNames(napi_env env, napi_callback_info in
 
     int errCode = resultSetProxy->GetInstance()->GetAllColumnNames(colNames);
     if (errCode != E_OK) {
-        LOG_ERROR("GetAllColumnNames failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("GetAllColumnNames failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, colNames);
 }
@@ -305,7 +305,7 @@ napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->GetColumnCount(count);
     if (errCode != E_OK) {
-        LOG_ERROR("GetColumnCount failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("GetColumnCount failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, count);
 }
@@ -332,7 +332,7 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
-        LOG_ERROR("GetColumnType failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
+        LOG_ERROR("GetColumnType failed code:%{public}d, version:%{public}d.", errCode, resultSetProxy->apiversion);
     }
     return JSUtils::Convert2JSValue(env, int32_t(columnType));
 }
@@ -356,7 +356,7 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->GetColumnIndex(input, result);
     if (errCode != E_OK) {
-        LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
+        LOG_ERROR("GetColumnIndex failed code:%{public}d, version:%{public}d.", errCode, resultSetProxy->apiversion);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -383,7 +383,7 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
 
     int errCode = resultSetProxy->GetInstance()->GetColumnName(columnIndex, result);
     if (errCode != E_OK) {
-        LOG_ERROR("GetColumnName failed code:%{public}d, version:%{public}d", errCode, resultSetProxy->apiversion);
+        LOG_ERROR("GetColumnName failed code:%{public}d, version:%{public}d.", errCode, resultSetProxy->apiversion);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -410,7 +410,7 @@ napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
     int32_t result;
     int errCode = resultSetProxy->GetInstance()->GetRowCount(result);
     if (errCode != E_OK) {
-        LOG_ERROR("GetRowCount failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("GetRowCount failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -424,7 +424,7 @@ napi_value ResultSetProxy::GetRowIndex(napi_env env, napi_callback_info info)
     int32_t result;
     int errCode = resultSetProxy->GetInstance()->GetRowIndex(result);
     if (errCode != E_OK) {
-        LOG_ERROR("GetRowIndex failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("GetRowIndex failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -438,7 +438,7 @@ napi_value ResultSetProxy::IsEnded(napi_env env, napi_callback_info info)
     bool result = false;
     int errCode = resultSetProxy->GetInstance()->IsEnded(result);
     if (errCode != E_OK) {
-        LOG_ERROR("IsEnded failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("IsEnded failed code:%{public}d, version:%{public}d.", errCode, version);
         result = true;
     }
     return JSUtils::Convert2JSValue(env, result);
@@ -453,7 +453,7 @@ napi_value ResultSetProxy::IsBegin(napi_env env, napi_callback_info info)
     bool result = false;
     int errCode = resultSetProxy->GetInstance()->IsStarted(result);
     if (errCode != E_OK) {
-        LOG_ERROR("IsBegin failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("IsBegin failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -507,7 +507,7 @@ napi_value ResultSetProxy::IsAtFirstRow(napi_env env, napi_callback_info info)
     bool result = false;
     int errCode = resultSetProxy->GetInstance()->IsAtFirstRow(result);
     if (errCode != E_OK) {
-        LOG_ERROR("IsAtFirstRow failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("IsAtFirstRow failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -521,7 +521,7 @@ napi_value ResultSetProxy::IsAtLastRow(napi_env env, napi_callback_info info)
     bool result = false;
     int errCode = resultSetProxy->GetInstance()->IsAtLastRow(result);
     if (errCode != E_OK) {
-        LOG_ERROR("IsAtLastRow failed code:%{public}d, version:%{public}d", errCode, version);
+        LOG_ERROR("IsAtLastRow failed code:%{public}d, version:%{public}d.", errCode, version);
     }
     return JSUtils::Convert2JSValue(env, result);
 }

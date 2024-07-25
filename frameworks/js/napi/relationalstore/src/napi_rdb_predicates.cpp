@@ -83,7 +83,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, cons, 1, &constructor_));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "RdbPredicates", cons));
 
-    LOG_DEBUG("RdbPredicatesProxy::Init end");
+    LOG_DEBUG("RdbPredicatesProxy::Init end.");
 }
 
 napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
@@ -105,7 +105,7 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT(env, !tableName.empty(), std::make_shared<ParamError>("name", "not empty"));
         auto *proxy = new (std::nothrow) RdbPredicatesProxy(tableName);
         if (proxy == nullptr) {
-            LOG_ERROR("RdbPredicatesProxy::New new failed, proxy is nullptr");
+            LOG_ERROR("RdbPredicatesProxy::New new failed, proxy is nullptr.");
             return nullptr;
         }
         napi_status status = napi_wrap(env, thiz, proxy, RdbPredicatesProxy::Destructor, nullptr, nullptr);
@@ -163,7 +163,7 @@ void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 
 RdbPredicatesProxy::~RdbPredicatesProxy()
 {
-    LOG_DEBUG("RdbPredicatesProxy destructor");
+    LOG_DEBUG("RdbPredicatesProxy destructor.");
 }
 
 RdbPredicatesProxy::RdbPredicatesProxy(std::string &tableName)

@@ -15,17 +15,17 @@
 
 #include <gtest/gtest.h>
 
+#include <regex>
 #include <string>
 #include <vector>
-#include <regex>
+
+#include "distributed_agent.h"
 #include "hilog/log.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
 #include "rdb_types.h"
-
-#include "distributed_agent.h"
 
 using namespace testing;
 using namespace OHOS;
@@ -35,7 +35,7 @@ using namespace OHOS::DistributedRdb;
 using namespace OHOS::HiviewDFX;
 
 namespace {
-constexpr HiLogLabel LABEL = {LOG_CORE, 0, "DistributedTestAgent"};
+constexpr HiLogLabel LABEL = { LOG_CORE, 0, "DistributedTestAgent" };
 static const std::string RDB_TEST_PATH = "/data/test/";
 static constexpr int AGE = 18;
 static constexpr double SALARY = 100.5;
@@ -56,7 +56,6 @@ public:
 const std::string DistributedTestAgent::DATABASE_NAME = RDB_TEST_PATH + "distributed_rdb.db";
 std::shared_ptr<RdbStore> DistributedTestAgent::store_ = nullptr;
 
-
 class DistributedTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
@@ -64,10 +63,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                                + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                              "name TEXT NOT NULL, age INTEGER, salary "
-                                                                              "REAL, blobType BLOB)");
+const std::string DistributedTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int DistributedTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -80,10 +79,12 @@ int DistributedTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int 
 }
 
 DistributedTestAgent::DistributedTestAgent()
-{}
+{
+}
 
 DistributedTestAgent::~DistributedTestAgent()
-{}
+{
+}
 
 bool DistributedTestAgent::SetUp()
 {
@@ -112,10 +113,10 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", AGE);
     values.PutDouble("salary", SALARY);
-    values.PutBlob("blobType", std::vector<uint8_t> { 1, 2, 3 });
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int status = -2;
 
-    std::vector<std::string> tables = {"test"};
+    std::vector<std::string> tables = { "test" };
     store_->SetDistributedTables(tables);
 
     status = store_->Insert(id, "test", values);
@@ -125,8 +126,8 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     predicate.InAllDevices();
 
     std::shared_ptr<ResultSet> resultSet =
-        store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string> { "zhangsan" });
-    if (resultSet!= nullptr) {
+        store_->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    if (resultSet != nullptr) {
         int position;
         int columnIndex;
         std::string strVal;
@@ -140,7 +141,7 @@ int DistributedTestAgent::OnProcessMsg(const std::string &strMsg, int len, std::
     }
     return strReturnValue.size();
 }
-}
+} // namespace
 
 int main()
 {

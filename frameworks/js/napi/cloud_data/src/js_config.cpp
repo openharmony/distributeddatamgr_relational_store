@@ -413,7 +413,7 @@ napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info inf
                                ? napi_ok: napi_generic_failure;
             return;
         }
-        LOG_DEBUG("SetGlobalCloudStrategy execute");
+        LOG_DEBUG("SetGlobalCloudStrategy execute.");
 
         auto res = proxy->SetGlobalCloudStrategy(ctxt->strategy, ctxt->param);
         ctxt->status =

@@ -27,7 +27,7 @@ AbsRdbPredicates::AbsRdbPredicates(const std::string &tableName)
 {
     if (tableName.empty()) {
         tableName_ = "";
-        LOG_DEBUG("no tableName specified.");
+        LOG_DEBUG("No tableName specified.");
         return;
     }
     tableName_ = std::move(tableName);
@@ -38,7 +38,7 @@ AbsRdbPredicates::AbsRdbPredicates(const std::vector<std::string> &tables)
 {
     if (tables.empty()) {
         tableName_ = "";
-        LOG_DEBUG("no tableName specified.");
+        LOG_DEBUG("No tableName specified.");
         return;
     }
     tableName_ = *(tables.begin());

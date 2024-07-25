@@ -72,8 +72,8 @@ public:
 
 std::string OpenCallbackA::CreateTableSQL(const std::string &tableName)
 {
-    return "CREATE TABLE IF NOT EXISTS " + tableName
-           + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)";
+    return "CREATE TABLE IF NOT EXISTS " + tableName +
+           " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)";
 }
 
 std::string OpenCallbackA::DropTableSQL(const std::string &tableName)
@@ -279,8 +279,8 @@ public:
 
 std::string OpenCallbackB::CreateTableSQL(const std::string &tableName)
 {
-    return "CREATE TABLE IF NOT EXISTS " + tableName
-           + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)";
+    return "CREATE TABLE IF NOT EXISTS " + tableName +
+           " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)";
 }
 
 std::string OpenCallbackB::DropTableSQL(const std::string &tableName)

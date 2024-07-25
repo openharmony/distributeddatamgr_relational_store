@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 #define LOG_TAG "SerializableTest"
-#include <type_traits>
-#include "logger.h"
 #include "serializable.h"
+
+#include <type_traits>
+
 #include "gtest/gtest.h"
+#include "logger.h"
 
 using namespace testing::ext;
 namespace OHOS::Test {
@@ -54,16 +56,16 @@ public:
             GetValue(node, GET_NAME(colRow), colRow);
             return true;
         }
-        bool operator == (const Normal &ref) const
+        bool operator==(const Normal &ref) const
         {
-            return name == ref.name && count == ref.count && status == ref.status && value == ref.value
-                && isClear == ref.isClear && cols == ref.cols;
+            return name == ref.name && count == ref.count && status == ref.status && value == ref.value &&
+                   isClear == ref.isClear && cols == ref.cols;
         }
     };
 
     struct NormalEx final : public Serializable {
     public:
-        std::vector<Normal> normals {Normal(), Normal()};
+        std::vector<Normal> normals{ Normal(), Normal() };
         Normal normal;
         int32_t count = 123;
         std::string name = "wdt";
@@ -124,7 +126,7 @@ HWTEST_F(SerializableTest, GetNormalVal, TestSize.Level2)
     normal.status = 12;
     normal.value = -56;
     normal.isClear = true;
-    normal.cols = {"adfasdfas"};
+    normal.cols = { "adfasdfas" };
     auto jstr = to_string(normal.Marshall());
     Normal normal1;
     normal1.Unmarshall(jstr);
@@ -152,7 +154,7 @@ HWTEST_F(SerializableTest, DeleteSerializable, TestSize.Level2)
 HWTEST_F(SerializableTest, GetMutilVal, TestSize.Level2)
 {
     NormalEx normalEx;
-    normalEx.normals = {Normal()};
+    normalEx.normals = { Normal() };
     normalEx.name = "normalEx";
     auto jstr = to_string(normalEx.Marshall());
     NormalEx normal1;

@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
+#include "data_ability_predicates.h"
+
 #include <gtest/gtest.h>
+
 #include <vector>
 
-#include "data_ability_predicates.h"
-#include "refbase.h"
 #include "predicates_utils.h"
+#include "refbase.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -61,11 +63,13 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_002, TestSize.Level1)
     DataAbilityPredicates *predicates1 = new DataAbilityPredicates();
 
     predicates1->EqualTo("stringValue", "ABCDEFGHIJKLMN")
-            ->BeginWrap()
-            ->EqualTo("integerValue", "1")
-            ->Or()
-            ->EqualTo("integerValue", MAX)
-            ->EndWrap()->OrderByDesc("integerValue")->Limit(2);
+        ->BeginWrap()
+        ->EqualTo("integerValue", "1")
+        ->Or()
+        ->EqualTo("integerValue", MAX)
+        ->EndWrap()
+        ->OrderByDesc("integerValue")
+        ->Limit(2);
 
     EXPECT_EQ(true, predicates1->GetLimit() == 2);
 
@@ -96,7 +100,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_003, TestSize.Level1)
 {
     DataAbilityPredicates *predicates = new DataAbilityPredicates();
     predicates->SetWhereClause("`name` = ? ");
-    std::vector<std::string> whereArgsArray = {"zhangsan", "lisi"};
+    std::vector<std::string> whereArgsArray = { "zhangsan", "lisi" };
     predicates->SetWhereArgs(whereArgsArray);
     predicates->SetOrder("ASC");
     OHOS::Parcel outParcel(0);
@@ -202,7 +206,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_009, TestSize.Level1)
 {
     DataAbilityPredicates *predicates = new DataAbilityPredicates();
     predicates->SetWhereClause("`name` = ? ");
-    std::vector<std::string> whereArgsArray = {"zhangsan", "lisi"};
+    std::vector<std::string> whereArgsArray = { "zhangsan", "lisi" };
     predicates->SetWhereArgs(whereArgsArray);
     predicates->SetOrder("ASC");
     OHOS::Parcel outParcel(0);
@@ -228,7 +232,7 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_009, TestSize.Level1)
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_010, TestSize.Level1)
 {
     DataAbilityPredicates *predicates = new DataAbilityPredicates();
-    std::vector<std::string> group = {"salary"};
+    std::vector<std::string> group = { "salary" };
     predicates->GreaterThan("age", "20")->OrderByAsc("age")->GroupBy(group)->Limit(3)->Offset(1);
 
     OHOS::Parcel outParcel(0);

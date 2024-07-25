@@ -50,7 +50,8 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string ReadOnlyTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+const std::string ReadOnlyTestOpenCallback::CREATE_TABLE_TEST =
+    "CREATE TABLE IF NOT EXISTS test "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER, salary REAL, blobType BLOB)";
 
 int ReadOnlyTestOpenCallback::OnCreate(RdbStore &store)
@@ -503,4 +504,3 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0022, TestSize.Level1)
     auto ret = store->CleanDirtyData("test", cursor);
     EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
-

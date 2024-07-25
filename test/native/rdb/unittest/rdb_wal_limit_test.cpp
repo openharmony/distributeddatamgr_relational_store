@@ -60,7 +60,8 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbWalLimitCallback::CREATE_TABLE_TEST("CREATE TABLE IF NOT EXISTS test "
+const std::string RdbWalLimitCallback::CREATE_TABLE_TEST(
+    "CREATE TABLE IF NOT EXISTS test "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
 
 int RdbWalLimitCallback::OnCreate(RdbStore &store)

@@ -36,7 +36,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
     for (size_t i = 0; i < ITERS_COUNT; i++) {
         std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(isWrite);
         if (connection == nullptr) {
-            LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr");
+            LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr.");
             return result;
         }
         errCode = connection->InnerOpen(config);
@@ -53,12 +53,12 @@ int32_t RdConnection::Repair(const RdbStoreConfig& config)
     std::string dbPath = "";
     auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
     if (errCode != E_OK) {
-        LOG_ERROR("Can not get db path");
+        LOG_ERROR("Can not get db path.");
         return errCode;
     }
     errCode = RdUtils::RdDbRepair(dbPath.c_str(), GRD_OPEN_CONFIG_STR);
     if (errCode != E_OK) {
-        LOG_ERROR("Fail to repair db");
+        LOG_ERROR("Fail to repair db.");
     }
     return errCode;
 }
@@ -103,12 +103,12 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     std::string dbPath = "";
     auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
     if (errCode != E_OK) {
-        LOG_ERROR("Can not get db path");
+        LOG_ERROR("Can not get db path.");
         return errCode;
     }
     errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr_.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
     if (errCode != E_OK) {
-        LOG_ERROR("Can not open rd db");
+        LOG_ERROR("Can not open rd db.");
         return errCode;
     }
     return errCode;

@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#include "value_object.h"
+
 #include <gtest/gtest.h>
+
 #include <climits>
 #include <string>
-#include "value_object.h"
-#include "grd_type_export.h"
+
 #include "big_integer.h"
+#include "grd_type_export.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -28,8 +31,8 @@ class ValueObjectTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void ValueObjectTest::SetUpTestCase(void)

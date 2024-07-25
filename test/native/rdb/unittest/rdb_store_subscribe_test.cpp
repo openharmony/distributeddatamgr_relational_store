@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+
 #include <functional>
 #include <string>
 
@@ -20,9 +21,9 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_sql_statistic.h"
 #include "rdb_store_manager.h"
 #include "rdb_types.h"
-#include "rdb_sql_statistic.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -31,22 +32,28 @@ using CheckOnChangeFunc = std::function<void(RdbStoreObserver::ChangeInfo &chang
 using SqlStatisticsFunc = std::function<void(SqlObserver::SqlExecutionInfo &info)>;
 class SubObserver : public RdbStoreObserver {
 public:
-    virtual ~SubObserver() {}
-    void OnChange(const std::vector<std::string>& devices) override;
-    void OnChange(const Origin &origin, const PrimaryFields &fields,
-        RdbStoreObserver::ChangeInfo &&changeInfo) override;
+    virtual ~SubObserver()
+    {
+    }
+    void OnChange(const std::vector<std::string> &devices) override;
+    void OnChange(
+        const Origin &origin, const PrimaryFields &fields, RdbStoreObserver::ChangeInfo &&changeInfo) override;
     void OnChange() override;
     void RegisterCallback(const CheckOnChangeFunc &callback);
     uint32_t count = 0;
+
 private:
     CheckOnChangeFunc checkOnChangeFunc_;
 };
 
 class StatisticsObserver : public SqlObserver {
 public:
-    virtual ~StatisticsObserver() {}
+    virtual ~StatisticsObserver()
+    {
+    }
     void OnStatistic(const SqlExecutionInfo &info);
     void Callback(const SqlStatisticsFunc &callback);
+
 private:
     SqlStatisticsFunc sqlStatisticsFunc_;
 };
@@ -69,8 +76,10 @@ public:
 
 class TestDetailProgressObserver : public DetailProgressObserver {
 public:
-    virtual ~TestDetailProgressObserver() {}
-    void ProgressNotification(const Details& details) override {};
+    virtual ~TestDetailProgressObserver()
+    {
+    }
+    void ProgressNotification(const Details &details) override{};
 };
 
 const std::string RdbStoreSubTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "subscribe.db";
@@ -284,8 +293,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail001, TestSize.Level1)
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER)";
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
     store->ExecuteSql(createTableTest);
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -304,12 +313,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail001, TestSize.Level1)
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(id, 1);
 
-    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) {
-        ASSERT_TRUE(false);
-    });
-    observer2->RegisterCallback([](RdbStoreObserver::ChangeInfo &) {
-        ASSERT_TRUE(false);
-    });
+    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) { ASSERT_TRUE(false); });
+    observer2->RegisterCallback([](RdbStoreObserver::ChangeInfo &) { ASSERT_TRUE(false); });
     status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
     status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer2);
@@ -357,9 +362,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail002, TestSize.Level1)
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(id, 1);
 
-    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) {
-        ASSERT_TRUE(false);
-    });
+    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) { ASSERT_TRUE(false); });
     status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
 
@@ -469,8 +472,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail005, TestSize.Level1)
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test1 "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER)";
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
     store->ExecuteSql(createTableTest);
 
     observer_->RegisterCallback([num](RdbStoreObserver::ChangeInfo &changeInfo) {
@@ -514,9 +517,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail006, TestSize.Level1)
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, nullptr);
     EXPECT_EQ(status, E_OK);
-    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) {
-        ASSERT_TRUE(false);
-    });
+    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) { ASSERT_TRUE(false); });
     ValuesBucket values;
     int id;
     values.PutString("name", std::string("zhangsan_update1"));
@@ -541,8 +542,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics001, TestSize.Level1)
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS statistics_test "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER)";
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
     store->ExecuteSql(createTableTest);
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -556,12 +557,8 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics001, TestSize.Level1)
     status = store->Insert(id, "statistics_test", values);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(id, 1);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 1);
-    });
-    observer2->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 1);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 1); });
+    observer2->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 1); });
     status = SqlStatistic::Unsubscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
     status = SqlStatistic::Unsubscribe(observer2);
@@ -590,9 +587,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics002, TestSize.Level1)
     status = store->Update(id, values, predicates);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(id, 1);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 1);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 1); });
     status = SqlStatistic::Unsubscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
 }
@@ -610,9 +605,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics003, TestSize.Level1)
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 1);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 1); });
     int id;
     status = store->Delete(id, "statistics_test", "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(status, E_OK);
@@ -637,9 +630,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics004, TestSize.Level1)
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 1);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 1); });
     int64_t id;
     std::vector<ValuesBucket> values;
     for (int i = 0; i < num; i++) {
@@ -670,13 +661,11 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics005, TestSize.Level1)
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS statistics_test1 "
-                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                          "name TEXT NOT NULL, age INTEGER)";
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
     store->ExecuteSql(createTableTest);
 
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 3);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 3); });
     ValuesBucket values;
     int64_t id;
     values.PutInt("id", 1);
@@ -702,9 +691,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics006, TestSize.Level1)
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 2);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 2); });
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM statistics_test");
     EXPECT_NE(resultSet, nullptr);
     status = SqlStatistic::Unsubscribe(sqlObserver_);
@@ -724,9 +711,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics007, TestSize.Level1)
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_.size(), 2);
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_.size(), 2); });
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM statistics_test");
     EXPECT_NE(resultSet, nullptr);
     status = SqlStatistic::Unsubscribe(sqlObserver_);
@@ -746,9 +731,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics008, TestSize.Level1)
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_[0], "PRAGMA quick_check");
-    });
+    sqlObserver_->Callback([](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_[0], "PRAGMA quick_check"); });
     auto [ret, object] = store->Execute("PRAGMA quick_check");
     status = SqlStatistic::Unsubscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -768,9 +751,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics009, TestSize.Level1)
     std::string value = "with test as (select * from statistics_test) select * from test1";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
-    sqlObserver_->Callback([value](SqlObserver::SqlExecutionInfo &info) {
-        ASSERT_EQ(info.sql_[0], value);
-    });
+    sqlObserver_->Callback([value](SqlObserver::SqlExecutionInfo &info) { ASSERT_EQ(info.sql_[0], value); });
     store->ExecuteSql(value);
     status = SqlStatistic::Unsubscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);

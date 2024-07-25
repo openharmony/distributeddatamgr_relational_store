@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "rdb_store_config.h"
-#include "rdb_errno.h"
-#include "rdb_store_impl.h"
 #include "rd_utils.h"
+#include "rdb_errno.h"
+#include "rdb_store_config.h"
+#include "rdb_store_impl.h"
 
 #define DOUBLE_SIZE 8
 #define INT_SIZE 4
@@ -95,8 +95,8 @@ void RdDbOpenFuzzer(const uint8_t *data, size_t size)
     RdUtils::RdSqlPrepare(dbHandle_, reinterpret_cast<const char *>(data), size, &stmtHandle, nullptr);
     RdUtils::RdSqlReset(stmtHandle);
     RdUtils::RdSqlFinalize(stmtHandle);
-    RdUtils::RdSqlBindBlob(stmtHandle, unit32t, static_cast<const void*>(data), size, nullptr);
-    RdUtils::RdSqlBindText(stmtHandle, unit32t, static_cast<const void*>(data), size, nullptr);
+    RdUtils::RdSqlBindBlob(stmtHandle, unit32t, static_cast<const void *>(data), size, nullptr);
+    RdUtils::RdSqlBindText(stmtHandle, unit32t, static_cast<const void *>(data), size, nullptr);
     RdUtils::RdSqlBindInt(stmtHandle, unit32t, nit32t);
     RdUtils::RdSqlBindInt64(stmtHandle, unit32t, nit64t);
     RdUtils::RdSqlBindDouble(stmtHandle, unit32t, doubleValue);
@@ -107,13 +107,12 @@ void RdDbOpenFuzzer(const uint8_t *data, size_t size)
     RdUtils::RdSqlBindFloatVector(stmtHandle, unit32t, ftVec, 1, nullptr);
     RdUtils::RdDbClose(dbHandle_, unit32t);
 }
-}
+} // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::RdDbOpenFuzzer(data, size);
     return 0;
 }
-
