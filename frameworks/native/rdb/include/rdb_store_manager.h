@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_STORE_MANAGER_H
 #define NATIVE_RDB_STORE_MANAGER_H
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>

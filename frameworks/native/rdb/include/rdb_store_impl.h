@@ -185,8 +185,8 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
-    void AfterOpen(const RdbStoreConfig &config);
     int32_t GetDbType() const override;
+    void AfterOpen(const RdbStoreConfig &config);
 
 protected:
     int InnerOpen();
@@ -228,6 +228,7 @@ private:
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
+    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
 
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
@@ -254,7 +255,6 @@ private:
     int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
-    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;

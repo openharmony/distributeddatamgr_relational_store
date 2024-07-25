@@ -22,8 +22,8 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
-#include "rd_utils.h"
 #include "rd_connection.h"
+#include "rd_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
@@ -134,6 +134,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     Finalize(); // Finalize original stmt
     sql_ = newSql;
     stmtHandle_ = tmpStmt;
+    columnCount_ = RdUtils::RdSqlColCnt(tmpStmt);
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
     if (readOnly_) {
         ret = Step();
@@ -222,11 +223,7 @@ int RdStatement::IsValid(int index) const
         LOG_ERROR("statement already close.");
         return E_ALREADY_CLOSED;
     }
-    if (index < 0) {
-        LOG_ERROR("invalid index %{public}d", index);
-        return E_INVALID_ARGS;
-    }
-    if (index >= columnCount_) {
+    if (index < 0 || index >= columnCount_) {
         LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
         return E_COLUMN_OUT_RANGE;
     }

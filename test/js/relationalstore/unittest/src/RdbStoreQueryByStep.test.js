@@ -354,9 +354,9 @@ describe('rdbStoreQueryByStepTest', function () {
     })
 
     /**
-     * @tc.number testRdbStoreQueryByStep0009
+     * @tc.number testRdbStoreQueryByStep0011
      * @tc.name Normal test case of queryByStep, query all data
-     * @tc.desc 1. Execute queryByStep, sql is 'select * from test'
+     * @tc.desc 1. Execute queryByStep, sql is 'select * from test where name = ""'
      * @tc.size MediumTest
      * @tc.type Function
      * @tc.level Level 2
