@@ -140,4 +140,5 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("EXPLAIN SELECT * FROM test"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAZZZZZZZ"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAAAAAAAA"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("PROCESS"));
 }
