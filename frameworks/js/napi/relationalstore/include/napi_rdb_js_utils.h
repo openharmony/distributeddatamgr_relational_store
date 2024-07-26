@@ -29,6 +29,7 @@
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
+using Assets = std::vector<Asset>;
 using RowEntity = OHOS::NativeRdb::RowEntity;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 using Date = OHOS::DistributedRdb::Date;
@@ -65,6 +66,9 @@ struct ContextParam {
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, Assets &output);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, DistributedRdb::Reference &output);
