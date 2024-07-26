@@ -69,6 +69,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
     return napi_ok;
 }
 
+template<>
 int32_t Convert2Value(napi_env env, napi_value input, Assets &output)
 {
     bool isArray = false;
@@ -90,6 +91,7 @@ int32_t Convert2Value(napi_env env, napi_value input, Assets &output)
         NAPI_CALL_RETURN_ERR(Convert2Value(env, element, item), napi_invalid_arg);
         if (!names.insert(item.name).second) {
             LOG_ERROR("duplicate assets! name = %{public}.6s", item.name.c_str());
+            return napi_invalid_arg;
         }
         output.push_back(std::move(item));
     }
