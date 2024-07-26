@@ -38,8 +38,8 @@ public:
     void Resume();
 private:
     static constexpr uint32_t AUTO_SYNC_INTERVAL = 200;
-    static constexpr uint32_t MAX_NOTIFY_INTERVAL = 1500;
-    static constexpr uint32_t SERVICE_INTERVAL = 5000;
+    static constexpr uint32_t MAX_NOTIFY_INTERVAL = 5000;
+    static constexpr uint32_t SERVICE_INTERVAL = 10000;
     bool isInitialized_ = false;
     Time lastTimePoint_;
     std::atomic_int32_t pauseCount_;
