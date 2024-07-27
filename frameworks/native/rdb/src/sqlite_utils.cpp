@@ -57,7 +57,7 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
         return strcmp(first.sql, second.sql) < 0;
     };
     auto it = std::lower_bound(SQL_TYPE_MAP, SQL_TYPE_MAP + TYPE_SIZE, type, comp);
-    if (it < SQL_TYPE_MAP + TYPE_SIZE && !comp(*it, type)) {
+    if (it < SQL_TYPE_MAP + TYPE_SIZE && !comp(type, *it)) {
         return it->type;
     }
     return STATEMENT_OTHER;
