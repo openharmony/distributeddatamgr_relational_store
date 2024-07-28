@@ -35,6 +35,7 @@
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
+#include "traits.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -629,10 +630,58 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
 
         CHECK_RETURN_ERR(ParseValuesBucket(env, obj, context) == OK);
-        context->valuesBuckets.push_back(context->valuesBucket);
+        context->valuesBuckets.push_back(std::move(context->valuesBucket));
         context->valuesBucket.Clear();
     }
     return OK;
+}
+
+bool HasDuplicateAssets(const ValueObject &value)
+{
+    auto *assets = Traits::get_if<ValueObject::Assets>(&value.value);
+    if (assets == nullptr) {
+        return false;
+    }
+    std::set<std::string> names;
+    auto item = assets->begin();
+    while (item != assets->end()) {
+        if (!names.insert(item->name).second) {
+            LOG_ERROR("duplicate assets! name = %{public}.6s", item->name.c_str());
+            return true;
+        }
+        item++;
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const std::vector<ValueObject> &values)
+{
+    for (auto &val : values) {
+        if (HasDuplicateAssets(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const ValuesBucket &value)
+{
+    for (auto &[key, val] : value.values_) {
+        if(HasDuplicateAssets(val)){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
+{
+    for (auto &valueBucket : values) {
+        if (HasDuplicateAssets(valueBucket)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
@@ -655,6 +704,8 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
+        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBucket), std::make_shared<ParamError>("Duplicate assets "
+                                                                                                   "are not allowed"));
         if (argc == 3) {
             CHECK_RETURN(OK == ParseConflictResolution(env, argv[2], context));
         }
@@ -683,6 +734,8 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
+        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBuckets), std::make_shared<ParamError>("Duplicate assets "
+                                                                                                   "are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
@@ -881,6 +934,8 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseSql(env, argv[0], context));
         if (argc == 2) {
             CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
+            CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs), std::make_shared<ParamError>("Duplicate assets "
+                                                                                                    "are not allowed"));
         }
     };
     auto exec = [context]() -> int {
@@ -912,11 +967,15 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
                 CHECK_RETURN(OK == ParseTxId(env, argv[1], context));
             } else {
                 CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
+                CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs),
+                    std::make_shared<ParamError>("Duplicate assets are not allowed"));
             }
         }
         if (argc == 3) {
             CHECK_RETURN(OK == ParseTxId(env, argv[1], context));
             CHECK_RETURN(OK == ParseBindArgs(env, argv[2], context));
+            CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs),
+                std::make_shared<ParamError>("Duplicate assets are not allowed"));
         }
     };
     auto exec = [context]() -> int {
@@ -969,6 +1028,8 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
+        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBucket),
+            std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);

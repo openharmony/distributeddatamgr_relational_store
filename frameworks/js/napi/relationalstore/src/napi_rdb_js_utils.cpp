@@ -70,35 +70,6 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 }
 
 template<>
-int32_t Convert2Value(napi_env env, napi_value input, Assets &output)
-{
-    bool isArray = false;
-    auto status = napi_is_array(env, input, &isArray);
-    uint32_t arrLen = 0;
-    auto lenStatus = napi_get_array_length(env, input, &arrLen);
-    if (status != napi_ok || !isArray || lenStatus != napi_ok) {
-        return napi_invalid_arg;
-    }
-    if (arrLen == 0) {
-        return napi_ok;
-    }
-    std::set<std::string> names;
-    output.reserve(arrLen);
-    for (size_t i = 0; i < arrLen; ++i) {
-        napi_value element;
-        napi_get_element(env, input, i, &element);
-        Asset item;
-        NAPI_CALL_RETURN_ERR(Convert2Value(env, element, item), napi_invalid_arg);
-        if (!names.insert(item.name).second) {
-            LOG_ERROR("duplicate assets! name = %{public}.6s", item.name.c_str());
-            return napi_invalid_arg;
-        }
-        output.push_back(std::move(item));
-    }
-    return napi_ok;
-}
-
-template<>
 int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Reference &output)
 {
     napi_valuetype type = napi_undefined;
