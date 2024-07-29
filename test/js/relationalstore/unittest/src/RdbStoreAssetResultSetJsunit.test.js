@@ -136,6 +136,86 @@ describe('rdbAssetResultSetTest', function () {
     }
 
     /**
+     * @tc.name Insert duplicate assets
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_DuplicateAsset_0010
+     * @tc.desc Insert duplicate assets by insert
+     */
+    it('testInsertDuplicateAssets0001', 0, async function (done) {
+        console.log(TAG + "************* testInsertDuplicateAssets0001 start *************");
+        const assets = [asset3, asset3];
+        let valuesBucket = {
+            "data1": asset1,
+            "data2": asset2,
+            "data3": assets,
+        }
+        try {
+            await rdbStore.insert("test", valuesBucket)
+            expect().assertFail();
+        } catch(e) {
+            console.log("insert failed, err: code=" + e.code + " message=" + e.message)
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testInsertDuplicateAssets0001 end *************");
+    })
+
+    /**
+     * @tc.name batchInsert duplicate assets
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_DuplicateAsset_0020
+     * @tc.desc Insert duplicate assets by batchInsert
+     */
+    it('testBatchInsertDuplicateAssets0001', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertDuplicateAssets0001 start *************");
+        let array = new Array();
+        const assets1 = [asset3];
+        let valuesBucket1 = {
+            "data1": asset1,
+            "data2": asset2,
+            "data3": assets1,
+        }
+        array.push(valuesBucket1);
+        const assets2 = [asset3, asset1, asset3];
+        let valuesBucket2 = {
+            "data1": asset2,
+            "data2": asset1,
+            "data3": assets2,
+        }
+        array.push(valuesBucket2);
+        try {
+            await rdbStore.batchInsert("test", array)
+            expect().assertFail();
+        } catch(e) {
+            console.log("batchInsert failed, err: code=" + e.code + " message=" + e.message)
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testBatchInsertDuplicateAssets0001 end *************");
+    })
+
+    /**
+     * @tc.name execute sql to insert duplicate assets
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_DuplicateAsset_0030
+     * @tc.desc Insert duplicate assets by executeSql
+     */
+    it('testExecuteSqlInsertDuplicateAssets0001', 0, async function (done) {
+        console.log(TAG + "************* testExecuteSqlInsertDuplicateAssets0001 start *************");
+        const assets = [asset2, asset3, asset3, asset2];
+        let array = new Array();
+        array.push(asset1);
+        array.push(asset2);
+        array.push(assets);
+        try {
+            await rdbStore.executeSql("insert into test (data1, data2, data3) values (?,?,?)", array)
+            expect().assertFail();
+        } catch(e) {
+            console.log("executeSql failed, err: code=" + e.code + " message=" + e.message)
+            expect(e.code == 401).assertTrue();
+        }
+        done();
+        console.log(TAG + "************* testExecuteSqlInsertDuplicateAssets0001 end *************");
+    })
+
+    /**
      * @tc.name resultSet getAsset normal test with batchInsert
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0010
      * @tc.desc resultSet getAsset normal test
