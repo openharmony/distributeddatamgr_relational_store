@@ -104,6 +104,7 @@ public:
 
 protected:
     int InnerOpen();
+    void InitSyncerParam();
     const RdbStoreConfig config_;
     bool isOpen_ = false;
     bool isReadOnly_;
@@ -156,6 +157,7 @@ private:
     static inline constexpr uint32_t INTERVAL = 10;
     static constexpr const char *ROW_ID = "ROWID";
 
+    DistributedRdb::RdbSyncerParam syncerParam_;
     std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
