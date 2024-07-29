@@ -42,23 +42,6 @@ enum StageRes : int {
 
 class RdbRadar {
 public:
-    static constexpr char ORG_PKG_LABEL[] = "ORG_PKG";
-    static constexpr char ORG_PKG_VALUE[] = "distributeddata";
-    static constexpr char FUNC_LABEL[] = "FUNC";
-    static constexpr char BIZ_SCENE_LABEL[] = "BIZ_SCENE";
-    static constexpr char BIZ_STATE_LABEL[] = "BIZ_STATE";
-    static constexpr char BIZ_STAGE_LABEL[] = "BIZ_STAGE";
-    static constexpr char STAGE_RES_LABEL[] = "STAGE_RES";
-    static constexpr char ERROR_CODE_LABEL[] = "ERROR_CODE";
-    static constexpr char TO_CALL_PKG_LABEL[] = "TO_CALL_PKG";
-    static constexpr char HOST_PKG_LABEL[] = "HOST_PKG";
-    static constexpr char LOCAL_UUID_LABEL[] = "HOST_PKG";
-    static constexpr char PEER_UUID_LABEL[] = "HOST_PKG";
-    static constexpr char EVENT_NAME[] = "DISTRIBUTED_RDB_BEHAVIOR";
-    static constexpr char HOST_PKG[] = "HOST_PKG";
-    static constexpr char UNKNOW[] = "unknow";
-
-public:
     RdbRadar(Scene scene, const char *funcName, std::string bundleName);
     ~RdbRadar();
 
