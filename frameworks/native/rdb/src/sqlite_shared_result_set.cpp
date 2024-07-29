@@ -213,9 +213,12 @@ int SqliteSharedResultSet::FillBlock(int requiredPos)
         return errCode;
     }
     blockCapacity_ = block->GetRowNum();
-    LOG_INFO("blockRowNum=%{public}d, requiredPos= %{public}d, startPos_= %{public}" PRIu32
+    if ((block->GetStartPos() == block->GetLastPos() && rowCount_ != block->GetStartPos())
+        || (requiredPos < block->GetStartPos() || block->GetLastPos() <= requiredPos)) {
+        LOG_WARN("blockRowNum=%{public}d, requiredPos= %{public}d, startPos_= %{public}" PRIu32
              ", lastPos_= %{public}" PRIu32 ", blockPos_= %{public}" PRIu32 ".",
         rowCount_, requiredPos, block->GetStartPos(), block->GetLastPos(), block->GetBlockPos());
+    }
     return E_OK;
 }
 

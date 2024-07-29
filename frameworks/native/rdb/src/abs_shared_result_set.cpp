@@ -119,7 +119,6 @@ int AbsSharedResultSet::GoToRow(int position)
 
     if (position >= rowCnt || position < 0) {
         rowPos_ = (position >= rowCnt && rowCnt != 0) ? rowCnt : rowPos_;
-        LOG_ERROR("position[%{public}d] rowCnt[%{public}d] rowPos[%{public}d]!", position, rowCnt, rowPos_);
         return E_ROW_OUT_RANGE;
     }
 
