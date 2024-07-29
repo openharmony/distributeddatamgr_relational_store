@@ -475,5 +475,53 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
     return rdbStoreConfig;
 }
+
+bool HasDuplicateAssets(const ValueObject &value)
+{
+    auto *assets = std::get_if<ValueObject::Assets>(&value.value);
+    if (assets == nullptr) {
+        return false;
+    }
+    std::set<std::string> names;
+    auto item = assets->begin();
+    while (item != assets->end()) {
+        if (!names.insert(item->name).second) {
+            LOG_ERROR("duplicate assets! name = %{public}.6s", item->name.c_str());
+            return true;
+        }
+        item++;
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const std::vector<ValueObject> &values)
+{
+    for (auto &val : values) {
+        if (HasDuplicateAssets(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const ValuesBucket &value)
+{
+    for (auto &[key, val] : value.values_) {
+        if (HasDuplicateAssets(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
+{
+    for (auto &valueBucket : values) {
+        if (HasDuplicateAssets(valueBucket)) {
+            return true;
+        }
+    }
+    return false;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
