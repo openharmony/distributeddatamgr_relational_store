@@ -35,7 +35,6 @@
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
-#include "traits.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -634,54 +633,6 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
         context->valuesBucket.Clear();
     }
     return OK;
-}
-
-bool HasDuplicateAssets(const ValueObject &value)
-{
-    auto *assets = Traits::get_if<ValueObject::Assets>(&value.value);
-    if (assets == nullptr) {
-        return false;
-    }
-    std::set<std::string> names;
-    auto item = assets->begin();
-    while (item != assets->end()) {
-        if (!names.insert(item->name).second) {
-            LOG_ERROR("duplicate assets! name = %{public}.6s", item->name.c_str());
-            return true;
-        }
-        item++;
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const std::vector<ValueObject> &values)
-{
-    for (auto &val : values) {
-        if (HasDuplicateAssets(val)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const ValuesBucket &value)
-{
-    for (auto &[key, val] : value.values_) {
-        if(HasDuplicateAssets(val)){
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
-{
-    for (auto &valueBucket : values) {
-        if (HasDuplicateAssets(valueBucket)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)

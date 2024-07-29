@@ -26,6 +26,7 @@
 #include "rdb_store_config.h"
 #include "result_set.h"
 #include "value_object.h"
+#include "values_bucket.h"
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
@@ -39,6 +40,7 @@ using SecurityLevel = NativeRdb::SecurityLevel;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
+using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -117,6 +119,10 @@ std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
     napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param);
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
 
+bool HasDuplicateAssets(const ValueObject &value);
+bool HasDuplicateAssets(const std::vector<ValueObject> &values);
+bool HasDuplicateAssets(const ValuesBucket &value);
+bool HasDuplicateAssets(const std::vector<ValuesBucket> &values);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H
