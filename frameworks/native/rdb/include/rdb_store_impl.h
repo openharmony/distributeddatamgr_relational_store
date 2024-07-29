@@ -190,6 +190,7 @@ public:
 
 protected:
     int InnerOpen();
+    void InitSyncerParam();
     const RdbStoreConfig config_;
     bool isOpen_ = false;
     bool isReadOnly_;

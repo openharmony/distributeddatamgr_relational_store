@@ -76,11 +76,8 @@ static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 
-int RdbStoreImpl::InnerOpen()
+void RdbStoreImpl::InitSyncerParam()
 {
-    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path_).c_str());
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    pool_ = TaskExecutor::GetInstance().GetExecutor();
     syncerParam_.bundleName_ = config_.GetBundleName();
     syncerParam_.hapName_ = config_.GetModuleName();
     syncerParam_.storeName_ = config_.GetName();
@@ -94,6 +91,14 @@ int RdbStoreImpl::InnerOpen()
     syncerParam_.password_ = {};
 
     syncerParam_.roleType_ = config_.GetRoleType();
+}
+
+int RdbStoreImpl::InnerOpen()
+{
+    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path_).c_str());
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    pool_ = TaskExecutor::GetInstance().GetExecutor();
+    
     if (config_.GetRoleType() == OWNER) {
         AfterOpen(config_);
     }
@@ -320,9 +325,21 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = ConnectionPool::Create(config_, errCode);
+    InitSyncerParam();
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
         LOG_ERROR("database corrupt, rebuild database %{public}s", name_.c_str());
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+        if (service != nullptr) {
+            service->Disable(syncerParam_);
+        }
+#endif
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+        if (service != nullptr) {
+            service->Enable(syncerParam_);
+        }
+#endif
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
