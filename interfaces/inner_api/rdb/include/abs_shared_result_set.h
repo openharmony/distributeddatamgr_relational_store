@@ -150,6 +150,7 @@ private:
     // The SharedBlock owned by this AbsSharedResultSet
     std::shared_ptr<AppDataFwk::SharedBlock> sharedBlock_ = nullptr;
     std::string sharedBlockName_ = "defaultSharedBlockName";
+    bool lowMem_ = false;
 };
 } // namespace NativeRdb
 } // namespace OHOS
