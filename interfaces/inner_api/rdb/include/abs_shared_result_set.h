@@ -150,6 +150,7 @@ private:
     // The SharedBlock owned by this AbsSharedResultSet
     std::shared_ptr<AppDataFwk::SharedBlock> sharedBlock_ = nullptr;
     std::string sharedBlockName_ = "defaultSharedBlockName";
+    // If the shared memory application fails for the first time, GetBlock() returns nullptr forever
     bool lowMem_ = false;
 };
 } // namespace NativeRdb
