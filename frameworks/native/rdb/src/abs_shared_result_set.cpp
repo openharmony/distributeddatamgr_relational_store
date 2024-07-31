@@ -62,12 +62,13 @@ int32_t AbsSharedResultSet::OnGo(int oldRowIndex, int newRowIndex)
 std::shared_ptr<SharedBlock> AbsSharedResultSet::GetBlock()
 {
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
-    if (sharedBlock_ != nullptr || isClosed_) {
+    if (sharedBlock_ != nullptr || isClosed_ || lowMem_) {
         return sharedBlock_;
     }
     SharedBlock *block = nullptr;
     auto errcode = SharedBlock::Create(sharedBlockName_, DEFAULT_BLOCK_SIZE, block);
     if (errcode != SharedBlock::SHARED_BLOCK_OK) {
+        lowMem_ = true;
         return nullptr;
     }
     sharedBlock_ = std::shared_ptr<SharedBlock>(block);
