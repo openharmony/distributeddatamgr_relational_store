@@ -470,7 +470,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
         if (!newKey.empty()) {
-            LOG_INFO("new key is not empty, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s",
+            LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s",
                 config.GetIter(), errCode, errno, config.GetName().c_str());
             errCode = SetEncryptKey(newKey, config.GetIter());
         }
