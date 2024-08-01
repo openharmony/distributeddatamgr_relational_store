@@ -48,7 +48,7 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.GetStorageMode() != StorageMode::MODE_MEMORY && config.GetSecurityLevel() != SecurityLevel::LAST) {
         auto toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
         auto errCode = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(config.GetPath(),
-            toSetLevel) ? E_OK : E_ERROR;
+            toSetLevel) ? E_OK : E_CONFIG_INVALID_CHANGE;
         if (errCode != E_OK) {
             auto currentLevel = GetFileSecurityLevel(config.GetPath());
             LOG_ERROR("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),
