@@ -15,22 +15,27 @@
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
 
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <climits>
 #include <cstdio>
 #include <cstring>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <fstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
-#include <fstream>
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
 #endif
-
+#define HMFS_MONITOR_FL 0x00000002
+#define HMFS_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
+#define HMFS_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -110,6 +115,7 @@ const char *SqliteUtils::GetConflictClause(int conflictResolution)
 
 bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
+    SqliteUtils::ControlDeleteFlag(filePath, CLEAR_FLAG);
     auto ret = remove(filePath.c_str());
     if (ret != 0) {
         LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, filePath.c_str());
@@ -170,6 +176,41 @@ int SqliteUtils::GetFileSize(const std::string &fileName)
     }
 
     return static_cast<int>(fileStat.st_size);
+}
+
+void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType flagControlType)
+{
+    int fd = open(fileName.c_str(), O_RDONLY, 0777);
+    unsigned int flags = 0;
+    int ret = ioctl(fd, HMFS_IOCTL_HW_GET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_ERROR("Failed to get flags, errno: %{public}d, %{public}s", errno, fileName.c_str());
+        close(fd);
+        return;
+    }
+
+    if ((flagControlType == SET_FLAG && (flags & HMFS_MONITOR_FL)) ||
+        (flagControlType == CLEAR_FLAG && !(flags & HMFS_MONITOR_FL))) {
+        LOG_DEBUG("Delete control flag is already set");
+        close(fd);
+        return;
+    }
+
+    if (flagControlType == SET_FLAG) {
+        flags |= HMFS_MONITOR_FL;
+    } else if (flagControlType == CLEAR_FLAG) {
+        flags &= ~HMFS_MONITOR_FL;
+    }
+
+    ret = ioctl(fd, HMFS_IOCTL_HW_SET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_ERROR("Failed to set flags, errno: %{public}d, %{public}s", errno, fileName.c_str());
+        close(fd);
+        return;
+    }
+
+    LOG_DEBUG("Flag control operation success type: %{public}d file: %{public}s", flagControlType, fileName.c_str());
+    close(fd);
 }
 } // namespace NativeRdb
 } // namespace OHOS
