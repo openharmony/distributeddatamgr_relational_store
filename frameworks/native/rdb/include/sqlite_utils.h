@@ -24,10 +24,6 @@ namespace NativeRdb {
 
 class SqliteUtils {
 public:
-    enum FlagControlType {
-        SET_FLAG,
-        CLEAR_FLAG
-    };
     static constexpr int STATEMENT_SELECT = 1;
     static constexpr int STATEMENT_UPDATE = 2;
     static constexpr int STATEMENT_ATTACH = 3;
@@ -58,7 +54,6 @@ public:
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static std::string Anonymous(const std::string &srcFile);
     static int GetFileSize(const std::string &fileName);
-    static void ControlDeleteFlag(const std::string fileName, FlagControlType flagControlType);
 
 private:
     struct SqlType {
