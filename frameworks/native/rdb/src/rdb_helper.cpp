@@ -20,7 +20,6 @@
 #include "rdb_store_manager.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
-#include "sqlite_utils.h"
 #include "unistd.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_security_manager.h"
@@ -85,10 +84,8 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("Store to delete doesn't exist, path %{public}s", dbFileName.c_str());
         return E_OK; // not not exist
     }
-    SqliteUtils::ControlDeleteFlag(dbFileName, SqliteUtils::CLEAR_FLAG);
     RdbStoreManager::GetInstance().Delete(dbFileName);
     int result = remove(dbFileName.c_str());
     if (result != 0) {
@@ -124,7 +121,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         }
     }
     DeleteRdbKeyFiles(dbFileName);
-    LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFileName.c_str());
+
     return errCode;
 }
 } // namespace NativeRdb
