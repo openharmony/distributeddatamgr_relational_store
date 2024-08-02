@@ -389,7 +389,6 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
     rdbPwd.Clear();
     if (rdbPwd.isKeyExpired ||
         RdbSecurityManager::GetInstance().IsKeyFileExists(path, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
-        LOG_INFO("isKeyExpired: %{public}d, dbName_:%{public}s", rdbPwd.isKeyExpired, name.c_str());
         auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE_NEW_KEY);
         if (rdbNewPwd.IsValid()) {
             newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
