@@ -432,6 +432,7 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
+    LOG_INFO("name = %{public}s, iter = %{public}d", config.GetName().c_str(), config.GetIter());
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
     newKey.assign(newKey.size(), 0);
@@ -467,6 +468,8 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
         if (!newKey.empty()) {
+            LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s",
+                config.GetIter(), errCode, errno, config.GetName().c_str());
             errCode = SetEncryptKey(newKey, config.GetIter());
         }
         newKey.assign(newKey.size(), 0);
