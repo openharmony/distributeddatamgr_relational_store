@@ -434,7 +434,7 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
-    LOG_INFO("Rekey begin, name = %{public}s", config.GetName().c_str());
+    LOG_INFO("name = %{public}s, iter = %{public}d", config.GetName().c_str(), config.GetIter());
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
     newKey.assign(newKey.size(), 0);
