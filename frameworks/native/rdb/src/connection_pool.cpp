@@ -480,10 +480,16 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
         if (disable_) {
             return false;
         }
-
         return ExtendNode() == E_OK;
     };
     if (cond_.wait_for(lock, interval, waiter)) {
+        if (nodes_.empty()) {
+            LOG_ERROR(
+                "nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
+                count_, max_, total_, left_, right_);
+            count_ = 0;
+            return nullptr;
+        }
         auto node = nodes_.back();
         nodes_.pop_back();
         count_--;
