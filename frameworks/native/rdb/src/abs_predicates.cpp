@@ -469,10 +469,6 @@ AbsPredicates *AbsPredicates::In(const std::string &field, const std::vector<Val
     if (!chekParaFlag) {
         return this;
     }
-    if (values.empty()) {
-        LOG_WARN("in() fails because values can't be null.");
-        return this;
-    }
 
     CheckIsNeedAnd();
 
@@ -496,10 +492,6 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
 {
     bool chekParaFlag = CheckParameter("notIn", field, {});
     if (!chekParaFlag) {
-        return this;
-    }
-    if (values.empty()) {
-        LOG_WARN("Fails as values is null.");
         return this;
     }
     CheckIsNeedAnd();

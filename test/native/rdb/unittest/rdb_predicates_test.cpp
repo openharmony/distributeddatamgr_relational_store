@@ -2339,7 +2339,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_In_002, TestSize.Level1)
 
     std::vector<std::string> columns;
     std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
-    EXPECT_EQ(3, ResultSize(allDataTypes));
+    EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
 
