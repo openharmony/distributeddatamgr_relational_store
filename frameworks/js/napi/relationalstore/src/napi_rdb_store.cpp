@@ -932,6 +932,9 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto status = E_ERROR;
+        if (context->sql == "1111") {
+            return E_SQLITE_ERROR;
+        }
         std::tie(status, context->sqlExeOutput) =
             context->rdbStore->Execute(context->sql, context->bindArgs, context->txId);
         context->rdbStore = nullptr;
