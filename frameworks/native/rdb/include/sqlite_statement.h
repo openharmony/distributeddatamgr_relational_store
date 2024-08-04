@@ -92,6 +92,7 @@ private:
     std::shared_ptr<Connection> conn_;
     std::string sql_;
     mutable std::vector<int32_t> types_;
+    std::shared_ptr<SqliteStatement> slave_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
