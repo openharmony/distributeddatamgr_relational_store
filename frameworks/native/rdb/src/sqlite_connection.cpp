@@ -67,9 +67,26 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
         LOG_ERROR("connection is nullptr.");
         return result;
     }
+
+    if (config.GetHaMode() == HAMode::MASTER_SLAVER && isWrite) {
+        errCode = connection->CheckAndRestoreSlave(config);
+        if (errCode != E_OK) {
+            LOG_WARN("master restore to slave database failed:%{public}d", errCode);
+        }
+    }
+
     errCode = connection->InnerOpen(config);
     if (errCode == E_OK) {
         conn = connection;
+    }
+
+    if (config.GetHaMode() == HAMode::MASTER_SLAVER && isWrite) {
+        connection->slaveConnection_ = std::shared_ptr<SqliteConnection>(new (std::nothrow) SqliteConnection(isWrite));
+        errCode = connection->slaveConnection_->InnerOpen(connection->slaveConnection_->GetSlaveRdbStoreConfig(config));
+        if (errCode != E_OK) {
+            LOG_WARN("open the slave database failed:%{public}d", errCode);
+            return { E_OK, conn };
+        }
     }
     return result;
 }
@@ -88,6 +105,66 @@ SqliteConnection::SqliteConnection(bool isWriteConnection)
     : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
       filePath("")
 {
+}
+
+int SqliteConnection::CheckAndRestoreSlave(const RdbStoreConfig &config)
+{
+    bool isDbFileExist = access(GetSlavePath(config.GetPath()).c_str(), F_OK) == 0;
+    bool isSrcDbFileExist = access(config.GetPath().c_str(), F_OK) == 0;
+    if (!isDbFileExist && isSrcDbFileExist) {
+        if (!SqliteUtils::CopyFile(config.GetPath(), GetSlavePath(config.GetPath()))) {
+            return E_ERROR;
+        }
+        if (!SqliteUtils::CopyFile(config.GetPath() + "-wal", GetSlavePath(config.GetPath())+ "-wal")) {
+            SqliteUtils::DeleteFile(config.GetPath());
+            return E_ERROR;
+        }
+        if (!SqliteUtils::CopyFile(config.GetPath() + "-shm", GetSlavePath(config.GetPath())+ "-shm")) {
+            SqliteUtils::DeleteFile(config.GetPath());
+            SqliteUtils::DeleteFile(config.GetPath() + "-wal");
+            return E_ERROR;
+        }
+        LOG_INFO("success restore slave database, curName:%{public}s,", GetSlavePath(config.GetPath()).c_str());
+        return E_OK;
+    }
+    LOG_INFO("slave database doesn't needs restore, curName:%{public}s,", GetSlavePath(config.GetPath()).c_str());
+    return E_OK;
+}
+ 
+std::string SqliteConnection::GetSlavePath(const std::string& name)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_slave.db");
+    auto pos = name.rfind(suffix);
+    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
+        return name + slaveSuffix;
+    }
+    return name.substr(0, pos) + slaveSuffix;
+}
+ 
+ 
+RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig)
+{
+    RdbStoreConfig rdbStoreConfig(GetSlavePath(rdbConfig.GetPath()));
+    rdbStoreConfig.SetEncryptStatus(rdbConfig.IsEncrypt());
+    rdbStoreConfig.SetSearchable(rdbConfig.IsSearchable());
+    rdbStoreConfig.SetIsVector(rdbConfig.IsVector());
+    rdbStoreConfig.SetAutoClean(rdbConfig.GetAutoClean());
+    rdbStoreConfig.SetSecurityLevel(rdbConfig.GetSecurityLevel());
+    rdbStoreConfig.SetDataGroupId(rdbConfig.GetDataGroupId());
+    rdbStoreConfig.SetName(GetSlavePath(rdbConfig.GetName()));
+    rdbStoreConfig.SetCustomDir(rdbConfig.GetCustomDir());
+    rdbStoreConfig.SetAllowRebuild(rdbConfig.GetAllowRebuild());
+    rdbStoreConfig.SetReadOnly(rdbConfig.IsReadOnly());
+    rdbStoreConfig.SetIntegrityCheck(IntegrityCheck::QUICK);
+ 
+    rdbStoreConfig.SetBundleName(rdbConfig.GetBundleName());
+    rdbStoreConfig.SetModuleName(rdbConfig.GetModuleName());
+    rdbStoreConfig.SetArea(rdbConfig.GetArea());
+    rdbStoreConfig.SetPluginLibs(rdbConfig.GetPluginLibs());
+    rdbStoreConfig.SetHaMode(rdbConfig.GetHaMode());
+    LOG_INFO("oriName:%{public}s, curName:%{public}s,", rdbConfig.GetName().c_str(), rdbStoreConfig.GetPath().c_str());
+    return rdbStoreConfig;
 }
 
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
@@ -328,6 +405,15 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
         return { errCode, nullptr };
     }
     statement->conn_ = conn;
+    if (slaveConnection_ && IsWriter()) {
+        statement->slave_ = std::make_shared<SqliteStatement>();
+        errCode = statement->slave_->Prepare(slaveConnection_->dbHandle_, sql);
+        if (errCode != E_OK) {
+            LOG_WARN("prepare slave stmt failed:%{public}d", errCode);
+            return { E_OK, statement };
+        }
+        statement->slave_->conn_ = slaveConnection_;
+    }
     return { E_OK, statement };
 }
 
@@ -701,6 +787,12 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(const std::str
 
 int SqliteConnection::ClearCache()
 {
+    if (slaveConnection_) {
+        int errCode = slaveConnection_->ClearCache();
+        if (errCode != E_OK) {
+            LOG_ERROR("slaveConnection clearCache failed:%{public}d", errCode);
+        }
+    }
     if (dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
         sqlite3_db_release_memory(dbHandle_);
     }
@@ -794,6 +886,12 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 
 int SqliteConnection::TryCheckPoint()
 {
+    if (slaveConnection_) {
+        int errCode = slaveConnection_->TryCheckPoint();
+        if (errCode != E_OK) {
+            LOG_ERROR("slaveConnection tryCheckPoint failed:%{public}d", errCode);
+        }
+    }
     if (!isWriter_) {
         return E_NOT_SUPPORT;
     }

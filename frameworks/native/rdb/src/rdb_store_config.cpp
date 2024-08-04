@@ -558,4 +558,14 @@ void RdbStoreConfig::SetIter(int32_t iter) const
 {
     iter_ = iter;
 }
+
+int32_t RdbStoreConfig::GetHaMode() const
+{
+    return haMode_;
+}
+
+void RdbStoreConfig::SetHaMode(int32_t haMode)
+{
+    haMode_ = haMode;
+}
 } // namespace OHOS::NativeRdb

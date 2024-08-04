@@ -355,6 +355,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     GetNamedProperty(env, jsValue, "pluginLibs", rdbConfig.pluginLibs, true);
     ASSERT(OK == status, "get pluginLibs failed.", napi_invalid_arg);
+ 
+    GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
+    ASSERT(OK == status, "get haMode failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -473,6 +476,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetModuleName(param.moduleName);
     rdbStoreConfig.SetArea(param.area);
     rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
+    rdbStoreConfig.SetHaMode(rdbConfig.haMode);
     return rdbStoreConfig;
 }
 
