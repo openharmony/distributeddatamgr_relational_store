@@ -2453,6 +2453,23 @@ describe('rdbPredicatesTest', function () {
         console.log(TAG + "************* testIn0004 end *************");
     })
 
+        /**
+     * @tc.name predicates in normal test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0194
+     * @tc.desc predicates in normal test
+     */
+    it('testIn0005', 0, async function (done) {
+        console.log(TAG + "************* testIn0005 start *************");
+        var values = [];
+        let predicates = new dataRdb.RdbPredicates("AllDataType");
+        predicates.in("doubleValue", values);
+        let result = await rdbStore.query(predicates);
+        expect(0).assertEqual(result.rowCount);
+        result.close()
+        done();
+        console.log(TAG + "************* testIn0005 end *************");
+    })
+
     /**
      * @tc.name testNotIn0001
      * @tc.number I4JWCV
@@ -2502,6 +2519,23 @@ describe('rdbPredicatesTest', function () {
         result.close();
         done();
         console.log(TAG + "************* testNotIn0003 end *************");
+    })
+
+    /**
+     * @tc.name testNotIn0004
+     * @tc.number I4JWCV
+     * @tc.desc the min and max value test with notin.
+     */
+    it('testNotIn0004', 0, async function (done) {
+        console.log(TAG + "************* testNotIn0004 start *************");
+        var values = [];
+        let predicates = new dataRdb.RdbPredicates("AllDataType");
+        predicates.notIn("integerValue", values);
+        let result = await rdbStore.query(predicates);
+        expect(3).assertEqual(result.rowCount);
+        result.close();
+        done();
+        console.log(TAG + "************* testNotIn0004 end *************");
     })
 
     /**
