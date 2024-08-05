@@ -129,8 +129,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("SELECT * FROM test");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute select sql failed, code:${err.code}, message: ${err.message}`);
         }
         done();
@@ -262,8 +262,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("ATTACH DATABASE 'execute_attach_test.db' AS 'attach.db'");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute attach sql failed, code:${err.code}, message: ${err.message}`);
         }
 
@@ -271,8 +271,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("DETACH DATABASE 'attach.db'");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute detach sql failed, code:${err.code}, message: ${err.message}`);
         }
 
@@ -280,8 +280,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("BEGIN TRANSACTION");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute begin transaction sql failed, code:${err.code}, message: ${err.message}`);
         }
 
@@ -289,8 +289,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("COMMIT");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute commit sql failed, code:${err.code}, message: ${err.message}`);
         }
 
@@ -298,8 +298,8 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("ROLLBACK");
             expect(null).assertFail();
         } catch (err) {
-            // 14800000: inner error
-            expect(14800000).assertEqual(err.code);
+            // 14800021: SQLite: Generic error.
+            expect(14800021).assertEqual(err.code);
             console.error(`execute rollback sql failed, code:${err.code}, message: ${err.message}`);
         }
         done();
