@@ -1705,12 +1705,9 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_NOT_SUPPORT;
     }
 
-    if (!isOpen_) {
-        LOG_ERROR("The connection pool has been closed.");
-        return E_ERROR;
-    }
-    if (connectionPool_ == nullptr) {
-        LOG_ERROR("The connectionPool_ is null.");
+    if (!isOpen_ || connectionPool_ == nullptr) {
+        LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
+            connectionPool_ == nullptr);
         return E_ERROR;
     }
 
@@ -1749,6 +1746,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return errCode;
     }
 #endif
+    rebuild_ = errCode == E_OK ? RebuiltType::NONE : rebuild_;
     return errCode;
 }
 
