@@ -64,6 +64,11 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+enum HAMode : int32_t {
+    SINGLE = 0,
+    MASTER_SLAVER,
+};
+
 enum RoleType : uint32_t {
     OWNER = 0,
     VISITOR,
@@ -195,7 +200,8 @@ public:
                && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
                && this->journalSize_ == config.journalSize_ && this->pageSize_ == config.pageSize_
                && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
-               && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_;
+               && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_
+               && this->haMode_ == config.haMode_;
     }
 
     bool IsSearchable() const;
@@ -218,6 +224,8 @@ public:
     int32_t GetIter() const;
     int SetDistributedType(DistributedType type);
     DistributedType GetDistributedType() const;
+    int32_t GetHaMode() const;
+    void SetHaMode(int32_t haMode);
 
 private:
     void ClearEncryptKey();
@@ -238,6 +246,7 @@ private:
     int32_t writeTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1; // seconds
     int32_t dbType_ = DB_SQLITE;
+    int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel = SecurityLevel::LAST;
     RoleType role_ = OWNER;
     StorageMode storageMode;

@@ -102,6 +102,9 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     void ReadFile2Buffer(const char* fileName);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
+    RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
+    std::string GetSlavePath(const std::string &name);
+    int CheckAndRestoreSlave(const RdbStoreConfig &config);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
@@ -118,6 +121,7 @@ private:
     int maxVariableNumber_;
     std::mutex mutex_;
     std::string filePath;
+    std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
 };
