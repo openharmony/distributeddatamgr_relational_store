@@ -149,6 +149,7 @@ ohos_unittest("NativeRdbTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "samgr:samgr_proxy",
   ]
 
   deps = [
