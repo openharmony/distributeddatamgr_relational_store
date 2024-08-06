@@ -77,7 +77,7 @@ private:
     std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncrypt(const RdbStoreConfig &config);
     int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
-    int SetServiceKey(const RdbStoreConfig &config, int32_t lastErr);
+    int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
     int SetEncryptAgo(int32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
