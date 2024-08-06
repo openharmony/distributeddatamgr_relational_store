@@ -41,6 +41,7 @@ using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
+using HAMode = NativeRdb::HAMode;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -54,6 +55,7 @@ struct RdbConfig {
     std::string customDir;
     std::string path;
     std::vector<std::string> pluginLibs = {};
+    int32_t haMode = HAMode::SINGLE;
 };
 
 struct ContextParam {

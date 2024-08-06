@@ -1061,6 +1061,18 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     return E_OK;
 }
 
+int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFilePath)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_slave.db");
+    auto pos = path.find(suffix);
+    if (pos != std::string::npos) {
+        backupFilePath = path + slaveSuffix;
+    }
+    backupFilePath = std::string(path, 0, pos) + slaveSuffix;
+    return E_OK;
+}
+
 int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = BeginExecuteSql(sql);
