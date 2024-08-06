@@ -35,7 +35,6 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
-#include "rdb_manager_impl.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
@@ -45,6 +44,7 @@
 #include "sqlite_utils.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
+#include "rdb_manager_impl.h"
 #endif
 
 namespace OHOS {
