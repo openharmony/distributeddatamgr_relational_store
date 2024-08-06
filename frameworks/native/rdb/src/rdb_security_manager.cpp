@@ -599,7 +599,7 @@ bool RdbSecurityManager::IsKeyFileEmpty(const std::string &keyFile)
     }
     struct stat fileInfo;
     auto errCode = stat(keyFile.c_str(), &fileInfo);
-    if (errCode == 0 || fileInfo.st_size == 0) {
+    if (errCode == 0 && fileInfo.st_size == 0) {
         return true;
     }
     return false;
