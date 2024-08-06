@@ -17,13 +17,13 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_security_manager.h"
 #include "rdb_store_manager.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "unistd.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
 

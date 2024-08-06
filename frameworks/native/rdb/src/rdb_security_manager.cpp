@@ -15,9 +15,11 @@
 #define LOG_TAG "RdbSecurityManager"
 #include "rdb_security_manager.h"
 
+#include <fcntl.h>
 #include <securec.h>
 #include <string>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "directory_ex.h"
