@@ -84,6 +84,7 @@ enum class RdbServiceInterfaceCode {
     RDB_SERVICE_CMD_ENABLE,
     RDB_SERVICE_CMD_BEFORE_OPEN,
     RDB_SERVICE_CMD_AFTER_OPEN,
+    RDB_SERVICE_CMD_GET_PASSWORD,
     RDB_SERVICE_CMD_MAX
 };
 } // namespace RelationalStore

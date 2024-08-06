@@ -434,6 +434,8 @@ public:
      */
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
 
+    void RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const;
+
     /**
      * @brief Obtains the encrypt key in this {@code StoreConfig} object.
      */
@@ -541,13 +543,13 @@ public:
             }
         }
 
-        return this->path == config.path && this->storageMode == config.storageMode
-               && this->storageMode == config.storageMode && this->journalMode == config.journalMode
-               && this->syncMode == config.syncMode && this->databaseFileType == config.databaseFileType
-               && this->isEncrypt_ == config.isEncrypt_ && this->securityLevel == config.securityLevel
-               && this->journalSize_ == config.journalSize_ && this->pageSize_ == config.pageSize_
-               && this->readConSize_ == config.readConSize_ && this->customDir_ == config.customDir_
-               && this->allowRebuilt_ == config.allowRebuilt_ && this->pluginLibs_ == config.pluginLibs_;
+        return this->path_ == config.path_ && this->storageMode_ == config.storageMode_ &&
+               this->journalMode_ == config.journalMode_ && this->syncMode_ == config.syncMode_ &&
+               this->databaseFileType == config.databaseFileType && this->isEncrypt_ == config.isEncrypt_ &&
+               this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
+               this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
+               this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
+               this->pluginLibs_ == config.pluginLibs_;
     }
 
     /**
@@ -607,7 +609,7 @@ private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
 
-    bool readOnly = false;
+    bool readOnly_ = false;
     bool isEncrypt_ = false;
     bool isCreateNecessary_;
     bool isSearchable_ = false;
@@ -622,21 +624,21 @@ private:
     int32_t writeTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1; // seconds
     int32_t dbType_ = DB_SQLITE;
-    SecurityLevel securityLevel = SecurityLevel::LAST;
+    SecurityLevel securityLevel_ = SecurityLevel::LAST;
     RoleType role_ = OWNER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
-    StorageMode storageMode;
+    StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
-    std::string name;
-    std::string path;
-    std::string journalMode;
-    std::string syncMode;
+    std::string name_;
+    std::string path_;
+    std::string journalMode_;
+    std::string syncMode_;
     std::string databaseFileType;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
     std::string visitorDir_;
-    std::string encryptAlgo;
+    std::string encryptAlgo_;
     std::string dataGroupId_;
     std::string customDir_;
     mutable std::vector<uint8_t> encryptKey_{};

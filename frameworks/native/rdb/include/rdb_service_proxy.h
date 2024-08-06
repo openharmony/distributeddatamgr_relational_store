@@ -78,6 +78,7 @@ public:
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
     int32_t Disable(const RdbSyncerParam& param) override;
     int32_t Enable(const RdbSyncerParam& param) override;
+    int32_t GetPassword(const RdbSyncerParam& param, std::vector<uint8_t> &key) override;
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
