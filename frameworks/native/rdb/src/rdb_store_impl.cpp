@@ -1743,10 +1743,12 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);
-        return errCode;
     }
 #endif
     rebuild_ = errCode == E_OK ? RebuiltType::NONE : rebuild_;
+    if (!cloudTables_.empty()) {
+        DoCloudSync("");
+    }
     return errCode;
 }
 
@@ -1795,6 +1797,11 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         cloudTables_.insert(tables.begin(), tables.end());
+    }
+    auto isRebuilt = RebuiltType::NONE;
+    GetRebuilt(isRebuilt);
+    if (isRebuilt == RebuiltType::REBUILT) {
+        DoCloudSync("");
     }
     return E_OK;
 }
