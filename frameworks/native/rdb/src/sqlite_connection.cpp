@@ -1076,7 +1076,7 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
     return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
 }
 
-int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t lastErr)
+int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCode)
 {
     DistributedRdb::RdbSyncerParam param;
     param.bundleName_ = config.GetBundleName();
@@ -1090,16 +1090,17 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t lastEr
     param.isAutoClean_ = config.GetAutoClean();
     param.isSearchable_ = config.IsSearchable();
     param.password_ = {};
-
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-    if (errCode != E_OK) {
-        return lastErr;
-    }
     std::vector<uint8_t> key;
-    errCode = service->GetPassword(param, key);
-    if (errCode != RDB_OK) {
-        return lastErr;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    auto [svcErr, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (svcErr != E_OK) {
+        return errCode;
     }
+    svcErr = service->GetPassword(param, key);
+    if (svcErr != RDB_OK) {
+        return errCode;
+    }
+#endif
 
     errCode = SetEncryptKey(key, config.GetIter());
     if (errCode == E_OK) {

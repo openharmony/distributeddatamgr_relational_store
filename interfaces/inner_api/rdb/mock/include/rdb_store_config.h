@@ -149,9 +149,7 @@ public:
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
-
     void RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const;
-
     std::vector<uint8_t> GetEncryptKey() const;
     void ChangeEncryptKey() const;
     std::vector<uint8_t> GetNewEncryptKey() const;
