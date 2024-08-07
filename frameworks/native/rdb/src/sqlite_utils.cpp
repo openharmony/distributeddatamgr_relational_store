@@ -143,7 +143,8 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
         return false;
     }
     std::ofstream dst(destFile.c_str(), std::ios::binary);
-    if (!src.is_open()) {
+    if (!dst.is_open()) {
+        src.close();
         LOG_WARN("open destFile failed errno %{public}d %{public}s", errno, destFile.c_str());
         return false;
     }
