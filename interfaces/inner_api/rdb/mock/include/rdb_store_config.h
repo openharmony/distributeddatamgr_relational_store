@@ -66,7 +66,8 @@ enum class SecurityLevel : int32_t {
 
 enum HAMode : int32_t {
     SINGLE = 0,
-    MASTER_SLAVER,
+    MAIN_REPLICA,
+    MANUAL_TRIGGER,
 };
 
 enum RoleType : uint32_t {
@@ -226,6 +227,8 @@ public:
     int32_t GetIter() const;
     int32_t GetHaMode() const;
     void SetHaMode(int32_t haMode);
+    void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
+    void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
 private:
     void ClearEncryptKey();

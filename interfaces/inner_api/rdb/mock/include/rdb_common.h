@@ -32,6 +32,14 @@ enum RebuiltType : uint32_t {
     REBUILT,
     REPAIRED,
 };
+
+enum SlaveStatus : uint32_t {
+    UNDEFINED,
+    DB_NOT_EXITS,
+    BACKING_UP,
+    BACKUP_INTERRUPT,
+    BACKUP_FINISHED,
+};
 }
 }
 
