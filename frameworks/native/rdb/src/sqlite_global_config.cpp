@@ -38,7 +38,7 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 {
     umask(GlobalExpr::APP_DEFAULT_UMASK);
 
-    sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+    sqlite3_config(SQLITE_CONFIG_LOOKASIDE, 0, 0);
 
     sqlite3_config(SQLITE_CONFIG_LOG, &Log,
         GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
