@@ -304,7 +304,7 @@ void RdbStoreConfig::SetEncryptStatus(const bool status)
 
 bool RdbStoreConfig::IsEncrypt() const
 {
-    return this->isEncrypt_;
+    return isEncrypt_ || !encryptKey_.empty();
 }
 
 bool RdbStoreConfig::IsCreateNecessary() const

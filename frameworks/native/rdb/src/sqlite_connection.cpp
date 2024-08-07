@@ -545,12 +545,12 @@ std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
-    std::vector<uint8_t> key = config.GetEncryptKey();
-    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-    if (key.empty() && newKey.empty()) {
+    if (!config.IsEncrypt()) {
         return E_OK;
     }
 
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     auto errCode = SetEncryptKey(key, config.GetIter());
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
