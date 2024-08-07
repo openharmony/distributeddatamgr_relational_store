@@ -62,8 +62,12 @@ public:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
-    virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
+    virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        bool isAsync = false) = 0;
     virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
+    virtual int32_t InterruptBackup() = 0;
+    virtual int32_t GetBackupStatus() const = 0;
+    virtual bool IsNeedBackupToSlave(const RdbStoreConfig &config) = 0;
 
 private:
     int32_t id_ = 0;

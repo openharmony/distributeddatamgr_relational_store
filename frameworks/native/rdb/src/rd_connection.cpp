@@ -206,7 +206,8 @@ int32_t RdConnection::Unsubscribe(const std::string& event,
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    bool isAsync)
 {
     uint32_t size = destEncryptKey.size();
     if (size != 0) {
@@ -224,5 +225,19 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
+int32_t RdConnection::InterruptBackup()
+{
+    return E_NOT_SUPPORT;
+}
+
+int32_t RdConnection::GetBackupStatus() const
+{
+    return SlaveStatus::UNDEFINED;
+}
+
+bool RdConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
+{
+    return false;
+}
 } // namespace NativeRdb
 } // namespace OHOS

@@ -129,7 +129,9 @@ enum HAMode : int32_t {
     /** Single database.*/
     SINGLE = 0,
     /** Real-time dual-write backup database.*/
-    MASTER_SLAVER,
+    MAIN_REPLICA,
+    /** Database for which real-time dual-write is enabled only after backup is manually triggered.*/
+    MANUAL_TRIGGER,
 };
 
 enum RoleType : uint32_t {
@@ -618,6 +620,10 @@ public:
     int32_t GetHaMode() const;
  
     void SetHaMode(int32_t haMode);
+
+    void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
+
+    void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
 private:
     void ClearEncryptKey();
