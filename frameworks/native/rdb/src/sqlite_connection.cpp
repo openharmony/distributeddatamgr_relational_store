@@ -184,7 +184,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 #endif
     isReadOnly_ = !isWriter_ || config.IsReadOnly();
-    int openFileFlags = isReadOnly_ ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
+    int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
                                     : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     errCode = OpenDatabase(dbPath, openFileFlags);
     if (errCode != E_OK) {
