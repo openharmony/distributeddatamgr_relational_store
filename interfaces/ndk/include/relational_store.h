@@ -92,6 +92,12 @@ typedef enum Rdb_SecurityArea {
      * @brief Security Area 4.
      */
     RDB_SECURITY_AREA_EL4,
+    /**
+     * @brief Security Area 5.
+     *
+     * @since 12
+     */
+    RDB_SECURITY_AREA_EL5,
 } Rdb_SecurityArea;
 
 /**
