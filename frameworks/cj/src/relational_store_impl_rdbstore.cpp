@@ -16,6 +16,7 @@
 #include "relational_store_utils.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
+#include "rdb_store.h"
 #include "rdb_helper.h"
 #include "abs_rdb_predicates.h"
 #include "logger.h"
@@ -42,6 +43,41 @@ using namespace OHOS::FFI;
 
 namespace OHOS {
 namespace Relational {
+    RdbStoreObserverImpl::RdbStoreObserverImpl(int64_t id, FuncType type, int32_t mode)
+    {
+        callbackId = id;
+        funcType = type;
+        mode_ = mode;
+        switch (type) {
+            case NoParam: {
+                auto cFunc = reinterpret_cast<void(*)()>(callbackId);
+                func = CJLambda::Create(cFunc);
+                break;
+            }
+            case ParamArrStr: {
+                auto cFunc = reinterpret_cast<void(*)(CArrStr arr)>(callbackId);
+                carrStrFunc = [ lambda = CJLambda::Create(cFunc)](const std::vector<std::string> &devices) ->
+                    void { lambda(VectorToCArrStr(devices)); };
+                break;
+            }
+            case ParamChangeInfo: {
+                auto cFunc = reinterpret_cast<void(*)(CArrRetChangeInfo arr)>(callbackId);
+                changeInfoFunc = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Origin &origin,
+                const PrimaryFields &fields, DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo) ->
+                    void { lambda(ToCArrRetChangeInfo(origin, fields, std::move(changeInfo))); };
+                break;
+            }
+        }
+    }
+
+    SyncObserverImpl::SyncObserverImpl(int64_t id)
+    {
+        callbackId = id;
+        auto cFunc = reinterpret_cast<void(*)(CProgressDetails details)>(callbackId);
+        func = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Details &details) ->
+            void { lambda(ToCProgressDetails(details)); };
+    }
+
     class DefaultOpenCallback : public NativeRdb::RdbOpenCallback {
     public:
         int OnCreate(NativeRdb::RdbStore &rdbStore) override
@@ -121,32 +157,33 @@ namespace Relational {
         return deletedRows;
     }
 
-    void RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize)
+    int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize)
     {
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
             tablesVector.push_back(std::string(tables[i]));
         }
-        rdbStore_->SetDistributedTables(tablesVector);
+        return rdbStore_->SetDistributedTables(tablesVector, DistributedRdb::DISTRIBUTED_DEVICE,
+            DistributedRdb::DistributedConfig{false});
     }
 
-    void RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type)
+    int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type)
     {
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
             tablesVector.push_back(std::string(tables[i]));
         }
-        rdbStore_->SetDistributedTables(tablesVector, type);
+        return rdbStore_->SetDistributedTables(tablesVector, type, DistributedRdb::DistributedConfig{false});
     }
 
-    void RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
+    int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
         DistributedRdb::DistributedConfig &distributedConfig)
     {
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
             tablesVector.push_back(std::string(tables[i]));
         }
-        rdbStore_->SetDistributedTables(tablesVector, type, distributedConfig);
+        return rdbStore_->SetDistributedTables(tablesVector, type, distributedConfig);
     }
 
     int32_t RdbStoreImpl::RollBack()
@@ -312,8 +349,7 @@ namespace Relational {
 
     int32_t RdbStoreImpl::RegisteredObserver(
         DistributedRdb::SubscribeOption option,
-        std::map<std::string,
-        std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
+        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
         std::function<void()> *callback, const std::function<void()>& callbackRef)
     {
         observers.try_emplace(option.event);
@@ -331,9 +367,55 @@ namespace Relational {
         return RelationalStoreJsKit::OK;
     }
 
-    void RdbStoreObserverImpl::RdbStoreObserverImpl::OnChange()
+    int32_t RdbStoreImpl::RegisterObserverArrStr(int32_t subscribeType, int64_t callbackId)
     {
-        m_callbackRef();
+        int32_t mode = subscribeType;
+        DistributedRdb::SubscribeOption option;
+        option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
+        option.event = "dataChange";
+        auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamArrStr, mode);
+        int32_t errCode = NativeRdb::E_OK;
+        if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+            errCode = rdbStore_->SubscribeObserver(option, observer);
+        } else {
+            errCode = rdbStore_->Subscribe(option, observer.get());
+        }
+        if (errCode == NativeRdb::E_OK) {
+            observers_[mode].push_back(observer);
+            LOGI("subscribe success");
+        }
+        return errCode;
+    }
+
+    int32_t RdbStoreImpl::RegisterObserverChangeInfo(int32_t subscribeType, int64_t callbackId)
+    {
+        int32_t mode = subscribeType;
+        DistributedRdb::SubscribeOption option;
+        option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
+        option.event = "dataChange";
+        auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamChangeInfo, mode);
+        int32_t errCode = NativeRdb::E_OK;
+        if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+            errCode = rdbStore_->SubscribeObserver(option, observer);
+        } else {
+            errCode = rdbStore_->Subscribe(option, observer.get());
+        }
+        if (errCode == NativeRdb::E_OK) {
+            observers_[mode].push_back(observer);
+            LOGI("subscribe success");
+        }
+        return errCode;
+    }
+
+    int32_t RdbStoreImpl::RegisterObserverProgressDetails(int64_t callbackId)
+    {
+        auto observer = std::make_shared<SyncObserverImpl>(callbackId);
+        int errCode = rdbStore_->RegisterAutoSyncCallback(observer);
+        if (errCode == NativeRdb::E_OK) {
+            syncObservers_.push_back(observer);
+            LOGI("progress subscribe success");
+        }
+        return errCode;
     }
 
     int32_t RdbStoreImpl::UnRegisterObserver(const char *event, bool interProcess, std::function<void()> *callback)
@@ -348,8 +430,9 @@ namespace Relational {
         return UnRegisteredObserver(option, localSharedObservers_, callback);
     }
 
-    int32_t RdbStoreImpl::UnRegisteredObserver(DistributedRdb::SubscribeOption option, std::map<std::string,
-        std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers, std::function<void()> *callback)
+    int32_t RdbStoreImpl::UnRegisteredObserver(DistributedRdb::SubscribeOption option,
+        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
+        std::function<void()> *callback)
     {
         auto obs = observers.find(option.event);
         if (obs == observers.end()) {
@@ -403,6 +486,137 @@ namespace Relational {
         observers.erase(option.event);
         LOGI("unsubscribe success, event: %{public}s", option.event.c_str());
         return RelationalStoreJsKit::OK;
+    }
+
+    int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfo(int32_t subscribeType, int64_t callbackId)
+    {
+        int32_t mode = subscribeType;
+        DistributedRdb::SubscribeOption option;
+        option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
+        option.event = "dataChange";
+        for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
+            if (*it == nullptr) {
+                it = observers_[mode].erase(it);
+                continue;
+            }
+            if (((**it).GetCallBackId() != callbackId)) {
+                ++it;
+                continue;
+            }
+            int errCode = NativeRdb::E_OK;
+            if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+                errCode = rdbStore_->UnsubscribeObserver(option, *it);
+            } else {
+                errCode = rdbStore_->UnSubscribe(option, it->get());
+            }
+            if (errCode != NativeRdb::E_OK) {
+                return errCode;
+            }
+            it = observers_[mode].erase(it);
+        }
+        return NativeRdb::E_OK;
+    }
+    
+    int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeType)
+    {
+        int32_t mode = subscribeType;
+        DistributedRdb::SubscribeOption option;
+        option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
+        option.event = "dataChange";
+        for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
+            if (*it == nullptr) {
+                it = observers_[mode].erase(it);
+                continue;
+            }
+            int errCode = NativeRdb::E_OK;
+            if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+                errCode = rdbStore_->UnsubscribeObserver(option, *it);
+            } else {
+                errCode = rdbStore_->UnSubscribe(option, it->get());
+            }
+            if (errCode != NativeRdb::E_OK) {
+                return errCode;
+            }
+            it = observers_[mode].erase(it);
+        }
+        return NativeRdb::E_OK;
+    }
+
+    int32_t RdbStoreImpl::UnRegisterObserverProgressDetails(int64_t callbackId)
+    {
+        for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
+            if (*it == nullptr) {
+                it = syncObservers_.erase(it);
+                continue;
+            }
+            if (((**it).GetCallBackId() != callbackId)) {
+                ++it;
+                continue;
+            }
+
+            int32_t errCode = rdbStore_->UnregisterAutoSyncCallback(*it);
+            if (errCode != NativeRdb::E_OK) {
+                return errCode;
+            }
+            it = syncObservers_.erase(it);
+        }
+        return NativeRdb::E_OK;
+    }
+
+    int32_t RdbStoreImpl::UnRegisterObserverProgressDetailsAll()
+    {
+        for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
+            if (*it == nullptr) {
+                it = syncObservers_.erase(it);
+                continue;
+            }
+            int32_t errCode = rdbStore_->UnregisterAutoSyncCallback(*it);
+            if (errCode != NativeRdb::E_OK) {
+                return errCode;
+            }
+            it = syncObservers_.erase(it);
+        }
+        return NativeRdb::E_OK;
+    }
+
+    int32_t RdbStoreImpl::CloudSync(int32_t mode, CArrStr tables, int64_t callbackId)
+    {
+        DistributedRdb::SyncOption option;
+        option.mode = static_cast<DistributedRdb::SyncMode>(mode);
+        option.isBlock = false;
+        std::vector<std::string> arr = CArrStrToVector(tables);
+        auto cFunc = reinterpret_cast<void(*)(CProgressDetails details)>(callbackId);
+        auto async = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Details &details) ->
+            void { lambda(ToCProgressDetails(details)); };
+        int32_t errCode = rdbStore_->Sync(option, arr, async);
+        return errCode;
+    }
+
+    int32_t RdbStoreImpl::GetVersion(int32_t& errCode)
+    {
+        int32_t version = 0;
+        errCode = rdbStore_->GetVersion(version);
+        return version;
+    }
+
+    void RdbStoreImpl::SetVersion(int32_t value, int32_t &errCode)
+    {
+        errCode = rdbStore_->SetVersion(value);
+    }
+
+    ModifyTime RdbStoreImpl::GetModifyTime(char *cTables, char *cColumnName, CArrPRIKeyType &cPrimaryKeys,
+        int32_t& errCode)
+    {
+        std::string tableName = cTables;
+        std::string columnName = cColumnName;
+        std::vector<NativeRdb::RdbStore::PRIKey> keys = CArrPRIKeyTypeToPRIKeyArray(cPrimaryKeys);
+        std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> map =
+            rdbStore_->GetModifyTime(tableName, columnName, keys);
+        if (map.empty()) {
+            errCode = NativeRdb::E_ERROR;
+            return ModifyTime{0};
+        }
+        return MapToModifyTime(map, errCode);
     }
 
     int32_t GetRealPath(AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
