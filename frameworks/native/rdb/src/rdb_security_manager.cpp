@@ -27,6 +27,7 @@
 #include "hks_api.h"
 #include "hks_param.h"
 #include "logger.h"
+#include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
@@ -573,7 +574,7 @@ static std::string RemoveSuffix(const std::string &name)
 
 bool RdbSecurityManager::IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType)
 {
-    KeyFiles keyFiles(dbPath);
+    KeyFiles keyFiles(dbPath, false);
     return (access(keyFiles.GetKeyFile(keyFileType).c_str(), F_OK) == 0);
 }
 
@@ -623,20 +624,32 @@ int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std:
     return E_OK;
 }
 
-RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath)
+RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
 {
     const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
-    lock_ = dbKeyDir + dbName + RdbSecurityManager::SUFFIX_KEY_LOCK;
-    keys_[PUB_KEY_FILE] = dbKeyDir + dbName + RdbSecurityManager::SUFFIX_PUB_KEY;
-    keys_[PUB_KEY_FILE_NEW_KEY] = dbKeyDir + dbName + RdbSecurityManager::SUFFIX_PUB_KEY_NEW;
-    if (!RdbSecurityManager::InitPath(dbKeyDir)) {
+    lock_ = dbKeyDir + dbName + SUFFIX_KEY_LOCK;
+    keys_[PUB_KEY_FILE] = dbKeyDir + dbName + SUFFIX_PUB_KEY;
+    keys_[PUB_KEY_FILE_NEW_KEY] = dbKeyDir + dbName + SUFFIX_PUB_KEY_NEW;
+    if (!InitPath(dbKeyDir)) {
         LOG_ERROR("keyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
+    }
+    if (!openFile) {
+        return;
     }
     lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRWXU | S_IRWXG);
     if (lockFd_ < 0) {
         LOG_WARN("open failed, errno:%{public}d, file:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
     }
+}
+
+RdbSecurityManager::KeyFiles::~KeyFiles()
+{
+    if (lockFd_ < 0) {
+        return;
+    }
+    close(lockFd_);
+    lockFd_ = -1;
 }
 
 const std::string &RdbSecurityManager::KeyFiles::GetKeyFile(KeyFileType type)
@@ -687,15 +700,6 @@ int32_t RdbSecurityManager::KeyFiles::DestroyLock()
     }
     SqliteUtils::DeleteFile(lock_);
     return E_OK;
-}
-
-RdbSecurityManager::KeyFiles::~KeyFiles()
-{
-    if (lockFd_ < 0) {
-        return;
-    }
-    close(lockFd_);
-    lockFd_ = -1;
 }
 } // namespace NativeRdb
 } // namespace OHOS
