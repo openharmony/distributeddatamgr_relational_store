@@ -21,17 +21,12 @@
 #include <unistd.h>
 
 #include <atomic>
-#include <chrono>
 #include <climits>
-#include <list>
-#include <map>
-#include <memory>
 #include <mutex>
 #include <random>
 #include <vector>
 
 #include "hks_type.h"
-#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
@@ -73,6 +68,20 @@ public:
         PUB_KEY_FILE_NEW_KEY,
         PUB_KEY_FILE_BUTT
     };
+    class KeyFiles {
+    public:
+        KeyFiles(const std::string &dbPath, bool openFile = true);
+        ~KeyFiles();
+        const std::string &GetKeyFile(KeyFileType type);
+        int32_t DestroyLock();
+        int32_t Lock();
+        int32_t Unlock();
+
+    private:
+        int32_t lockFd_ = -1;
+        std::string lock_;
+        std::string keys_[PUB_KEY_FILE_BUTT];
+    };
     static RdbSecurityManager &GetInstance();
     int32_t Init(const std::string &bundleName);
 
@@ -84,19 +93,6 @@ public:
     bool IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType);
 
 private:
-    class KeyFiles {
-    public:
-        KeyFiles(const std::string &dbPath);
-        ~KeyFiles();
-        const std::string &GetKeyFile(KeyFileType type);
-        int32_t DestroyLock();
-        int32_t Lock();
-        int32_t Unlock();
-    private:
-        int32_t lockFd_ = -1;
-        std::string lock_;
-        std::string keys_[PUB_KEY_FILE_BUTT];
-    };
     RdbSecurityManager();
     ~RdbSecurityManager();
 
@@ -127,10 +123,10 @@ private:
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-    static const uint32_t TIMES = 4;
-    static const uint32_t MAX_UPDATE_SIZE = 64;
-    static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
-    static const uint8_t AEAD_LEN = 16;
+    static constexpr uint32_t TIMES = 4;
+    static constexpr uint32_t MAX_UPDATE_SIZE = 64;
+    static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+    static constexpr uint8_t AEAD_LEN = 16;
     static constexpr int RDB_KEY_SIZE = 32;
 
     static constexpr int HOURS_PER_YEAR = (24 * 365);
