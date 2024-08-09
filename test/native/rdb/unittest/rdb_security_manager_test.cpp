@@ -91,12 +91,12 @@ HWTEST_F(RdbSecurityManagerTest, LockUnlock, TestSize.Level1)
         keyFiles.Unlock();
         blockResult->SetValue(true);
     });
-    thread.detach();
     auto beforeUnlock = blockResult->GetValue();
     blockResult->Clear(false);
     keyFiles.Unlock();
     auto afterUnlock = blockResult->GetValue();
     ASSERT_FALSE(beforeUnlock);
     ASSERT_TRUE(afterUnlock);
+    thread.join();
 }
 }
