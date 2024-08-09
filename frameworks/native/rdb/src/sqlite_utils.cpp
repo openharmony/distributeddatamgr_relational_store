@@ -182,12 +182,14 @@ void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType 
 {
     int fd = open(fileName.c_str(), O_RDONLY, 0777);
     unsigned int flags = 0;
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     int ret = ioctl(fd, HMFS_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
         LOG_ERROR("Failed to get flags, errno: %{public}d, %{public}s", errno, fileName.c_str());
         close(fd);
         return;
     }
+#endif
 
     if ((flagControlType == SET_FLAG && (flags & HMFS_MONITOR_FL)) ||
         (flagControlType == CLEAR_FLAG && !(flags & HMFS_MONITOR_FL))) {
@@ -202,12 +204,14 @@ void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType 
         flags &= ~HMFS_MONITOR_FL;
     }
 
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     ret = ioctl(fd, HMFS_IOCTL_HW_SET_FLAGS, &flags);
     if (ret < 0) {
         LOG_ERROR("Failed to set flags, errno: %{public}d, %{public}s", errno, fileName.c_str());
         close(fd);
         return;
     }
+#endif
 
     LOG_DEBUG("Flag control operation success type: %{public}d file: %{public}s", flagControlType, fileName.c_str());
     close(fd);
