@@ -505,6 +505,10 @@ int32_t SqliteStatement::BindBlob(sqlite3_stmt *stat, int index, const ValueObje
     if (val == nullptr) {
         return SQLITE_MISMATCH;
     }
+
+    if (val->empty()) {
+        return sqlite3_bind_zeroblob(stat, index, 0);
+    }
     return sqlite3_bind_blob(stat, index, static_cast<const void *>((*val).data()), (*val).size(), SQLITE_TRANSIENT);
 }
 
