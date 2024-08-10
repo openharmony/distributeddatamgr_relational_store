@@ -34,16 +34,17 @@
 
 #include "logger.h"
 #include "raw_data_parser.h"
-#include "rdb_store_config.h"
 #include "rdb_errno.h"
+#include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_store_config.h"
 #include "relational_store_client.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "rdb_security_manager.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
+#include "rdb_manager_impl.h"
 #endif
 
 namespace OHOS {
@@ -184,7 +185,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 #endif
     isReadOnly_ = !isWriter_ || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
-                                            : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+                                    : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     errCode = OpenDatabase(dbPath, openFileFlags);
     if (errCode != E_OK) {
         return errCode;
@@ -221,7 +222,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
 {
-    SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
@@ -526,11 +526,10 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     newKey.assign(newKey.size(), 0);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
-        RdbSecurityManager::GetInstance().DelRdbSecretDataFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        RdbSecurityManager::GetInstance().DelKeyFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
         return E_OK;
     }
     config.ChangeEncryptKey();
-    RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
     return E_OK;
 }
 
@@ -546,12 +545,12 @@ std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
-    std::vector<uint8_t> key = config.GetEncryptKey();
-    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-    if (key.empty() && newKey.empty()) {
+    if (!config.IsEncrypt()) {
         return E_OK;
     }
 
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     auto errCode = SetEncryptKey(key, config.GetIter());
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
@@ -562,11 +561,11 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
         }
         newKey.assign(newKey.size(), 0);
         if (errCode != E_OK) {
+            errCode = SetServiceKey(config, errCode);
             LOG_ERROR("fail, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
                 errCode, errno, config.GetName().c_str());
             return errCode;
         }
-        RdbSecurityManager::GetInstance().UpdateKeyFile(config.GetPath());
         config.ChangeEncryptKey();
         newKey = {};
     }
@@ -1173,6 +1172,40 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         LOG_ERROR("disable failed, err=%{public}d, errno=%{public}d", err, errno);
     }
     return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
+}
+
+int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCode)
+{
+    DistributedRdb::RdbSyncerParam param;
+    param.bundleName_ = config.GetBundleName();
+    param.hapName_ = config.GetModuleName();
+    param.storeName_ = config.GetName();
+    param.customDir_ = config.GetCustomDir();
+    param.area_ = config.GetArea();
+    param.level_ = static_cast<int32_t>(config.GetSecurityLevel());
+    param.type_ = config.GetDistributedType();
+    param.isEncrypt_ = config.IsEncrypt();
+    param.isAutoClean_ = config.GetAutoClean();
+    param.isSearchable_ = config.IsSearchable();
+    param.password_ = {};
+    std::vector<uint8_t> key;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    auto [svcErr, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (svcErr != E_OK) {
+        return errCode;
+    }
+    svcErr = service->GetPassword(param, key);
+    if (svcErr != RDB_OK) {
+        return errCode;
+    }
+#endif
+
+    errCode = SetEncryptKey(key, config.GetIter());
+    if (errCode == E_OK) {
+        config.RestoreEncryptKey(key);
+    }
+    key.assign(key.size(), 0);
+    return errCode;
 }
 } // namespace NativeRdb
 } // namespace OHOS
