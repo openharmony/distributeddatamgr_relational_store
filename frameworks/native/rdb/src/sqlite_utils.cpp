@@ -180,7 +180,11 @@ int SqliteUtils::GetFileSize(const std::string &fileName)
 
 void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType flagControlType)
 {
-    int fd = open(fileName.c_str(), O_RDONLY, 0777);
+    int fd = open(fileName.c_str(), O_RDONLY, S_IRWXU | S_IRWXG);
+    if (fd < 0) {
+        LOG_ERROR("Open failed, errno=%{public}d.", errno);
+        return;
+    }
     unsigned int flags = 0;
     int ret = ioctl(fd, HMFS_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
