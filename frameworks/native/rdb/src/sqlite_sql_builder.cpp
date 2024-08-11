@@ -260,6 +260,10 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
         sql.append(", " + logTable + ".cursor");
         sql.append(", CASE WHEN ").append(logTable).append(".")
             .append("flag & 0x8 = 0x8 THEN true ELSE false END AS deleted_flag");
+        sql.append(", CASE WHEN ").append(logTable).append(".");
+        sql.append("flag & 0x808 = 0x808 THEN 3 WHEN ").append(logTable).append(".flag & 0x800 = 0x800 THEN 1 WHEN ")
+            .append(logTable).append(".flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status");
+
     }
     sql.append(" FROM ").append(table);
     AppendClause(sql, " INDEXED BY ", predicates.GetIndex());
