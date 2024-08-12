@@ -781,7 +781,7 @@ describe('rdbStoreInsertTest', function () {
                 "data1": asset1,
                 "data2": assets1,
             }
-            await rdbStore.Insert(valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+            await rdbStore.Insert("assetTest", valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
