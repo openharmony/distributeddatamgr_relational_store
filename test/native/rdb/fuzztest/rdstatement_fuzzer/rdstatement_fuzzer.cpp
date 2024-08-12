@@ -17,12 +17,14 @@
 #include "rdb_errno.h"
 #include "rdb_store_impl.h"
 #include "rd_statement.h"
+#include "rdb_store_config.h"
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdStatementPrepareFuzz(const uint8_t *data, size_t size)
 {
-    auto stmt = std::make_shared<RdStatement>();
+    RdbStoreConfig config("/data/test/rdbStoreFuzz.db");
+    auto stmt = std::make_shared<RdStatement>(config);
     std::string sqlString(reinterpret_cast<const char *>(data), size);
     stmt->Prepare(sqlString);
 }

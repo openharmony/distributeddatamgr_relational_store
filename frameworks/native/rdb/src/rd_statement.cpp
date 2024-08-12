@@ -26,11 +26,13 @@
 #include "rd_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-RdStatement::RdStatement()
+RdStatement::RdStatement(const RdbStoreConfig &config) : config_(config)
 {
 }
 
@@ -125,6 +127,9 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     GRD_SqlStmt *tmpStmt = nullptr;
     int ret = RdUtils::RdSqlPrepare(db, newSql.c_str(), newSql.length(), &tmpStmt, nullptr);
     if (ret != E_OK) {
+        if (ret == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(ret);
+        }
         if (tmpStmt != nullptr) {
             (void)RdUtils::RdSqlFinalize(tmpStmt);
         }
@@ -279,7 +284,11 @@ int32_t RdStatement::Step()
     if (stmtHandle_ == nullptr) {
         return E_OK;
     }
-    return RdUtils::RdSqlStep(stmtHandle_);
+    int ret = RdUtils::RdSqlStep(stmtHandle_);
+    if (ret == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(ret);
+    }
+    return ret;
 }
 
 int32_t RdStatement::Reset()
@@ -470,5 +479,30 @@ void RdStatement::GetProperties()
     columnCount_ = RdUtils::RdSqlColCnt(stmtHandle_);
 }
 
+void RdStatement::ReportDbCorruptedEvent(int errorCode)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+}
 } // namespace NativeRdb
 } // namespace OHOS
