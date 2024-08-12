@@ -1197,7 +1197,6 @@ describe('rdbStoreUpdateTest', function () {
             predicates.equalTo("data2", assets1)
             await rdbStore.update(valuesBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
-            expect().assertFail()
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect().assertFail();
