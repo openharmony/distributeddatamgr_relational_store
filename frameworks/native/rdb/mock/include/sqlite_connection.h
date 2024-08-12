@@ -70,7 +70,7 @@ protected:
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
-    explicit SqliteConnection(bool isWriteConnection);
+    SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
@@ -106,8 +106,7 @@ private:
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
     std::string GetSlavePath(const std::string& name);
     int CheckAndRestoreSlave(const RdbStoreConfig &config);
-    void ReportDbCorruptedEvent(
-        const RdbStoreConfig &config, int errCode, const std::string &checkResultInfo, const std::string &dbPath);
+    void ReportDbCorruptedEvent(int errCode);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
@@ -127,6 +126,7 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
+    const RdbStoreConfig config_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
