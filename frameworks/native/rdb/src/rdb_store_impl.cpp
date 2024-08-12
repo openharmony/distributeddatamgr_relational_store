@@ -298,9 +298,6 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
     }
-    if (table.empty()) {
-        return E_INVALID_ARGS;
-    }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
         return E_DATABASE_BUSY;
