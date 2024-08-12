@@ -126,6 +126,7 @@ static napi_value ExportField(napi_env env)
     SET_NAPI_PROPERTY(field, "CURSOR_FIELD", std::string(DistributedRdb::Field::CURSOR_FIELD));
     SET_NAPI_PROPERTY(field, "ORIGIN_FIELD", std::string(DistributedRdb::Field::ORIGIN_FIELD));
     SET_NAPI_PROPERTY(field, "DELETED_FLAG_FIELD", std::string(DistributedRdb::Field::DELETED_FLAG_FIELD));
+    SET_NAPI_PROPERTY(field, "DATA_STATUS_FIELD", std::string(DistributedRdb::Field::DATA_STATUS_FIELD));
     SET_NAPI_PROPERTY(field, "OWNER_FIELD", std::string(DistributedRdb::Field::OWNER_FIELD));
     SET_NAPI_PROPERTY(field, "PRIVILEGE_FIELD", std::string(DistributedRdb::Field::PRIVILEGE_FIELD));
     SET_NAPI_PROPERTY(field, "SHARING_RESOURCE_FIELD", std::string(DistributedRdb::Field::SHARING_RESOURCE_FIELD));
