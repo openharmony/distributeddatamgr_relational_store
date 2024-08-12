@@ -783,6 +783,7 @@ describe('rdbStoreInsertTest', function () {
             }
             await rdbStore.Insert("assetTest", valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
+            expect().assertFail();
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect("14800001").assertEqual(err.code);
