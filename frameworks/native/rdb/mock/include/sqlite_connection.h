@@ -106,6 +106,8 @@ private:
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
     std::string GetSlavePath(const std::string& name);
     int CheckAndRestoreSlave(const RdbStoreConfig &config);
+    void ReportDbCorruptedEvent(
+        const RdbStoreConfig &config, int errCode, const std::string &checkResultInfo, const std::string &dbPath);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;

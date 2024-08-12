@@ -23,6 +23,7 @@ config("module_private_config") {
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
     "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "//commonlibrary/c_utils/base/include",
@@ -115,6 +116,7 @@ ohos_unittest("NativeRdbTest") {
   ]
 
   sources += [
+    "../../../frameworks/native/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../frameworks/native/rdb/src/connection.cpp",
     "../../../frameworks/native/rdb/src/connection_pool.cpp",
