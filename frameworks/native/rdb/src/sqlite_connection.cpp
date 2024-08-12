@@ -106,8 +106,10 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 
 SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
     : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
-      filePath(""), config_(&config)
+      filePath("")
 {
+    RdbStoreConfig rdbStoreConfig(config);
+    config_ = &rdbStoreConfig;
 }
 
 int SqliteConnection::CheckAndRestoreSlave(const RdbStoreConfig &config)
