@@ -73,7 +73,7 @@ private:
     bool isWriter_ = false;
     GRD_DB *dbHandle_ = nullptr;
     std::string configStr_ = GRD_OPEN_CONFIG_STR;
-    const RdbStoreConfig *config_ = nullptr;
+    const RdbStoreConfig config_;
 };
 
 } // namespace NativeRdb
