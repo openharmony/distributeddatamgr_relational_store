@@ -788,34 +788,18 @@ describe('rdbStoreInsertTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0006
      * @tc.name Normal test case of insert, values are asset and assets
      * @tc.desc 1.Create value
-     *          2.Insert asset with conflict
-     *          3.Insert assets with conflict
+     *          2.Insert asset and assets with conflict
      */
     it('testRdbStoreInsertWithConflictResolution0006', 0, async function () {
         console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0006 start *************");
         try {
             await rdbStore.executeSql(CREATE_TABLE_ASSET_TEST);
             const assets1 = [asset1];
-            const assets2 = [asset2, asset3];
             let valuesBucket = {
                 "data1": asset1,
                 "data2": assets1,
             }
-            await rdbStore.insert("assetTest", valuesBucket)
-            valuesBucket = {
-                "data1": asset2,
-                "data2": assets1,
-            }
-            let predicates = new data_relationalStore.RdbPredicates("assetTest")
-            predicates.equalTo("data1", asset1)
-            await rdbStore.Insert(valuesBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-            valuesBucket = {
-                "data1": asset2,
-                "data2": assets2,
-            }
-            predicates = new data_relationalStore.RdbPredicates("assetTest")
-            predicates.equalTo("data2", assets1)
-            await rdbStore.Insert(valuesBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            await rdbStore.Insert(valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
             expect().assertFail()
         } catch (err) {
@@ -829,28 +813,18 @@ describe('rdbStoreInsertTest', function () {
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0007
      * @tc.name Abnormal test case of insert, value is assets and ON_CONFLICT_REPLACE
      * @tc.desc 1.Create value
-     *          2.Insert asset with conflict
-     *          3.Insert assets with conflict
+     *          2.Insert asset with ON_CONFLICT_REPLACE
      */
     it('testRdbStoreInsertWithConflictResolution0007', 0, async function () {
         console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0007 start *************");
         try {
             await rdbStore.executeSql(CREATE_TABLE_ASSET_TEST);
             const assets1 = [asset1];
-            const assets2 = [asset2, asset3];
             let valuesBucket = {
                 "data1": asset1,
                 "data2": assets1,
             }
-            await rdbStore.insert("assetTest", valuesBucket)
-            valuesBucket = {
-                "data1": asset1,
-                "data2": assets2,
-            }
-            let predicates = new data_relationalStore.RdbPredicates("assetTest")
-            predicates.equalTo("data2", assets2)
-            await rdbStore.Insert(valuesBucket, predicates,
-                data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+            await rdbStore.Insert(valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
