@@ -45,7 +45,7 @@
 #include "traits.h"
 
 #include "directory_ex.h"
-
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
 #include "raw_data_parser.h"
@@ -325,6 +325,9 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     InitSyncerParam();
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
         LOG_ERROR("database corrupt, rebuild database %{public}s", name_.c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -347,6 +350,32 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     }
 
     InnerOpen();
+}
+
+void RdbStoreImpl::ReportDbCorruptedEvent(int errorCode)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 
 RdbStoreImpl::~RdbStoreImpl()
@@ -403,11 +432,17 @@ int RdbStoreImpl::BatchInsertEntry(int64_t &outInsertNum, const std::string &tab
 #endif
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         if (statement == nullptr) {
             continue;
         }
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
+            if (errCode == E_SQLITE_CORRUPT) {
+                ReportDbCorruptedEvent(errCode);
+            }
             if (errCode != E_OK) {
                 outInsertNum = -1;
                 LOG_ERROR("BatchInsert failed, errCode : %{public}d, bindArgs : %{public}zu,"
@@ -944,11 +979,17 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::ExecuteEntry(const std::string &sq
 
     auto [errCode, statement] = GetStatement(sql, connect);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         return { errCode, object };
     }
 
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         LOG_ERROR("execute sql failed, sql: %{public}s, error: %{public}d.", sql.c_str(), errCode);
         return { errCode, object };
     }
@@ -984,12 +1025,18 @@ int RdbStoreImpl::ExecuteAndGetString(
         return E_NOT_SUPPORT;
     }
     auto [errCode, statement] = BeginExecuteSql(sql);
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (statement == nullptr) {
         return errCode;
     }
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", sql.c_str(), errCode);
     }
     outValue = static_cast<std::string>(object);
@@ -1003,11 +1050,17 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
         return E_NOT_SUPPORT;
     }
     auto [errCode, statement] = GetStatement(sql, false);
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (statement == nullptr) {
         return errCode;
     }
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         return errCode;
     }
     outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
@@ -1021,10 +1074,16 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
         return E_NOT_SUPPORT;
     }
     auto [errCode, statement] = GetStatement(sql, false);
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (statement == nullptr) {
         return errCode;
     }
     errCode = statement->Execute(bindArgs);
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (errCode != E_OK) {
         return errCode;
     }
@@ -1171,12 +1230,18 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(errCode);
+        }
         return errCode;
     }
     errCode = statement->Prepare(GlobalExpr::EXPORT_SQL);
     int ret = statement->Execute();
     errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
     int res = statement->Execute();
+    if (res == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(res);
+    }
     return (res == E_OK) ? ret : res;
 }
 

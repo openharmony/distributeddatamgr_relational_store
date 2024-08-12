@@ -42,6 +42,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #include "rdb_manager_impl.h"
@@ -208,9 +209,11 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                 LOG_INFO("%{public}s : %{public}s, ", sql, config.GetName().c_str());
                 std::tie(errCode, checkResult) = ExecuteForValue(sql);
             }
-            if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
+            std::string checkResultInfo = static_cast<std::string>(checkResult);
+            if (errCode == E_OK && checkResultInfo != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s", config.GetName().c_str(),
-                    static_cast<std::string>(checkResult).c_str(), sql);
+                    checkResultInfo.c_str(), sql);
+                ReportDbCorruptedEvent(config, errCode, checkResultInfo, dbPath);
             }
         }
         SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
@@ -218,6 +221,28 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
     filePath = dbPath;
     return E_OK;
+}
+
+void SqliteConnection::ReportDbCorruptedEvent(
+    const RdbStoreConfig &config, int errCode, const std::string &checkResultInfo, const std::string &dbPath)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config.GetBundleName();
+    eventInfo.moduleName = config.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config.GetIntegrityCheck());
+    eventInfo.errorCode = errCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.appendix = checkResultInfo;
+    eventInfo.errorOccurTime = time(nullptr);
+    eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+    std::string walPath = dbPath + "-wal";
+    eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
