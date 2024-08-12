@@ -785,7 +785,7 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
-        return E_ERROR;
+        return E_INVALID_ARGS;
     }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
