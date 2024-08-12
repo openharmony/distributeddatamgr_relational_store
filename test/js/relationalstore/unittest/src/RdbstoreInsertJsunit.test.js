@@ -32,24 +32,6 @@ const asset1 = {
     path: "path1",
     status: data_relationalStore.AssetStatus.ASSET_NORMAL,
 }
-const asset2 = {
-    name: "name2",
-    uri: "uri2",
-    createTime: "createTime2",
-    modifyTime: "modifyTime2",
-    size: "size2",
-    path: "path2",
-    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
-}
-const asset3 = {
-    name: "name3",
-    uri: "uri3",
-    createTime: "createTime3",
-    modifyTime: "modifyTime3",
-    size: "size3",
-    path: "path3",
-    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
-}
 const STORE_CONFIG = {
     name: "InsertTest.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
