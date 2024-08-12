@@ -35,7 +35,7 @@ public:
     static constexpr int COLUMN_TYPE_FLOATS = 1002;
     static constexpr int COLUMN_TYPE_BIGINT = 1003;
 
-    SqliteStatement(const RdbStoreConfig &config);
+    SqliteStatement();
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
     int Bind(const std::vector<ValueObject> &args) override;
@@ -95,7 +95,7 @@ private:
     std::string sql_;
     mutable std::vector<int32_t> types_;
     std::shared_ptr<SqliteStatement> slave_;
-    const RdbStoreConfig config_;
+    const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS

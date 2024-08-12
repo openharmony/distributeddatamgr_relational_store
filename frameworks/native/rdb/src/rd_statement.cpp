@@ -32,7 +32,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-RdStatement::RdStatement(const RdbStoreConfig &config) : config_(config)
+RdStatement::RdStatement()
 {
 }
 
@@ -481,20 +481,23 @@ void RdStatement::GetProperties()
 
 void RdStatement::ReportDbCorruptedEvent(int errorCode)
 {
+    if (config_ == nullptr) {
+        return;
+    }
     RdbCorruptedEvent eventInfo;
-    eventInfo.bundleName = config_.GetBundleName();
-    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.bundleName = config_->GetBundleName();
+    eventInfo.moduleName = config_->GetModuleName();
     eventInfo.storeType = "RDB";
-    eventInfo.storeName = config_.GetName();
-    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
-    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
-    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
-    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.storeName = config_->GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_->GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
     eventInfo.errorCode = errorCode;
     eventInfo.systemErrorNo = errno;
     eventInfo.errorOccurTime = time(nullptr);
     std::string dbPath;
-    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+    if (SqliteGlobalConfig::GetDbPath(*config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
         eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
         std::string walPath = dbPath + "-wal";
         eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);

@@ -45,8 +45,7 @@ using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
-SqliteStatement::SqliteStatement(const RdbStoreConfig &config)
-    : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_(""), config_(config)
+SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
 {
     seqId_ = SqlStatistic::GenerateId();
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_REF, seqId_);
@@ -587,20 +586,23 @@ int SqliteStatement::ModifyLockStatus(const std::string &table, const std::vecto
 
 void SqliteStatement::ReportDbCorruptedEvent(int errorCode)
 {
+    if (config_ == nullptr) {
+        return;
+    }
     RdbCorruptedEvent eventInfo;
-    eventInfo.bundleName = config_.GetBundleName();
-    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.bundleName = config_->GetBundleName();
+    eventInfo.moduleName = config_->GetModuleName();
     eventInfo.storeType = "RDB";
-    eventInfo.storeName = config_.GetName();
-    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
-    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
-    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
-    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.storeName = config_->GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_->GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
     eventInfo.errorCode = errorCode;
     eventInfo.systemErrorNo = errno;
     eventInfo.errorOccurTime = time(nullptr);
     std::string dbPath;
-    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+    if (SqliteGlobalConfig::GetDbPath(*config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
         eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
         std::string walPath = dbPath + "-wal";
         eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
