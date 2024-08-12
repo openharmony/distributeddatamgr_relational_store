@@ -768,37 +768,12 @@ describe('rdbStoreInsertTest', function () {
 
     /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0006
-     * @tc.name Normal test case of insert, values are asset and assets
-     * @tc.desc 1.Create value
-     *          2.Insert asset and assets with conflict
-     */
-    it('testRdbStoreInsertWithConflictResolution0006', 0, async function () {
-        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0006 start *************");
-        try {
-            await rdbStore.executeSql(CREATE_TABLE_ASSET_TEST);
-            const assets1 = [asset1];
-            let valuesBucket = {
-                "data1": asset1,
-                "data2": assets1,
-            }
-            await rdbStore.Insert(valuesBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-            await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
-            expect().assertFail()
-        } catch (err) {
-            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
-            expect().assertFail();
-        }
-        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0006 end   *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_InsertWithConflictResolution_0007
      * @tc.name Abnormal test case of insert, value is assets and ON_CONFLICT_REPLACE
      * @tc.desc 1.Create value
      *          2.Insert asset with ON_CONFLICT_REPLACE
      */
-    it('testRdbStoreInsertWithConflictResolution0007', 0, async function () {
-        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0007 start *************");
+    it('testRdbStoreInsertWithConflictResolution0006', 0, async function () {
+        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0006 start *************");
         try {
             await rdbStore.executeSql(CREATE_TABLE_ASSET_TEST);
             const assets1 = [asset1];
@@ -812,7 +787,7 @@ describe('rdbStoreInsertTest', function () {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect("14800001").assertEqual(err.code);
         }
-        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0007 end   *************");
+        console.log(TAG + "************* testRdbStoreInsertWithConflictResolution0006 end   *************");
     })
 
     /**
