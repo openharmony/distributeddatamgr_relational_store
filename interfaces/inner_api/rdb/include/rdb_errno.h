@@ -394,6 +394,11 @@ static constexpr int E_CONFIG_INVALID_CHANGE = (E_BASE + 70);
  * @brief Not get service.
  */
 static constexpr int E_SERVICE_NOT_FOUND = (E_BASE + 71);
+
+/**
+ * @brief Database schema has changed.
+ */
+static constexpr int E_SQLITE_SCHEMA = (E_BASE + 72);
 } // namespace NativeRdb
 } // namespace OHOS
 

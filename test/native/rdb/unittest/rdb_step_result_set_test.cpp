@@ -18,6 +18,7 @@
 #include <climits>
 #include <string>
 
+#include "abs_predicates.h"
 #include "cache_result_set.h"
 #include "common.h"
 #include "rdb_errno.h"
@@ -1915,6 +1916,31 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
     // if columnIndex > colNames_.size
     errCode = resultSet->Get(5, valueobject);
     EXPECT_NE(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Abnormal_CacheResultSet004
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Invalid_TableName, TestSize.Level1)
+{
+    auto sql = "create table if not exists 'table_-1' (id INTEGER PRIMARY KEY AUTOINCREMENT)";
+    auto ret = store->ExecuteSql(sql);
+    EXPECT_EQ(E_OK, ret);
+    int64_t rowId = 0;
+    ValuesBucket bucket{};
+    bucket.Put("id", 1);
+    ret = store->Insert(rowId, "'table_-1'", bucket);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(rowId, 1);
+    AbsRdbPredicates predicates("table_-1");
+    auto resultSet = store->Query(predicates, {});
+    EXPECT_NE(resultSet, nullptr);
+    auto rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 1);
 }
 } // namespace NativeRdb
 } // namespace OHOS
