@@ -169,6 +169,7 @@ int RdStatement::Finalize()
     sql_ = "";
     columnCount_ = 0;
     readOnly_ = false;
+    config_ = nullptr;
     return E_OK;
 }
 

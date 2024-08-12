@@ -85,10 +85,8 @@ int32_t RdConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter)
+RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter), config_(config)
 {
-    RdbStoreConfig rdbStoreConfig(config);
-    config_ = &rdbStoreConfig;
 }
 
 RdConnection::~RdConnection()
@@ -127,7 +125,7 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
 {
     auto stmt = std::make_shared<RdStatement>();
     stmt->conn_ = conn;
-    stmt->config_ = config_;
+    stmt->config_ = &config_;
     stmt->setPragmas_["user_version"] = ([this](const int &value) -> int32_t {
         return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, value);
     });

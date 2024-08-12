@@ -214,6 +214,7 @@ int SqliteStatement::Finalize()
     columnCount_ = -1;
     numParameters_ = 0;
     types_ = std::vector<int32_t>();
+    config_ = nullptr;
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);

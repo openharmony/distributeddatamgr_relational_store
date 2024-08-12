@@ -126,7 +126,7 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
-    const RdbStoreConfig *config_ = nullptr;
+    const RdbStoreConfig config_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
