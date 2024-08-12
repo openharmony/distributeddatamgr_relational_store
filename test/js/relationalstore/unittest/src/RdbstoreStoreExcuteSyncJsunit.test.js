@@ -461,6 +461,25 @@ describe('rdbStoreExcuteTest', function () {
     })
 
     /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Execute_0017
+     * @tc.name AbNormal test case of Execute, if sql is invalid
+     * @tc.desc 1. Insert data
+     *          2. Check returned value
+     */
+    it('testSyncExecute0017', 0, async function (done) {
+        console.info(TAG + "************* testSyncExecute0017 start *************");
+        try {
+            rdbStore.executeSync("11111");
+            expect(null).assertFail();
+        } catch (err) {
+            expect(14800000).assertEqual(err.code);
+            console.error(`insert data failed, code:${err.code}, message: ${err.message}`);
+        }
+        done();
+        console.info(TAG + "************* testSyncExecute0017 end   *************");
+    })
+
+    /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
      * @tc.name Abnormal test case of sync
      * @tc.desc 1.Close rdbStore
