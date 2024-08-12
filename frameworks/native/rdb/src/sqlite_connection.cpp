@@ -64,7 +64,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
-    std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(config, isWrite));
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, isWrite);
     if (connection == nullptr) {
         LOG_ERROR("connection is nullptr.");
         return result;
@@ -83,8 +83,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     }
 
     if (config.GetHaMode() == HAMode::MASTER_SLAVER && isWrite) {
-        connection->slaveConnection_ =
-            std::shared_ptr<SqliteConnection>(new (std::nothrow) SqliteConnection(config, isWrite));
+        connection->slaveConnection_ = std::make_shared<SqliteConnection>(config, isWrite);
         errCode = connection->slaveConnection_->InnerOpen(connection->slaveConnection_->GetSlaveRdbStoreConfig(config));
         if (errCode != E_OK) {
             LOG_WARN("open the slave database failed:%{public}d", errCode);
