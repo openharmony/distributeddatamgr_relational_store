@@ -472,7 +472,7 @@ describe('rdbStoreExcuteTest', function () {
             rdbStore.executeSync("11111");
             expect(null).assertFail();
         } catch (err) {
-            expect(14800000).assertEqual(err.code);
+            expect(14800021).assertEqual(err.code);
             console.error(`insert data failed, code:${err.code}, message: ${err.message}`);
         }
         done();
