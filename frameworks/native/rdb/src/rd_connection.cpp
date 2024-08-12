@@ -85,7 +85,11 @@ int32_t RdConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter), config_(&config) {}
+RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter)
+{
+    RdbStoreConfig rdbStoreConfig(config);
+    config_ = &rdbStoreConfig;
+}
 
 RdConnection::~RdConnection()
 {
