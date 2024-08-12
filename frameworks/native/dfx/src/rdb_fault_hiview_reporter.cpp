@@ -23,7 +23,6 @@
 #include "logger.h"
 #include "rdb_errno.h"
 
-
 namespace OHOS::NativeRdb {
 
 using namespace OHOS::Rdb;
