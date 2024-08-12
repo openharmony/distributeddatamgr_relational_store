@@ -470,7 +470,7 @@ describe('rdbStoreExcuteTest', function () {
         console.info(TAG + "************* testSyncExecute0017 start *************");
         try {
             rdbStore.executeSync("11111");
-            expect(null).assertFail();
+            expect().assertFail();
         } catch (err) {
             expect(14800021).assertEqual(err.code);
             console.error(`insert data failed, code:${err.code}, message: ${err.message}`);
