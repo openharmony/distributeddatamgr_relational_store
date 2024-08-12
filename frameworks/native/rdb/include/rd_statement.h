@@ -30,7 +30,7 @@ namespace OHOS {
 namespace NativeRdb {
 class RdStatement final : public Statement {
 public:
-    RdStatement(const RdbStoreConfig &config);
+    RdStatement();
     ~RdStatement();
     int Finalize() override;
     int32_t Prepare(const std::string& sql) override;
@@ -67,7 +67,7 @@ private:
 
     std::map<std::string, std::function<int32_t(const int &value)>> setPragmas_;
     std::map<std::string, std::function<int32_t(int &version)>> getPragmas_;
-    const RdbStoreConfig config_;
+    const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS

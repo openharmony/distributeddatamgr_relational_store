@@ -17,12 +17,10 @@
 #define DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 
 #include <sys/stat.h>
-
 #include <ctime>
 #include <string>
 
 #include "rdb_store_config.h"
-
 
 namespace OHOS::NativeRdb {
 

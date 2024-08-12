@@ -23,8 +23,7 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdStatementPrepareFuzz(const uint8_t *data, size_t size)
 {
-    RdbStoreConfig config("/data/test/rdbStoreFuzz.db");
-    auto stmt = std::make_shared<RdStatement>(config);
+    auto stmt = std::make_shared<RdStatement>();
     std::string sqlString(reinterpret_cast<const char *>(data), size);
     stmt->Prepare(sqlString);
 }
