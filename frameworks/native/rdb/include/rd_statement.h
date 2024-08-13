@@ -24,6 +24,8 @@
 #include "statement.h"
 #include "value_object.h"
 #include "rd_connection.h"
+#include "rdb_store_config.h"
+
 namespace OHOS {
 namespace NativeRdb {
 class RdStatement final : public Statement {
@@ -54,6 +56,7 @@ private:
     int Prepare(GRD_DB *db, const std::string &sql);
     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
     int IsValid(int index) const;
+    void ReportDbCorruptedEvent(int errorCode);
 
     bool readOnly_ = false;
     std::string sql_ = "";
@@ -64,6 +67,7 @@ private:
 
     std::map<std::string, std::function<int32_t(const int &value)>> setPragmas_;
     std::map<std::string, std::function<int32_t(int &version)>> getPragmas_;
+    const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS

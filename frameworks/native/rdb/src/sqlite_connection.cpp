@@ -42,6 +42,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #include "rdb_manager_impl.h"
@@ -63,7 +64,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
-    std::shared_ptr<SqliteConnection> connection(new (std::nothrow) SqliteConnection(isWrite));
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, isWrite);
     if (connection == nullptr) {
         LOG_ERROR("connection is nullptr.");
         return result;
@@ -82,7 +83,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     }
 
     if (config.GetHaMode() == HAMode::MASTER_SLAVER && isWrite) {
-        connection->slaveConnection_ = std::shared_ptr<SqliteConnection>(new (std::nothrow) SqliteConnection(isWrite));
+        connection->slaveConnection_ = std::make_shared<SqliteConnection>(config, isWrite);
         errCode = connection->slaveConnection_->InnerOpen(connection->slaveConnection_->GetSlaveRdbStoreConfig(config));
         if (errCode != E_OK) {
             LOG_WARN("open the slave database failed:%{public}d", errCode);
@@ -102,9 +103,9 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-SqliteConnection::SqliteConnection(bool isWriteConnection)
-    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
-      filePath("")
+SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
+    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0), filePath(""),
+      config_(config)
 {
 }
 
@@ -208,9 +209,11 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                 LOG_INFO("%{public}s : %{public}s, ", sql, config.GetName().c_str());
                 std::tie(errCode, checkResult) = ExecuteForValue(sql);
             }
-            if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
+            std::string checkResultInfo = static_cast<std::string>(checkResult);
+            if (errCode == E_OK && checkResultInfo != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s", config.GetName().c_str(),
-                    static_cast<std::string>(checkResult).c_str(), sql);
+                    checkResultInfo.c_str(), sql);
+                ReportDbCorruptedEvent(errCode);
             }
         }
         SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
@@ -218,6 +221,32 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
     filePath = dbPath;
     return E_OK;
+}
+
+void SqliteConnection::ReportDbCorruptedEvent(int errorCode)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
@@ -400,6 +429,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn)
 {
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>();
+    statement->config_ = &config_;
     int errCode = statement->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
         return { errCode, nullptr };
@@ -407,6 +437,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     statement->conn_ = conn;
     if (slaveConnection_ && IsWriter()) {
         statement->slave_ = std::make_shared<SqliteStatement>();
+        statement->slave_->config_ = &config_;
         errCode = statement->slave_->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d", errCode);
