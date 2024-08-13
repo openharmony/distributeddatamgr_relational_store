@@ -559,9 +559,10 @@ std::pair<int32_t, uint32_t> RdbServiceProxy::LockCloudContainer(const RdbSyncer
     if (status != RDB_OK) {
         LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+        return { status, expiredTime };
     }
     if (!ITypesUtil::Unmarshal(reply, expiredTime)) {
-        LOG_ERROR("read expiredTime failed");
+        LOG_ERROR("Unmarshal failed");
         status = RDB_ERROR;
     }
     return { status, expiredTime };

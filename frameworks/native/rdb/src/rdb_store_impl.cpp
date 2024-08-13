@@ -2364,6 +2364,7 @@ std::pair<int32_t, uint32_t> RdbStoreImpl::LockCloudContainer()
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
+        LOG_ERROR("not support");
         return { errCode, 0 };
     }
     if (errCode != E_OK) {
@@ -2384,6 +2385,7 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
+        LOG_ERROR("not support");
         return errCode;
     }
     if (errCode != E_OK) {
