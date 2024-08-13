@@ -45,7 +45,7 @@
 #include "traits.h"
 
 #include "directory_ex.h"
-
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
 #include "raw_data_parser.h"
@@ -325,6 +325,9 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     InitSyncerParam();
+    if (errCode == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(errCode);
+    }
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
         LOG_ERROR("database corrupt, rebuild database %{public}s", name_.c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -347,6 +350,32 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     }
 
     InnerOpen();
+}
+
+void RdbStoreImpl::ReportDbCorruptedEvent(int errorCode)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 
 RdbStoreImpl::~RdbStoreImpl()

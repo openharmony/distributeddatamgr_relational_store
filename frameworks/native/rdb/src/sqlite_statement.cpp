@@ -35,6 +35,8 @@
 #include "sqlite_connection.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -69,7 +71,11 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
-        return SQLiteError::ErrNo(errCode);
+        int ret = SQLiteError::ErrNo(errCode);
+        if (ret == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(ret);
+        }
+        return ret;
     }
     Finalize(); // finalize the old
     sql_ = newSql;
@@ -174,7 +180,11 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 int SqliteStatement::Step()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
-    return SQLiteError::ErrNo(sqlite3_step(stmt_));
+    int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
+    if (ret == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(ret);
+    }
+    return ret;
 }
 
 int SqliteStatement::Reset()
@@ -204,6 +214,7 @@ int SqliteStatement::Finalize()
     columnCount_ = -1;
     numParameters_ = 0;
     types_ = std::vector<int32_t>();
+    config_ = nullptr;
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
@@ -572,6 +583,35 @@ int SqliteStatement::ModifyLockStatus(const std::string &table, const std::vecto
     }
     LOG_ERROR("Lock/Unlock failed, err is %{public}d.", ret);
     return E_ERROR;
+}
+
+void SqliteStatement::ReportDbCorruptedEvent(int errorCode)
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_->GetBundleName();
+    eventInfo.moduleName = config_->GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_->GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_->GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(*config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 } // namespace NativeRdb
 } // namespace OHOS

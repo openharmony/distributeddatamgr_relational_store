@@ -23,6 +23,7 @@
 #include "sqlite3sym.h"
 #include "statement.h"
 #include "value_object.h"
+#include "rdb_store_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -82,6 +83,7 @@ private:
     int BindArgs(const std::vector<ValueObject> &bindArgs);
     int IsValid(int index) const;
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
+    void ReportDbCorruptedEvent(int errorCode);
 
     bool readOnly_;
     bool bound_ = false;
@@ -93,6 +95,7 @@ private:
     std::string sql_;
     mutable std::vector<int32_t> types_;
     std::shared_ptr<SqliteStatement> slave_;
+    const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS
