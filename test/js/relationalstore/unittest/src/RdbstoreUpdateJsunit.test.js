@@ -1188,14 +1188,19 @@ describe('rdbStoreUpdateTest', function () {
             }
             let predicates = new data_relationalStore.RdbPredicates("assetTest")
             predicates.equalTo("data1", asset1)
-            await rdbStore.update(valuesBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            let ret = await rdbStore.update(valuesBucket, predicates,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            expect(1).assertEqual(ret)
+
             valuesBucket = {
                 "data1": asset2,
                 "data2": assets2,
             }
             predicates = new data_relationalStore.RdbPredicates("assetTest")
             predicates.equalTo("data2", assets1)
-            await rdbStore.update(valuesBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            ret = await rdbStore.update(valuesBucket, predicates,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            expect(1).assertEqual(ret)
             await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
         } catch (err) {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
