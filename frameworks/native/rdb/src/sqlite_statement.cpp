@@ -129,27 +129,26 @@ int SqliteStatement::IsValid(int index) const
 
 int SqliteStatement::Prepare(const std::string &sql)
 {
+    if (stmt_ == nullptr) {
+        return E_ERROR;
+    }
+    auto db = sqlite3_db_handle(stmt_);
+    int errCode = Prepare(db, sql);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
     if (slave_) {
         int errCode = slave_->Prepare(sql);
         if (errCode != E_OK) {
             LOG_WARN("slave prepare Error:%{public}d", errCode);
         }
     }
-    if (stmt_ == nullptr) {
-        return E_ERROR;
-    }
-    auto db = sqlite3_db_handle(stmt_);
-    return Prepare(db, sql);
+    return E_OK;
 }
 
 int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 {
-    if (slave_) {
-        int errCode = slave_->Bind(args);
-        if (errCode != E_OK) {
-            LOG_ERROR("slave bind error:%{public}d", errCode);
-        }
-    }
     int count = static_cast<int>(args.size());
     std::vector<ValueObject> abindArgs;
 
@@ -174,7 +173,18 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
-    return BindArgs(abindArgs);
+    int errCode = BindArgs(abindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (slave_) {
+        int errCode = slave_->Bind(args);
+        if (errCode != E_OK) {
+            LOG_ERROR("slave bind error:%{public}d", errCode);
+        }
+    }
+    return E_OK;
 }
 
 int SqliteStatement::Step()
@@ -224,12 +234,6 @@ int SqliteStatement::Finalize()
 
 int SqliteStatement::Execute(const std::vector<ValueObject> &args)
 {
-    if (slave_ && !ReadOnly()) {
-        int errCode = slave_->Execute(args);
-        if (errCode != E_OK) {
-            LOG_ERROR("slave execute error:%{public}d", errCode);
-        }
-    }
     int count = static_cast<int>(args.size());
     if (count != numParameters_) {
         LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", count, numParameters_,
@@ -256,6 +260,13 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
     if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
         return errCode;
+    }
+
+    if (slave_ && !ReadOnly()) {
+        int errCode = slave_->Execute(args);
+        if (errCode != E_OK) {
+            LOG_ERROR("slave execute error:%{public}d", errCode);
+        }
     }
     return E_OK;
 }

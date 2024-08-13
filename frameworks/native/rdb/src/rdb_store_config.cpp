@@ -340,6 +340,11 @@ void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) c
     encryptKey_ = encryptKey;
 }
 
+void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
+{
+    newEncryptKey_ = newEncryptKey;
+}
+
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
     return encryptKey_;
@@ -412,6 +417,11 @@ void RdbStoreConfig::ClearEncryptKey()
 void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
 {
     customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+}
+
+void RdbStoreConfig::SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions)
+{
+    customScalarFunctions = functions;
 }
 
 std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const

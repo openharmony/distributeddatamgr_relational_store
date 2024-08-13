@@ -118,6 +118,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     }
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
     LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFileName.c_str());
+    DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
     return errCode;
 }
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
