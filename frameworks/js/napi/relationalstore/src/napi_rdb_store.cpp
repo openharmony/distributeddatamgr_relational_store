@@ -2126,7 +2126,6 @@ napi_value RdbStoreProxy::LockCloudContainer(napi_env env, napi_callback_info in
 {
     LOG_DEBUG("RdbStoreProxy::LockCloudContainer start.");
     auto context = std::make_shared<RdbStoreContext>();
-    std::pair<int32_t, uint32_t> result;
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
@@ -2138,11 +2137,12 @@ napi_value RdbStoreProxy::LockCloudContainer(napi_env env, napi_callback_info in
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
         auto result = rdbStore->LockCloudContainer();
+        context->expiredTime = result.second;
         return result.first;
     };
 
-    auto output = [context, &result](napi_env env, napi_value &res) {
-        auto status = napi_create_uint32(env, result.second, &res);
+    auto output = [context](napi_env env, napi_value &res) {
+        auto status = napi_create_uint32(env, context->expiredTime, &res);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
