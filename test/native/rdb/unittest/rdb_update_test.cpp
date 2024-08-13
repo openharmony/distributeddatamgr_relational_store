@@ -591,7 +591,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize
     int64_t id;
     ValuesBucket values;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
