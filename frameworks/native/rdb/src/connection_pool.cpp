@@ -328,7 +328,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         LOG_ERROR("Connection pool is busy now!");
         return E_ERROR;
     }
-
+    int ret = E_OK;
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
         auto [retVal, connection] = CreateConnection(false);
@@ -354,13 +354,18 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             Connection::Delete(config);
         }
 
-        if (!SqliteUtils::CopyFile(backupPath, newPath)) {
-            auto [errCode, node] = Init();
-            return E_ERROR;
+        if (SqliteUtils::IsSlaveDbName(backupPath)) {
+            auto [retVal, connection] = CreateConnection(false);
+            ret = connection->Restore(backupPath, {});
+            CloseAllConnections();
+        } else {
+            if (!SqliteUtils::CopyFile(backupPath, newPath)) {
+                ret = E_ERROR;
+            }
         }
     }
     auto [errCode, node] = Init();
-    return errCode;
+    return ret == E_OK ? errCode : ret;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()

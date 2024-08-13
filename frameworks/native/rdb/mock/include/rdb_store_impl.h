@@ -101,6 +101,8 @@ public:
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
+    int InterruptBackup() override;
+    int32_t GetBackupStatus() const override;
 
 protected:
     int InnerOpen();
@@ -152,6 +154,7 @@ private:
         int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     void ReportDbCorruptedEvent(int errorCode);
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;

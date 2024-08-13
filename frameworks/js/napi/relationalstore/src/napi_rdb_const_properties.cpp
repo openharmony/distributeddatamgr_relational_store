@@ -200,6 +200,17 @@ static napi_value ExportRebuiltType(napi_env env)
     return rebuiltType;
 }
 
+static napi_value ExportHAMode(napi_env env)
+{
+    napi_value haMode = nullptr;
+    napi_create_object(env, &haMode);
+
+    SET_NAPI_PROPERTY(haMode, "SINGLE", int32_t(NativeRdb::HAMode::SINGLE));
+    SET_NAPI_PROPERTY(haMode, "MAIN_REPLICA", int32_t(NativeRdb::HAMode::MAIN_REPLICA));
+    napi_object_freeze(env, haMode);
+    return haMode;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -217,6 +228,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
         DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
+        DECLARE_NAPI_PROPERTY("HAMode", ExportHAMode(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

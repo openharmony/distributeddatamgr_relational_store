@@ -189,6 +189,8 @@ public:
     void AfterOpen(const RdbStoreConfig &config);
     std::pair<int32_t, uint32_t> LockCloudContainer() override;
     int32_t UnlockCloudContainer() override;
+    int InterruptBackup() override;
+    int32_t GetBackupStatus() const override;
 
 protected:
     int InnerOpen();
@@ -259,6 +261,7 @@ private:
         int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     void ReportDbCorruptedEvent(int errorCode);
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
