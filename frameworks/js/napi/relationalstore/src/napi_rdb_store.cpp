@@ -74,6 +74,7 @@ RdbStoreProxy::~RdbStoreProxy()
     if (rdbStore == nullptr) {
         return;
     }
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -101,6 +102,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 RdbStoreProxy::RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore)
