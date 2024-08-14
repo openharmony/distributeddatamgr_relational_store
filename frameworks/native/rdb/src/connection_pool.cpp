@@ -345,20 +345,22 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
         CloseAllConnections();
     } else {
-        CloseAllConnections();
-        Connection::Delete(config_);
-
-        if (config_.GetPath() != newPath) {
-            RdbStoreConfig config(newPath);
-            config.SetPath(newPath);
-            Connection::Delete(config);
-        }
-
-        if (SqliteUtils::IsSlaveDbName(backupPath)) {
-            auto [retVal, connection] = CreateConnection(false);
+        if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
+            auto connection = AcquireConnection(false);
+            if (connection == nullptr) {
+                return E_DATABASE_BUSY;
+            }
             ret = connection->Restore(backupPath, {});
-            CloseAllConnections();
         } else {
+            CloseAllConnections();
+            Connection::Delete(config_);
+
+            if (config_.GetPath() != newPath) {
+                RdbStoreConfig config(newPath);
+                config.SetPath(newPath);
+                Connection::Delete(config);
+            }
+
             if (!SqliteUtils::CopyFile(backupPath, newPath)) {
                 ret = E_ERROR;
             }

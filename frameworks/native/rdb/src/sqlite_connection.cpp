@@ -439,7 +439,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     statement->conn_ = conn;
     if (slaveConnection_ && IsWriter()) {
         statement->slave_ = std::make_shared<SqliteStatement>();
-        statement->slave_->config_ = &config_;
+        statement->slave_->config_ = &slaveConnection_->config_;
         errCode = statement->slave_->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d", errCode);
@@ -1283,6 +1283,7 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         if (!isRestore && slaveStatus_.load() == SlaveStatus::BACKUP_INTERRUPT) {
             LOG_INFO("backup slave was interrupt!");
             (void)sqlite3_backup_finish(pBackup);
+            (void)SqliteConnection::Delete(slaveConnection_->config_);
             return E_OK;
         }
         rc = sqlite3_backup_step(pBackup, BACKUP_PAGES_PRE_STEP);
@@ -1315,6 +1316,9 @@ bool SqliteConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
         return false;
     }
     SlaveStatus curSlaveStatus = slaveStatus_.load();
+    if (curSlaveStatus == SlaveStatus::BACKING_UP) {
+        return false;
+    }
     if (curSlaveStatus == SlaveStatus::DB_NOT_EXITS || curSlaveStatus == SlaveStatus::BACKUP_INTERRUPT) {
         return true;
     }
@@ -1369,7 +1373,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
         return E_NOT_SUPPORT;
     }
     LOG_INFO("begin to repair main db:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
-    (void)connection->Delete(config);
+    (void)SqliteConnection::Delete(config);
     ret = connection->InnerOpen(config);
     if (ret != E_OK) {
         LOG_ERROR("create db failed during repairing, err:%{public}d", ret);

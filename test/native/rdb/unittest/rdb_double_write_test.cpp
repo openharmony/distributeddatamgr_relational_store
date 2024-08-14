@@ -520,3 +520,20 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
 
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_009
+ * @tc.desc: test db that restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
+{
+    int64_t id = 10;
+    Insert(id, 100);
+    id = 200;
+    Insert(id, 100, true);
+    RdbDoubleWriteTest::CheckNumber(store, 100);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 200);
+    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
+    RdbDoubleWriteTest::CheckNumber(store, 200);
+}
