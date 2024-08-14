@@ -618,12 +618,16 @@ public:
     int32_t GetIter() const;
 
     int32_t GetHaMode() const;
+
+    int32_t GetApiTargetVersion() const;
  
     void SetHaMode(int32_t haMode);
 
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
+
+    void SetApiTargetVersion(int32_t apiTargetVersion);
 
 private:
     void ClearEncryptKey();
@@ -645,6 +649,7 @@ private:
     int32_t readTimeout_ = 1; // seconds
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
+    int32_t apiTargetVersion_ = 0;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;
     RoleType role_ = OWNER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
