@@ -579,4 +579,14 @@ void RdbStoreConfig::SetHaMode(int32_t haMode)
 {
     haMode_ = haMode;
 }
+
+int32_t RdbStoreConfig::GetApiTargetVersion() const
+{
+    return apiTargetVersion_;
+}
+
+void RdbStoreConfig::SetApiTargetVersion(int32_t apiTargetVersion)
+{
+    apiTargetVersion_ = apiTargetVersion;
+}
 } // namespace OHOS::NativeRdb

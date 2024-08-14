@@ -34,6 +34,8 @@
 #include "rdb_sql_statistic.h"
 #include "securec.h"
 
+#define API_VERSION 12
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
 using namespace OHOS::DataShare;
@@ -475,6 +477,13 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && apiVerion < API_VERSION) {
+            std::vector<uint8_t> tmpValue;
+            val.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         context->bindArgs.push_back(std::move(valueObject));
     }
     return OK;
@@ -546,6 +555,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
     status = napi_get_array_length(env, keys, &arrLen);
     CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
 
+    int32_t apiVerion = context->rdbStore->config_.GetApiTargetVersion();
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
@@ -555,6 +565,13 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && apiVerion < API_VERSION) {
+            std::vector<uint8_t> tmpValue;
+            val.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, valueObject);
         } else if (ret != napi_generic_failure) {

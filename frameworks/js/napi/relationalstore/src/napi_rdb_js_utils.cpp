@@ -410,6 +410,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
         status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
         ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
+        status = GetNamedProperty(env, appInfo, "apiTargetVersion", param.apiTargetVersion, true);
+        ASSERT(status == napi_ok, "get applicationInfo.apiTargetVersion failed.", napi_invalid_arg);
     }
     return napi_ok;
 }
@@ -477,6 +479,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetArea(param.area);
     rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
     rdbStoreConfig.SetHaMode(rdbConfig.haMode);
+    rdbStoreConfig.SetApiTargetVersion(param.apiTargetVersion);
     return rdbStoreConfig;
 }
 
