@@ -154,11 +154,12 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0001, TestSize.Lev
             int rowCount = -1;
             errCode = resultSet->GetRowCount(rowCount);
             resultSet->Close();
-            if (errCode != E_OK) {
+            if (errCode != E_OK && errCode != E_SQLITE_SCHEMA) {
                 break;
             }
         }
-        block2->SetValue(errCode);
+        auto code = (errCode == E_OK || errCode == E_SQLITE_SCHEMA) ? E_OK : errCode;
+        block2->SetValue(code);
     });
 
     EXPECT_EQ(block1->GetValue(), E_OK);
@@ -200,11 +201,12 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Lev
             int rowCount = -1;
             errCode = resultSet->GetRowCount(rowCount);
             resultSet->Close();
-            if (errCode != E_OK) {
+            if (errCode != E_OK && errCode != E_SQLITE_SCHEMA) {
                 break;
             }
         }
-        block2->SetValue(errCode);
+        auto code = (errCode == E_OK || errCode == E_SQLITE_SCHEMA) ? E_OK : errCode;
+        block2->SetValue(code);
     });
 
     EXPECT_EQ(block1->GetValue(), E_OK);

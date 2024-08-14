@@ -126,6 +126,7 @@ static napi_value ExportField(napi_env env)
     SET_NAPI_PROPERTY(field, "CURSOR_FIELD", std::string(DistributedRdb::Field::CURSOR_FIELD));
     SET_NAPI_PROPERTY(field, "ORIGIN_FIELD", std::string(DistributedRdb::Field::ORIGIN_FIELD));
     SET_NAPI_PROPERTY(field, "DELETED_FLAG_FIELD", std::string(DistributedRdb::Field::DELETED_FLAG_FIELD));
+    SET_NAPI_PROPERTY(field, "DATA_STATUS_FIELD", std::string(DistributedRdb::Field::DATA_STATUS_FIELD));
     SET_NAPI_PROPERTY(field, "OWNER_FIELD", std::string(DistributedRdb::Field::OWNER_FIELD));
     SET_NAPI_PROPERTY(field, "PRIVILEGE_FIELD", std::string(DistributedRdb::Field::PRIVILEGE_FIELD));
     SET_NAPI_PROPERTY(field, "SHARING_RESOURCE_FIELD", std::string(DistributedRdb::Field::SHARING_RESOURCE_FIELD));
@@ -199,6 +200,17 @@ static napi_value ExportRebuiltType(napi_env env)
     return rebuiltType;
 }
 
+static napi_value ExportHAMode(napi_env env)
+{
+    napi_value haMode = nullptr;
+    napi_create_object(env, &haMode);
+
+    SET_NAPI_PROPERTY(haMode, "SINGLE", int32_t(NativeRdb::HAMode::SINGLE));
+    SET_NAPI_PROPERTY(haMode, "MAIN_REPLICA", int32_t(NativeRdb::HAMode::MAIN_REPLICA));
+    napi_object_freeze(env, haMode);
+    return haMode;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -216,6 +228,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
         DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
+        DECLARE_NAPI_PROPERTY("HAMode", ExportHAMode(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

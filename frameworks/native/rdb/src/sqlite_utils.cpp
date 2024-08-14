@@ -128,7 +128,7 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
 {
     auto ret = rename(srcFile.c_str(), destFile.c_str());
     if (ret != 0) {
-        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
+        LOG_WARN("rename failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
             destFile.c_str(), srcFile.c_str());
         return false;
     }
@@ -181,7 +181,11 @@ int SqliteUtils::GetFileSize(const std::string &fileName)
 
 void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType flagControlType)
 {
-    int fd = open(fileName.c_str(), O_RDONLY, 0777);
+    int fd = open(fileName.c_str(), O_RDONLY, S_IRWXU | S_IRWXG);
+    if (fd < 0) {
+        LOG_ERROR("Open failed, errno=%{public}d.", errno);
+        return;
+    }
     unsigned int flags = 0;
     int ret = ioctl(fd, HMFS_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
@@ -212,6 +216,72 @@ void SqliteUtils::ControlDeleteFlag(const std::string fileName, FlagControlType 
 
     LOG_DEBUG("Flag control operation success type: %{public}d file: %{public}s", flagControlType, fileName.c_str());
     close(fd);
+}
+
+bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
+{
+    std::string slaveSuffix("_slave.db");
+    if (fileName.size() < slaveSuffix.size()) {
+        return false;
+    }
+    size_t pos = fileName.rfind(slaveSuffix);
+    return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
+}
+
+std::string SqliteUtils::GetDbFileName(sqlite3 *db)
+{
+    if (db == nullptr) {
+        return {};
+    }
+    auto fileName = sqlite3_db_filename(db, nullptr);
+    if (fileName == nullptr) {
+        return {};
+    }
+    return std::string(fileName);
+}
+
+bool SqliteUtils::TryAccessSlaveLock(sqlite3 *db, bool isDelete, bool needCreate)
+{
+    if (db == nullptr) {
+        return false;
+    }
+    std::string lockFile = GetDbFileName(db) + "-locker";
+    if (isDelete) {
+        if (std::remove(lockFile.c_str()) != 0) {
+            LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+            return false;
+        } else {
+            LOG_INFO("remove slave lock %{public}s", Anonymous(lockFile).c_str());
+            return true;
+        }
+    } else {
+        if (access(lockFile.c_str(), F_OK) == 0) {
+            return true;
+        }
+        if (needCreate) {
+            std::ofstream src(lockFile.c_str(), std::ios::binary);
+            if (src.is_open()) {
+                LOG_INFO("create slave lock %{public}s", Anonymous(lockFile).c_str());
+                src.close();
+                return true;
+            } else {
+                LOG_WARN("open slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+                return false;
+            }
+        }
+        return false;
+    }
+}
+
+std::string SqliteUtils::GetSlavePath(const std::string& name)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_slave.db");
+    auto pos = name.rfind(suffix);
+    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
+        return name + slaveSuffix;
+    }
+    return name.substr(0, pos) + slaveSuffix;
 }
 } // namespace NativeRdb
 } // namespace OHOS

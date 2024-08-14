@@ -12,36 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "rdb_fault_hiview_reporter.h"
 
-#ifndef MOCK_UTILS_BASE_FILE_EX_H
-#define MOCK_UTILS_BASE_FILE_EX_H
+namespace OHOS::NativeRdb {
 
-#include <string>
-#include <vector>
-
-static bool SaveBufferToFile(const std::string& filePath, const std::vector<char>& content, bool truncated = true)
+void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo)
 {
-    return true;
+    (void)eventInfo;
 }
 
-static bool LoadBufferFromFile(const std::string& filePath, std::vector<char>& content)
+std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
 {
-    return true;
+    (void)fileStat;
+    return "";
 }
 
-#ifndef LOCK_EX
-#define LOCK_EX 0
-#endif
-
-#ifndef LOCK_UN
-#define LOCK_UN 1
-#endif
-#ifdef __cplusplus
-extern "C" {
-#endif
-#define flock(a, b) 0
-#ifdef __cplusplus
+std::string RdbFaultHiViewReporter::GetDateInfo(time_t time)
+{
+    (void)time;
+    return "";
 }
-#endif
-#endif  /* MOCK_UTILS_BASE_FILE_EX_H */
 
+} // namespace OHOS::NativeRdb

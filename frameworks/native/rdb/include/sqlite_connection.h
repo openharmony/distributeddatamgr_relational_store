@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_H
 #define NATIVE_RDB_SQLITE_CONNECTION_H
 
+#include <atomic>
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -23,6 +24,7 @@
 #include <vector>
 
 #include "connection.h"
+#include "rdb_common.h"
 #include "rdb_local_db_observer.h"
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
@@ -41,6 +43,7 @@ class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
+    SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
     int TryCheckPoint() override;
@@ -59,8 +62,12 @@ public:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
     int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        bool isAsync = false) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t InterruptBackup() override;
+    int32_t GetBackupStatus() const override;
+    bool IsNeedBackupToSlave(const RdbStoreConfig &config) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
@@ -70,13 +77,13 @@ protected:
 private:
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
-    explicit SqliteConnection(bool isWriteConnection);
     int InnerOpen(const RdbStoreConfig &config);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncrypt(const RdbStoreConfig &config);
     int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
+    int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
     int SetEncryptAgo(int32_t iter);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
@@ -103,11 +110,13 @@ private:
     void ReadFile2Buffer(const char* fileName);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
-    std::string GetSlavePath(const std::string &name);
-    int CheckAndRestoreSlave(const RdbStoreConfig &config);
+    void ReportDbCorruptedEvent(int errCode);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite);
+    int MasterSlaveExchange(bool isRestore = false);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
+    static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr uint32_t NO_ITER = 0;
     static const int32_t regCreator_;
     static const int32_t regDeleter_;
@@ -124,6 +133,8 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
+    const RdbStoreConfig config_;
+    std::atomic<SlaveStatus> slaveStatus_ = SlaveStatus::UNDEFINED;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -17,6 +17,7 @@
 #include "rdb_errno.h"
 #include "rdb_store_impl.h"
 #include "rd_statement.h"
+#include "rdb_store_config.h"
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace OHOS {

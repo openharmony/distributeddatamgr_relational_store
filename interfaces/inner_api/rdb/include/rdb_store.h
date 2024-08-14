@@ -568,6 +568,26 @@ public:
         return DB_SQLITE;
     }
 
+    virtual std::pair<int32_t, uint32_t> LockCloudContainer()
+    {
+        return std::pair<int32_t, uint32_t>(E_OK, 0);
+    }
+
+    virtual int32_t UnlockCloudContainer()
+    {
+        return E_OK;
+    }
+
+    virtual int InterruptBackup()
+    {
+        return E_OK;
+    }
+
+    virtual int32_t GetBackupStatus() const
+    {
+        return SlaveStatus::UNDEFINED;
+    }
+
     class ModifyTime {
     public:
         ModifyTime() = default;

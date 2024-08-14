@@ -31,6 +31,7 @@ public:
     static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
     static int DeleteRdbStore(const std::string &path);
+    static int DeleteRdbStore(const RdbStoreConfig &config);
     static void ClearCache();
 };
 } // namespace NativeRdb

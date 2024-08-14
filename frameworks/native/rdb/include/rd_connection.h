@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "rd_utils.h"
+#include "rdb_common.h"
 #include "connection.h"
 #include "rdb_store_config.h"
 #include "value_object.h"
@@ -34,7 +35,7 @@ public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     static int32_t Repair(const RdbStoreConfig& config);
     static int32_t Delete(const RdbStoreConfig& config);
-    explicit RdConnection(bool isWriteConnection);
+    RdConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~RdConnection();
     int32_t OnInitialize() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string& sql, SConn conn) override;
@@ -53,8 +54,12 @@ public:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
     int32_t Unsubscribe(const std::string& event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        bool isAsync = false) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    int32_t InterruptBackup() override;
+    int32_t GetBackupStatus() const override;
+    bool IsNeedBackupToSlave(const RdbStoreConfig &config) override;
     
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;
@@ -73,6 +78,7 @@ private:
     bool isWriter_ = false;
     GRD_DB *dbHandle_ = nullptr;
     std::string configStr_ = GRD_OPEN_CONFIG_STR;
+    const RdbStoreConfig config_;
 };
 
 } // namespace NativeRdb

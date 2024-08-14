@@ -63,7 +63,7 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
             LOG_INFO("Error(%{public}d) %{public}s ", err, msg);
         }
     } else if (errType == SQLITE_WARNING) {
-        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+        LOG_WARN("WARNING(%{public}d) %{public}s ", err, msg);
     } else {
         LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, msg);
     }
