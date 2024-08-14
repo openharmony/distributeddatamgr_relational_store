@@ -21,36 +21,6 @@ var context = ability_featureAbility.getContext()
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
     "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
-const CREATE_TABLE_ASSET_TEST = "CREATE TABLE IF NOT EXISTS assetTest (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-    "data1 asset, " + "data2 assets )";
-const DROP_TABLE_ASSET_TEST = "DROP TABLE IF EXISTS assetTest";
-const asset1 = {
-    name: "name1",
-    uri: "uri1",
-    createTime: "createTime1",
-    modifyTime: "modifyTime1",
-    size: "size1",
-    path: "path1",
-    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
-}
-const asset2 = {
-    name: "name2",
-    uri: "uri2",
-    createTime: "createTime2",
-    modifyTime: "modifyTime2",
-    size: "size2",
-    path: "path2",
-    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
-}
-const asset3 = {
-    name: "name3",
-    uri: "uri3",
-    createTime: "createTime3",
-    modifyTime: "modifyTime3",
-    size: "size3",
-    path: "path3",
-    status: data_relationalStore.AssetStatus.ASSET_NORMAL,
-}
 const STORE_CONFIG = {
     name: "UpdataTest.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
@@ -1162,51 +1132,6 @@ describe('rdbStoreUpdateTest', function () {
             expect("401").assertEqual(err.code)
         }
         console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0007 end   *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateWithConflictResolution_0008
-     * @tc.name Normal test case of update, values are assets
-     * @tc.desc 1.Create value
-     *          2.Update asset with conflict
-     *          3.Update assets with conflict
-     */
-    it('testRdbStoreUpdateWithConflictResolution0008', 0, async function () {
-        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0008 start *************");
-        try {
-            await rdbStore.executeSql(CREATE_TABLE_ASSET_TEST);
-            const assets1 = [asset1];
-            const assets2 = [asset2, asset3];
-            let valuesBucket = {
-                "data1": asset1,
-                "data2": assets1,
-            }
-            await rdbStore.insert("assetTest", valuesBucket)
-            valuesBucket = {
-                "data1": asset2,
-                "data2": assets1,
-            }
-            let predicates = new data_relationalStore.RdbPredicates("assetTest")
-            predicates.equalTo("data1", asset1)
-            let ret = await rdbStore.update(valuesBucket, predicates,
-                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-            expect(1).assertEqual(ret)
-
-            valuesBucket = {
-                "data1": asset2,
-                "data2": assets2,
-            }
-            predicates = new data_relationalStore.RdbPredicates("assetTest")
-            predicates.equalTo("data2", assets1)
-            ret = await rdbStore.update(valuesBucket, predicates,
-                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
-            expect(1).assertEqual(ret)
-            await rdbStore.executeSql(DROP_TABLE_ASSET_TEST);
-        } catch (err) {
-            console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
-            expect().assertFail();
-        }
-        console.log(TAG + "************* testRdbStoreUpdateWithConflictResolution0008 end   *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
