@@ -75,9 +75,10 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 
     RdbStoreConfig rdbSlaveStoreConfig = connection->GetSlaveRdbStoreConfig(config);
     errCode = connection->InnerOpen(config);
-    if (errCode == E_OK) {
-        conn = connection;
+    if (errCode != E_OK) {
+        return result;
     }
+    conn = connection;
 
     if (isWrite) {
         int ret = connection->CreateSlaveConnection(rdbSlaveStoreConfig, isWrite);
