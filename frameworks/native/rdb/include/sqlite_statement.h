@@ -82,6 +82,7 @@ private:
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int BindArgs(const std::vector<ValueObject> &bindArgs);
     int IsValid(int index) const;
+    int InnerStep();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReportDbCorruptedEvent(int errorCode);
 

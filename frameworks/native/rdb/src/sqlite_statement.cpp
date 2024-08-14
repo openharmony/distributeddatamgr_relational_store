@@ -194,6 +194,25 @@ int SqliteStatement::Step()
     if (ret == E_SQLITE_CORRUPT) {
         ReportDbCorruptedEvent(ret);
     }
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (slave_) {
+        ret = slave_->InnerStep();
+        if (ret != E_OK) {
+            LOG_WARN("slave step error:%{public}d", ret);
+        }
+    }
+    return ret;
+}
+
+int SqliteStatement::InnerStep()
+{
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
+    int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
+    if (ret == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(ret);
+    }
     return ret;
 }
 
@@ -207,6 +226,12 @@ int SqliteStatement::Reset()
     if (errCode != SQLITE_OK) {
         LOG_ERROR("reset ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
+    }
+    if (slave_) {
+        errCode = slave_->Reset();
+        if (errCode != E_OK) {
+            LOG_WARN("slave reset error:%{public}d", errCode);
+        }
     }
     return E_OK;
 }
@@ -228,6 +253,12 @@ int SqliteStatement::Finalize()
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
+    }
+    if (slave_) {
+        errCode = slave_->Finalize();
+        if (errCode != E_OK) {
+            LOG_WARN("slave finalize error:%{public}d", errCode);
+        }
     }
     return E_OK;
 }
