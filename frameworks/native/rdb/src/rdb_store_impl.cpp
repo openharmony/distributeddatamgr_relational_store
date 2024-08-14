@@ -113,14 +113,6 @@ int RdbStoreImpl::InnerOpen()
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-std::string RdbStoreImpl::GetSecManagerName(const RdbStoreConfig &config)
-{
-    auto name = config.GetBundleName();
-    if (name.empty()) {
-        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
-    }
-    return name;
-}
 
 void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
 {
