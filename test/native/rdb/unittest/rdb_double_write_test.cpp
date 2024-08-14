@@ -479,3 +479,44 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
 
     RdbDoubleWriteTest::CheckNumber(RdbDoubleWriteTest::slaveStore, count);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_008
+ * @tc.desc: test db corrupt that auto repair
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+    LOG_INFO("RdbStore_DoubleWrite_008 insert finish");
+
+    store = nullptr;
+
+    std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = {0x6, 0x6};
+    file.write(bytes, 2);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
+    LOG_INFO("RdbStore_DoubleWrite_008 corrupt db finish");
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetAllowRebuild(true);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    RebuiltType rebuiltType;
+    store->GetRebuilt(rebuiltType);
+    EXPECT_EQ(rebuiltType, RebuiltType::REPAIRED);
+    LOG_INFO("RdbStore_DoubleWrite_008 reopen db finish");
+
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}

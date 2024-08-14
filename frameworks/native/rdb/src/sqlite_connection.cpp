@@ -59,6 +59,8 @@ constexpr const char *INTEGRITIES[] = {nullptr, "PRAGMA quick_check", "PRAGMA in
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
+const int32_t SqliteConnection::regRepairer_ = Connection::RegisterRepairer(DB_SQLITE, SqliteConnection::Repair);
+__attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
@@ -66,12 +68,12 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, isWrite);
-    RdbStoreConfig rdbSlaveStoreConfig = connection->GetSlaveRdbStoreConfig(config);
     if (connection == nullptr) {
         LOG_ERROR("connection is nullptr.");
         return result;
     }
 
+    RdbStoreConfig rdbSlaveStoreConfig = connection->GetSlaveRdbStoreConfig(config);
     errCode = connection->InnerOpen(config);
     if (errCode == E_OK) {
         conn = connection;
@@ -1260,7 +1262,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 
 int SqliteConnection::MasterSlaveExchange(bool isRestore)
 {
-    if (slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
+    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
         LOG_WARN("slave conn invalid");
         return E_OK;
     }
@@ -1305,8 +1307,7 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
 
 bool SqliteConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
 {
-    if (slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
-        LOG_WARN("slave conn invalid");
+    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
         return false;
     }
     if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
@@ -1348,6 +1349,61 @@ int32_t SqliteConnection::InterruptBackup()
 int32_t SqliteConnection::GetBackupStatus() const
 {
     return slaveStatus_.load();
+}
+
+int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
+{
+    if (config.GetHaMode() != MAIN_REPLICA) {
+        return E_NOT_SUPPORT;
+    }
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
+    if (connection == nullptr) {
+        return E_NOT_SUPPORT;
+    }
+    RdbStoreConfig rdbSlaveStoreConfig = connection->GetSlaveRdbStoreConfig(config);
+    int ret = connection->CreateSlaveConnection(rdbSlaveStoreConfig, true);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (!connection->IsDbRepairable()) {
+        return E_NOT_SUPPORT;
+    }
+    LOG_INFO("begin to repair main db:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+    (void)connection->Delete(config);
+    ret = connection->InnerOpen(config);
+    if (ret != E_OK) {
+        LOG_ERROR("create db failed during repairing, err:%{public}d", ret);
+        return ret;
+    }
+    ret = connection->MasterSlaveExchange(true);
+    if (ret != E_OK) {
+        LOG_ERROR("restore db failed during repairing, err:%{public}d", ret);
+        return ret;
+    }
+    LOG_INFO("repair main db success:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+    connection->slaveConnection_ = nullptr;
+    connection = nullptr;
+    return E_OK;
+}
+
+bool SqliteConnection::IsDbRepairable()
+{
+    if (slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
+        return false;
+    }
+    static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    auto [qRet, qObj] = slaveConnection_->ExecuteForValue(querySql);
+    if (qRet != E_OK || (static_cast<int64_t>(qObj) == 0L)) {
+        LOG_INFO("cancel repair, ret:%{public}d", qRet);
+        return false;
+    }
+    static const std::string checkSql = "PRAGMA quick_check";
+    auto [cRet, cObj] = slaveConnection_->ExecuteForValue(checkSql);
+    if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
+        LOG_ERROR("cancel repair, ret:%{public}s, cRet:%{public}d", static_cast<std::string>(cObj).c_str(), cRet);
+        return false;
+    }
+    return true;
 }
 } // namespace NativeRdb
 } // namespace OHOS
