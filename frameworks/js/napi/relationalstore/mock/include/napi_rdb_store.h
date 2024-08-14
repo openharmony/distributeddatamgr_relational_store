@@ -25,21 +25,24 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_js_utils.h"
 #include "rdb_helper.h"
 #include "rdb_store.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using namespace OHOS::AppDataMgrJsKit::JSUtils;
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, const ContextParam &param);
     RdbStoreProxy();
     ~RdbStoreProxy();
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
+    int32_t GetApiVersion() const;
 
 private:
     static Descriptor GetDescriptors();
@@ -79,6 +82,7 @@ private:
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
+    int32_t apiTargetVersion_ = 12;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     
     static constexpr int WAIT_TIME_DEFAULT = 2;

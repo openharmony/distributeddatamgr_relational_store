@@ -55,6 +55,11 @@ Context::Context(std::shared_ptr<AbilityRuntime::Platform::Context> stageContext
 }
 #endif
 
+int32_t Context::GetApiVersion() const
+{
+    return apiTargetVersion_;
+}
+
 std::string Context::GetDatabaseDir()
 {
     return databaseDir_;
