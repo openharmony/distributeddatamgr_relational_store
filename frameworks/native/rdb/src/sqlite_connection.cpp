@@ -448,16 +448,6 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     return E_OK;
 }
 
-std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
-{
-    auto name = config.GetBundleName();
-    if (name.empty()) {
-        LOG_WARN("Bundle name is empty, using path instead.");
-        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
-    }
-    return name;
-}
-
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
     std::vector<uint8_t> key = config.GetEncryptKey();
