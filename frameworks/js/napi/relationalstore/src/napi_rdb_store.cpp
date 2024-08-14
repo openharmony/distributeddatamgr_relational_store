@@ -26,12 +26,10 @@
 #include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
-#include "napi_async_call.h"
+#include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
-#include "napi_rdb_predicates.h"
 #include "napi_rdb_trace.h"
-#include "napi_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
@@ -42,7 +40,6 @@ using namespace OHOS::DataShare;
 #endif
 
 using namespace OHOS::Rdb;
-using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::AppDataMgrJsKit::JSUtils;
 
@@ -66,56 +63,6 @@ struct PredicatesProxy {
 constexpr int32_t KEY_INDEX = 0;
 constexpr int32_t VALUE_INDEX = 1;
 
-struct RdbStoreContextBase : public ContextBase {
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
-};
-
-struct RdbStoreContext : public RdbStoreContextBase {
-    std::string device;
-    std::string tableName;
-    std::vector<std::string> tablesNames;
-    std::string whereClause;
-    std::string sql;
-    RdbPredicatesProxy *predicatesProxy;
-    std::vector<std::string> columns;
-    ValuesBucket valuesBucket;
-    std::vector<ValuesBucket> valuesBuckets;
-    std::map<std::string, ValueObject> numberMaps;
-    std::vector<ValueObject> bindArgs;
-    int64_t int64Output;
-    int intOutput;
-    ValueObject sqlExeOutput;
-    std::vector<uint8_t> newKey;
-    std::shared_ptr<ResultSet> resultSet;
-    std::string aliasName;
-    std::string pathName;
-    std::string srcName;
-    std::string columnName;
-    int32_t enumArg;
-    int32_t distributedType;
-    int32_t syncMode;
-    uint64_t cursor = UINT64_MAX;
-    int64_t txId = 0;
-    DistributedRdb::DistributedConfig distributedConfig;
-    napi_ref asyncHolder = nullptr;
-    NativeRdb::ConflictResolution conflictResolution;
-    DistributedRdb::SyncResult syncResult;
-    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
-    std::vector<NativeRdb::RdbStore::PRIKey> keys;
-    std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
-    bool isQuerySql = false;
-
-    RdbStoreContext()
-        : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
-          distributedType(DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE),
-          syncMode(DistributedRdb::SyncMode::PUSH), conflictResolution(ConflictResolution::ON_CONFLICT_NONE)
-    {
-    }
-    virtual ~RdbStoreContext()
-    {
-    }
-};
-
 RdbStoreProxy::RdbStoreProxy()
 {
 }
@@ -127,6 +74,7 @@ RdbStoreProxy::~RdbStoreProxy()
     if (rdbStore == nullptr) {
         return;
     }
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -154,6 +102,7 @@ RdbStoreProxy::~RdbStoreProxy()
     for (const auto &obs : syncObservers_) {
         rdbStore->UnregisterAutoSyncCallback(obs);
     }
+#endif
 }
 
 RdbStoreProxy::RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore)
@@ -229,6 +178,8 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("lockRow", LockRow),
             DECLARE_NAPI_FUNCTION("unlockRow", UnlockRow),
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
+            DECLARE_NAPI_FUNCTION("lockCloudContainer", LockCloudContainer),
+            DECLARE_NAPI_FUNCTION("unlockCloudContainer", UnlockCloudContainer),
 #endif
         };
         AddSyncFunctions(properties);
@@ -932,9 +883,6 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto status = E_ERROR;
-        if (context->sql == "1111") {
-            return E_SQLITE_ERROR;
-        }
         std::tie(status, context->sqlExeOutput) =
             context->rdbStore->Execute(context->sql, context->bindArgs, context->txId);
         context->rdbStore = nullptr;
@@ -1390,9 +1338,11 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     LOG_DEBUG("RdbStoreProxy::Restore start.");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1 or 2"));
+        CHECK_RETURN_SET_E(argc == 0 || argc == 1, std::make_shared<ParamNumError>("0 to 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN(OK == ParseSrcName(env, argv[0], context));
+        if (argc == 1) {
+            CHECK_RETURN(OK == ParseSrcName(env, argv[0], context));
+        }
     };
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Restore Async.");
@@ -2167,6 +2117,60 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->resultSet);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::LockCloudContainer(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::LockCloudContainer start.");
+    auto context = std::make_shared<RdbStoreContext>();
+    std::pair<int32_t, uint32_t> result;
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+    };
+
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::LockCloudContainer Async.");
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
+        auto result = rdbStore->LockCloudContainer();
+        return result.first;
+    };
+
+    auto output = [context, &result](napi_env env, napi_value &res) {
+        auto status = napi_create_uint32(env, result.second, &res);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::UnlockCloudContainer(napi_env env, napi_callback_info info)
+{
+    LOG_DEBUG("RdbStoreProxy::UnlockCloudContainer start.");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+    };
+    auto exec = [context]() {
+        LOG_DEBUG("RdbStoreProxy::UnlockCloudContainer Async.");
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
+        return rdbStore->UnlockCloudContainer();
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        auto status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 

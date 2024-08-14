@@ -187,6 +187,10 @@ public:
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
     int32_t GetDbType() const override;
     void AfterOpen(const RdbStoreConfig &config);
+    std::pair<int32_t, uint32_t> LockCloudContainer() override;
+    int32_t UnlockCloudContainer() override;
+    int InterruptBackup() override;
+    int32_t GetBackupStatus() const override;
 
 protected:
     int InnerOpen();
@@ -198,7 +202,6 @@ protected:
     bool isEncrypt_;
     int64_t vSchema_ = 0;
     std::string path_;
-    std::string orgPath_;
     std::string name_;
     std::string fileType_;
 
@@ -257,6 +260,8 @@ private:
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
+    void ReportDbCorruptedEvent(int errorCode);
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;

@@ -533,4 +533,49 @@ int32_t RdbServiceProxy::Enable(const RdbSyncerParam& param)
     }
     return status;
 }
+
+int32_t RdbServiceProxy::GetPassword(const RdbSyncerParam &param, std::vector<uint8_t> &key)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_PASSWORD), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+        return status;
+    }
+    if (!ITypesUtil::Unmarshal(reply, key)) {
+        LOG_ERROR("unmarshal key failed.");
+        status = RDB_ERROR;
+    }
+    return status;
+}
+
+std::pair<int32_t, uint32_t> RdbServiceProxy::LockCloudContainer(const RdbSyncerParam& param)
+{
+    MessageParcel reply;
+    uint32_t expiredTime = 0;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_LOCK_CLOUD_CONTAINER), reply,
+        param, expiredTime);
+    if (status != RDB_OK) {
+        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    if (!ITypesUtil::Unmarshal(reply, expiredTime)) {
+        LOG_ERROR("read expiredTime failed");
+        status = RDB_ERROR;
+    }
+    return { status, expiredTime };
+}
+
+int32_t RdbServiceProxy::UnlockCloudContainer(const RdbSyncerParam& param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNLOCK_CLOUD_CONTAINER),
+        reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
 } // namespace OHOS::DistributedRdb

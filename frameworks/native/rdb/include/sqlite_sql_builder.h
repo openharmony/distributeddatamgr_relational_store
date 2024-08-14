@@ -63,6 +63,8 @@ private:
         std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
 
     static constexpr const char *SHARING_RESOURCE = "sharing_resource";
+
+    static std::string HandleTable(const std::string &tableName);
 };
 } // namespace NativeRdb
 } // namespace OHOS

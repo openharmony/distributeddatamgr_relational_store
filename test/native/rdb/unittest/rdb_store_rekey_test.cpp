@@ -315,8 +315,12 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
     int errCode = E_OK;
     RdbStoreConfig config = GetRdbConfig(encryptedDatabasePath);
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_EQ(store, nullptr);
-    ASSERT_NE(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
 }
 
 /**

@@ -356,7 +356,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     GetNamedProperty(env, jsValue, "pluginLibs", rdbConfig.pluginLibs, true);
     ASSERT(OK == status, "get pluginLibs failed.", napi_invalid_arg);
  
-    GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
+    status = GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
     ASSERT(OK == status, "get haMode failed.", napi_invalid_arg);
     return napi_ok;
 }

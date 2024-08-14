@@ -23,6 +23,7 @@ config("module_private_config") {
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
     "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "//commonlibrary/c_utils/base/include",
@@ -94,6 +95,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_read_only_test.cpp",
+    "unittest/rdb_security_manager_test.cpp",
     "unittest/rdb_sql_utils_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
@@ -114,6 +116,7 @@ ohos_unittest("NativeRdbTest") {
   ]
 
   sources += [
+    "../../../frameworks/native/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../frameworks/native/rdb/src/connection.cpp",
     "../../../frameworks/native/rdb/src/connection_pool.cpp",
@@ -123,7 +126,10 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rd_statement.cpp",
     "../../../frameworks/native/rdb/src/rd_utils.cpp",
     "../../../frameworks/native/rdb/src/rdb_local_db_observer.cpp",
+    "../../../frameworks/native/rdb/src/rdb_manager_impl.cpp",
+    "../../../frameworks/native/rdb/src/rdb_notifier_stub.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
+    "../../../frameworks/native/rdb/src/rdb_service_proxy.cpp",
     "../../../frameworks/native/rdb/src/rdb_sql_statistic.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",
     "../../../frameworks/native/rdb/src/share_block.cpp",
@@ -148,6 +154,7 @@ ohos_unittest("NativeRdbTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "samgr:samgr_proxy",
   ]
 
   deps = [
