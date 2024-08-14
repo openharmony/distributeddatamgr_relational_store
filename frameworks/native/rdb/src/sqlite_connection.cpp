@@ -123,8 +123,19 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
     slaveConnection_ = std::make_shared<SqliteConnection>(config, isWrite);
     int errCode = slaveConnection_->InnerOpen(config);
     if (errCode != E_OK) {
-        LOG_WARN("open the slave database failed:%{public}d", errCode);
-        return errCode;
+        if (errCode == E_SQLITE_CORRUPT) {
+            LOG_WARN("slave may corrupt, it will be removed:%{public}s",
+                SqliteUtils::Anonymous(config.GetPath()).c_str());
+            (void)Delete(config);
+            errCode = slaveConnection_->InnerOpen(config);
+            if (errCode != E_OK) {
+                LOG_ERROR("reopen slave still failed:%{public}d", errCode);
+                return errCode;
+            }
+        } else {
+            LOG_WARN("open the slave database failed:%{public}d", errCode);
+            return errCode;
+        }
     }
     if (IsNeedBackupToSlave(config)) {
         (void)Backup({}, {}, true);
@@ -1266,18 +1277,27 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         LOG_WARN("slave conn invalid");
         return E_OK;
     }
-    bool tryLock = SqliteUtils::TryAccessSlaveLock(dbHandle_, false, true);
-    if (!tryLock) {
+    if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, false, true)) {
         LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
+    }
+    slaveStatus_.store(SlaveStatus::BACKING_UP);
+    if (isRestore) {
+        auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
+        if (cRet == E_OK && (static_cast<std::string>(cObj) != "ok")) {
+            LOG_ERROR("slave may corrupt, cancel backup, ret:%{public}s, cRet:%{public}d",
+                static_cast<std::string>(cObj).c_str(), cRet);
+            slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
+            return E_SQLITE_CORRUPT;
+        }
     }
     sqlite3 *dbFrom = isRestore ? dbHandle_ : slaveConnection_->dbHandle_;
     sqlite3 *dbTo = isRestore ? slaveConnection_->dbHandle_ : dbHandle_;
     sqlite3_backup *pBackup = sqlite3_backup_init(dbFrom, "main", dbTo, "main");
     if (pBackup == nullptr) {
         LOG_WARN("slave backup init failed");
+        slaveStatus_.store(SlaveStatus::UNDEFINED);
         return E_OK;
     }
-    slaveStatus_.store(SlaveStatus::BACKING_UP);
     int rc = SQLITE_OK;
     do {
         if (!isRestore && slaveStatus_.load() == SlaveStatus::BACKUP_INTERRUPT) {
@@ -1296,8 +1316,7 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         LOG_WARN("backup slave err:%{public}d, isRestore:%{public}d", rc, isRestore);
     } else {
         slaveStatus_.store(SlaveStatus::BACKUP_FINISHED);
-        tryLock = SqliteUtils::TryAccessSlaveLock(dbHandle_, true, false);
-        if (!tryLock) {
+        if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, true, false)) {
             LOG_WARN("try remove slave lock failed! isRestore:%{public}d", isRestore);
         }
         LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
@@ -1401,8 +1420,7 @@ bool SqliteConnection::IsDbRepairable()
         LOG_INFO("cancel repair, ret:%{public}d", qRet);
         return false;
     }
-    static const std::string checkSql = "PRAGMA quick_check";
-    auto [cRet, cObj] = slaveConnection_->ExecuteForValue(checkSql);
+    auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[1]); // 1 is quick check
     if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
         LOG_ERROR("cancel repair, ret:%{public}s, cRet:%{public}d", static_cast<std::string>(cObj).c_str(), cRet);
         return false;
