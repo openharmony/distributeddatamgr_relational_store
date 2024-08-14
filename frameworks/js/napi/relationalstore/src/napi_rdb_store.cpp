@@ -28,13 +28,12 @@
 #include "logger.h"
 #include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
-#include "napi_rdb_js_utils.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
 
-#define API_VERSION 12
+#define API_VERSION_12 12
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -43,7 +42,6 @@ using namespace OHOS::DataShare;
 
 using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
-using namespace OHOS::AppDataMgrJsKit::JSUtils;
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
@@ -127,6 +125,11 @@ RdbStoreProxy &RdbStoreProxy::operator=(std::shared_ptr<NativeRdb::RdbStore> rdb
 bool RdbStoreProxy::IsSystemAppCalled()
 {
     return isSystemAppCalled_;
+}
+
+int32_t RdbStoreProxy::GetApiVersion() const
+{
+    return apiTargetVersion_;
 }
 
 bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
@@ -232,7 +235,8 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled)
+napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value,
+    const ContextParam &param)
 {
     if (value == nullptr) {
         LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
@@ -260,7 +264,8 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
     proxy->queue_ = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
     proxy->dbType = value->GetDbType();
     proxy->SetInstance(std::move(value));
-    proxy->isSystemAppCalled_ = isSystemAppCalled;
+    proxy->isSystemAppCalled_ = param.isSystemApp;
+    proxy->apiTargetVersion_ = param.apiTargetVersion;
     return instance;
 }
 
@@ -281,6 +286,7 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
     CHECK_RETURN_SET(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
     CHECK_RETURN_SET(obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     context->boundObj = obj;
+    context->apiTargetVersion = obj->GetApiVersion();
     context->rdbStore = obj->GetInstance();
     return OK;
 }
@@ -477,9 +483,9 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
-        if (valueObject.GetType() == ValueObject::TYPE_BLOB && apiVerion < API_VERSION) {
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && context->apiTargetVersion < API_VERSION_12) {
             std::vector<uint8_t> tmpValue;
-            val.GetBlob(tmpValue);
+            valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
                 valueObject = ValueObject();
             }
@@ -555,7 +561,6 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
     status = napi_get_array_length(env, keys, &arrLen);
     CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
 
-    int32_t apiVerion = context->rdbStore->config_.GetApiTargetVersion();
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
@@ -565,9 +570,9 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (valueObject.GetType() == ValueObject::TYPE_BLOB && apiVerion < API_VERSION) {
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && context->apiTargetVersion < API_VERSION_12) {
             std::vector<uint8_t> tmpValue;
-            val.GetBlob(tmpValue);
+            valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
                 valueObject = ValueObject();
             }

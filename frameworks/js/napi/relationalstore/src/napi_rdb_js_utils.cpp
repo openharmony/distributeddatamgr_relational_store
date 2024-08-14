@@ -391,28 +391,17 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         return GetCurrentAbilityParam(env, jsValue, param);
     }
     LOG_DEBUG("stage mode branch");
-    status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
-    ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
-    status = GetNamedProperty(env, jsValue, "area", param.area, true);
-    ASSERT(status == napi_ok, "get area failed.", napi_invalid_arg);
 
-    napi_value hapInfo = nullptr;
-    GetNamedProperty(env, jsValue, "currentHapModuleInfo", hapInfo);
-    if (hapInfo != nullptr) {
-        status = GetNamedProperty(env, hapInfo, "name", param.moduleName);
-        ASSERT(status == napi_ok, "get currentHapModuleInfo.name failed.", napi_invalid_arg);
+    std::shared_ptr<Context> context = JSAbility::GetStageModeContext(env, jsValue);
+    if (context == nullptr) {
+        return napi_invalid_arg;
     }
-
-    napi_value appInfo = nullptr;
-    GetNamedProperty(env, jsValue, "applicationInfo", appInfo);
-    if (appInfo != nullptr) {
-        status = GetNamedProperty(env, appInfo, "name", param.bundleName);
-        ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
-        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
-        ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
-        status = GetNamedProperty(env, appInfo, "apiTargetVersion", param.apiTargetVersion, true);
-        ASSERT(status == napi_ok, "get applicationInfo.apiTargetVersion failed.", napi_invalid_arg);
-    }
+    param.apiTargetVersion = context->GetApiVersion();
+    param.baseDir = context->GetDatabaseDir();
+    param.area = context->GetArea();
+    param.moduleName = context->GetModuleName();
+    param.bundleName = context->GetBundleName();
+    param.isSystemApp = context->IsSystemAppCalled();
     return napi_ok;
 }
 
@@ -479,7 +468,6 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetArea(param.area);
     rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
     rdbStoreConfig.SetHaMode(rdbConfig.haMode);
-    rdbStoreConfig.SetApiTargetVersion(param.apiTargetVersion);
     return rdbStoreConfig;
 }
 

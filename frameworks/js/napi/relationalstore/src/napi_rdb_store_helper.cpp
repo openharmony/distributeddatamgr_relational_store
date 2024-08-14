@@ -78,7 +78,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
+        result = RdbStoreProxy::NewInstance(env, context->proxy, context->param);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
