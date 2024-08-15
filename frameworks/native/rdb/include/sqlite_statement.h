@@ -83,6 +83,7 @@ private:
     int BindArgs(const std::vector<ValueObject> &bindArgs);
     int IsValid(int index) const;
     int InnerStep();
+    int InnerFinalize();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReportDbCorruptedEvent(int errorCode);
 
