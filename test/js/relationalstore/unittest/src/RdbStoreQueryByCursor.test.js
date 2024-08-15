@@ -105,7 +105,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         }
         let promise = rdbStore.query(predicates);
         await promise.then((resultSet) => {
-            expect(6).assertEqual(resultSet.columnCount);
+            expect(7).assertEqual(resultSet.columnCount);
             let deletedIndex = resultSet.getColumnIndex(relationalStore.Field.DELETED_FLAG_FIELD);
             expect(5).assertEqual(deletedIndex);
             let cursorIndex = resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD);
@@ -119,7 +119,6 @@ describe('rdbStoreQueryByCursorTest', function () {
         });
         done();
     })
-0.
     /**
      * @tc.name query with cursor
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0002
@@ -137,7 +136,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         }
         let promise = rdbStore.query(predicates, ["data", "uuid"]);
         await promise.then((resultSet) => {
-            expect(4).assertEqual(resultSet.columnCount);
+            expect(5).assertEqual(resultSet.columnCount);
             expect(true).assertEqual(resultSet.goToFirstRow());
             expect(true).assertEqual(resultSet.goToNextRow());
             let cursor = resultSet.getLong(resultSet.getColumnIndex(relationalStore.Field.CURSOR_FIELD));
