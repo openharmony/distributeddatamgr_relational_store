@@ -1274,23 +1274,11 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 
 int SqliteConnection::MasterSlaveExchange(bool isRestore)
 {
-    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
-        LOG_WARN("slave conn invalid");
-        return E_OK;
+    auto [isReturn, err] = CheckMasterSlaveExchange(isRestore);
+    if (isReturn) {
+        return err;
     }
-    if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, false, true)) {
-        LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
-    }
-    slaveStatus_.store(SlaveStatus::BACKING_UP);
-    if (isRestore) {
-        auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
-        if (cRet == E_OK && (static_cast<std::string>(cObj) != "ok")) {
-            LOG_ERROR("slave may corrupt, cancel backup, ret:%{public}s, cRet:%{public}d",
-                static_cast<std::string>(cObj).c_str(), cRet);
-            slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
-            return E_SQLITE_CORRUPT;
-        }
-    }
+
     sqlite3 *dbFrom = isRestore ? dbHandle_ : slaveConnection_->dbHandle_;
     sqlite3 *dbTo = isRestore ? slaveConnection_->dbHandle_ : dbHandle_;
     sqlite3_backup *pBackup = sqlite3_backup_init(dbFrom, "main", dbTo, "main");
@@ -1427,6 +1415,28 @@ bool SqliteConnection::IsDbRepairable()
         return false;
     }
     return true;
+}
+
+std::pair<bool, int> SqliteConnection::CheckMasterSlaveExchange(bool isRestore)
+{
+    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
+        LOG_WARN("slave conn invalid");
+        return { true, E_OK };
+    }
+    if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, false, true)) {
+        LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
+    }
+    slaveStatus_.store(SlaveStatus::BACKING_UP);
+    if (isRestore) {
+        auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
+        if (cRet == E_OK && (static_cast<std::string>(cObj) != "ok")) {
+            LOG_ERROR("slave may corrupt, cancel backup, ret:%{public}s, cRet:%{public}d",
+                static_cast<std::string>(cObj).c_str(), cRet);
+            slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
+            return { true, E_SQLITE_CORRUPT };
+        }
+    }
+    return { false, E_OK };
 }
 } // namespace NativeRdb
 } // namespace OHOS

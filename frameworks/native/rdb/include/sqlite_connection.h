@@ -115,6 +115,7 @@ private:
     int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite);
     int MasterSlaveExchange(bool isRestore = false);
     bool IsDbRepairable();
+    std::pair<bool, int> CheckMasterSlaveExchange(bool isRestore);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;

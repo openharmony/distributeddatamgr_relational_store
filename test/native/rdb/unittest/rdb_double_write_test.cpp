@@ -619,3 +619,32 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
 
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_012
+ * @tc.desc: test RdbStore transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+
+    int err = store->BeginTransaction();
+    EXPECT_EQ(err, E_OK);
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    auto [ret2, outValue2] = store->Execute("UPDATE test SET age= 18 WHERE id = 1");
+    EXPECT_EQ(E_OK, ret2);
+    err = store->Commit();
+    EXPECT_EQ(err, E_OK);
+
+    RdbDoubleWriteTest::CheckResultSet(slaveStore);
+}
