@@ -63,7 +63,6 @@ struct ContextParam {
     std::string moduleName;
     std::string baseDir;
     int32_t area;
-    int32_t apiTargetVersion = 12;
     bool isSystemApp = false;
     bool isStageMode = true;
 };

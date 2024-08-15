@@ -25,7 +25,6 @@ namespace RelationalStoreJsKit {
 using namespace OHOS::NativeRdb;
 struct RdbStoreContextBase : public ContextBase {
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
-    int32_t apiTargetVersion = 12;
 };
 
 struct RdbStoreContext : public RdbStoreContextBase {
