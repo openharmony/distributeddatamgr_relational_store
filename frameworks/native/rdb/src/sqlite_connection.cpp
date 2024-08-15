@@ -105,7 +105,7 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
 {
 }
 
-int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite)
+int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist)
 {
     if (config.GetHaMode() != HAMode::MAIN_REPLICA && config.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_OK;
@@ -115,7 +115,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
     if (!isSlaveExist) {
         slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
     }
-    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && (!isSlaveExist || isSlaveLockExist)) {
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && ((checkSlaveExist && !isSlaveExist) || isSlaveLockExist)) {
         LOG_INFO("not dual write on MANUAL_TRIGGER mode, slave:%{public}d, slaveLock:%{public}d",
             isSlaveExist, isSlaveLockExist);
         return E_OK;
@@ -1178,6 +1178,14 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     LOG_INFO("begin backup to slave:%{public}s, isAsync:%{public}d", SqliteUtils::Anonymous(databasePath).c_str(),
         isAsync);
     if (!isAsync) {
+        if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER && slaveConnection_ == nullptr) {
+            RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
+            int errCode = CreateSlaveConnection(rdbSlaveStoreConfig, true, false);
+            if (errCode != E_OK) {
+                LOG_ERROR("create slave conn failed when manual backup:%{public}d", errCode);
+                return errCode;
+            }
+        }
         return MasterSlaveExchange();
     }
     auto pool = TaskExecutor::GetInstance().GetExecutor();
@@ -1380,7 +1388,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (!connection->IsDbRepairable()) {
         return E_NOT_SUPPORT;
     }
-    LOG_INFO("begin to repair main db:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+    LOG_WARN("begin to repair main db:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
     (void)SqliteConnection::Delete(config);
     ret = connection->InnerOpen(config);
     if (ret != E_OK) {
@@ -1389,7 +1397,8 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     }
     ret = connection->MasterSlaveExchange(true);
     if (ret != E_OK) {
-        LOG_ERROR("restore db failed during repairing, err:%{public}d", ret);
+        LOG_ERROR("repair failed, [%{public}s]->[%{public}s], err:%{public}d", rdbSlaveStoreConfig.GetName().c_str(),
+            config.GetName().c_str(), ret);
         return ret;
     }
     LOG_INFO("repair main db success:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());

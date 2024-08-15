@@ -112,7 +112,7 @@ private:
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
     void ReportDbCorruptedEvent(int errCode);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = false);
     int MasterSlaveExchange(bool isRestore = false);
     bool IsDbRepairable();
     std::pair<bool, int> CheckMasterSlaveExchange(bool isRestore);
