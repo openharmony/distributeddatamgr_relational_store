@@ -43,6 +43,7 @@ class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
+    static int32_t Repair(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
@@ -113,12 +114,14 @@ private:
     void ReportDbCorruptedEvent(int errCode);
     int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite);
     int MasterSlaveExchange(bool isRestore = false);
+    bool IsDbRepairable();
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr uint32_t NO_ITER = 0;
     static const int32_t regCreator_;
+    static const int32_t regRepairer_;
     static const int32_t regDeleter_;
 
     sqlite3 *dbHandle_;
