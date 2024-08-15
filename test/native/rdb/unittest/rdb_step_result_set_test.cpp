@@ -1499,7 +1499,10 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     std::string value = "SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE "
                         "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-                        "THEN true ELSE false END AS deleted_flag "
+                        "THEN true ELSE false END AS deleted_flag, CASE "
+                        "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
+                        "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
+                        "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
                         "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
                         "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
     EXPECT_EQ(value, sqlstr);
@@ -1510,7 +1513,10 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
     sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.cursor, CASE "
             "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-            "THEN true ELSE false END AS deleted_flag "
+            "THEN true ELSE false END AS deleted_flag, CASE "
+            "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
+            "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
+            "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
             "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
             "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
     EXPECT_EQ(value, sqlstr);
@@ -1553,7 +1559,10 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
     value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field, "
             "naturalbase_rdb_aux_test_log.cursor, CASE "
             "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-            "THEN true ELSE false END AS deleted_flag "
+            "THEN true ELSE false END AS deleted_flag, CASE "
+            "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
+            "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
+            "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
             "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
             "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
     EXPECT_EQ(value, sqlstr);
