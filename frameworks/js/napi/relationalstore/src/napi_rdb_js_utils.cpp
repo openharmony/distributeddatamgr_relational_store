@@ -391,17 +391,28 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         return GetCurrentAbilityParam(env, jsValue, param);
     }
     LOG_DEBUG("stage mode branch");
+    status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
+    ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
+    status = GetNamedProperty(env, jsValue, "area", param.area, true);
+    ASSERT(status == napi_ok, "get area failed.", napi_invalid_arg);
 
-    std::shared_ptr<Context> context = JSAbility::GetStageModeContext(env, jsValue);
-    if (context == nullptr) {
-        return napi_invalid_arg;
+    napi_value hapInfo = nullptr;
+    GetNamedProperty(env, jsValue, "currentHapModuleInfo", hapInfo);
+    if (hapInfo != nullptr) {
+        status = GetNamedProperty(env, hapInfo, "name", param.moduleName);
+        ASSERT(status == napi_ok, "get currentHapModuleInfo.name failed.", napi_invalid_arg);
     }
-    param.apiTargetVersion = context->GetApiVersion();
-    param.baseDir = context->GetDatabaseDir();
-    param.area = context->GetArea();
-    param.moduleName = context->GetModuleName();
-    param.bundleName = context->GetBundleName();
-    param.isSystemApp = context->IsSystemAppCalled();
+
+    napi_value appInfo = nullptr;
+    GetNamedProperty(env, jsValue, "applicationInfo", appInfo);
+    if (appInfo != nullptr) {
+        status = GetNamedProperty(env, appInfo, "name", param.bundleName);
+        ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
+        status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
+        ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
+        int32_t hapVersion = JSAbility::GetHapVersion(env, jsValue);
+        JSUtils::SetHapVersion(hapVersion);
+    }
     return napi_ok;
 }
 

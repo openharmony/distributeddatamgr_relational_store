@@ -14,11 +14,11 @@
  */
 #define LOG_TAG "JSAbility"
 #include "js_ability.h"
+#include "js_utils.h"
 
 #include "extension_context.h"
 #include "logger.h"
 
-#define API_VERSION_12 12
 #define API_VERSION_MOD 100
 
 namespace OHOS {
@@ -56,7 +56,6 @@ Context::Context(std::shared_ptr<AbilityRuntime::Context> stageContext)
     }
     auto appInfo = stageContext->GetApplicationInfo();
     isSystemAppCalled_ = appInfo == nullptr ? false : appInfo->isSystemApp;
-    apiTargetVersion_ = appInfo == nullptr ? API_VERSION_12 : (appInfo->apiTargetVersion % API_VERSION_MOD);
 }
 
 Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
@@ -68,11 +67,6 @@ Context::Context(std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext)
     if (abilityInfo != nullptr) {
         moduleName_ = abilityInfo->moduleName;
     }
-}
-
-int32_t Context::GetApiVersion() const
-{
-    return apiTargetVersion_;
 }
 
 std::string Context::GetDatabaseDir()
@@ -172,6 +166,20 @@ std::shared_ptr<Context> JSAbility::GetCurrentAbility(napi_env env, napi_value v
         return nullptr;
     }
     return std::make_shared<Context>(abilityContext);
+}
+
+int32_t JSAbility::GetHapVersion(napi_env env, napi_value value)
+{
+    auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
+    if (stageContext == nullptr) {
+        return napi_invalid_arg;
+    }
+    auto appInfo = stageContext->GetApplicationInfo();
+    if (appInfo != nullptr) {
+        return appInfo->apiTargetVersion % API_VERSION_MOD;
+    }
+    LOG_WARN("GetApplicationInfo failed.");
+    return napi_invalid_arg;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

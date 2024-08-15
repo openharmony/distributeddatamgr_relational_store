@@ -1574,7 +1574,7 @@ describe('rdbResultSetTest', function () {
         expect(true).assertEqual(resultSet.goToNextRow())
         expect(true).assertEqual(resultSet.goToNextRow())
         const isColumnNull4 = resultSet.isColumnNull(resultSet.getColumnIndex("data4"))
-        expect(false).assertEqual(isColumnNull4)
+        expect(true).assertEqual(isColumnNull4)
 
         resultSet.close()
         resultSet = null;
@@ -1618,7 +1618,7 @@ describe('rdbResultSetTest', function () {
         {
             resultSet.goToRow(2)
             expect(false).assertEqual(resultSet.isColumnNull(1))
-            expect(false).assertEqual(resultSet.isColumnNull(4))
+            expect(true).assertEqual(resultSet.isColumnNull(4))
         }
         resultSet.close()
         resultSet = null;

@@ -41,7 +41,6 @@ public:
     std::string GetReadPermission();
     std::string GetWritePermission();
     int32_t GetArea() const;
-    int32_t GetApiVersion() const;
     bool IsSystemAppCalled();
     bool IsHasProxyDataConfig() const;
     int GetSystemDatabaseDir(const std::string &dataGroupId, std::string &databaseDir);
@@ -49,7 +48,6 @@ public:
 
 private:
     int32_t area_ = 0;
-    int32_t apiTargetVersion_ = 12;
     std::string databaseDir_;
     std::string bundleName_;
     std::string moduleName_;
@@ -67,6 +65,7 @@ public:
     static std::shared_ptr<Context> GetContext(napi_env env, napi_value object);
     static std::shared_ptr<Context> GetStageModeContext(napi_env env, napi_value value);
     static std::shared_ptr<Context> GetCurrentAbility(napi_env env, napi_value value);
+    static int32_t GetHapVersion(napi_env env, napi_value value);
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

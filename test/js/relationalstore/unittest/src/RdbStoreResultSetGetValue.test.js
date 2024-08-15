@@ -105,8 +105,7 @@ describe('rdbStoreResultSetGetValueTest', function () {
             let resultSet = await rdbStore.querySql('SELECT * FROM test')
             expect(true).assertEqual(resultSet.goToFirstRow());
             let blobValue = resultSet.getValue(resultSet.getColumnIndex('blobType'));
-            let isArray = blobValue instanceof Uint8Array;
-            expect(true).assertEqual(isArray);
+            expect(null).assertEqual(blobValue);
         } catch (err) {
             console.error(`### query failed, code:${err.code}, message:${err.message}`)
         }

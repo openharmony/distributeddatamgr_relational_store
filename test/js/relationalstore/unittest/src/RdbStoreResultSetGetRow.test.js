@@ -228,8 +228,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
         expect(true).assertEqual(resultSet.goToFirstRow());
 
         let valueBucket_ret = resultSet.getRow();
-        let isArray = valueBucket_ret.data4 instanceof Uint8Array;
-        expect(true).assertEqual(isArray);
+        expect(null).assertEqual(valueBucket_ret.data4);
         done();
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0006 end   *************");
     })
