@@ -43,6 +43,7 @@ struct RdbSyncerParam {
     std::string customDir_;
     int32_t area_ = 0;
     int32_t level_ = 0;
+    int32_t haMode_ = 0;
     int32_t type_ = RDB_DEVICE_COLLABORATION;
     uint32_t roleType_ = 0;
     bool isEncrypt_ = false;

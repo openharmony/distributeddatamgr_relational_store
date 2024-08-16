@@ -89,7 +89,7 @@ void RdbStoreImpl::InitSyncerParam()
     syncerParam_.isAutoClean_ = config_.GetAutoClean();
     syncerParam_.isSearchable_ = config_.IsSearchable();
     syncerParam_.password_ = {};
-
+    syncerParam_.haMode_ = config_.GetHaMode();
     syncerParam_.roleType_ = config_.GetRoleType();
 }
 
