@@ -85,6 +85,12 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
         if (ret != E_OK) {
             return { E_OK, conn };
         }
+        if (connection->IsNeedBackupToSlave(rdbSlaveStoreConfig)) {
+            (void)connection->Backup({}, {}, true);
+        } else {
+            LOG_INFO("not need backup slave db:%{public}s,",
+                SqliteUtils::Anonymous(rdbSlaveStoreConfig.GetPath()).c_str());
+        }
     }
     return result;
 }
@@ -135,16 +141,9 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
             }
         } else {
             LOG_WARN("open the slave database failed:%{public}d", errCode);
-            return errCode;
         }
     }
-    if (IsNeedBackupToSlave(config)) {
-        (void)Backup({}, {}, true);
-    } else {
-        LOG_INFO("slave database doesn't needs backup, curName:%{public}s,",
-            SqliteUtils::Anonymous(config.GetPath()).c_str());
-    }
-    return E_OK;
+    return errCode;
 }
 
 RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig)
@@ -1327,8 +1326,7 @@ bool SqliteConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
     if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
         return false;
     }
-    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
-        // never proactively backup in MANUAL_TRIGGER mode
+    if (config.GetHaMode() != HAMode::MAIN_REPLICA) {
         return false;
     }
     SlaveStatus curSlaveStatus = slaveStatus_.load();
