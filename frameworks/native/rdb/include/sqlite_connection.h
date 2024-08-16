@@ -68,7 +68,7 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t InterruptBackup() override;
     int32_t GetBackupStatus() const override;
-    bool IsNeedBackupToSlave(const RdbStoreConfig &config) override;
+    std::pair<bool, bool> IsExchangeRequired(const RdbStoreConfig &config) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,

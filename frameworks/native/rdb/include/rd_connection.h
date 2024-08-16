@@ -59,7 +59,7 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t InterruptBackup() override;
     int32_t GetBackupStatus() const override;
-    bool IsNeedBackupToSlave(const RdbStoreConfig &config) override;
+    std::pair<bool, bool> IsExchangeRequired(const RdbStoreConfig &config) override;
     
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;

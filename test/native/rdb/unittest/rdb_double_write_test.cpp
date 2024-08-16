@@ -20,6 +20,7 @@
 
 #include "logger.h"
 #include "common.h"
+#include "sqlite_utils.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -446,7 +447,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_007
- * @tc.desc: Open db with SINGLE, init data,
+ * @tc.desc: open SINGLE db, write, close, open MAIN_REPLICA db, check slave
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
@@ -482,7 +483,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_008
- * @tc.desc: test db corrupt that auto repair
+ * @tc.desc: open MAIN_REPLICA db, write, close, corrupt, reopen db allow rebuild, db returns to normal
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
@@ -523,7 +524,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_009
- * @tc.desc: test db that restore
+ * @tc.desc: open MAIN_REPLICA db, write, slave db has 100 more data than main db, restore, check count
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
@@ -540,7 +541,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_010
- * @tc.desc: test slave db corrupt
+ * @tc.desc: open MAIN_REPLICA db, write, close all, corrupt slave, open MAIN_REPLICA db, slave returns to normal
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
@@ -584,7 +585,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_011
- * @tc.desc: test slave db corrupt
+ * @tc.desc: open MAIN_REPLICA db, write, close slave, corrupt slave, backup, check slave
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
@@ -651,7 +652,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_013
- * @tc.desc: test RdbStore backup in MANUAL_TRIGGER
+ * @tc.desc: open MANUAL_TRIGGER db, open slave, write, slave is empty, backup, check slave, write, check slave
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
@@ -695,7 +696,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_014
- * @tc.desc: test RdbStore backup in MANUAL_TRIGGER
+ * @tc.desc: open MANUAL_TRIGGER db, write, backup, open slave, check slave, write, check slave
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
@@ -737,7 +738,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_DoubleWrite_015
- * @tc.desc: test slave db corrupt
+ * @tc.desc: open MAIN_REPLICA db, write, close, corrupt, slave create table, open MAIN_REPLICA db. check count
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
@@ -787,5 +788,37 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
     RdbDoubleWriteTest::CheckNumber(store, 1, E_OK, std::string("xx"));
     RdbDoubleWriteTest::CheckNumber(store, count);
     RdbDoubleWriteTest::CheckNumber(slaveStore, 1, E_OK, std::string("xx"));
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_016
+ * @tc.desc: open MAIN_REPLICA db, write, close, delete db file, reopen, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
+{
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+    LOG_INFO("RdbStore_DoubleWrite_016 insert finish");
+
+    store = nullptr;
+
+    SqliteUtils::DeleteFile(DATABASE_NAME);
+    SqliteUtils::DeleteFile(DATABASE_NAME + "-shm");
+    SqliteUtils::DeleteFile(DATABASE_NAME + "-wal");
+    LOG_INFO("RdbStore_DoubleWrite_016 delete db file finish");
+
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    int errCode;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_016 reopen db finish");
+
+    RdbDoubleWriteTest::CheckNumber(store, count);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
