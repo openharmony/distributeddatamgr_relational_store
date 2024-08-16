@@ -85,8 +85,13 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
         if (ret != E_OK) {
             return { E_OK, conn };
         }
-        if (connection->IsNeedBackupToSlave(rdbSlaveStoreConfig)) {
-            (void)connection->Backup({}, {}, true);
+        auto [isExchange, isRestore] = connection->IsExchangeRequired(rdbSlaveStoreConfig);
+        if (isExchange) {
+            if (isRestore) {
+                (void)connection->Restore({}, {});
+            } else {
+                (void)connection->Backup({}, {}, true);
+            }
         } else {
             LOG_INFO("not need backup slave db:%{public}s,",
                 SqliteUtils::Anonymous(rdbSlaveStoreConfig.GetPath()).c_str());
@@ -1318,41 +1323,50 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
     }
     (void)sqlite3_backup_finish(pBackup);
-    return E_OK;
+    return SQLiteError::ErrNo(rc);
 }
 
-bool SqliteConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
+std::pair<bool, bool> SqliteConnection::IsExchangeRequired(const RdbStoreConfig &config)
 {
+    std::pair<bool, bool> res = { false, false };
+    auto &[isExchange, isRestore] = res;
     if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
-        return false;
+        return res;
     }
     if (config.GetHaMode() != HAMode::MAIN_REPLICA) {
-        return false;
+        return res;
     }
     SlaveStatus curSlaveStatus = slaveStatus_.load();
     if (curSlaveStatus == SlaveStatus::BACKING_UP) {
-        return false;
+        return res;
     }
     if (curSlaveStatus == SlaveStatus::DB_NOT_EXITS || curSlaveStatus == SlaveStatus::BACKUP_INTERRUPT) {
-        return true;
+        isExchange = true;
+        return res;
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
     if (mRet != E_OK) {
-        return false;
+        return res;
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
     if (sRet != E_OK) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
-        return true;
+        isExchange = true;
+        return res;
     }
     int64_t mCount = static_cast<int64_t>(mObj);
     int64_t sCount = static_cast<int64_t>(sObj);
     if (mCount != sCount) {
-        LOG_INFO("tables not equal, need backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
-        return true;
+        isExchange = true;
+        if (mCount == 0) {
+            isRestore = true;
+            LOG_INFO("main db empty, restore, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+        } else {
+            LOG_INFO("tables not equal, need backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+        }
     }
-    return false;
+    return res;
 }
 
 int32_t SqliteConnection::InterruptBackup()

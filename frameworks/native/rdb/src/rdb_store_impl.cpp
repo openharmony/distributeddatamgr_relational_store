@@ -1846,7 +1846,7 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
         auto conn = connectionPool_->AcquireConnection(false);
         if (conn == nullptr) {
             LOG_WARN("acquire conn failed when set distributed.");
-        } else if (conn->IsNeedBackupToSlave(config_)) {
+        } else if (conn->IsExchangeRequired(config_).first) {
             (void)conn->Backup({}, {});
         }
     }
