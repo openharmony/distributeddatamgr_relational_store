@@ -734,3 +734,58 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
     LOG_INFO("RdbStore_DoubleWrite_014 insert finish");
     RdbDoubleWriteTest::CheckNumber(slaveStore, 200); // 200 is all count
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_015
+ * @tc.desc: test slave db corrupt
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
+{
+    int64_t id = 10;
+    int count = 100;
+    ValuesBucket values;
+    for (int i = 0; i < count; i++) {
+        id++;
+        values.Clear();
+        values.PutInt("id", id);
+        values.PutString("name", std::string("zhangsan"));
+        values.PutInt("age", 18);
+        values.PutDouble("salary", 100.5);
+        values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+        int ret = store->Insert(id, "test", values);
+        EXPECT_EQ(ret, E_OK);
+    }
+    LOG_INFO("RdbStore_DoubleWrite_015 insert finish");
+
+    store = nullptr;
+
+    std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = {0x6, 0x6};
+    file.write(bytes, 2);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
+    LOG_INFO("RdbStore_DoubleWrite_015 corrupt db finish");
+
+    int errCode = slaveStore->ExecuteSql("CREATE TABLE IF NOT EXISTS xx (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(slaveStore->Insert(id, "xx", values), E_OK);
+
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetAllowRebuild(true);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_015 reopen db finish");
+
+    RdbDoubleWriteTest::CheckNumber(store, 1, E_OK, std::string("xx"));
+    RdbDoubleWriteTest::CheckNumber(store, count);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 1, E_OK, std::string("xx"));
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
