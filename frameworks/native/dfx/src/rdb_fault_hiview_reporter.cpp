@@ -48,6 +48,7 @@ void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInf
     } else {
         appendInfo = appendInfo + " \n GetWalFileStatInfoFailed ! \n";
     }
+    LOG_ERROR("storeName: %{public}s, appendInfo : %{public}s.", storeName, appendInfo.c_str());
     char *errorOccurTime = GetDateInfo(eventInfo.errorOccurTime).data();
     HiSysEventParam params[] = {
         { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName }, .arraySize = 0 },

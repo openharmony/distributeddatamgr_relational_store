@@ -153,7 +153,6 @@ private:
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
-    void ReportDbCorruptedEvent(int errorCode);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
