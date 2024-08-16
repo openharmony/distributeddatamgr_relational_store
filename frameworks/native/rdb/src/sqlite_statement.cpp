@@ -71,10 +71,14 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
+        if (errCode == SQLITE_NOTADB) {
+            ReadFile2Buffer();
+        }
         int ret = SQLiteError::ErrNo(errCode);
         if (ret == E_SQLITE_CORRUPT) {
             ReportDbCorruptedEvent(ret);
         }
+        PrintInfoForDbError(ret);
         return ret;
     }
     Finalize(); // finalize the old
@@ -85,6 +89,46 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     types_ = std::vector<int32_t>(columnCount_, COLUMN_TYPE_INVALID);
     numParameters_ = sqlite3_bind_parameter_count(stmt_);
     return E_OK;
+}
+
+void SqliteStatement::PrintInfoForDbError(int errorCode)
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
+        errorCode == E_SQLITE_IOERR || errorCode == E_SQLITE_CORRUPT || errorCode == E_SQLITE_CANTOPEN) {
+        LOG_ERROR(" DbError errorCode: %{public}d  DbName: %{public}s ", errorCode, config_->GetName().c_str());
+    }
+}
+
+void SqliteStatement::ReadFile2Buffer()
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    std::string fileName;
+    if (SqliteGlobalConfig::GetDbPath(*config_, fileName) != E_OK || access(fileName.c_str(), F_OK) != 0) {
+        return;
+    }
+    uint64_t buffer[BUFFER_LEN] = {0x0};
+    FILE *file = fopen(fileName.c_str(), "r");
+    if (file == nullptr) {
+        LOG_ERROR("open db file failed: %{public}s, errno is %{public}d", fileName.c_str(), errno);
+        return;
+    }
+    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
+    if (readSize != BUFFER_LEN) {
+        LOG_ERROR("read db file size: %{public}zu, errno is %{public}d", readSize, errno);
+        (void)fclose(file);
+        return;
+    }
+    constexpr int bufferSize = 4;
+    for (uint32_t i = 0; i < BUFFER_LEN; i += bufferSize) {
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
+            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+    }
+    (void)fclose(file);
 }
 
 int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
@@ -194,6 +238,7 @@ int SqliteStatement::Step()
     if (ret == E_SQLITE_CORRUPT) {
         ReportDbCorruptedEvent(ret);
     }
+    PrintInfoForDbError(ret);
     return ret;
 }
 
