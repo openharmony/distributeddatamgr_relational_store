@@ -1237,6 +1237,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.isEncrypt_ = config.IsEncrypt();
     param.isAutoClean_ = config.GetAutoClean();
     param.isSearchable_ = config.IsSearchable();
+    param.haMode_ = config.GetHaMode();
     param.password_ = {};
     std::vector<uint8_t> key;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

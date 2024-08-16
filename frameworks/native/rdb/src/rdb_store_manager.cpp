@@ -145,6 +145,7 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
     syncerParam.isAutoClean_ = config.GetAutoClean();
     syncerParam.isSearchable_ = config.IsSearchable();
     syncerParam.roleType_ = config.GetRoleType();
+    syncerParam.haMode_ = config.GetHaMode();
     return syncerParam;
 }
 
