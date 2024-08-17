@@ -77,7 +77,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         }
         return ret;
     }
-    Finalize(); // finalize the old
+    InnerFinalize(); // finalize the old
     sql_ = newSql;
     stmt_ = stmt;
     readOnly_ = (sqlite3_stmt_readonly(stmt_) != 0);
@@ -189,6 +189,21 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
 int SqliteStatement::Step()
 {
+    int ret = InnerStep();
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (slave_) {
+        ret = slave_->InnerStep();
+        if (ret != E_OK) {
+            LOG_WARN("slave step error:%{public}d", ret);
+        }
+    }
+    return ret;
+}
+
+int SqliteStatement::InnerStep()
+{
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
     if (ret == E_SQLITE_CORRUPT) {
@@ -208,26 +223,27 @@ int SqliteStatement::Reset()
         LOG_ERROR("reset ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
     }
+    if (slave_) {
+        errCode = slave_->Reset();
+        if (errCode != E_OK) {
+            LOG_WARN("slave reset error:%{public}d", errCode);
+        }
+    }
     return E_OK;
 }
 
 int SqliteStatement::Finalize()
 {
-    if (stmt_ == nullptr) {
-        return E_OK;
+    int errCode = InnerFinalize();
+    if (errCode != E_OK) {
+        return errCode;
     }
 
-    int errCode = sqlite3_finalize(stmt_);
-    stmt_ = nullptr;
-    sql_ = "";
-    readOnly_ = false;
-    columnCount_ = -1;
-    numParameters_ = 0;
-    types_ = std::vector<int32_t>();
-    config_ = nullptr;
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
-        return SQLiteError::ErrNo(errCode);
+    if (slave_) {
+        errCode = slave_->Finalize();
+        if (errCode != E_OK) {
+            LOG_WARN("slave finalize error:%{public}d", errCode);
+        }
     }
     return E_OK;
 }
@@ -256,13 +272,13 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
     if (errCode != E_OK) {
         return errCode;
     }
-    errCode = Step();
+    errCode = InnerStep();
     if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
         return errCode;
     }
 
-    if (slave_ && !ReadOnly()) {
+    if (slave_) {
         int errCode = slave_->Execute(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave execute error:%{public}d", errCode);
@@ -623,6 +639,27 @@ void SqliteStatement::ReportDbCorruptedEvent(int errorCode)
         eventInfo.walFileStatRet = -1;
     }
     RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+}
+
+int SqliteStatement::InnerFinalize()
+{
+    if (stmt_ == nullptr) {
+        return E_OK;
+    }
+
+    int errCode = sqlite3_finalize(stmt_);
+    stmt_ = nullptr;
+    sql_ = "";
+    readOnly_ = false;
+    columnCount_ = -1;
+    numParameters_ = 0;
+    types_ = std::vector<int32_t>();
+    config_ = nullptr;
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
+        return SQLiteError::ErrNo(errCode);
+    }
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

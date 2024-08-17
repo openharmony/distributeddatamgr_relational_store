@@ -235,9 +235,9 @@ int32_t RdConnection::GetBackupStatus() const
     return SlaveStatus::UNDEFINED;
 }
 
-bool RdConnection::IsNeedBackupToSlave(const RdbStoreConfig &config)
+std::pair<bool, bool> RdConnection::IsExchange(const RdbStoreConfig &config)
 {
-    return false;
+    return { false, false };
 }
 } // namespace NativeRdb
 } // namespace OHOS
