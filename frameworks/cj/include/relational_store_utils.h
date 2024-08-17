@@ -18,6 +18,8 @@
 
 #include "value_object.h"
 #include "securec.h"
+#include "rdb_store.h"
+#include "rdb_types.h"
 
 namespace OHOS {
 namespace Relational {
@@ -57,6 +59,10 @@ namespace Relational {
         char** head;
         int64_t size;
     };
+
+    CArrStr VectorToCArrStr(const std::vector<std::string> &devices);
+
+    std::vector<std::string> CArrStrToVector(CArrStr carr);
     
     struct ValueType {
         int64_t integer;
@@ -92,7 +98,91 @@ namespace Relational {
         int64_t size;
     };
 
-    ValueType ValueObjectToValueType(const NativeRdb::ValueObject& object);
+    ValueType ValueObjectToValueType(const NativeRdb::ValueObject &object);
+
+    struct RetPRIKeyType {
+        int64_t integer;
+        double dou;
+        char* string;
+        uint8_t tag;
+    };
+
+    std::variant<std::monostate, std::string, int64_t, double> RetPRIKeyTypeToVariant(RetPRIKeyType &value);
+
+    RetPRIKeyType VariantToRetPRIKeyType(const std::variant<std::monostate, std::string, int64_t, double> &value);
+
+    struct CArrPRIKeyType {
+        RetPRIKeyType* head;
+        int64_t size;
+    };
+
+    std::vector<NativeRdb::RdbStore::PRIKey> CArrPRIKeyTypeToPRIKeyArray(CArrPRIKeyType &cPrimaryKeys);
+
+    struct ModifyTime {
+        RetPRIKeyType* key;
+        uint64_t* value;
+        int64_t size;
+    };
+
+    ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode);
+
+    struct RetChangeInfo {
+        char* table;
+        int32_t type;
+        CArrPRIKeyType inserted;
+        CArrPRIKeyType updated;
+        CArrPRIKeyType deleted;
+    };
+
+    struct CArrRetChangeInfo {
+        RetChangeInfo* head;
+        int64_t size;
+    };
+
+    CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserver::PrimaryKey> arr);
+
+    RetChangeInfo ToRetChangeInfo(const DistributedRdb::Origin &origin,
+        DistributedRdb::RdbStoreObserver::ChangeInfo::iterator info);
+
+    CArrRetChangeInfo ToCArrRetChangeInfo(const DistributedRdb::Origin &origin,
+        const DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
+        DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo);
+
+    struct CStatistic {
+        uint32_t total;
+        uint32_t successful;
+        uint32_t failed;
+        uint32_t remained;
+    };
+
+    CStatistic ToStatistic(DistributedRdb::Statistic statistic);
+
+    struct CTableDetails {
+        CStatistic upload;
+        CStatistic download;
+    };
+
+    CTableDetails ToCTableDetails(DistributedRdb::TableDetail detail);
+
+    struct CDetails {
+        char** key;
+        CTableDetails* value;
+        int64_t size;
+    };
+
+    CDetails ToCDetails(DistributedRdb::TableDetails details);
+
+    struct CProgressDetails {
+        int32_t schedule;
+        int32_t code;
+        CDetails details;
+    };
+
+    CProgressDetails ToCProgressDetails(const  DistributedRdb::Details &details);
+
+    struct RetDistributedConfig {
+        bool autoSync;
+    };
 }
 }
 #endif

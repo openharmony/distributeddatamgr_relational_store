@@ -30,24 +30,67 @@
 
 namespace OHOS {
 namespace Relational {
-    class RdbStoreObserverImpl : public OHOS::DistributedRdb::RdbStoreObserver {
+    class RdbStoreObserverImpl : public DistributedRdb::RdbStoreObserver {
     public:
+        enum FuncType : int32_t {
+            NoParam = 0,
+            ParamArrStr,
+            ParamChangeInfo
+        };
         RdbStoreObserverImpl(std::function<void()> *callback, const std::function<void()>& callbackRef);
+        RdbStoreObserverImpl(int64_t id, FuncType type, int32_t mode = DistributedRdb::REMOTE);
         ~RdbStoreObserverImpl() override = default;
-        void OnChange() override;
+        void OnChange() override
+        {
+            m_callbackRef();
+        };
         void OnChange(const std::vector<std::string> &devices) override
         {
-            return;
+            carrStrFunc(devices);
         };
         void OnChange(const DistributedRdb::Origin &origin, const PrimaryFields &fields,
-            ChangeInfo &&changeInfo) override
+            DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo) override
         {
-            OnChange(origin.id);
+            if (mode_ != DistributedRdb::CLOUD_DETAIL && mode_ != DistributedRdb::LOCAL_DETAIL) {
+                RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
+                return;
+            }
+            changeInfoFunc(origin, fields, std::move(changeInfo));
+        };
+
+        int64_t GetCallBackId()
+        {
+            return callbackId;
         };
         std::function<void()> *GetCallBack();
     private:
         std::function<void()> *m_callback;
         std::function<void()> m_callbackRef;
+        int32_t mode_ = DistributedRdb::REMOTE;
+        int64_t callbackId;
+        FuncType funcType;
+        std::function<void()> func;
+        std::function<void(const std::vector<std::string> &devices)> carrStrFunc;
+        std::function<void(const DistributedRdb::Origin &origin, const PrimaryFields &fields,
+            DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)> changeInfoFunc;
+    };
+
+    class SyncObserverImpl : public DistributedRdb::DetailProgressObserver {
+    public:
+        SyncObserverImpl(int64_t id);
+        ~SyncObserverImpl() override = default;
+        void ProgressNotification(const DistributedRdb::Details &details) override
+        {
+            func(details);
+        };
+
+        int64_t GetCallBackId()
+        {
+            return callbackId;
+        };
+    private:
+        int64_t callbackId;
+        std::function<void(const DistributedRdb::Details &details)> func;
     };
 
     class RdbStoreImpl : public OHOS::FFI::FFIData {
@@ -63,9 +106,9 @@ namespace Relational {
         std::shared_ptr<NativeRdb::ResultSet> RemoteQuery(char* device, RdbPredicatesImpl &predicates, char** column,
             int64_t columnSize);
         int Delete(RdbPredicatesImpl &predicates, int32_t *errCode);
-        void SetDistributedTables(char** tables, int64_t tablesSize);
-        void SetDistributedTables(char** tables, int64_t tablesSize, int32_t type);
-        void SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
+        int32_t SetDistributedTables(char** tables, int64_t tablesSize);
+        int32_t SetDistributedTables(char** tables, int64_t tablesSize, int32_t type);
+        int32_t SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
             DistributedRdb::DistributedConfig &distributedConfig);
         int32_t Commit();
         int32_t RollBack();
@@ -85,28 +128,41 @@ namespace Relational {
         void ExecuteSql(const char* sql, ValueType* bindArgs, int64_t bindArgsSize, int32_t *errCode);
         int32_t RegisterObserver(const char *event, bool interProcess, std::function<void()> *callback,
             const std::function<void()>& callbackRef);
-        int32_t RegisteredObserver(DistributedRdb::SubscribeOption option, std::map<std::string,
-            std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback, const std::function<void()>& callbackRef);
+        int32_t RegisteredObserver(DistributedRdb::SubscribeOption option,
+            std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
+            std::function<void()> *callback, const std::function<void()>& callbackRef);
+        int32_t RegisterObserverArrStr(int32_t subscribeType, int64_t callbackId);
+        int32_t RegisterObserverChangeInfo(int32_t subscribeType, int64_t callbackId);
+        int32_t RegisterObserverProgressDetails(int64_t callbackId);
         bool HasRegisteredObserver(std::function<void()> *callback,
             std::list<std::shared_ptr<RdbStoreObserverImpl>> &observers);
         int32_t UnRegisterObserver(const char *event, bool interProcess, std::function<void()> *callback);
         int32_t UnRegisterAllObserver(const char *event, bool interProcess);
-        int32_t UnRegisteredObserver(DistributedRdb::SubscribeOption option, std::map<std::string,
-            std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback);
+        int32_t UnRegisteredObserver(DistributedRdb::SubscribeOption option,
+            std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
+            std::function<void()> *callback);
         int32_t UnRegisteredAllObserver(DistributedRdb::SubscribeOption option, std::map<std::string,
             std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers);
+        int32_t UnRegisterObserverArrStrChangeInfo(int32_t subscribeType, int64_t callbackId);
+        int32_t UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeType);
+        int32_t UnRegisterObserverProgressDetails(int64_t callbackId);
+        int32_t UnRegisterObserverProgressDetailsAll();
+        int32_t CloudSync(int32_t mode, CArrStr tables, int64_t callbackId);
+        int32_t GetVersion(int32_t &errCode);
+        void SetVersion(int32_t value, int32_t &errCode);
+        ModifyTime GetModifyTime(char *cTable, char *cColumnName, CArrPRIKeyType &cPrimaryKeys, int32_t &errCode);
 
-        std::vector<OHOS::NativeRdb::ValueObject> bindArgs;
-        std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
-        std::vector<uint8_t> newKey;
-        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localObservers_;
-        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localSharedObservers_;
     private:
         friend class OHOS::FFI::RuntimeType;
         friend class OHOS::FFI::TypeBase;
         static OHOS::FFI::RuntimeType* GetClassType();
+        std::vector<OHOS::NativeRdb::ValueObject> bindArgs;
+        std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
+        std::vector<uint8_t> newKey;
+        std::list<std::shared_ptr<RdbStoreObserverImpl>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
+        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localObservers_;
+        std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localSharedObservers_;
+        std::list<std::shared_ptr<SyncObserverImpl>> syncObservers_;
     };
 
     int64_t GetRdbStore(OHOS::AbilityRuntime::Context* context, StoreConfig config,
