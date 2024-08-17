@@ -15,6 +15,7 @@
 
 #include "relational_store_utils.h"
 #include "native_log.h"
+#include "rdb_store.h"
 
 namespace OHOS {
 namespace Relational {
@@ -206,6 +207,191 @@ namespace Relational {
             default:
                 return ValueType {.tag = TYPE_NULL};
         }
+    }
+
+    CArrStr VectorToCArrStr(const std::vector<std::string> &devices)
+    {
+        CArrStr cArrStr{0};
+        if (devices.size() == 0) {
+            return cArrStr;
+        }
+        cArrStr.head = static_cast<char**>(malloc(sizeof(char*) * devices.size()));
+        if (cArrStr.head == nullptr) {
+            return cArrStr;
+        }
+        for (size_t i = 0; i < devices.size(); i++) {
+            cArrStr.head[i] = MallocCString(devices[i]);
+        }
+        cArrStr.size = devices.size();
+        return cArrStr;
+    }
+
+    std::vector<std::string> CArrStrToVector(CArrStr carr)
+    {
+        std::vector<std::string> arr;
+        for (int i = 0; i < carr.size; i++) {
+            if (carr.head[i] != nullptr) {
+                arr.push_back(carr.head[i]);
+            } else {
+                arr.push_back(std::string());
+            }
+        }
+        return arr;
+    }
+
+    std::variant<std::monostate, std::string, int64_t, double> RetPRIKeyTypeToVariant(RetPRIKeyType &value)
+    {
+        switch (value.tag) {
+            case NativeRdb::ValueObject::TYPE_INT:
+                return std::variant<std::monostate, std::string, int64_t, double>(value.integer);
+            case NativeRdb::ValueObject::TYPE_DOUBLE:
+                return std::variant<std::monostate, std::string, int64_t, double>(value.dou);
+            case NativeRdb::ValueObject::TYPE_STRING:
+                return std::variant<std::monostate, std::string, int64_t, double>(value.string);
+            default:
+                return std::variant<std::monostate, std::string, int64_t, double>(0);
+        }
+    }
+
+    RetPRIKeyType VariantToRetPRIKeyType(const std::variant<std::monostate, std::string, int64_t, double> &value)
+    {
+        if (std::holds_alternative<int64_t>(value)) {
+            return RetPRIKeyType{ .integer = std::get<int64_t>(value), .dou = 0.0,
+                .string = nullptr, .tag = NativeRdb::ValueObject::TYPE_INT };
+        } else if (std::holds_alternative<double>(value)) {
+            return RetPRIKeyType{ .integer = 0, .dou = std::get<double>(value),
+                .string = nullptr, .tag = NativeRdb::ValueObject::TYPE_DOUBLE };
+        } else if (std::holds_alternative<std::string>(value)) {
+            return RetPRIKeyType{ .integer = 0, .dou = 0.0,
+                .string = MallocCString(std::get<std::string>(value)), .tag = NativeRdb::ValueObject::TYPE_STRING };
+        } else {
+            return RetPRIKeyType{0};
+        }
+    }
+
+    std::vector<NativeRdb::RdbStore::PRIKey> CArrPRIKeyTypeToPRIKeyArray(CArrPRIKeyType &cPrimaryKeys)
+    {
+        std::vector<NativeRdb::RdbStore::PRIKey> res = std::vector<NativeRdb::RdbStore::PRIKey>();
+        for (int64_t i = 0; i < cPrimaryKeys.size; i++) {
+            res.push_back(RetPRIKeyTypeToVariant(cPrimaryKeys.head[i]));
+        }
+        return res;
+    }
+
+    ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode)
+    {
+        ModifyTime modifyTime{0};
+        modifyTime.size = map.size();
+        modifyTime.key = static_cast<RetPRIKeyType*>(malloc(sizeof(RetPRIKeyType) * modifyTime.size));
+        modifyTime.value = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * modifyTime.size));
+        if (modifyTime.key == nullptr || modifyTime.value == nullptr) {
+            free(modifyTime.key);
+            free(modifyTime.value);
+            errCode = -1;
+            return ModifyTime{0};
+        }
+        int64_t index = 0;
+        for (auto it = map.begin(); it != map.end(); ++it) {
+            modifyTime.key[index] = VariantToRetPRIKeyType(it->first);
+            modifyTime.value[index] = (it->second).date;
+            index++;
+        }
+        return modifyTime;
+    }
+
+    CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserver::PrimaryKey> arr)
+    {
+        CArrPRIKeyType types{0};
+        if (arr.size() == 0) {
+            return types;
+        }
+        types.head = static_cast<RetPRIKeyType*>(malloc(sizeof(RetPRIKeyType) * arr.size()));
+        if (types.head == nullptr) {
+            return types;
+        }
+        for (size_t i = 0; i < arr.size(); i++) {
+            types.head[i] = VariantToRetPRIKeyType(arr[i]);
+        }
+        types.size = arr.size();
+        return types;
+    }
+
+    RetChangeInfo ToRetChangeInfo(const DistributedRdb::Origin &origin,
+        DistributedRdb::RdbStoreObserver::ChangeInfo::iterator info)
+    {
+        RetChangeInfo retInfo{0};
+        retInfo.table = MallocCString(info->first);
+        retInfo.type = origin.dataType;
+        retInfo.inserted = VectorToCArrPRIKeyType(info->
+            second[DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_INSERT]);
+        retInfo.updated = VectorToCArrPRIKeyType(info->
+            second[DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_UPDATE]);
+        retInfo.deleted = VectorToCArrPRIKeyType(info->
+            second[DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_DELETE]);
+        return retInfo;
+    }
+
+    CArrRetChangeInfo ToCArrRetChangeInfo(const DistributedRdb::Origin &origin,
+        const DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
+        DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
+    {
+        CArrRetChangeInfo infos{0};
+        if (changeInfo.size() == 0) {
+            return infos;
+        }
+        infos.head = static_cast<RetChangeInfo*>(malloc(sizeof(RetChangeInfo) * changeInfo.size()));
+        if (infos.head == nullptr) {
+            return CArrRetChangeInfo{0};
+        }
+        int64_t index = 0;
+        for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
+            infos.head[index] = ToRetChangeInfo(origin, it);
+            index++;
+        }
+        infos.size = changeInfo.size();
+        return infos;
+    }
+
+    CStatistic ToStatistic(DistributedRdb::Statistic statistic)
+    {
+        return CStatistic{ .total = statistic.total, .successful = statistic.success,
+            .failed = statistic.failed, .remained = statistic.untreated };
+    }
+
+    CTableDetails ToCTableDetails(DistributedRdb::TableDetail detail)
+    {
+        return CTableDetails{ .upload = ToStatistic(detail.upload), .download = ToStatistic(detail.download) };
+    }
+
+    CDetails ToCDetails(DistributedRdb::TableDetails details)
+    {
+        if (details.size() == 0) {
+            return CDetails{0};
+        }
+        char** key = static_cast<char**>(malloc(sizeof(char*) * details.size()));
+        CTableDetails* value = static_cast<CTableDetails*>(malloc(sizeof(CTableDetails) * details.size()));
+        if (key == nullptr || value == nullptr) {
+            free(key);
+            free(value);
+            return CDetails{0};
+        }
+        int64_t index = 0;
+        for (auto it = details.begin(); it != details.end(); ++it) {
+            key[index] = MallocCString(it->first);
+            value[index] = ToCTableDetails(it->second);
+            index++;
+        }
+        return CDetails{ .key = key, .value = value, .size = details.size() };
+    }
+
+    CProgressDetails ToCProgressDetails(const  DistributedRdb::Details &details)
+    {
+        if (details.empty()) {
+            return CProgressDetails{0};
+        }
+        DistributedRdb::ProgressDetail detail = details.begin() ->second;
+        return CProgressDetails{ .schedule = detail.progress, .code = detail.code,
+            .details = ToCDetails(detail.details) };
     }
 }
 }
