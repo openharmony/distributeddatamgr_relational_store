@@ -328,7 +328,6 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         LOG_ERROR("Connection pool is busy now!");
         return E_ERROR;
     }
-    int ret = E_OK;
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
         auto [retVal, connection] = CreateConnection(false);
@@ -344,27 +343,53 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             return retVal;
         }
         CloseAllConnections();
-    } else {
-        if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
-            auto connection = AcquireConnection(false);
-            if (connection == nullptr) {
-                return E_DATABASE_BUSY;
-            }
-            ret = connection->Restore(backupPath, {});
-        } else {
+        auto [errCode, node] = Init();
+        return errCode;
+    }
+    return RestoreByDbSqliteType(newPath, backupPath);
+}
+
+int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath)
+{
+    int ret = E_OK;
+    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
+        auto connection = AcquireConnection(false);
+        if (connection == nullptr) {
+            return E_DATABASE_BUSY;
+        }
+        ret = connection->Restore(backupPath, {});
+        if (ret == E_SQLITE_CORRUPT && config_.GetAllowRebuild()) {
+            LOG_WARN("main db may corrupt during restore, try rebuild");
             CloseAllConnections();
             Connection::Delete(config_);
-
-            if (config_.GetPath() != newPath) {
-                RdbStoreConfig config(newPath);
-                config.SetPath(newPath);
-                Connection::Delete(config);
+            auto [errCode, node] = Init();
+            if (errCode != E_OK) {
+                LOG_ERROR("init failed during restore:%{public}d", errCode);
+                return errCode;
             }
-
-            if (!SqliteUtils::CopyFile(backupPath, newPath)) {
-                ret = E_ERROR;
+            auto newConn = AcquireConnection(false);
+            if (newConn == nullptr) {
+                return E_DATABASE_BUSY;
+            }
+            LOG_INFO("after rebuild, try restore again");
+            ret = newConn->Restore(backupPath, {});
+            if (ret != E_OK) {
+                LOG_ERROR("restore failed again:%{public}d", ret);
             }
         }
+        return ret;
+    }
+    CloseAllConnections();
+    Connection::Delete(config_);
+
+    if (config_.GetPath() != newPath) {
+        RdbStoreConfig config(newPath);
+        config.SetPath(newPath);
+        Connection::Delete(config);
+    }
+
+    if (!SqliteUtils::CopyFile(backupPath, newPath)) {
+        ret = E_ERROR;
     }
     auto [errCode, node] = Init();
     return ret == E_OK ? errCode : ret;
