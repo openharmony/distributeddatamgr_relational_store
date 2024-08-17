@@ -19,6 +19,7 @@
 #include "relational_store_impl_rdbstore.h"
 #include "relational_store_impl_rdbpredicatesproxy.h"
 #include "relational_store_impl_resultsetproxy.h"
+#include "relational_store_utils.h"
 #include <cstdint>
 #include "napi_base_context.h"
 #include "rdb_store_config.h"
@@ -150,7 +151,7 @@ extern "C" {
         int32_t type);
 
     FFI_EXPORT int32_t FfiOHOSRelationalStoreSetDistributedTablesConfig(int64_t id, char** tables, int64_t tablesSize,
-        int32_t type, DistributedRdb::DistributedConfig &distributedConfig);
+        int32_t type, RetDistributedConfig distributedConfig);
 
     FFI_EXPORT char* FfiOHOSRelationalStoreObtainDistributedTableName(int64_t id, const char* device, char* table);
 
@@ -220,11 +221,34 @@ extern "C" {
     FFI_EXPORT int32_t FfiOHOSRelationalStoreOn(int64_t id, const char *event, bool interProcess, void (*callback)(),
         void (*callbackRef)());
 
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOnArrStr(int64_t id, int32_t subscribeType, int64_t callbackId);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOnChangeInfo(int64_t id, int32_t subscribeType, int64_t callbackId);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOnProgressDetails(int64_t id, int64_t callbackId);
+
     FFI_EXPORT int32_t FfiOHOSRelationalStoreOff(int64_t id, const char *event, bool interProcess, void (*callback)());
 
     FFI_EXPORT int32_t FfiOHOSRelationalStoreOffAll(int64_t id, const char *event, bool interProcess);
 
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOffArrStrChangeInfo(int64_t id, int32_t subscribeType, int64_t callbackId);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOffArrStrChangeInfoAll(int64_t id, int32_t subscribeType);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOffProgressDetails(int64_t id, int64_t callbackId);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreOffProgressDetailsAll(int64_t id);
+
     FFI_EXPORT int32_t FfiOHOSRelationalStoreEmit(int64_t id, const char *event);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreCloudSync(int64_t id, int32_t mode, CArrStr tables, int64_t callbackId);
+
+    FFI_EXPORT int32_t FfiOHOSRelationalStoreGetVersion(int64_t id, int32_t *errCode);
+
+    FFI_EXPORT void FfiOHOSRelationalStoreSetVersion(int64_t id, int32_t value, int32_t *errCode);
+
+    FFI_EXPORT ModifyTime FfiOHOSRelationalStoreGetModifyTime(int64_t id, char *cTable, char* cColumnName,
+        CArrPRIKeyType cPrimaryKeys, int32_t *errCode);
 }
 }
 }
