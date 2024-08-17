@@ -39,14 +39,10 @@ void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInf
     uint32_t checkType = eventInfo.integrityCheck;
     std::string appendInfo = eventInfo.appendix;
     if (eventInfo.dbFileStatRet >= 0) {
-        appendInfo = appendInfo + " \n GetDbFileStatInfoSuccess : \n" + GetFileStatInfo(eventInfo.dbFileStat);
-    } else {
-        appendInfo = appendInfo + " \n GetDbFileStatInfoFailed ! \n";
+        appendInfo = appendInfo + " \n DB : \n" + GetFileStatInfo(eventInfo.dbFileStat);
     }
     if (eventInfo.walFileStatRet >= 0) {
-        appendInfo = appendInfo + " \n GetWalFileStatInfoSuccess : \n" + GetFileStatInfo(eventInfo.walFileStat);
-    } else {
-        appendInfo = appendInfo + " \n GetWalFileStatInfoFailed ! \n";
+        appendInfo = appendInfo + " \n WAL : \n" + GetFileStatInfo(eventInfo.walFileStat);
     }
     LOG_ERROR("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s.", storeName, eventInfo.errorCode,
         appendInfo.c_str());
