@@ -425,8 +425,7 @@ extern "C" {
         if (nativeRdbStore == nullptr) {
             return -1;
         }
-        nativeRdbStore->SetDistributedTables(tables, tablesSize);
-        return 0;
+        return nativeRdbStore->SetDistributedTables(tables, tablesSize);
     }
 
     int32_t FfiOHOSRelationalStoreSetDistributedTablesType(int64_t id, char** tables, int64_t tablesSize, int32_t type)
@@ -435,19 +434,18 @@ extern "C" {
         if (nativeRdbStore == nullptr) {
             return -1;
         }
-        nativeRdbStore->SetDistributedTables(tables, tablesSize, type);
-        return 0;
+        return nativeRdbStore->SetDistributedTables(tables, tablesSize, type);
     }
 
     int32_t FfiOHOSRelationalStoreSetDistributedTablesConfig(int64_t id, char** tables, int64_t tablesSize,
-        int32_t type, DistributedRdb::DistributedConfig &distributedConfig)
+        int32_t type, RetDistributedConfig distributedConfig)
     {
         auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
         if (nativeRdbStore == nullptr) {
             return -1;
         }
-        nativeRdbStore->SetDistributedTables(tables, tablesSize, type, distributedConfig);
-        return 0;
+        DistributedRdb::DistributedConfig config{distributedConfig.autoSync};
+        return nativeRdbStore->SetDistributedTables(tables, tablesSize, type, config);
     }
 
     char* FfiOHOSRelationalStoreObtainDistributedTableName(int64_t id, const char* device, char* table)
@@ -876,6 +874,33 @@ extern "C" {
         return nativeRdbStore->RegisterObserver(event, interProcess, (std::function<void()>*)(callback), onChange);
     }
 
+    int32_t FfiOHOSRelationalStoreOnArrStr(int64_t id, int32_t subscribeType, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->RegisterObserverArrStr(subscribeType, callbackId);
+    }
+
+    int32_t FfiOHOSRelationalStoreOnChangeInfo(int64_t id, int32_t subscribeType, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->RegisterObserverChangeInfo(subscribeType, callbackId);
+    }
+
+    int32_t FfiOHOSRelationalStoreOnProgressDetails(int64_t id, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->RegisterObserverProgressDetails(callbackId);
+    }
+
     int32_t FfiOHOSRelationalStoreOff(int64_t id, const char *event, bool interProcess, void (*callback)())
     {
         auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
@@ -894,6 +919,42 @@ extern "C" {
         return nativeRdbStore->UnRegisterAllObserver(event, interProcess);
     }
 
+    int32_t FfiOHOSRelationalStoreOffArrStrChangeInfo(int64_t id, int32_t subscribeType, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->UnRegisterObserverArrStrChangeInfo(subscribeType, callbackId);
+    }
+
+    int32_t FfiOHOSRelationalStoreOffArrStrChangeInfoAll(int64_t id, int32_t subscribeType)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->UnRegisterObserverArrStrChangeInfoAll(subscribeType);
+    }
+
+    int32_t FfiOHOSRelationalStoreOffProgressDetails(int64_t id, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->UnRegisterObserverProgressDetails(callbackId);
+    }
+
+    int32_t FfiOHOSRelationalStoreOffProgressDetailsAll(int64_t id)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->UnRegisterObserverProgressDetailsAll();
+    }
+
     int32_t FfiOHOSRelationalStoreEmit(int64_t id, const char *event)
     {
         auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
@@ -901,6 +962,46 @@ extern "C" {
             return -1;
         }
         return nativeRdbStore->Emit(event);
+    }
+
+    int32_t FfiOHOSRelationalStoreCloudSync(int64_t id, int32_t mode, CArrStr tables, int64_t callbackId)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            return -1;
+        }
+        return nativeRdbStore->CloudSync(mode, tables, callbackId);
+    }
+
+    int32_t FfiOHOSRelationalStoreGetVersion(int64_t id, int32_t *errCode)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            *errCode = -1;
+            return -1;
+        }
+        return nativeRdbStore->GetVersion(*errCode);
+    }
+
+    void FfiOHOSRelationalStoreSetVersion(int64_t id, int32_t value, int32_t *errCode)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            *errCode = -1;
+            return;
+        }
+        nativeRdbStore->SetVersion(value, *errCode);
+    }
+
+    ModifyTime FfiOHOSRelationalStoreGetModifyTime(int64_t id, char *cTable, char* cColumnName,
+        CArrPRIKeyType cPrimaryKeys, int32_t *errCode)
+    {
+        auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+        if (nativeRdbStore == nullptr) {
+            *errCode = -1;
+            return ModifyTime{0};
+        }
+        return nativeRdbStore->GetModifyTime(cTable, cColumnName, cPrimaryKeys, *errCode);
     }
 }
 }
