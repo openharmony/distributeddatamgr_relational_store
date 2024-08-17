@@ -43,6 +43,7 @@ class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
+    static int32_t Repair(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
@@ -67,7 +68,7 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t InterruptBackup() override;
     int32_t GetBackupStatus() const override;
-    bool IsNeedBackupToSlave(const RdbStoreConfig &config) override;
+    std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
@@ -111,13 +112,16 @@ private:
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
     void ReportDbCorruptedEvent(int errCode, const std::string &checkResultInfo);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = false);
     int MasterSlaveExchange(bool isRestore = false);
+    bool IsRepairable();
+    std::pair<bool, int> ExchangeVerify(bool isRestore);
 
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr uint32_t NO_ITER = 0;
     static const int32_t regCreator_;
+    static const int32_t regRepairer_;
     static const int32_t regDeleter_;
 
     sqlite3 *dbHandle_;
