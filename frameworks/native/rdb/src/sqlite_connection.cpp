@@ -1312,9 +1312,11 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
             sqlite3_backup_pagecount(pBackup) - sqlite3_backup_remaining(pBackup), sqlite3_backup_pagecount(pBackup),
             isRestore);
     } while (rc == SQLITE_OK || rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
+    (void)sqlite3_backup_finish(pBackup);
     if (rc != SQLITE_DONE) {
         slaveStatus_.store(SlaveStatus::BACKUP_INTERRUPT);
         LOG_WARN("backup slave err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return SQLiteError::ErrNo(rc);
     } else {
         slaveStatus_.store(SlaveStatus::BACKUP_FINISHED);
         if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, true, false)) {
@@ -1322,8 +1324,7 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         }
         LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
     }
-    (void)sqlite3_backup_finish(pBackup);
-    return SQLiteError::ErrNo(rc);
+    return E_OK;
 }
 
 std::pair<bool, bool> SqliteConnection::IsExchangeRequired(const RdbStoreConfig &config)
@@ -1450,7 +1451,7 @@ std::pair<bool, int> SqliteConnection::CheckMasterSlaveExchange(bool isRestore)
     slaveStatus_.store(SlaveStatus::BACKING_UP);
     if (isRestore) {
         auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
-        if (cRet == E_OK && (static_cast<std::string>(cObj) != "ok")) {
+        if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
             LOG_ERROR("slave may corrupt, cancel backup, ret:%{public}s, cRet:%{public}d",
                 static_cast<std::string>(cObj).c_str(), cRet);
             slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
