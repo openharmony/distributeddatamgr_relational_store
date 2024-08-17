@@ -44,7 +44,7 @@ void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInf
     if (eventInfo.walFileStatRet >= 0) {
         appendInfo = appendInfo + " \n WAL : \n" + GetFileStatInfo(eventInfo.walFileStat);
     }
-    LOG_ERROR("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s.", storeName, eventInfo.errorCode,
+    LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s.", storeName, eventInfo.errorCode,
         appendInfo.c_str());
     char *errorOccurTime = GetDateInfo(eventInfo.errorOccurTime).data();
     HiSysEventParam params[] = {
