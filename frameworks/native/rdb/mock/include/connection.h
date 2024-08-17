@@ -67,7 +67,7 @@ public:
     virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
     virtual int32_t InterruptBackup() = 0;
     virtual int32_t GetBackupStatus() const = 0;
-    virtual std::pair<bool, bool> IsExchangeRequired(const RdbStoreConfig &config) = 0;
+    virtual std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) = 0;
 
 private:
     int32_t id_ = 0;

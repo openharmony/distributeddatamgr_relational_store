@@ -68,7 +68,7 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
     int32_t InterruptBackup() override;
     int32_t GetBackupStatus() const override;
-    std::pair<bool, bool> IsExchangeRequired(const RdbStoreConfig &config) override;
+    std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
@@ -114,8 +114,8 @@ private:
     void ReportDbCorruptedEvent(int errCode);
     int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = false);
     int MasterSlaveExchange(bool isRestore = false);
-    bool IsDbRepairable();
-    std::pair<bool, int> CheckMasterSlaveExchange(bool isRestore);
+    bool IsRepairable();
+    std::pair<bool, int> ExchangeVerify(bool isRestore);
 
     static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
