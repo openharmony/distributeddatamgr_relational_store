@@ -359,22 +359,21 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         }
         ret = connection->Restore(backupPath, {});
         if (ret == E_SQLITE_CORRUPT && config_.GetAllowRebuild()) {
-            LOG_WARN("main db may corrupt during restore, try rebuild");
+            LOG_WARN("corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(backupPath).c_str());
             CloseAllConnections();
             Connection::Delete(config_);
             auto [errCode, node] = Init();
             if (errCode != E_OK) {
-                LOG_ERROR("init failed during restore:%{public}d", errCode);
+                LOG_ERROR("init failed:%{public}d", errCode);
                 return errCode;
             }
             auto newConn = AcquireConnection(false);
             if (newConn == nullptr) {
                 return E_DATABASE_BUSY;
             }
-            LOG_INFO("after rebuild, try restore again");
             ret = newConn->Restore(backupPath, {});
             if (ret != E_OK) {
-                LOG_ERROR("restore failed again:%{public}d", ret);
+                LOG_ERROR("restore failed:%{public}d, %{public}s", ret, SqliteUtils::Anonymous(backupPath).c_str());
             }
         }
         return ret;
