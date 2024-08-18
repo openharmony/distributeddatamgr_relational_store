@@ -457,6 +457,13 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
 
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
+        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB) {
+            std::vector<uint8_t> tmpValue;
+            valueObject.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, std::move(valueObject));
         } else if (ret != napi_generic_failure) {
@@ -769,6 +776,13 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("tables", "a string array.");
         RDB_CHECK_RETURN_CALL_RESULT(ret == napi_ok, context->SetError(paramError));
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB) {
+            std::vector<uint8_t> tmpValue;
+            valueObject.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         context->bindArgs.push_back(valueObject);
     }
     return OK;
