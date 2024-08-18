@@ -475,6 +475,15 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
+        // The blob is an empty vector.
+        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+            std::vector<uint8_t> tmpValue;
+            valueObject.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         context->bindArgs.push_back(std::move(valueObject));
     }
     return OK;
@@ -555,6 +564,15 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
+        // The blob is an empty vector.
+        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
+        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+            std::vector<uint8_t> tmpValue;
+            valueObject.GetBlob(tmpValue);
+            if (tmpValue.empty()) {
+                valueObject = ValueObject();
+            }
+        }
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, valueObject);
         } else if (ret != napi_generic_failure) {
@@ -891,30 +909,6 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, context->sqlExeOutput);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return ASYNC_CALL(env, context);
-}
-
-napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1 or 2"));
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN(OK == ParsePredicates(env, argv[0], context));
-    };
-    auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->rdbStore != nullptr && context->predicatesProxy != nullptr &&
-                         context->predicatesProxy->GetPredicates() != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Count(context->int64Output, *(context->predicatesProxy->GetPredicates()));
-    };
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_create_int64(env, context->int64Output, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 
