@@ -40,14 +40,16 @@ DelayNotify::~DelayNotify()
 void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData)
 {
     LOG_DEBUG("Update changed data.");
-    std::lock_guard<std::mutex> lock(mutex_);
-    for (auto& [k, v] : changedData.tableData) {
-        if (!v.isTrackedDataChange) {
-            continue;
-        }
-        auto it = changedData_.tableData.find(k);
-        if (it == changedData_.tableData.end()) {
-            changedData_.tableData.insert_or_assign(k, v);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto& [k, v] : changedData.tableData) {
+            if (!v.isTrackedDataChange) {
+                continue;
+            }
+            auto it = changedData_.tableData.find(k);
+            if (it == changedData_.tableData.end()) {
+                changedData_.tableData.insert_or_assign(k, v);
+            }
         }
     }
     StartTimer();
@@ -68,35 +70,43 @@ void DelayNotify::SetTask(Task task)
 
 void DelayNotify::StartTimer()
 {
-    auto changedData = changedData_;
-    if (pool_ == nullptr) {
-        return;
+    DistributedRdb::RdbChangedData changedData;
+    bool needExecTask = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        changedData.tableData = changedData_.tableData;
+        if (pool_ == nullptr) {
+            return;
+        }
+
+        if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
+            delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
+                [this]() { ExecuteTask(); });
+        } else {
+            delaySyncTaskId_ =
+                pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
+        }
+
+        if (autoSyncInterval_ == AUTO_SYNC_INTERVAL || changedData.tableData.empty()) {
+            return;
+        }
+
+        if (!isInitialized_) {
+            needExecTask = true;
+            lastTimePoint_ = std::chrono::steady_clock::now();
+            isInitialized_ = true;
+        } else {
+            Time curTime = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - lastTimePoint_);
+            if (duration >= std::chrono::milliseconds(MAX_NOTIFY_INTERVAL)) {
+                needExecTask = true;
+                lastTimePoint_ = std::chrono::steady_clock::now();
+            }
+        }
     }
 
-    if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
-        delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
-            [this]() { ExecuteTask(); });
-    } else {
-        delaySyncTaskId_ =
-            pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
-    }
-
-    if (autoSyncInterval_ == AUTO_SYNC_INTERVAL || changedData.tableData.empty()) {
-        return;
-    }
-
-    if (!isInitialized_) {
+    if (needExecTask) {
         task_(changedData, SERVICE_INTERVAL);
-        lastTimePoint_ = std::chrono::steady_clock::now();
-        isInitialized_ = true;
-        return;
-    }
-
-    Time curTime = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - lastTimePoint_);
-    if (duration >= std::chrono::milliseconds(MAX_NOTIFY_INTERVAL)) {
-        task_(changedData, SERVICE_INTERVAL);
-        lastTimePoint_ = std::chrono::steady_clock::now();
     }
 }
 
