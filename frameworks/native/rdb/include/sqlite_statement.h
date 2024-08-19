@@ -86,6 +86,10 @@ private:
     int InnerFinalize();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReportDbCorruptedEvent(int errorCode);
+    void ReadFile2Buffer();
+    void PrintInfoForDbError(int errorCode);
+
+    static constexpr uint32_t BUFFER_LEN = 16;
 
     bool readOnly_;
     bool bound_ = false;
