@@ -108,16 +108,14 @@ private:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
-    void ReadFile2Buffer(const char* fileName);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
-    void ReportDbCorruptedEvent(int errCode);
+    void ReportDbCorruptedEvent(int errCode, const std::string &checkResultInfo);
     int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = true);
     int MasterSlaveExchange(bool isRestore = false);
     bool IsRepairable();
     std::pair<bool, int> ExchangeVerify(bool isRestore);
 
-    static constexpr uint32_t BUFFER_LEN = 16;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr uint32_t NO_ITER = 0;
