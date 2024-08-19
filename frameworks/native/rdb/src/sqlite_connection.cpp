@@ -994,12 +994,18 @@ void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value 
         int len = sqlite3_value_bytes(argv[1]);
         RawDataParser::ParserRawData(data, len, newAsset);
     }
-    if ((size != 0) && (asset.name != newAsset.name)) {
-        LOG_ERROR("name change! old:%{public}s, new:%{public}s", SqliteUtils::Anonymous(asset.name).c_str(),
+
+    if (size == 0) {
+        asset = std::move(newAsset);
+        if (asset.status != AssetValue::Status::STATUS_DELETE) {
+            asset.status = AssetValue::Status::STATUS_INSERT;
+        }
+    } else if (asset.name == newAsset.name) {
+        MergeAsset(asset, newAsset);
+    } else {
+        LOG_WARN("name change! old:%{public}s, new:%{public}s", SqliteUtils::Anonymous(asset.name).c_str(),
             SqliteUtils::Anonymous(newAsset.name).c_str());
-        return;
     }
-    MergeAsset(asset, newAsset);
     auto blob = RawDataParser::PackageRawData(asset);
     sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
 }
@@ -1007,19 +1013,11 @@ void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value 
 void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &assets,
     std::map<std::string, ValueObject::Asset> &newAssets)
 {
-    using Status = ValueObject::Asset::Status;
     auto oldIt = assets.begin();
     auto newIt = newAssets.begin();
     for (; oldIt != assets.end() && newIt != newAssets.end();) {
         if (oldIt->first == newIt->first) {
-            if (newIt->second.status == Status::STATUS_DELETE) {
-                oldIt->second.status = Status::STATUS_DELETE;
-                oldIt->second.hash = "";
-                oldIt->second.modifyTime = "";
-                oldIt->second.size = "";
-            } else {
-                MergeAsset(oldIt->second, newIt->second);
-            }
+            MergeAsset(oldIt->second, newIt->second);
             oldIt++;
             newIt = newAssets.erase(newIt);
             continue;
@@ -1039,6 +1037,13 @@ void SqliteConnection::CompAssets(std::map<std::string, ValueObject::Asset> &ass
 void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset)
 {
     using Status = ValueObject::Asset::Status;
+    if (newAsset.status == Status::STATUS_DELETE) {
+        oldAsset.status = Status::STATUS_DELETE;
+        oldAsset.hash = "";
+        oldAsset.modifyTime = "";
+        oldAsset.size = "";
+        return;
+    }
     auto status = static_cast<int32_t>(oldAsset.status);
     switch (status) {
         case Status::STATUS_UNKNOWN:  // fallthrough
