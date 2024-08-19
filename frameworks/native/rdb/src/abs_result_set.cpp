@@ -229,6 +229,9 @@ int AbsResultSet::GetDouble(int columnIndex, double& value)
 
 int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
+    if (lastErr_ != E_OK) {
+        return lastErr_;
+    }
     ColumnType columnType = ColumnType::TYPE_NULL;
     int errCode = GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
