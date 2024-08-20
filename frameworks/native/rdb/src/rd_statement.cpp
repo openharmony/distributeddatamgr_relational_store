@@ -494,7 +494,7 @@ void RdStatement::ReportDbCorruptedEvent(int errorCode)
     eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
     eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
     eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
-    eventInfo.errorCode = errorCode;
+    eventInfo.errorCode = static_cast<uint32_t>(errorCode);
     eventInfo.systemErrorNo = errno;
     eventInfo.errorOccurTime = time(nullptr);
     std::string dbPath;
