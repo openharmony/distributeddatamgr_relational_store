@@ -461,13 +461,32 @@ describe('rdbStoreExcuteTest', function () {
     })
 
     /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Execute_0017
+     * @tc.name AbNormal test case of Execute, if sql is invalid
+     * @tc.desc 1. Insert data
+     *          2. Check returned value
+     */
+    it('testSyncExecute0017', 0, async function (done) {
+        console.info(TAG + "************* testSyncExecute0017 start *************");
+        try {
+            rdbStore.executeSync("11111");
+            expect().assertFail();
+        } catch (err) {
+            expect(14800021).assertEqual(err.code);
+            console.error(`insert data failed, code:${err.code}, message: ${err.message}`);
+        }
+        done();
+        console.info(TAG + "************* testSyncExecute0017 end   *************");
+    })
+
+    /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
      * @tc.name Abnormal test case of sync
      * @tc.desc 1.Close rdbStore
      *          2.Call beginTransaction
      */
-    it('testSyncExecute0017', 0, async function () {
-        console.log(TAG + "************* testSyncExecute0017 start *************");
+    it('testSyncExecute0018', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0018 start *************");
 
         const STORE_NAME = "AfterCloseTest.db"
         const config = {
@@ -494,17 +513,17 @@ describe('rdbStoreExcuteTest', function () {
         }
 
         await relationalStore.deleteRdbStore(context, STORE_NAME);
-        console.log(TAG + "************* testSyncExecute0017 end *************");
+        console.log(TAG + "************* testSyncExecute0018 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0020
      * @tc.name Normal test case of ExecuteSql
      * @tc.desc 1.Close rdbStore
      *          2.Call beginTransaction
      */
-    it('testSyncExecute0018', 0, async function () {
-        console.log(TAG + "************* testSyncExecute0018 start *************");
+    it('testSyncExecute0019', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0019 start *************");
 
         const STORE_NAME = "AfterCloseTest.db"
         const config = {
@@ -531,7 +550,7 @@ describe('rdbStoreExcuteTest', function () {
         }
 
         await relationalStore.deleteRdbStore(context, STORE_NAME);
-        console.log(TAG + "************* testSyncExecute0018 end *************");
+        console.log(TAG + "************* testSyncExecute0019 end *************");
     })
     console.info(TAG + "*************Unit Test End*************");
 })

@@ -113,14 +113,6 @@ int RdbStoreImpl::InnerOpen()
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-std::string RdbStoreImpl::GetSecManagerName(const RdbStoreConfig &config)
-{
-    auto name = config.GetBundleName();
-    if (name.empty()) {
-        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
-    }
-    return name;
-}
 
 void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
 {
@@ -297,9 +289,6 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
-    }
-    if (table.empty()) {
-        return E_INVALID_ARGS;
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
