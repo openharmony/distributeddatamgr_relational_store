@@ -66,7 +66,7 @@ void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInf
 
 std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
 {
-    const int permission = 0777;
+    const uint32_t permission = 0777;
     std::stringstream oss;
     oss << " device: " << fileStat.st_dev << " inode: " << fileStat.st_ino
         << " mode: " << (fileStat.st_mode & permission) << " size: " << fileStat.st_size

@@ -230,6 +230,8 @@ public:
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
+    void EnableRekey(bool enable);
+
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -241,6 +243,7 @@ private:
     bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
+    bool autoRekey_ = false;
     mutable int32_t iter_ = 0;
     int32_t journalSize_;
     int32_t pageSize_;
