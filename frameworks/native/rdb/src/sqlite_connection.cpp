@@ -558,16 +558,6 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     return E_OK;
 }
 
-std::string SqliteConnection::GetSecManagerName(const RdbStoreConfig &config)
-{
-    auto name = config.GetBundleName();
-    if (name.empty()) {
-        LOG_WARN("Bundle name is empty, using path instead.");
-        return std::string(config.GetPath()).substr(0, config.GetPath().rfind("/") + 1);
-    }
-    return name;
-}
-
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
     if (!config.IsEncrypt()) {
@@ -901,7 +891,7 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
-        return E_ERROR;
+        return E_INVALID_ARGS;
     }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
