@@ -403,16 +403,11 @@ SqliteConnection::~SqliteConnection()
         if (hasClientObserver_) {
             UnRegisterClientObserver(dbHandle_);
         }
-        int errCode = SQLITE_OK;
         if (isWriter_) {
             UnregisterStoreObserver(dbHandle_);
-            errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-            if (errCode != SQLITE_OK) {
-                LOG_WARN("sqlite3_wal_checkpoint_v2 failed err %{public}d.", errCode);
-            }
         }
 
-        errCode = sqlite3_close_v2(dbHandle_);
+        int errCode = sqlite3_close_v2(dbHandle_);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }

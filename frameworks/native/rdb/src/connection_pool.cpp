@@ -165,8 +165,8 @@ std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode>
 
 void ConnPool::CloseAllConnections()
 {
-    readers_.Clear();
     writers_.Clear();
+    readers_.Clear();
 }
 
 bool ConnPool::IsInTransaction()
