@@ -221,7 +221,6 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
         LOG_ERROR("SaveBufferToFile failed!");
         return false;
     }
-    SqliteUtils::ControlDeleteFlag(keyPath, SqliteUtils::SET_FLAG);
     return true;
 }
 
