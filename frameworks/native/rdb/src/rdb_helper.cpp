@@ -81,7 +81,6 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         LOG_ERROR("Store to delete doesn't exist, path %{public}s", dbFileName.c_str());
         return E_OK; // not not exist
     }
-    SqliteUtils::ControlDeleteFlag(dbFileName, SqliteUtils::CLEAR_FLAG);
     RdbStoreManager::GetInstance().Delete(dbFileName);
     int result = remove(dbFileName.c_str());
     if (result != 0) {
@@ -132,7 +131,6 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
         LOG_ERROR("not exist, path %{public}s", dbFile.c_str());
         return E_OK; // not not exist
     }
-    SqliteUtils::ControlDeleteFlag(dbFile, SqliteUtils::CLEAR_FLAG);
     RdbStoreManager::GetInstance().Delete(dbFile);
     auto errCode = Connection::Delete(config);
     if (errCode != E_OK) {

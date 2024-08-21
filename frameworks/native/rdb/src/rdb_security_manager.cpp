@@ -217,7 +217,6 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
         std::lock_guard<std::mutex> lock(mutex_);
         ret = SaveBufferToFile(keyPath, secretKeyInChar);
     }
-    SqliteUtils::ControlDeleteFlag(keyPath, SqliteUtils::SET_FLAG);
     return ret;
 }
 
