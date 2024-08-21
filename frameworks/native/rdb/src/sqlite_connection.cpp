@@ -135,7 +135,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                     static_cast<std::string>(checkResult).c_str(), sql);
             }
         }
-        SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
     }
 
     filePath = dbPath;
@@ -144,7 +143,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
 {
-    SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
