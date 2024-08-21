@@ -30,6 +30,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_trace.h"
+#include "napi_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"

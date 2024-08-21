@@ -18,10 +18,10 @@
 
 #include "napi_async_call.h"
 #include "napi_rdb_predicates.h"
-#include "napi_result_set.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+class ResultSetProxy;
 using namespace OHOS::NativeRdb;
 struct RdbStoreContextBase : public ContextBase {
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
