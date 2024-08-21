@@ -233,7 +233,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                     config.GetName().c_str(), errCode, static_cast<std::string>(checkResult).c_str(), sql);
             }
         }
-        SqliteUtils::ControlDeleteFlag(dbPath, SqliteUtils::SET_FLAG);
     }
 
     filePath = dbPath;
