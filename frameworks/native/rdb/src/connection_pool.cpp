@@ -52,7 +52,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
         std::tie(errCode, conn) = pool->Init();
-        if (errCode == E_OK) {
+        if (errCode == E_OK || errCode != E_SQLITE_CORRUPT) {
             break;
         }
         storeConfig.SetIter(ITER_V1);
