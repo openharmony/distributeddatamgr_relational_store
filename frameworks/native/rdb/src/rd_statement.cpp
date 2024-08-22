@@ -142,14 +142,14 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     columnCount_ = RdUtils::RdSqlColCnt(tmpStmt);
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
     if (readOnly_) {
+        isStepInPrepare_ = true;
         ret = Step();
         if (ret != E_OK && ret != E_NO_MORE_ROWS) {
             return ret;
         }
         GetProperties();
-        ret = Reset();
-        if (ret != E_OK) {
-            return ret;
+        if (ret == E_NO_MORE_ROWS) {
+            Reset();
         }
     }
     return E_OK;
@@ -280,15 +280,25 @@ int32_t RdStatement::Bind(const std::vector<ValueObject>& args)
     return E_OK;
 }
 
+std::pair<int32_t, int32_t> RdStatement::Count()
+{
+    return { E_NOT_SUPPORT, INVALID_COUNT };
+}
+
 int32_t RdStatement::Step()
 {
     if (stmtHandle_ == nullptr) {
+        return E_OK;
+    }
+    if (isStepInPrepare_ && stepCnt_ == 1) {
+        stepCnt_++;
         return E_OK;
     }
     int ret = RdUtils::RdSqlStep(stmtHandle_);
     if (ret == E_SQLITE_CORRUPT) {
         ReportDbCorruptedEvent(ret);
     }
+    stepCnt_++;
     return ret;
 }
 
@@ -297,6 +307,8 @@ int32_t RdStatement::Reset()
     if (stmtHandle_ == nullptr) {
         return E_OK;
     }
+    stepCnt_ = 0;
+    isStepInPrepare_ = false;
     return RdUtils::RdSqlReset(stmtHandle_);
 }
 

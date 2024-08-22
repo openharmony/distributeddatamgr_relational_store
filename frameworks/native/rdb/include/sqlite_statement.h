@@ -39,6 +39,7 @@ public:
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
     int Bind(const std::vector<ValueObject> &args) override;
+    std::pair<int32_t, int32_t> Count() override;
     int Step() override;
     int Reset() override;
     int Finalize() override;
@@ -90,6 +91,10 @@ private:
     void PrintInfoForDbError(int errorCode);
 
     static constexpr uint32_t BUFFER_LEN = 16;
+
+    static constexpr int MAX_RETRY_TIMES = 50;
+    // Interval of retrying query in millisecond
+    static constexpr int RETRY_INTERVAL = 1000;
 
     bool readOnly_;
     bool bound_ = false;

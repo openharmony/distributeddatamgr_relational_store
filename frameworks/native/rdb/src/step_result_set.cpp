@@ -42,8 +42,17 @@ StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::st
     auto errCode = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
+        return;
     }
-    rowCount_ = InitRowCount();
+    auto statement = GetStatement();
+    if (statement == nullptr) {
+        return;
+    }
+    std::tie(lastErr_, rowCount_) = statement->Count();
+    if (lastErr_ == E_NOT_SUPPORT && rowCount_ == Statement::INVALID_COUNT) {
+        isSupportCountRow_ = false;
+        lastErr_ = E_OK;
+    }
 }
 
 StepResultSet::~StepResultSet()
@@ -158,7 +167,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (rowPos_ == INIT_POS || IsEnded().second) {
+    if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
         LOG_ERROR("query not executed.");
         return E_ROW_OUT_RANGE;
     }
@@ -186,9 +195,13 @@ int StepResultSet::GoToRow(int position)
         return E_ALREADY_CLOSED;
     }
 
-    if (position >= rowCount_ || position < 0) {
-        rowPos_ = (position >= rowCount_ && rowCount_ != 0) ? rowCount_ : rowPos_;
+    if (isSupportCountRow_ && position >= rowCount_) {
+        rowPos_ = (position >= rowCount_ && rowCount_ != Statement::INVALID_COUNT) ? rowCount_ : rowPos_;
         LOG_ERROR("position[%{public}d] rowCount[%{public}d] rowPos_[%{public}d]!", position, rowCount_, rowPos_);
+        return E_ROW_OUT_RANGE;
+    }
+
+    if (position < 0) {
         return E_ROW_OUT_RANGE;
     }
 
@@ -247,7 +260,12 @@ int StepResultSet::GoToNextRow()
         rowPos_++;
         return E_OK;
     } else if (errCode == E_NO_MORE_ROWS) {
-        rowPos_ = rowCount_ != 0 ? rowCount_ : rowPos_;
+        if (isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) {
+            rowPos_ = rowCount_ != 0 ? rowCount_ : rowPos_;
+        } else {
+            ++rowPos_;
+            rowCount_ = rowPos_;
+        }
         return E_ROW_OUT_RANGE;
     } else {
         Reset();
@@ -265,6 +283,28 @@ int StepResultSet::Close()
     conn_ = nullptr;
     sqliteStatement_ = nullptr;
     auto args = std::move(args_);
+    Reset();
+    return E_OK;
+}
+
+int StepResultSet::GetRowCount(int &count)
+{
+    if (isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) {
+        return AbsResultSet::GetRowCount(count);
+    }
+    int ret = E_OK;
+    while (ret == E_OK) {
+        ret = GoToNextRow();
+        if (ret == E_ROW_OUT_RANGE) {
+            rowCount_ = rowPos_;
+            break;
+        }
+        if (ret != E_OK) {
+            LOG_ERROR("Get row cnt err %{public}d, rowCount_ %{public}d, rowPos_ %{public}d", ret, rowCount_, rowPos_);
+            return ret;
+        }
+    };
+    count = rowCount_;
     Reset();
     return E_OK;
 }
@@ -295,7 +335,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     if (isClosed_) {
         return E_ALREADY_CLOSED;
     }
-    if (rowPos_ == INIT_POS || IsEnded().second) {
+    if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
         size = 0;
         return E_ROW_OUT_RANGE;
     }
@@ -324,7 +364,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
 
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
-    if (rowPos_ == INIT_POS || IsEnded().second) {
+    if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
         return { E_ROW_OUT_RANGE, ValueObject() };
     }
     auto statement = GetStatement();
