@@ -46,7 +46,8 @@ void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInf
     }
     LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s.", storeName, eventInfo.errorCode,
         appendInfo.c_str());
-    char *errorOccurTime = GetDateInfo(eventInfo.errorOccurTime).data();
+    std::string occurTime = GetDateInfo(eventInfo.errorOccurTime);
+    char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
         { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName }, .arraySize = 0 },
         { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName }, .arraySize = 0 },
@@ -77,7 +78,8 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
 
 std::string RdbFaultHiViewReporter::GetDateInfo(time_t time)
 {
-    std::tm tm = *std::localtime(&time);
+    std::tm tm;
+    localtime_r(&time, &tm);
     std::stringstream oss;
     oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
     return oss.str();
