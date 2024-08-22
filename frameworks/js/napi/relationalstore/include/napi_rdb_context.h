@@ -18,7 +18,8 @@
 
 #include "napi_async_call.h"
 #include "napi_rdb_predicates.h"
-#include "napi_result_set.h"
+
+class ResultSetProxy;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
