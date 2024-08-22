@@ -45,7 +45,7 @@ protected:
     static constexpr const char* DATABASE_NAME = "bigint_test.db";
     static constexpr const char* CREATE_TABLE =
         "CREATE TABLE IF NOT EXISTS bigint_table(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 VECS)";
+        "value1 UNLIMITED INT NOT NULL, value2 UNLIMITED INT, value3 FLOATVECTOR)";
     static constexpr const char* DROP_TABLE = "DROP TABLE IF EXISTS bigint_table";
     static std::shared_ptr<RdbStore> rdbStore_;
 };

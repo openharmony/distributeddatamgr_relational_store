@@ -39,6 +39,7 @@ public:
     int GetSize(int columnIndex, size_t &size) override;
     int Get(int32_t col, ValueObject &value) override;
     int Close() override;
+    int GetRowCount(int &count) override;
 
 protected:
     std::pair<int, std::vector<std::string>> GetColumnNames() override;
@@ -58,6 +59,7 @@ private:
     static const int STEP_QUERY_RETRY_INTERVAL = 1000;
     static const int EMPTY_ROW_COUNT = 0;
 
+    bool isSupportCountRow_ = true;
     std::shared_ptr<Statement> sqliteStatement_;
     std::shared_ptr<Connection> conn_;
 

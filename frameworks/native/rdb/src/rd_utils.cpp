@@ -58,15 +58,15 @@ int RdUtils::TransferGrdErrno(int err)
 ColumnType RdUtils::TransferGrdTypeToColType(int grdColType)
 {
     switch (grdColType) {
-        case GRD_SQL_DATATYPE_INTEGER:
+        case GRD_DB_DATATYPE_INTEGER:
             return ColumnType::TYPE_INTEGER;
-        case GRD_SQL_DATATYPE_FLOAT:
+        case GRD_DB_DATATYPE_FLOAT:
             return ColumnType::TYPE_FLOAT;
-        case GRD_SQL_DATATYPE_TEXT:
+        case GRD_DB_DATATYPE_TEXT:
             return ColumnType::TYPE_STRING;
-        case GRD_SQL_DATATYPE_BLOB:
+        case GRD_DB_DATATYPE_BLOB:
             return ColumnType::TYPE_BLOB;
-        case GRD_SQL_DATATYPE_FLOATVECTOR:
+        case GRD_DB_DATATYPE_FLOATVECTOR:
             return ColumnType::TYPE_FLOAT32_ARRAY;
         default:
             break;
@@ -486,7 +486,7 @@ int RdUtils::RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version)
         return TransferGrdErrno(GRD_INNER_ERR);
     }
     GRD_DbValueT value;
-    value.type = GRD_SQL_DATATYPE_INTEGER;
+    value.type = GRD_DB_DATATYPE_INTEGER;
     value.value.longValue = version;
     return TransferGrdErrno(GRD_KVApiInfo.DBSetConfigApi(db, type, value));
 }
