@@ -18,7 +18,6 @@
 
 #include <iomanip>
 #include <sstream>
-#include <time.h>
 
 #include "hisysevent_c.h"
 #include "logger.h"
