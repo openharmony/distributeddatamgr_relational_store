@@ -498,6 +498,19 @@ void RdbServiceProxy::OnSyncComplete(const std::string &storeName, Details &&res
     });
 }
 
+int32_t RdbServiceProxy::SetSearchable(const RdbSyncerParam& param, bool isSearchable)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SET_SEARCHABLE),
+        reply, param, isSearchable);
+    if (status != RDB_OK) {
+        LOG_ERROR("RdbServiceProxy SetSearchable fail, status:%{public}d, "
+                  "bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData,
     uint32_t delay)
 {
