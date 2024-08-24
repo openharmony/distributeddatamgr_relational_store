@@ -35,6 +35,7 @@ public:
     int Finalize() override;
     int32_t Prepare(const std::string& sql) override;
     int32_t Bind(const std::vector<ValueObject>& args) override;
+    std::pair<int32_t, int32_t> Count() override;
     int32_t Step() override;
     int32_t Reset() override;
     int32_t Execute(const std::vector<ValueObject>& args) override;
@@ -59,6 +60,8 @@ private:
     void ReportDbCorruptedEvent(int errorCode);
 
     bool readOnly_ = false;
+    bool isStepInPrepare_ = false;
+    int stepCnt_ = 0;
     std::string sql_ = "";
     GRD_SqlStmt *stmtHandle_ = nullptr;
     GRD_DB *dbHandle_ = nullptr;
