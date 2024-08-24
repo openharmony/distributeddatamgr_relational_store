@@ -76,6 +76,8 @@ public:
     virtual int32_t NotifyDataChange(
         const RdbSyncerParam &param, const RdbChangedData &rdbChangedData, uint32_t delay = 0) = 0;
 
+    virtual int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) = 0;
+
     virtual int32_t Disable(const RdbSyncerParam &param) = 0;
 
     virtual int32_t Enable(const RdbSyncerParam &param) = 0;
