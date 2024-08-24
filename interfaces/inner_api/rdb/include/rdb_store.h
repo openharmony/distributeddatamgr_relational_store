@@ -664,6 +664,16 @@ public:
     {
         return E_ERROR;
     }
+
+    /**
+     * @brief Set search enable or disable.
+     *
+     * @param isSearchable Indicates enable or disable.
+     */
+    virtual int SetSearchable(bool isSearchable)
+    {
+        return E_ERROR;
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif
