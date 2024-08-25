@@ -584,7 +584,6 @@ describe('rdbStoreInsertTest', function () {
             } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
                 expect(14800032).assertEqual(err.code);
-                rdbStore.rollBack();
             }
         }
 

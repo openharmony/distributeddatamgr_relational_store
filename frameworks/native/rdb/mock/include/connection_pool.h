@@ -74,7 +74,7 @@ private:
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        void Unused();
+        int32_t Unused();
     };
 
     struct Container {
