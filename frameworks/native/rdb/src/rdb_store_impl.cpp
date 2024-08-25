@@ -1142,7 +1142,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         }
         return conn->Backup(databasePath, {});
     }
-    if (SqliteUtils::IsSlaveDbName(databasePath)) {
+    if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
         auto conn = connectionPool_->AcquireConnection(false);
         return conn == nullptr ? E_BASE : conn->Backup(databasePath, {});
     }

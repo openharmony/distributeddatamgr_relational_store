@@ -268,7 +268,7 @@ int SqliteStatement::Step()
             LOG_WARN("slave step error:%{public}d", ret);
         }
     }
-    return ret;
+    return E_OK;
 }
 
 int SqliteStatement::InnerStep()

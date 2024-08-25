@@ -184,24 +184,9 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
     return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
 }
 
-std::string SqliteUtils::GetDbFileName(sqlite3 *db)
+bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate)
 {
-    if (db == nullptr) {
-        return {};
-    }
-    auto fileName = sqlite3_db_filename(db, nullptr);
-    if (fileName == nullptr) {
-        return {};
-    }
-    return std::string(fileName);
-}
-
-bool SqliteUtils::TryAccessSlaveLock(sqlite3 *db, bool isDelete, bool needCreate)
-{
-    if (db == nullptr) {
-        return false;
-    }
-    std::string lockFile = GetDbFileName(db) + "-locker";
+    std::string lockFile = dbPath + "-locker";
     if (isDelete) {
         if (std::remove(lockFile.c_str()) != 0) {
             LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
