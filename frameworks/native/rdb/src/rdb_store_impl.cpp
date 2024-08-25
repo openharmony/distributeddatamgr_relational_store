@@ -1509,6 +1509,11 @@ int RdbStoreImpl::RollBack()
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
+    if (errCode != E_OK) {
+        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
+            transactionId, name_.c_str(), errCode);
+        return errCode;
+    }
     if (connectionPool_->GetTransactionStack().empty()) {
         connectionPool_->SetInTransaction(false);
     }
@@ -1594,6 +1599,11 @@ int RdbStoreImpl::Commit()
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
+    if (errCode != E_OK) {
+        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
+            transactionId, name_.c_str(), errCode);
+        return errCode;
+    }
     connectionPool_->SetInTransaction(false);
     // 1 means the number of transactions in process
     if (transactionId > 1) {
