@@ -29,6 +29,7 @@
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
 #include "sqlite_statement.h"
+#include "task_executor.h"
 #include "value_object.h"
 
 typedef struct ClientChangedData ClientChangedData;
@@ -122,6 +123,7 @@ private:
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
 
+    std::atomic<TaskExecutor::TaskId> backupId_ = TaskExecutor::INVALID_TASK_ID;
     sqlite3 *dbHandle_;
     bool isWriter_;
     bool isReadOnly_;

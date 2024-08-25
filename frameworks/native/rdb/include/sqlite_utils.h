@@ -58,8 +58,7 @@ public:
     static int GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
     static std::string GetSlavePath(const std::string& name);
-    static std::string GetDbFileName(sqlite3 *db);
-    static bool TryAccessSlaveLock(sqlite3 *db, bool isDelete, bool needCreate);
+    static bool TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate);
 
 private:
     struct SqlType {
