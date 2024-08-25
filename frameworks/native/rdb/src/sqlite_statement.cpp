@@ -331,10 +331,12 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
         if (!conn_->IsWriter() && !ReadOnly()) {
             return E_EXECUTE_WRITE_IN_READ_CONNECTION;
         }
-
         auto errCode = conn_->LimitWalSize();
         if (errCode != E_OK) {
-            return errCode;
+            int sqlType = SqliteUtils::GetSqlStatementType(sql_);
+            if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
+                return errCode;
+            }
         }
     }
 
