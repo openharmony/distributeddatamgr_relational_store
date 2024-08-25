@@ -265,6 +265,10 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
     if (node == nullptr) {
         return;
     }
+    auto errCode = node->Unused();
+    if (errCode == E_WAL_SIZE_OVER_LIMIT) {
+        readers_.Dump("WAL Over Limit");
+    }
     node->Unused();
     if (node->IsWriter()) {
         writers_.Release(node);
@@ -406,14 +410,16 @@ int64_t ConnPool::ConnNode::GetUsingTime() const
     return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
 }
 
-void ConnPool::ConnNode::Unused()
+int32_t ConnPool::ConnNode::Unused()
 {
+    int32_t errCode = E_OK;
     tid_ = 0;
     time_ = std::chrono::steady_clock::now();
     if (connect_ != nullptr) {
         connect_->ClearCache();
-        connect_->TryCheckPoint();
+        errCode = connect_->TryCheckPoint();
     }
+    return errCode;
 }
 
 bool ConnPool::ConnNode::IsWriter() const
@@ -642,6 +648,8 @@ int32_t ConnPool::Container::Dump(const char *header)
 {
     std::string info;
     std::vector<std::shared_ptr<ConnNode>> details;
+        std::string title = " M_T_C[" + std::to_string(max_) + ","+ std::to_string(total_) +","
+            + std::to_string(count_) + "]";
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
         details.reserve(details_.size());
@@ -664,11 +672,11 @@ int32_t ConnPool::Container::Dump(const char *header)
             .append(">");
         // 256 represent that limit to info length
         if (info.size() > 256) {
-            LOG_WARN("%{public}s: %{public}s", header, info.c_str());
+            LOG_WARN("%{public}s %{public}s: %{public}s", header, title.c_str(), info.c_str());
             info.clear();
         }
     }
-    LOG_WARN("%{public}s: %{public}s", header, info.c_str());
+    LOG_WARN("%{public}s %{public}s: %{public}s", header, title.c_str(), info.c_str());
     return 0;
 }
 } // namespace NativeRdb

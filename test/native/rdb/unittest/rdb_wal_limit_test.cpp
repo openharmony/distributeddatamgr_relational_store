@@ -259,5 +259,23 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_003, TestSize.Level3)
     store->BeginTransaction();
     MakeWalReachLimit();
     EXPECT_EQ(store->Insert(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
-    store->Commit();
+    int errCode = store->Commit();
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_WalOverLimit_003
+ * @tc.desc: During transactions, the size of the wal file may exceed the limit.
+ * @tc.type: FUNC
+ * @tc.acquire: AR000HR0G5
+ */
+HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_004, TestSize.Level3)
+{
+    ValuesBucket values = MakeValueBucket(200);
+    int64_t id;
+    store->BeginTransaction();
+    MakeWalReachLimit();
+    EXPECT_EQ(store->Insert(id, "test", values), E_WAL_SIZE_OVER_LIMIT);
+    int errCode = store->RollBack();
+    EXPECT_EQ(errCode, E_OK);
 }
