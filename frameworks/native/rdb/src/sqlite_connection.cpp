@@ -121,7 +121,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
         return E_OK;
     }
     bool isSlaveExist = access(config.GetPath().c_str(), F_OK) == 0;
-    bool isSlaveLockExist = SqliteUtils::TryAccessSlaveLock(dbHandle_, false, false);
+    bool isSlaveLockExist = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false);
     if (!isSlaveExist) {
         slaveStatus_.store(SlaveStatus::DB_NOT_EXITS);
     }
@@ -398,6 +398,12 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
 SqliteConnection::~SqliteConnection()
 {
+    if (backupId_ != TaskExecutor::INVALID_TASK_ID) {
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (pool != nullptr) {
+            pool->Remove(backupId_, true);
+        }
+    }
     if (dbHandle_ != nullptr) {
         if (hasClientObserver_) {
             UnRegisterClientObserver(dbHandle_);
@@ -429,14 +435,14 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     }
     statement->conn_ = conn;
     if (slaveConnection_ && IsWriter()) {
-        statement->slave_ = std::make_shared<SqliteStatement>();
-        statement->slave_->config_ = &slaveConnection_->config_;
-        errCode = statement->slave_->Prepare(slaveConnection_->dbHandle_, sql);
+        auto slaveStmt = std::make_shared<SqliteStatement>();
+        slaveStmt->config_ = &slaveConnection_->config_;
+        errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d", errCode);
             return { E_OK, statement };
         }
-        statement->slave_->conn_ = slaveConnection_;
+        statement->slave_ = slaveStmt;
     }
     return { E_OK, statement };
 }
@@ -1162,17 +1168,20 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
         }
         return MasterSlaveExchange();
     }
-    auto pool = TaskExecutor::GetInstance().GetExecutor();
-    if (pool == nullptr) {
-        LOG_WARN("task pool err when restore");
-        return E_OK;
-    }
-    pool->Schedule(std::chrono::seconds(0), [this]() {
-        int ret = MasterSlaveExchange();
-        if (ret != E_OK) {
-            LOG_WARN("master backup to slave failed:%{public}d", ret);
+    if (backupId_ == TaskExecutor::INVALID_TASK_ID) {
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (pool == nullptr) {
+            LOG_WARN("task pool err when restore");
+            return E_OK;
         }
-    });
+        backupId_ = pool->Execute([this]() {
+            int ret = MasterSlaveExchange();
+            if (ret != E_OK) {
+                LOG_WARN("master backup to slave failed:%{public}d", ret);
+            }
+            backupId_ = TaskExecutor::INVALID_TASK_ID;
+        });
+    }
     return E_OK;
 }
 
@@ -1289,8 +1298,9 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
         LOG_WARN("backup slave err:%{public}d, isRestore:%{public}d", rc, isRestore);
         return SQLiteError::ErrNo(rc);
     } else {
+        isRestore ? TryCheckPoint() : slaveConnection_->TryCheckPoint();
         slaveStatus_.store(SlaveStatus::BACKUP_FINISHED);
-        if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, true, false)) {
+        if (!SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false)) {
             LOG_WARN("try remove slave lock failed! isRestore:%{public}d", isRestore);
         }
         LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
@@ -1329,11 +1339,19 @@ std::pair<bool, bool> SqliteConnection::IsExchange(const RdbStoreConfig &config)
     }
     int64_t mCount = static_cast<int64_t>(mObj);
     int64_t sCount = static_cast<int64_t>(sObj);
-    if (mCount != sCount) {
-        isExchanged = true;
-        if (mCount == 0) {
+    if (mCount == sCount) {
+        return res;
+    }
+    isExchanged = true;
+    if (mCount == 0) {
+        isRestore = true;
+        LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+    } else {
+        auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check
+        if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
+            LOG_ERROR("main corrupt, need restore, ret:%{public}s, cRet:%{public}d",
+                static_cast<std::string>(cObj).c_str(), cRet);
             isRestore = true;
-            LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         } else {
             LOG_INFO("not equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         }
@@ -1416,7 +1434,7 @@ std::pair<bool, int> SqliteConnection::ExchangeVerify(bool isRestore)
         LOG_WARN("slave conn invalid");
         return { true, E_OK };
     }
-    if (!SqliteUtils::TryAccessSlaveLock(dbHandle_, false, true)) {
+    if (!SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true)) {
         LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
     }
     slaveStatus_.store(SlaveStatus::BACKING_UP);
