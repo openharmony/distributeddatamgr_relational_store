@@ -2146,6 +2146,16 @@ int RdbStoreImpl::Notify(const std::string &event)
     return E_OK;
 }
 
+int RdbStoreImpl::SetSearchable(bool isSearchable)
+{
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    return service->SetSearchable(syncerParam_, isSearchable);
+}
+
 int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
 {
     if (config_.GetDBType() == DB_VECTOR) {

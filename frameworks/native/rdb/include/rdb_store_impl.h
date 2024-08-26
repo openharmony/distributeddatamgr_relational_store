@@ -176,6 +176,8 @@ public:
 
     int Notify(const std::string &event) override;
 
+    int SetSearchable(bool isSearchable) override;
+
     ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
         std::vector<PRIKey>& keys) override;
 
