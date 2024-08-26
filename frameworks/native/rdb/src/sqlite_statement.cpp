@@ -186,6 +186,7 @@ int SqliteStatement::Prepare(const std::string &sql)
         int errCode = slave_->Prepare(sql);
         if (errCode != E_OK) {
             LOG_WARN("slave prepare Error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
@@ -226,6 +227,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
         int errCode = slave_->Bind(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave bind error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
@@ -354,6 +356,7 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
         int errCode = slave_->Execute(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave execute error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
