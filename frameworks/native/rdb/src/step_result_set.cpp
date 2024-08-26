@@ -196,7 +196,7 @@ int StepResultSet::GoToRow(int position)
     }
 
     if (isSupportCountRow_ && position >= rowCount_) {
-        rowPos_ = (position >= rowCount_ && rowCount_ != Statement::INVALID_COUNT) ? rowCount_ : rowPos_;
+        rowPos_ = (position >= rowCount_ && rowCount_ != 0) ? rowCount_ : rowPos_;
         LOG_ERROR("position[%{public}d] rowCount[%{public}d] rowPos_[%{public}d]!", position, rowCount_, rowPos_);
         return E_ROW_OUT_RANGE;
     }
