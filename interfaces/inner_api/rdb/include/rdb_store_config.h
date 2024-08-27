@@ -625,6 +625,8 @@ public:
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
+    void SetJournalMode(const std::string &journalMode);
+
     void EnableRekey(bool enable);
 
 private:

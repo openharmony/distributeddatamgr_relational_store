@@ -47,6 +47,12 @@ enum SlaveStatus : uint32_t {
     BACKUP_INTERRUPT,
     BACKUP_FINISHED,
 };
+
+enum ExchangeStrategy : uint32_t {
+    NOT_HANDLE,
+    BACKUP,
+    RESTORE,
+};
 } // namespace NativeRdb
 } // namespace OHOS
 

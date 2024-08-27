@@ -302,14 +302,15 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
       isEncrypt_(config.IsEncrypt()), path_(config.GetPath()), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType()), connectionPool_(nullptr), rebuild_(RebuiltType::NONE)
+      fileType_(config.GetDatabaseFileType()), connectionPool_(nullptr), rebuild_(RebuiltType::NONE),
+      slaveStatus_(SlaveStatus::UNDEFINED)
 {
 }
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     : config_(config), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
       isEncrypt_(config.IsEncrypt()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
-      rebuild_(RebuiltType::NONE)
+      rebuild_(RebuiltType::NONE), slaveStatus_(SlaveStatus::UNDEFINED)
 {
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     connectionPool_ = ConnectionPool::Create(config_, errCode);
@@ -1142,11 +1143,11 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         if (isEncrypt_) {
             return E_NOT_SUPPORT;
         }
-        return conn->Backup(databasePath, {});
+        return conn->Backup(databasePath, {}, false, slaveStatus_);
     }
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
         auto conn = connectionPool_->AcquireConnection(false);
-        return conn == nullptr ? E_BASE : conn->Backup(databasePath, {});
+        return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) {
@@ -1761,7 +1762,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Disable(syncerParam_);
     }
 #endif
-    int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey);
+    int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
@@ -1816,10 +1817,11 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     }
     if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
         auto conn = connectionPool_->AcquireConnection(false);
-        if (conn == nullptr) {
-            LOG_WARN("acquire conn failed when set distributed.");
-        } else if (conn->IsExchange(config_).first) {
-            (void)conn->Backup({}, {});
+        if (conn != nullptr) {
+            auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+            if (strategy == ExchangeStrategy::BACKUP) {
+                (void)conn->Backup({}, {}, false, slaveStatus_);
+            }
         }
     }
     if (type != DistributedRdb::DISTRIBUTED_CLOUD || !distributedConfig.autoSync) {
@@ -2412,16 +2414,11 @@ int RdbStoreImpl::InterruptBackup()
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_NOT_SUPPORT;
     }
-    auto conn = connectionPool_->AcquireConnection(false);
-    if (conn == nullptr) {
-        return E_DATABASE_BUSY;
+    if (slaveStatus_ == SlaveStatus::BACKING_UP) {
+        slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
+        return E_OK;
     }
-    int32_t ret = conn->InterruptBackup();
-    if (ret != E_OK) {
-        LOG_ERROR("InterruptBackup failed");
-        return ret;
-    }
-    return E_OK;
+    return E_INVALID_INTERRUPT;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const
@@ -2429,11 +2426,7 @@ int32_t RdbStoreImpl::GetBackupStatus() const
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER && config_.GetHaMode() != HAMode::MAIN_REPLICA) {
         return SlaveStatus::UNDEFINED;
     }
-    auto conn = connectionPool_->AcquireConnection(false);
-    if (conn == nullptr) {
-        return SlaveStatus::UNDEFINED;
-    }
-    return conn->GetBackupStatus();
+    return slaveStatus_;
 }
 
 bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore)
@@ -2457,5 +2450,24 @@ bool RdbStoreImpl::IsSlaveDiffFromMaster()
 {
     std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
     return access(failureFlagFile.c_str(), F_OK) == 0;
+}
+
+int32_t RdbStoreImpl::ExchangeSlaverToMaster()
+{
+    auto conn = connectionPool_->AcquireConnection(false);
+    if (conn == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+    auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+    if (strategy != ExchangeStrategy::NOT_HANDLE) {
+        LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, config_.GetName().c_str());
+    }
+    int ret = E_OK;
+    if (strategy == ExchangeStrategy::RESTORE) {
+        ret = conn->Restore({}, {}, slaveStatus_);
+    } else if (strategy == ExchangeStrategy::BACKUP) {
+        ret = conn->Backup({}, {}, true, slaveStatus_);
+    }
+    return ret;
 }
 } // namespace OHOS::NativeRdb
