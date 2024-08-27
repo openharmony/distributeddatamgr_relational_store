@@ -193,6 +193,7 @@ public:
     int32_t UnlockCloudContainer() override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    int32_t ExchangeSlaverToMaster();
 
 protected:
     int InnerOpen();
@@ -287,6 +288,7 @@ private:
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+    SlaveStatus slaveStatus_;
 };
 } // namespace OHOS::NativeRdb
 #endif

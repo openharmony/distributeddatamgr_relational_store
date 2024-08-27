@@ -53,7 +53,7 @@ public:
     int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-        const std::vector<uint8_t> &newKey);
+        const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
@@ -115,7 +115,7 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
-    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath);
+    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
 
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;
