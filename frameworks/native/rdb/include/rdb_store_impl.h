@@ -189,6 +189,8 @@ public:
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
     int32_t GetDbType() const override;
     void AfterOpen(const RdbStoreConfig &config);
+    std::pair<int32_t, uint32_t> LockCloudContainer() override;
+    int32_t UnlockCloudContainer() override;
 
 protected:
     int InnerOpen();
