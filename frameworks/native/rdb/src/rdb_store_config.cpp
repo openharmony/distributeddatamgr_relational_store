@@ -402,8 +402,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         rdbPwd.Clear();
     }
     if (encryptKey_.empty() && newEncryptKey_.empty()) {
-        LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
-        return E_ERROR;
+        LOG_WARN("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
     }
     return E_OK;
 }
