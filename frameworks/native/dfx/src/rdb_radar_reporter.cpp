@@ -62,8 +62,9 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
     if (errCode != E_OK) {
         stageRes = static_cast<int>(StageRes::RES_FAILED);
     }
-
+    hostPkgMutex_.lock();
     char *hostPkg = const_cast<char *>(hostPkg_.c_str());
+    hostPkgMutex_.unlock();
     HiSysEventParam params[] = {
         {.name = "ORG_PKG", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(ORG_PKG_VALUE) }, .arraySize = 0, },
         {.name = "FUNC", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(funcName) }, .arraySize = 0, },
@@ -90,11 +91,15 @@ void RdbRadar::GetHostPkgInfo(std::string bundleName)
     if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
         NativeTokenInfo tokenInfo;
         if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
+            hostPkgMutex_.lock();
             hostPkg_ = tokenInfo.processName;
+            hostPkgMutex_.unlock();
             hasHostPkg_ = true;
         }
     } else {
+        hostPkgMutex_.lock();
         hostPkg_ = bundleName;
+        hostPkgMutex_.unlock();
         hasHostPkg_ = true;
     }
 }
