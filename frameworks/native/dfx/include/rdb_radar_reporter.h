@@ -54,9 +54,8 @@ private:
     Scene scene_;
     const char* funcName_;
 
-    static bool hasHostPkg_;
     static std::string hostPkg_;
-    std::mutex mutex_;
+    static std::mutex mutex_;
 
     void LocalReport(int bizSence, const char *funcName, int state, int errCode = 0);
     void GetHostPkgInfo(std::string bundleName);

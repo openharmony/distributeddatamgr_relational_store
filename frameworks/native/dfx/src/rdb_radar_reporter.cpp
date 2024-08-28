@@ -28,8 +28,8 @@ static constexpr const char* EVENT_NAME = "DISTRIBUTED_RDB_BEHAVIOR";
 static constexpr const char* UNKNOW = "unknow";
 static constexpr const char* DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 
-bool RdbRadar::hasHostPkg_ = false;
 std::string RdbRadar::hostPkg_{ "" };
+std::mutex RdbRadar::mutex_;
 
 RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
 {
@@ -83,7 +83,7 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
 void RdbRadar::GetHostPkgInfo(std::string bundleName)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    if (hasHostPkg_) {
+    if (!hostPkg_.empty()) {
         return;
     }
     auto tokenId = IPCSkeleton::GetCallingTokenID();
@@ -92,11 +92,9 @@ void RdbRadar::GetHostPkgInfo(std::string bundleName)
         NativeTokenInfo tokenInfo;
         if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
             hostPkg_ = tokenInfo.processName;
-            hasHostPkg_ = true;
         }
     } else {
         hostPkg_ = bundleName;
-        hasHostPkg_ = true;
     }
 }
 }
