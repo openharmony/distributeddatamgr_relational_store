@@ -62,6 +62,7 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
     if (errCode != E_OK) {
         stageRes = static_cast<int>(StageRes::RES_FAILED);
     }
+
     char *hostPkg = const_cast<char *>(hostPkg_.c_str());
     HiSysEventParam params[] = {
         {.name = "ORG_PKG", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(ORG_PKG_VALUE) }, .arraySize = 0, },
