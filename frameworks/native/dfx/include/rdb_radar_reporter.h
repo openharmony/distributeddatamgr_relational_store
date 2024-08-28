@@ -56,7 +56,7 @@ private:
 
     static bool hasHostPkg_;
     static std::string hostPkg_;
-    std::mutex hostPkgMutex_;
+    std::mutex mutex_;
 
     void LocalReport(int bizSence, const char *funcName, int state, int errCode = 0);
     void GetHostPkgInfo(std::string bundleName);
