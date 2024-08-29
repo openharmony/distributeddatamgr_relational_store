@@ -156,5 +156,5 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::STATEMENT_SELECT, SqliteUtils::GetSqlStatementType("   select * from text"));
     EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType(""
                                                                               "update test set id = ?"));
-    EXPECT_EQ(SqliteUtils::STATEMENT_ATTACH, SqliteUtils::GetSqlStatementType("~!@# attach database ? as ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("~!@# attach database ? as ?"));
 }
