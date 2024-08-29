@@ -354,7 +354,6 @@ describe('rdbStoreExecuteSqlTest', function () {
         resultSet.close();
         console.log(TAG + "************* ExecuteSqlTest0007 end   *************");
     })
-
-
+    
     console.log(TAG + "*************Unit Test End*************");
 })
