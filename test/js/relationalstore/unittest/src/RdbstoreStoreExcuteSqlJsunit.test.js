@@ -351,9 +351,15 @@ describe('rdbStoreExecuteSqlTest', function () {
         let resultSet = await rdbStore.querySql("PRAGMA user_version");
         resultSet.goToFirstRow();
         expect(2).assertEqual(resultSet.getLong(0))
+
+        await rdbStore.executeSql("" +
+            "PRAGMA user_version = 3")
+        resultSet = await rdbStore.querySql("PRAGMA user_version");
+        resultSet.goToFirstRow();
+        expect(3).assertEqual(resultSet.getLong(0))
         resultSet.close();
         console.log(TAG + "************* ExecuteSqlTest0007 end   *************");
     })
-    
+
     console.log(TAG + "*************Unit Test End*************");
 })
