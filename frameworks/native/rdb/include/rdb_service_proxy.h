@@ -81,6 +81,10 @@ public:
     int32_t Disable(const RdbSyncerParam& param) override;
     int32_t Enable(const RdbSyncerParam& param) override;
 
+    std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam& param) override;
+
+    int32_t UnlockCloudContainer(const RdbSyncerParam& param) override;
+
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
