@@ -2303,6 +2303,48 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
     }
     return errCode;
 }
+
+std::pair<int32_t, uint32_t> RdbStoreImpl::LockCloudContainer()
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode == E_NOT_SUPPORT) {
+        LOG_ERROR("not support");
+        return { errCode, 0 };
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.", errCode,
+            syncerParam_.bundleName_.c_str());
+        return { errCode, 0 };
+    }
+    auto result = service->LockCloudContainer(syncerParam_);
+    if (result.first != E_OK) {
+        LOG_ERROR("LockCloudContainer failed, err is %{public}d.", result.first);
+    }
+    return result;
+}
+
+int32_t RdbStoreImpl::UnlockCloudContainer()
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
+    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    if (errCode == E_NOT_SUPPORT) {
+        LOG_ERROR("not support");
+        return errCode;
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.", errCode,
+                  syncerParam_.bundleName_.c_str());
+        return errCode;
+    }
+    errCode = service->UnlockCloudContainer(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("UnlockCloudContainer failed, err is %{public}d.", errCode);
+    }
+    return errCode;
+}
 #endif
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
