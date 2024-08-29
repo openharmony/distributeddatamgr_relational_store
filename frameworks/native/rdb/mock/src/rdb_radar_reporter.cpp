@@ -18,9 +18,8 @@
 
 namespace OHOS::NativeRdb {
 
-
-bool RdbRadar::hasHostPkg_ = false;
 std::string RdbRadar::hostPkg_{ "" };
+std::mutex RdbRadar::mutex_;
 
 RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
 {
