@@ -53,6 +53,7 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
         return STATEMENT_ERROR;
     }
     auto pos = alnum - sql.begin();
+    /* 3 represents the number of prefix characters that need to be extracted and checked */
     if (pos + 3 >= sql.length()) {
         return STATEMENT_ERROR;
     }
