@@ -151,10 +151,9 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
  *           3.Non-alphanumeric and non-numeric before the sql
  * @tc.type: FUNC
  */
-HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
+HWTEST_F(RdbUtilsTest, GetSqlStatementType_002, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::STATEMENT_SELECT, SqliteUtils::GetSqlStatementType("   select * from text"));
-    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType(""
-                                                                              "update test set id = ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("\r\nupdate test set id = ?"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("~!@# attach database ? as ?"));
 }
