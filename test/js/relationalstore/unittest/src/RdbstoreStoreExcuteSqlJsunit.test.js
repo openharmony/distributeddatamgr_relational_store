@@ -22,12 +22,12 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
     "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
-    name: "ExcuteSqlTest.db",
+    name: "ExecuteSqlTest.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 var rdbStore = undefined;
 
-describe('rdbStoreExcuteSqlTest', function () {
+describe('rdbStoreExecuteSqlTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
@@ -46,18 +46,18 @@ describe('rdbStoreExcuteSqlTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await data_relationalStore.deleteRdbStore(context, "ExcuteSqlTest.db");
+        await data_relationalStore.deleteRdbStore(context, "ExecuteSqlTest.db");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0010
-     * @tc.name Normal test case of ExcuteSql
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0010
+     * @tc.name Normal test case of ExecuteSql
      * @tc.desc 1.Insert data
      *          2.ExecuteSql(delete age = "18" OR "20")
      *          3.QuerySql
      */
-    it('ExcuteSqlTest0001', 0, async function (done) {
-        console.log(TAG + "************* ExcuteSqlTest0001 start *************");
+    it('ExecuteSqlTest0001', 0, async function (done) {
+        console.log(TAG + "************* ExecuteSqlTest0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         {
             const valueBucket = {
@@ -100,18 +100,18 @@ describe('rdbStoreExcuteSqlTest', function () {
             expect(null).assertFail();
         })
         await querySqlPromise
-        console.log(TAG + "************* ExcuteSqlTest0001 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0001 end   *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0020
-     * @tc.name Normal test case of ExcuteSql
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0020
+     * @tc.name Normal test case of ExecuteSql
      * @tc.desc 1.Insert data
      *          2.ExecuteSql(delete name = "lisi")
      *          3.QuerySql
      */
-    it('ExcuteSqlTest0002', 0, async function (done) {
-        console.log(TAG + "************* ExcuteSqlTest0002 start *************");
+    it('ExecuteSqlTest0002', 0, async function (done) {
+        console.log(TAG + "************* ExecuteSqlTest0002 start *************");
         var u8 = new Uint8Array([2, 3, 4])
         {
             const valueBucket = {
@@ -153,19 +153,19 @@ describe('rdbStoreExcuteSqlTest', function () {
             expect(null).assertFail();
         })
         await querySqlPromise
-        console.log(TAG + "************* ExcuteSqlTest0002 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0002 end   *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0030
-     * @tc.name Normal test case of ExcuteSql
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0030
+     * @tc.name Normal test case of ExecuteSql
      * @tc.desc 1.Insert data (param is long string)
      *          2.Query data
      *          3.ExecuteSql (delete age = 19 AND name = nameStr)
      *          4.Query data
      */
-    it('ExcuteSqlTest0003', 0, async function (done) {
-        console.log(TAG + "************* ExcuteSqlTest0003 start *************");
+    it('ExecuteSqlTest0003', 0, async function (done) {
+        console.log(TAG + "************* ExecuteSqlTest0003 start *************");
         var u8 = new Uint8Array([3, 4, 5])
         var nameStr = "lisi" + "e".repeat(2000) + "zhangsan"
         {
@@ -240,17 +240,17 @@ describe('rdbStoreExcuteSqlTest', function () {
             })
             await querySqlPromise
         }
-        console.log(TAG + "************* ExcuteSqlTest0003 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0003 end   *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0040
-     * @tc.name Normal test case of ExcuteSql, drop table
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0040
+     * @tc.name Normal test case of ExecuteSql, drop table
      * @tc.desc 1.Insert data
      *          2.ExecuteSql (drop table)
      */
-    it('ExcuteSqlTest0004', 0, async function (done) {
-        console.log(TAG + "************* ExcuteSqlTest0004 start *************");
+    it('ExecuteSqlTest0004', 0, async function (done) {
+        console.log(TAG + "************* ExecuteSqlTest0004 start *************");
         var u8 = new Uint8Array([3, 4, 5])
         {
             const valueBucket = {
@@ -284,34 +284,34 @@ describe('rdbStoreExcuteSqlTest', function () {
         }
         await rdbStore.executeSql("DROP TABLE IF EXISTS test")
         done();
-        console.log(TAG + "************* ExcuteSqlTest0004 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0004 end   *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0050
-     * @tc.name Normal test case of excuteSql and querySql, PRAGMA user_version
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0050
+     * @tc.name Normal test case of executeSql and querySql, PRAGMA user_version
      * @tc.desc 1.Set user_version
      *          2.Get user_version
      */
-    it('ExcuteSqlTest0005', 0, async function () {
-        console.log(TAG + "************* ExcuteSqlTest0005 start *************");
+    it('ExecuteSqlTest0005', 0, async function () {
+        console.log(TAG + "************* ExecuteSqlTest0005 start *************");
         // 2 is used to set the store version
         await rdbStore.executeSql("PRAGMA user_version = 2")
         let resultSet = await rdbStore.querySql("PRAGMA user_version");
         resultSet.goToFirstRow();
         expect(2).assertEqual(resultSet.getLong(0))
         resultSet.close();
-        console.log(TAG + "************* ExcuteSqlTest0005 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0005 end   *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExcuteSql_0060
-     * @tc.name Normal test case of excuteSql and querySql, PRAGMA table_info
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0060
+     * @tc.name Normal test case of executeSql and querySql, PRAGMA table_info
      * @tc.desc 1.Get table_info
      *          2.Check table_info
      */
-    it('ExcuteSqlTest0006', 0, async function () {
-        console.log(TAG + "************* ExcuteSqlTest0006 start *************");
+    it('ExecuteSqlTest0006', 0, async function () {
+        console.log(TAG + "************* ExecuteSqlTest0006 start *************");
         let resultSet = await rdbStore.querySql("PRAGMA table_info(test)");
         resultSet.goToFirstRow();
         expect(0).assertEqual(resultSet.getLong(0))
@@ -335,8 +335,26 @@ describe('rdbStoreExcuteSqlTest', function () {
         expect("blobType").assertEqual(resultSet.getString(1))
         expect("BLOB").assertEqual(resultSet.getString(2))
         resultSet.close();
-        console.log(TAG + "************* ExcuteSqlTest0006 end   *************");
+        console.log(TAG + "************* ExecuteSqlTest0006 end   *************");
     })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ExecuteSql_0070
+     * @tc.name Normal test case of executeSql, if spaces before the sql
+     * @tc.desc 1.Set user_version
+     *          2.Get user_version
+     */
+    it('ExecuteSqlTest0007', 0, async function () {
+        console.log(TAG + "************* ExecuteSqlTest0007 start *************");
+        // 2 is used to set the store version
+        await rdbStore.executeSql("   PRAGMA user_version = 2")
+        let resultSet = await rdbStore.querySql("PRAGMA user_version");
+        resultSet.goToFirstRow();
+        expect(2).assertEqual(resultSet.getLong(0))
+        resultSet.close();
+        console.log(TAG + "************* ExecuteSqlTest0007 end   *************");
+    })
+
 
     console.log(TAG + "*************Unit Test End*************");
 })
