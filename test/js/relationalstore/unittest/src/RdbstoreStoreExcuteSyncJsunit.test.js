@@ -493,8 +493,7 @@ describe('rdbStoreExcuteTest', function () {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
 
-            let ret = rdbStore.executeSync("" +
-                "INSERT INTO test2(name, age, salary) VALUES (?, ?, ?)", ['tt', 28, 50000]);
+            let ret = rdbStore.executeSync("\r\nINSERT INTO test2(name, age, salary) VALUES (?, ?, ?)", ['tt', 28, 50000]);
             expect(1).assertEqual(ret);
 
             let resultSet = await rdbStore.querySql("SELECT * FROM test2");
