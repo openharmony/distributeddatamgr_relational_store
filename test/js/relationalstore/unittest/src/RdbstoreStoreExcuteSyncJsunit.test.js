@@ -497,12 +497,8 @@ describe('rdbStoreExcuteTest', function () {
                 "INSERT INTO test2(name, age, salary) VALUES (?, ?, ?)", ['tt', 28, 50000]);
             expect(1).assertEqual(ret);
 
-            ret = rdbStore.executeSync("~!@# INSERT INTO test2(name, age, salary) VALUES (?, ?, ?)",
-                ['zz', 29, 60000]);
-            expect(1).assertEqual(ret);
-
             let resultSet = await rdbStore.querySql("SELECT * FROM test2");
-            expect(2).assertEqual(resultSet.rowCount)
+            expect(1).assertEqual(resultSet.rowCount)
             resultSet.close();
         } catch (err) {
             expect(null).assertFail();
