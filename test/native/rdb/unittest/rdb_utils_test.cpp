@@ -149,7 +149,6 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
  *           1.Spaces before the sql
  *           2.Enter before the sql
  *           3.Non-alphanumeric and non-numeric before the sql
-
  * @tc.type: FUNC
  */
 HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
