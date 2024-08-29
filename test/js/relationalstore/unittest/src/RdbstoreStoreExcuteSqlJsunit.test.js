@@ -352,8 +352,7 @@ describe('rdbStoreExecuteSqlTest', function () {
         resultSet.goToFirstRow();
         expect(2).assertEqual(resultSet.getLong(0))
 
-        await rdbStore.executeSql("" +
-            "PRAGMA user_version = 3")
+        await rdbStore.executeSql("\r\nPRAGMA user_version = 3")
         resultSet = await rdbStore.querySql("PRAGMA user_version");
         resultSet.goToFirstRow();
         expect(3).assertEqual(resultSet.getLong(0))
