@@ -106,6 +106,8 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     SqliteUtils::DeleteFile(path + "-shm");
     SqliteUtils::DeleteFile(path + "-wal");
     SqliteUtils::DeleteFile(path + "-journal");
+    SqliteUtils::DeleteFile(path + "-slaveFailure");
+    SqliteUtils::DeleteFile(path + "-syncInterrupt");
     return E_OK;
 }
 
@@ -134,6 +136,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
     slaveConnection_ = std::make_shared<SqliteConnection>(config, isWrite);
     int errCode = slaveConnection_->InnerOpen(config);
     if (errCode != E_OK) {
+        SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
         if (errCode == E_SQLITE_CORRUPT) {
             LOG_WARN("slave corrupt, rebuild:%{public}s",
                 SqliteUtils::Anonymous(config.GetPath()).c_str());
@@ -440,6 +443,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
             return { E_OK, statement };
         }
         statement->slave_ = slaveStmt;
@@ -1300,9 +1304,8 @@ int SqliteConnection::MasterSlaveExchange(bool isRestore)
     } else {
         isRestore ? TryCheckPoint() : slaveConnection_->TryCheckPoint();
         slaveStatus_.store(SlaveStatus::BACKUP_FINISHED);
-        if (!SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false)) {
-            LOG_WARN("try remove slave lock failed! isRestore:%{public}d", isRestore);
-        }
+        SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false);
+        SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false, true);
         LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
     }
     return E_OK;
@@ -1312,17 +1315,17 @@ std::pair<bool, bool> SqliteConnection::IsExchange(const RdbStoreConfig &config)
 {
     std::pair<bool, bool> res = { false, false };
     auto &[isExchanged, isRestore] = res;
-    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
-        return res;
-    }
-    if (config.GetHaMode() != HAMode::MAIN_REPLICA) {
+    if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr ||
+        config.GetHaMode() != HAMode::MAIN_REPLICA) {
         return res;
     }
     SlaveStatus curSlaveStatus = slaveStatus_.load();
     if (curSlaveStatus == SlaveStatus::BACKING_UP) {
         return res;
     }
-    if (curSlaveStatus == SlaveStatus::DB_NOT_EXITS || curSlaveStatus == SlaveStatus::BACKUP_INTERRUPT) {
+    std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
+    if (curSlaveStatus == SlaveStatus::DB_NOT_EXITS || curSlaveStatus == SlaveStatus::BACKUP_INTERRUPT ||
+        access(failureFlagFile.c_str(), F_OK) == 0) {
         isExchanged = true;
         return res;
     }

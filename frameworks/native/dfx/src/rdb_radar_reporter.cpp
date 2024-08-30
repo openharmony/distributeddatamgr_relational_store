@@ -28,15 +28,15 @@ static constexpr const char* EVENT_NAME = "DISTRIBUTED_RDB_BEHAVIOR";
 static constexpr const char* UNKNOW = "unknow";
 static constexpr const char* DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 
-bool RdbRadar::hasHostPkg_ = false;
 std::string RdbRadar::hostPkg_{ "" };
+std::mutex RdbRadar::mutex_;
 
-RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
+RdbRadar::RdbRadar(Scene scene, const char *funcName, std::string bundleName)
+    : scene_(scene), funcName_(funcName), bundleName_(bundleName)
 {
     if (funcName_ == nullptr) {
         funcName_ = UNKNOW;
     }
-    GetHostPkgInfo(bundleName);
     LocalReport(scene_, funcName_, STATE_START);
 }
 
@@ -63,7 +63,11 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         stageRes = static_cast<int>(StageRes::RES_FAILED);
     }
 
-    char *hostPkg = const_cast<char *>(hostPkg_.c_str());
+    std::string hostPkg = GetHostPkgInfo();
+    char *hostPkgPtr = hostPkg.data();
+    if (hostPkgPtr == nullptr) {
+        return;
+    }
     HiSysEventParam params[] = {
         {.name = "ORG_PKG", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(ORG_PKG_VALUE) }, .arraySize = 0, },
         {.name = "FUNC", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(funcName) }, .arraySize = 0, },
@@ -72,7 +76,7 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         {.name = "STAGE_RES", .t = HISYSEVENT_INT32, .v = { .i32 = stageRes }, .arraySize = 0, },
         {.name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .i32 = errCode }, .arraySize = 0, },
         {.name = "BIZ_STATE", .t = HISYSEVENT_INT32, .v = { .i32 = state }, .arraySize = 0, },
-        {.name = "HOST_PKG", .t = HISYSEVENT_STRING, .v = { .s = hostPkg }, .arraySize = 0, },
+        {.name = "HOST_PKG", .t = HISYSEVENT_STRING, .v = { .s = hostPkgPtr }, .arraySize = 0, },
     };
 
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, EVENT_NAME,
@@ -80,10 +84,11 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
     return;
 }
 
-void RdbRadar::GetHostPkgInfo(std::string bundleName)
+std::string RdbRadar::GetHostPkgInfo()
 {
-    if (hasHostPkg_) {
-        return;
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (!hostPkg_.empty()) {
+        return hostPkg_;
     }
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
@@ -91,11 +96,10 @@ void RdbRadar::GetHostPkgInfo(std::string bundleName)
         NativeTokenInfo tokenInfo;
         if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
             hostPkg_ = tokenInfo.processName;
-            hasHostPkg_ = true;
         }
     } else {
-        hostPkg_ = bundleName;
-        hasHostPkg_ = true;
+        hostPkg_ = bundleName_;
     }
+    return hostPkg_;
 }
 }
