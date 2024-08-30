@@ -102,7 +102,7 @@ private:
     std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
     bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
-    static bool InitPath(const std::string &dbKeyDir);
+    static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
