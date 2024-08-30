@@ -429,15 +429,15 @@ int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlia
     return ret;
 }
 
-bool RdbSecurityManager::InitPath(const std::string &dbKeyDir)
+bool RdbSecurityManager::InitPath(const std::string &fileDir)
 {
     constexpr mode_t DEFAULT_UMASK = 0002;
-    if (access(dbKeyDir.c_str(), F_OK) == 0) {
+    if (access(fileDir.c_str(), F_OK) == 0) {
         return true;
     }
     umask(DEFAULT_UMASK);
-    if (MkDir(dbKeyDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
-        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
+    if (MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
+        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(fileDir).c_str());
         return false;
     }
     return true;
@@ -527,6 +527,10 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
 void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
 {
     LOG_INFO("Delete all key files begin.");
+    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
+    if (access(dbKeyDir.c_str(), F_OK) != 0) {
+        return;
+    }
     KeyFiles keyFiles(dbPath);
     keyFiles.Lock();
     {
@@ -625,14 +629,19 @@ int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std:
 
 RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
 {
-    const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
-    lock_ = dbKeyDir + dbName + SUFFIX_KEY_LOCK;
+    if (!InitPath(dbKeyDir)) {
+        LOG_ERROR(
+            "dbKeyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
+    }
+    const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
+    if (!InitPath(lockDir)) {
+        LOG_ERROR("lockDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(lockDir).c_str());
+    }
+    const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    lock_ = lockDir + dbName + SUFFIX_KEY_LOCK;
     keys_[PUB_KEY_FILE] = dbKeyDir + dbName + SUFFIX_PUB_KEY;
     keys_[PUB_KEY_FILE_NEW_KEY] = dbKeyDir + dbName + SUFFIX_PUB_KEY_NEW;
-    if (!InitPath(dbKeyDir)) {
-        LOG_ERROR("keyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
-    }
     if (!openFile) {
         return;
     }
