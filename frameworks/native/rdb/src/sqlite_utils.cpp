@@ -123,7 +123,7 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
 {
     auto ret = rename(srcFile.c_str(), destFile.c_str());
     if (ret != 0) {
-        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
+        LOG_WARN("rename failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
             destFile.c_str(), srcFile.c_str());
         return false;
     }

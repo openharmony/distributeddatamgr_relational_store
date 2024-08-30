@@ -17,13 +17,13 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_security_manager.h"
 #include "rdb_store_manager.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "unistd.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_security_manager.h"
 #include "security_policy.h"
 #endif
 
@@ -43,13 +43,6 @@ void RdbHelper::ClearCache()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     RdbStoreManager::GetInstance().Clear();
-}
-
-static void DeleteRdbKeyFiles(const std::string &dbFileName)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    RdbSecurityManager::GetInstance().DelRdbSecretDataFile(dbFileName);
-#endif
 }
 
 static std::vector<std::string> rdPostFixes = {
@@ -122,8 +115,29 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
             errCode = E_REMOVE_FILE;
         }
     }
-    DeleteRdbKeyFiles(dbFileName);
+    RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
     LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFileName.c_str());
+    return errCode;
+}
+int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto dbFile = config.GetPath();
+    if (dbFile.empty()) {
+        return E_INVALID_FILE_PATH;
+    }
+    if (access(dbFile.c_str(), F_OK) != 0) {
+        LOG_ERROR("not exist, path %{public}s", dbFile.c_str());
+        return E_OK; // not not exist
+    }
+    RdbStoreManager::GetInstance().Delete(dbFile);
+    auto errCode = Connection::Delete(config);
+    if (errCode != E_OK) {
+        LOG_ERROR("delete the db file err = %{public}d", errno);
+        return E_REMOVE_FILE;
+    }
+    RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
+    LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFile.c_str());
     return errCode;
 }
 } // namespace NativeRdb
