@@ -273,7 +273,6 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
     if (errCode == E_WAL_SIZE_OVER_LIMIT) {
         readers_.Dump("WAL Over Limit");
     }
-    node->Unused();
     if (node->IsWriter()) {
         writers_.Release(node);
     } else {
