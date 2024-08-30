@@ -349,6 +349,8 @@ void RdbStoreImpl::RemoveDbFiles(std::string &path)
     SqliteUtils::DeleteFile(path + "-shm");
     SqliteUtils::DeleteFile(path + "-wal");
     SqliteUtils::DeleteFile(path + "-journal");
+    SqliteUtils::DeleteFile(path + "-slaveFailure");
+    SqliteUtils::DeleteFile(path + "-syncInterrupt");
 }
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
@@ -2449,5 +2451,11 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
         return false;
     }
     return true;
+}
+
+bool RdbStoreImpl::IsSlaveDiffFromMaster()
+{
+    std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
+    return access(failureFlagFile.c_str(), F_OK) == 0;
 }
 } // namespace OHOS::NativeRdb

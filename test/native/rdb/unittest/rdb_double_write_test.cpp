@@ -21,6 +21,7 @@
 #include "logger.h"
 #include "common.h"
 #include "sqlite_utils.h"
+#include "file_ex.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -120,7 +121,8 @@ void RdbDoubleWriteTest::SetUp(void)
 void RdbDoubleWriteTest::TearDown(void)
 {
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    store = nullptr;
+    slaveStore = nullptr;
 }
  
 /**
@@ -453,7 +455,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
 {
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    store = nullptr;
+    slaveStore = nullptr;
 
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
@@ -658,7 +661,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
 {
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    store = nullptr;
+    slaveStore = nullptr;
 
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
@@ -702,7 +706,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
 {
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    store = nullptr;
+    slaveStore = nullptr;
 
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
@@ -861,4 +866,97 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_017, TestSize.Level1)
 
     RdbDoubleWriteTest::CheckNumber(store, count);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_018
+ * @tc.desc: open MAIN_REPLICA db, update slave, insert, M succ && S failed,
+ *           check failureFlag, backup, check failureFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 3 WHERE id = 1");
+    EXPECT_EQ(E_OK, ret2);
+
+    int64_t id2;
+    ValuesBucket values2;
+    values2.PutInt("id", 3);
+    values2.PutString("name", std::string("zhangsan"));
+    values2.PutInt("age", 25);
+    values2.PutDouble("salary", CHECKCOLUMN);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret3 = store->Insert(id2, "test", values2);
+    EXPECT_EQ(E_OK, ret3);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+
+    int errCode;
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_FALSE(isFlagFileExists);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_019
+ * @tc.desc: open MAIN_REPLICA db, update slave, insert, M succ && S failed,
+ *           check failureFlag, reopen, check failureFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 3 WHERE id = 1");
+    EXPECT_EQ(E_OK, ret2);
+
+    int64_t id2;
+    ValuesBucket values2;
+    values2.PutInt("id", 3);
+    values2.PutString("name", std::string("zhangsan"));
+    values2.PutInt("age", 25);
+    values2.PutDouble("salary", CHECKCOLUMN);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret3 = store->Insert(id2, "test", values2);
+    EXPECT_EQ(E_OK, ret3);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+
+    store = nullptr;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetAllowRebuild(true);
+    DoubleWriteTestOpenCallback helper;
+    int errCode;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    store = nullptr;
+    isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_FALSE(isFlagFileExists);
 }
