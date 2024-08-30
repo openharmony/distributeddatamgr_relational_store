@@ -465,7 +465,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetCustomDir(rdbConfig.customDir);
     rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
     rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
-    rdbStoreConfig.SetIntegrityCheck(IntegrityCheck::QUICK);
+    rdbStoreConfig.SetIntegrityCheck(IntegrityCheck::NONE);
 
     if (!param.bundleName.empty()) {
         rdbStoreConfig.SetBundleName(param.bundleName);
