@@ -64,6 +64,10 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
     }
 
     std::string hostPkg = GetHostPkgInfo();
+    char *hostPkgPtr = hostPkg.data();
+    if (hostPkgPtr == nullptr) {
+        return;
+    }
     HiSysEventParam params[] = {
         {.name = "ORG_PKG", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(ORG_PKG_VALUE) }, .arraySize = 0, },
         {.name = "FUNC", .t = HISYSEVENT_STRING, .v = { .s = const_cast<char *>(funcName) }, .arraySize = 0, },
@@ -72,7 +76,7 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         {.name = "STAGE_RES", .t = HISYSEVENT_INT32, .v = { .i32 = stageRes }, .arraySize = 0, },
         {.name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .i32 = errCode }, .arraySize = 0, },
         {.name = "BIZ_STATE", .t = HISYSEVENT_INT32, .v = { .i32 = state }, .arraySize = 0, },
-        {.name = "HOST_PKG", .t = HISYSEVENT_STRING, .v = { .s = hostPkg.data() }, .arraySize = 0, },
+        {.name = "HOST_PKG", .t = HISYSEVENT_STRING, .v = { .s = hostPkgPtr }, .arraySize = 0, },
     };
 
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, EVENT_NAME,
