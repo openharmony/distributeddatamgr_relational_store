@@ -207,7 +207,7 @@ int32_t RdConnection::Unsubscribe(const std::string& event,
 }
 
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    bool isAsync)
+    bool isAsync, SlaveStatus &slaveStatus)
 {
     uint32_t size = destEncryptKey.size();
     if (size != 0) {
@@ -216,7 +216,8 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
     return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
-int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    SlaveStatus &slaveStatus)
 {
     uint32_t size = destEncryptKey.size();
     if (size != 0) {
@@ -225,19 +226,9 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
-int32_t RdConnection::InterruptBackup()
+ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
 {
-    return E_NOT_SUPPORT;
-}
-
-int32_t RdConnection::GetBackupStatus() const
-{
-    return SlaveStatus::UNDEFINED;
-}
-
-std::pair<bool, bool> RdConnection::IsExchange(const RdbStoreConfig &config)
-{
-    return { false, false };
+    return ExchangeStrategy::NOT_HANDLE;
 }
 } // namespace NativeRdb
 } // namespace OHOS

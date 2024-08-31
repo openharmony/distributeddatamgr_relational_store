@@ -103,6 +103,7 @@ public:
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    int32_t ExchangeSlaverToMaster();
 
 protected:
     int InnerOpen();
@@ -166,6 +167,7 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+    SlaveStatus slaveStatus_;
 };
 } // namespace OHOS::NativeRdb
 #endif
