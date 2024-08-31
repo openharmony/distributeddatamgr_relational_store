@@ -132,6 +132,7 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
+    bool IsSlaveDiffFromMaster() const override;
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     std::string GetName();
@@ -264,7 +265,6 @@ private:
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
-    bool IsSlaveDiffFromMaster();
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;

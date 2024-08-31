@@ -2460,7 +2460,7 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
     return true;
 }
 
-bool RdbStoreImpl::IsSlaveDiffFromMaster()
+bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 {
     std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
     return access(failureFlagFile.c_str(), F_OK) == 0;

@@ -113,7 +113,10 @@ public:
     {
         return E_OK;
     }
-
+    virtual bool IsSlaveDiffFromMaster() const
+    {
+        return false;
+    }
     virtual int32_t GetBackupStatus() const
     {
         return SlaveStatus::UNDEFINED;

@@ -902,6 +902,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
     std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
     bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
     ASSERT_TRUE(isFlagFileExists);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
 
     int errCode;
     errCode = store->Backup(std::string(""), {});
@@ -945,6 +946,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
     std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
     bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
     ASSERT_TRUE(isFlagFileExists);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
 
     store = nullptr;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
