@@ -31,6 +31,7 @@
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_radar_reporter.h"
+#include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -51,7 +52,6 @@
 #include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
-#include "rdb_security_manager.h"
 #include "relational_store_manager.h"
 #include "runtime_config.h"
 #include "security_policy.h"
@@ -1111,6 +1111,9 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
         return ret;
     }
 
+    RdbSecurityManager::KeyFiles keyFiles(backupFilePath);
+    keyFiles.Lock();
+
     auto deleteDirtyFiles = [&backupFilePath] {
         auto res = SqliteUtils::DeleteFile(backupFilePath);
         res = SqliteUtils::DeleteFile(backupFilePath + "-shm") && res;
@@ -1121,6 +1124,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     auto walFile = backupFilePath + "-wal";
     if (access(walFile.c_str(), F_OK) == E_OK) {
         if (!deleteDirtyFiles()) {
+            keyFiles.Unlock();
             return E_ERROR;
         }
     }
@@ -1128,7 +1132,12 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     if (access(tempPath.c_str(), F_OK) == E_OK) {
         SqliteUtils::DeleteFile(backupFilePath);
     } else {
-        SqliteUtils::RenameFile(backupFilePath, tempPath);
+        if (access(backupFilePath.c_str(), F_OK) == E_OK && !SqliteUtils::RenameFile(backupFilePath, tempPath)) {
+            LOG_ERROR("rename backup file failed, path:%{public}s, errno:%{public}d",
+                SqliteUtils::Anonymous(backupFilePath).c_str(), errno);
+            keyFiles.Unlock();
+            return E_ERROR;
+        }
     }
     ret = InnerBackup(backupFilePath, destEncryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
@@ -1138,6 +1147,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     } else {
         SqliteUtils::DeleteFile(tempPath);
     }
+    keyFiles.Unlock();
     return ret;
 }
 
@@ -1162,9 +1172,26 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         auto conn = connectionPool_->AcquireConnection(false);
         return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
-    auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
+
+    return ExecuteBackupSql(databasePath, destEncryptKey);
+}
+
+/**
+ * Backup a database from a specified encrypted or unencrypted database file.
+ */
+int RdbStoreImpl::ExecuteBackupSql(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+{
+    auto [errCode, conn] = connectionPool_->CreateConnection(false);
+    if (conn == nullptr) {
+        LOG_ERROR("Get null connection, databasePath:%{public}s, err:%{public}d",
+            SqliteUtils::Anonymous(databasePath).c_str(), errCode);
+        return E_DATABASE_BUSY;
+    }
+    auto [err, statement] = conn->CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, conn);
     if (statement == nullptr) {
-        return E_BASE;
+        LOG_ERROR("Get null statement, databasePath:%{public}s, err:%{public}d",
+            SqliteUtils::Anonymous(databasePath).c_str(), err);
+        return err;
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
@@ -1179,11 +1206,15 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         statement->Execute();
 #endif
     } else {
-        std::string str = "";
-        bindArgs.emplace_back(str);
+        bindArgs.emplace_back("");
     }
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = statement->Prepare(GlobalExpr::PRAGMA_BACKUP_JOUR_MODE_WAL);
+    errCode = statement->Execute();
     if (errCode != E_OK) {
         return errCode;
     }
@@ -1759,12 +1790,13 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         } else {
             auto walFile = destPath + "-wal";
             if (access(walFile.c_str(), F_OK) == E_OK) {
+                LOG_ERROR("The walFile is exist, %{public}s", SqliteUtils::Anonymous(walFile).c_str());
                 return E_ERROR;
             }
         }
 
         if (access(destPath.c_str(), F_OK) != E_OK) {
-            LOG_ERROR("The backupFilePath does not exists.");
+            LOG_ERROR("The backupFilePath does not exists, %{public}s", SqliteUtils::Anonymous(destPath).c_str());
             return E_INVALID_FILE_PATH;
         }
     }

@@ -100,6 +100,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
     "unittest/rdb_step_result_set_test.cpp",
+    "unittest/rdb_store_backup_restore_test.cpp",
     "unittest/rdb_store_concurrent_test.cpp",
     "unittest/rdb_store_config_test.cpp",
     "unittest/rdb_store_impl_test.cpp",
