@@ -174,4 +174,52 @@ HWTEST_F(SerializableTest, IsJson, TestSize.Level1)
     ASSERT_FALSE(Serializable::IsJson(str));
     ASSERT_TRUE(Serializable::IsJson(jsonStr));
 }
+
+/**
+* @tc.name: ToJson_01
+* @tc.desc: to json.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, ToJson_01, TestSize.Level1)
+{
+    std::string jsonStr = "{\"key\":\"value\"}";
+    Serializable::json result = Serializable::ToJson(jsonStr);
+    ASSERT_FALSE(result.is_discarded());
+}
+
+/**
+* @tc.name: ToJson_02
+* @tc.desc: to json.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, ToJson_02, TestSize.Level1)
+{
+    std::string jsonStr = "invalid_json";
+    Serializable::json result = Serializable::ToJson(jsonStr);
+    ASSERT_FALSE(result.is_discarded());
+}
+
+/**
+* @tc.name: ToJson_03
+* @tc.desc: to json.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, ToJson_03, TestSize.Level1)
+{
+    std::string jsonStr = "";
+    Serializable::json result = Serializable::ToJson(jsonStr);
+    ASSERT_TRUE(result.empty());
+}
+
+/**
+* @tc.name: ToJson_04
+* @tc.desc: to json.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, ToJson_04, TestSize.Level1)
+{
+    std::string jsonStr = "{invalid_json}";
+    Serializable::json result = Serializable::ToJson(jsonStr);
+    ASSERT_FALSE(result.is_discarded());
+}
 } // namespace OHOS::Test

@@ -41,6 +41,7 @@ public:
     static bool ChangeKeyFileDate(const std::string &dbName, int rep);
     static bool SaveNewKey(const std::string &dbName);
     static RdbStoreConfig GetRdbConfig(const std::string &name);
+    static RdbStoreConfig GetRdbNotRekeyConfig(const std::string &name);
     static void InsertData(std::shared_ptr<RdbStore> &store);
     static void CheckQueryData(std::shared_ptr<RdbStore> &store);
 
@@ -188,6 +189,16 @@ RdbStoreConfig RdbRekeyTest::GetRdbConfig(const std::string &name)
     RdbStoreConfig config(name);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
+    config.EnableRekey(true);
+    return config;
+}
+
+RdbStoreConfig RdbRekeyTest::GetRdbNotRekeyConfig(const std::string &name)
+{
+    RdbStoreConfig config(name);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    config.EnableRekey(false);
     return config;
 }
 
@@ -390,5 +401,40 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
     }
 
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_06
+* @tc.desc: test RdbStore rekey function
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
+
+    RdbStoreConfig config = GetRdbNotRekeyConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(newKeyPath);
+    ASSERT_FALSE(isFileExists);
+
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
     CheckQueryData(store);
 }

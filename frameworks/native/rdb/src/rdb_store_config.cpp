@@ -387,7 +387,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
     rdbPwd.Clear();
-    if (rdbPwd.isKeyExpired ||
+    if ((rdbPwd.isKeyExpired && autoRekey_) ||
         RdbSecurityManager::GetInstance().IsKeyFileExists(path, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
         auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE_NEW_KEY);
         if (rdbNewPwd.IsValid()) {
@@ -557,5 +557,10 @@ int32_t RdbStoreConfig::GetIter() const
 void RdbStoreConfig::SetIter(int32_t iter) const
 {
     iter_ = iter;
+}
+
+void RdbStoreConfig::EnableRekey(bool enable)
+{
+    autoRekey_ = enable;
 }
 } // namespace OHOS::NativeRdb
