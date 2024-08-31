@@ -139,6 +139,7 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
+    int ExecuteBackupSql(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     int RegisterDataChangeCallback();
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;

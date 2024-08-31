@@ -230,6 +230,7 @@ private:
         const AsyncDetail &async);
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
+    int ExecuteBackupSql(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
