@@ -1303,8 +1303,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         return ExchangeStrategy::NOT_HANDLE;
     }
     std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
-    if (status == SlaveStatus::DB_NOT_EXITS || status == SlaveStatus::BACKUP_INTERRUPT ||
-        access(failureFlagFile.c_str(), F_OK) == 0) {
+    if (status == SlaveStatus::DB_NOT_EXITS || status == SlaveStatus::BACKUP_INTERRUPT) {
         return ExchangeStrategy::BACKUP;
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
@@ -1319,7 +1318,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
     }
     int64_t mCount = static_cast<int64_t>(mObj);
     int64_t sCount = static_cast<int64_t>(sObj);
-    if (mCount == sCount) {
+    if (mCount == sCount && access(failureFlagFile.c_str(), F_OK) != 0) {
         LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::NOT_HANDLE;
     }
