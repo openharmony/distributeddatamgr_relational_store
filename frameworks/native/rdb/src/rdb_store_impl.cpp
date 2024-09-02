@@ -2468,6 +2468,9 @@ bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
 {
+    if (config_.GetRoleType() == VISITOR || config_.IsReadOnly()) {
+        return E_OK;
+    }
     auto conn = connectionPool_->AcquireConnection(false);
     if (conn == nullptr) {
         return E_DATABASE_BUSY;
