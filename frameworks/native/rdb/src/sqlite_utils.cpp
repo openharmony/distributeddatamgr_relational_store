@@ -48,11 +48,17 @@ constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
     /* the sql string length less than 3 can not be any type sql */
-    if (sql.length() < 3) {
+    auto alnum = std::find_if(sql.begin(), sql.end(), [](int ch) { return !std::isspace(ch) && !std::iscntrl(ch); });
+    if (alnum == sql.end()) {
+        return STATEMENT_ERROR;
+    }
+    auto pos = alnum - sql.begin();
+    /* 3 represents the number of prefix characters that need to be extracted and checked */
+    if (pos + 3 >= sql.length()) {
         return STATEMENT_ERROR;
     }
     /* analyze the sql type through first 3 character */
-    std::string prefixSql = StrToUpper(sql.substr(0, 3));
+    std::string prefixSql = StrToUpper(sql.substr(pos, 3));
     SqlType type = { prefixSql.c_str(), STATEMENT_OTHER };
     auto comp = [](const SqlType &first, const SqlType &second) {
         return strcmp(first.sql, second.sql) < 0;
