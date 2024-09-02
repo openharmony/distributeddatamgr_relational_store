@@ -83,8 +83,8 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         errCode = SetSecurityLabel(config);
         if (errCode != E_OK) {
-            LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d", config.GetName().c_str(),
-                config.GetSecurityLevel(), errCode);
+            LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d",
+                SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetSecurityLevel(), errCode);
             return nullptr;
         }
         if (config.IsVector()) {
@@ -95,7 +95,8 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                config.GetName().c_str(), config.GetPath().c_str(), errCode);
+                SqliteUtils::Anonymous(config.GetName()).c_str(),
+                SqliteUtils::Anonymous(config.GetPath()).c_str(), errCode);
             return nullptr;
         }
     }
@@ -109,11 +110,11 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, const RdbS
     Param param = GetSyncParam(config);
     Param tempParam;
     if (bundleName_.empty()) {
-        LOG_WARN("Config has no bundleName, path: %{public}s", path.c_str());
+        LOG_WARN("Config has no bundleName, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
     if (!configCache_.Get(path, tempParam)) {
-        LOG_WARN("Not found config cache, path: %{public}s", path.c_str());
+        LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         tempParam = param;
         if (GetParamFromService(tempParam) == E_OK) {
             configCache_.Set(path, tempParam);
@@ -126,8 +127,8 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, const RdbS
         tempParam.isEncrypt_ != param.isEncrypt_) {
         LOG_ERROR("Store config invalid change, storeName %{public}s, securitylevel: %{public}d -> %{public}d, "
                   "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
-            path.c_str(), tempParam.level_, param.level_, tempParam.area_, param.area_, tempParam.isEncrypt_,
-            param.isEncrypt_);
+            SqliteUtils::Anonymous(path).c_str(), tempParam.level_, param.level_, tempParam.area_, param.area_,
+            tempParam.isEncrypt_, param.isEncrypt_);
         return true;
     }
     return false;
