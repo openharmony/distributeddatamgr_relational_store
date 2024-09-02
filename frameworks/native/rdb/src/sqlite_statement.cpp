@@ -99,7 +99,8 @@ void SqliteStatement::PrintInfoForDbError(int errorCode)
     }
     if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
         errorCode == E_SQLITE_IOERR || errorCode == E_SQLITE_CORRUPT || errorCode == E_SQLITE_CANTOPEN) {
-        LOG_ERROR(" DbError errorCode: %{public}d  DbName: %{public}s ", errorCode, config_->GetName().c_str());
+        LOG_ERROR(" DbError errorCode: %{public}d  DbName: %{public}s ", errorCode,
+            SqliteUtils::Anonymous(config_->GetName()).c_str());
     }
 }
 
@@ -115,7 +116,8 @@ void SqliteStatement::ReadFile2Buffer()
     uint64_t buffer[BUFFER_LEN] = {0x0};
     FILE *file = fopen(fileName.c_str(), "r");
     if (file == nullptr) {
-        LOG_ERROR("open db file failed: %{public}s, errno is %{public}d", fileName.c_str(), errno);
+        LOG_ERROR(
+            "open db file failed: %{public}s, errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
         return;
     }
     size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);

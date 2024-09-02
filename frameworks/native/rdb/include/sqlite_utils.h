@@ -87,6 +87,9 @@ private:
     static constexpr size_t TYPE_SIZE = sizeof(SQL_TYPE_MAP) / sizeof(SqlType);
     static constexpr const char* ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT] = { "", " OR ROLLBACK", " OR ABORT",
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
+
+    static int GetContinuousDigitsNum(const std::string& fileName);
+    static std::string AnonyDigits(const std::string& fileName, int digitsNum);
 };
 
 } // namespace NativeRdb
