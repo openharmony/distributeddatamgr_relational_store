@@ -598,15 +598,12 @@ bool RdbSecurityManager::HasRootKey()
 
 bool RdbSecurityManager::IsKeyFileEmpty(const std::string &keyFile)
 {
-    if (access(keyFile.c_str(), F_OK) != 0) {
-        return true;
-    }
     struct stat fileInfo;
     auto errCode = stat(keyFile.c_str(), &fileInfo);
-    if (errCode == 0 && fileInfo.st_size == 0) {
+    if (errCode != 0) {
         return true;
     }
-    return false;
+    return fileInfo.st_size == 0;
 }
 
 int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std::vector<uint8_t> &key)
