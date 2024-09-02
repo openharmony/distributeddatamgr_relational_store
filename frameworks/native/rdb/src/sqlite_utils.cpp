@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <regex>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -36,11 +37,13 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr int32_t HEAD_SIZE = 3;
-constexpr int32_t END_SIZE = 3;
-constexpr int32_t MIN_SIZE = HEAD_SIZE + END_SIZE + 3;
-constexpr const char *REPLACE_CHAIN = "***";
-constexpr const char *DEFAULT_ANONYMOUS = "******";
+/* A continuous number must contain at least eight digits, because the employee ID has eight digits,
+    and the mobile phone number has 11 digits. The UUID is longer */
+constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 5;
+constexpr int32_t FILE_PATH_MINI_SIZE = 6;
+constexpr int32_t AREA_MINI_SIZE = 4;
+constexpr int32_t AREA_OFFSET_SIZE = 5;
+constexpr int32_t PRE_OFFSET_SIZE = 1;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -113,7 +116,8 @@ bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
     auto ret = remove(filePath.c_str());
     if (ret != 0) {
-        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, filePath.c_str());
+        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret,
+            Anonymous(filePath).c_str());
         return false;
     }
     return true;
@@ -124,7 +128,7 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
     auto ret = rename(srcFile.c_str(), destFile.c_str());
     if (ret != 0) {
         LOG_WARN("rename failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
-            destFile.c_str(), srcFile.c_str());
+            SqliteUtils::Anonymous(destFile).c_str(), srcFile.c_str());
         return false;
     }
     return true;
@@ -134,13 +138,13 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
 {
     std::ifstream src(srcFile.c_str(), std::ios::binary);
     if (!src.is_open()) {
-        LOG_WARN("open srcFile failed errno %{public}d %{public}s", errno, srcFile.c_str());
+        LOG_WARN("open srcFile failed errno %{public}d %{public}s", errno, SqliteUtils::Anonymous(srcFile).c_str());
         return false;
     }
     std::ofstream dst(destFile.c_str(), std::ios::binary);
     if (!dst.is_open()) {
         src.close();
-        LOG_WARN("open destFile failed errno %{public}d %{public}s", errno, destFile.c_str());
+        LOG_WARN("open destFile failed errno %{public}d %{public}s", errno, SqliteUtils::Anonymous(destFile).c_str());
         return false;
     }
     dst << src.rdbuf();
@@ -149,17 +153,83 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     return true;
 }
 
+std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
+{
+    std::vector<std::string> alnum;
+    std::vector<std::string> noAlnum;
+    std::string alnumStr;
+    std::string noAlnumStr;
+    for (const auto &letter : fileName) {
+        if (isxdigit(letter)) {
+            if (!noAlnumStr.empty()) {
+                noAlnum.push_back(noAlnumStr);
+                noAlnumStr.clear();
+                alnum.push_back("");
+            }
+            alnumStr += letter;
+        } else {
+            if (!alnumStr.empty()) {
+                alnum.push_back(alnumStr);
+                alnumStr.clear();
+                noAlnum.push_back("");
+            }
+            noAlnumStr += letter;
+        }
+    }
+    if (!alnumStr.empty()) {
+        alnum.push_back(alnumStr);
+        noAlnum.push_back("");
+    }
+    if (!noAlnumStr.empty()) {
+        noAlnum.push_back(alnumStr);
+        alnum.push_back("");
+    }
+    std::string res = "";
+    for (size_t i = 0; i < alnum.size(); ++i) {
+        res += (AnonyDigits(alnum[i]) + noAlnum[i]);
+    }
+    return res;
+}
+
+std::string SqliteUtils::AnonyDigits(const std::string &fileName)
+{
+    int digitsNum = fileName.size();
+    if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
+        return fileName;
+    }
+    constexpr int longDigits = 7;
+    int endDigitsNum = 4;
+    int shortEndDigitsNum = 3;
+    std::string name = fileName;
+    std::string last = "";
+    if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE && digitsNum < longDigits) {
+        last = name.substr(name.size() - shortEndDigitsNum);
+    } else {
+        last = name.substr(name.size() - endDigitsNum);
+    }
+
+    return "***" + last;
+}
+
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
 {
-    if (srcFile.length() <= HEAD_SIZE) {
-        return DEFAULT_ANONYMOUS;
+    auto pre = srcFile.find("/");
+    auto end = srcFile.rfind("/");
+    if (pre == std::string::npos || end - pre < FILE_PATH_MINI_SIZE) {
+        return GetAnonymousName(srcFile);
     }
-
-    if (srcFile.length() < MIN_SIZE) {
-        return (srcFile.substr(0, HEAD_SIZE) + REPLACE_CHAIN);
+    auto path = srcFile.substr(pre, end - pre);
+    auto area = path.find("/el");
+    if (area == std::string::npos || area + AREA_MINI_SIZE > path.size()) {
+        path = "";
+    } else if (area + AREA_OFFSET_SIZE < path.size()) {
+        path = path.substr(area, AREA_MINI_SIZE) + "/***";
+    } else {
+        path = path.substr(area, AREA_MINI_SIZE);
     }
-
-    return (srcFile.substr(0, HEAD_SIZE) + REPLACE_CHAIN + srcFile.substr(srcFile.length() - END_SIZE, END_SIZE));
+    std::string fileName = srcFile.substr(end); // rdb file name
+    fileName = GetAnonymousName(fileName);
+    return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
 int SqliteUtils::GetFileSize(const std::string &fileName)

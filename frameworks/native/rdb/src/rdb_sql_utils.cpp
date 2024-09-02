@@ -27,6 +27,7 @@
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
+#include "sqlite_utils.h"
 namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
@@ -51,7 +52,8 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
         databaseDirectory = databaseDirectory + "/" + directory;
         if (access(databaseDirectory.c_str(), F_OK) != 0) {
             if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno, databaseDirectory.c_str());
+                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
+                    SqliteUtils::Anonymous(databaseDirectory).c_str());
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server
@@ -80,8 +82,9 @@ std::pair<std::string, int> RdbSqlUtils::GetDefaultDatabasePath(const std::strin
 
     errorCode = CreateDirectory(databaseDir);
     if (errorCode != E_OK) {
-        LOG_ERROR("failed errno[%{public}d] baseDir : %{public}s name : %{public}s customDir : %{public}s",
-            errno, baseDir.c_str(), name.c_str(), customDir.c_str());
+        LOG_ERROR("failed errno[%{public}d] baseDir : %{public}s name : %{public}s customDir : %{public}s", errno,
+            SqliteUtils::Anonymous(baseDir).c_str(), SqliteUtils::Anonymous(name).c_str(),
+            SqliteUtils::Anonymous(customDir).c_str());
     }
     return std::make_pair(databaseDir.append("/").append(name), errorCode);
 }
@@ -94,8 +97,8 @@ std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, cons
     std::string databaseDir = baseDir + "/rdb";
     errorCode = CreateDirectory(databaseDir);
     if (errorCode != E_OK) {
-        LOG_ERROR(
-            "failed errno[%{public}d] baseDir : %{public}s name : %{public}s", errno, baseDir.c_str(), name.c_str());
+        LOG_ERROR("failed errno[%{public}d] baseDir : %{public}s name : %{public}s", errno,
+            SqliteUtils::Anonymous(baseDir).c_str(), SqliteUtils::Anonymous(name).c_str());
     }
     return databaseDir.append("/").append(name);
 }

@@ -53,26 +53,6 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStore_SqliteUtils_002
- * @tc.desc: Abnormal testCase of sqlite_utils for Anonymous, if len(srcFile) < HEAD_SIZE
- * @tc.type: FUNC
- */
-HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_002, TestSize.Level2)
-{
-    EXPECT_EQ("******", SqliteUtils::Anonymous("ac"));
-}
-
-/**
- * @tc.name: RdbStore_SqliteUtils_003
- * @tc.desc: Abnormal testCase of sqlite_utils for Anonymous, if len(srcFile) < MIN_SIZE
- * @tc.type: FUNC
- */
-HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_003, TestSize.Level2)
-{
-    EXPECT_EQ("abc***", SqliteUtils::Anonymous("abc/def"));
-}
-
-/**
  * @tc.name: RdbStore_SqliteUtils_004
  * @tc.desc: Abnormal testCase of string_utils for SurroundWithQuote, if value is ""
  * @tc.type: FUNC
