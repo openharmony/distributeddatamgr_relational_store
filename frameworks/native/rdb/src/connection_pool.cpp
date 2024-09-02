@@ -506,8 +506,8 @@ int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
 
 std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::milliseconds milliS)
 {
-    auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     if (max_ == 0) {
         return nullptr;
     }
