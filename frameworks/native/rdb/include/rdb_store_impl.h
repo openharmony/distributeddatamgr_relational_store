@@ -265,6 +265,8 @@ private:
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
+    int GetDestPath(const std::string &backupPath, std::string &destPath);
+    void ReportDbRestoreSuccessEvent();
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
