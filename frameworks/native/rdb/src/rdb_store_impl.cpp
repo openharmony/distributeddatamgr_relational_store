@@ -1734,6 +1734,29 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
+int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)
+{
+    int ret = GetDataBasePath(backupPath, destPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::string tempPath = destPath + ".tmp";
+    if (access(tempPath.c_str(), F_OK) == E_OK) {
+        destPath = tempPath;
+    } else {
+        auto walFile = destPath + "-wal";
+        if (access(walFile.c_str(), F_OK) == E_OK) {
+            return E_ERROR;
+        }
+    }
+
+    if (access(destPath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("The backupFilePath does not exists.");
+        return E_INVALID_FILE_PATH;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", config_.GetName().c_str());
@@ -1749,26 +1772,11 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 
     std::string destPath;
     if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        int ret = GetDataBasePath(backupPath, destPath);
+        int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             return ret;
         }
-        std::string tempPath = destPath + ".tmp";
-        if (access(tempPath.c_str(), F_OK) == E_OK) {
-            destPath = tempPath;
-        } else {
-            auto walFile = destPath + "-wal";
-            if (access(walFile.c_str(), F_OK) == E_OK) {
-                return E_ERROR;
-            }
-        }
-
-        if (access(destPath.c_str(), F_OK) != E_OK) {
-            LOG_ERROR("The backupFilePath does not exists.");
-            return E_INVALID_FILE_PATH;
-        }
     }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
