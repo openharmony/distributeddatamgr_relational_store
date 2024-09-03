@@ -1765,6 +1765,29 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
+int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)
+{
+    int ret = GetDataBasePath(backupPath, destPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::string tempPath = destPath + ".tmp";
+    if (access(tempPath.c_str(), F_OK) == E_OK) {
+        destPath = tempPath;
+    } else {
+        auto walFile = destPath + "-wal";
+        if (access(walFile.c_str(), F_OK) == E_OK) {
+            return E_ERROR;
+        }
+    }
+
+    if (access(destPath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("The backupFilePath does not exists.");
+        return E_INVALID_FILE_PATH;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", config_.GetName().c_str());
@@ -1780,27 +1803,11 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 
     std::string destPath;
     if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        int ret = GetDataBasePath(backupPath, destPath);
+        int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             return ret;
         }
-        std::string tempPath = destPath + ".tmp";
-        if (access(tempPath.c_str(), F_OK) == E_OK) {
-            destPath = tempPath;
-        } else {
-            auto walFile = destPath + "-wal";
-            if (access(walFile.c_str(), F_OK) == E_OK) {
-                LOG_ERROR("The walFile is exist, %{public}s", SqliteUtils::Anonymous(walFile).c_str());
-                return E_ERROR;
-            }
-        }
-
-        if (access(destPath.c_str(), F_OK) != E_OK) {
-            LOG_ERROR("The backupFilePath does not exists, %{public}s", SqliteUtils::Anonymous(destPath).c_str());
-            return E_INVALID_FILE_PATH;
-        }
     }
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
@@ -1815,13 +1822,41 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Enable(syncerParam_);
     }
 #endif
-    rebuild_ = errCode == E_OK ? RebuiltType::NONE : rebuild_;
+    if (errCode == E_OK) {
+        ReportDbRestoreSuccessEvent();
+        rebuild_ = RebuiltType::NONE;
+    }
     if (!cloudTables_.empty()) {
         DoCloudSync("");
     }
     return errCode;
 }
 
+void RdbStoreImpl::ReportDbRestoreSuccessEvent()
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = 0; // Rdb Restore Success
+    eventInfo.systemErrorNo = 0;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+}
 /**
  * Queries data in the database based on specified conditions.
  */
@@ -2500,6 +2535,9 @@ bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
 {
+    if (config_.GetRoleType() == VISITOR || config_.IsReadOnly()) {
+        return E_OK;
+    }
     auto conn = connectionPool_->AcquireConnection(false);
     if (conn == nullptr) {
         return E_DATABASE_BUSY;
