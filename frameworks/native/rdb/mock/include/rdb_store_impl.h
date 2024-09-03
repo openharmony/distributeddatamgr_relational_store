@@ -156,6 +156,7 @@ private:
         int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
+    void ReportDbRestoreSuccessEvent();
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 20000;
