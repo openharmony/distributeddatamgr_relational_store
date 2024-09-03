@@ -1783,12 +1783,12 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Enable(syncerParam_);
     }
 #endif
-    rebuild_ = errCode == E_OK ? RebuiltType::NONE : rebuild_;
-    if (!cloudTables_.empty()) {
-        DoCloudSync("");
-    }
     if (errCode == E_OK) {
         ReportDbRestoreSuccessEvent();
+        rebuild_ = RebuiltType::NONE;
+    }
+    if (!cloudTables_.empty()) {
+        DoCloudSync("");
     }
     return errCode;
 }
