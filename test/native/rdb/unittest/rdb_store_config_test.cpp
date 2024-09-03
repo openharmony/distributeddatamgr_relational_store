@@ -1021,7 +1021,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_033, TestSize.Level1)
     RdbStoreConfig config1(dbPath);
     config1.SetEncryptStatus(true);
 
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config2(dbPath);
     config2.SetEncryptStatus(true);
     
@@ -1033,8 +1032,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_034, TestSize.Level1)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config1(dbPath);
     config1.SetEncryptStatus(true);
-
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    
     RdbStoreConfig config2(dbPath);
     config2.SetEncryptStatus(false);
     
