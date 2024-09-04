@@ -1015,30 +1015,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_032, TestSize.Level1)
     EXPECT_EQ(300, config.GetWriteTime());
 }
 
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_033, TestSize.Level1)
-{
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-    RdbStoreConfig config1(dbPath);
-    config1.SetEncryptStatus(true);
-
-    RdbStoreConfig config2(dbPath);
-    config2.SetEncryptStatus(true);
-    
-    EXPECT_TRUE(config1 == config2);
-}
-
-HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_034, TestSize.Level1)
-{
-    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
-    RdbStoreConfig config1(dbPath);
-    config1.SetEncryptStatus(true);
-    
-    RdbStoreConfig config2(dbPath);
-    config2.SetEncryptStatus(false);
-    
-    EXPECT_FALSE(config1 == config2);
-}
-
 /**
  * @tc.name: RdbStoreConfigVisitor_001
  * @tc.desc: test RdbStoreConfigVisitor

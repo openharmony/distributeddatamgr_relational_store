@@ -128,3 +128,23 @@ HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }
+
+HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config1(RdbHelperTest::rdbStorePath);
+    config1.SetEncryptStatus(true);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config1, 1, helper, errCode);
+    EXPECT_EQ(rdbStore1, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    RdbStoreConfig config2(RdbHelperTest::rdbStorePath);
+    config2.SetEncryptStatus(true);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config2, 1, helper, errCode);
+    EXPECT_EQ(rdbStore2, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    EXPECT_EQ(rdbStore1, rdbStore2);
+}
