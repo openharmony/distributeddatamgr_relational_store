@@ -230,7 +230,6 @@ private:
         const AsyncDetail &async);
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
-    int ExecuteBackupSql(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
     Uri GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
@@ -248,6 +247,7 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
+    std::pair<int32_t, Stmt> CreateStatement(const std::string &sql);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,

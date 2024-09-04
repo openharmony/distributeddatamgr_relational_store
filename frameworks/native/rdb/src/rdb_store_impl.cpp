@@ -1173,38 +1173,20 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
 
-    return ExecuteBackupSql(databasePath, destEncryptKey);
-}
-
-/**
- * Backup a database from a specified encrypted or unencrypted database file.
- */
-int RdbStoreImpl::ExecuteBackupSql(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
-{
-    auto [errCode, conn] = connectionPool_->CreateConnection(false);
-    if (conn == nullptr) {
-        LOG_ERROR("Get null connection, databasePath:%{public}s, err:%{public}d",
-            SqliteUtils::Anonymous(databasePath).c_str(), errCode);
-        return E_DATABASE_BUSY;
-    }
-    auto [err, statement] = conn->CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, conn);
-    if (statement == nullptr) {
-        LOG_ERROR("Get null statement, databasePath:%{public}s, err:%{public}d",
-            SqliteUtils::Anonymous(databasePath).c_str(), err);
-        return err;
+    auto [errCode, statement] = CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+    if (errCode != E_OK || statement == nullptr) {
+        return errCode;
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
     if (!destEncryptKey.empty() && !isEncrypt_) {
         bindArgs.emplace_back(destEncryptKey);
         statement->Execute();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     } else if (isEncrypt_) {
         std::vector<uint8_t> key = config_.GetEncryptKey();
         bindArgs.emplace_back(key);
         key.assign(key.size(), 0);
         statement->Execute();
-#endif
     } else {
         bindArgs.emplace_back("");
     }
@@ -2465,6 +2447,16 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
     return errCode;
 }
 #endif
+
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::CreateStatement(const std::string &sql)
+{
+    auto [errCode, conn] = connectionPool_->CreateConnection(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("create connection failed, err:%{public}d", errCode);
+        return { errCode, nullptr };
+    }
+    return conn->CreateStatement(sql, conn);
+}
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     const std::string &sql, std::shared_ptr<Connection> conn) const

@@ -406,6 +406,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         Connection::Delete(config);
     }
 
+    int ret = E_OK;
     if (!SqliteUtils::CopyFile(backupPath, newPath)) {
         ret = E_ERROR;
     }
