@@ -72,7 +72,7 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABL IF NOT EXISTS test "
+const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
                                                                  "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                                                  "name TEXT NOT NULL, age INTEGER, salary REAL, "
                                                                  "blobType BLOB)";
@@ -131,20 +131,26 @@ HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
 
 HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
 {
-    int errCode = E_OK;
-    RdbStoreConfig config1(RdbHelperTest::rdbStorePath);
-    config1.SetEncryptStatus(true);
-    RdbHelperTestOpenCallback helper1;
-    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
-    EXPECT_EQ(rdbStore1, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
 
-    RdbStoreConfig config2(RdbHelperTest::rdbStorePath);
-    config2.SetEncryptStatus(true);
-    RdbHelperTestOpenCallback helper2;
-    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
-    EXPECT_EQ(rdbStore2, nullptr);
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore1, nullptr);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore2, nullptr);
 
     EXPECT_EQ(rdbStore1, rdbStore2);
 }
