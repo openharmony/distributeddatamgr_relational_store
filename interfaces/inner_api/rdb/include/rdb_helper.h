@@ -52,6 +52,8 @@ public:
      */
     API_EXPORT static int DeleteRdbStore(const std::string &path);
 
+    API_EXPORT static int DeleteRdbStore(const RdbStoreConfig &config);
+
     /**
      * @brief Clear Cache.
      */

@@ -202,7 +202,6 @@ protected:
     bool isEncrypt_;
     int64_t vSchema_ = 0;
     std::string path_;
-    std::string orgPath_;
     std::string name_;
     std::string fileType_;
 

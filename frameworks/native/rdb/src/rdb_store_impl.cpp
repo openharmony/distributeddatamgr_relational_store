@@ -311,10 +311,9 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 #endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
-    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()),
-      isMemoryRdb_(config.IsMemoryRdb()), isEncrypt_(config.IsEncrypt()), path_(config.GetPath()),
-      orgPath_(config.GetPath()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
-      connectionPool_(nullptr), rebuild_(RebuiltType::NONE)
+    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
+      isEncrypt_(config.IsEncrypt()), path_(config.GetPath()), name_(config.GetName()),
+      fileType_(config.GetDatabaseFileType()), connectionPool_(nullptr), rebuild_(RebuiltType::NONE)
 {
 }
 
