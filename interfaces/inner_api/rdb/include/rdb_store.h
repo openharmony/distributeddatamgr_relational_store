@@ -578,6 +578,16 @@ public:
         return E_OK;
     }
 
+    virtual int InterruptBackup()
+    {
+        return E_OK;
+    }
+
+    virtual int32_t GetBackupStatus() const
+    {
+        return SlaveStatus::UNDEFINED;
+    }
+
     class ModifyTime {
     public:
         ModifyTime() = default;
