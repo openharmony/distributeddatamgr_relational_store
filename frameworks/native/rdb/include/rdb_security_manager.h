@@ -21,17 +21,12 @@
 #include <unistd.h>
 
 #include <atomic>
-#include <chrono>
 #include <climits>
-#include <list>
-#include <map>
-#include <memory>
 #include <mutex>
 #include <random>
 #include <vector>
 
 #include "hks_type.h"
-#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
@@ -68,38 +63,53 @@ private:
 
 class RdbSecurityManager {
 public:
-    enum class KeyFileType {
-        PUB_KEY_FILE = 1,
-        PUB_KEY_FILE_NEW_KEY
+    enum KeyFileType : int32_t {
+        PUB_KEY_FILE = 0,
+        PUB_KEY_FILE_NEW_KEY,
+        PUB_KEY_FILE_BUTT
     };
+    class KeyFiles {
+    public:
+        KeyFiles(const std::string &dbPath, bool openFile = true);
+        ~KeyFiles();
+        const std::string &GetKeyFile(KeyFileType type);
+        int32_t DestroyLock();
+        int32_t Lock();
+        int32_t Unlock();
 
-    RdbPassword GetRdbPassword(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
-    void DelRdbSecretDataFile(const std::string &dbPath);
-    void DelRdbSecretDataFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
+    private:
+        int32_t lockFd_ = -1;
+        std::string lock_;
+        std::string keys_[PUB_KEY_FILE_BUTT];
+    };
     static RdbSecurityManager &GetInstance();
     int32_t Init(const std::string &bundleName);
-    void UpdateKeyFile(const std::string &dbPath);
-    bool IsKeyFileExists(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
+
+    RdbPassword GetRdbPassword(const std::string &dbPath, KeyFileType keyFileType);
+    void DelAllKeyFiles(const std::string &dbPath);
+    void DelKeyFile(const std::string &dbPath, KeyFileType keyFileType);
+    void ChangeKeyFile(const std::string &dbPath);
+    int32_t RestoreKeyFile(const std::string &dbPath, const std::vector<uint8_t> &key);
+    bool IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType);
 
 private:
     RdbSecurityManager();
     ~RdbSecurityManager();
 
+    bool HasRootKey();
     int GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
-    bool HasRootKey();
     std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
     bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
-    bool InitPath(const std::string &dbKeyDir);
-    std::pair<std::string, std::string> ConcatenateKeyPath(const std::string &dbPath);
+    static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
-    bool SaveSecretKeyToFile(const std::string &dbPath, RdbSecurityManager::KeyFileType keyFileType);
+    bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
-    RdbPassword LoadSecretKeyFromFile(const std::string &dbPath, KeyFileType keyFileType);
+    RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    bool IsKeyFileEmpty(const std::string &keyFile);
     static bool IsKeyExpired(const time_t &createTime) ;
-    std::string GetKeyPath(const std::string &dbPath, KeyFileType keyFileType);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
     int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
@@ -107,15 +117,16 @@ private:
     int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
         const struct HksBlob *cipherText, struct HksBlob *plainText);
 
+    static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-    static const uint32_t TIMES = 4;
-    static const uint32_t MAX_UPDATE_SIZE = 64;
-    static const uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
-    static const uint8_t AEAD_LEN = 16;
+    static constexpr uint32_t TIMES = 4;
+    static constexpr uint32_t MAX_UPDATE_SIZE = 64;
+    static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+    static constexpr uint8_t AEAD_LEN = 16;
     static constexpr int RDB_KEY_SIZE = 32;
 
     static constexpr int HOURS_PER_YEAR = (24 * 365);

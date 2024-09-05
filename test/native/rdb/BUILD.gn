@@ -93,6 +93,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_read_only_test.cpp",
+    "unittest/rdb_security_manager_test.cpp",
     "unittest/rdb_sql_utils_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
@@ -122,7 +123,10 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rd_statement.cpp",
     "../../../frameworks/native/rdb/src/rd_utils.cpp",
     "../../../frameworks/native/rdb/src/rdb_local_db_observer.cpp",
+    "../../../frameworks/native/rdb/src/rdb_manager_impl.cpp",
+    "../../../frameworks/native/rdb/src/rdb_notifier_stub.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
+    "../../../frameworks/native/rdb/src/rdb_service_proxy.cpp",
     "../../../frameworks/native/rdb/src/rdb_sql_statistic.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",
     "../../../frameworks/native/rdb/src/share_block.cpp",
@@ -147,6 +151,7 @@ ohos_unittest("NativeRdbTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "samgr:samgr_proxy",
   ]
 
   deps = [
