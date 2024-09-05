@@ -19,6 +19,8 @@
 #include <map>
 #include <string>
 
+#include "sqlite3sym.h"
+
 namespace OHOS {
 namespace NativeRdb {
 
@@ -54,6 +56,9 @@ public:
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static std::string Anonymous(const std::string &srcFile);
     static int GetFileSize(const std::string &fileName);
+    static bool IsSlaveDbName(const std::string &fileName);
+    static std::string GetSlavePath(const std::string& name);
+    static bool TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate);
 
 private:
     struct SqlType {

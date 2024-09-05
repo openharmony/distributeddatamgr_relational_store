@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_security_manager.h"
+#include "string_utils.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -26,21 +27,12 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
     int journalSize, int pageSize, const std::string &encryptAlgo)
-    : readOnly(isReadOnly),
-      isCreateNecessary_(isCreateNecessary),
-      autoCheck_(autoCheck),
-      journalSize_(journalSize),
-      pageSize_(pageSize),
-      securityLevel(securityLevel),
-      storageMode(storageMode),
-      name(name),
-      path(name),
-      journalMode(journalMode),
-      syncMode(syncMode),
-      databaseFileType(databaseFileType),
-      encryptAlgo(encryptAlgo),
+    : readOnly_(isReadOnly), isCreateNecessary_(isCreateNecessary), autoCheck_(autoCheck), journalSize_(journalSize),
+      pageSize_(pageSize), securityLevel_(securityLevel), storageMode_(storageMode), path_(name),
+      journalMode_(journalMode), syncMode_(syncMode), databaseFileType(databaseFileType), encryptAlgo_(encryptAlgo),
       encryptKey_(encryptKey)
 {
+    name_ = StringUtils::ExtractFileName(name);
 }
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -53,7 +45,7 @@ RdbStoreConfig::~RdbStoreConfig()
  */
 std::string RdbStoreConfig::GetName() const
 {
-    return name;
+    return name_;
 }
 
 /**
@@ -61,7 +53,7 @@ std::string RdbStoreConfig::GetName() const
  */
 std::string RdbStoreConfig::GetPath() const
 {
-    return path;
+    return path_;
 }
 
 /**
@@ -69,7 +61,7 @@ std::string RdbStoreConfig::GetPath() const
  */
 StorageMode RdbStoreConfig::GetStorageMode() const
 {
-    return storageMode;
+    return storageMode_;
 }
 
 /**
@@ -77,7 +69,7 @@ StorageMode RdbStoreConfig::GetStorageMode() const
  */
 std::string RdbStoreConfig::GetJournalMode() const
 {
-    return journalMode;
+    return journalMode_;
 }
 
 /**
@@ -85,7 +77,7 @@ std::string RdbStoreConfig::GetJournalMode() const
  */
 std::string RdbStoreConfig::GetSyncMode() const
 {
-    return syncMode;
+    return syncMode_;
 }
 
 /**
@@ -93,7 +85,7 @@ std::string RdbStoreConfig::GetSyncMode() const
  */
 bool RdbStoreConfig::IsReadOnly() const
 {
-    return readOnly;
+    return readOnly_;
 }
 
 /**
@@ -114,7 +106,7 @@ std::string RdbStoreConfig::GetDatabaseFileType() const
 
 void RdbStoreConfig::SetName(std::string name)
 {
-    this->name = std::move(name);
+    this->name_ = std::move(name);
 }
 
 /**
@@ -122,7 +114,7 @@ void RdbStoreConfig::SetName(std::string name)
  */
 void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
 {
-    this->journalMode = GetJournalModeValue(journalMode);
+    this->journalMode_ = GetJournalModeValue(journalMode);
 }
 
 void RdbStoreConfig::SetDatabaseFileType(DatabaseFileType type)
@@ -135,12 +127,12 @@ void RdbStoreConfig::SetDatabaseFileType(DatabaseFileType type)
  */
 void RdbStoreConfig::SetPath(std::string path)
 {
-    this->path = std::move(path);
+    this->path_ = std::move(path);
 }
 
 void RdbStoreConfig::SetStorageMode(StorageMode storageMode)
 {
-    this->storageMode = storageMode;
+    this->storageMode_ = storageMode;
 }
 
 bool RdbStoreConfig::IsAutoCheck() const
@@ -169,16 +161,16 @@ void RdbStoreConfig::SetPageSize(int pageSize)
 }
 const std::string RdbStoreConfig::GetEncryptAlgo() const
 {
-    return encryptAlgo;
+    return encryptAlgo_;
 }
 void RdbStoreConfig::SetEncryptAlgo(const std::string &encryptAlgo)
 {
-    this->encryptAlgo = encryptAlgo;
+    this->encryptAlgo_ = encryptAlgo;
 }
 
 void RdbStoreConfig::SetReadOnly(bool readOnly)
 {
-    this->readOnly = readOnly;
+    this->readOnly_ = readOnly;
 }
 
 int RdbStoreConfig::SetDistributedType(DistributedType type)
@@ -297,12 +289,12 @@ std::string RdbStoreConfig::GetDatabaseFileTypeValue(DatabaseFileType databaseFi
 
 void RdbStoreConfig::SetSecurityLevel(SecurityLevel sl)
 {
-    securityLevel = sl;
+    securityLevel_ = sl;
 }
 
 SecurityLevel RdbStoreConfig::GetSecurityLevel() const
 {
-    return securityLevel;
+    return securityLevel_;
 }
 
 void RdbStoreConfig::SetEncryptStatus(const bool status)
@@ -312,7 +304,7 @@ void RdbStoreConfig::SetEncryptStatus(const bool status)
 
 bool RdbStoreConfig::IsEncrypt() const
 {
-    return this->isEncrypt_;
+    return isEncrypt_ || !encryptKey_.empty();
 }
 
 bool RdbStoreConfig::IsCreateNecessary() const
@@ -340,6 +332,19 @@ void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
     encryptKey_ = encryptKey;
 }
 
+void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const
+{
+    RdbSecurityManager::GetInstance().RestoreKeyFile(GetPath(), encryptKey);
+    encryptKey_.assign(encryptKey_.size(), 0);
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
+    encryptKey_ = encryptKey;
+}
+
+void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
+{
+    newEncryptKey_ = newEncryptKey;
+}
+
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
     return encryptKey_;
@@ -347,6 +352,7 @@ std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 
 void RdbStoreConfig::ChangeEncryptKey() const
 {
+    RdbSecurityManager::GetInstance().ChangeKeyFile(GetPath());
     if (newEncryptKey_.empty()) {
         return;
     }
@@ -374,7 +380,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
 
     auto name = bundleName_;
     if (name.empty()) {
-        name = std::string(path).substr(0, path.rfind("/") + 1);
+        name = std::string(path_).substr(0, path_.rfind("/") + 1);
     }
     using KeyFileType = RdbSecurityManager::KeyFileType;
     auto errCode = RdbSecurityManager::GetInstance().Init(name);
@@ -382,22 +388,21 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         LOG_ERROR("generate root encrypt key failed, bundleName_:%{public}s", bundleName_.c_str());
         return errCode;
     }
-    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE);
+    auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path_, KeyFileType::PUB_KEY_FILE);
     if (rdbPwd.IsValid()) {
         encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
     rdbPwd.Clear();
     if ((rdbPwd.isKeyExpired && autoRekey_) ||
-        RdbSecurityManager::GetInstance().IsKeyFileExists(path, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
-        auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path, KeyFileType::PUB_KEY_FILE_NEW_KEY);
+        RdbSecurityManager::GetInstance().IsKeyFileExists(path_, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
+        auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path_, KeyFileType::PUB_KEY_FILE_NEW_KEY);
         if (rdbNewPwd.IsValid()) {
             newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
         }
         rdbPwd.Clear();
     }
     if (encryptKey_.empty() && newEncryptKey_.empty()) {
-        LOG_ERROR("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
-        return E_ERROR;
+        LOG_WARN("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
     }
     return E_OK;
 }
@@ -411,6 +416,11 @@ void RdbStoreConfig::ClearEncryptKey()
 void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
 {
     customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+}
+
+void RdbStoreConfig::SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions)
+{
+    customScalarFunctions = functions;
 }
 
 std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const
@@ -552,6 +562,16 @@ std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
 int32_t RdbStoreConfig::GetIter() const
 {
     return iter_;
+}
+
+int32_t RdbStoreConfig::GetHaMode() const
+{
+    return haMode_;
+}
+
+void RdbStoreConfig::SetHaMode(int32_t haMode)
+{
+    haMode_ = haMode;
 }
 
 void RdbStoreConfig::SetIter(int32_t iter) const

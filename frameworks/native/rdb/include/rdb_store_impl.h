@@ -187,10 +187,12 @@ public:
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
+    int InterruptBackup() override;
     int32_t GetDbType() const override;
     void AfterOpen(const RdbStoreConfig &config);
     std::pair<int32_t, uint32_t> LockCloudContainer() override;
     int32_t UnlockCloudContainer() override;
+    int32_t GetBackupStatus() const override;
 
 protected:
     int InnerOpen();
@@ -202,7 +204,6 @@ protected:
     bool isEncrypt_;
     int64_t vSchema_ = 0;
     std::string path_;
-    std::string orgPath_;
     std::string name_;
     std::string fileType_;
 
@@ -244,6 +245,7 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
@@ -258,6 +260,7 @@ private:
         ConflictResolution conflictResolution);
     int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
     int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
+    int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
 
