@@ -785,3 +785,48 @@ HWTEST_F(RdbStoreImplTest, UnlockCloudContainerTest, TestSize.Level2)
     store = nullptr;
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
+
+/* *
+ * @tc.name: LockCloudContainerTest001
+ * @tc.desc: lock cloudContainer testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, LockCloudContainerTest001, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_OK, errCode);
+    // GetRdbService succeeded if configuration file has already been configured
+    auto ret = store->RdbStore::LockCloudContainer();
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(0, ret.second);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: UnlockCloudContainerTest001
+ * @tc.desc: unlock cloudContainer testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, UnlockCloudContainerTest001, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_OK, errCode);
+    // GetRdbService succeeded if configuration file has already been configured
+    auto result = store->RdbStore::UnlockCloudContainer();
+    EXPECT_EQ(E_OK, result);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}

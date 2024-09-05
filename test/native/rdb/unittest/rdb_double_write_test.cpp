@@ -1016,6 +1016,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_023, TestSize.Level1)
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
     LOG_INFO("RdbStore_DoubleWrite_023 reopen finish");
 
     int64_t id = 10;
