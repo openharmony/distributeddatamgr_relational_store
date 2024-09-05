@@ -74,7 +74,7 @@ void RowEntity::Clear(int32_t size)
     indexs_.resize(size);
 }
 
-AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed_(false)
+AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed_(false), lastErr_(E_OK)
 {
 }
 
@@ -87,6 +87,10 @@ AbsResultSet::~AbsResultSet()
 int AbsResultSet::GetRowCount(int &count)
 {
     count = rowCount_;
+    if (lastErr_ != E_OK) {
+        LOG_ERROR("ResultSet has lastErr %{public}d", lastErr_);
+        return lastErr_;
+    }
     if (rowCount_ != NO_COUNT) {
         return E_OK;
     }
@@ -225,6 +229,9 @@ int AbsResultSet::GetDouble(int columnIndex, double& value)
 
 int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
 {
+    if (lastErr_ != E_OK) {
+        return lastErr_;
+    }
     ColumnType columnType = ColumnType::TYPE_NULL;
     int errCode = GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {

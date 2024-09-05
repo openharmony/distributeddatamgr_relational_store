@@ -91,6 +91,7 @@ int SqliteSharedResultSet::InitRowCount()
         count++;
     } while (status == E_OK || ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < MAX_RETRY_TIMES));
     if (status != E_NO_MORE_ROWS) {
+        lastErr_ = status;
         count = NO_COUNT;
     }
     statement_->Reset();
@@ -101,6 +102,7 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
     if (conn_ == nullptr) {
         LOG_ERROR("Already close.");
+        lastErr_ = E_ALREADY_CLOSED;
         return { nullptr, E_ALREADY_CLOSED };
     }
 
@@ -111,16 +113,19 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
     auto type = SqliteUtils::GetSqlStatementType(qrySql_);
     if (type == SqliteUtils::STATEMENT_ERROR) {
         LOG_ERROR("invalid sql_ %{public}s!", qrySql_.c_str());
+        lastErr_ = E_INVALID_ARGS;
         return { nullptr, E_INVALID_ARGS };
     }
 
     auto [errCode, statement] = conn_->CreateStatement(qrySql_, conn_);
     if (statement == nullptr) {
+        lastErr_ = errCode;
         return { statement, errCode };
     }
 
     if (!statement->ReadOnly()) {
         LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(qrySql_).c_str());
+        lastErr_ = E_NOT_SELECT;
         return { nullptr, E_NOT_SELECT };
     }
 
@@ -129,6 +134,7 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
         statement->Reset();
         statement = nullptr;
+        lastErr_ = errCode;
         return { nullptr, errCode };
     }
     return { statement, E_OK };

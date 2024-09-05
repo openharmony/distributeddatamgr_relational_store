@@ -71,6 +71,7 @@ int StepResultSet::InitRowCount()
     } while (status == E_OK ||
              ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < STEP_QUERY_RETRY_MAX_TIMES));
     if (status != E_NO_MORE_ROWS) {
+        lastErr_ = status;
         count = NO_COUNT;
     }
     statement->Reset();
@@ -86,23 +87,27 @@ int StepResultSet::PrepareStep()
     }
 
     if (conn_ == nullptr) {
-        return E_ALREADY_CLOSED;
+        lastErr_ = E_ALREADY_CLOSED;
+        return lastErr_;
     }
 
     auto type = SqliteUtils::GetSqlStatementType(sql_);
     if (type == SqliteUtils::STATEMENT_ERROR) {
         LOG_ERROR("invalid sql_ %{public}s!", sql_.c_str());
-        return E_INVALID_ARGS;
+        lastErr_ = E_INVALID_ARGS;
+        return lastErr_;
     }
 
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
+        lastErr_ = errCode;
         return E_STATEMENT_NOT_PREPARED;
     }
 
     if (!statement->ReadOnly()) {
         LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(sql_).c_str());
-        return E_NOT_SELECT;
+        lastErr_ = E_NOT_SELECT;
+        return lastErr_;
     }
 
     errCode = statement->Bind(args_);
@@ -110,7 +115,8 @@ int StepResultSet::PrepareStep()
         LOG_ERROR("Bind arg faild! Ret is %{public}d", errCode);
         statement->Reset();
         statement = nullptr;
-        return errCode;
+        lastErr_ = errCode;
+        return lastErr_;
     }
 
     sqliteStatement_ = std::move(statement);

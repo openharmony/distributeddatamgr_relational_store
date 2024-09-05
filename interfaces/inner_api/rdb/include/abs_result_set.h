@@ -344,6 +344,7 @@ protected:
     int rowPos_ = INIT_POS;
     bool isClosed_ = false;
     int rowCount_ = NO_COUNT;
+    int32_t lastErr_;
 private:
     int InitColumnNames();
 
