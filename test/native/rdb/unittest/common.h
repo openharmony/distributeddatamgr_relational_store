@@ -29,6 +29,8 @@ struct RowData {
     int age;
     double salary;
     std::vector<uint8_t> blobType;
+    AssetValue asset;
+    std::vector<AssetValue> assets;
 };
 
 struct RowDatas {
