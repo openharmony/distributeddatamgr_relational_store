@@ -1028,10 +1028,10 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
         int64_t executeCost =
             std::chrono::duration_cast<std::chrono::milliseconds>(executeStart - changesStart).count();
         int64_t changesCost = std::chrono::duration_cast<std::chrono::milliseconds>(allEnd - changesStart).count();
-        LOG_WARN("executeForLastInsertedRowId totalCostTime[%{public}" PRId64 "] getStatementCost[%{public}" PRId64
+        LOG_WARN("totalCostTime[%{public}" PRId64 "] getStatementCost[%{public}" PRId64
                  "] executeCost[%{public}" PRId64 "] changesCost[%{public}" PRId64 "] "
                  "sql[%{public}s]",
-            totalCostTime, getStatementCost, executeCost, changesCost, sql.c_str());
+            totalCostTime, getStatementCost, executeCost, changesCost, SqliteUtils::Anonymous(sql).c_str());
     }
     return E_OK;
 }
