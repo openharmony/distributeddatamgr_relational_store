@@ -76,6 +76,7 @@ using RdbMgr = DistributedRdb::RdbManagerImpl;
 static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
+constexpr int64_t TIME_OUT = 1500;
 
 void RdbStoreImpl::InitSyncerParam()
 {
@@ -1007,15 +1008,31 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
     }
+    auto getStatementStart = std::chrono::steady_clock::now();
     auto [errCode, statement] = GetStatement(sql, false);
     if (statement == nullptr) {
         return errCode;
     }
+    auto executeStart = std::chrono::steady_clock::now();
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         return errCode;
     }
+    auto changesStart = std::chrono::steady_clock::now();
     outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    auto allEnd = std::chrono::steady_clock::now();
+    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(getStatementStart - allEnd).count();
+    if (totalCostTime >= TIME_OUT) {
+        int64_t getStatementCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(executeStart - getStatementStart).count();
+        int64_t executeCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(executeStart - changesStart).count();
+        int64_t changesCost = std::chrono::duration_cast<std::chrono::milliseconds>(allEnd - changesStart).count();
+        LOG_WARN("executeForLastInsertedRowId totalCostTime[%{public}" PRId64 "] getStatementCost[%{public}" PRId64
+                 "] executeCost[%{public}" PRId64 "] changesCost[%{public}" PRId64 "] "
+                 "sql[%{public}s]",
+            totalCostTime, getStatementCost, executeCost, changesCost, sql.c_str());
+    }
     return E_OK;
 }
 
