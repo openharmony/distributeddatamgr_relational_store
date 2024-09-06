@@ -116,6 +116,8 @@ private:
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
     int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
+    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
+    bool CheckIntegrity(const std::string &dbPath);
 
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;

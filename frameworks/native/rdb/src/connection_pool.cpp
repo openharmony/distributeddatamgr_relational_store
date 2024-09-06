@@ -384,6 +384,19 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         }
         return ret;
     }
+
+    return RestoreMasterDb(newPath, backupPath);
+}
+
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+{
+    if (!CheckIntegrity(backupPath)) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    SqliteUtils::DeleteFile(backupPath + "-shm");
+    SqliteUtils::DeleteFile(backupPath + "-wal");
+
     CloseAllConnections();
     Connection::Delete(config_);
 
@@ -393,11 +406,17 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         Connection::Delete(config);
     }
 
+    int ret = E_OK;
     if (!SqliteUtils::CopyFile(backupPath, newPath)) {
         ret = E_ERROR;
     }
-    auto [errCode, node] = Init();
-    return ret == E_OK ? errCode : ret;
+    auto result = Init();
+    if (result.first != E_OK) {
+        CloseAllConnections();
+        Connection::Delete(config_);
+        result = Init();
+    }
+    return ret == E_OK ? result.first : ret;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
@@ -642,6 +661,15 @@ int32_t ConnectionPool::Container::RelDetails(std::shared_ptr<ConnNode> node)
         }
     }
     return E_OK;
+}
+
+bool ConnectionPool::CheckIntegrity(const std::string &dbPath)
+{
+    RdbStoreConfig config(config_);
+    config.SetPath(dbPath);
+    config.SetIntegrityCheck(IntegrityCheck::FULL);
+    auto [ret, connection] = Connection::Create(config, true);
+    return ret == E_OK;
 }
 
 int32_t ConnPool::Container::Clear()
