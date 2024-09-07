@@ -1060,6 +1060,19 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     return E_OK;
 }
 
+int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFilePath)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_slave.db");
+    auto pos = path.find(suffix);
+    if (pos == std::string::npos) {
+        backupFilePath = path + slaveSuffix;
+    } else {
+        backupFilePath = std::string(path, 0, pos) + slaveSuffix;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
 {
     auto [errCode, statement] = BeginExecuteSql(sql);
@@ -1084,6 +1097,10 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
         return E_NOT_SUPPORT;
     }
     std::string backupFilePath;
+    if (TryGetMasterSlaveBackupPath(databasePath, backupFilePath)) {
+        return InnerBackup(backupFilePath, destEncryptKey);
+    }
+
     int ret = GetDataBasePath(databasePath, backupFilePath);
     if (ret != E_OK) {
         return ret;
@@ -1135,6 +1152,10 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
             return E_NOT_SUPPORT;
         }
         return conn->Backup(databasePath, {});
+    }
+    if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
+        auto conn = connectionPool_->AcquireConnection(false);
+        return conn == nullptr ? E_BASE : conn->Backup(databasePath, {});
     }
     auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
     if (statement == nullptr) {
@@ -1253,8 +1274,9 @@ int RdbStoreImpl::AttachInner(
 std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
-        return { E_NOT_SUPPORT, 0 };
+    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly()) ||
+        config_.GetHaMode() != HAMode::SINGLE) {
+        return {E_NOT_SUPPORT, 0};
     }
     std::string dbPath;
     int err = SqliteGlobalConfig::GetDbPath(config, dbPath);
@@ -1713,25 +1735,26 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_ERROR;
     }
 
-    std::string backupFilePath;
-    int ret = GetDataBasePath(backupPath, backupFilePath);
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    std::string tempPath = backupFilePath + ".tmp";
-    if (access(tempPath.c_str(), F_OK) == E_OK) {
-        backupFilePath = tempPath;
-    } else {
-        auto walFile = backupFilePath + "-wal";
-        if (access(walFile.c_str(), F_OK) == E_OK) {
-            return E_ERROR;
+    std::string destPath;
+    if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
+        int ret = GetDataBasePath(backupPath, destPath);
+        if (ret != E_OK) {
+            return ret;
         }
-    }
+        std::string tempPath = destPath + ".tmp";
+        if (access(tempPath.c_str(), F_OK) == E_OK) {
+            destPath = tempPath;
+        } else {
+            auto walFile = destPath + "-wal";
+            if (access(walFile.c_str(), F_OK) == E_OK) {
+                return E_ERROR;
+            }
+        }
 
-    if (access(backupFilePath.c_str(), F_OK) != E_OK) {
-        LOG_ERROR("The backupFilePath does not exists.");
-        return E_INVALID_FILE_PATH;
+        if (access(destPath.c_str(), F_OK) != E_OK) {
+            LOG_ERROR("The backupFilePath does not exists.");
+            return E_INVALID_FILE_PATH;
+        }
     }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1740,7 +1763,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Disable(syncerParam_);
     }
 #endif
-    int errCode = connectionPool_->ChangeDbFileForRestore(path_, backupFilePath, newKey);
+    int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
@@ -1789,6 +1812,14 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
+    }
+    if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
+        auto conn = connectionPool_->AcquireConnection(false);
+        if (conn == nullptr) {
+            LOG_WARN("acquire conn failed when set distributed.");
+        } else if (conn->IsExchange(config_).first) {
+            (void)conn->Backup({}, {});
+        }
     }
     if (type != DistributedRdb::DISTRIBUTED_CLOUD || !distributedConfig.autoSync) {
         return E_OK;
@@ -2368,5 +2399,51 @@ int RdbStoreImpl::GetRebuilt(RebuiltType &rebuilt)
 {
     rebuilt = static_cast<RebuiltType>(rebuild_);
     return E_OK;
+}
+
+int RdbStoreImpl::InterruptBackup()
+{
+    if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
+        return E_NOT_SUPPORT;
+    }
+    auto conn = connectionPool_->AcquireConnection(false);
+    if (conn == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+    int32_t ret = conn->InterruptBackup();
+    if (ret != E_OK) {
+        LOG_ERROR("InterruptBackup failed");
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t RdbStoreImpl::GetBackupStatus() const
+{
+    if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER && config_.GetHaMode() != HAMode::MAIN_REPLICA) {
+        return SlaveStatus::UNDEFINED;
+    }
+    auto conn = connectionPool_->AcquireConnection(false);
+    if (conn == nullptr) {
+        return SlaveStatus::UNDEFINED;
+    }
+    return conn->GetBackupStatus();
+}
+
+bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore)
+{
+    if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {
+        return false;
+    }
+    int ret = GetSlaveName(config_.GetPath(), destPath);
+    if (ret != E_OK) {
+        destPath = {};
+        return false;
+    }
+    if (isRestore && access(destPath.c_str(), F_OK) != 0) {
+        LOG_WARN("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
+        return false;
+    }
+    return true;
 }
 } // namespace OHOS::NativeRdb

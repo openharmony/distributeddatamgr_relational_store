@@ -109,6 +109,15 @@ public:
     {
         return DB_SQLITE;
     }
+    virtual int InterruptBackup()
+    {
+        return E_OK;
+    }
+
+    virtual int32_t GetBackupStatus() const
+    {
+        return SlaveStatus::UNDEFINED;
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif
