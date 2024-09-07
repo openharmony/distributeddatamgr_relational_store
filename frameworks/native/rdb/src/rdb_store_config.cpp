@@ -340,6 +340,11 @@ void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) c
     encryptKey_ = encryptKey;
 }
 
+void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
+{
+    newEncryptKey_ = newEncryptKey;
+}
+
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
     return encryptKey_;
@@ -411,6 +416,11 @@ void RdbStoreConfig::ClearEncryptKey()
 void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
 {
     customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+}
+
+void RdbStoreConfig::SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions)
+{
+    customScalarFunctions = functions;
 }
 
 std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const
@@ -552,6 +562,16 @@ std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
 int32_t RdbStoreConfig::GetIter() const
 {
     return iter_;
+}
+
+int32_t RdbStoreConfig::GetHaMode() const
+{
+    return haMode_;
+}
+
+void RdbStoreConfig::SetHaMode(int32_t haMode)
+{
+    haMode_ = haMode;
 }
 
 void RdbStoreConfig::SetIter(int32_t iter) const

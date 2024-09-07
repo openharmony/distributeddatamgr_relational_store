@@ -138,7 +138,8 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
         return false;
     }
     std::ofstream dst(destFile.c_str(), std::ios::binary);
-    if (!src.is_open()) {
+    if (!dst.is_open()) {
+        src.close();
         LOG_WARN("open destFile failed errno %{public}d %{public}s", errno, destFile.c_str());
         return false;
     }
@@ -171,6 +172,57 @@ int SqliteUtils::GetFileSize(const std::string &fileName)
     }
 
     return static_cast<int>(fileStat.st_size);
+}
+
+bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
+{
+    std::string slaveSuffix("_slave.db");
+    if (fileName.size() < slaveSuffix.size()) {
+        return false;
+    }
+    size_t pos = fileName.rfind(slaveSuffix);
+    return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
+}
+
+bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate)
+{
+    std::string lockFile = dbPath + "-locker";
+    if (isDelete) {
+        if (std::remove(lockFile.c_str()) != 0) {
+            LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+            return false;
+        } else {
+            LOG_INFO("remove slave lock %{public}s", Anonymous(lockFile).c_str());
+            return true;
+        }
+    } else {
+        if (access(lockFile.c_str(), F_OK) == 0) {
+            return true;
+        }
+        if (needCreate) {
+            std::ofstream src(lockFile.c_str(), std::ios::binary);
+            if (src.is_open()) {
+                LOG_INFO("create slave lock %{public}s", Anonymous(lockFile).c_str());
+                src.close();
+                return true;
+            } else {
+                LOG_WARN("open slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+                return false;
+            }
+        }
+        return false;
+    }
+}
+
+std::string SqliteUtils::GetSlavePath(const std::string& name)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_slave.db");
+    auto pos = name.rfind(suffix);
+    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
+        return name + slaveSuffix;
+    }
+    return name.substr(0, pos) + slaveSuffix;
 }
 } // namespace NativeRdb
 } // namespace OHOS

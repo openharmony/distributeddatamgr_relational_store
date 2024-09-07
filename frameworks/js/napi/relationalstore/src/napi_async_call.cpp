@@ -42,8 +42,12 @@ void ContextBase::SetAction(
         status = napi_typeof(env, argv[argc - 1], &valueType);
         if (status == napi_ok && valueType == napi_function) {
             LOG_DEBUG("asyncCall set callback");
-            status = napi_create_reference(env, argv[argc - 1], 1, &callback_);
-            argc = argc - 1;
+            if (argc == 1) {
+                error = std::make_shared<ParamNumError>("1");
+            } else {
+                status = napi_create_reference(env, argv[argc - 1], 1, &callback_);
+                argc = argc - 1;
+            }
         }
     }
     if (data) {

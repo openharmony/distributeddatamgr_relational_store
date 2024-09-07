@@ -122,6 +122,18 @@ enum class SecurityLevel : int32_t {
     LAST
 };
 
+/**
+ * @brief High availability mode.
+ */
+enum HAMode : int32_t {
+    /** Single database.*/
+    SINGLE = 0,
+    /** Real-time dual-write backup database.*/
+    MAIN_REPLICA,
+    /** Database for which real-time dual-write is enabled only after backup is manually triggered.*/
+    MANUAL_TRIGGER,
+};
+
 enum RoleType : uint32_t {
     /**
       * The user has administrative rights.
@@ -549,7 +561,7 @@ public:
                this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
                this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
                this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
-               this->pluginLibs_ == config.pluginLibs_;
+               this->pluginLibs_ == config.pluginLibs_ && this->haMode_ == config.haMode_;
     }
 
     /**
@@ -601,6 +613,14 @@ public:
 
     std::vector<std::string> GetPluginLibs() const;
 
+    int32_t GetHaMode() const;
+ 
+    void SetHaMode(int32_t haMode);
+
+    void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
+
+    void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
+
     void SetIter(int32_t iter) const;
 
     int32_t GetIter() const;
@@ -627,6 +647,7 @@ private:
     int32_t writeTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1; // seconds
     int32_t dbType_ = DB_SQLITE;
+    int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;
     RoleType role_ = OWNER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
