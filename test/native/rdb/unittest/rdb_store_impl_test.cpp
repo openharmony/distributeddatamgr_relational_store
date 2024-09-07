@@ -830,3 +830,29 @@ HWTEST_F(RdbStoreImplTest, UnlockCloudContainerTest001, TestSize.Level2)
     store = nullptr;
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
 }
+
+/* *
+ * @tc.name: SetSearchableTest
+ * @tc.desc: SetSearchable testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, SetSearchableTest, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    int result = store->SetSearchable(true);
+    EXPECT_EQ(E_INVALID_ARGS, result);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    config.SetBundleName("com.example.distributed.rdb");
+    EXPECT_EQ(E_OK, errCode);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    result = store->SetSearchable(true);
+    EXPECT_EQ(E_OK, result);
+}

@@ -50,9 +50,14 @@ public:
 };
 
 const std::string UpdateTestOpenCallback::CREATE_TABLE_TEST =
-    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                  "name TEXT UNIQUE, age INTEGER, salary "
-                                                                  "REAL, blobType BLOB)");
+    std::string("CREATE TABLE IF NOT EXISTS test (")
+    + std::string("id INTEGER PRIMARY KEY AUTOINCREMENT, ")
+    + std::string("name TEXT UNIQUE, ")
+    + std::string("age INTEGER, ")
+    + std::string("salary REAL, ")
+    + std::string("blobType BLOB, ")
+    + std::string("assetType ASSET, ")
+    + std::string("assetsType ASSETS)");
 
 int UpdateTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -284,6 +289,161 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
 
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_007
+ * @tc.desc: test RdbStore update asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    ValuesBucket values;
+    AssetValue value{ .version = 1, .name = "123", .uri = "your test path", .createTime = "13", .modifyTime = "13" };
+    int changedRows;
+    int64_t id;
+    values.PutNull("assetType");
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+    values.Clear();
+    values.Put("assetType", value);
+    ret = store->Update(changedRows, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ .id = 3,
+                                                   .asset{ .version = 1,
+                                                       .name = "123",
+                                                       .uri = "your test path",
+                                                       .createTime = "13",
+                                                       .modifyTime = "13",
+                                                       .status = AssetValue::STATUS_INSERT } });
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_008
+ * @tc.desc: test RdbStore update asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    ValuesBucket values;
+    AssetValue valueDef{
+        .version = 0,
+        .name = "123",
+        .uri = "my test path",
+        .createTime = "12",
+        .modifyTime = "12",
+    };
+    AssetValue value{ .version = 2, .name = "456", .uri = "your test path", .createTime = "15", .modifyTime = "15" };
+    int changedRows;
+    int64_t id;
+    values.Put("assetType", valueDef);
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(4, id);
+    values.Clear();
+    values.Put("assetType", value);
+    ret = store->Update(changedRows, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RdbStoreUpdateTest::ExpectValue(resultSet,
+        RowData{ .id = 4,
+            .asset{ .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" } });
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_009
+ * @tc.desc: test RdbStore update asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    ValuesBucket values;
+    AssetValue valueDef{ .version = 0,
+        .name = "123",
+        .uri = "my test path",
+        .createTime = "12",
+        .modifyTime = "12",
+        .status = AssetValue::STATUS_NORMAL,
+        .hash = "321",
+        .size = "543" };
+    AssetValue value{ .name = "123" };
+    value.status = AssetValue::STATUS_DELETE;
+    int changedRows;
+    int64_t id;
+    values.Put("assetType", valueDef);
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(5, id);
+    values.Clear();
+    values.Put("assetType", value);
+    ret = store->Update(changedRows, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ .id = 5,
+                                                   .asset{ .version = 0,
+                                                       .name = "123",
+                                                       .uri = "my test path",
+                                                       .createTime = "12",
+                                                       .modifyTime = "",
+                                                       .status = AssetValue::Status::STATUS_DELETE,
+                                                       .hash = "",
+                                                       .size = "" } });
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Update_010
+ * @tc.desc: test RdbStore update assets
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    ValuesBucket values;
+    std::vector<AssetValue> assetsDef{
+        { .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" }
+    };
+    AssetValue value1{ .version = 1, .name = "123", .uri = "your test path", .createTime = "13", .modifyTime = "13" };
+    AssetValue value2{ .version = 2, .name = "123", .uri = "your test path", .createTime = "14", .modifyTime = "14" };
+    AssetValue value3{ .version = 3, .name = "456", .uri = "your test path", .createTime = "15", .modifyTime = "15" };
+    auto assets = ValueObject::Assets({ value1, value2, value3 });
+    int changedRows;
+    int64_t id;
+    values.Put("assetsType", assetsDef);
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(6, id);
+    values.Clear();
+    values.Put("assetsType", assets);
+
+    ret = store->Update(changedRows, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
 }
 
 /**

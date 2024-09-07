@@ -143,6 +143,7 @@ void SubObserver::OnChange(const Origin &origin, const PrimaryFields &fields, Rd
 
 void SubObserver::OnChange()
 {
+    count++;
     const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                           "name TEXT NOT NULL, age INTEGER, salary "
@@ -150,14 +151,14 @@ void SubObserver::OnChange()
     RdbStoreSubTest::store->ExecuteSql(CREATE_TABLE_TEST);
     ValuesBucket values;
     int64_t id;
-    values.PutInt("id", 1);
+    values.PutInt("id", count);
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret = RdbStoreSubTest::store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
+    EXPECT_EQ(count, id);
 }
 
 void SubObserver::RegisterCallback(const CheckOnChangeFunc &callback)
@@ -224,7 +225,9 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::REMOTE }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
 
@@ -239,7 +242,9 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::CLOUD }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::CLOUD, "observer" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::CLOUD, "observer" }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
 
@@ -254,7 +259,9 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL, "observer" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::CLOUD_DETAIL, "observer" }, observer_.get());
     EXPECT_EQ(status, E_OK);
 }
 
@@ -269,16 +276,59 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::LOCAL, "observer" }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::LOCAL, "observer1" }, observer_.get());
+    store->Subscribe({ SubscribeMode::LOCAL, "observer1" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    store->Subscribe({ SubscribeMode::LOCAL, "observer2" }, observer_.get());
     EXPECT_EQ(status, E_OK);
 
-    status = store->Notify("observer");
+    status = store->Notify("observer1");
     EXPECT_EQ(status, E_OK);
+    status = store->Notify("observer2");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(observer_->count, 2);
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     int count;
     resultSet->GetRowCount(count);
-    EXPECT_EQ(1, count);
+    EXPECT_EQ(observer_->count, count);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL, "nonexistent" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL, "observer1" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL, "nonexistent" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL, "observer2" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+    status = store->Notify("observer1");
+    EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared
+ * @tc.desc: RdbStoreSubscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_.get());
+    store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer2" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "nonexistent" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_.get());
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "nonexistent" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "observer2" }, nullptr);
+    EXPECT_EQ(status, E_OK);
 }
 
 /**
@@ -500,6 +550,10 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail005, TestSize.Level1)
     EXPECT_EQ(id, num);
     EXPECT_EQ(observer_->count, 1);
     status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, nullptr);
     EXPECT_EQ(status, E_OK);
     observer_->RegisterCallback(nullptr);
 }
