@@ -481,11 +481,21 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
         }
     }
 
+    auto size = content.size();
+    auto offset = 0;
     auto iter = content.begin();
+    if (offset + 1 >= size) {
+        return false;
+    }
     keyData.distributed = *iter;
     iter++;
+    offset++;
 
     std::vector<uint8_t> createTime;
+    if (offset + sizeof(time_t) / sizeof(uint8_t) >= size) {
+        return false;
+    }
+    offset += sizeof(time_t) / sizeof(uint8_t);
     for (int i = 0; i < static_cast<int>(sizeof(time_t) / sizeof(uint8_t)); i++) {
         createTime.push_back(*iter);
         iter++;
@@ -495,6 +505,10 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
         keyData.timeValue = *reinterpret_cast<time_t *>(&createTime[0]);
     }
 
+    if (offset + AEAD_LEN >= size) {
+        return false;
+    }
+    offset = size;
     keyData.secretKey.insert(keyData.secretKey.end(), iter, content.end());
 
     return true;
