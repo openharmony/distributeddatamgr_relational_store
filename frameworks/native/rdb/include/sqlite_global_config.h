@@ -42,6 +42,7 @@ public:
     static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
     static constexpr char DETACH_BACKUP_SQL[] = "detach backup";
     static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
+    static constexpr char PRAGMA_BACKUP_JOUR_MODE_WAL[] = "PRAGMA backup.journal_mode=WAL";
     static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
     static constexpr char JOURNAL_MODE_WAL[] = "WAL";
     static constexpr char DEFAULE_SYNC_MODE[] = "FULL";

@@ -160,3 +160,56 @@ HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }
+
+HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
+
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore1, nullptr);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore2, nullptr);
+
+    EXPECT_EQ(rdbStore1, rdbStore2);
+}
+
+HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
+
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore1, nullptr);
+
+    config.SetSecurityLevel(SecurityLevel::S2);
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore2, nullptr);
+
+    EXPECT_NE(rdbStore1, rdbStore2);
+}
