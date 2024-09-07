@@ -21,6 +21,7 @@
 
 #include "common.h"
 #include "rdb_errno.h"
+#include "file_ex.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -98,5 +99,25 @@ HWTEST_F(RdbSecurityManagerTest, LockUnlock, TestSize.Level1)
     ASSERT_FALSE(beforeUnlock);
     ASSERT_TRUE(afterUnlock);
     thread.join();
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest
+ * @tc.desc: test load secret key from disk test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
+{
+    std::string name = "secret_key_load_test";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
+    RdbSecurityManager::KeyFiles keyFile(keyPath);
+
+    const std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    std::vector<char> content = { 'a' };
+    bool ret = OHOS::SaveBufferToFile(file, content);
+    ASSERT_TRUE(ret);
+    RdbPassword pwd =
+        RdbSecurityManager::GetInstance().GetRdbPassword(keyPath, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    ASSERT_EQ(pwd.GetSize(), 0);
 }
 }
