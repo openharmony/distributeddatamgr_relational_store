@@ -332,6 +332,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = base_deps
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/rdb/stdlib.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]

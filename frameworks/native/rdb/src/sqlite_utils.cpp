@@ -193,7 +193,12 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
 bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
     bool isSlaveFailure)
 {
-    std::string lockFile = isSlaveFailure ? dbPath + "-slaveFailure" : dbPath + "-syncInterrupt";
+    auto realPath = RealPath(dbPath);
+    if (realPath.empty()) {
+        LOG_ERROR("get real path file failed, len = %{public}zu.", realPath.size());
+        return false;
+    }
+    std::string lockFile = isSlaveFailure ? realPath + "-slaveFailure" : realPath + "-syncInterrupt";
     if (isDelete) {
         if (std::remove(lockFile.c_str()) != 0) {
             LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
@@ -230,6 +235,21 @@ std::string SqliteUtils::GetSlavePath(const std::string& name)
         return name + slaveSuffix;
     }
     return name.substr(0, pos) + slaveSuffix;
+}
+
+std::string SqliteUtils::RealPath(const std::string &inOriPath)
+{
+    std::vector<char> realPath(PATH_MAX + 1, '\0');
+    if (inOriPath.size() > PATH_MAX || realpath(inOriPath.c_str(), realPath.data()) == nullptr) {
+        LOG_ERROR("get real path fail!");
+        return "";
+    }
+    auto outOriPath = std::string(realPath.data());
+    if (access(outOriPath.c_str(), F_OK) != 0) {
+        LOG_ERROR("FileDeal : access errInfo=%{public}s", strerror(errno));
+        return "";
+    }
+    return outOriPath;
 }
 } // namespace NativeRdb
 } // namespace OHOS
