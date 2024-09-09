@@ -273,3 +273,49 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
 }
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_003
+ * @tc.desc: backup and restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetAllowRebuild(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows = 0;
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    CheckResultSet(store);
+
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+}
