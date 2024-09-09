@@ -60,7 +60,6 @@ public:
     static std::string GetSlavePath(const std::string& name);
     static bool TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
         bool isSlaveFailure = false);
-    static std::string RealPath(const std::string &inOriPath);
 
 private:
     struct SqlType {
