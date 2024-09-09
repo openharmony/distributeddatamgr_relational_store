@@ -180,9 +180,6 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     return predicatesProxy->predicates_;
 }
 
