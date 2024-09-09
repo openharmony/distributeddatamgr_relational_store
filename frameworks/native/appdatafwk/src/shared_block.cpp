@@ -249,9 +249,6 @@ uint32_t *SharedBlock::AllocRowOffset()
 
     uint32_t rowPos = mHeader->rowNums % ROW_NUM_IN_A_GROUP;
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
-    if (group == nullptr) {
-        return nullptr;
-    }
     mHeader->rowNums += 1;
     return group->rowOffsets + rowPos;
 }
@@ -267,9 +264,6 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
 
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
     uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    if (groupPos > GROUP_NUM) {
-        return nullptr;
-    }
     RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
     return reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
 }
@@ -314,9 +308,6 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
     }
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
     uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    if (groupPos > GROUP_NUM) {
-        return SHARED_BLOCK_NO_MEMORY;
-    }
     RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
     CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     uint32_t offset = mHeader->unusedOffset;
@@ -350,9 +341,6 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
 
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
     uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    if (groupPos > GROUP_NUM) {
-        return SHARED_BLOCK_NO_MEMORY;
-    }
     RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
     CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     cellUnit->type = CELL_UNIT_TYPE_INTEGER;
@@ -371,9 +359,6 @@ int SharedBlock::PutDouble(uint32_t row, uint32_t column, double value)
 
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
     uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    if (groupPos > GROUP_NUM) {
-        return SHARED_BLOCK_NO_MEMORY;
-    }
     RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
     CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
     cellUnit->type = CELL_UNIT_TYPE_FLOAT;
@@ -392,9 +377,6 @@ int SharedBlock::PutNull(uint32_t row, uint32_t column)
 
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
     uint32_t rowPos = row % ROW_NUM_IN_A_GROUP;
-    if (groupPos > GROUP_NUM) {
-        return SHARED_BLOCK_NO_MEMORY;
-    }
     RowGroupHeader *group = reinterpret_cast<RowGroupHeader *>(mData + mHeader->groupOffset[groupPos]);
     CellUnit *cellUnit = reinterpret_cast<CellUnit *>(mData + group->rowOffsets[rowPos]) + column;
 
