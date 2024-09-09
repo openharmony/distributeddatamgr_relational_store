@@ -206,9 +206,6 @@ std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesProxy::GetNativePredicate
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     return predicatesProxy->predicates_;
 }
 
@@ -220,9 +217,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
@@ -247,9 +241,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
@@ -267,9 +258,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
@@ -287,9 +275,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     // Ensure that argc contains 2 parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
@@ -314,9 +299,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     // 2 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
@@ -342,9 +324,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, n
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     // 2 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
@@ -366,9 +345,6 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
     napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
     RdbPredicatesProxy *predicatesProxy = nullptr;
     napi_unwrap(env, thiz, reinterpret_cast<void **>(&predicatesProxy));
-    if (predicatesProxy == nullptr) {
-        return nullptr;
-    }
     int version = predicatesProxy->apiversion;
     // 3 represents the number of parameters
     RDB_NAPI_ASSERT_FROMV9(env, argc == 3, std::make_shared<ParamNumError>("3"), version);
