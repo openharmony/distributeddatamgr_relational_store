@@ -56,6 +56,7 @@ SqliteStatement::~SqliteStatement()
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
     conn_ = nullptr;
+    config_ = nullptr;
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
@@ -733,7 +734,6 @@ int SqliteStatement::InnerFinalize()
     columnCount_ = -1;
     numParameters_ = 0;
     types_ = std::vector<int32_t>();
-    config_ = nullptr;
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
