@@ -2522,7 +2522,8 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
 bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 {
     std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
-    return access(failureFlagFile.c_str(), F_OK) == 0;
+    std::string slaveDbPath = SqliteUtils::GetSlavePath(config_.GetPath());
+    return access(failureFlagFile.c_str(), F_OK) == 0 || access(slaveDbPath.c_str(), F_OK) != 0;
 }
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
