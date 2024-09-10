@@ -242,19 +242,18 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
     if (buffSize >= JSUtils::MAX_VALUE_LENGTH - 1) {
         buffSize = JSUtils::MAX_VALUE_LENGTH - 1;
     }
-    char *buffer = (char *)malloc((buffSize + 1) * sizeof(char));
-    if (buffer == nullptr) {
+    std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffSize + 1);
+    if (!buffer) {
         LOG_ERROR("buffer data is nullptr.");
         return napi_invalid_arg;
     }
-    status = napi_get_value_string_utf8(env, jsValue, buffer, buffSize + 1, &buffSize);
+    status = napi_get_value_string_utf8(env, jsValue, buffer.get(), buffSize + 1, &buffSize);
     if (status != napi_ok) {
         LOG_ERROR("napi_get_value_string_utf8 failed, status = %{public}d", status);
-        free(buffer);
         return status;
     }
-    output = std::string(buffer);
-    free(buffer);
+    output = std::string(buffer.get());
+
     return status;
 }
 
