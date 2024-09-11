@@ -2541,8 +2541,11 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     }
     int ret = E_OK;
     if (strategy == ExchangeStrategy::RESTORE) {
-        ret = conn->Restore({}, {}, slaveStatus_);
+        conn = nullptr;
+        // disable is required before restore
+        ret = Restore({}, {});
     } else if (strategy == ExchangeStrategy::BACKUP) {
+        // async backup
         ret = conn->Backup({}, {}, true, slaveStatus_);
     }
     return ret;
