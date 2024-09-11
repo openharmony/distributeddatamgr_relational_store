@@ -1783,9 +1783,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         ReportDbRestoreSuccessEvent();
         rebuild_ = RebuiltType::NONE;
     }
-    if (!cloudTables_.empty()) {
-        DoCloudSync("");
-    }
     return errCode;
 }
 
