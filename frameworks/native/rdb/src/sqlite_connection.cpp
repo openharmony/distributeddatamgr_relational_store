@@ -43,6 +43,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #include "rdb_manager_impl.h"
@@ -227,6 +228,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s", config.GetName().c_str(),
                     static_cast<std::string>(checkResult).c_str(), sql);
+                ReportDbCorruptedEvent(errCode, static_cast<std::string>(checkResult));
             } else {
                 LOG_INFO("%{public}s integrity check err:%{public}d, result is %{public}s, sql:%{public}s",
                     config.GetName().c_str(), errCode, static_cast<std::string>(checkResult).c_str(), sql);
@@ -236,6 +238,32 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
     filePath = dbPath;
     return E_OK;
+}
+
+void SqliteConnection::ReportDbCorruptedEvent(int errorCode, const std::string &checkResultInfo)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_.GetBundleName();
+    eventInfo.moduleName = config_.GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
@@ -253,34 +281,10 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
                 return E_INVALID_FILE_PATH;
             }
         }
-        if (errCode == SQLITE_NOTADB) {
-            ReadFile2Buffer(dbPath.c_str());
-        }
 #endif
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
-}
-
-void SqliteConnection::ReadFile2Buffer(const char* fileName)
-{
-    uint64_t buffer[BUFFER_LEN] = {0x0};
-    FILE *file = fopen(fileName, "r");
-    if (file == nullptr) {
-        LOG_ERROR("open db file failed: %{public}s, errno is %{public}d", fileName, errno);
-        return;
-    }
-    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
-    if (readSize != BUFFER_LEN) {
-        LOG_ERROR("read db file size: %{public}zu, errno is %{public}d", readSize, errno);
-        (void)fclose(file);
-        return;
-    }
-    for (uint32_t i = 0; i < BUFFER_LEN; i += 4) {
-        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
-            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
-    }
-    (void)fclose(file);
 }
 
 int SqliteConnection::SetCustomFunctions(const RdbStoreConfig &config)

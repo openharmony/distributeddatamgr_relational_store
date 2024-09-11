@@ -34,7 +34,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto& [errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
-        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(isWrite);
+        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(config, isWrite);
         if (connection == nullptr) {
             LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr.");
             return result;
@@ -85,7 +85,9 @@ int32_t RdConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-RdConnection::RdConnection(bool isWriter) : isWriter_(isWriter) {}
+RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter), config_(config)
+{
+}
 
 RdConnection::~RdConnection()
 {
@@ -123,6 +125,7 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
 {
     auto stmt = std::make_shared<RdStatement>();
     stmt->conn_ = conn;
+    stmt->config_ = &config_;
     stmt->setPragmas_["user_version"] = ([this](const int &value) -> int32_t {
         return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, value);
     });
