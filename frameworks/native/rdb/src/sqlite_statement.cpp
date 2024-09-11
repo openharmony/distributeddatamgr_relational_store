@@ -35,6 +35,8 @@
 #include "sqlite_connection.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -69,7 +71,15 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
-        return SQLiteError::ErrNo(errCode);
+        if (errCode == SQLITE_NOTADB) {
+            ReadFile2Buffer();
+        }
+        int ret = SQLiteError::ErrNo(errCode);
+        if (ret == E_SQLITE_CORRUPT) {
+            ReportDbCorruptedEvent(ret);
+        }
+        PrintInfoForDbError(ret);
+        return ret;
     }
     InnerFinalize(); // finalize the old
     sql_ = newSql;
@@ -79,6 +89,46 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     types_ = std::vector<int32_t>(columnCount_, COLUMN_TYPE_INVALID);
     numParameters_ = sqlite3_bind_parameter_count(stmt_);
     return E_OK;
+}
+
+void SqliteStatement::PrintInfoForDbError(int errorCode)
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
+        errorCode == E_SQLITE_IOERR || errorCode == E_SQLITE_CORRUPT || errorCode == E_SQLITE_CANTOPEN) {
+        LOG_ERROR(" DbError errorCode: %{public}d  DbName: %{public}s ", errorCode, config_->GetName().c_str());
+    }
+}
+
+void SqliteStatement::ReadFile2Buffer()
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    std::string fileName;
+    if (SqliteGlobalConfig::GetDbPath(*config_, fileName) != E_OK || access(fileName.c_str(), F_OK) != 0) {
+        return;
+    }
+    uint64_t buffer[BUFFER_LEN] = {0x0};
+    FILE *file = fopen(fileName.c_str(), "r");
+    if (file == nullptr) {
+        LOG_ERROR("open db file failed: %{public}s, errno is %{public}d", fileName.c_str(), errno);
+        return;
+    }
+    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
+    if (readSize != BUFFER_LEN) {
+        LOG_ERROR("read db file size: %{public}zu, errno is %{public}d", readSize, errno);
+        (void)fclose(file);
+        return;
+    }
+    constexpr int bufferSize = 4;
+    for (uint32_t i = 0; i < BUFFER_LEN; i += bufferSize) {
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
+            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+    }
+    (void)fclose(file);
 }
 
 int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
@@ -200,6 +250,12 @@ int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     return SQLiteError::ErrNo(sqlite3_step(stmt_));
+    int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
+    if (ret == E_SQLITE_CORRUPT) {
+        ReportDbCorruptedEvent(ret);
+    }
+    PrintInfoForDbError(ret);
+    return ret;
 }
 
 int SqliteStatement::Reset()
@@ -620,6 +676,35 @@ int SqliteStatement::InnerFinalize()
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
+}
+
+void SqliteStatement::ReportDbCorruptedEvent(int errorCode)
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config_->GetBundleName();
+    eventInfo.moduleName = config_->GetModuleName();
+    eventInfo.storeType = "RDB";
+    eventInfo.storeName = config_->GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config_->GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
+    eventInfo.errorCode = errorCode;
+    eventInfo.systemErrorNo = errno;
+    eventInfo.errorOccurTime = time(nullptr);
+    std::string dbPath;
+    if (SqliteGlobalConfig::GetDbPath(*config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
+        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
+        std::string walPath = dbPath + "-wal";
+        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
+    } else {
+        eventInfo.dbFileStatRet = -1;
+        eventInfo.walFileStatRet = -1;
+    }
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
 }
 } // namespace NativeRdb
 } // namespace OHOS
