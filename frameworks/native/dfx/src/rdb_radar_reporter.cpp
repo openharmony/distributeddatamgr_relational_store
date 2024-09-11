@@ -23,15 +23,15 @@ namespace OHOS::NativeRdb {
 
 using namespace Security::AccessToken;
 
-bool RdbRadar::hasHostPkg_ = false;
 std::string RdbRadar::hostPkg_{ "" };
+std::mutex RdbRadar::mutex_;
 
-RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
+RdbRadar::RdbRadar(Scene scene, const char *funcName, std::string bundleName)
+    : scene_(scene), funcName_(funcName), bundleName_(bundleName)
 {
     if (funcName_ == nullptr) {
         funcName_ = UNKNOW;
     }
-    GetHostPkgInfo(bundleName);
     LocalReport(scene_, funcName_, STATE_START);
 }
 
@@ -58,6 +58,11 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         stageRes = static_cast<int>(StageRes::RES_FAILED);
     }
 
+    std::string hostPkg = GetHostPkgInfo();
+    char *hostPkgPtr = hostPkg.data();
+    if (hostPkgPtr == nullptr) {
+        return;
+    }
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::DISTRIBUTED_DATAMGR,
         RdbRadar::EVENT_NAME,
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
@@ -68,14 +73,15 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         RdbRadar::STAGE_RES_LABEL, stageRes,
         RdbRadar::ERROR_CODE_LABEL, errCode,
         RdbRadar::BIZ_STATE_LABEL, state,
-        RdbRadar::HOST_PKG, hostPkg_.c_str());
+        RdbRadar::HOST_PKG, hostPkgPtr);
     return;
 }
 
-void RdbRadar::GetHostPkgInfo(std::string bundleName)
+std::string RdbRadar::GetHostPkgInfo()
 {
-    if (hasHostPkg_) {
-        return;
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (!hostPkg_.empty()) {
+        return hostPkg_;
     }
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
@@ -83,11 +89,10 @@ void RdbRadar::GetHostPkgInfo(std::string bundleName)
         NativeTokenInfo tokenInfo;
         if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
             hostPkg_ = tokenInfo.processName;
-            hasHostPkg_ = true;
         }
     } else {
-        hostPkg_ = bundleName;
-        hasHostPkg_ = true;
+        hostPkg_ = bundleName_;
     }
+    return hostPkg_;
 }
 }
