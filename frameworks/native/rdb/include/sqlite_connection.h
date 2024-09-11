@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_CONNECTION_H
 #define NATIVE_RDB_SQLITE_CONNECTION_H
 
+#include <atomic>
 #include <cstdint>
 #include <list>
 #include <memory>

@@ -44,7 +44,6 @@ class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
-    SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     static int32_t Repair(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
