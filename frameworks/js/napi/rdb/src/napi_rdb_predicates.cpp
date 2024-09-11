@@ -673,6 +673,9 @@ napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
     auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr && predicatesProxy->predicates_ != nullptr,
         "RdbPredicatesProxy predicatesProxy or predicates_ is nullptr");
+    if (values.empty()) {
+        return thiz;
+    }
     predicatesProxy->predicates_->In(field, values);
     return thiz;
 }
@@ -685,6 +688,9 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
     auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
     RDB_CHECK_RETURN_NULLPTR(predicatesProxy != nullptr && predicatesProxy->predicates_ != nullptr,
         "RdbPredicatesProxy predicatesProxy or predicates_ is nullptr");
+    if (values.empty()) {
+        return thiz;
+    }
     predicatesProxy->predicates_->NotIn(field, values);
     return thiz;
 }

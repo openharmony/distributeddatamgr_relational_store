@@ -652,6 +652,9 @@ napi_value RdbPredicatesProxy::In(napi_env env, napi_callback_info info)
     std::vector<ValueObject> values;
     auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
+    if (values.empty()) {
+        return thiz;
+    }
     predicatesProxy->GetInstance()->In(field, values);
     return thiz;
 }
@@ -663,6 +666,9 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
     std::vector<ValueObject> values;
     auto predicatesProxy = ParseFieldAndValueArray(env, info, thiz, field, values, "ValueType");
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
+    if (values.empty()) {
+        return thiz;
+    }
     predicatesProxy->GetInstance()->NotIn(field, values);
     return thiz;
 }
