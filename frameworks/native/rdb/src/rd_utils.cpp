@@ -80,7 +80,7 @@ int RdUtils::RdDbOpen(const char *dbPath, const char *configStr, uint32_t flags,
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBOpenApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBOpenApi(dbPath, configStr, flags, db));
 }
@@ -92,55 +92,51 @@ int RdUtils::RdDbClose(GRD_DB *db, uint32_t flags)
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBCloseApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBCloseApi(db, flags));
 }
 
 int RdUtils::RdDbRepair(const char *dbPath, const char *configStr)
 {
-    LOG_DEBUG("[RdUtils::RdDbRepair]");
     if (GRD_KVApiInfo.DBRepairApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBRepairApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBRepairApi(dbPath, configStr));
 }
 
 int RdUtils::RdSqlPrepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr)
 {
-    LOG_DEBUG("[RdUtils::RdSqlPrepare]");
     if (GRD_KVApiInfo.DBSqlPrepare == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlPrepare == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlPrepare(db, str, strLen, stmt, unusedStr));
 }
 
 int RdUtils::RdSqlReset(GRD_SqlStmt *stmt)
 {
-    LOG_DEBUG("[RdUtils::RdSqlReset]");
     if (GRD_KVApiInfo.DBSqlReset == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlReset == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlReset(stmt));
 }
 
 int RdUtils::RdSqlFinalize(GRD_SqlStmt *stmt)
 {
-    LOG_DEBUG("[RdUtils::RdSqlFinalize]");
     if (GRD_KVApiInfo.DBSqlFinalize == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlFinalize == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlFinalize(stmt));
 }
@@ -152,12 +148,11 @@ void RdSqlFreeBlob(void *blobElementSize)
 
 int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *))
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindBlob]");
     if (GRD_KVApiInfo.DBSqlBindBlob == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindBlob == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     if (len <= 0) {
         LOG_ERROR("Invalid len %{public}d", len);
@@ -186,12 +181,11 @@ void RdSqlFreeCharStr(void *charStr)
 
 int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *))
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindText]");
     if (GRD_KVApiInfo.DBSqlBindText == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindText == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     if (len <= 0) {
         LOG_ERROR("Invalid len %{public}d", len);
@@ -215,48 +209,44 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
 
 int RdUtils::RdSqlBindInt(GRD_SqlStmt *stmt, uint32_t idx, int32_t val)
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindInt]");
     if (GRD_KVApiInfo.DBSqlBindInt == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindInt == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindInt(stmt, idx, val));
 }
 
 int RdUtils::RdSqlBindInt64(GRD_SqlStmt *stmt, uint32_t idx, int64_t val)
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindInt64]");
     if (GRD_KVApiInfo.DBSqlBindInt64 == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindInt64 == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindInt64(stmt, idx, val));
 }
 
 int RdUtils::RdSqlBindDouble(GRD_SqlStmt *stmt, uint32_t idx, double val)
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindDouble]");
     if (GRD_KVApiInfo.DBSqlBindDouble == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindDouble == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindDouble(stmt, idx, val));
 }
 
 int RdUtils::RdSqlBindNull(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindNull]");
     if (GRD_KVApiInfo.DBSqlBindNull == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindNull == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindNull(stmt, idx));
 }
@@ -269,12 +259,11 @@ void RdSqlFreeFloatArr(void *floatElement)
 int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
     uint32_t dim, void (*freeFunc)(void *))
 {
-    LOG_DEBUG("[RdUtils::RdSqlBindFloatVector]");
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     if (dim <= 0) {
         LOG_ERROR("Invalid dim %{public}d", dim);
@@ -298,31 +287,28 @@ int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
 
 int RdUtils::RdSqlStep(GRD_SqlStmt *stmt)
 {
-    LOG_DEBUG("[RdUtils::RdSqlStep]");
     if (GRD_KVApiInfo.DBSqlStep == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlStep == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlStep(stmt));
 }
 
 int RdUtils::RdSqlColCnt(GRD_SqlStmt *stmt)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColCnt]");
     if (GRD_KVApiInfo.DBSqlColCnt == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlColCnt == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlColCnt(stmt));
 }
 
 ColumnType RdUtils::RdSqlColType(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColType]");
     if (GRD_KVApiInfo.DBSqlColType == nullptr) {
         GetApiInfoInstance();
     }
@@ -334,19 +320,17 @@ ColumnType RdUtils::RdSqlColType(GRD_SqlStmt *stmt, uint32_t idx)
 
 int RdUtils::RdSqlColBytes(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColBytes]");
     if (GRD_KVApiInfo.DBSqlColBytes == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSqlColBytes == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlColBytes(stmt, idx));
 }
 
 char *RdUtils::RdSqlColName(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColName]");
     if (GRD_KVApiInfo.DBSqlColName == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -358,7 +342,6 @@ char *RdUtils::RdSqlColName(GRD_SqlStmt *stmt, uint32_t idx)
 
 GRD_DbValueT RdUtils::RdSqlColValue(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColValue]");
     if (GRD_KVApiInfo.DBSqlColValue == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -370,7 +353,6 @@ GRD_DbValueT RdUtils::RdSqlColValue(GRD_SqlStmt *stmt, uint32_t idx)
 
 uint8_t *RdUtils::RdSqlColBlob(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColBlob]");
     if (GRD_KVApiInfo.DBSqlColBlob == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -382,7 +364,6 @@ uint8_t *RdUtils::RdSqlColBlob(GRD_SqlStmt *stmt, uint32_t idx)
 
 char *RdUtils::RdSqlColText(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColText]");
     if (GRD_KVApiInfo.DBSqlColText == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -394,7 +375,6 @@ char *RdUtils::RdSqlColText(GRD_SqlStmt *stmt, uint32_t idx)
 
 int RdUtils::RdSqlColInt(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColInt]");
     if (GRD_KVApiInfo.DBSqlColInt == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -406,7 +386,6 @@ int RdUtils::RdSqlColInt(GRD_SqlStmt *stmt, uint32_t idx)
 
 uint64_t RdUtils::RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColInt64]");
     if (GRD_KVApiInfo.DBSqlColInt64 == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -418,7 +397,6 @@ uint64_t RdUtils::RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx)
 
 double RdUtils::RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColDouble]");
     if (GRD_KVApiInfo.DBSqlColDouble == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -430,7 +408,6 @@ double RdUtils::RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx)
 
 const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim)
 {
-    LOG_DEBUG("[RdUtils::RdSqlColumnFloatVector]");
     if (GRD_KVApiInfo.DBSqlColumnFloatVector == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
@@ -442,24 +419,22 @@ const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, ui
 
 int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen)
 {
-    LOG_DEBUG("[RdUtils::RdDbBackup]");
     if (GRD_KVApiInfo.DBBackupApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBBackupApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBBackupApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
 }
 
 int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen)
 {
-    LOG_DEBUG("[RdUtils::RdDbRestore]");
     if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     return TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, encryptedKey, encryptedKeyLen));
 }
@@ -470,7 +445,7 @@ int RdUtils::RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version)
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBGetConfigApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     GRD_DbValueT value = GRD_KVApiInfo.DBGetConfigApi(db, type);
     version = value.value.longValue;
@@ -483,7 +458,7 @@ int RdUtils::RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version)
         GRD_KVApiInfo = GetApiInfoInstance();
     }
     if (GRD_KVApiInfo.DBSetConfigApi == nullptr) {
-        return TransferGrdErrno(GRD_INNER_ERR);
+        return E_NOT_SUPPORT;
     }
     GRD_DbValueT value;
     value.type = GRD_DB_DATATYPE_INTEGER;
