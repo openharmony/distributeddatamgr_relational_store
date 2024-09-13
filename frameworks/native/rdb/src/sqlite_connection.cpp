@@ -71,16 +71,24 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     return result;
 }
 
+static constexpr const char *SQLITE_POST_FIXES[] = {
+    "",
+    "-shm",
+    "-wal",
+    "-journal",
+    "-slaveFailure",
+    "-syncInterrupt",
+    ".corruptedflg",
+};
+
 int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 {
     auto path = config.GetPath();
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
-    SqliteUtils::DeleteFile(path + "-slaveFailure");
-    SqliteUtils::DeleteFile(path + "-syncInterrupt");
-    return E_OK;
+    bool ret = true;
+    for (auto postFix : SQLITE_POST_FIXES) {
+        ret = ret && SqliteUtils::DeleteFile(path + postFix);
+    }
+    return ret ? E_OK : E_REMOVE_FILE;
 }
 
 SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
@@ -236,7 +244,7 @@ void SqliteConnection::ReportDbCorruptedEvent(int errorCode, const std::string &
         eventInfo.dbFileStatRet = -1;
         eventInfo.walFileStatRet = -1;
     }
-    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo, config_.GetPath());
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)

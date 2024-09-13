@@ -45,11 +45,15 @@ struct RdbCorruptedEvent {
 
 class RdbFaultHiViewReporter {
 public:
-    static void ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo);
-
+    static void ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo, const std::string &dbPath);
+    static void ReportRdbCorruptedRestore(RdbCorruptedEvent &eventInfo, const std::string &dbPath);
 private:
+    static void InnerReportRdbCorrupted(RdbCorruptedEvent &eventInfo);
     static std::string GetFileStatInfo(const struct stat &fileStat);
-    static std::string GetDateInfo(time_t time);
+    static bool IsReportCorruptedFault(const std::string &dbPath);
+    static void CreateCorruptedFlag(const std::string &dbPath);
+    static void DeleteCorruptedFlag(const std::string &dbPath);
+    static std::string GetTimeWithMilliseconds(const time_t &time);
 };
 } // namespace OHOS::NativeRdb
 #endif //DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H

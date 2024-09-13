@@ -71,6 +71,7 @@ static constexpr const char *RD_POST_FIXES[] = {
     ".ctrl.dwr",
     ".safe",
     ".map",
+    ".corruptedflg",
 };
 
 int32_t RdConnection::Delete(const RdbStoreConfig &config)
