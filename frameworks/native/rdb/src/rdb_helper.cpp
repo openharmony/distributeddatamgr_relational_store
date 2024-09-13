@@ -81,45 +81,24 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         LOG_ERROR("Store to delete doesn't exist, path %{public}s", dbFileName.c_str());
         return E_OK; // not not exist
     }
+
     RdbStoreManager::GetInstance().Delete(dbFileName);
-    int result = remove(dbFileName.c_str());
-    if (result != 0) {
-        LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the db file err = %{public}d", errno);
-        return E_REMOVE_FILE;
-    }
-
-    int errCode = DeleteRdFiles(dbFileName);
-    std::string shmFileName = dbFileName + "-shm";
-    if (access(shmFileName.c_str(), F_OK) == 0) {
-        result = remove(shmFileName.c_str());
-        if (result < 0) {
-            LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the shm file err = %{public}d", errno);
-            errCode = E_REMOVE_FILE;
-        }
-    }
-
-    std::string walFileName = dbFileName + "-wal";
-    if (access(walFileName.c_str(), F_OK) == 0) {
-        result = remove(walFileName.c_str());
-        if (result < 0) {
-            LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the wal file err = %{public}d", errno);
-            errCode = E_REMOVE_FILE;
-        }
-    }
-
-    std::string journalFileName = dbFileName + "-journal";
-    if (access(journalFileName.c_str(), F_OK) == 0) {
-        result = remove(journalFileName.c_str());
-        if (result < 0) {
-            LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the journal file err = %{public}d", errno);
-            errCode = E_REMOVE_FILE;
-        }
-    }
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
-    LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFileName.c_str());
     DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
+
+    RdbStoreConfig config(dbFileName);
+    config.SetDBType(DB_SQLITE);
+    int errCodeSqlite = Connection::Delete(config);
+
+    config.SetDBType(DB_VECTOR);
+    int errCodeVector = Connection::Delete(config);
+
+    int errCode = (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
+    LOG_INFO("Delete rdb store ret sqlite=%{public}d, vector=%{public}d, path %{public}s",
+        errCodeSqlite, errCodeVector, dbFileName.c_str());
     return errCode;
 }
+
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -132,14 +111,10 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
         return E_OK; // not not exist
     }
     RdbStoreManager::GetInstance().Delete(dbFile);
-    auto errCode = Connection::Delete(config);
-    if (errCode != E_OK) {
-        LOG_ERROR("delete the db file err = %{public}d", errno);
-        return E_REMOVE_FILE;
-    }
+    Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
-    LOG_INFO("Delete rdb store ret %{public}d, path %{public}s", errCode, dbFile.c_str());
-    return errCode;
+    LOG_INFO("Delete rdb store, path %{public}s", dbFile.c_str());
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

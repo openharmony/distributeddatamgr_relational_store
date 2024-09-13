@@ -117,6 +117,9 @@ const char *SqliteUtils::GetConflictClause(int conflictResolution)
 
 bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
+    if (access(filePath.c_str(), F_OK) != 0) {
+        return true;
+    }
     auto ret = remove(filePath.c_str());
     if (ret != 0) {
         LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, filePath.c_str());

@@ -518,7 +518,7 @@ void RdStatement::ReportDbCorruptedEvent(int errorCode)
         eventInfo.dbFileStatRet = -1;
         eventInfo.walFileStatRet = -1;
     }
-    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo, config_->GetPath());
 }
 } // namespace NativeRdb
 } // namespace OHOS
