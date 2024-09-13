@@ -1837,7 +1837,7 @@ void RdbStoreImpl::ReportDbRestoreSuccessEvent()
         eventInfo.dbFileStatRet = -1;
         eventInfo.walFileStatRet = -1;
     }
-    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo);
+    RdbFaultHiViewReporter::ReportRdbCorruptedRestore(eventInfo, config_.GetPath());
 }
 /**
  * Queries data in the database based on specified conditions.
