@@ -364,7 +364,7 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
             return E_DATABASE_BUSY;
         }
         ret = connection->Restore(backupPath, {}, slaveStatus);
-        if (ret == E_SQLITE_CORRUPT && config_.GetAllowRebuild()) {
+        if (ret == E_DB_NOT_EXIST || ret == E_SQLITE_CORRUPT) {
             LOG_WARN("corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(backupPath).c_str());
             CloseAllConnections();
             Connection::Delete(config_);
