@@ -200,9 +200,10 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             LOG_INFO("open database path [%{public}s] ino[%{public}" PRIu32
                      "] config is [%{public}d, %{public}d, %{public}d, %{public}d, %{public}s, %{public}s, %{public}d,"
                      "%{public}d, %{public}d]",
-                SqliteUtils::Anonymous(dbPath).c_str(), static_cast<uint32_t>(fileInfo.st_ino), config.IsEncrypt(), config.GetArea(),
-                config.GetHaMode(), config.GetSecurityLevel(), SqliteUtils::Anonymous(config.GetName()).c_str(),
-                config.GetBundleName().c_str(), config.GetRoleType(), config.IsReadOnly(), config.GetDBType());
+                SqliteUtils::Anonymous(dbPath).c_str(), static_cast<uint32_t>(fileInfo.st_ino), config.IsEncrypt(),
+                config.GetArea(), config.GetHaMode(), config.GetSecurityLevel(),
+                SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetBundleName().c_str(), config.GetRoleType(),
+                config.IsReadOnly(), config.GetDBType());
         }
         TryCheckPoint();
         ValueObject checkResult{"ok"};

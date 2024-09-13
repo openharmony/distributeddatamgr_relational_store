@@ -37,10 +37,9 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-constexpr int32_t END_SIZE = 3;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
-constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
+constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 5;
 constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
@@ -163,46 +162,62 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     return true;
 }
 
-int SqliteUtils::GetContinuousDigitsNum(const std::string &fileName)
+std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
 {
-    int count = 0;
-    bool isNumber = false;
+    std::vector<std::string> alnum;
+    std::vector<std::string> noAlnum;
+    std::string alnumStr;
+    std::string noAlnumStr;
     for (const auto &letter : fileName) {
-        if (isdigit(letter) || isalpha(letter)) {
-            count++;
-            isNumber = true;
-        } else {
-            if (isNumber) {
-                break;
+        if (isxdigit(letter)) {
+            if (!noAlnumStr.empty()) {
+                noAlnum.push_back(noAlnumStr);
+                noAlnumStr.clear();
+                alnum.push_back("");
             }
-            count = 0;
-            isNumber = false;
+            alnumStr += letter;
+        } else {
+            if (!alnumStr.empty()) {
+                alnum.push_back(alnumStr);
+                alnumStr.clear();
+                noAlnum.push_back("");
+            }
+            noAlnumStr += letter;
         }
     }
-    return count;
+    if (!alnumStr.empty()) {
+        alnum.push_back(alnumStr);
+        noAlnum.push_back("");
+    }
+    if (!noAlnumStr.empty()) {
+        noAlnum.push_back(alnumStr);
+        alnum.push_back("");
+    }
+    std::string res = "";
+    for (size_t i = 0; i < alnum.size(); ++i) {
+        res += (AnonyDigits(alnum[i]) + noAlnum[i]);
+    }
+    return res;
 }
 
-std::string SqliteUtils::AnonyDigits(const std::string &fileName, int digitsNum)
+std::string SqliteUtils::AnonyDigits(const std::string &fileName)
 {
+    int digitsNum = fileName.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
         return fileName;
     }
-    constexpr int longDigits = 11;
+    constexpr int longDigits = 7;
     int endDigitsNum = 4;
-    std::regex pattern("\\d{11,}");
-    if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE && digitsNum < longDigits) {
-        endDigitsNum = END_SIZE;
-        pattern = "\\d{6,}";
-    }
+    int shortEndDigitsNum = 3;
     std::string name = fileName;
-    std::string replacement = "***";
-    std::smatch result;
-    while (std::regex_search(name, result, pattern)) {
-        std::string matchStr = result[0];
-        std::string lastFourDigits = matchStr.substr(matchStr.size() - endDigitsNum);
-        name.replace(result.position(), matchStr.size(), replacement + lastFourDigits);
+    std::string last = "";
+    if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE && digitsNum < longDigits) {
+        last = name.substr(name.size() - shortEndDigitsNum);
+    } else {
+        last = name.substr(name.size() - endDigitsNum);
     }
-    return name;
+
+    return "***" + last;
 }
 
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
@@ -210,11 +225,7 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     auto pre = srcFile.find("/");
     auto end = srcFile.rfind("/");
     if (pre == std::string::npos || end - pre < FILE_PATH_MINI_SIZE) {
-        int digitsNum = GetContinuousDigitsNum(srcFile);
-        if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE) {
-            return AnonyDigits(srcFile, digitsNum);
-        }
-        return srcFile;
+        return GetAnonymousName(srcFile);
     }
     auto path = srcFile.substr(pre, end - pre);
     auto area = path.find("/el");
@@ -226,10 +237,7 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
         path = path.substr(area, AREA_MINI_SIZE);
     }
     std::string fileName = srcFile.substr(end); // rdb file name
-    int digitsNum = GetContinuousDigitsNum(fileName);
-    if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE) {
-        fileName = AnonyDigits(fileName, digitsNum);
-    }
+    fileName = GetAnonymousName(fileName);
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
