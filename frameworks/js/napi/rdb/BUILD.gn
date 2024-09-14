@@ -23,6 +23,7 @@ ohos_copy("relational_store_declaration") {
 
 ohos_shared_library("napi_rdb") {
   sources = [
+    "../common/src/js_df_manager.cpp",
     "../common/src/js_utils.cpp",
     "src/napi_async_call.cpp",
     "src/napi_rdb_const_properties.cpp",

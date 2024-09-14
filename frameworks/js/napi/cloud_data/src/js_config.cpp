@@ -26,6 +26,7 @@
 #include "js_strategy_context.h"
 #include "logger.h"
 #include "napi_queue.h"
+#include "js_df_manager.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
@@ -434,6 +435,10 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
     }
 
     auto finalize = [](napi_env env, void *data, void *hint) {
+        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
+        if (tid != 0) {
+            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data));
+        }
         LOG_DEBUG("cloudConfig finalize.");
         auto *config = reinterpret_cast<JsConfig *>(data);
         ASSERT_VOID(config != nullptr, "finalize null!");
@@ -447,6 +452,7 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
         finalize(env, cloudConfig, nullptr);
         return nullptr;
     }
+    JSDFManager::GetInstance().AddNewInfo(cloudConfig);
     return self;
 }
 
