@@ -1276,3 +1276,66 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
     Insert(id, count);
     RdbDoubleWriteTest::CheckNumber(store, count + count);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_031
+ * @tc.desc: open MANUAL_TRIGGER db, write, backup, delete main db, restore, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_031, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    SqliteUtils::DeleteFile(DATABASE_NAME);
+
+    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
+    EXPECT_EQ(access(DATABASE_NAME.c_str(), F_OK) == 0, true);
+
+    id = 666;
+    Insert(id, count);
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_032
+ * @tc.desc: open MANUAL_TRIGGER db, write, backup, close, delete main db, reopen, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    store = nullptr;
+
+    SqliteUtils::DeleteFile(DATABASE_NAME);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    EXPECT_EQ(access(DATABASE_NAME.c_str(), F_OK) == 0, true);
+
+    id = 666;
+    Insert(id, count);
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+}
