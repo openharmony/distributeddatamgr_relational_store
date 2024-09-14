@@ -78,7 +78,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("Store to delete doesn't exist, path %{public}s", dbFileName.c_str());
+        LOG_ERROR("Store to delete doesn't exist, path %{public}s", SqliteUtils::Anonymous(dbFileName).c_str());
         return E_OK; // not not exist
     }
 
@@ -95,7 +95,7 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 
     int errCode = (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
     LOG_INFO("Delete rdb store ret sqlite=%{public}d, vector=%{public}d, path %{public}s",
-        errCodeSqlite, errCodeVector, dbFileName.c_str());
+        errCodeSqlite, errCodeVector, SqliteUtils::Anonymous(dbFileName).c_str());
     return errCode;
 }
 
@@ -107,13 +107,13 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFile.c_str(), F_OK) != 0) {
-        LOG_ERROR("not exist, path %{public}s", dbFile.c_str());
+        LOG_ERROR("not exist, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
         return E_OK; // not not exist
     }
     RdbStoreManager::GetInstance().Delete(dbFile);
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
-    LOG_INFO("Delete rdb store, path %{public}s", dbFile.c_str());
+    LOG_INFO("Delete rdb store, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
 }
 } // namespace NativeRdb

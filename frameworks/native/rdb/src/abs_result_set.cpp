@@ -257,7 +257,7 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         ValueObject value;
         auto ret = Get(index, value);
         if (ret != E_OK) {
-            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index, name.c_str(), ret);
+            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index, SqliteUtils::Anonymous(name).c_str(), ret);
             return ret;
         }
         rowEntity.Put(name, index, std::move(value));
@@ -404,7 +404,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
             return E_OK;
         }
     }
-    LOG_ERROR("failed, columnName is: %{public}s", columnName.c_str());
+    LOG_ERROR("failed, columnName is: %{public}s", SqliteUtils::Anonymous(columnName).c_str());
     return E_ERROR;
 }
 
