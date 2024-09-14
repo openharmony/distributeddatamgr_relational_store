@@ -67,8 +67,8 @@ void RdbFaultHiViewReporter::InnerReportRdbCorrupted(RdbCorruptedEvent &eventInf
     if (eventInfo.walFileStatRet >= 0) {
         appendInfo = appendInfo + " \n WAL:" + GetFileStatInfo(eventInfo.walFileStat);
     }
-    LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s", storeName, eventInfo.errorCode,
-        appendInfo.c_str());
+    LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
+        SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
     std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime);
     char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
