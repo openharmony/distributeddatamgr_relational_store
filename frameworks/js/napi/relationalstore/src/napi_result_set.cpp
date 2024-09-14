@@ -23,6 +23,7 @@
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_sendable_utils.h"
 #include "napi_rdb_trace.h"
+#include "js_df_manager.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
 #include "string_ex.h"
@@ -86,12 +87,17 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
+        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
+        if (tid != 0) {
+            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data));
+        }
         if (data != hint) {
             LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
                 uintptr_t(data), uintptr_t(hint));
             return;
         }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
+        proxy->SetInstance(nullptr);
         delete proxy;
     };
     napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
@@ -100,6 +106,7 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
         finalize(env, proxy, proxy);
         return nullptr;
     }
+    JSDFManager::GetInstance().AddNewInfo(proxy);
     return self;
 }
 
