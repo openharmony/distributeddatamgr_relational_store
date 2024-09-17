@@ -217,7 +217,7 @@ bool Unmarshalling(Reference &output, MessageParcel &data)
 template<>
 bool Marshalling(const BigInt& input, MessageParcel& data)
 {
-    return ITypesUtil::Marshal(data, input.Sign(), input.Value());
+    return Marshal(data, input.Sign(), input.Value());
 }
 
 template<>
@@ -225,10 +225,20 @@ bool Unmarshalling(BigInt& output, MessageParcel& data)
 {
     int32_t sign = 0;
     std::vector<uint64_t> value;
-    if (!ITypesUtil::Unmarshal(data, sign, value)) {
+    if (!Unmarshal(data, sign, value)) {
         return false;
     }
     output = BigInt(sign, std::move(value));
     return true;
+}
+template<>
+bool Marshalling(const DebugInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.inode_, input.mode_, input.uid_, input.gid_);
+}
+template<>
+bool Unmarshalling(DebugInfo &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.inode_, output.mode_, output.uid_, output.gid_);
 }
 }

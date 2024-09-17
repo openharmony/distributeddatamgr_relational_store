@@ -76,8 +76,8 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
             ReadFile2Buffer();
         }
         int ret = SQLiteError::ErrNo(errCode);
-        if (ret == E_SQLITE_CORRUPT) {
-            ReportDbCorruptedEvent(ret);
+        if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+            RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
         }
         PrintInfoForDbError(ret);
         return ret;
@@ -280,8 +280,8 @@ int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
-    if (ret == E_SQLITE_CORRUPT) {
-        ReportDbCorruptedEvent(ret);
+    if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+        RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
     }
     PrintInfoForDbError(ret);
     return ret;
@@ -692,35 +692,6 @@ int SqliteStatement::ModifyLockStatus(const std::string &table, const std::vecto
     }
     LOG_ERROR("Lock/Unlock failed, err is %{public}d.", ret);
     return E_ERROR;
-}
-
-void SqliteStatement::ReportDbCorruptedEvent(int errorCode)
-{
-    if (config_ == nullptr) {
-        return;
-    }
-    RdbCorruptedEvent eventInfo;
-    eventInfo.bundleName = config_->GetBundleName();
-    eventInfo.moduleName = config_->GetModuleName();
-    eventInfo.storeType = "RDB";
-    eventInfo.storeName = config_->GetName();
-    eventInfo.securityLevel = static_cast<uint32_t>(config_->GetSecurityLevel());
-    eventInfo.pathArea = static_cast<uint32_t>(config_->GetArea());
-    eventInfo.encryptStatus = static_cast<uint32_t>(config_->IsEncrypt());
-    eventInfo.integrityCheck = static_cast<uint32_t>(config_->GetIntegrityCheck());
-    eventInfo.errorCode = static_cast<uint32_t>(errorCode);
-    eventInfo.systemErrorNo = errno;
-    eventInfo.errorOccurTime = time(nullptr);
-    std::string dbPath;
-    if (SqliteGlobalConfig::GetDbPath(*config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
-        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
-        std::string walPath = dbPath + "-wal";
-        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
-    } else {
-        eventInfo.dbFileStatRet = -1;
-        eventInfo.walFileStatRet = -1;
-    }
-    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo, config_->GetPath());
 }
 
 int SqliteStatement::InnerFinalize()

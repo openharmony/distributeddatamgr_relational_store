@@ -86,6 +86,8 @@ public:
 
     int32_t UnlockCloudContainer(const RdbSyncerParam& param) override;
 
+    int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
+
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;

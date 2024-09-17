@@ -44,6 +44,7 @@ public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
     static int32_t Repair(const RdbStoreConfig &config);
+    static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
@@ -75,8 +76,11 @@ protected:
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
 
 private:
-    static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
-    static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
+    struct Suffix {
+        const char *suffix_ = nullptr;
+        const char *debug_ = nullptr;
+    };
+
     int InnerOpen(const RdbStoreConfig &config);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
@@ -87,6 +91,7 @@ private:
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
+    int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     void LimitPermission(const std::string &dbPath) const;
 
@@ -106,17 +111,25 @@ private:
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
-    void ReadFile2Buffer();
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
-    RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig);
-    void ReportDbCorruptedEvent(int errCode, const std::string &checkResultInfo);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = false);
+    RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = true);
     int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
     bool IsRepairable();
     std::pair<bool, int> ExchangeVerify(bool isRestore);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
         bool isWrite);
-
+    static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
+        {"", "DB"},
+        {"-shm", "SHM"},
+        {"-wal", "WAL"},
+        {"-journal", "JOURNAL"},
+        {"-slaveFailure", "FAILURE"},
+        {"-syncInterrupt", "INTERRUPT"},
+        {".corruptedflg", "FLAG"}
+    };
+    static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
+    static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
@@ -124,6 +137,7 @@ private:
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
+    static const int32_t regCollector_;
 
     std::atomic<TaskExecutor::TaskId> backupId_ = TaskExecutor::INVALID_TASK_ID;
     sqlite3 *dbHandle_;
