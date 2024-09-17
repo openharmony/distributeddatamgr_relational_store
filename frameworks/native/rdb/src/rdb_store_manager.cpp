@@ -35,10 +35,13 @@
 #endif
 #include "sqlite_utils.h"
 #include "string_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+__attribute__((used))
+const bool RdbStoreManager::regCollector_ = RdbFaultHiViewReporter::RegCollector(RdbStoreManager::Collector);
 RdbStoreManager &RdbStoreManager::GetInstance()
 {
     static RdbStoreManager manager;
@@ -266,6 +269,26 @@ int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
     return SecurityPolicy::SetSecurityLabel(config);
 #endif
     return E_OK;
+}
+
+std::map<std::string, RdbStoreManager::Info> RdbStoreManager::Collector(const RdbStoreConfig &config)
+{
+    std::map<std::string, Info> debugInfos;
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    Param param = GetSyncParam(config);
+    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (err != E_OK || service == nullptr) {
+        LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
+        return std::map<std::string, Info>();
+    }
+    err = service->GetDebugInfo(param, debugInfos);
+    if (err != E_OK) {
+        LOG_ERROR("GetDebugInfo failed, storeName:%{public}s, err = %{public}d",
+            SqliteUtils::Anonymous(param.storeName_).c_str(), err);
+        return std::map<std::string, Info>();
+    }
+#endif
+    return debugInfos;
 }
 } // namespace NativeRdb
 } // namespace OHOS

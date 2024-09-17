@@ -57,7 +57,6 @@ private:
     int Prepare(GRD_DB *db, const std::string &sql);
     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
     int IsValid(int index) const;
-    void ReportDbCorruptedEvent(int errorCode);
 
     bool readOnly_ = false;
     bool isStepInPrepare_ = false;

@@ -26,7 +26,6 @@ namespace NativeRdb {
 class GlobalExpr {
 public:
     static constexpr bool CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
-    static constexpr bool DB_AUTO_CHECK = false;       /* Sqlite callback log switch */
     static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
     static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */

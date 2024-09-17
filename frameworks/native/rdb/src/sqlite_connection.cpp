@@ -54,14 +54,22 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
-
 constexpr const char *INTEGRITIES[] = {nullptr, "PRAGMA quick_check", "PRAGMA integrity_check"};
+constexpr SqliteConnection::Suffix SqliteConnection::FILE_SUFFIXES[];
+constexpr const char *SqliteConnection::MERGE_ASSETS_FUNC;
+constexpr const char *SqliteConnection::MERGE_ASSET_FUNC;
+constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
+constexpr int SqliteConnection::BACKUP_PAGES_PRE_STEP; // 1024 * 4 * 12800 == 50m
+constexpr int SqliteConnection::BACKUP_PRE_WAIT_TIME;
+constexpr uint32_t SqliteConnection::NO_ITER;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
 const int32_t SqliteConnection::regRepairer_ = Connection::RegisterRepairer(DB_SQLITE, SqliteConnection::Repair);
 __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
+__attribute__((used))
+const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
@@ -71,24 +79,32 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
     return result;
 }
 
-static constexpr const char *SQLITE_POST_FIXES[] = {
-    "",
-    "-shm",
-    "-wal",
-    "-journal",
-    "-slaveFailure",
-    "-syncInterrupt",
-    ".corruptedflg",
-};
-
 int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 {
     auto path = config.GetPath();
-    bool ret = true;
-    for (auto postFix : SQLITE_POST_FIXES) {
-        ret = ret && SqliteUtils::DeleteFile(path + postFix);
+    for (auto &suffix : FILE_SUFFIXES) {
+        SqliteUtils::DeleteFile(path + suffix.suffix_);
     }
-    return ret ? E_OK : E_REMOVE_FILE;
+    return E_OK;
+}
+
+std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStoreConfig &config)
+{
+    std::map<std::string, Connection::Info> collection;
+    std::string path;
+    Info info;
+    SqliteGlobalConfig::GetDbPath(config, path);
+    for (auto &suffix : FILE_SUFFIXES) {
+        auto file = path + suffix.suffix_;
+        struct stat fileStat;
+        if (stat(file.c_str(), &fileStat) != 0) {
+            continue;
+        }
+        info.inode_ = fileStat.st_ino;
+        info.mode_ = fileStat.st_mode;
+        collection.insert(std::pair{ suffix.debug_, info });
+    }
+    return collection;
 }
 
 SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
@@ -130,7 +146,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
     return errCode;
 }
 
-RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig rdbConfig)
+RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig)
 {
     RdbStoreConfig rdbStoreConfig(SqliteUtils::GetSlavePath(rdbConfig.GetPath()));
     rdbStoreConfig.SetEncryptStatus(rdbConfig.IsEncrypt());
@@ -218,7 +234,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
                     SqliteUtils::Anonymous(config.GetName()).c_str(),
                     static_cast<std::string>(checkResult).c_str(), sql);
-                ReportDbCorruptedEvent(errCode, static_cast<std::string>(checkResult));
+                RdbFaultHiViewReporter::ReportFault(
+                    RdbFaultHiViewReporter::Create(config, errCode, static_cast<std::string>(checkResult)));
             } else {
                 LOG_DEBUG("%{public}s integrity check err:%{public}d, result is %{public}s, sql:%{public}s",
                     SqliteUtils::Anonymous(config.GetName()).c_str(), errCode,
@@ -229,33 +246,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
     filePath = dbPath;
     return E_OK;
-}
-
-void SqliteConnection::ReportDbCorruptedEvent(int errorCode, const std::string &checkResultInfo)
-{
-    RdbCorruptedEvent eventInfo;
-    eventInfo.bundleName = config_.GetBundleName();
-    eventInfo.moduleName = config_.GetModuleName();
-    eventInfo.storeType = "RDB";
-    eventInfo.storeName = config_.GetName();
-    eventInfo.securityLevel = static_cast<uint32_t>(config_.GetSecurityLevel());
-    eventInfo.pathArea = static_cast<uint32_t>(config_.GetArea());
-    eventInfo.encryptStatus = static_cast<uint32_t>(config_.IsEncrypt());
-    eventInfo.integrityCheck = static_cast<uint32_t>(config_.GetIntegrityCheck());
-    eventInfo.errorCode = static_cast<uint32_t>(errorCode);
-    eventInfo.systemErrorNo = errno;
-    eventInfo.appendix = checkResultInfo;
-    eventInfo.errorOccurTime = time(nullptr);
-    std::string dbPath;
-    if (SqliteGlobalConfig::GetDbPath(config_, dbPath) == E_OK && access(dbPath.c_str(), F_OK) == 0) {
-        eventInfo.dbFileStatRet = stat(dbPath.c_str(), &eventInfo.dbFileStat);
-        std::string walPath = dbPath + "-wal";
-        eventInfo.walFileStatRet = stat(walPath.c_str(), &eventInfo.walFileStat);
-    } else {
-        eventInfo.dbFileStatRet = -1;
-        eventInfo.walFileStatRet = -1;
-    }
-    RdbFaultHiViewReporter::ReportRdbCorruptedFault(eventInfo, config_.GetPath());
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
@@ -370,6 +360,9 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     if (errCode != E_OK) {
         return errCode;
     }
+
+    // set the user version to the wal file;
+    SetWalFile(config);
 
     errCode = SetJournalSizeLimit(config);
     if (errCode != E_OK) {
@@ -725,7 +718,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 
 int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
-    if (isReadOnly_ || config.IsAutoCheck() == GlobalExpr::DB_AUTO_CHECK) {
+    if (isReadOnly_ || !config.IsAutoCheck()) {
         return E_OK;
     }
 
@@ -745,6 +738,18 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to set wal_autocheckpoint : %{public}d", errCode);
     }
     return errCode;
+}
+
+int SqliteConnection::SetWalFile(const RdbStoreConfig &config)
+{
+    if (!IsWriter()) {
+        return E_OK;
+    }
+    auto [errCode, version] = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return ExecuteSql(std::string(GlobalExpr::PRAGMA_VERSION) + "=?", { std::move(version) });
 }
 
 int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
