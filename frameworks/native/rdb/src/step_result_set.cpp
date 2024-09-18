@@ -65,8 +65,8 @@ StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::st
         int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - queryStart).count();
         int64_t preparCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparEnd - preparStart).count();
         int64_t countCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - preparEnd).count();
-        LOG_WARN("queryByStep totalCostTime[%{public}" PRId64 "] acquirCost[%{public}" PRId64
-                 "] preparCost[%{public}" PRId64 "] countCost[%{public}" PRId64 "] rowCount[%{public}d] "
+        LOG_WARN("total[%{public}" PRId64 "] acquir[%{public}" PRId64 "] prepar[%{public}" PRId64
+                 "] count[%{public}" PRId64 "] rowCount[%{public}d] "
                  "sql[%{public}s]",
             totalCostTime, acquirCost, preparCost, countCost, rowCount_, SqliteUtils::Anonymous(sql_).c_str());
     }
