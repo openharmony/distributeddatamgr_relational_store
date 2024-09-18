@@ -31,6 +31,17 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 }
 
 template<>
+bool Marshalling(const NotifyConfig &input, MessageParcel &data)
+{
+    return ITypesUtil::Marshal(data, input.delay_, input.isFull_);
+}
+template<>
+bool Unmarshalling(NotifyConfig &output, MessageParcel &data)
+{
+    return ITypesUtil::Unmarshal(data, output.delay_, output.isFull_);
+}
+
+template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation);

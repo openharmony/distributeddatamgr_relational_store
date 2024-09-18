@@ -512,11 +512,11 @@ int32_t RdbServiceProxy::SetSearchable(const RdbSyncerParam& param, bool isSearc
 }
 
 int32_t RdbServiceProxy::NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &rdbChangedData,
-    uint32_t delay)
+    const RdbNotifyConfig &rdbNotifyConfig)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_NOTIFY_DATA_CHANGE),
-        reply, param, rdbChangedData, delay);
+        reply, param, rdbChangedData, rdbNotifyConfig);
     if (status != RDB_OK) {
         LOG_ERROR("RdbServiceProxy NotifyDataChange fail, status:%{public}d, "
                   "bundleName:%{public}s, storeName:%{public}s",
