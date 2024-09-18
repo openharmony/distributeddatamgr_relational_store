@@ -91,10 +91,10 @@ void RdbFaultHiViewReporter::InnerReportRdbCorrupted(RdbCorruptedEvent &eventInf
 std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
 {
     std::stringstream oss;
-    const int permission = 0777;
+    const uint32_t permission = 0777;
 
     oss << " device: " << fileStat.st_dev << " inode: " << fileStat.st_ino
-        << " mode: " << (fileStat.st_mode & permission) << " size: " << fileStat.st_size
+        << " mode: " << fileStat.st_mode & permission << " size: " << fileStat.st_size
         << " natime: " << GetTimeWithMilliseconds(fileStat.st_atime)
         << " smtime: " << GetTimeWithMilliseconds(fileStat.st_mtime)
         << " sctime: " << GetTimeWithMilliseconds(fileStat.st_ctime);
