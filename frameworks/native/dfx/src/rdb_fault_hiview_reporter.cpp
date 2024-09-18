@@ -89,11 +89,11 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
     const int permission = 0777;
-    oss << " device: " << debugInfo.dev_ << " inode: " << debugInfo.inode_;
+    oss << " device: 0x" << std::hex << debugInfo.dev_ << " inode: 0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
-        oss << "<>" << debugInfo.oldInode_;
+        oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
-    oss << " mode: " << (debugInfo.mode_ & permission) << " size: " << debugInfo.size_
+    oss << " mode: 0" << std::oct << (debugInfo.mode_ & permission) << " size: " << std::dec << debugInfo.size_
         << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
         << " smtime: " << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
         << " sctime: " << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
