@@ -76,7 +76,7 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     }
     LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
         SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
-    std::string occurTime = GetTimeWithMilliseconds({ eventInfo.errorOccurTime, 0 });
+    std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime, 0);
     char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
         { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
@@ -104,9 +104,9 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat,
         oss << " pre_inode: " << oldInode;
     }
     oss << " mode: " << (fileStat.st_mode & permission) << " size: " << fileStat.st_size
-        << " natime: " << GetTimeWithMilliseconds(fileStat.st_atim)
-        << " smtime: " << GetTimeWithMilliseconds(fileStat.st_mtim)
-        << " sctime: " << GetTimeWithMilliseconds(fileStat.st_ctim);
+        << " natime: " << GetTimeWithMilliseconds(fileStat.st_atim.tv_sec, fileStat.st_atim.tv_nsec)
+        << " smtime: " << GetTimeWithMilliseconds(fileStat.st_mtim.tv_sec, fileStat.st_mtim.tv_nsec)
+        << " sctime: " << GetTimeWithMilliseconds(fileStat.st_ctim.tv_sec, fileStat.st_ctim.tv_nsec);
     return oss.str();
 }
 
@@ -151,14 +151,14 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     }
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(const timestruc_t &time)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, long nsec)
 {
     std::stringstream oss;
     char buffer[MAX_TIME_BUF_LEN] = {0};
     std::tm local_time;
-    localtime_r(&time.tv_sec, &local_time);
+    localtime_r(&sec, &local_time);
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_time);
-    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << time.tv_nsec / NANO_TO_MILLI;
+    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << nsec / NANO_TO_MILLI;
     return oss.str();
 }
 

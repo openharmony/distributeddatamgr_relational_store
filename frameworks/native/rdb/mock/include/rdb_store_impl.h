@@ -112,6 +112,7 @@ private:
     using RdbParam = DistributedRdb::RdbSyncerParam;
 
     int InnerOpen();
+    void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
@@ -163,7 +164,6 @@ private:
     std::string path_;
     std::string name_;
     std::string fileType_;
-    mutable std::shared_mutex rwMutex_;
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
