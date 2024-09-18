@@ -35,7 +35,7 @@ public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
     static int32_t Repair(const RdbStoreConfig& config);
     static int32_t Delete(const RdbStoreConfig& config);
-    explicit RdConnection(bool isWriteConnection);
+    RdConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~RdConnection();
     int32_t OnInitialize() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string& sql, SConn conn) override;
@@ -78,6 +78,7 @@ private:
     bool isWriter_ = false;
     GRD_DB *dbHandle_ = nullptr;
     std::string configStr_ = GRD_OPEN_CONFIG_STR;
+    const RdbStoreConfig config_;
 };
 
 } // namespace NativeRdb

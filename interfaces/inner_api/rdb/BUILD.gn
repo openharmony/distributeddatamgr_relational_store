@@ -44,8 +44,10 @@ base_sources = [
 ]
 
 if (!is_ohos) {
-  base_sources +=
-      [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp" ]
+  base_sources += [
+    "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
+    "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
+  ]
 }
 
 if (is_ohos && !build_ohos_sdk) {
@@ -121,6 +123,7 @@ if (is_ohos && !build_ohos_sdk) {
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
     sources += [
+      "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
       "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
@@ -190,6 +193,7 @@ if (is_ohos && !build_ohos_sdk) {
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
+      "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
       "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/delay_notify.cpp",
