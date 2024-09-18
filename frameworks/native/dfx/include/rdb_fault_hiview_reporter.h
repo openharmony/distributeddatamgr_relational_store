@@ -54,11 +54,11 @@ public:
 
 private:
     static void Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos);
-    static std::string GetFileStatInfo(const struct stat &fileStat, uint64_t oldInode = 0);
+    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
-    static std::string GetTimeWithMilliseconds(time_t sec, long nsec);
+    static std::string GetTimeWithMilliseconds(time_t sec, int64_t nsec);
 
     static Connection::Collector collector_;
 };
