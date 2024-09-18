@@ -39,7 +39,7 @@ enum RdbDistributedType {
 struct RdbDebugInfo {
     struct DebugTime {
         int64_t sec_ = 0;
-        long nsec_ = 0;
+        int64_t nsec_ = 0;
     };
     uint64_t inode_ = 0;
     uint64_t oldInode_ = 0;

@@ -32,10 +32,9 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     (void)eventInfo;
 }
 
-std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat, uint64_t oldInode)
+std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
-    (void)fileStat;
-    (void)oldInode;
+    (void)debugInfo;
     return "";
 }
 
@@ -54,7 +53,7 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     (void)dbPath;
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, long nsec)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t nsec)
 {
     (void)sec;
     (void)nsec;

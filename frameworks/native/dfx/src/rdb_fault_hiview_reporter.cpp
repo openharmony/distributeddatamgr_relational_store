@@ -36,6 +36,7 @@ static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
 static constexpr int MAX_TIME_BUF_LEN = 32;
 static constexpr int MILLISECONDS_LEN = 3;
 static constexpr int NANO_TO_MILLI = 1000000;
+static constexpr int MILLI_PRE_SEC = 1000;
 Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 
 void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
@@ -61,18 +62,7 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     uint32_t checkType = eventInfo.integrityCheck;
     std::string appendInfo = eventInfo.appendix;
     for (auto &[name, debugInfo] : eventInfo.debugInfos) {
-        struct stat fileStat;
-        fileStat.st_dev = debugInfo.dev_;
-        fileStat.st_ino = debugInfo.inode_;
-        fileStat.st_mode = debugInfo.mode_;
-        fileStat.st_size = off_t(debugInfo.size_);
-        fileStat.st_atim.tv_sec = debugInfo.atime_.sec_;
-        fileStat.st_atim.tv_nsec = debugInfo.atime_.nsec_;
-        fileStat.st_mtim.tv_sec = debugInfo.mtime_.sec_;
-        fileStat.st_mtim.tv_nsec = debugInfo.mtime_.nsec_;
-        fileStat.st_ctim.tv_sec = debugInfo.ctime_.sec_;
-        fileStat.st_ctim.tv_nsec = debugInfo.ctime_.nsec_;
-        appendInfo += "\n" + name + " :" + GetFileStatInfo(fileStat, debugInfo.oldInode_);
+        appendInfo += "\n" + name + " :" + GetFileStatInfo(debugInfo);
     }
     LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
         SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
@@ -95,18 +85,18 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, EVENT_NAME, HISYSEVENT_FAULT, params, sizeof(params) / sizeof(params[0]));
 }
 
-std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat, uint64_t oldInode)
+std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
     const int permission = 0777;
-    oss << " device: " << fileStat.st_dev << " inode: " << fileStat.st_ino;
-    if (fileStat.st_ino != oldInode && oldInode != 0) {
-        oss << " pre_inode: " << oldInode;
+    oss << " device: " << debugInfo.dev_ << " inode: " << debugInfo.inode_;
+    if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
+        oss << " pre_inode: " << debugInfo.oldInode_;
     }
-    oss << " mode: " << (fileStat.st_mode & permission) << " size: " << fileStat.st_size
-        << " natime: " << GetTimeWithMilliseconds(fileStat.st_atim.tv_sec, fileStat.st_atim.tv_nsec)
-        << " smtime: " << GetTimeWithMilliseconds(fileStat.st_mtim.tv_sec, fileStat.st_mtim.tv_nsec)
-        << " sctime: " << GetTimeWithMilliseconds(fileStat.st_ctim.tv_sec, fileStat.st_ctim.tv_nsec);
+    oss << " mode: " << (debugInfo.mode_ & permission) << " size: " << debugInfo.size_
+        << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+        << " smtime: " << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
+        << " sctime: " << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
 }
 
@@ -151,14 +141,14 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     }
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, long nsec)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t nsec)
 {
     std::stringstream oss;
-    char buffer[MAX_TIME_BUF_LEN] = {0};
+    char buffer[MAX_TIME_BUF_LEN] = { 0 };
     std::tm local_time;
     localtime_r(&sec, &local_time);
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_time);
-    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << nsec / NANO_TO_MILLI;
+    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << (nsec / NANO_TO_MILLI) % MILLI_PRE_SEC;
     return oss.str();
 }
 
