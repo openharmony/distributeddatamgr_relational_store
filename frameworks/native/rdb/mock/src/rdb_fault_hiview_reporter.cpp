@@ -20,13 +20,11 @@ namespace OHOS::NativeRdb {
 void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
 {
     (void)eventInfo;
-    (void)dbPath;
 }
 
 void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 {
     (void)eventInfo;
-    (void)dbPath;
 }
 
 void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
@@ -56,9 +54,10 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     (void)dbPath;
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(const timestruc_t &time)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, long nsec)
 {
-    (void)time;
+    (void)sec;
+    (void)nsec;
     return "";
 }
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,
@@ -70,9 +69,12 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, i
 
 bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
 {
+    (void)collector;
     return true;
 }
 void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos)
 {
+    (void)eventInfo;
+    (void)infos;
 }
 } // namespace OHOS::NativeRdb

@@ -254,7 +254,7 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
         LOG_ERROR("observer is null.");
         return RDB_ERROR;
     }
-    if (DoUnSubscribe(param) != RDB_OK) {
+    if (DoUnSubscribe(param, option) != RDB_OK) {
         return RDB_ERROR;
     }
     auto name = RemoveSuffix(param.storeName_);
@@ -269,13 +269,13 @@ int32_t RdbServiceProxy::UnSubscribe(const RdbSyncerParam &param, const Subscrib
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param)
+int32_t RdbServiceProxy::DoUnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNSUBSCRIBE), reply, param);
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_UNSUBSCRIBE), reply, param, option);
     if (status != RDB_OK) {
-        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
-            status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
 }

@@ -106,7 +106,7 @@ private:
 
     int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
-    int32_t DoUnSubscribe(const RdbSyncerParam& param);
+    int32_t DoUnSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
     int32_t DoRegister(const RdbSyncerParam &param);
 
