@@ -291,16 +291,16 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 #endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
-    : config_(config), isOpen_(false), isMemoryRdb_(config.IsMemoryRdb()), path_(config.GetPath()),
-      name_(config.GetName()), fileType_(config.GetDatabaseFileType()), connectionPool_(nullptr),
-      rebuild_(RebuiltType::NONE), slaveStatus_(SlaveStatus::UNDEFINED)
+    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
+      fileType_(config.GetDatabaseFileType())
 {
+    path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : config_(config), isMemoryRdb_(config.IsMemoryRdb()), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType()), rebuild_(RebuiltType::NONE), slaveStatus_(SlaveStatus::UNDEFINED)
+    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
+      fileType_(config.GetDatabaseFileType())
 {
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();

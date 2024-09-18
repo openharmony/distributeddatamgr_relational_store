@@ -16,13 +16,15 @@
 #ifndef DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 #define DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 
-#include <sys/stat.h>
 #include <ctime>
+#include <fcntl.h>
 #include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include "connection.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
-#include "connection.h"
 namespace OHOS::NativeRdb {
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 struct RdbCorruptedEvent {
