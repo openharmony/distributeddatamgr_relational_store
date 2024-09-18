@@ -609,6 +609,10 @@ public:
 
     IntegrityCheck GetIntegrityCheck() const;
 
+    void SetIter(int32_t iter) const;
+
+    int32_t GetIter() const;
+
     void SetPluginLibs(const std::vector<std::string> &pluginLibs);
 
     std::vector<std::string> GetPluginLibs() const;
@@ -620,10 +624,6 @@ public:
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
-
-    void SetIter(int32_t iter) const;
-
-    int32_t GetIter() const;
 
     void EnableRekey(bool enable);
 

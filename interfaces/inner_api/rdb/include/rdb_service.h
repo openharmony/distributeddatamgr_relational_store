@@ -82,11 +82,11 @@ public:
 
     virtual int32_t Enable(const RdbSyncerParam &param) = 0;
 
-    virtual int32_t GetPassword(const RdbSyncerParam &param, std::vector<uint8_t> &password) = 0;
-
     virtual std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam &param) = 0;
-
+ 
     virtual int32_t UnlockCloudContainer(const RdbSyncerParam &param) = 0;
+
+    virtual int32_t GetPassword(const RdbSyncerParam &param, std::vector<uint8_t> &password) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 };
