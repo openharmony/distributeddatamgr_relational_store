@@ -91,6 +91,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
             storeCache_[path] = rdbStore;
             return rdbStore;
         }
+        (void)rdbStore->ExchangeSlaverToMaster();
         errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
