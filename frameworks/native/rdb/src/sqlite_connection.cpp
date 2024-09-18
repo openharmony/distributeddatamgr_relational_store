@@ -101,7 +101,17 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
             continue;
         }
         info.inode_ = fileStat.st_ino;
+        info.oldInode_ = 0;
+        info.atime_.sec_ = fileStat.st_atim.tv_sec;
+        info.atime_.nsec_ = fileStat.st_atim.tv_nsec;
+        info.mtime_.sec_ = fileStat.st_mtim.tv_sec;
+        info.mtime_.nsec_ = fileStat.st_mtim.tv_nsec;
+        info.ctime_.sec_ = fileStat.st_ctim.tv_sec;
+        info.ctime_.nsec_ = fileStat.st_ctim.tv_nsec;
+        info.dev_ = fileStat.st_dev;
         info.mode_ = fileStat.st_mode;
+        info.uid_ = fileStat.st_uid;
+        info.gid_ = fileStat.st_gid;
         collection.insert(std::pair{ suffix.debug_, info });
     }
     return collection;
