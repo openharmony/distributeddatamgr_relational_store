@@ -223,7 +223,6 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
-    int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,

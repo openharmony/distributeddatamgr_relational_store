@@ -1081,20 +1081,6 @@ int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFileP
     return E_OK;
 }
 
-int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs)
-{
-    auto [errCode, statement] = BeginExecuteSql(sql);
-    if (statement == nullptr) {
-        return errCode;
-    }
-
-    errCode = statement->Execute(bindArgs);
-    if (errCode != E_OK) {
-        LOG_ERROR("ExecuteSql ATTACH_BACKUP_SQL error %{public}d", errCode);
-    }
-    return errCode;
-}
-
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
