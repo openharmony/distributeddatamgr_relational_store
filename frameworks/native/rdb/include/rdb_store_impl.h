@@ -264,8 +264,8 @@ private:
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_;
-    uint32_t rebuild_;
-    SlaveStatus slaveStatus_;
+    uint32_t rebuild_ = RebuiltType::NONE;
+    SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
     const RdbStoreConfig config_;
