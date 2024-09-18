@@ -48,7 +48,7 @@ static napi_value ExportAssetStatus(napi_env env)
 static napi_value CommonTypeExport(napi_env env, napi_value exports)
 {
     napi_status status;
-    static napi_property_descriptor desc[] = {
+    const napi_property_descriptor desc[] = {
         DECLARE_NAPI_PROPERTY("AssetStatus", OHOS::CommonType::ExportAssetStatus(env)),
     };
 
