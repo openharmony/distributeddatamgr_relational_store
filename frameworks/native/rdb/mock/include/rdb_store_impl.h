@@ -111,9 +111,7 @@ private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
 
-    static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int InnerOpen();
-    void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
@@ -125,31 +123,13 @@ private:
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
     void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
-    int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
-        const AsyncDetail &async);
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
-    ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
-    Uri GetUri(const std::string &event);
-    int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
-    int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
-    int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocalAll(const SubscribeOption& option);
-    int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocalSharedAll(const SubscribeOption& option);
-    int32_t UnsubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
-    int RegisterDataChangeCallback();
-    void InitDelayNotifier();
-    bool ColHasSpecificField(const std::vector<std::string> &columns);
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
-    int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
     int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution);
     int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
@@ -186,11 +166,8 @@ private:
     mutable std::shared_mutex rwMutex_;
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
-    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
     std::set<std::string> cloudTables_;
-    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
-    std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
 };
