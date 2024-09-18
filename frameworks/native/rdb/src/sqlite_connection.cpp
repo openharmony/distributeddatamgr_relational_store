@@ -95,6 +95,9 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
     Info info;
     SqliteGlobalConfig::GetDbPath(config, path);
     for (auto &suffix : FILE_SUFFIXES) {
+        if (suffix.debug_ == nullptr) {
+            continue;
+        }
         auto file = path + suffix.suffix_;
         struct stat fileStat;
         if (stat(file.c_str(), &fileStat) != 0) {
@@ -111,6 +114,7 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
         info.mtime_.nsec_ = fileStat.st_mtim.tv_nsec;
         info.ctime_.nsec_ = fileStat.st_ctim.tv_nsec;
 #endif
+        info.size_ = fileStat.st_size;
         info.dev_ = fileStat.st_dev;
         info.mode_ = fileStat.st_mode;
         info.uid_ = fileStat.st_uid;
