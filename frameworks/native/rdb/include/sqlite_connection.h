@@ -124,9 +124,9 @@ private:
         {"-shm", "SHM"},
         {"-wal", "WAL"},
         {"-journal", "JOURNAL"},
-        {"-slaveFailure", "FAILURE"},
-        {"-syncInterrupt", "INTERRUPT"},
-        {".corruptedflg", "FLAG"}
+        {"-slaveFailure", nullptr},
+        {"-syncInterrupt", nullptr},
+        {".corruptedflg", nullptr}
     };
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";

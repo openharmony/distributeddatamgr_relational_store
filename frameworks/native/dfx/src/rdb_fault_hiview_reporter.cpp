@@ -91,7 +91,7 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
     const int permission = 0777;
     oss << " device: " << debugInfo.dev_ << " inode: " << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
-        oss << " pre_inode: " << debugInfo.oldInode_;
+        oss << "<>" << debugInfo.oldInode_;
     }
     oss << " mode: " << (debugInfo.mode_ & permission) << " size: " << debugInfo.size_
         << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
@@ -178,7 +178,7 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, i
 
 bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
 {
-    if (collector_ == nullptr) {
+    if (collector_ != nullptr) {
         return false;
     }
     collector_ = collector;
