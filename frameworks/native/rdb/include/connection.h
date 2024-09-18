@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
 namespace OHOS::NativeRdb {
@@ -63,11 +64,10 @@ public:
     virtual int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync = false) = 0;
-    virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
-    virtual int32_t InterruptBackup() = 0;
-    virtual int32_t GetBackupStatus() const = 0;
-    virtual std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) = 0;
+        bool isAsync, SlaveStatus &slaveStatus) = 0;
+    virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        SlaveStatus &slaveStatus) = 0;
+    virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
 
 private:
     int32_t id_ = 0;

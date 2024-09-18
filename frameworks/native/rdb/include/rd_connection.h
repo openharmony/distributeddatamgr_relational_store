@@ -55,11 +55,10 @@ public:
     int32_t Unsubscribe(const std::string& event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync = false) override;
-    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
-    int32_t InterruptBackup() override;
-    int32_t GetBackupStatus() const override;
-    std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) override;
+        bool isAsync, SlaveStatus &slaveStatus) override;
+    int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        SlaveStatus &slaveStatus) override;
+    ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
     
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;
