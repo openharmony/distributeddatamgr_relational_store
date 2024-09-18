@@ -68,6 +68,7 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -804,6 +805,18 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         return nullptr;
     }
     return std::make_shared<SqliteSharedResultSet>(connectionPool_, path_, sql, bindArgs);
+}
+
+void RdbStoreImpl::NotifyDataChange()
+{
+    int errCode = RegisterDataChangeCallback();
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterDataChangeCallback is failed, err is %{public}d.", errCode);
+    }
+    DistributedRdb::RdbChangedData rdbChangedData;
+    if (delayNotifier_ != nullptr) {
+        delayNotifier_->UpdateNotify(rdbChangedData, true);
+    }
 }
 #endif
 
@@ -1773,6 +1786,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 #endif
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    NotifyDataChange();
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);

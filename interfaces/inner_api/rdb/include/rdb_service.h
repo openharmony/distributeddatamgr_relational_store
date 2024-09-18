@@ -74,7 +74,7 @@ public:
         const RdbSyncerParam &param, const PredicatesMemo &predicates, const std::vector<std::string> &columns) = 0;
 
     virtual int32_t NotifyDataChange(
-        const RdbSyncerParam &param, const RdbChangedData &rdbChangedData, uint32_t delay = 0) = 0;
+        const RdbSyncerParam &param, const RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) = 0;
 
     virtual int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) = 0;
 

@@ -72,7 +72,7 @@ public:
     int32_t Delete(const RdbSyncerParam &param) override;
 
     int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData,
-        uint32_t delay = 0) override;
+        const RdbNotifyConfig &rdbNotifyConfig) override;
 
     int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) override;
 
@@ -82,6 +82,7 @@ public:
     int32_t Disable(const RdbSyncerParam& param) override;
 
     int32_t Enable(const RdbSyncerParam& param) override;
+    int32_t GetPassword(const RdbSyncerParam& param, std::vector<uint8_t> &key) override;
 
     std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam& param) override;
 

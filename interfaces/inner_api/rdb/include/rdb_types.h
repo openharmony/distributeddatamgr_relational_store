@@ -56,6 +56,11 @@ struct RdbSyncerParam {
     };
 };
 
+struct RdbNotifyConfig {
+    uint32_t delay_ = 0;
+    bool isFull_ = false;
+};
+
 enum SyncMode {
     PUSH,
     PULL,
