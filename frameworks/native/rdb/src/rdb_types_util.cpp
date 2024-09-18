@@ -20,14 +20,14 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_,
         input.level_, input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_,
-        input.isSearchable_, input.haMode_);
+        input.isSearchable_, input.haMode_, input.infos_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 {
     return ITypesUtil::Unmarshal(data, output.bundleName_, output.hapName_, output.storeName_, output.area_,
         output.level_, output.type_, output.isEncrypt_, output.password_, output.customDir_, output.isAutoClean_,
-        output.isSearchable_, output.haMode_);
+        output.isSearchable_, output.haMode_, output.infos_);
 }
 
 template<>

@@ -58,7 +58,7 @@ private:
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
-    static std::string GetTimeWithMilliseconds(const timestruc_t &time);
+    static std::string GetTimeWithMilliseconds(time_t sec, long nsec);
 
     static Connection::Collector collector_;
 };
