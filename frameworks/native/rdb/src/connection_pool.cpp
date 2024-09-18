@@ -358,32 +358,12 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
 
 int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
 {
-    int ret = E_OK;
     if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
         auto connection = AcquireConnection(false);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
         }
-        ret = connection->Restore(backupPath, {}, slaveStatus);
-        if (ret == E_DB_NOT_EXIST || ret == E_SQLITE_CORRUPT) {
-            LOG_WARN("corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-            CloseAllConnections();
-            Connection::Delete(config_);
-            auto [errCode, node] = Init();
-            if (errCode != E_OK) {
-                LOG_ERROR("init failed:%{public}d", errCode);
-                return errCode;
-            }
-            auto newConn = AcquireConnection(false);
-            if (newConn == nullptr) {
-                return E_DATABASE_BUSY;
-            }
-            ret = newConn->Restore(backupPath, {}, slaveStatus);
-            if (ret != E_OK) {
-                LOG_ERROR("restore failed:%{public}d, %{public}s", ret, SqliteUtils::Anonymous(backupPath).c_str());
-            }
-        }
-        return ret;
+        return connection->Restore(backupPath, {}, slaveStatus);
     }
 
     return RestoreMasterDb(newPath, backupPath);
