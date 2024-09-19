@@ -233,7 +233,7 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
-    std::pair<int32_t, Stmt> CreateStatement(const std::string &sql);
+    std::pair<int32_t, Stmt> CreateWriteableStmt(const std::string &sql);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,

@@ -1149,7 +1149,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
 
-    auto [errCode, statement] = CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+    auto [errCode, statement] = CreateWriteableStmt(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
     if (errCode != E_OK || statement == nullptr) {
         return errCode;
     }
@@ -2409,9 +2409,11 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 }
 #endif
 
-std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::CreateStatement(const std::string &sql)
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::CreateWriteableStmt(const std::string &sql)
 {
-    auto [errCode, conn] = connectionPool_->CreateConnection(false);
+    auto config  = config_;
+    config.SetHaMode(HAMode::SINGLE);
+    auto [errCode, conn] = Connection::Create(config, true);
     if (errCode != E_OK || conn == nullptr) {
         LOG_ERROR("create connection failed, err:%{public}d", errCode);
         return { errCode, nullptr };
