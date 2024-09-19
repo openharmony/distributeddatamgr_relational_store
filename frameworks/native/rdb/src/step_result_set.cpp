@@ -36,7 +36,7 @@ StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::st
     const std::vector<ValueObject> &args)
     : AbsResultSet(), sql_(sql), args_(std::move(args))
 {
-    auto queryStart = std::chrono::steady_clock::now();
+    auto begin = std::chrono::steady_clock::now();
     conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
         isClosed_ = true;
@@ -60,9 +60,9 @@ StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::st
         lastErr_ = E_OK;
     }
     auto queryEnd = std::chrono::steady_clock::now();
-    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - queryStart).count();
+    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - begin).count();
     if (totalCostTime >= TIME_OUT) {
-        int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - queryStart).count();
+        int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - begin).count();
         int64_t preparCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparEnd - preparStart).count();
         int64_t countCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - preparEnd).count();
         LOG_WARN("total[%{public}" PRId64 "] acquir[%{public}" PRId64 "] prepar[%{public}" PRId64
