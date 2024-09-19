@@ -50,7 +50,6 @@ private:
     std::pair<int, ValueObject> GetValueObject(int32_t col, size_t index);
     std::shared_ptr<Statement> GetStatement();
     int Reset();
-    int InitRowCount();
     int PrepareStep();
 
     // Max times of retrying step query

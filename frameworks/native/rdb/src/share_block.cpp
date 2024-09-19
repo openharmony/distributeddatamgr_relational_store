@@ -32,7 +32,6 @@ const int ERROR_STATUS = -1;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number
 const int RETRY_TIME = 50;
-const unsigned int OFFSET = 32;
 
 int SeriAddRow(void *pCtx, int addedRows)
 {
@@ -86,15 +85,6 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
 {
     auto *serializer = static_cast<SharedBlockSerializerInfo *>(pCtx);
     return serializer->PutOther(addedRows, column);
-}
-
-int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock)
-{
-    int status = sharedBlock->Clear();
-    if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-        return ERROR_STATUS;
-    }
-    return status;
 }
 
 int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
@@ -347,17 +337,6 @@ bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
         return false;
     }
     return true;
-}
-
-int64_t GetCombinedData(int startPos, int totalRows)
-{
-    if (startPos > totalRows) {
-        LOG_ERROR("startPos %{public}d > actual rows %{public}d", startPos, totalRows);
-    }
-
-    auto high = static_cast<uint64_t>(static_cast<uint32_t>(startPos));
-    auto low = static_cast<uint64_t>(static_cast<uint32_t>(totalRows));
-    return static_cast<int64_t>((high << OFFSET) | low);
 }
 } // namespace NativeRdb
 } // namespace OHOS
