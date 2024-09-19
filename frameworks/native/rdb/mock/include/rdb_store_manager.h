@@ -16,9 +16,11 @@
 #ifndef NATIVE_RDB_STORE_MANAGER_H
 #define NATIVE_RDB_STORE_MANAGER_H
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 
 #include "lru_bucket.h"
 #include "rdb_open_callback.h"
@@ -40,13 +42,17 @@ public:
     int SetSecurityLabel(const RdbStoreConfig &config);
 
 private:
-    static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     using Param = DistributedRdb::RdbSyncerParam;
+    using Info = DistributedRdb::RdbDebugInfo;
     int ProcessOpenCallback(RdbStore &rdbStore,
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, const RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
-    Param GetSyncParam(const RdbStoreConfig &config);
+    static Param GetSyncParam(const RdbStoreConfig &config);
+    static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
+
+    static constexpr uint32_t BUCKET_MAX_SIZE = 4;
+    static const bool regCollector_;
     std::string bundleName_;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;

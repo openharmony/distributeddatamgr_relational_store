@@ -14,28 +14,27 @@
  */
 #include "rdb_fault_hiview_reporter.h"
 
+#include "connection.h"
 namespace OHOS::NativeRdb {
 
-void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo, const std::string &dbPath)
-{
-    (void)eventInfo;
-    (void)dbPath;
-}
-
-void RdbFaultHiViewReporter::ReportRdbCorruptedRestore(RdbCorruptedEvent &eventInfo, const std::string &dbPath)
-{
-    (void)eventInfo;
-    (void)dbPath;
-}
-
-void RdbFaultHiViewReporter::InnerReportRdbCorrupted(RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
 {
     (void)eventInfo;
 }
 
-std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
+void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 {
-    (void)fileStat;
+    (void)eventInfo;
+}
+
+void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
+{
+    (void)eventInfo;
+}
+
+std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
+{
+    (void)debugInfo;
     return "";
 }
 
@@ -54,9 +53,27 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     (void)dbPath;
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(const time_t &time)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t nsec)
 {
-    (void)time;
+    (void)sec;
+    (void)nsec;
     return "";
+}
+RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,
+    const std::string &appendix)
+{
+    RdbCorruptedEvent eventInfo;
+    return eventInfo;
+}
+
+bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
+{
+    (void)collector;
+    return true;
+}
+void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos)
+{
+    (void)eventInfo;
+    (void)infos;
 }
 } // namespace OHOS::NativeRdb

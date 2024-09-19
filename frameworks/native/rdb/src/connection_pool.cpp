@@ -52,7 +52,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
         std::tie(errCode, conn) = pool->Init();
-        if (errCode == E_OK || errCode != E_SQLITE_CORRUPT) {
+        if (errCode != E_SQLITE_CORRUPT) {
             break;
         }
         storeConfig.SetIter(ITER_V1);
@@ -705,7 +705,7 @@ int32_t ConnPool::Container::Dump(const char *header)
 {
     std::string info;
     std::vector<std::shared_ptr<ConnNode>> details;
-        std::string title = " M_T_C[" + std::to_string(max_) + ","+ std::to_string(total_) +","
+    std::string title = " M_T_C[" + std::to_string(max_) + ","+ std::to_string(total_) +","
             + std::to_string(count_) + "]";
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);

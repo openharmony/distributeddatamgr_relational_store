@@ -320,11 +320,12 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
 
     RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ .id = 3,
                                                    .asset{ .version = 1,
+                                                       .status = AssetValue::STATUS_INSERT,
                                                        .name = "123",
                                                        .uri = "your test path",
                                                        .createTime = "13",
-                                                       .modifyTime = "13",
-                                                       .status = AssetValue::STATUS_INSERT } });
+                                                       .modifyTime = "13"
+                                                        } });
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -379,13 +380,13 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
     ValuesBucket values;
     AssetValue valueDef{ .version = 0,
+        .status = AssetValue::STATUS_NORMAL,
         .name = "123",
         .uri = "my test path",
         .createTime = "12",
         .modifyTime = "12",
-        .status = AssetValue::STATUS_NORMAL,
-        .hash = "321",
-        .size = "543" };
+        .size = "543",
+        .hash = "321" };
     AssetValue value{ .name = "123" };
     value.status = AssetValue::STATUS_DELETE;
     int changedRows;
@@ -405,13 +406,13 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     RdbStoreUpdateTest::ExpectValue(resultSet, RowData{ .id = 5,
                                                    .asset{ .version = 0,
+                                                       .status = AssetValue::Status::STATUS_DELETE,
                                                        .name = "123",
                                                        .uri = "my test path",
                                                        .createTime = "12",
                                                        .modifyTime = "",
-                                                       .status = AssetValue::Status::STATUS_DELETE,
-                                                       .hash = "",
-                                                       .size = "" } });
+                                                       .size = "",
+                                                       .hash = "" } });
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }

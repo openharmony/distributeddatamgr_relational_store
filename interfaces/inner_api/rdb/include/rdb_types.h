@@ -36,6 +36,23 @@ enum RdbDistributedType {
     RDB_DISTRIBUTED_TYPE_MAX
 };
 
+struct RdbDebugInfo {
+    struct DebugTime {
+        int64_t sec_ = 0;
+        int64_t nsec_ = 0;
+    };
+    uint64_t inode_ = 0;
+    uint64_t oldInode_ = 0;
+    DebugTime atime_;
+    DebugTime mtime_;
+    DebugTime ctime_;
+    size_t size_ = 0;
+    uint32_t dev_ = 0;
+    uint32_t mode_ = 0;
+    uint32_t uid_ = 0;
+    uint32_t gid_ = 0;
+};
+
 struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;
@@ -50,6 +67,7 @@ struct RdbSyncerParam {
     bool isAutoClean_ = true;
     bool isSearchable_ = false;
     std::vector<uint8_t> password_;
+    std::map<std::string, RdbDebugInfo> infos_;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);

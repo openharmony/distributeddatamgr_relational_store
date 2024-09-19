@@ -16,14 +16,17 @@
 #ifndef DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 #define DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 
-#include <sys/stat.h>
 #include <ctime>
+#include <fcntl.h>
 #include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include "connection.h"
 #include "rdb_store_config.h"
-
+#include "rdb_types.h"
 namespace OHOS::NativeRdb {
-
+using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 struct RdbCorruptedEvent {
     std::string bundleName;
     std::string moduleName;
@@ -37,23 +40,27 @@ struct RdbCorruptedEvent {
     int32_t systemErrorNo;
     std::string appendix;
     time_t errorOccurTime;
-    int dbFileStatRet;
-    struct stat dbFileStat;
-    int walFileStatRet;
-    struct stat walFileStat;
+    std::string path;
+    std::map<std::string, DebugInfo> debugInfos;
 };
 
 class RdbFaultHiViewReporter {
 public:
-    static void ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo, const std::string &dbPath);
-    static void ReportRdbCorruptedRestore(RdbCorruptedEvent &eventInfo, const std::string &dbPath);
+    static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "");
+    static bool RegCollector(Connection::Collector collector);
+    static void Report(const RdbCorruptedEvent &eventInfo);
+    static void ReportFault(const RdbCorruptedEvent &eventInfo);
+    static void ReportRestore(const RdbCorruptedEvent &eventInfo);
+
 private:
-    static void InnerReportRdbCorrupted(RdbCorruptedEvent &eventInfo);
-    static std::string GetFileStatInfo(const struct stat &fileStat);
+    static void Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos);
+    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
-    static std::string GetTimeWithMilliseconds(const time_t &time);
+    static std::string GetTimeWithMilliseconds(time_t sec, int64_t nsec);
+
+    static Connection::Collector collector_;
 };
 } // namespace OHOS::NativeRdb
 #endif //DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H

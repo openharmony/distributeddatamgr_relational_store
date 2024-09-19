@@ -18,64 +18,61 @@
 
 #include <iomanip>
 #include <sstream>
+
 #include <fcntl.h>
 #include <unistd.h>
-#include <chrono>
 #include <ctime>
-
+#include "connection.h"
 #include "hisysevent_c.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-
 namespace OHOS::NativeRdb {
-
 using namespace OHOS::Rdb;
-
 static constexpr const char *EVENT_NAME = "DATABASE_CORRUPTED";
 static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
 static constexpr int MAX_TIME_BUF_LEN = 32;
 static constexpr int MILLISECONDS_LEN = 3;
-static constexpr int SECOND_TO_MILL_UNIT = 1000;
+static constexpr int NANO_TO_MILLI = 1000000;
+static constexpr int MILLI_PRE_SEC = 1000;
+Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 
-void RdbFaultHiViewReporter::ReportRdbCorruptedFault(RdbCorruptedEvent &eventInfo, const std::string &dbPath)
+void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
 {
-    if (IsReportCorruptedFault(dbPath)) {
-        InnerReportRdbCorrupted(eventInfo);
-        CreateCorruptedFlag(dbPath);
+    if (IsReportCorruptedFault(eventInfo.path)) {
+        Report(eventInfo);
+        CreateCorruptedFlag(eventInfo.path);
     }
 }
 
-void RdbFaultHiViewReporter::ReportRdbCorruptedRestore(RdbCorruptedEvent &eventInfo, const std::string &dbPath)
+void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 {
-    InnerReportRdbCorrupted(eventInfo);
-    DeleteCorruptedFlag(dbPath);
+    Report(eventInfo);
+    DeleteCorruptedFlag(eventInfo.path);
 }
 
-void RdbFaultHiViewReporter::InnerReportRdbCorrupted(RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
 {
-    char *bundleName = eventInfo.bundleName.data();
-    char *moduleName = eventInfo.moduleName.data();
-    char *storeType = eventInfo.storeType.data();
-    char *storeName = eventInfo.storeName.data();
+    std::string bundleName = eventInfo.bundleName;
+    std::string moduleName = eventInfo.moduleName;
+    std::string storeType = eventInfo.storeType;
+    std::string storeName = eventInfo.storeName;
     uint32_t checkType = eventInfo.integrityCheck;
     std::string appendInfo = eventInfo.appendix;
-    if (eventInfo.dbFileStatRet >= 0) {
-        appendInfo = appendInfo + "\n DB:" + GetFileStatInfo(eventInfo.dbFileStat);
-    }
-    if (eventInfo.walFileStatRet >= 0) {
-        appendInfo = appendInfo + " \n WAL:" + GetFileStatInfo(eventInfo.walFileStat);
+    for (auto &[name, debugInfo] : eventInfo.debugInfos) {
+        appendInfo += "\n" + name + " :" + GetFileStatInfo(debugInfo);
     }
     LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
         SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
-    std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime);
+    std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime, 0);
     char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
-        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName }, .arraySize = 0 },
-        { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName }, .arraySize = 0 },
-        { .name = "STORE_TYPE", .t = HISYSEVENT_STRING, .v = { .s = storeType }, .arraySize = 0 },
-        { .name = "STORE_NAME", .t = HISYSEVENT_STRING, .v = { .s = storeName }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
+        { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName.data() }, .arraySize = 0 },
+        { .name = "STORE_TYPE", .t = HISYSEVENT_STRING, .v = { .s = storeType.data() }, .arraySize = 0 },
+        { .name = "STORE_NAME", .t = HISYSEVENT_STRING, .v = { .s = storeName.data() }, .arraySize = 0 },
         { .name = "SECURITY_LEVEL", .t = HISYSEVENT_UINT32, .v = { .ui32 = eventInfo.securityLevel }, .arraySize = 0 },
         { .name = "PATH_AREA", .t = HISYSEVENT_UINT32, .v = { .ui32 = eventInfo.pathArea }, .arraySize = 0 },
         { .name = "ENCRYPT_STATUS", .t = HISYSEVENT_UINT32, .v = { .ui32 = eventInfo.encryptStatus }, .arraySize = 0 },
@@ -88,16 +85,18 @@ void RdbFaultHiViewReporter::InnerReportRdbCorrupted(RdbCorruptedEvent &eventInf
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, EVENT_NAME, HISYSEVENT_FAULT, params, sizeof(params) / sizeof(params[0]));
 }
 
-std::string RdbFaultHiViewReporter::GetFileStatInfo(const struct stat &fileStat)
+std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
     const int permission = 0777;
-
-    oss << " device: " << fileStat.st_dev << " inode: " << fileStat.st_ino
-        << " mode: " << (fileStat.st_mode & permission) << " size: " << fileStat.st_size
-        << " natime: " << GetTimeWithMilliseconds(fileStat.st_atime)
-        << " smtime: " << GetTimeWithMilliseconds(fileStat.st_mtime)
-        << " sctime: " << GetTimeWithMilliseconds(fileStat.st_ctime);
+    oss << " device: 0x" << std::hex << debugInfo.dev_ << " inode: 0x" << std::hex << debugInfo.inode_;
+    if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
+        oss << "<>0x" << std::hex << debugInfo.oldInode_;
+    }
+    oss << " mode: 0" << std::oct << (debugInfo.mode_ & permission) << " size: " << std::dec << debugInfo.size_
+        << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+        << " smtime: " << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
+        << " sctime: " << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
 }
 
@@ -142,17 +141,69 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     }
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(const time_t &time)
+std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t nsec)
 {
     std::stringstream oss;
-    char buffer[MAX_TIME_BUF_LEN] = {0};
+    char buffer[MAX_TIME_BUF_LEN] = { 0 };
     std::tm local_time;
-    localtime_r(&time, &local_time);
-    std::chrono::milliseconds ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    localtime_r(&sec, &local_time);
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_time);
-
-    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << ms.count() % SECOND_TO_MILL_UNIT;
+    oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << (nsec / NANO_TO_MILLI) % MILLI_PRE_SEC;
     return oss.str();
+}
+
+RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,
+    const std::string &appendix)
+{
+    RdbCorruptedEvent eventInfo;
+    eventInfo.bundleName = config.GetBundleName();
+    eventInfo.moduleName = config.GetModuleName();
+    eventInfo.storeType = config.GetDBType() == DB_SQLITE ? "RDB" : "VECTOR DB";
+    eventInfo.storeName = config.GetName();
+    eventInfo.securityLevel = static_cast<uint32_t>(config.GetSecurityLevel());
+    eventInfo.pathArea = static_cast<uint32_t>(config.GetArea());
+    eventInfo.encryptStatus = static_cast<uint32_t>(config.IsEncrypt());
+    eventInfo.integrityCheck = static_cast<uint32_t>(config.GetIntegrityCheck());
+    eventInfo.errorCode = static_cast<uint32_t>(errCode);
+    eventInfo.systemErrorNo = errCode == E_OK ? 0 : errno;
+    eventInfo.appendix = appendix;
+    eventInfo.errorOccurTime = time(nullptr);
+    eventInfo.debugInfos = Connection::Collect(config);
+    SqliteGlobalConfig::GetDbPath(config, eventInfo.path);
+    if (collector_ != nullptr) {
+        Update(eventInfo, collector_(config));
+    }
+    return eventInfo;
+}
+
+bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
+{
+    if (collector_ != nullptr) {
+        return false;
+    }
+    collector_ = collector;
+    return true;
+}
+
+void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos)
+{
+    auto &local = eventInfo.debugInfos;
+    auto lIt = local.begin();
+    auto rIt = infos.begin();
+    for (; lIt != local.end() && rIt != infos.end();) {
+        if (lIt->first == rIt->first) {
+            if (lIt->second.inode_ != rIt->second.inode_) {
+                lIt->second.oldInode_ = rIt->second.inode_;
+            }
+            ++lIt;
+            ++rIt;
+            continue;
+        }
+        if (lIt->first < rIt->first) {
+            ++lIt;
+        } else {
+            ++rIt;
+        }
+    }
 }
 } // namespace OHOS::NativeRdb
