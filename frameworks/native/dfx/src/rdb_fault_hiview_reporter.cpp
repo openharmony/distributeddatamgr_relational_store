@@ -88,7 +88,7 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
 std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
-    const int permission = 0777;
+    const uint32_t permission = 0777;
     oss << " device: 0x" << std::hex << debugInfo.dev_ << " inode: 0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
