@@ -30,6 +30,7 @@
 #include "relational_predicates_objects.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+#include "relational_store_inner.h"
 #include "relational_types_v0.h"
 #include "relational_values_bucket.h"
 #include "securec.h"
@@ -46,7 +47,7 @@ constexpr int RDB_CARLEY = 2;
 
 static int g_supportDbTypes[] = {RDB_SQLITE, RDB_CARLEY};
 
-typedef struct OH_Rdb_ConfigV2 {
+struct OH_Rdb_ConfigV2 {
     int magicNum = RDB_CONFIG_V2_MAGIC_CODE;
     std::string dataBaseDir = "";
     std::string storeName = "";
@@ -56,7 +57,7 @@ typedef struct OH_Rdb_ConfigV2 {
     int securityLevel = 0;
     int area = 0;
     int dbType = RDB_SQLITE;
-} OH_Rdb_ConfigV2;
+};
 
 OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
 {
