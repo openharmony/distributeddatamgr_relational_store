@@ -36,6 +36,7 @@ public:
         bool isCompensation = false;
     };
     using ResultSet = NativeRdb::ResultSet;
+    inline static constexpr const char *SERVICE_NAME = "relational_store";
 
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
 
@@ -87,7 +88,8 @@ public:
     virtual std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam &param) = 0;
 
     virtual int32_t UnlockCloudContainer(const RdbSyncerParam &param) = 0;
-    inline static constexpr const char *SERVICE_NAME = "relational_store";
+
+    virtual int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) = 0;
 };
 }
 } // namespace OHOS::DistributedRdb

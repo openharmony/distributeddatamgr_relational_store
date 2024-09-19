@@ -189,36 +189,25 @@ public:
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
     int32_t GetDbType() const override;
-    void AfterOpen(const RdbStoreConfig &config);
+
     std::pair<int32_t, uint32_t> LockCloudContainer() override;
     int32_t UnlockCloudContainer() override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
     int32_t ExchangeSlaverToMaster();
 
-protected:
-    int InnerOpen();
-    void InitSyncerParam();
-    const RdbStoreConfig config_;
-    bool isOpen_ = false;
-    bool isReadOnly_;
-    bool isMemoryRdb_;
-    bool isEncrypt_;
-    int64_t vSchema_ = 0;
-    std::string path_;
-    std::string name_;
-    std::string fileType_;
-
 private:
-    ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
-    std::atomic<int64_t> newTrxId_ = 1;
+    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
+    using Stmt = std::shared_ptr<Statement>;
+    using RdbParam = DistributedRdb::RdbSyncerParam;
+
+    static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    int InnerOpen();
+    void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
         const std::string &sql, const ValueObject &object, int sqlType);
-
-    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
-    using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
@@ -236,8 +225,6 @@ private:
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
-    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
-
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
     int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
@@ -252,7 +239,6 @@ private:
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
-    void RemoveDbFiles(std::string &path);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
     int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution);
@@ -267,7 +253,6 @@ private:
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
     int GetDestPath(const std::string &backupPath, std::string &destPath);
-    void ReportDbRestoreSuccessEvent();
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -276,23 +261,28 @@ private:
     static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
-    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
+    bool isOpen_ = false;
+    bool isReadOnly_ = false;
+    bool isMemoryRdb_;
+    uint32_t rebuild_ = RebuiltType::NONE;
+    SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
+    int64_t vSchema_ = 0;
+    std::atomic<int64_t> newTrxId_ = 1;
+    const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
-
-    std::shared_ptr<ExecutorPool> pool_;
-    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
-
+    std::string path_;
+    std::string name_;
+    std::string fileType_;
     mutable std::shared_mutex rwMutex_;
-
-    std::set<std::string> cloudTables_;
-
     std::mutex mutex_;
-    std::shared_ptr<std::set<std::string>> syncTables_;
+    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
+    std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
+    std::set<std::string> cloudTables_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
-    uint32_t rebuild_;
-    SlaveStatus slaveStatus_;
+    ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
 };
 } // namespace OHOS::NativeRdb
 #endif

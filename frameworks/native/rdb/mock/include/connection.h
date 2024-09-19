@@ -30,18 +30,22 @@ class RdbStoreConfig;
 class Statement;
 class Connection {
 public:
+    using Info = DistributedRdb::RdbDebugInfo;
     using SConn = std::shared_ptr<Connection>;
     using Stmt = std::shared_ptr<Statement>;
     using Notifier = std::function<void(const std::set<std::string> &tables)>;
     using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
     using Repairer = int32_t (*)(const RdbStoreConfig &config);
     using Deleter = int32_t (*)(const RdbStoreConfig &config);
+    using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
     static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t Repair(const RdbStoreConfig &config);
     static int32_t Delete(const RdbStoreConfig &config);
+    static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     static int32_t RegisterCreator(int32_t dbType, Creator creator);
     static int32_t RegisterRepairer(int32_t dbType, Repairer repairer);
     static int32_t RegisterDeleter(int32_t dbType, Deleter deleter);
+    static int32_t RegisterCollector(int32_t dbType, Collector collector);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;

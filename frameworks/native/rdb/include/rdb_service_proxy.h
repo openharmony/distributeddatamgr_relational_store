@@ -86,6 +86,8 @@ public:
 
     int32_t UnlockCloudContainer(const RdbSyncerParam& param) override;
 
+    int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
+
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
@@ -104,7 +106,7 @@ private:
 
     int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
-    int32_t DoUnSubscribe(const RdbSyncerParam& param);
+    int32_t DoUnSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
     int32_t DoRegister(const RdbSyncerParam &param);
 
