@@ -28,8 +28,12 @@
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
+
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+using namespace Security::AccessToken;
 static constexpr const char *EVENT_NAME = "DATABASE_CORRUPTED";
 static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
@@ -55,7 +59,7 @@ void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 
 void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
 {
-    std::string bundleName = eventInfo.bundleName;
+    std::string bundleName = GetBundleName(eventInfo);
     std::string moduleName = eventInfo.moduleName;
     std::string storeType = eventInfo.storeType;
     std::string storeName = eventInfo.storeName;
@@ -205,5 +209,21 @@ void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map
             ++rIt;
         }
     }
+}
+
+std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &eventInfo)
+{
+    if (!eventInfo.bundleName.empty()) {
+        return eventInfo.bundleName;
+    }
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
+        NativeTokenInfo tokenInfo;
+        if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
+            return tokenInfo.processName;
+        }
+    }
+    return SqliteUtils::Anonymous(eventInfo.storeName);
 }
 } // namespace OHOS::NativeRdb
