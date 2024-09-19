@@ -76,4 +76,10 @@ void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map
     (void)eventInfo;
     (void)infos;
 }
+
+std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &eventInfo)
+{
+    (void)eventInfo;
+    return "";
+}
 } // namespace OHOS::NativeRdb
