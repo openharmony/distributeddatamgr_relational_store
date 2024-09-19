@@ -108,7 +108,7 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
         info.atime_.sec_ = fileStat.st_atime;
         info.mtime_.sec_ = fileStat.st_mtime;
         info.ctime_.sec_ = fileStat.st_ctime;
-#if !defined(WINDOWS_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         info.atime_.nsec_ = fileStat.st_atim.tv_nsec;
         info.mtime_.nsec_ = fileStat.st_mtim.tv_nsec;
         info.ctime_.nsec_ = fileStat.st_ctim.tv_nsec;
