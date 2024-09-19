@@ -60,32 +60,6 @@ StepResultSet::~StepResultSet()
     Close();
 }
 
-int StepResultSet::InitRowCount()
-{
-    auto statement = GetStatement();
-    if (statement == nullptr) {
-        return NO_COUNT;
-    }
-    int32_t count = NO_COUNT;
-    int32_t status = E_OK;
-    int32_t retry = 0;
-    do {
-        status = statement->Step();
-        if (status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) {
-            retry++;
-            usleep(STEP_QUERY_RETRY_INTERVAL);
-            continue;
-        }
-        count++;
-    } while (status == E_OK ||
-             ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < STEP_QUERY_RETRY_MAX_TIMES));
-    if (status != E_NO_MORE_ROWS) {
-        lastErr_ = status;
-        count = NO_COUNT;
-    }
-    statement->Reset();
-    return count;
-}
 /**
  * Obtain session and prepare precompile statement for step query
  */

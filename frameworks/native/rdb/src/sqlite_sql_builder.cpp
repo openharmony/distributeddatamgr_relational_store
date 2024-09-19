@@ -34,20 +34,6 @@ SqliteSqlBuilder::SqliteSqlBuilder() {}
 SqliteSqlBuilder::~SqliteSqlBuilder() {}
 
 /**
- * Build a delete SQL string using the given condition for SQLite.
- */
-std::string SqliteSqlBuilder::BuildDeleteString(const std::string &tableName, const std::string &index,
-    const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
-{
-    std::string sql;
-    sql.append("Delete ")
-        .append("FROM ")
-        .append(HandleTable(tableName))
-        .append(BuildSqlStringFromPredicates(index, "", whereClause, group, order, limit, offset));
-    return sql;
-}
-
-/**
  * Build a count SQL string using the given condition for SQLite.
  */
 std::string SqliteSqlBuilder::BuildUpdateString(const ValuesBucket &values, const std::string &tableName,
@@ -108,19 +94,6 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
     return E_OK;
 }
 
-/**
- * Build a count SQL string using the given condition for SQLite.
- */
-std::string SqliteSqlBuilder::BuildCountString(const std::string &tableName, const std::string &index,
-    const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
-{
-    std::string sql;
-    sql.append("SELECT COUNT(*) FROM ")
-        .append(HandleTable(tableName))
-        .append(BuildSqlStringFromPredicates(index, "", whereClause, group, order, limit, offset));
-    return sql;
-}
-
 std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const std::string &index, const std::string &joinClause,
     const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
 {
@@ -152,23 +125,6 @@ std::string SqliteSqlBuilder::BuildSqlStringFromPredicates(const AbsPredicates &
     AppendClause(sqlString, " WHERE ", predicates.GetWhereClause());
     AppendClause(sqlString, " GROUP BY ", predicates.GetGroup());
     AppendClause(sqlString, " ORDER BY ", predicates.GetOrder());
-    AppendClause(sqlString, " LIMIT ", limitStr);
-    AppendClause(sqlString, " OFFSET ", offsetStr);
-
-    return sqlString;
-}
-
-std::string SqliteSqlBuilder::BuildSqlStringFromPredicatesNoWhere(const std::string &index,
-    const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset)
-{
-    std::string limitStr = (limit == AbsPredicates::INIT_LIMIT_VALUE) ? "" : std::to_string(limit);
-    std::string offsetStr = (offset == AbsPredicates::INIT_OFFSET_VALUE) ? "" : std::to_string(offset);
-
-    std::string sqlString;
-    AppendClause(sqlString, " INDEXED BY ", index);
-    AppendClause(sqlString, " ", whereClause);
-    AppendClause(sqlString, " GROUP BY ", group);
-    AppendClause(sqlString, " ORDER BY ", order);
     AppendClause(sqlString, " LIMIT ", limitStr);
     AppendClause(sqlString, " OFFSET ", offsetStr);
 

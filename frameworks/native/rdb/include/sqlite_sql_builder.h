@@ -29,8 +29,6 @@ public:
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     SqliteSqlBuilder();
     ~SqliteSqlBuilder();
-    static std::string BuildDeleteString(const std::string &tableName, const std::string &index,
-        const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildUpdateString(const ValuesBucket &values, const std::string &tableName,
         const std::vector<std::string> &whereArgs, const std::string &index, const std::string &whereClause,
         const std::string &group, const std::string &order, int limit, int offset, std::vector<ValueObject> &bindArgs,
@@ -39,12 +37,8 @@ public:
         const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
         const std::string &indexName, const std::string &orderBy, const int &limit,
         const int &offset, std::string &outSql);
-    static std::string BuildCountString(const std::string &tableName, const std::string &index,
-        const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildSqlStringFromPredicates(const std::string &index, const std::string &joinClause,
         const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset);
-    static std::string BuildSqlStringFromPredicatesNoWhere(const std::string &index, const std::string &whereClause,
-        const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
     static std::string BuildSqlStringFromPredicates(const AbsPredicates &predicates);
