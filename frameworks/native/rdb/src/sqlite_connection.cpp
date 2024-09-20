@@ -1296,8 +1296,8 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curStatus)
 {
     curStatus = SlaveStatus::BACKING_UP;
-    auto [isReturn, err] = ExchangeVerify(isRestore);
-    if (isReturn) {
+    auto err = ExchangeVerify(isRestore);
+    if (err != E_OK) {
         curStatus = SlaveStatus::UNDEFINED;
         return err;
     }
@@ -1442,32 +1442,32 @@ bool SqliteConnection::IsRepairable()
     return true;
 }
 
-std::pair<bool, int> SqliteConnection::ExchangeVerify(bool isRestore)
+int SqliteConnection::ExchangeVerify(bool isRestore)
 {
     if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
         LOG_WARN("slave conn invalid");
-        return { true, E_OK };
+        return E_STORE_CLOSED;
     }
     if (access(config_.GetPath().c_str(), F_OK) != 0) {
         LOG_WARN("main no exist, isR:%{public}d, %{public}s", isRestore, config_.GetName().c_str());
-        return { true, E_DB_NOT_EXIST };
+        return E_DB_NOT_EXIST;
     }
     if (isRestore) {
         auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
         if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
             LOG_ERROR("slave may corrupt, cancel, ret:%{public}s, cRet:%{public}d",
                 static_cast<std::string>(cObj).c_str(), cRet);
-            return { true, E_SQLITE_CORRUPT };
+            return E_SQLITE_CORRUPT;
         }
         if (!IsRepairable()) {
-            return { true, E_OK };
+            return E_ERROR;
         }
     } else {
         if (!SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true)) {
             LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
         }
     }
-    return { false, E_OK };
+    return E_OK;
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCreate(const RdbStoreConfig &config,
