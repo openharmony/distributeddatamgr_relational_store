@@ -163,7 +163,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteg
     uint64_t count = Endian::LeToH(*(reinterpret_cast<const uint64_t *>(alignData + used)));
     used += sizeof(uint64_t);
 
-    if (sizeof(uint64_t) * count > length - used) {
+    if (count > (length - used) / sizeof(uint64_t)) {
         return 0;
     }
     const uint64_t *temp = (reinterpret_cast<const uint64_t *>(alignData + used));
@@ -201,7 +201,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataP
     uint32_t count = Endian::LeToH(*(reinterpret_cast<const uint32_t *>(alignData + used)));
     used += sizeof(uint32_t);
 
-    if (sizeof(float) * count > length - used) {
+    if (count > (length - used) / sizeof(float)) {
         return 0;
     }
     auto values = reinterpret_cast<const float *>(alignData + used);
