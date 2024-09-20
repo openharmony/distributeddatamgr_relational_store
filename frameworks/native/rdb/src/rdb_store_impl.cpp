@@ -76,6 +76,7 @@ using RdbMgr = DistributedRdb::RdbManagerImpl;
 static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
+constexpr int64_t TIME_OUT = 1500;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -992,15 +993,31 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    auto begin = std::chrono::steady_clock::now();
     auto [errCode, statement] = GetStatement(sql, false);
     if (statement == nullptr) {
         return errCode;
     }
+    auto beginExec = std::chrono::steady_clock::now();
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         return errCode;
     }
+    auto beginResult = std::chrono::steady_clock::now();
     outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    auto allEnd = std::chrono::steady_clock::now();
+    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(begin - allEnd).count();
+    if (totalCostTime >= TIME_OUT) {
+        int64_t prepareCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(beginExec - begin).count();
+        int64_t execCost =
+            std::chrono::duration_cast<std::chrono::milliseconds>(beginExec - beginResult).count();
+        int64_t resultCost = std::chrono::duration_cast<std::chrono::milliseconds>(allEnd - beginResult).count();
+        LOG_WARN("total[%{public}" PRId64 "] stmt[%{public}" PRId64 "] exec[%{public}" PRId64
+                 "] result[%{public}" PRId64 "] "
+                 "sql[%{public}s]",
+            totalCostTime, prepareCost, execCost, resultCost, SqliteUtils::Anonymous(sql).c_str());
+    }
     return E_OK;
 }
 
