@@ -1381,12 +1381,6 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::RESTORE;
     }
-    auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check
-    if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
-        LOG_ERROR("main corrupt, need restore, ret:%{public}s, cRet:%{public}d, slave:%{public}" PRId64,
-            static_cast<std::string>(cObj).c_str(), cRet, sCount);
-        return sCount == 0 ? ExchangeStrategy::NOT_HANDLE : ExchangeStrategy::RESTORE;
-    }
     LOG_INFO("backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
     return ExchangeStrategy::BACKUP;
 }
@@ -1405,8 +1399,9 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (ret != E_OK) {
         return ret;
     }
-    if (!connection->IsRepairable()) {
-        return E_NOT_SUPPORT;
+    ret = connection->IsRepairable();
+    if (ret != E_OK) {
+        return ret;
     }
     LOG_WARN("begin repair main:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
     (void)SqliteConnection::Delete(config);
@@ -1428,18 +1423,22 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     return ret;
 }
 
-bool SqliteConnection::IsRepairable()
+int SqliteConnection::IsRepairable()
 {
     if (slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr) {
-        return false;
+        return E_STORE_CLOSED;
     }
-    static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, false)) {
+        LOG_ERROR("unavailable slave, %{public}s", config_.GetName().c_str());
+        return E_DB_RESTORE_NOT_ALLOWED;
+    }
+    std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [qRet, qObj] = slaveConnection_->ExecuteForValue(querySql);
     if (qRet != E_OK || (static_cast<int64_t>(qObj) == 0L)) {
         LOG_INFO("cancel repair, ret:%{public}d", qRet);
-        return false;
+        return E_DB_RESTORE_NOT_ALLOWED;
     }
-    return true;
+    return E_OK;
 }
 
 int SqliteConnection::ExchangeVerify(bool isRestore)
@@ -1453,16 +1452,33 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
         return E_DB_NOT_EXIST;
     }
     if (isRestore) {
+        int err = IsRepairable();
+        if (err != E_OK) {
+            return err;
+        }
         auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
         if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
             LOG_ERROR("slave may corrupt, cancel, ret:%{public}s, cRet:%{public}d",
                 static_cast<std::string>(cObj).c_str(), cRet);
             return E_SQLITE_CORRUPT;
         }
-        if (!IsRepairable()) {
-            return E_ERROR;
+        std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+        std::tie(cRet, cObj) = ExecuteForValue(querySql);
+        if (cRet == E_OK && (static_cast<int64_t>(cObj) == 0L)) {
+            LOG_INFO("main empty, need restore, %{public}s", config_.GetName().c_str());
+            return E_OK;
+        }
+        if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true)) {
+            LOG_ERROR("incomplete slave, %{public}s", config_.GetName().c_str());
+            return E_DB_RESTORE_NOT_ALLOWED;
         }
     } else {
+        auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check
+        if (cRet != E_OK || (static_cast<std::string>(cObj) != "ok")) {
+            LOG_ERROR("main corrupt, cancel, ret:%{public}s, qRet:%{public}d",
+                static_cast<std::string>(cObj).c_str(), cRet);
+            return E_SQLITE_CORRUPT;
+        }
         if (!SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true)) {
             LOG_WARN("try create slave lock failed! isRestore:%{public}d", isRestore);
         }
