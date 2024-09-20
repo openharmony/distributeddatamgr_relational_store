@@ -30,7 +30,6 @@
 #include "relational_predicates_objects.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
-#include "relational_store_inner.h"
 #include "relational_types_v0.h"
 #include "relational_values_bucket.h"
 #include "securec.h"
@@ -42,10 +41,8 @@ constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
-constexpr int RDB_SQLITE = 1;
-constexpr int RDB_CARLEY = 2;
 
-static int g_supportDbTypes[] = {RDB_SQLITE, RDB_CARLEY};
+static int g_supportDbTypes[] = {RDB_SQLITE, RDB_CAYLEY};
 
 struct OH_Rdb_ConfigV2 {
     int magicNum = RDB_CONFIG_V2_MAGIC_CODE;
@@ -76,11 +73,12 @@ int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Rdb_SetDataBaseDir(OH_Rdb_ConfigV2 *config, const char *dataBaseDir)
+int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *dataBaseDir)
 {
-    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when Set DataBaseDir.",
-            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+    if (config == nullptr || dataBaseDir == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or dataBaseDir %{public}d magic num not valid %{public}x "
+            "when Set DataBaseDir.", (config == nullptr), (dataBaseDir == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->dataBaseDir = std::string(dataBaseDir);
@@ -89,9 +87,10 @@ int OH_Rdb_SetDataBaseDir(OH_Rdb_ConfigV2 *config, const char *dataBaseDir)
 
 int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName)
 {
-    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x When set storeName.",
-            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+    if (config == nullptr || storeName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or storeName %{public}d or magic num not ok"
+            "%{public}x When set storeName.", (config == nullptr), (storeName == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->storeName = std::string(storeName);
@@ -100,9 +99,9 @@ int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName)
 
 int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName)
 {
-    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set bundleName.",
-            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+    if (config == nullptr || bundleName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or bundleName %{public}d magic num no ok %{public}x when set bundleName.",
+            (config == nullptr), (bundleName == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->bundleName = std::string(bundleName);
@@ -111,23 +110,23 @@ int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName)
 
 int OH_Rdb_SetModuleName(OH_Rdb_ConfigV2 *config, const char *moduleName)
 {
-    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set moduleName.",
-            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+    if (config == nullptr || moduleName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or moduleName %{public}d magic num no ok %{public}x when set moduleName.",
+            (config == nullptr), (moduleName == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->moduleName = std::string(moduleName);
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-int OH_Rdb_SetEncrypt(OH_Rdb_ConfigV2 *config, bool isEncrypt)
+int OH_Rdb_SetEncrypted(OH_Rdb_ConfigV2 *config, bool isEncrypted)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set encrypt.", (config == nullptr),
             (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    config->isEncrypt = isEncrypt;
+    config->isEncrypt = isEncrypted;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -164,24 +163,24 @@ int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area)
 int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
-        (dbType < RDB_SQLITE || dbType > RDB_CARLEY)) {
+        (dbType < RDB_SQLITE || dbType > RDB_CAYLEY)) {
         LOG_ERROR("config is null %{public}d or magicNum not valid %{public}d or dbType is out of range %{public}d",
             (config == nullptr), (config == nullptr ? 0 : config->magicNum), dbType);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    if (dbType == RDB_CARLEY && !(OHOS::NativeRdb::IsUsingArkData())) {
+    if (dbType == RDB_CAYLEY && !(OHOS::NativeRdb::IsUsingArkData())) {
         return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
     }
     config->dbType = dbType;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
-const int *OH_Rdb_GetSupportDBType(int *numType)
+const int *OH_Rdb_GetSupportedDbType(int *numType)
 {
     if (numType == nullptr) {
         return nullptr;
     }
-    // if use arkData, then numType will be 2 {RDB_SQLITE and RDB_CARLEY}, otherwise only 1 {RDB_SQLITE}
+    // if use arkData, then numType will be 2 {RDB_SQLITE and RDB_CAYLEY}, otherwise only 1 {RDB_SQLITE}
     *numType = OHOS::NativeRdb::IsUsingArkData() ? 2 : 1;
     return g_supportDbTypes;
 }
@@ -317,7 +316,7 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
         (OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
         OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
         (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
-        (config->dbType < RDB_SQLITE || config->dbType > RDB_CARLEY)) {
+        (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY)) {
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
             "dbType %{public}d ret %{public}d", config->magicNum, config->securityLevel, config->area, config->dbType,
@@ -335,7 +334,7 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
     rdbStoreConfig.SetArea(config->area - 1);
-    rdbStoreConfig.SetIsVector(config->dbType == RDB_CARLEY);
+    rdbStoreConfig.SetIsVector(config->dbType == RDB_CAYLEY);
     rdbStoreConfig.SetBundleName(config->bundleName);
     rdbStoreConfig.SetName(config->storeName);
     return rdbStoreConfig;
