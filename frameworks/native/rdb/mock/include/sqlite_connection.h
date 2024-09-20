@@ -116,7 +116,7 @@ private:
     int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = true);
     int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
     bool IsRepairable();
-    std::pair<bool, int> ExchangeVerify(bool isRestore);
+    int ExchangeVerify(bool isRestore);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
         bool isWrite);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
