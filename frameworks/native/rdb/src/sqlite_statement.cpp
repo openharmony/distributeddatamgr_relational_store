@@ -92,7 +92,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     return E_OK;
 }
 
-void SqliteStatement::PrintInfoForDbError(int errorCode)
+void SqliteStatement::PrintInfoForDbError(int errorCode, const std::string &sql)
 {
     if (config_ == nullptr) {
         return;
