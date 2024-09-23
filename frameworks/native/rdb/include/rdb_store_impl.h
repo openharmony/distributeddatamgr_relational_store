@@ -266,6 +266,7 @@ private:
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
     int GetDestPath(const std::string &backupPath, std::string &destPath);
+    void NotifyDataChange();
     void ReportDbRestoreSuccessEvent();
 
     static constexpr char SCHEME_RDB[] = "rdb://";

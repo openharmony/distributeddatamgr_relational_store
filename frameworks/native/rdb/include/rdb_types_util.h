@@ -26,6 +26,7 @@
 namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;
+using NotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Option = DistributedRdb::RdbService::Option;
 using RdbPredicates = DistributedRdb::PredicatesMemo;
 using RdbOperation = DistributedRdb::RdbPredicateOperation;
@@ -48,6 +49,10 @@ template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(SyncerParam &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const NotifyConfig &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(NotifyConfig &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const Option &input, MessageParcel &data);
 template<>
