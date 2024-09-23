@@ -83,6 +83,7 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
+    bool IsSlaveDiffFromMaster() const override;
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     std::string GetName();
@@ -101,6 +102,7 @@ public:
     int GetRebuilt(RebuiltType &rebuilt) override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    int32_t ExchangeSlaverToMaster();
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
@@ -166,6 +168,7 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+    SlaveStatus slaveStatus_;
 };
 } // namespace OHOS::NativeRdb
 #endif

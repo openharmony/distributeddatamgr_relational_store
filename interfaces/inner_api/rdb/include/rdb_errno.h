@@ -399,6 +399,21 @@ static constexpr int E_SERVICE_NOT_FOUND = (E_BASE + 71);
  * @brief Database schema has changed.
  */
 static constexpr int E_SQLITE_SCHEMA = (E_BASE + 72);
+
+/**
+ * @brief Database backup was interrupted.
+ */
+static constexpr int E_BACKUP_INTERRUPT = (E_BASE + 0x49);
+
+/**
+ * @brief Backup interrupt operation is invalid
+ */
+static constexpr int E_INVALID_INTERRUPT = (E_BASE + 0x4a);
+
+/**
+ * @brief Restore is not allowed
+ */
+static constexpr int E_DB_RESTORE_NOT_ALLOWED = (E_BASE + 0x4b);
 } // namespace NativeRdb
 } // namespace OHOS
 

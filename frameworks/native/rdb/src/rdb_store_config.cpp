@@ -117,6 +117,11 @@ void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
     this->journalMode_ = GetJournalModeValue(journalMode);
 }
 
+void RdbStoreConfig::SetJournalMode(const std::string &journalMode)
+{
+    this->journalMode_ = journalMode;
+}
+
 void RdbStoreConfig::SetDatabaseFileType(DatabaseFileType type)
 {
     this->databaseFileType = GetDatabaseFileTypeValue(type);
