@@ -87,7 +87,7 @@ private:
     int InnerFinalize();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReadFile2Buffer();
-    void PrintInfoForDbError(int errorCode);
+    void PrintInfoForDbError(int errorCode, const std::string &sql);
 
     static constexpr uint32_t BUFFER_LEN = 16;
 
