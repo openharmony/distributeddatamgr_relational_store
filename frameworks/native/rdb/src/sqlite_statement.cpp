@@ -97,7 +97,7 @@ void SqliteStatement::PrintInfoForDbError(int errorCode, const std::string &sql)
     if (config_ == nullptr) {
         return;
     }
-    if (errCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
+    if (errorCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
         return;
     }
     if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
