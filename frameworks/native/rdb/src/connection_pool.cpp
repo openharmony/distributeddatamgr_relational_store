@@ -326,7 +326,7 @@ int ConnPool::ConfigLocale(const std::string &localeStr)
  * Rename the backed up database.
  */
 int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-    const std::vector<uint8_t> &newKey)
+    const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus)
 {
     if (!writers_.IsFull() || config_.GetPath() == backupPath || newPath == backupPath) {
         LOG_ERROR("Connection pool is busy now!");
@@ -340,8 +340,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             LOG_ERROR("Get null connection.");
             return retVal;
         }
-
-        retVal = connection->Restore(backupPath, {});
+        retVal = connection->Restore(backupPath, {}, slaveStatus);
         if (retVal != E_OK) {
             LOG_ERROR("RdDbRestore error.");
             return retVal;
@@ -350,10 +349,10 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         auto [errCode, node] = Init();
         return errCode;
     }
-    return RestoreByDbSqliteType(newPath, backupPath);
+    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
 }
 
-int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath)
+int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
 {
     int ret = E_OK;
     if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
@@ -361,26 +360,7 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
         }
-        ret = connection->Restore(backupPath, {});
-        if (ret == E_SQLITE_CORRUPT && config_.GetAllowRebuild()) {
-            LOG_WARN("corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-            CloseAllConnections();
-            Connection::Delete(config_);
-            auto [errCode, node] = Init();
-            if (errCode != E_OK) {
-                LOG_ERROR("init failed:%{public}d", errCode);
-                return errCode;
-            }
-            auto newConn = AcquireConnection(false);
-            if (newConn == nullptr) {
-                return E_DATABASE_BUSY;
-            }
-            ret = newConn->Restore(backupPath, {});
-            if (ret != E_OK) {
-                LOG_ERROR("restore failed:%{public}d, %{public}s", ret, SqliteUtils::Anonymous(backupPath).c_str());
-            }
-        }
-        return ret;
+        return connection->Restore(backupPath, {}, slaveStatus);
     }
     CloseAllConnections();
     Connection::Delete(config_);
