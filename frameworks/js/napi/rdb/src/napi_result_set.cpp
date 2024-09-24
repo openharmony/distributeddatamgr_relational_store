@@ -181,7 +181,7 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
     auto finalize = [](napi_env env, void *data, void *hint) {
         auto tid = JSDFManager::GetInstance().GetFreedTid(data);
         if (tid != 0) {
-            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data));
+            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         proxy->SetInstance(nullptr);
