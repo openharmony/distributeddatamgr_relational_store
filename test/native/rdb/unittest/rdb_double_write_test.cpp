@@ -1032,6 +1032,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_024, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     LOG_INFO("RdbStore_DoubleWrite_024 reopen db finish");
 
+    usleep(200000); // 200000 us delay
     store = nullptr;
     LOG_INFO("RdbStore_DoubleWrite_024 close again");
 
@@ -1204,5 +1205,33 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_029, TestSize.Level1)
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
     EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
 
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_030
+ * @tc.desc: open db, write, update slave, insert, check failure, restore, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
+{
+    InitDb();
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 666 WHERE id = 22");
+    EXPECT_EQ(E_OK, ret2);
+
+    id = 666;
+    Insert(id, 1);
+
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+
+    EXPECT_NE(store->Restore(std::string(""), {}), E_OK);
+
+    RdbDoubleWriteTest::CheckNumber(store, count + 1);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }

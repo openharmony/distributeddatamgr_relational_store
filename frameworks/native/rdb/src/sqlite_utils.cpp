@@ -269,10 +269,9 @@ bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, b
     std::string lockFile = isSlaveFailure ? dbPath + "-slaveFailure" : dbPath + "-syncInterrupt";
     if (isDelete) {
         if (std::remove(lockFile.c_str()) != 0) {
-            LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
             return false;
         } else {
-            LOG_INFO("remove slave lock %{public}s", Anonymous(lockFile).c_str());
+            LOG_INFO("remove %{public}s", Anonymous(lockFile).c_str());
             return true;
         }
     } else {
@@ -282,11 +281,11 @@ bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, b
         if (needCreate) {
             std::ofstream src(lockFile.c_str(), std::ios::binary);
             if (src.is_open()) {
-                LOG_INFO("create slave lock %{public}s", Anonymous(lockFile).c_str());
+                LOG_INFO("open %{public}s", Anonymous(lockFile).c_str());
                 src.close();
                 return true;
             } else {
-                LOG_WARN("open slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+                LOG_WARN("open errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
                 return false;
             }
         }
