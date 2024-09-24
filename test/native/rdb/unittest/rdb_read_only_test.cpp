@@ -18,10 +18,10 @@
 #include <string>
 
 #include "common.h"
+#include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
@@ -402,6 +402,9 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0017, TestSize.Level1)
  */
 HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0018, TestSize.Level1)
 {
+    if (!OHOS::NativeRdb::IsUsingArkData()) {
+        return;
+    }
     int errCode = E_ERROR;
     RdbStoreConfig config(RdbReadOnlyTest::READONLY_DATABASE_NAME);
     config.SetBundleName("com.example.readOnly.rdb");
