@@ -165,7 +165,7 @@ void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, vo
 {
     auto tid = JSDFManager::GetInstance().GetFreedTid(nativeObject);
     if (tid != 0) {
-        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject));
+        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
     }
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
     delete proxy;
