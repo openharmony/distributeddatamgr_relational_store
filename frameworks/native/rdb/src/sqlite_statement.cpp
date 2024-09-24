@@ -79,7 +79,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
             RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
         }
-        PrintInfoForDbError(ret);
+        PrintInfoForDbError(ret, newSql);
         return ret;
     }
     InnerFinalize(); // finalize the old
@@ -92,9 +92,12 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     return E_OK;
 }
 
-void SqliteStatement::PrintInfoForDbError(int errorCode)
+void SqliteStatement::PrintInfoForDbError(int errorCode, const std::string &sql)
 {
     if (config_ == nullptr) {
+        return;
+    }
+    if (errorCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
         return;
     }
     if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
@@ -283,7 +286,7 @@ int SqliteStatement::InnerStep()
     if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
         RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
     }
-    PrintInfoForDbError(ret);
+    PrintInfoForDbError(ret, sql_);
     return ret;
 }
 
