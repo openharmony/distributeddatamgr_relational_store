@@ -142,14 +142,14 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
         return E_OK;
     }
 
-    slaveConnection_ = std::make_shared<SqliteConnection>(config, isWrite);
-    int errCode = slaveConnection_->InnerOpen(config);
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
+    int errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
         if (errCode == E_SQLITE_CORRUPT) {
             LOG_WARN("slave corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
             (void)Delete(config);
-            errCode = slaveConnection_->InnerOpen(config);
+            errCode = connection->InnerOpen(config);
             if (errCode != E_OK) {
                 LOG_ERROR("reopen slave failed:%{public}d", errCode);
                 return errCode;
@@ -157,8 +157,10 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
         } else {
             LOG_WARN("open slave failed:%{public}d, %{public}s", errCode,
                 SqliteUtils::Anonymous(config.GetPath()).c_str());
+            return errCode;
         }
     }
+    slaveConnection_ = connection;
     return errCode;
 }
 
