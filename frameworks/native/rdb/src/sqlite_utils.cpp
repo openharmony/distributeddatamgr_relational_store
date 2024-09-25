@@ -39,7 +39,7 @@ using namespace OHOS::Rdb;
 
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
-constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 5;
+constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
 constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
@@ -202,21 +202,19 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
 
 std::string SqliteUtils::AnonyDigits(const std::string &fileName)
 {
-    int digitsNum = fileName.size();
+    std::string::size_type digitsNum = fileName.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
         return fileName;
     }
-    constexpr int longDigits = 7;
-    int endDigitsNum = 4;
-    int shortEndDigitsNum = 3;
+    std::string::size_type endDigitsNum = 4;
+    std::string::size_type shortEndDigitsNum = 3;
     std::string name = fileName;
     std::string last = "";
-    if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE && digitsNum < longDigits) {
+    if (digitsNum == CONTINUOUS_DIGITS_MINI_SIZE) {
         last = name.substr(name.size() - shortEndDigitsNum);
     } else {
         last = name.substr(name.size() - endDigitsNum);
     }
-
     return "***" + last;
 }
 
