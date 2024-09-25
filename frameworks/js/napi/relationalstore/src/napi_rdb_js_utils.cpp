@@ -133,15 +133,12 @@ napi_value Convert2JSValue(napi_env env, const Asset &value)
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 {
-    std::vector<napi_property_descriptor> descriptors;
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
     auto &values = rowEntity.Get();
     for (auto const &[key, value] : values) {
-        descriptors.emplace_back(DECLARE_JS_PROPERTY(env, key.c_str(), value));
+        NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, key.c_str(), value), object);
     }
-
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(
-        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
