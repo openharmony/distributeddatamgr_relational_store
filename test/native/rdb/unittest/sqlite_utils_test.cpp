@@ -61,7 +61,7 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_004, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_005, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::Anonymous("rdb_30005_test.db"), "rdb_***005_test.db");
+    EXPECT_EQ(SqliteUtils::Anonymous("rdb_30005_test.db"), "rdb_30005_test.db");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_006, TestSize.Level1)
@@ -118,15 +118,30 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0014, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0015, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::Anonymous("K23edfK.db"), "K***edfK.db");
+    EXPECT_EQ(SqliteUtils::Anonymous("K23edfK.db"), "K23edfK.db");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0016, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::Anonymous("__23edf__.db"), "__***edf__.db");
+    EXPECT_EQ(SqliteUtils::Anonymous("__23edf__.db"), "__23edf__.db");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0017, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::Anonymous("K3edfK.db"), "K3edfK.db");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0018, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("K23564edfK.db"), "K***4edfK.db");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0019, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("K235648edfK.db"), "K***8edfK.db");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0020, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("K2356489edfK.db"), "K***9edfK.db");
 }
