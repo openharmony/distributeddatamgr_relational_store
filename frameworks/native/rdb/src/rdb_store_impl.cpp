@@ -1856,21 +1856,24 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
     }
-    if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
-        auto conn = connectionPool_->AcquireConnection(false);
-        if (conn != nullptr) {
-            auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
-            if (strategy == ExchangeStrategy::BACKUP) {
-                (void)conn->Backup({}, {}, false, slaveStatus_);
-            }
-        }
-    }
-    if (type != DistributedRdb::DISTRIBUTED_CLOUD || !distributedConfig.autoSync) {
+    if (type != DistributedRdb::DISTRIBUTED_CLOUD) {
         return E_OK;
+    }
+    auto conn = connectionPool_->AcquireConnection(false);
+    if (conn != nullptr) {
+        auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+        if (strategy == ExchangeStrategy::BACKUP) {
+            (void)conn->Backup({}, {}, false, slaveStatus_);
+        }
     }
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        cloudTables_.insert(tables.begin(), tables.end());
+        if (distributedConfig.autoSync) {
+            cloudTables_.insert(tables.begin(), tables.end());
+        } else {
+            std::for_each(tables.begin(), tables.end(), [this](const auto &table) { cloudTables_.erase(table); });
+            return E_OK;
+        }
     }
     auto isRebuilt = RebuiltType::NONE;
     GetRebuilt(isRebuilt);
