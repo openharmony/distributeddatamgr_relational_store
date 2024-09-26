@@ -145,3 +145,19 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0020, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::Anonymous("K2356489edfK.db"), "K***9edfK.db");
 }
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0021, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("linker_reborn.db-wal"), "linker_reborn.db-wal");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0022, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("linker_grow.db-wal"), "linker_grow.db-wal");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::Anonymous("file /data/stage/el2/database/rdb/ddddddd/linker_reborn.db-wal"),
+        "file /***/el2/***/linker_reborn.db-wal");
+}
