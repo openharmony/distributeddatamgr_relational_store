@@ -19,9 +19,12 @@
 #include <iomanip>
 #include <sstream>
 
+#include <chrono>
 #include <fcntl.h>
 #include <unistd.h>
+#include <unordered_map>
 #include <ctime>
+#include <mutex>
 #include "connection.h"
 #include "hisysevent_c.h"
 #include "logger.h"
@@ -41,19 +44,38 @@ static constexpr int MAX_TIME_BUF_LEN = 32;
 static constexpr int MILLISECONDS_LEN = 3;
 static constexpr int NANO_TO_MILLI = 1000000;
 static constexpr int MILLI_PRE_SEC = 1000;
+static constexpr int TIME_OUT_MINUTES = 10;
+static std::unordered_map<std::string, std::chrono::steady_clock::time_point> dbfileLastTimeStatistical_;
+static std::mutex dbfilesMutex_;
 Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 
 void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
 {
+    RdbCorruptedEvent eventInfoAppend = eventInfo;
+    if (HandTimeout(eventInfo.path)) {
+        for (auto &[name, debugInfo] : eventInfo.debugInfos) {
+            eventInfoAppend.appendix += "\n" + name + " :" + GetFileStatInfo(debugInfo);
+        }
+        LOG_WARN("database corrupted store:%{public}s, errCode:%{public}d, append:%{public}s",
+                 SqliteUtils::Anonymous(eventInfo.storeName).c_str(),
+                 eventInfo.errorCode,
+                 eventInfoAppend.appendix.c_str());
+    }
     if (IsReportCorruptedFault(eventInfo.path)) {
-        Report(eventInfo);
+        Report(eventInfoAppend);
         CreateCorruptedFlag(eventInfo.path);
     }
 }
 
 void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 {
-    Report(eventInfo);
+    RdbCorruptedEvent eventInfoAppend = eventInfo;
+    for (auto &[name, debugInfo] : eventInfo.debugInfos) {
+        eventInfoAppend.appendix += "\n" + name + " :" + GetFileStatInfo(debugInfo);
+    }
+    LOG_INFO("database restore store:%{public}s, errCode:%{public}d, append:%{public}s",
+        SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, eventInfoAppend.appendix.c_str());
+    Report(eventInfoAppend);
     DeleteCorruptedFlag(eventInfo.path);
 }
 
@@ -65,11 +87,6 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     std::string storeName = eventInfo.storeName;
     uint32_t checkType = eventInfo.integrityCheck;
     std::string appendInfo = eventInfo.appendix;
-    for (auto &[name, debugInfo] : eventInfo.debugInfos) {
-        appendInfo += "\n" + name + " :" + GetFileStatInfo(debugInfo);
-    }
-    LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
-        SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
     std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime, 0);
     char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
@@ -93,14 +110,14 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
     const uint32_t permission = 0777;
-    oss << " device: 0x" << std::hex << debugInfo.dev_ << " inode: 0x" << std::hex << debugInfo.inode_;
+    oss << " dev:0x" << std::hex << debugInfo.dev_ << " ino:0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
-    oss << " mode: 0" << std::oct << (debugInfo.mode_ & permission) << " size: " << std::dec << debugInfo.size_
-        << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
-        << " smtime: " << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
-        << " sctime: " << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
+    oss << " mode:0" << std::oct << (debugInfo.mode_ & permission) << " size:" << std::dec << debugInfo.size_
+        << " atim:" << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+        << " mtim:" << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
+        << " ctim:" << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
 }
 
@@ -154,6 +171,22 @@ std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t 
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_time);
     oss << buffer << '.' << std::setfill('0') << std::setw(MILLISECONDS_LEN) << (nsec / NANO_TO_MILLI) % MILLI_PRE_SEC;
     return oss.str();
+}
+
+bool RdbFaultHiViewReporter::HandTimeout(const std::string &dbPath)
+{
+    std::lock_guard<std::mutex> lock(dbfilesMutex_);
+    auto now = std::chrono::steady_clock::now();
+    if (dbfileLastTimeStatistical_.find(dbPath) != dbfileLastTimeStatistical_.end()) {
+        auto lastTime = dbfileLastTimeStatistical_[dbPath];
+        auto duration = std::chrono::duration_cast<std::chrono::minutes>(now - lastTime);
+        if (duration.count() < TIME_OUT_MINUTES) {
+            return false;
+        }
+    }
+    LOG_DEBUG("dbPath %{public}s Last Time is update", SqliteUtils::Anonymous(dbPath).c_str());
+    dbfileLastTimeStatistical_[dbPath] = now;
+    return true;
 }
 
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,

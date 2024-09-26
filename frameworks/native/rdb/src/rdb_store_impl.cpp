@@ -318,6 +318,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
             service->Disable(param);
         }
 #endif
+        config_.SetIter(0);
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
