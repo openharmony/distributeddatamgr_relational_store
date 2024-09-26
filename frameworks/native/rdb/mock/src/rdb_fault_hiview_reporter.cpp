@@ -82,4 +82,9 @@ std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &event
     (void)eventInfo;
     return "";
 }
+
+bool RdbFaultHiViewReporter::HandTimeout(const std::string &dbPath)
+{
+    return false;
+}
 } // namespace OHOS::NativeRdb
