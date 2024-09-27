@@ -168,6 +168,7 @@ void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, vo
         LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
     }
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
+    proxy->predicates_ = std::move(nullptr);
     delete proxy;
 }
 

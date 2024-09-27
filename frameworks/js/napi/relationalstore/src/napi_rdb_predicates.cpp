@@ -164,6 +164,8 @@ void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
         LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
     }
     RdbPredicatesProxy *proxy = static_cast<RdbPredicatesProxy *>(nativeObject);
+
+    proxy->SetInstance(nullptr);
     delete proxy;
 }
 
