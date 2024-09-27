@@ -158,6 +158,7 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
+        proxy->rdbStore_ = std::move(nullptr);
         delete proxy;
     };
     auto *proxy = new (std::nothrow) RdbStoreProxy();
