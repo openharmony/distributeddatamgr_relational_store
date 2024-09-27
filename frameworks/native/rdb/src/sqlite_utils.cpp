@@ -190,7 +190,7 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
         noAlnum.push_back("");
     }
     if (!noAlnumStr.empty()) {
-        noAlnum.push_back(alnumStr);
+        noAlnum.push_back(noAlnumStr);
         alnum.push_back("");
     }
     std::string res = "";
