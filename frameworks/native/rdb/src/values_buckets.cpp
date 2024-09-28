@@ -47,9 +47,8 @@ void ValuesBuckets::Put(const ValuesBucket &bucket)
 
 std::pair<int, ValuesBuckets::ValueType> ValuesBuckets::Get(size_t row, const FieldType &field) const
 {
-    ValueObject emptyObject;
-    ValueType emptyRef(emptyObject);
-
+    ValueObject empty;
+    std::reference_wrapper<ValueObject> emptyRef(empty);
     if (row >= buckets_.size()) {
         return { E_INVALID_ARGS, emptyRef };
     }

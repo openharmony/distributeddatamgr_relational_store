@@ -26,7 +26,6 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSqlBuilder {
 public:
-    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     SqliteSqlBuilder();
     ~SqliteSqlBuilder();
     static std::string BuildUpdateString(const ValuesBucket &values, const std::string &tableName,
@@ -49,8 +48,10 @@ public:
     static std::string GetSqlArgs(size_t size);
 
     template<typename T>
-    static std::vector<std::pair<std::string, std::vector<std::vector<T>>>> MakeExecuteSqls(
-        const std::string &sql, const std::vector<T> &args, int fieldSize, int limit);
+    using ExecuteSqlsType = std::vector<std::pair<std::string, std::vector<std::vector<T>>>>;
+    template<typename T>
+    static ExecuteSqlsType<T> MakeExecuteSqls(const std::string &sql, const std::vector<T> &args, int fieldSize,
+                                              int limit);
 private:
     static void AppendClause(std::string &builder, const std::string &name,
         const std::string &clause, const std::string &table = "");
