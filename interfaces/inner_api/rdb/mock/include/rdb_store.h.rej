@@ -1,0 +1,21 @@
+diff a/interfaces/inner_api/rdb/mock/include/rdb_store.h b/interfaces/inner_api/rdb/mock/include/rdb_store.h	(rejected hunks)
+@@ -28,6 +28,8 @@
+ #include "result_set.h"
+ #include "value_object.h"
+ #include "values_bucket.h"
++#include "values_buckets.h"
++
+ namespace OHOS::NativeRdb {
+ class RdbStore {
+ public:
+@@ -39,6 +41,10 @@ public:
+     virtual int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
+     virtual int BatchInsert(int64_t &outInsertNum, const std::string &table,
+         const std::vector<ValuesBucket> &values) = 0;
++    virtual std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &values)
++    {
++        return { E_NOT_SUPPORT, 0 };
++    }
+     virtual int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values) = 0;
+     virtual int InsertWithConflictResolution(
+         int64_t &outRowId, const std::string &table, const ValuesBucket &values,
