@@ -655,8 +655,8 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBuckets), std::make_shared<ParamError>("Duplicate assets "
-                                                                                                   "are not allowed"));
+        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->sharedValuesBuckets),
+                           std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);

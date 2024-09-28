@@ -410,8 +410,7 @@ int RdbStoreImpl::BatchInsertEntry(const std::string &table, const T &values, si
     return E_OK;
 }
 
-RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets,
-    int limit)
+auto RdbStoreImpl::GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit)
 {
     std::vector<std::vector<ValueObject>> values;
     std::map<std::string, uint32_t> fields;
@@ -454,17 +453,14 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
     return SqliteSqlBuilder::MakeExecuteSqls(sql, args, fields.size(), limit);
 }
 
-RdbStoreImpl::ExecuteSqlsRef RdbStoreImpl::GenerateSql(
-    const std::string& table, const ValuesBuckets& buckets, int limit)
+auto RdbStoreImpl::GenerateSql(const std::string& table, const ValuesBuckets& buckets, int limit)
 {
     auto [fields, values] = buckets.GetFieldsAndValues();
     auto columnSize = fields->size();
     auto rowSize = buckets.RowSize();
     LOG_INFO("columnSize=%{public}zu, rowSize=%{public}zu", columnSize, rowSize);
 
-    ValueObject object;
-    std::reference_wrapper<ValueObject> emptyRef(object);
-    std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, emptyRef);
+    std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, emptyValueObjectRef_);
     std::string sql = "INSERT OR REPLACE INTO " + table + " (";
     size_t columnIndex = 0;
     for (auto &field : *fields) {
@@ -472,7 +468,11 @@ RdbStoreImpl::ExecuteSqlsRef RdbStoreImpl::GenerateSql(
             auto [errorCode, value] = buckets.Get(row, std::ref(field));
             if (errorCode != E_OK) {
                 LOG_ERROR("not found %{public}s in row=%{public}zu", field.c_str(), row);
-                return ExecuteSqlsRef();
+                continue;
+            }
+            auto type = value.get().GetType();
+            if (type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_ASSETS) {
+                SetAssetStatus(value.get(), AssetValue::STATUS_INSERT);
             }
             args[columnIndex + row * columnSize] = value;
         }
