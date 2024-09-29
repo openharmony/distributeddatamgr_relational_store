@@ -76,7 +76,8 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
             ReadFile2Buffer();
         }
         int ret = SQLiteError::ErrNo(errCode);
-        if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+        if (config_ != nullptr &&
+            (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
             RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
         }
         PrintInfoForDbError(ret, newSql);
@@ -92,17 +93,19 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     return E_OK;
 }
 
-void SqliteStatement::PrintInfoForDbError(int errorCode, const std::string &sql)
+void SqliteStatement::PrintInfoForDbError(int errCode, const std::string &sql)
 {
     if (config_ == nullptr) {
         return;
     }
-    if (errorCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
+
+    if (errCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
         return;
     }
-    if (errorCode == E_SQLITE_ERROR || errorCode == E_SQLITE_BUSY || errorCode == E_SQLITE_LOCKED ||
-        errorCode == E_SQLITE_IOERR || errorCode == E_SQLITE_CORRUPT || errorCode == E_SQLITE_CANTOPEN) {
-        LOG_ERROR(" DbError errorCode: %{public}d  DbName: %{public}s ", errorCode,
+
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED ||
+        errCode == E_SQLITE_IOERR || errCode == E_SQLITE_CANTOPEN) {
+        LOG_ERROR("DbError errCode:%{public}d errno:%{public}d DbName: %{public}s ", errCode, errno,
             SqliteUtils::Anonymous(config_->GetName()).c_str());
     }
 }
@@ -282,8 +285,9 @@ int SqliteStatement::Step()
 int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
-    int ret = SQLiteError::ErrNo(sqlite3_step(stmt_));
-    if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+    auto errCode = sqlite3_step(stmt_);
+    int ret = SQLiteError::ErrNo(errCode);
+    if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
     }
     PrintInfoForDbError(ret, sql_);

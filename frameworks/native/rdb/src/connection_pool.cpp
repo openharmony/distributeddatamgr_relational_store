@@ -27,6 +27,7 @@
 #include "connection.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -78,6 +79,8 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
         LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
             static_cast<uint32_t>(rebuiltType), SqliteUtils::Anonymous(storeConfig.GetName()).c_str(),
             storeConfig.IsEncrypt(), errCode, errno);
+    } else {
+        RdbFaultHiViewReporter::ReportRestore(RdbFaultHiViewReporter::Create(storeConfig, E_OK));
     }
 
     return result;
