@@ -1335,7 +1335,14 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
         }
         return rc == E_BACKUP_INTERRUPT ? E_BACKUP_INTERRUPT : SQLiteError::ErrNo(rc);
     }
-    isRestore ? TryCheckPoint() : slaveConnection_->TryCheckPoint();
+    rc = isRestore ? TryCheckPoint() : slaveConnection_->TryCheckPoint();
+    if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        if (!isRestore) {
+            curStatus = SlaveStatus::BACKUP_INTERRUPT;
+        }
+        LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return E_OK;
+    }
     curStatus = SlaveStatus::BACKUP_FINISHED;
     SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false);
     SqliteUtils::TryAccessSlaveLock(config_.GetPath(), true, false, true);
