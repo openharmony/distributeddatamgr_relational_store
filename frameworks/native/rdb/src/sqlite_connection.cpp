@@ -137,9 +137,11 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool c
     }
     bool isSlaveExist = access(config.GetPath().c_str(), F_OK) == 0;
     bool isSlaveLockExist = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false);
-    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && (checkSlaveExist && (!isSlaveExist || isSlaveLockExist))) {
-        LOG_INFO("not dual write on manual, slave:%{public}d, lock:%{public}d",
-            isSlaveExist, isSlaveLockExist);
+    bool hasFailure = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true);
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER &&
+        (checkSlaveExist && (!isSlaveExist || isSlaveLockExist || hasFailure))) {
+        LOG_INFO("not dual write on manual, slave:%{public}d, lock:%{public}d, failure:%{public}d", isSlaveExist,
+            isSlaveLockExist, hasFailure);
         return E_OK;
     }
 
