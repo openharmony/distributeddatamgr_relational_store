@@ -51,6 +51,8 @@ public:
     static void Report(const RdbCorruptedEvent &eventInfo);
     static void ReportFault(const RdbCorruptedEvent &eventInfo);
     static void ReportRestore(const RdbCorruptedEvent &eventInfo);
+    static std::string Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
+    static std::string FormatBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
 
 private:
     static void Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos);

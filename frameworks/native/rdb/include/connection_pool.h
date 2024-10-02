@@ -38,7 +38,7 @@ public:
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
-    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
+    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config, int &errCode);
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
@@ -103,7 +103,7 @@ private:
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
-        int32_t Dump(const char *header);
+        int32_t Dump(const char *header, bool inTrans);
 
     private:
         int32_t ExtendNode();
