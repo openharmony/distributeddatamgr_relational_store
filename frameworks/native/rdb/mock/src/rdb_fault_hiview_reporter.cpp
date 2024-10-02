@@ -87,4 +87,18 @@ bool RdbFaultHiViewReporter::HandTimeout(const std::string &dbPath)
 {
     return false;
 }
+std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+{
+    (void)debugs;
+    (void)header;
+    return "";
+}
+
+std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
+    const std::string &header)
+{
+    (void)debugs;
+    (void)header;
+    return "";
+}
 } // namespace OHOS::NativeRdb

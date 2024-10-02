@@ -40,11 +40,12 @@ using ConnPool = ConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
 using SharedConns = std::vector<std::shared_ptr<Connection>>;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 
-std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, int &errCode)
+std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &errCode)
 {
-    std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(storeConfig));
+    std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(config));
     if (pool == nullptr) {
         LOG_ERROR("ConnPool::Create new failed, pool is nullptr.");
         errCode = E_ERROR;
@@ -56,8 +57,17 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &storeConfig, in
         if (errCode != E_SQLITE_CORRUPT) {
             break;
         }
-        storeConfig.SetIter(ITER_V1);
+        config.SetIter(ITER_V1);
     }
+    std::string dbPath;
+    (void)SqliteGlobalConfig::GetDbPath(config, dbPath);
+    LOG_INFO("code:%{public}d app:%{public}s path:[%{public}s] "
+             "cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
+             "%{public}s",
+        errCode, config.GetBundleName().c_str(), SqliteUtils::Anonymous(dbPath).c_str(), config.GetDBType(),
+        config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(),
+        config.IsReadOnly(),
+        Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
     return errCode == E_OK ? pool : nullptr;
 }
 
@@ -240,7 +250,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
     auto node = container->Acquire(ms);
     if (node == nullptr) {
         const char *header = (isReadOnly && maxReader_ != 0) ? "readers_" : "writers_";
-        container->Dump(header);
+        container->Dump(header, isInTransaction_);
         return nullptr;
     }
     return Convert2AutoConn(node);
@@ -254,7 +264,7 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     }
     auto node = writers_.Acquire(ms);
     if (node == nullptr) {
-        writers_.Dump("writers_");
+        writers_.Dump("writers_", isInTransaction_);
         return nullptr;
     }
     auto conn = node->connect_;
@@ -274,9 +284,10 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
         return;
     }
     auto errCode = node->Unused();
-    if (errCode == E_WAL_SIZE_OVER_LIMIT) {
-        readers_.Dump("WAL Over Limit");
+    if (errCode == E_SQLITE_LOCKED) {
+        readers_.Dump("WAL Over Limit", isInTransaction_);
     }
+
     if (node->IsWriter()) {
         writers_.Release(node);
     } else {
@@ -684,12 +695,12 @@ bool ConnPool::Container::IsFull()
     return total_ == count_;
 }
 
-int32_t ConnPool::Container::Dump(const char *header)
+int32_t ConnPool::Container::Dump(const char *header, bool inTrans)
 {
     std::string info;
     std::vector<std::shared_ptr<ConnNode>> details;
-    std::string title = " M_T_C[" + std::to_string(max_) + ","+ std::to_string(total_) +","
-            + std::to_string(count_) + "]";
+    std::string title = " B_M_T_C[" + std::to_string(inTrans) + "," + std::to_string(max_) + "," +
+                        std::to_string(total_) + "," + std::to_string(count_) + "]";
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
         details.reserve(details_.size());

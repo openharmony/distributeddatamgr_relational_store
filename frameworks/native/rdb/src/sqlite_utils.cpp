@@ -239,16 +239,16 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
-int SqliteUtils::GetFileSize(const std::string &fileName)
+ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
 {
     struct stat fileStat;
     if (fileName.empty() || stat(fileName.c_str(), &fileStat) < 0) {
-        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s",
-                  errno, Anonymous(fileName).c_str());
+        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s", errno,
+            Anonymous(fileName).c_str());
         return 0;
     }
 
-    return static_cast<int>(fileStat.st_size);
+    return fileStat.st_size;
 }
 
 bool SqliteUtils::IsSlaveDbName(const std::string &fileName)

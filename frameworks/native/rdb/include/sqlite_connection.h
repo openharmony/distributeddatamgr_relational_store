@@ -113,7 +113,7 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = true);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool checkSlaveExist = true);
     int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
     int IsRepairable();
     int ExchangeVerify(bool isRestore);
