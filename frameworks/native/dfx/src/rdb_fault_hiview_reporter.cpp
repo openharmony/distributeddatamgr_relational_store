@@ -259,4 +259,30 @@ std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &event
     }
     return SqliteUtils::Anonymous(eventInfo.storeName);
 }
+
+std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::string appendix = header;
+    for (auto &[name, debugInfo] : debugs) {
+        appendix += "\n" + name + " :" + GetFileStatInfo(debugInfo);
+    }
+    return appendix;
+}
+
+std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
+    const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::stringstream oss;
+    oss << header << ":";
+    for (auto &[name, debugInfo] : debugs) {
+        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ">";
+    }
+    return oss.str();
+}
 } // namespace OHOS::NativeRdb
