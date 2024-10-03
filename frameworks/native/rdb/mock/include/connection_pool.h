@@ -103,7 +103,7 @@ private:
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
-        int32_t Dump(const char *header);
+        int32_t Dump(const char *header, bool inTrans);
 
     private:
         int32_t ExtendNode();

@@ -936,7 +936,7 @@ int SqliteConnection::TryCheckPoint()
     if (errCode != SQLITE_OK) {
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
-        return errCode == SQLITE_LOCKED ? E_SQLITE_LOCKED : E_ERROR;
+        return SQLiteError::ErrNo(errCode);
     }
 
     if (slaveConnection_) {
