@@ -414,6 +414,11 @@ static constexpr int E_INVALID_INTERRUPT = (E_BASE + 0x4a);
  * @brief Restore is not allowed
  */
 static constexpr int E_DB_RESTORE_NOT_ALLOWED = (E_BASE + 0x4b);
+
+/**
+ * @brief Do not use except relational_store
+ */
+static constexpr int E_INNER_WARNING = (E_BASE + 0x4c);
 } // namespace NativeRdb
 } // namespace OHOS
 

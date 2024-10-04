@@ -274,7 +274,7 @@ int SqliteStatement::Step()
         return ret;
     }
     if (slave_) {
-        ret = slave_->InnerStep();
+        ret = slave_->Step();
         if (ret != E_OK) {
             LOG_WARN("slave step error:%{public}d", ret);
         }

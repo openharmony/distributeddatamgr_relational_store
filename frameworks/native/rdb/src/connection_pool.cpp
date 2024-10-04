@@ -35,6 +35,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using namespace std::chrono;
 using Conn = Connection;
 using ConnPool = ConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
@@ -283,7 +284,7 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
     if (node == nullptr) {
         return;
     }
-    auto errCode = node->Unused();
+    auto errCode = node->Unused(isInTransaction_);
     if (errCode == E_SQLITE_LOCKED) {
         readers_.Dump("WAL Over Limit", isInTransaction_);
     }
@@ -442,25 +443,38 @@ ConnPool::ConnNode::ConnNode(std::shared_ptr<Conn> conn) : connect_(std::move(co
 std::shared_ptr<Conn> ConnPool::ConnNode::GetConnect()
 {
     tid_ = gettid();
-    time_ = std::chrono::steady_clock::now();
+    time_ = steady_clock::now();
     return connect_;
 }
 
 int64_t ConnPool::ConnNode::GetUsingTime() const
 {
-    auto time = std::chrono::steady_clock::now() - time_;
-    return std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
+    auto time = steady_clock::now() - time_;
+    return duration_cast<milliseconds>(time).count();
 }
 
-int32_t ConnPool::ConnNode::Unused()
+int32_t ConnPool::ConnNode::Unused(bool inTrans)
 {
-    int32_t errCode = E_OK;
-    tid_ = 0;
-    time_ = std::chrono::steady_clock::now();
-    if (connect_ != nullptr) {
-        connect_->ClearCache();
-        errCode = connect_->TryCheckPoint();
+    time_ = steady_clock::now();
+    if (connect_ == nullptr) {
+        return E_OK;
     }
+
+    connect_->ClearCache();
+    if (!connect_->IsWriter()) {
+        tid_ = 0;
+    }
+
+    if (inTrans) {
+        return E_OK;
+    }
+    auto timeout = time_ > (failedTime_ + minutes(CHECK_POINT_INTERVAL)) || time_ < failedTime_;
+    int32_t errCode = connect_->TryCheckPoint(timeout);
+    if (errCode == E_INNER_WARNING || errCode == E_NOT_SUPPORT) {
+        return E_OK;
+    }
+
+    failedTime_ = errCode != E_OK ? time_ : steady_clock::time_point();
     return errCode;
 }
 
@@ -699,7 +713,7 @@ int32_t ConnPool::Container::Dump(const char *header, bool inTrans)
 {
     std::string info;
     std::vector<std::shared_ptr<ConnNode>> details;
-    std::string title = " B_M_T_C[" + std::to_string(inTrans) + "," + std::to_string(max_) + "," +
+    std::string title = "B_M_T_C[" + std::to_string(inTrans) + "," + std::to_string(max_) + "," +
                         std::to_string(total_) + "," + std::to_string(count_) + "]";
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
