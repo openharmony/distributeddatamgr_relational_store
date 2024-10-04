@@ -236,7 +236,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
-        TryCheckPoint();
+        TryCheckPoint(true);
         ValueObject checkResult{"ok"};
         auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
         if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
@@ -916,12 +916,17 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
-int SqliteConnection::TryCheckPoint()
+int SqliteConnection::TryCheckPoint(bool timeout)
 {
     if (!isWriter_) {
         return E_NOT_SUPPORT;
     }
 
+    std::shared_ptr<Connection> autoCheck(slaveConnection_.get(), [this, timeout](Connection *conn) {
+        if (conn != nullptr && backupId_ == TaskExecutor::INVALID_TASK_ID) {
+            conn->TryCheckPoint(timeout);
+        }
+    });
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
     ssize_t size = SqliteUtils::GetFileSize(walName);
     if (size < 0) {
@@ -932,18 +937,16 @@ int SqliteConnection::TryCheckPoint()
     if (size <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {
         return E_OK;
     }
+
+    if (!timeout && size < GlobalExpr::DB_WAL_WARNING_SIZE) {
+        return E_INNER_WARNING;
+    }
+
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
         return SQLiteError::ErrNo(errCode);
-    }
-
-    if (slaveConnection_) {
-        int errCode = slaveConnection_->TryCheckPoint();
-        if (errCode != E_OK) {
-            LOG_ERROR("slaveConnection tryCheckPoint failed:%{public}d", errCode);
-        }
     }
     return E_OK;
 }
@@ -1337,7 +1340,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
         }
         return rc == E_BACKUP_INTERRUPT ? E_BACKUP_INTERRUPT : SQLiteError::ErrNo(rc);
     }
-    rc = isRestore ? TryCheckPoint() : slaveConnection_->TryCheckPoint();
+    rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
     if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         if (!isRestore) {
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
