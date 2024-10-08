@@ -77,7 +77,10 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_INVALID_FILE_PATH;
     }
-    if (access(dbFileName.c_str(), F_OK) != 0) {
+    std::string shmFileName = dbFileName + "-shm";
+    std::string walFileName = dbFileName + "-wal";
+    if (access(dbFileName.c_str(), F_OK) != 0 && access(shmFileName.c_str(), F_OK) != 0 &&
+        access(walFileName.c_str(), F_OK) != 0) {
         LOG_ERROR("Store to delete doesn't exist, path %{public}s", SqliteUtils::Anonymous(dbFileName).c_str());
         return E_OK; // not not exist
     }
@@ -103,10 +106,13 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto dbFile = config.GetPath();
+    std::string shmFile = dbFile + "-shm";
+    std::string walFile = dbFile + "-wal";
     if (dbFile.empty()) {
         return E_INVALID_FILE_PATH;
     }
-    if (access(dbFile.c_str(), F_OK) != 0) {
+    if (access(dbFile.c_str(), F_OK) != 0 && access(shmFile.c_str(), F_OK) != 0 &&
+        access(walFile.c_str(), F_OK) != 0) {
         LOG_ERROR("not exist, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
         return E_OK; // not not exist
     }
