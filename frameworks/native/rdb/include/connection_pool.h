@@ -64,17 +64,19 @@ public:
 
 private:
     struct ConnNode {
+        static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
         bool using_ = false;
         int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point failedTime_;
         std::shared_ptr<Connection> connect_;
 
         explicit ConnNode(std::shared_ptr<Connection> conn);
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        int32_t Unused();
+        int32_t Unused(bool inTrans);
     };
 
     struct Container {

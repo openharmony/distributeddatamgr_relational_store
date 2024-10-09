@@ -243,8 +243,9 @@ ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
 {
     struct stat fileStat;
     if (fileName.empty() || stat(fileName.c_str(), &fileStat) < 0) {
-        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s", errno,
-            Anonymous(fileName).c_str());
+        if (errno != ENOENT) {
+            LOG_ERROR("failed, errno: %{public}d, fileName:%{public}s", errno, Anonymous(fileName).c_str());
+        }
         return 0;
     }
 

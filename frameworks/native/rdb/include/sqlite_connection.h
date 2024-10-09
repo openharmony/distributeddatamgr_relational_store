@@ -48,7 +48,7 @@ public:
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
-    int TryCheckPoint() override;
+    int TryCheckPoint(bool timeout) override;
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
