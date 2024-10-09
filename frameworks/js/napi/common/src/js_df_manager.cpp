@@ -14,9 +14,6 @@
  */
 
 #include <mutex>
-#if defined(WINDOWS_PLATFORM)
-#include <windows.h>
-#endif
 
 #include <unistd.h>
 
@@ -45,11 +42,12 @@ int32_t JSDFManager::GetFreedTid(void *data)
         if (tid != 0) {
             freedTid = tid;
         } else {
-#if defined(WINDOWS_PLATFORM)
-            tid = GetCurrentThreadId();
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+            tid = 0;
 #else
             tid = gettid();
 #endif
+            instances_[data] = tid;
         }
     }
     return freedTid;
