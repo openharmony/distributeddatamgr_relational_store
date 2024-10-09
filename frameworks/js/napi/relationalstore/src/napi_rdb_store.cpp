@@ -34,6 +34,7 @@
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
+#include "js_df_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -210,12 +211,17 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
+        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
+        if (tid != 0) {
+            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
+        }
         if (data != hint) {
             LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
                 uintptr_t(hint));
             return;
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
+        proxy->SetInstance(nullptr);
         delete proxy;
     };
     auto *proxy = new (std::nothrow) RdbStoreProxy();
@@ -228,6 +234,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
         finalize(env, proxy, proxy);
         return nullptr;
     }
+    JSDFManager::GetInstance().AddNewInfo(proxy);
     return self;
 }
 
