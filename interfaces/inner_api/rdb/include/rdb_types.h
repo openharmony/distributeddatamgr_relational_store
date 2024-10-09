@@ -46,7 +46,7 @@ struct RdbDebugInfo {
     DebugTime atime_;
     DebugTime mtime_;
     DebugTime ctime_;
-    size_t size_ = 0;
+    ssize_t size_ = 0;
     uint32_t dev_ = 0;
     uint32_t mode_ = 0;
     uint32_t uid_ = 0;
