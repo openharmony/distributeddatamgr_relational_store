@@ -280,10 +280,13 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
 int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        LOG_ERROR("not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType());
         return E_NOT_SUPPORT;
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
+        LOG_ERROR("db is busy. table:%{public}s", SqliteUtils::Anonymous(table).c_str());
         return E_DATABASE_BUSY;
     }
     int errCode = connection->CleanDirtyData(table, cursor);
