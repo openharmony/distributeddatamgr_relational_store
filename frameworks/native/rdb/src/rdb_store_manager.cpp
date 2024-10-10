@@ -40,8 +40,10 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 __attribute__((used))
 const bool RdbStoreManager::regCollector_ = RdbFaultHiViewReporter::RegCollector(RdbStoreManager::Collector);
+constexpr int RETRY_INTERVAL = 1;
 RdbStoreManager &RdbStoreManager::GetInstance()
 {
     static RdbStoreManager manager;
@@ -57,8 +59,33 @@ RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE)
 {
 }
 
-std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &config,
-    int &errCode, int version, RdbOpenCallback &openCallback)
+std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreConfig &config, const std::string &path)
+{
+    if (storeCache_.find(path) != storeCache_.end()) {
+        std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
+        if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
+            return rdbStore;
+        }
+        // TOD reconfigure store should be repeated this
+        storeCache_.erase(path);
+        // If rdbStore is not null, it means that the config has changed.
+        if (rdbStore != nullptr) {
+            LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
+                     " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
+                     " %{public}s",
+                config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
+                config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(),
+                config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(), config.GetCustomDir().c_str(),
+                RdbFaultHiViewReporter::FormatBrief(
+                    Connection::Collect(config), SqliteUtils::Anonymous(config.GetName()))
+                    .c_str());
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
+    const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
     if (config.IsVector() && config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         LOG_ERROR("GetRdbStore type not support memory mode.");
@@ -67,17 +94,17 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
     auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();
-    bundleName_ = config.GetBundleName();
-    if (storeCache_.find(path) != storeCache_.end()) {
-        std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
-        if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
-            return rdbStore;
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [path, config, this]() {
+        if (IsConfigInvalidChanged(path, config)) {
+            Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE, "ErrorType:Encrypt diff"));
         }
-        // TOD reconfigure store should be repeated this
-        storeCache_.erase(path);
+    });
+    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(config, path);
+    if (rdbStore != nullptr) {
+        return rdbStore;
     }
-
-    std::shared_ptr<RdbStoreImpl> rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
+    rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;
@@ -98,8 +125,8 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(const RdbStoreConfig &con
         errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                SqliteUtils::Anonymous(config.GetName()).c_str(),
-                SqliteUtils::Anonymous(config.GetPath()).c_str(), errCode);
+                SqliteUtils::Anonymous(config.GetName()).c_str(), SqliteUtils::Anonymous(config.GetPath()).c_str(),
+                errCode);
             return nullptr;
         }
     }

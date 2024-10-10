@@ -43,6 +43,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
 SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
@@ -78,7 +79,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         int ret = SQLiteError::ErrNo(errCode);
         if (config_ != nullptr &&
             (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
-            RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
+            Reportor::ReportFault(Reportor::Create(*config_, ret));
         }
         PrintInfoForDbError(ret, newSql);
         return ret;
@@ -288,7 +289,7 @@ int SqliteStatement::InnerStep()
     auto errCode = sqlite3_step(stmt_);
     int ret = SQLiteError::ErrNo(errCode);
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
-        RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
+        Reportor::ReportFault(Reportor::Create(*config_, ret));
     }
     PrintInfoForDbError(ret, sql_);
     return ret;
