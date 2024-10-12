@@ -211,6 +211,40 @@ static napi_value ExportHAMode(napi_env env)
     return haMode;
 }
 
+static napi_value ExportEncryptionAlgo(napi_env env)
+{
+    napi_value encryptionAlgo = nullptr;
+    napi_create_object(env, &encryptionAlgo);
+
+    SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_GCM", int32_t(NativeRdb::EncryptAlgo::AES_256_GCM));
+    SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_CBC", int32_t(NativeRdb::EncryptAlgo::AES_256_CBC));
+    napi_object_freeze(env, encryptionAlgo);
+    return encryptionAlgo;
+}
+
+static napi_value ExportHmacAlgo(napi_env env)
+{
+    napi_value hmacAlgo = nullptr;
+    napi_create_object(env, &hmacAlgo);
+
+    SET_NAPI_PROPERTY(hmacAlgo, "SHA1", int32_t(NativeRdb::HmacAlgo::SHA1));
+    SET_NAPI_PROPERTY(hmacAlgo, "SHA256", int32_t(NativeRdb::HmacAlgo::SHA256));
+    SET_NAPI_PROPERTY(hmacAlgo, "SHA512", int32_t(NativeRdb::HmacAlgo::SHA512));
+    napi_object_freeze(env, hmacAlgo);
+    return hmacAlgo;
+}
+
+static napi_value ExportKdfAlgo(napi_env env)
+{
+    napi_value kdfAlgo = nullptr;
+    napi_create_object(env, &kdfAlgo);
+
+    SET_NAPI_PROPERTY(kdfAlgo, "KDF_SHA1", int32_t(NativeRdb::KdfAlgo::KDF_SHA1));
+    SET_NAPI_PROPERTY(kdfAlgo, "KDF_SHA256", int32_t(NativeRdb::KdfAlgo::KDF_SHA256));
+    SET_NAPI_PROPERTY(kdfAlgo, "KDF_SHA512", int32_t(NativeRdb::KdfAlgo::KDF_SHA512));
+    napi_object_freeze(env, kdfAlgo);
+    return kdfAlgo;
+}
 
 static napi_value ExportTransactionType(napi_env env)
 {
@@ -242,6 +276,9 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
         DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
         DECLARE_NAPI_PROPERTY("HAMode", ExportHAMode(env)),
+        DECLARE_NAPI_PROPERTY("EncryptionAlgo", ExportEncryptionAlgo(env)),
+        DECLARE_NAPI_PROPERTY("HmacAlgo", ExportHmacAlgo(env)),
+        DECLARE_NAPI_PROPERTY("KdfAlgo", ExportKdfAlgo(env)),
         DECLARE_NAPI_PROPERTY("TransactionType", ExportTransactionType(env)),
     };
 

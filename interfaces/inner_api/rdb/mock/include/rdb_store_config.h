@@ -86,6 +86,24 @@ enum DistributedType {
     RDB_DISTRIBUTED_TYPE_MAX
 };
 
+enum HmacAlgo : int32_t {
+    SHA1 = 0,
+    SHA256,
+    SHA512
+};
+
+enum KdfAlgo : int32_t {
+    KDF_SHA1 = 0,
+    KDF_SHA256,
+    KDF_SHA512
+};
+
+enum EncryptAlgo : int32_t {
+    AES_256_GCM = 0,
+    AES_256_CBC
+};
+
+
 using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
 
 struct ScalarFunctionInfo {
@@ -96,17 +114,28 @@ struct ScalarFunctionInfo {
 
 class RdbStoreConfig {
 public:
+    struct CryptoParam {
+        mutable int32_t iterNum = 0;
+        int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
+        int32_t hmacAlgo = HmacAlgo::SHA256;
+        int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
+        uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
+        mutable std::vector<uint8_t> encryptKey_{};
+        CryptoParam();
+        ~CryptoParam();
+        bool IsValid() const;
+    };
     static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
     static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
-    static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+    static constexpr EncryptAlgo DB_DEFAULT_ENCRYPT_ALGO = AES_256_GCM;
+    static constexpr uint32_t DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
+    static constexpr uint32_t DB_INVALID_CRYPTO_PAGE_SIZE_MASK = 0xFFFE03FF;
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
-        const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE,
-        const std::string &syncMode = "", const std::string &databaseFileType = "",
-        SecurityLevel securityLevel = SecurityLevel::LAST, bool isCreateNecessary = true,
-        bool autoCheck = false, int journalSize = 1048576, int pageSize = 4096,
-        const std::string &encryptAlgo = "sha256");
+        const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE, const std::string &syncMode = "",
+        const std::string &databaseFileType = "", SecurityLevel securityLevel = SecurityLevel::LAST,
+        bool isCreateNecessary = true, bool autoCheck = false, int journalSize = 1048576, int pageSize = 4096);
     ~RdbStoreConfig();
     std::string GetName() const;
     std::string GetPath() const;
@@ -150,8 +179,8 @@ public:
     void SetJournalSize(int journalSize);
     int GetPageSize() const;
     void SetPageSize(int pageSize);
-    const std::string GetEncryptAlgo() const;
-    void SetEncryptAlgo(const std::string &encryptAlgo);
+    EncryptAlgo GetEncryptAlgo() const;
+    void SetEncryptAlgo(EncryptAlgo encryptAlgo);
     int GetReadConSize() const;
     void SetReadConSize(int readConSize);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
@@ -188,12 +217,12 @@ public:
             }
         }
 
-        if (this->encryptKey_.size() != config.encryptKey_.size()) {
+        if (this->cryptoParam_.encryptKey_.size() != config.cryptoParam_.encryptKey_.size()) {
             return false;
         }
 
-        for (size_t i = 0; i < encryptKey_.size(); i++) {
-            if (this->encryptKey_[i] != config.encryptKey_[i]) {
+        for (size_t i = 0; i < cryptoParam_.encryptKey_.size(); i++) {
+            if (this->cryptoParam_.encryptKey_[i] != config.cryptoParam_.encryptKey_[i]) {
                 return false;
             }
         }
@@ -229,8 +258,9 @@ public:
     void SetHaMode(int32_t haMode);
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
+    void SetCryptoParam(CryptoParam cryptoParam);
+    CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
-
     void EnableRekey(bool enable);
     static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
 
@@ -246,7 +276,6 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    mutable int32_t iter_ = 0;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;
@@ -260,6 +289,7 @@ private:
     DistributedType distributedType_ = DistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
+    CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
     std::string journalMode_;
@@ -269,10 +299,8 @@ private:
     std::string bundleName_;
     std::string moduleName_;
     std::string visitorDir_;
-    std::string encryptAlgo_;
     std::string dataGroupId_;
     std::string customDir_;
-    mutable std::vector<uint8_t> encryptKey_{};
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     std::vector<std::string> pluginLibs_{};

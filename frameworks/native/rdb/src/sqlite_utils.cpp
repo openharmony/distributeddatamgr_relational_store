@@ -30,9 +30,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
-#endif
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -304,5 +302,48 @@ std::string SqliteUtils::GetSlavePath(const std::string& name)
     }
     return name.substr(0, pos) + slaveSuffix;
 }
+
+const char *SqliteUtils::HmacAlgoDescription(int32_t hmacAlgo)
+{
+    HmacAlgo hmacEnum = static_cast<HmacAlgo>(hmacAlgo);
+    switch (hmacEnum) {
+        case HmacAlgo::SHA1:
+            return "sha1";
+        case HmacAlgo::SHA256:
+            return "sha256";
+        case HmacAlgo::SHA512:
+            return "sha512";
+        default:
+            return "sha256";
+    }
+}
+
+const char *SqliteUtils::KdfAlgoDescription(int32_t kdfAlgo)
+{
+    KdfAlgo kdfEnum = static_cast<KdfAlgo>(kdfAlgo);
+    switch (kdfEnum) {
+        case KdfAlgo::KDF_SHA1:
+            return "kdf_sha1";
+        case KdfAlgo::KDF_SHA256:
+            return "kdf_sha256";
+        case KdfAlgo::KDF_SHA512:
+            return "kdf_sha512";
+        default:
+            return "kdf_sha256";
+    }
+}
+
+const char *SqliteUtils::EncryptAlgoDescription(int32_t encryptAlgo)
+{
+    EncryptAlgo encryptEnum = static_cast<EncryptAlgo>(encryptAlgo);
+    switch (encryptEnum) {
+        case EncryptAlgo::AES_256_CBC:
+            return "aes-256-cbc";
+        case EncryptAlgo::AES_256_GCM:
+        default:
+            return "aes-256-gcm";
+    }
+}
+
 } // namespace NativeRdb
 } // namespace OHOS
