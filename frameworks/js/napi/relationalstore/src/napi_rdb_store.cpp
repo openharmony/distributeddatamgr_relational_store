@@ -1585,7 +1585,7 @@ napi_value RdbStoreProxy::GetModifyTime(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
 {
-    LOG_DEBUG("RdbStoreProxy::Clean start.");
+    LOG_INFO("RdbStoreProxy::Clean start.");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1 - 3"));

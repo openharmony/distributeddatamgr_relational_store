@@ -909,10 +909,13 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
+        LOG_ERROR("table is empty");
         return E_INVALID_ARGS;
     }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
+    LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
+        SqliteUtils::Anonymous(table).c_str(), cursor);
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
