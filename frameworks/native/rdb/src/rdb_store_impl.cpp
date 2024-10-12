@@ -1569,23 +1569,74 @@ bool RdbStoreImpl::IsHoldingConnection()
     return connectionPool_ != nullptr;
 }
 
+int RdbStoreImpl::SetDefaultEncryptSql(
+    const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config)
+{
+    auto errCode = statement->Prepare(sql);
+    if (errCode != E_OK) {
+        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
+        return errCode;
+    }
+    errCode = statement->Execute();
+    if (errCode != E_OK) {
+        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
+        return errCode;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config)
 {
     if (conn == nullptr) {
         return E_DATABASE_BUSY;
     }
 
-    auto [errCode, statement] = conn->CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, conn);
-    if (errCode != E_OK || statement == nullptr) {
+    if (!config.GetCryptoParam().IsValid()) {
+        LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config.GetName()).c_str());
+        return E_INVALID_ARGS;
+    }
+
+    std::string sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_CIPHER_PREFIX) +
+                      SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
+                      std::string(GlobalExpr::ALGO_SUFFIX);
+    auto [errCode, statement] = conn->CreateStatement(sql, conn);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
         return errCode;
     }
 
-    errCode = statement->Execute();
-    if (errCode != E_OK) {
-        LOG_ERROR("Execute failed: %{public}s, %{public}d",
-            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetIter());
+    if (config.GetIter() > 0) {
+        sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_KDF_ITER_PREFIX) + std::to_string(config.GetIter());
+        errCode = SetDefaultEncryptSql(statement, sql, config);
+        if (errCode != E_OK) {
+            return errCode;
+        }
     }
-    return errCode;
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO_PREFIX) +
+          SqliteUtils::HmacAlgoDescription(config.GetCryptoParam().hmacAlgo) + std::string(GlobalExpr::ALGO_SUFFIX);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_KDF_ALGO_PREFIX) +
+                      SqliteUtils::KdfAlgoDescription(config.GetCryptoParam().kdfAlgo) +
+                      std::string(GlobalExpr::ALGO_SUFFIX);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_PAGE_SIZE_PREFIX) +
+                      std::to_string(config.GetCryptoParam().cryptoPageSize);
+    return SetDefaultEncryptSql(statement, sql, config);
 }
 
 int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,

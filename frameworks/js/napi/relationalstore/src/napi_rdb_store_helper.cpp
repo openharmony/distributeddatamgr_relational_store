@@ -67,6 +67,8 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         errCode = Convert2Value(env, argv[1], context->config);
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
+        CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
+
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
         CHECK_RETURN_SET_E(OK == code, err);
     };
