@@ -177,11 +177,12 @@ int32_t RdbServiceProxy::DoAsync(const RdbSyncerParam& param, const Option &opti
 }
 
 int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam& param, const std::vector<std::string> &tables,
-    const std::vector<Reference> &references, int32_t type)
+    const std::vector<Reference> &references, bool isRebuild, int32_t type)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(
-        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SET_DIST_TABLE), reply, param, tables, references, type);
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_SET_DIST_TABLE), reply, param, tables, references,
+            type, isRebuild);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s, type:%{public}d",
             status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), type);

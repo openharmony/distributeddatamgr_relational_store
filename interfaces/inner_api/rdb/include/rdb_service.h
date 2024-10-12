@@ -42,7 +42,7 @@ public:
 
     virtual int32_t SetDistributedTables(
         const RdbSyncerParam &param, const std::vector<std::string> &tables,
-        const std::vector<Reference> &references, int32_t type = DISTRIBUTED_DEVICE) = 0;
+        const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
