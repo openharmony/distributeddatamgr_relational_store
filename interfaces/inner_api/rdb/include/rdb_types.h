@@ -95,7 +95,8 @@ struct SyncOption {
 
 enum DistributedTableType {
     DISTRIBUTED_DEVICE = 0,
-    DISTRIBUTED_CLOUD
+    DISTRIBUTED_CLOUD,
+    DISTRIBUTED_SEARCH
 };
 
 struct Reference {
@@ -107,6 +108,7 @@ struct Reference {
 struct DistributedConfig {
     bool autoSync = true;
     std::vector<Reference> references = {};
+    bool isRebuild = false;
 };
 
 enum Progress {
