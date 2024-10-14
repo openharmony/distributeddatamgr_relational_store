@@ -1341,7 +1341,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
     do {
         if (!isRestore && curStatus == SlaveStatus::BACKUP_INTERRUPT) {
             LOG_INFO("backup slave was interrupt!");
-            rc = E_BACKUP_INTERRUPT;
+            rc = E_CANCEL;
             break;
         }
         rc = sqlite3_backup_step(pBackup, BACKUP_PAGES_PRE_STEP);
@@ -1363,7 +1363,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
             }
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
         }
-        return rc == E_BACKUP_INTERRUPT ? E_BACKUP_INTERRUPT : SQLiteError::ErrNo(rc);
+        return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
     rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
     if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
@@ -1388,7 +1388,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
-    if (mRet != E_OK) {
+    if (mRet == E_SQLITE_CORRUPT) {
         LOG_WARN("main abnormal, err:%{public}d", mRet);
         return ExchangeStrategy::RESTORE;
     }
@@ -1398,7 +1398,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (sRet != E_OK) {
+    if (sRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
     }
@@ -1464,13 +1464,13 @@ int SqliteConnection::IsRepairable()
     }
     if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, false)) {
         LOG_ERROR("unavailable slave, %{public}s", config_.GetName().c_str());
-        return E_DB_RESTORE_NOT_ALLOWED;
+        return E_SQLITE_CORRUPT;
     }
     std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [qRet, qObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (qRet != E_OK || (static_cast<int64_t>(qObj) == 0L)) {
+    if (qRet == E_SQLITE_CORRUPT || (static_cast<int64_t>(qObj) == 0L)) {
         LOG_INFO("cancel repair, ret:%{public}d", qRet);
-        return E_DB_RESTORE_NOT_ALLOWED;
+        return E_SQLITE_CORRUPT;
     }
     return E_OK;
 }
@@ -1504,7 +1504,7 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
         }
         if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true)) {
             LOG_ERROR("incomplete slave, %{public}s", config_.GetName().c_str());
-            return E_DB_RESTORE_NOT_ALLOWED;
+            return E_NOT_SUPPORTED;
         }
     } else {
         auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check
