@@ -248,10 +248,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                     SqliteUtils::Anonymous(config.GetName()).c_str(),
                     static_cast<std::string>(checkResult).c_str(), sql);
                 Reportor::ReportFault(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
-            } else {
-                LOG_DEBUG("%{public}s integrity check err:%{public}d, result is %{public}s, sql:%{public}s",
-                    SqliteUtils::Anonymous(config.GetName()).c_str(), errCode,
-                    static_cast<std::string>(checkResult).c_str(), sql);
             }
         }
     }
