@@ -111,7 +111,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     }
     errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr_.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
     if (errCode != E_OK) {
-        LOG_ERROR("Can not open rd db.");
+        LOG_ERROR("Can not open rd db %{public}d.", errCode);
         return errCode;
     }
     return errCode;

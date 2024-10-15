@@ -186,22 +186,20 @@ RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rd
     rdbStoreConfig.SetReadOnly(rdbConfig.IsReadOnly());
     rdbStoreConfig.SetAutoCheck(rdbConfig.IsAutoCheck());
     rdbStoreConfig.SetCreateNecessary(rdbConfig.IsCreateNecessary());
-    rdbStoreConfig.SetIter(rdbConfig.GetIter());
     rdbStoreConfig.SetJournalSize(rdbConfig.GetJournalSize());
     rdbStoreConfig.SetPageSize(rdbConfig.GetPageSize());
     rdbStoreConfig.SetReadConSize(rdbConfig.GetReadConSize());
     rdbStoreConfig.SetReadTime(rdbConfig.GetReadTime());
     rdbStoreConfig.SetDBType(rdbConfig.GetDBType());
     rdbStoreConfig.SetVisitorDir(rdbConfig.GetVisitorDir());
-    rdbStoreConfig.SetEncryptKey(rdbConfig.GetEncryptKey());
-    rdbStoreConfig.SetNewEncryptKey(rdbConfig.GetNewEncryptKey());
     rdbStoreConfig.SetScalarFunctions(rdbConfig.GetScalarFunctions());
     rdbStoreConfig.SetJournalMode(rdbConfig.GetJournalMode());
 
     rdbStoreConfig.SetModuleName(rdbConfig.GetModuleName());
-    rdbStoreConfig.SetArea(rdbConfig.GetArea());
     rdbStoreConfig.SetPluginLibs(rdbConfig.GetPluginLibs());
     rdbStoreConfig.SetHaMode(rdbConfig.GetHaMode());
+
+    rdbStoreConfig.SetCryptoParam(rdbConfig.GetCryptoParam());
     return rdbStoreConfig;
 }
 
@@ -250,10 +248,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                     SqliteUtils::Anonymous(config.GetName()).c_str(),
                     static_cast<std::string>(checkResult).c_str(), sql);
                 Reportor::ReportFault(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
-            } else {
-                LOG_DEBUG("%{public}s integrity check err:%{public}d, result is %{public}s, sql:%{public}s",
-                    SqliteUtils::Anonymous(config.GetName()).c_str(), errCode,
-                    static_cast<std::string>(checkResult).c_str(), sql);
             }
         }
     }
@@ -515,25 +509,52 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetEncryptAgo(int32_t iter)
+int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 {
-    int errCode = E_ERROR;
-    if (iter != NO_ITER) {
-        errCode = ExecuteSql(GlobalExpr::CIPHER_DEFAULT_ALGO);
+    if (!config.GetCryptoParam().IsValid()) {
+        LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
+        return E_INVALID_ARGS;
+    }
+
+    if (config.GetIter() != NO_ITER) {
+        auto errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_ALGO_PREFIX) +
+                                  SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
+                                  std::string(GlobalExpr::ALGO_SUFFIX));
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
-        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(iter));
+
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(config.GetIter()));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
         }
     }
 
-    errCode = ExecuteSql(GlobalExpr::CODEC_HMAC_ALGO);
+    auto errCode = ExecuteSql(std::string(GlobalExpr::CODEC_HMAC_ALGO_PREFIX) +
+                              SqliteUtils::HmacAlgoDescription(config.GetCryptoParam().hmacAlgo) +
+                              std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+
+    errCode = ExecuteSql(std::string(GlobalExpr::CODEC_KDF_ALGO_PREFIX) +
+                         SqliteUtils::KdfAlgoDescription(config.GetCryptoParam().kdfAlgo) +
+                         std::string(GlobalExpr::ALGO_SUFFIX));
+    if (errCode != E_OK) {
+        LOG_ERROR("set codec kdf algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
+
+    errCode = ExecuteSql(
+        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(config.GetCryptoParam().cryptoPageSize));
+    if (errCode != E_OK) {
+        LOG_ERROR("set codec page size failed, err = %{public}d", errCode);
         return errCode;
     }
 
@@ -572,13 +593,13 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 
     std::vector<uint8_t> key = config.GetEncryptKey();
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-    auto errCode = SetEncryptKey(key, config.GetIter());
+    auto errCode = SetEncryptKey(key, config);
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
         if (!newKey.empty()) {
             LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
                 errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
-            errCode = SetEncryptKey(newKey, config.GetIter());
+            errCode = SetEncryptKey(newKey, config);
         }
         newKey.assign(newKey.size(), 0);
         if (errCode != E_OK) {
@@ -598,7 +619,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     return E_OK;
 }
 
-int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter)
+int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config)
 {
     if (key.empty()) {
         return E_INVALID_ARGS;
@@ -609,7 +630,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, int32_t ite
         return SQLiteError::ErrNo(errCode);
     }
 
-    errCode = SetEncryptAgo(iter);
+    errCode = SetEncryptAgo(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -620,6 +641,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, int32_t ite
         if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
             return errCode;
         }
+        return E_OK;
     }
     return errCode;
 }
@@ -909,10 +931,13 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {
+        LOG_ERROR("table is empty");
         return E_INVALID_ARGS;
     }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
+    LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
+        SqliteUtils::Anonymous(table).c_str(), cursor);
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
@@ -1287,7 +1312,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     }
 #endif
 
-    errCode = SetEncryptKey(key, config.GetIter());
+    errCode = SetEncryptKey(key, config);
     if (errCode == E_OK) {
         config.RestoreEncryptKey(key);
     }
@@ -1316,7 +1341,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
     do {
         if (!isRestore && curStatus == SlaveStatus::BACKUP_INTERRUPT) {
             LOG_INFO("backup slave was interrupt!");
-            rc = E_BACKUP_INTERRUPT;
+            rc = E_CANCEL;
             break;
         }
         rc = sqlite3_backup_step(pBackup, BACKUP_PAGES_PRE_STEP);
@@ -1338,7 +1363,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
             }
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
         }
-        return rc == E_BACKUP_INTERRUPT ? E_BACKUP_INTERRUPT : SQLiteError::ErrNo(rc);
+        return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
     rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
     if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
@@ -1363,7 +1388,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
-    if (mRet != E_OK) {
+    if (mRet == E_SQLITE_CORRUPT) {
         LOG_WARN("main abnormal, err:%{public}d", mRet);
         return ExchangeStrategy::RESTORE;
     }
@@ -1373,7 +1398,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (sRet != E_OK) {
+    if (sRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
     }
@@ -1439,13 +1464,13 @@ int SqliteConnection::IsRepairable()
     }
     if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, false)) {
         LOG_ERROR("unavailable slave, %{public}s", config_.GetName().c_str());
-        return E_DB_RESTORE_NOT_ALLOWED;
+        return E_SQLITE_CORRUPT;
     }
     std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [qRet, qObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (qRet != E_OK || (static_cast<int64_t>(qObj) == 0L)) {
+    if (qRet == E_SQLITE_CORRUPT || (static_cast<int64_t>(qObj) == 0L)) {
         LOG_INFO("cancel repair, ret:%{public}d", qRet);
-        return E_DB_RESTORE_NOT_ALLOWED;
+        return E_SQLITE_CORRUPT;
     }
     return E_OK;
 }
@@ -1479,7 +1504,7 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
         }
         if (SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true)) {
             LOG_ERROR("incomplete slave, %{public}s", config_.GetName().c_str());
-            return E_DB_RESTORE_NOT_ALLOWED;
+            return E_NOT_SUPPORTED;
         }
     } else {
         auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check

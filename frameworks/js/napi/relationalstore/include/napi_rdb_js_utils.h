@@ -42,6 +42,10 @@ using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
 using HAMode = NativeRdb::HAMode;
+using HmacAlgo = NativeRdb::HmacAlgo;
+using KdfAlgo = NativeRdb::KdfAlgo;
+using EncryptAlgo = NativeRdb::EncryptAlgo;
+using CryptoParam = NativeRdb::RdbStoreConfig::CryptoParam;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -56,6 +60,7 @@ struct RdbConfig {
     std::string path;
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;
+    CryptoParam cryptoParam;
 };
 
 struct ContextParam {
@@ -78,6 +83,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, DistributedRdb::Distribu
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, CryptoParam &cryptoParam);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig);
