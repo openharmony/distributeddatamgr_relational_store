@@ -23,8 +23,8 @@
 #include <sstream>
 #include <vector>
 
-#include "logger.h"
 #include "connection.h"
+#include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -62,18 +62,18 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &er
     }
     std::string dbPath;
     (void)SqliteGlobalConfig::GetDbPath(config, dbPath);
-    LOG_INFO("code:%{public}d app:%{public}s path:[%{public}s] "
-             "cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
+    LOG_INFO("code:%{public}d app[%{public}s:%{public}s] path[%{public}s] "
+             "cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
              "%{public}s",
-        errCode, config.GetBundleName().c_str(), SqliteUtils::Anonymous(dbPath).c_str(), config.GetDBType(),
-        config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(),
-        config.IsReadOnly(),
+        errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),
+        SqliteUtils::Anonymous(dbPath).c_str(), config.GetDBType(), config.GetHaMode(), config.IsEncrypt(),
+        config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(),
         Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
     return errCode == E_OK ? pool : nullptr;
 }
 
-std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorruption
-    (const RdbStoreConfig &storeConfig, int &errCode)
+std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorruption(
+    const RdbStoreConfig &storeConfig, int &errCode)
 {
     std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> result;
     auto &[rebuiltType, pool] = result;
@@ -299,9 +299,9 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
 int ConnPool::AcquireTransaction()
 {
     std::unique_lock<std::mutex> lock(transMutex_);
-    if (transCondition_.wait_for(lock, std::chrono::seconds(TRANSACTION_TIMEOUT), [this] {
-            return !transactionUsed_;
-        })) {
+    if (transCondition_.wait_for(
+        lock, std::chrono::seconds(TRANSACTION_TIMEOUT),
+        [this] { return !transactionUsed_; })) {
         transactionUsed_ = true;
         return E_OK;
     }
@@ -322,10 +322,7 @@ int ConnPool::RestartReaders()
 {
     readers_.Clear();
     auto [errCode, node] = readers_.Initialize(
-        [this]() {
-            return Connection::Create(config_, false);
-        },
-        maxReader_, config_.GetReadTime(), maxReader_ == 0);
+        [this]() { return Connection::Create(config_, false); }, maxReader_, config_.GetReadTime(), maxReader_ == 0);
     return errCode;
 }
 
@@ -486,8 +483,8 @@ bool ConnPool::ConnNode::IsWriter() const
     return false;
 }
 
-std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(Creator creator, int32_t max,
-    int32_t timeout, bool disable, bool acquire)
+std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(
+    Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire)
 {
     std::shared_ptr<ConnNode> connNode = nullptr;
     {
@@ -551,8 +548,7 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
     };
     if (cond_.wait_for(lock, interval, waiter)) {
         if (nodes_.empty()) {
-            LOG_ERROR(
-                "nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
+            LOG_ERROR("nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
                 count_, max_, total_, left_, right_);
             count_ = 0;
             return nullptr;
@@ -591,9 +587,7 @@ std::list<std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::AcquireAll(s
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     auto time = std::chrono::steady_clock::now() + interval;
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    while (count < total_ && cond_.wait_until(lock, time, [this]() {
-        return count_ > 0;
-    })) {
+    while (count < total_ && cond_.wait_until(lock, time, [this]() { return count_ > 0; })) {
         nodes.merge(std::move(nodes_));
         nodes_.clear();
         count += count_;
