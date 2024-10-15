@@ -174,7 +174,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_002, TestSize.Level1)
  * @tc.desc: DeleteRdbStore if the dbFile is not exists
  * @tc.type: FUNC
  */
-HWTEST_F(RdbHelperTest, DeleteDatabase_002, TestSize.Level1)
+HWTEST_F(RdbHelperTest, DeleteDatabase_003, TestSize.Level1)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbHelperTest::rdbStorePath);
