@@ -62,7 +62,6 @@ private:
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static std::string GetTimeWithMilliseconds(time_t sec, int64_t nsec);
     static std::string GetBundleName(const RdbCorruptedEvent &eventInfo);
-    static bool HandTimeout(const std::string &dbPath);
     static Connection::Collector collector_;
 };
 } // namespace OHOS::NativeRdb

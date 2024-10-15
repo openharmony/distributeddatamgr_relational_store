@@ -40,8 +40,10 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 __attribute__((used))
 const bool RdbStoreManager::regCollector_ = RdbFaultHiViewReporter::RegCollector(RdbStoreManager::Collector);
+constexpr int RETRY_INTERVAL = 1;
 RdbStoreManager &RdbStoreManager::GetInstance()
 {
     static RdbStoreManager manager;
@@ -92,6 +94,12 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
     auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [path, config, this]() {
+        if (IsConfigInvalidChanged(path, config)) {
+            Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE, "ErrorType:Encrypt diff"));
+        }
+    });
     std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(config, path);
     if (rdbStore != nullptr) {
         return rdbStore;
