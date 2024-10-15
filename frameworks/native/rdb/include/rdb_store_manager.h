@@ -50,6 +50,7 @@ private:
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;

@@ -603,9 +603,9 @@ public:
                this->journalMode_ == config.journalMode_ && this->syncMode_ == config.syncMode_ &&
                this->databaseFileType == config.databaseFileType && IsEncrypt() == config.IsEncrypt() &&
                this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
-               this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
-               this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
-               this->pluginLibs_ == config.pluginLibs_ && this->haMode_ == config.haMode_;
+               this->pageSize_ == config.pageSize_ && this->dbType_ == config.dbType_ &&
+               this->customDir_ == config.customDir_ && this->pluginLibs_ == config.pluginLibs_ &&
+               this->haMode_ == config.haMode_;
     }
 
     /**
