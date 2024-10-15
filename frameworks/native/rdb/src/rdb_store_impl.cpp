@@ -2557,7 +2557,7 @@ int RdbStoreImpl::InterruptBackup()
         slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
         return E_OK;
     }
-    return E_INVALID_INTERRUPT;
+    return E_CANCEL;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const
