@@ -106,11 +106,11 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto dbFile = config.GetPath();
-    std::string shmFile = dbFile + "-shm";
-    std::string walFile = dbFile + "-wal";
     if (dbFile.empty()) {
         return E_INVALID_FILE_PATH;
     }
+    std::string shmFile = dbFile + "-shm";
+    std::string walFile = dbFile + "-wal";
     if (access(dbFile.c_str(), F_OK) != 0 && access(shmFile.c_str(), F_OK) != 0 &&
         access(walFile.c_str(), F_OK) != 0) {
         LOG_ERROR("not exist, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
