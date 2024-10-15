@@ -69,6 +69,7 @@ using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
+using Reportor = RdbFaultHiViewReporter;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -1660,6 +1661,9 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
+        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, E_DATABASE_BUSY, "ErrorType: Busy"));
+        }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
             SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
@@ -1889,7 +1893,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     if (errCode == E_OK) {
-        RdbFaultHiViewReporter::ReportRestore(RdbFaultHiViewReporter::Create(config_, E_OK));
+        Reportor::ReportRestore(Reportor::Create(config_, E_OK));
         rebuild_ = RebuiltType::NONE;
     }
     if (!cloudTables_.empty()) {
