@@ -87,10 +87,6 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    if (config.IsVector() && config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        LOG_ERROR("GetRdbStore type not support memory mode.");
-        return nullptr;
-    }
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
     auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();

@@ -26,34 +26,38 @@ typedef int32_t (*DBOpen)(const char *dbPath, const char *configStr, uint32_t fl
 typedef int32_t (*DBClose)(GRD_DB *db, uint32_t flags);
 typedef int32_t (*DBRepair)(const char *dbPath, const char *configStr);
 
-typedef int (*DBSqlPrepare)(GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr);
-typedef int (*DBSqlReset)(GRD_SqlStmt *stmt);
-typedef int (*DBSqlFinalize)(GRD_SqlStmt *stmt);
-typedef int (*DBSqlBindBlob)(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
-typedef int (*DBSqlBindText)(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
-typedef int (*DBSqlBindInt)(GRD_SqlStmt *stmt, uint32_t idx, int32_t val);
-typedef int (*DBSqlBindInt64)(GRD_SqlStmt *stmt, uint32_t idx, int64_t val);
-typedef int (*DBSqlBindDouble)(GRD_SqlStmt *stmt, uint32_t idx, double val);
-typedef int (*DBSqlBindNull)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef int (*DBSqlBindFloatVector)(
+typedef int32_t (*DBSqlPrepare)(
+    GRD_DB *db, const char *str, uint32_t strLen, GRD_SqlStmt **stmt, const char **unusedStr);
+typedef int32_t (*DBSqlReset)(GRD_SqlStmt *stmt);
+typedef int32_t (*DBSqlFinalize)(GRD_SqlStmt *stmt);
+typedef int32_t (*DBSqlBindBlob)(
+    GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
+typedef int32_t (*DBSqlBindText)(
+    GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
+typedef int32_t (*DBSqlBindInt)(GRD_SqlStmt *stmt, uint32_t idx, int32_t val);
+typedef int32_t (*DBSqlBindInt64)(GRD_SqlStmt *stmt, uint32_t idx, int64_t val);
+typedef int32_t (*DBSqlBindDouble)(GRD_SqlStmt *stmt, uint32_t idx, double val);
+typedef int32_t (*DBSqlBindNull)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef int32_t (*DBSqlBindFloatVector)(
     GRD_SqlStmt *stmt, uint32_t idx, const float *val, uint32_t dim, void (*freeFunc)(void *));
 
-typedef int (*DBSqlStep)(GRD_SqlStmt *stmt);
+typedef int32_t (*DBSqlStep)(GRD_SqlStmt *stmt);
 typedef uint32_t (*DBSqlColCnt)(GRD_SqlStmt *stmt);
 typedef GRD_DbDataTypeE (*DBSqlColType)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef int (*DBSqlColBytes)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef uint32_t (*DBSqlColBytes)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef char *(*DBSqlColName)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef GRD_DbValueT (*DBSqlColValue)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef uint8_t *(*DBSqlColBlob)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef char *(*DBSqlColText)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef int (*DBSqlColInt)(GRD_SqlStmt *stmt, uint32_t idx);
-typedef uint64_t (*DBSqlColInt64)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef const void *(*DBSqlColBlob)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef const char *(*DBSqlColText)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef int32_t (*DBSqlColInt)(GRD_SqlStmt *stmt, uint32_t idx);
+typedef int64_t (*DBSqlColInt64)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef double (*DBSqlColDouble)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef const float *(*DBSqlColumnFloatVector)(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
-typedef int (*DBBackup) (GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
-typedef int (*DBRestore) (GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+typedef int32_t (*DBBackup) (GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
+typedef int32_t (*DBRestore) (GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
+typedef int32_t (*DBReKey) (const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
 typedef GRD_DbValueT (*DBGetConfig) (GRD_DB *db, GRD_ConfigTypeE type);
-typedef int (*DBSetConfig) (GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
+typedef int32_t (*DBSetConfig) (GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
 
 struct GRD_APIInfo {
     DBOpen DBOpenApi = nullptr;
@@ -83,6 +87,7 @@ struct GRD_APIInfo {
     DBSqlColumnFloatVector DBSqlColumnFloatVector = nullptr;
     DBBackup DBBackupApi = nullptr;
     DBRestore DBRestoreApi = nullptr;
+    DBReKey DBReKeyApi = nullptr;
     DBGetConfig DBGetConfigApi = nullptr;
     DBSetConfig DBSetConfigApi = nullptr;
 };

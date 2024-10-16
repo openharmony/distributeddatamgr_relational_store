@@ -18,7 +18,10 @@
 #include "logger.h"
 #include "rd_statement.h"
 #include "rdb_errno.h"
+#include "rdb_security_manager.h"
 #include "sqlite_global_config.h"
+#include "sqlite_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -31,7 +34,11 @@ const int32_t RdConnection::regDeleter_ = Connection::RegisterDeleter(DB_VECTOR,
 
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
-    std::pair<int32_t, std::shared_ptr<Connection>> result;
+    std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
+    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        result.first = E_NOT_SUPPORT;
+        return result;
+    }
     auto& [errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
         std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(config, isWrite);
@@ -56,7 +63,8 @@ int32_t RdConnection::Repair(const RdbStoreConfig& config)
         LOG_ERROR("Can not get db path.");
         return errCode;
     }
-    errCode = RdUtils::RdDbRepair(dbPath.c_str(), GRD_OPEN_CONFIG_STR);
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    errCode = RdUtils::RdDbRepair(dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str());
     if (errCode != E_OK) {
         LOG_ERROR("Fail to repair db.");
     }
@@ -101,6 +109,19 @@ RdConnection::~RdConnection()
     }
 }
 
+std::string RdConnection::GetConfigStr(const std::vector<uint8_t> &keys, bool isEncrypt)
+{
+    std::string config = "{";
+    if (isEncrypt) {
+        config += "\"isEncrypted\":1,";
+        config += "\"hexPassword\":" + RdUtils::GetEncryptKey(keys) + ",";
+    }
+    config += RdConnection::GRD_OPEN_CONFIG_STR;
+    config += "}";
+    return config;
+}
+
+
 int RdConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath = "";
@@ -109,7 +130,19 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
         LOG_ERROR("Can not get db path.");
         return errCode;
     }
-    errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr_.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    if (!newKey.empty()) {
+        newKey.assign(newKey.size(), 0);
+        errCode = ReSetKey(config);
+        if (errCode != E_OK) {
+            LOG_ERROR("Can not reset key %{public}d.", errCode);
+            return errCode;
+        }
+    }
+
+    std::vector<uint8_t> key = config.GetEncryptKey();    
+    errCode = RdUtils::RdDbOpen(
+        dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
         return errCode;
@@ -152,7 +185,27 @@ bool RdConnection::IsWriter() const
 
 int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
 {
-    return E_NOT_SUPPORT;
+    if (!IsWriter()) {
+        return E_OK;
+    }
+    std::string dbPath = "";
+    int errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
+    if (errCode != E_OK) {
+        LOG_ERROR("Can not get db path.");
+        return errCode;
+    }
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    errCode = RdUtils::RdDbRekey(dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str(), newKey);
+    newKey.assign(newKey.size(), 0);
+    if (errCode != E_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
+        RdbSecurityManager::GetInstance().DelKeyFile(
+            config.GetPath(), RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
+        return E_OK;
+    }
+    config.ChangeEncryptKey();
+    return E_OK;
 }
 
 int32_t RdConnection::TryCheckPoint(bool timeout)
@@ -210,21 +263,13 @@ int32_t RdConnection::Unsubscribe(const std::string& event,
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     bool isAsync, SlaveStatus &slaveStatus)
 {
-    uint32_t size = destEncryptKey.size();
-    if (size != 0) {
-        return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), const_cast<uint8_t*>(&destEncryptKey[0]), size);
-    }
-    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), nullptr, 0);
+    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
 }
 
 int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     SlaveStatus &slaveStatus)
 {
-    uint32_t size = destEncryptKey.size();
-    if (size != 0) {
-        return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), const_cast<uint8_t*>(&destEncryptKey[0]), size);
-    }
-    return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
+    return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), destEncryptKey);
 }
 
 ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
