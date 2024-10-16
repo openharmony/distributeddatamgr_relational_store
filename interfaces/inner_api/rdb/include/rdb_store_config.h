@@ -677,6 +677,8 @@ public:
 
     void EnableRekey(bool enable);
 
+    static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &IncomingConfig);
+
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;

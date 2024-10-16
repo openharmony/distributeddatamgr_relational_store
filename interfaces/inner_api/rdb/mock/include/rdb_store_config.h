@@ -253,6 +253,7 @@ public:
     CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
     void EnableRekey(bool enable);
+    static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &IncomingConfig);
 
 private:
     void ClearEncryptKey();

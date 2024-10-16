@@ -46,7 +46,7 @@ private:
     using Info = DistributedRdb::RdbDebugInfo;
     int ProcessOpenCallback(RdbStore &rdbStore,
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-    bool IsConfigInvalidChanged(const std::string &path, const RdbStoreConfig &config);
+    bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
