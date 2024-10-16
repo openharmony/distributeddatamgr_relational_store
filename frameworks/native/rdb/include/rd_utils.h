@@ -53,15 +53,17 @@ public:
     static char *RdSqlColName(GRD_SqlStmt *stmt, uint32_t idx);
     static GRD_DbValueT RdSqlColValue(GRD_SqlStmt *stmt, uint32_t idx);
 
-    static uint8_t *RdSqlColBlob(GRD_SqlStmt *stmt, uint32_t idx);
-    static char *RdSqlColText(GRD_SqlStmt *stmt, uint32_t idx);
-    static int RdSqlColInt(GRD_SqlStmt *stmt, uint32_t idx);
-    static uint64_t RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx);
+    static const void *RdSqlColBlob(GRD_SqlStmt *stmt, uint32_t idx);
+    static const char *RdSqlColText(GRD_SqlStmt *stmt, uint32_t idx);
+    static int32_t RdSqlColInt(GRD_SqlStmt *stmt, uint32_t idx);
+    static int64_t RdSqlColInt64(GRD_SqlStmt *stmt, uint32_t idx);
     static double RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx);
     static const float *RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
 
-    static int RdDbBackup(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
-    static int RdDbRestore(GRD_DB *db, const char *backupDbFile, uint8_t *encryptedKey, uint32_t encryptedKeyLen);
+    static std::string GetEncryptKey(const std::vector<uint8_t> &encryptedKey);
+    static int RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
+    static int RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
+    static int RdDbRekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey);
 
     static int RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version);
     static int RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version);

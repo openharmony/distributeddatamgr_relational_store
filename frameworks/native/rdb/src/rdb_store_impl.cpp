@@ -1470,16 +1470,12 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     }
 
     if (config_.GetDBType() == DB_VECTOR) {
-        if (config_.IsEncrypt()) {
-            return E_NOT_SUPPORT;
-        }
-
         auto conn = connectionPool_->AcquireConnection(false);
         if (conn == nullptr) {
             return E_BASE;
         }
 
-        return conn->Backup(databasePath, {}, false, slaveStatus_);
+        return conn->Backup(databasePath, destEncryptKey, false, slaveStatus_);
     }
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
