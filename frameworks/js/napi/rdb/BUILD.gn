@@ -53,10 +53,16 @@ ohos_shared_library("napi_rdb") {
     ]
     if (is_mac) {
       buildos = "mac"
-      defines = [ "MAC_PLATFORM" ]
+      defines = [
+        "MAC_PLATFORM",
+        "CROSS_PLATFORM",
+      ]
     } else {
       buildos = "windows"
-      defines = [ "WINDOWS_PLATFORM" ]
+      defines = [
+        "WINDOWS_PLATFORM",
+        "CROSS_PLATFORM",
+      ]
     }
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
     deps = [
@@ -124,10 +130,16 @@ ohos_shared_library("rdb") {
     ]
     if (is_mac) {
       buildos = "mac"
-      defines = [ "MAC_PLATFORM" ]
+      defines = [
+        "MAC_PLATFORM",
+        "CROSS_PLATFORM",
+      ]
     } else {
       buildos = "windows"
-      defines = [ "WINDOWS_PLATFORM" ]
+      defines = [
+        "WINDOWS_PLATFORM",
+        "CROSS_PLATFORM",
+      ]
     }
 
     deps = [

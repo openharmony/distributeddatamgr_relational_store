@@ -274,7 +274,10 @@ if (is_ohos && !build_ohos_sdk) {
       defines += [ "RDB_SUPPORT_ICU" ]
     }
 
-    defines += [ "WINDOWS_PLATFORM" ]
+    defines += [
+      "WINDOWS_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
@@ -380,7 +383,10 @@ if (is_ohos && !build_ohos_sdk) {
       defines += [ "RDB_SUPPORT_ICU" ]
     }
 
-    defines += [ "MAC_PLATFORM" ]
+    defines += [
+      "MAC_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
@@ -572,7 +578,10 @@ if (is_ohos && !build_ohos_sdk) {
   base_deps = [ "${plugins_path}/libs/icu:icu_ios" ]
 
   ohos_source_set("native_rdb") {
-    defines = [ "IOS_PLATFORM" ]
+    defines = [
+      "IOS_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     part_name = "relational_store"
     sources = base_sources
