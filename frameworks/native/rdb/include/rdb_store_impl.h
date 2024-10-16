@@ -268,7 +268,7 @@ private:
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
-    static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
+    static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
