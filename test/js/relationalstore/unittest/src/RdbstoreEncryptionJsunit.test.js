@@ -70,7 +70,7 @@ const STORE_CONFIG_NON_DEFAULT = {
     }
 }
 
-async function CreatRdbStore(context, STORE_CONFIG) {
+async function CreateRdbStore(context, STORE_CONFIG) {
     let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
     await rdbStore.executeSql(CREATE_TABLE_TEST, null)
     let u8 = new Uint8Array([1, 2, 3])
@@ -211,7 +211,7 @@ describe('rdbEncryptTest', function () {
      */
     it('RdbEncryptTest_0030', 0, async function (done) {
         await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
-        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+        let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         let predicates = new data_relationalStore.RdbPredicates("test")
         predicates.equalTo("name", "zhangsan")
         let resultSet = await rdbStore.query(predicates)
@@ -239,19 +239,42 @@ describe('rdbEncryptTest', function () {
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
      * @tc.desc RDB Encrypt function test
      */
-    it('RdbEncryptTest_0040', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
-        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
-        rdbStore = null
-
+    it('RdbEncryptTest_0040', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0040 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         try {
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
-            expect(false).assertTrue()
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
+          expect(rdbStore !== null).assertTrue();
         } catch (err) {
-            expect(err.code).assertEqual(14800011);
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
         }
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0040 end *************");
+    })
 
-        await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
+    /**
+     * @tc.name RdbEncryptTest_0041
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0041
+     * @tc.desc RDB Encrypt function test
+     * @tc.size MediumTest
+     * @tc.type Function
+     * @tc.level Level 1
+     */
+    it('RdbEncryptTest_0041', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0041 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_WRONG);
+        try {
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+          expect(rdbStore !== null).assertTrue();
+        } catch (err) {
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0041 end *************");
     })
 
     /**
@@ -297,10 +320,10 @@ describe('rdbEncryptTest', function () {
         let rdbStore2;
         // create 'rdbstore1'
         try {
-            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT);
+            rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // query 'rdbstore1'
@@ -315,10 +338,10 @@ describe('rdbEncryptTest', function () {
 
         // create 'rdbStore2'
         try {
-            rdbStore2 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT2)
+            rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create table and query 'rdbStore1'
