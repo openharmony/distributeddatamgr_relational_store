@@ -234,11 +234,16 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
-    std::pair<int32_t, Stmt> CreateWriteableStmt(const std::string &sql);
+    std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
+    std::vector<ValueObject> CreateBackupBindArgs(const std::string &databasePath,
+        const std::vector<uint8_t> &destEncryptKey);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
-    int AttachInner(const std::string &attachName,
-        const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
+    int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
+        const std::vector<uint8_t> &key, int32_t waitTime);
+    int SetDefaultEncryptSql(
+        const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config);
+    int SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
     int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution);
@@ -259,7 +264,7 @@ private:
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
-    static inline constexpr uint32_t MAX_RETRY_TIMES = 5;
+    static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     bool isOpen_ = false;

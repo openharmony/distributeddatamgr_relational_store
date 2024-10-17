@@ -30,9 +30,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_store_config.h"
-#endif
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -137,7 +135,7 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
     auto ret = rename(srcFile.c_str(), destFile.c_str());
     if (ret != 0) {
         LOG_WARN("rename failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
-            SqliteUtils::Anonymous(destFile).c_str(), srcFile.c_str());
+            SqliteUtils::Anonymous(destFile).c_str(), SqliteUtils::Anonymous(srcFile).c_str());
         return false;
     }
     return true;
@@ -239,16 +237,17 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
-int SqliteUtils::GetFileSize(const std::string &fileName)
+ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
 {
     struct stat fileStat;
     if (fileName.empty() || stat(fileName.c_str(), &fileStat) < 0) {
-        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s",
-                  errno, Anonymous(fileName).c_str());
+        if (errno != ENOENT) {
+            LOG_ERROR("failed, errno: %{public}d, fileName:%{public}s", errno, Anonymous(fileName).c_str());
+        }
         return 0;
     }
 
-    return static_cast<int>(fileStat.st_size);
+    return fileStat.st_size;
 }
 
 bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
@@ -301,5 +300,48 @@ std::string SqliteUtils::GetSlavePath(const std::string& name)
     }
     return name.substr(0, pos) + slaveSuffix;
 }
+
+const char *SqliteUtils::HmacAlgoDescription(int32_t hmacAlgo)
+{
+    HmacAlgo hmacEnum = static_cast<HmacAlgo>(hmacAlgo);
+    switch (hmacEnum) {
+        case HmacAlgo::SHA1:
+            return "sha1";
+        case HmacAlgo::SHA256:
+            return "sha256";
+        case HmacAlgo::SHA512:
+            return "sha512";
+        default:
+            return "sha256";
+    }
+}
+
+const char *SqliteUtils::KdfAlgoDescription(int32_t kdfAlgo)
+{
+    KdfAlgo kdfEnum = static_cast<KdfAlgo>(kdfAlgo);
+    switch (kdfEnum) {
+        case KdfAlgo::KDF_SHA1:
+            return "kdf_sha1";
+        case KdfAlgo::KDF_SHA256:
+            return "kdf_sha256";
+        case KdfAlgo::KDF_SHA512:
+            return "kdf_sha512";
+        default:
+            return "kdf_sha256";
+    }
+}
+
+const char *SqliteUtils::EncryptAlgoDescription(int32_t encryptAlgo)
+{
+    EncryptAlgo encryptEnum = static_cast<EncryptAlgo>(encryptAlgo);
+    switch (encryptEnum) {
+        case EncryptAlgo::AES_256_CBC:
+            return "aes-256-cbc";
+        case EncryptAlgo::AES_256_GCM:
+        default:
+            return "aes-256-gcm";
+    }
+}
+
 } // namespace NativeRdb
 } // namespace OHOS

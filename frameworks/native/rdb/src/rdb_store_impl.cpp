@@ -70,6 +70,7 @@ using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
+using Reportor = RdbFaultHiViewReporter;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -281,10 +282,13 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
 int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        LOG_ERROR("not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType());
         return E_NOT_SUPPORT;
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
+        LOG_ERROR("db is busy. table:%{public}s", SqliteUtils::Anonymous(table).c_str());
         return E_DATABASE_BUSY;
     }
     int errCode = connection->CleanDirtyData(table, cursor);
@@ -319,6 +323,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
             service->Disable(param);
         }
 #endif
+        config_.SetIter(0);
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1178,6 +1183,23 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     return ret;
 }
 
+std::vector<ValueObject> RdbStoreImpl::CreateBackupBindArgs(const std::string &databasePath,
+    const std::vector<uint8_t> &destEncryptKey)
+{
+    std::vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(databasePath);
+    if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
+        bindArgs.emplace_back(destEncryptKey);
+    } else if (config_.IsEncrypt()) {
+        std::vector<uint8_t> key = config_.GetEncryptKey();
+        bindArgs.emplace_back(key);
+        key.assign(key.size(), 0);
+    } else {
+        bindArgs.emplace_back("");
+    }
+    return bindArgs;
+}
+
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
@@ -1205,24 +1227,20 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
 
-    auto [errCode, statement] = CreateWriteableStmt(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
-    if (errCode != E_OK || statement == nullptr) {
-        return errCode;
+    auto [result, conn] = CreateWritableConn();
+    if (result != E_OK) {
+        return result;
     }
-    std::vector<ValueObject> bindArgs;
-    bindArgs.emplace_back(databasePath);
-    if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
-        bindArgs.emplace_back(destEncryptKey);
-        statement->Execute();
-    } else if (config_.IsEncrypt()) {
-        std::vector<uint8_t> key = config_.GetEncryptKey();
-        bindArgs.emplace_back(key);
-        key.assign(key.size(), 0);
-        statement->Execute();
-    } else {
-        bindArgs.emplace_back("");
+
+    if (config_.IsEncrypt()) {
+        result = SetDefaultEncryptAlgo(conn, config_);
+        if (result != E_OK) {
+            return result;
+        }
     }
-    errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
+
+    std::vector<ValueObject> bindArgs = CreateBackupBindArgs(databasePath, destEncryptKey);
+    auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_BACKUP_SQL, conn);
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         return errCode;
@@ -1271,8 +1289,78 @@ bool RdbStoreImpl::IsHoldingConnection()
     return connectionPool_ != nullptr;
 }
 
-int RdbStoreImpl::AttachInner(
-    const std::string &attachName, const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime)
+int RdbStoreImpl::SetDefaultEncryptSql(
+    const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config)
+{
+    auto errCode = statement->Prepare(sql);
+    if (errCode != E_OK) {
+        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
+        return errCode;
+    }
+    errCode = statement->Execute();
+    if (errCode != E_OK) {
+        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
+        return errCode;
+    }
+    return E_OK;
+}
+
+int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config)
+{
+    if (conn == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+
+    if (!config.GetCryptoParam().IsValid()) {
+        LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config.GetName()).c_str());
+        return E_INVALID_ARGS;
+    }
+
+    std::string sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_CIPHER_PREFIX) +
+                      SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
+                      std::string(GlobalExpr::ALGO_SUFFIX);
+    auto [errCode, statement] = conn->CreateStatement(sql, conn);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (config.GetIter() > 0) {
+        sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_KDF_ITER_PREFIX) + std::to_string(config.GetIter());
+        errCode = SetDefaultEncryptSql(statement, sql, config);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+    }
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO_PREFIX) +
+          SqliteUtils::HmacAlgoDescription(config.GetCryptoParam().hmacAlgo) + std::string(GlobalExpr::ALGO_SUFFIX);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_KDF_ALGO_PREFIX) +
+                      SqliteUtils::KdfAlgoDescription(config.GetCryptoParam().kdfAlgo) +
+                      std::string(GlobalExpr::ALGO_SUFFIX);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_PAGE_SIZE_PREFIX) +
+                      std::to_string(config.GetCryptoParam().cryptoPageSize);
+    return SetDefaultEncryptSql(statement, sql, config);
+}
+
+int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
+    const std::vector<uint8_t> &key, int32_t waitTime)
 {
     auto [conn, readers] = connectionPool_->AcquireAll(waitTime);
     if (conn == nullptr) {
@@ -1295,14 +1383,12 @@ int RdbStoreImpl::AttachInner(
     bindArgs.emplace_back(ValueObject(dbPath));
     bindArgs.emplace_back(ValueObject(attachName));
     if (!key.empty()) {
-        auto [errCode, statement] = conn->CreateStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, conn);
-        if (statement == nullptr) {
-            LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
-            return errCode;
+        auto ret = SetDefaultEncryptAlgo(conn, config);
+        if (ret != E_OK) {
+            return ret;
         }
-        errCode = statement->Execute();
         bindArgs.emplace_back(ValueObject(key));
-        std::tie(errCode, statement) = conn->CreateStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
+        auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
         if (statement == nullptr || errCode != E_OK) {
             LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
             return E_ERROR;
@@ -1343,15 +1429,11 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     }
 
     std::vector<uint8_t> key;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    config.Initialize();
     if (config.IsEncrypt()) {
-        RdbPassword rdbPwd =
-            RdbSecurityManager::GetInstance().GetRdbPassword(dbPath, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-        rdbPwd.Clear();
+        key = config.GetEncryptKey();
     }
-#endif
-    err = AttachInner(attachName, dbPath, key, waitTime);
+    err = AttachInner(config, attachName, dbPath, key, waitTime);
     key.assign(key.size(), 0);
     if (err == E_SQLITE_ERROR) {
         // only when attachName is already in use, SQLITE-ERROR will be reported here.
@@ -1618,6 +1700,9 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
+        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, E_DATABASE_BUSY, "ErrorType: Busy"));
+        }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
             SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
@@ -1847,7 +1932,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     if (errCode == E_OK) {
-        RdbFaultHiViewReporter::ReportRestore(RdbFaultHiViewReporter::Create(config_, E_OK));
+        Reportor::ReportRestore(Reportor::Create(config_, E_OK));
         rebuild_ = RebuiltType::NONE;
     }
     if (!cloudTables_.empty()) {
@@ -1890,7 +1975,8 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errCode != E_OK) {
         return errCode;
     }
-    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references, type);
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references,
+        distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
@@ -2468,16 +2554,17 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 }
 #endif
 
-std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::CreateWriteableStmt(const std::string &sql)
+
+std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn()
 {
     auto config  = config_;
     config.SetHaMode(HAMode::SINGLE);
-    auto [errCode, conn] = Connection::Create(config, true);
-    if (errCode != E_OK || conn == nullptr) {
-        LOG_ERROR("create connection failed, err:%{public}d", errCode);
-        return { errCode, nullptr };
+    auto [result, conn] = Connection::Create(config, true);
+    if (result != E_OK || conn == nullptr) {
+        LOG_ERROR("create connection failed, err:%{public}d", result);
+        return { result, nullptr };
     }
-    return conn->CreateStatement(sql, conn);
+    return { E_OK, conn };
 }
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
@@ -2513,7 +2600,7 @@ int RdbStoreImpl::InterruptBackup()
         slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
         return E_OK;
     }
-    return E_INVALID_INTERRUPT;
+    return E_CANCEL;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const

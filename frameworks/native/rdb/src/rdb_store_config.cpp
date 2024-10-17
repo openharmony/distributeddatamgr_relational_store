@@ -26,13 +26,13 @@ using namespace OHOS::Rdb;
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
     const std::string &databaseFileType, SecurityLevel securityLevel, bool isCreateNecessary, bool autoCheck,
-    int journalSize, int pageSize, const std::string &encryptAlgo)
+    int journalSize, int pageSize)
     : readOnly_(isReadOnly), isCreateNecessary_(isCreateNecessary), autoCheck_(autoCheck), journalSize_(journalSize),
       pageSize_(pageSize), securityLevel_(securityLevel), storageMode_(storageMode), path_(name),
-      journalMode_(journalMode), syncMode_(syncMode), databaseFileType(databaseFileType), encryptAlgo_(encryptAlgo),
-      encryptKey_(encryptKey)
+      journalMode_(journalMode), syncMode_(syncMode), databaseFileType(databaseFileType)
 {
     name_ = StringUtils::ExtractFileName(name);
+    cryptoParam_.encryptKey_ = encryptKey;
 }
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -164,13 +164,13 @@ void RdbStoreConfig::SetPageSize(int pageSize)
 {
     this->pageSize_ = pageSize;
 }
-const std::string RdbStoreConfig::GetEncryptAlgo() const
+EncryptAlgo RdbStoreConfig::GetEncryptAlgo() const
 {
-    return encryptAlgo_;
+    return static_cast<EncryptAlgo>(cryptoParam_.encryptAlgo);
 }
-void RdbStoreConfig::SetEncryptAlgo(const std::string &encryptAlgo)
+void RdbStoreConfig::SetEncryptAlgo(EncryptAlgo encryptAlgo)
 {
-    this->encryptAlgo_ = encryptAlgo;
+    this->cryptoParam_.encryptAlgo = static_cast<int32_t>(encryptAlgo);
 }
 
 void RdbStoreConfig::SetReadOnly(bool readOnly)
@@ -309,7 +309,7 @@ void RdbStoreConfig::SetEncryptStatus(const bool status)
 
 bool RdbStoreConfig::IsEncrypt() const
 {
-    return isEncrypt_ || !encryptKey_.empty();
+    return isEncrypt_ || !cryptoParam_.encryptKey_.empty();
 }
 
 bool RdbStoreConfig::IsCreateNecessary() const
@@ -334,15 +334,16 @@ void RdbStoreConfig::SetReadConSize(int readConSize)
 
 void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
 {
-    encryptKey_ = encryptKey;
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_ = encryptKey;
 }
 
 void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const
 {
     RdbSecurityManager::GetInstance().RestoreKeyFile(GetPath(), encryptKey);
-    encryptKey_.assign(encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
     newEncryptKey_.assign(newEncryptKey_.size(), 0);
-    encryptKey_ = encryptKey;
+    cryptoParam_.encryptKey_ = encryptKey;
 }
 
 void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
@@ -352,7 +353,7 @@ void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
 
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
-    return encryptKey_;
+    return cryptoParam_.encryptKey_;
 }
 
 void RdbStoreConfig::ChangeEncryptKey() const
@@ -361,8 +362,8 @@ void RdbStoreConfig::ChangeEncryptKey() const
     if (newEncryptKey_.empty()) {
         return;
     }
-    encryptKey_.assign(encryptKey_.size(), 0);
-    encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
     newEncryptKey_.assign(newEncryptKey_.size(), 0);
     newEncryptKey_.resize(0);
 }
@@ -379,7 +380,7 @@ int32_t RdbStoreConfig::Initialize() const
 
 int32_t RdbStoreConfig::GenerateEncryptedKey() const
 {
-    if (!isEncrypt_) {
+    if (!isEncrypt_ || !cryptoParam_.encryptKey_.empty()) {
         return E_OK;
     }
 
@@ -395,7 +396,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
     }
     auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path_, KeyFileType::PUB_KEY_FILE);
     if (rdbPwd.IsValid()) {
-        encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        cryptoParam_.encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
     rdbPwd.Clear();
     if ((rdbPwd.isKeyExpired && autoRekey_) ||
@@ -406,7 +407,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         }
         rdbPwd.Clear();
     }
-    if (encryptKey_.empty() && newEncryptKey_.empty()) {
+    if (cryptoParam_.encryptKey_.empty() && newEncryptKey_.empty()) {
         LOG_WARN("key is inValid, bundleName_:%{public}s", bundleName_.c_str());
     }
     return E_OK;
@@ -414,7 +415,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
 
 void RdbStoreConfig::ClearEncryptKey()
 {
-    encryptKey_.assign(encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
     newEncryptKey_.assign(newEncryptKey_.size(), 0);
 }
 
@@ -566,12 +567,12 @@ std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
 
 int32_t RdbStoreConfig::GetIter() const
 {
-    return iter_;
+    return cryptoParam_.iterNum;
 }
 
 void RdbStoreConfig::SetIter(int32_t iter) const
 {
-    iter_ = iter;
+    cryptoParam_.iterNum = iter;
 }
 
 int32_t RdbStoreConfig::GetHaMode() const
@@ -588,4 +589,51 @@ void RdbStoreConfig::EnableRekey(bool enable)
 {
     autoRekey_ = enable;
 }
+
+void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
+{
+    cryptoParam_ = cryptoParam;
+}
+
+RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const
+{
+    return cryptoParam_;
+}
+
+RdbStoreConfig::CryptoParam::CryptoParam() = default;
+
+RdbStoreConfig::CryptoParam::~CryptoParam()
+{
+    encryptKey_.assign(encryptKey_.size(), 0);
+}
+
+bool RdbStoreConfig::CryptoParam::IsValid() const
+{
+    int32_t count = iterNum;
+    if (count < 0) {
+        return false;
+    }
+
+    if (encryptAlgo != AES_256_CBC && encryptAlgo != AES_256_GCM) {
+        return false;
+    }
+
+    if (hmacAlgo < SHA1 || hmacAlgo > SHA512) {
+        return false;
+    }
+
+    if (kdfAlgo < KDF_SHA1 || kdfAlgo > KDF_SHA512) {
+        return false;
+    }
+
+    int32_t pageSize = cryptoPageSize;
+    if (pageSize < DB_MIN_CRYPTO_PAGE_SIZE || pageSize > DB_MAX_CRYPTO_PAGE_SIZE) {
+        return false;
+    }
+    if (!((pageSize != 0) && ((pageSize & (pageSize - 1)) == 0))) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace OHOS::NativeRdb

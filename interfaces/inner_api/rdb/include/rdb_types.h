@@ -46,7 +46,7 @@ struct RdbDebugInfo {
     DebugTime atime_;
     DebugTime mtime_;
     DebugTime ctime_;
-    size_t size_ = 0;
+    ssize_t size_ = 0;
     uint32_t dev_ = 0;
     uint32_t mode_ = 0;
     uint32_t uid_ = 0;
@@ -95,7 +95,8 @@ struct SyncOption {
 
 enum DistributedTableType {
     DISTRIBUTED_DEVICE = 0,
-    DISTRIBUTED_CLOUD
+    DISTRIBUTED_CLOUD,
+    DISTRIBUTED_SEARCH
 };
 
 struct Reference {
@@ -107,6 +108,7 @@ struct Reference {
 struct DistributedConfig {
     bool autoSync = true;
     std::vector<Reference> references = {};
+    bool isRebuild = false;
 };
 
 enum Progress {

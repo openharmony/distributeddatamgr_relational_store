@@ -82,4 +82,19 @@ std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &event
     (void)eventInfo;
     return "";
 }
+
+std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+{
+    (void)debugs;
+    (void)header;
+    return "";
+}
+
+std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
+    const std::string &header)
+{
+    (void)debugs;
+    (void)header;
+    return "";
+}
 } // namespace OHOS::NativeRdb

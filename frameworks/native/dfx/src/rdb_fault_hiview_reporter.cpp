@@ -19,9 +19,12 @@
 #include <iomanip>
 #include <sstream>
 
+#include <chrono>
 #include <fcntl.h>
 #include <unistd.h>
+#include <unordered_map>
 #include <ctime>
+#include <mutex>
 #include "connection.h"
 #include "hisysevent_c.h"
 #include "logger.h"
@@ -46,14 +49,27 @@ Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
 {
     if (IsReportCorruptedFault(eventInfo.path)) {
-        Report(eventInfo);
+        RdbCorruptedEvent eventInfoAppend = eventInfo;
+        eventInfoAppend.appendix += Format(eventInfoAppend.debugInfos, "");
+        LOG_WARN("corrupted %{public}s errCode:0x%{public}x [%{public}s]",
+            SqliteUtils::Anonymous(eventInfoAppend.storeName).c_str(),
+            eventInfoAppend.errorCode,
+            eventInfoAppend.appendix.c_str());
+        Report(eventInfoAppend);
         CreateCorruptedFlag(eventInfo.path);
     }
 }
 
 void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
 {
-    Report(eventInfo);
+    if (IsReportCorruptedFault(eventInfo.path)) {
+        return;
+    }
+    RdbCorruptedEvent eventInfoAppend = eventInfo;
+    eventInfoAppend.appendix += Format(eventInfoAppend.debugInfos, "");
+    LOG_INFO("restored %{public}s errCode:0x%{public}x [%{public}s]",
+        SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, eventInfoAppend.appendix.c_str());
+    Report(eventInfoAppend);
     DeleteCorruptedFlag(eventInfo.path);
 }
 
@@ -65,11 +81,6 @@ void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
     std::string storeName = eventInfo.storeName;
     uint32_t checkType = eventInfo.integrityCheck;
     std::string appendInfo = eventInfo.appendix;
-    for (auto &[name, debugInfo] : eventInfo.debugInfos) {
-        appendInfo += "\n" + name + " :" + GetFileStatInfo(debugInfo);
-    }
-    LOG_WARN("storeName: %{public}s, errorCode: %{public}d, appendInfo : %{public}s",
-        SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, appendInfo.c_str());
     std::string occurTime = GetTimeWithMilliseconds(eventInfo.errorOccurTime, 0);
     char *errorOccurTime = occurTime.data();
     HiSysEventParam params[] = {
@@ -93,14 +104,14 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
     const uint32_t permission = 0777;
-    oss << " device: 0x" << std::hex << debugInfo.dev_ << " inode: 0x" << std::hex << debugInfo.inode_;
+    oss << " dev:0x" << std::hex << debugInfo.dev_ << " ino:0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
-    oss << " mode: 0" << std::oct << (debugInfo.mode_ & permission) << " size: " << std::dec << debugInfo.size_
-        << " natime: " << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
-        << " smtime: " << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
-        << " sctime: " << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
+    oss << " mode:0" << std::oct << (debugInfo.mode_ & permission) << " size:" << std::dec << debugInfo.size_
+        << " atim:" << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+        << " mtim:" << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
+        << " ctim:" << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
 }
 
@@ -225,5 +236,31 @@ std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &event
         }
     }
     return SqliteUtils::Anonymous(eventInfo.storeName);
+}
+
+std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::string appendix = header;
+    for (auto &[name, debugInfo] : debugs) {
+        appendix += "\n" + name + " :" + GetFileStatInfo(debugInfo);
+    }
+    return appendix;
+}
+
+std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
+    const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::stringstream oss;
+    oss << header << ":";
+    for (auto &[name, debugInfo] : debugs) {
+        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ">";
+    }
+    return oss.str();
 }
 } // namespace OHOS::NativeRdb
