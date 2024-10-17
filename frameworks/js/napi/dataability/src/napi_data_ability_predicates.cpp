@@ -19,6 +19,7 @@
 #include "logger.h"
 #include "napi_async_proxy.h"
 #include "napi_predicates_utils.h"
+#include "js_df_manager.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -104,6 +105,7 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
             delete proxy;
             return nullptr;
         }
+        JSDFManager::GetInstance().AddNewInfo(proxy);
         return thiz;
     }
 
@@ -161,7 +163,12 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
+    auto tid = JSDFManager::GetInstance().GetFreedTid(nativeObject);
+    if (tid != 0) {
+        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
+    }
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
+    proxy->predicates_ = std::move(nullptr);
     delete proxy;
 }
 

@@ -89,7 +89,7 @@ private:
     int InnerFinalize();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReadFile2Buffer();
-    void PrintInfoForDbError(int errorCode, const std::string &sql);
+    void PrintInfoForDbError(int errCode, const std::string &sql);
 
     static constexpr uint32_t BUFFER_LEN = 16;
 
@@ -106,7 +106,7 @@ private:
     std::shared_ptr<Connection> conn_;
     std::string sql_;
     mutable std::vector<int32_t> types_;
-    std::shared_ptr<SqliteStatement> slave_;
+    std::shared_ptr<Statement> slave_;
     const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb

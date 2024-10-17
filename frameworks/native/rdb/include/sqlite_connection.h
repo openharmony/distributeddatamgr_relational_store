@@ -48,7 +48,7 @@ public:
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t OnInitialize() override;
-    int TryCheckPoint() override;
+    int TryCheckPoint(bool timeout) override;
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
@@ -85,9 +85,9 @@ private:
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
     int SetEncrypt(const RdbStoreConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
+    int SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config);
     int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
-    int SetEncryptAgo(int32_t iter);
+    int SetEncryptAgo(const RdbStoreConfig &config);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
@@ -113,7 +113,7 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool isWrite, bool checkSlaveExist = true);
+    int CreateSlaveConnection(const RdbStoreConfig &config, bool checkSlaveExist = true);
     int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
     int IsRepairable();
     int ExchangeVerify(bool isRestore);
