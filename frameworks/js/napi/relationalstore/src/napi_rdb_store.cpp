@@ -31,6 +31,7 @@
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
+#include "napi_transaction.h"
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
@@ -182,6 +183,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
             DECLARE_NAPI_FUNCTION("lockCloudContainer", LockCloudContainer),
             DECLARE_NAPI_FUNCTION("unlockCloudContainer", UnlockCloudContainer),
+            DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
 #endif
         };
         AddSyncFunctions(properties);
@@ -275,7 +277,7 @@ RdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
     RdbStoreProxy *proxy = nullptr;
     napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
     if (proxy == nullptr) {
-        LOG_ERROR("RdbStoreProxy::GetNativePredicates native instance is nullptr! code:%{public}d!", status);
+        LOG_ERROR("RdbStoreProxy native instance is nullptr! code:%{public}d!", status);
         return nullptr;
     }
     return proxy;
@@ -652,6 +654,18 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
+}
+
+int ParseTransactionType(const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
+{
+    context->transactionType = NativeRdb::DEFERRED;
+    if (argc > 0 && !JSUtils::IsNull(env, argv[0])) {
+        auto status = JSUtils::Convert2ValueExt(env, argv[0], context->transactionType);
+        bool checked = status == napi_ok && context->transactionType >= NativeRdb::DEFERRED &&
+                       context->transactionType <= NativeRdb::EXCLUSIVE;
+        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("type", "a TransactionType"));
+    }
+    return OK;
 }
 
 napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
@@ -2198,6 +2212,28 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParseTransactionType(env, argc, argv, context));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        context->transaction = context->rdbStore->CreateTransaction(context->transactionType);
+        return (context->transaction != nullptr) ? E_OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = TransactionProxy::NewInstance(env, context->transaction);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 

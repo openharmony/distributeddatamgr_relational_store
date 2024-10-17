@@ -94,6 +94,7 @@ private:
     static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
     static napi_value LockCloudContainer(napi_env env, napi_callback_info info);
     static napi_value UnlockCloudContainer(napi_env env, napi_callback_info info);
+    static napi_value CreateTransaction(napi_env env, napi_callback_info info);
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
 
