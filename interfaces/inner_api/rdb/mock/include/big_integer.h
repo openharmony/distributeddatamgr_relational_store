@@ -32,6 +32,7 @@ public:
     BigInteger &operator=(const BigInteger &other);
     BigInteger &operator=(BigInteger &&other);
     bool operator==(const BigInteger &other);
+    bool operator<(const BigInteger &rhs);
 
     int32_t Sign() const;
     size_t Size() const;

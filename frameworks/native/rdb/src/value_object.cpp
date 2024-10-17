@@ -341,5 +341,40 @@ int ValueObject::Get(T &output) const
     output = static_cast<T>(*v);
     return E_OK;
 }
+
+bool ValueObject::operator<(const ValueObject &rhs) const
+{
+    if (GetType() != rhs.GetType()) {
+        return GetType() < rhs.GetType();
+    }
+
+    bool result = true;
+    switch (GetType()) {
+        case TYPE_INT:
+            result = int64_t(*this) < int64_t(rhs);
+            break;
+        case TYPE_DOUBLE:
+            result = double(*this) < double(rhs);
+            break;
+        case TYPE_STRING:
+            result = std::string(*this) < std::string(rhs);
+            break;
+        case TYPE_BOOL:
+            result = bool(*this) < bool(rhs);
+            break;
+        case TYPE_BLOB:
+            result = Blob(*this) < Blob(rhs);
+            break;
+        case TYPE_VECS:
+            result = FloatVector(*this) < FloatVector(rhs);
+            break;
+        case TYPE_BIGINT:
+            result = BigInt(*this) < BigInt(rhs);
+            break;
+        default:
+            break;
+    }
+    return result;
+}
 } // namespace NativeRdb
 } // namespace OHOS

@@ -27,6 +27,8 @@
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "values_buckets.h"
+
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
@@ -41,6 +43,7 @@ using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
+using ValuesBuckets = OHOS::NativeRdb::ValuesBuckets;
 using HAMode = NativeRdb::HAMode;
 using HmacAlgo = NativeRdb::HmacAlgo;
 using KdfAlgo = NativeRdb::KdfAlgo;
@@ -133,6 +136,7 @@ bool HasDuplicateAssets(const ValueObject &value);
 bool HasDuplicateAssets(const std::vector<ValueObject> &values);
 bool HasDuplicateAssets(const ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<ValuesBucket> &values);
+bool HasDuplicateAssets(const ValuesBuckets &values);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

@@ -606,7 +606,7 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
         CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
 
         CHECK_RETURN_ERR(ParseValuesBucket(env, obj, context) == OK);
-        context->valuesBuckets.push_back(std::move(context->valuesBucket));
+        context->sharedValuesBuckets.Put(context->valuesBucket);
         context->valuesBucket.Clear();
     }
     return OK;
@@ -662,13 +662,15 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBuckets), std::make_shared<ParamError>("Duplicate assets "
-                                                                                                   "are not allowed"));
+        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->sharedValuesBuckets),
+                           std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->BatchInsert(context->int64Output, context->tableName, context->valuesBuckets);
+        auto [ret, output] = rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets);
+        context->int64Output = output;
+        return ret;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
