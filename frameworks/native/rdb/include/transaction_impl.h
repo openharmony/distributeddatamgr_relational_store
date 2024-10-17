@@ -35,6 +35,8 @@ public:
     std::pair<int32_t, int64_t> Delete(const AbsRdbPredicates &values) override;
     std::pair<int32_t, int64_t> Update(const ValuesBucket &values, const AbsRdbPredicates &predicates,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) override;
+    std::shared_ptr<ResultSet> Query(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     std::shared_ptr<ResultSet> QuerySql(const std::string &sql, const std::vector<ValueObject> &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &args) override;
 };
