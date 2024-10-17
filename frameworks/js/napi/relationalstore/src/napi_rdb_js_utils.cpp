@@ -553,5 +553,16 @@ bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
     }
     return false;
 }
+
+bool HasDuplicateAssets(const ValuesBuckets &values)
+{
+    const auto &[fields, vals] = values.GetFieldsAndValues();
+    for (const auto &valueObject : *vals) {
+        if (HasDuplicateAssets(valueObject)) {
+            return true;
+        }
+    }
+    return false;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
