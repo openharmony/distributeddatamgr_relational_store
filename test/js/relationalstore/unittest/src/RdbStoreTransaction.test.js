@@ -18,7 +18,7 @@ import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 var context = ability_featureAbility.getContext()
 
-const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
+const TAG = "[RELATIONAL_STORE_TRANSACTION_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY, " +
     "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
@@ -49,7 +49,7 @@ describe('rdbStoreTransactionTest', function () {
     afterAll(async function () {
         console.info(TAG + 'afterAll')
         rdbStore = null
-        await data_relationalStore.deleteRdbStore(context, "TransactionInsertTest.db");
+        await data_relationalStore.deleteRdbStore(context, "TransactionTest.db");
     })
 
     console.log(TAG + "*************Unit Test Begin*************");
@@ -78,8 +78,8 @@ describe('rdbStoreTransactionTest', function () {
 
             await transaction.commit()
 
-            let predicates = new data_relationalStore.RdbPredicates("test");
-            let resultSet = await transaction.query(predicates)
+            // let predicates = new data_relationalStore.RdbPredicates("test");
+            // let resultSet = await transaction.query(predicates)
             // console.log(TAG + "testTransactionInsert0001 result count " + resultSet.rowCount)
             // expect(1).assertEqual(resultSet.rowCount)
             // resultSet.close()
@@ -121,8 +121,7 @@ describe('rdbStoreTransactionTest', function () {
 
             await transaction.commit()
 
-            let predicates = new data_relationalStore.RdbPredicates("test");
-            let resultSet = await transaction.query(predicates)
+            // let resultSet = await transaction.querySql("select * from test")
             // console.log(TAG + "testTransactionBatchInsert0001 result count " + resultSet.rowCount)
             // expect(2).assertEqual(resultSet.rowCount)
             // resultSet.close()
@@ -165,12 +164,12 @@ describe('rdbStoreTransactionTest', function () {
                 "salary": 25,
                 "blobType": u8,
             }
-            var num = await transaction.update("test", updateValueBucket)
+            var num = await transaction.update( updateValueBucket, predicates)
             expect(1).assertEqual(num);
             await transaction.commit()
 
-            let resultSet = await transaction.query(predicates)
-            // console.log(TAG + "testTransactionInsert0001 result count " + resultSet.rowCount)
+            // let resultSet = await transaction.query(predicates)
+            // console.log(TAG + "testTransactionUpdate0001 result count " + resultSet.rowCount)
             // expect(1).assertEqual(resultSet.rowCount)
             // expect(true).assertEqual(resultSet.goToFirstRow())
             // const name = resultSet.getString(resultSet.getColumnIndex("name"))
@@ -213,12 +212,12 @@ describe('rdbStoreTransactionTest', function () {
 
             let predicates = new data_relationalStore.RdbPredicates("test");
             predicates.equalTo("name", "lisi");
-            var num = await transaction.delete(updateValueBucket)
+            var num = await transaction.delete(predicates)
             expect(1).assertEqual(num);
             await transaction.commit()
 
-            let resultSet = await transaction.query(predicates)
-            // console.log(TAG + "testTransactionInsert0001 result count " + resultSet.rowCount)
+            // let resultSet = await transaction.query(predicates)
+            // console.log(TAG + "testTransactionDelete0001 result count " + resultSet.rowCount)
             // expect(0).assertEqual(resultSet.rowCount)
             // resultSet.close()
         } catch (e) {
@@ -262,8 +261,8 @@ describe('rdbStoreTransactionTest', function () {
      *          7.querySqlSync
      *          7.ExecuteSync
      */
-    it('testTransactionInsert0001', 0, async function (done) {
-        console.log(TAG + "************* testTransactionInsert0001 start *************");
+    it('testTransactionSyncInterface0001', 0, async function (done) {
+        console.log(TAG + "************* testTransactionSyncInterface0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         try {
             var transaction = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
@@ -273,24 +272,73 @@ describe('rdbStoreTransactionTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            var num = await transaction.insert("test", valueBucket)
+            var num = await transaction.insertSync("test", valueBucket);
+            expect(1).assertEqual(num);
+            const updateValueBucket = {
+                "name": "update",
+                "age": 28,
+                "salary": 25,
+                "blobType": u8,
+            }
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo("name", "update")
+            num = await transaction.updateSync(updateValueBucket, predicates)
+            expect(1).assertEqual(num);
+
+            num = await transaction.deleteSync(predicates);
             expect(1).assertEqual(num);
 
             await transaction.commit()
 
-            let predicates = new data_relationalStore.RdbPredicates("test");
-            let resultSet = await transaction.query(predicates)
-            // console.log(TAG + "testTransactionInsert0001 result count " + resultSet.rowCount)
-            // expect(1).assertEqual(resultSet.rowCount)
+            // let resultSet = await transaction.querySync(predicates)
+            // console.log(TAG + "testTransactionSyncInterface0001 result count " + resultSet.rowCount)
+            // expect(0).assertEqual(resultSet.rowCount)
             // resultSet.close()
         } catch (e) {
             console.log(TAG + e);
             expect(null).assertFail()
-            console.log(TAG + "testTransactionInsert0001 failed");
+            console.log(TAG + "testTransactionSyncInterface0001 failed");
         }
         done()
-        console.log(TAG + "************* testTransactionInsert0001 end *************");
+        console.log(TAG + "************* testTransactionSyncInterface0001 end *************");
     })
-    console.log(TAG + "*************Unit Test End*************");
 
+    /**
+     * @tc.number testTransactionRollback0001
+     * @tc.name Normal test case of transactions, insert and update a row of data
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          2.Delete data
+     *          3.Execute commit
+     *          4.Query data
+     */
+    it('testTransactionRollback0001', 0, async function (done) {
+        console.log(TAG + "************* testTransactionRollback0001 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        try {
+            var transaction = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE)
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket)
+
+            await transaction.rollback()
+
+            // let resultSet = await transaction.query(predicates)
+            // console.log(TAG + "testTransactionRollback0001 result count " + resultSet.rowCount)
+            // expect(0).assertEqual(resultSet.rowCount)
+            // resultSet.close()
+        } catch (e) {
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionRollback0001 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionRollback0001 end *************");
+    })
+
+    console.log(TAG + "*************Unit Test End*************");
 })

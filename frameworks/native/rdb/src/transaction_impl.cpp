@@ -15,6 +15,7 @@
 
 #define LOG_TAG "TransactionImpl"
 #include "transaction_impl.h"
+
 #include "logger.h"
 
 namespace OHOS::NativeRdb {
@@ -61,6 +62,12 @@ std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(
 {
     LOG_ERROR("enter.table:%{public}s", table.c_str());
     return { 0, 2 };
+}
+std::shared_ptr<ResultSet> TransactionImpl::Query(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+{
+    LOG_ERROR("enter.");
+    return nullptr;
 }
 std::shared_ptr<ResultSet> TransactionImpl::QuerySql(const std::string &sql, const std::vector<ValueObject> &args)
 {

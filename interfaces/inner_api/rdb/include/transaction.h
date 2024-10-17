@@ -37,6 +37,8 @@ public:
     virtual std::pair<int32_t, int64_t> Update(const ValuesBucket &values, const AbsRdbPredicates &predicates,
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) = 0;
 
+    virtual std::shared_ptr<ResultSet> Query(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) = 0;
     virtual std::shared_ptr<ResultSet> QuerySql(const std::string &sql, const std::vector<ValueObject> &args = {}) = 0;
     virtual std::pair<int32_t, ValueObject> Execute(
         const std::string &sql, const std::vector<ValueObject> &args = {}) = 0;

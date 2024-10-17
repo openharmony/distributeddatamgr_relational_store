@@ -21,10 +21,10 @@
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
-#include "napi_result_set.h"
 #include "napi_rdb_predicates.h"
-#include "rdb_errno.h"
+#include "napi_result_set.h"
 #include "rdb_common.h"
+#include "rdb_errno.h"
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -52,19 +52,20 @@ struct TransactionContext : public ContextBase {
     static constexpr int32_t VALUE_INDEX = 1;
 };
 
-int32_t TransactionContext::ParseRdbPredicatesProxy(napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
+int32_t TransactionContext::ParseRdbPredicatesProxy(
+    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
 {
     RdbPredicatesProxy *predicatesProxy = nullptr;
     auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&predicatesProxy));
     ASSERT_RETURN_SET_ERROR(status == napi_ok && predicatesProxy != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."));
     predicates = predicatesProxy->GetInstance();
-    ASSERT_RETURN_SET_ERROR(predicates != nullptr,
-        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+    ASSERT_RETURN_SET_ERROR(predicates != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
     return OK;
 }
 
-int32_t TransactionContext::ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
+int32_t TransactionContext::ParseSendableValuesBucket(
+    const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
 {
     uint32_t length = 0;
     napi_status status = napi_map_get_size(env, map, &length);
@@ -79,7 +80,8 @@ int32_t TransactionContext::ParseSendableValuesBucket(const napi_env env, const 
         ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_map_iterator_get_next failed."));
         napi_value values = nullptr;
         status = napi_get_named_property(env, iter, "value", &values);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_named_property value failed."));
+        ASSERT_RETURN_SET_ERROR(
+            status == napi_ok, std::make_shared<InnerError>("napi_get_named_property value failed."));
         napi_value key = nullptr;
         status = napi_get_element(env, values, KEY_INDEX, &key);
         ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
@@ -123,15 +125,6 @@ int32_t TransactionContext::ParseValuesBucket(napi_env env, napi_value arg, Valu
         napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        // The blob is an empty vector.
-        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
-        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
-            std::vector<uint8_t> tmpValue;
-            valueObject.GetBlob(tmpValue);
-            if (tmpValue.empty()) {
-                valueObject = ValueObject();
-            }
-        }
         if (ret == napi_ok) {
             valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
         } else if (ret != napi_generic_failure) {
@@ -163,13 +156,14 @@ int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, std
     return OK;
 }
 
-int32_t TransactionContext::ParseConflictResolution(const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution)
+int32_t TransactionContext::ParseConflictResolution(
+    const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution)
 {
     int32_t input = 0;
     auto status = napi_get_value_int32(env, arg, &input);
     int min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
     int max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
-    bool checked = status==napi_ok && (input >= min) && (input <= max);
+    bool checked = status == napi_ok && (input >= min) && (input <= max);
     ASSERT_RETURN_SET_ERROR(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
     conflictResolution = static_cast<NativeRdb::ConflictResolution>(input);
     return OK;
@@ -203,19 +197,20 @@ void TransactionProxy::Init(napi_env env, napi_value exports)
 {
     auto lambda = []() -> std::vector<napi_property_descriptor> {
         std::vector<napi_property_descriptor> properties = {
-            DECLARE_NAPI_FUNCTION("rollback()", Rollback),
+            DECLARE_NAPI_FUNCTION("rollback", Rollback),
             DECLARE_NAPI_FUNCTION("commit", Commit),
             DECLARE_NAPI_FUNCTION_WITH_DATA("delete", Delete, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
         };
         AddSyncFunctions(properties);
         return properties;
     };
-    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "TransactionProxy", lambda, Initialize);
+    auto jsCtor = JSUtils::DefineClass(env, "ohos.data.relationalStore", "Transaction", lambda, Initialize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "Transaction", jsCtor));
 
     LOG_DEBUG("TransactionProxy::Init end.");
@@ -227,6 +222,7 @@ void TransactionProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &p
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", Query, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySql, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
 }
@@ -279,7 +275,6 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
 struct CommitContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
-        ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<ParamNumError>("1"));
         GetInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
@@ -313,7 +308,6 @@ napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
 struct RollBackContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
-        ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<ParamNumError>("1"));
         GetInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
@@ -418,7 +412,8 @@ napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
-        auto [code, updateRows] = context->transaction->Update(context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
+        auto [code, updateRows] =
+            context->transaction->Update(context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
         context->updateRows = updateRows;
         return code;
     };
@@ -465,7 +460,8 @@ napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction != nullptr);
-        auto [code, insertRows] = context->transaction->Insert(context->tableName, context->valuesBucket, context->conflictResolution);
+        auto [code, insertRows] =
+            context->transaction->Insert(context->tableName, context->valuesBucket, context->conflictResolution);
         context->insertRows = insertRows;
         return code;
     };
@@ -516,6 +512,51 @@ napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->insertRows, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct QueryContext : public TransactionContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
+        GetInstance(self);
+        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
+        if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
+            ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[1], columns) == OK,
+                std::make_shared<ParamError>("columns", "a Array<string>."));
+        }
+        return OK;
+    }
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    std::vector<std::string> columns;
+
+    std::shared_ptr<ResultSet> resultSet;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      query(predicates: RdbPredicates, columns?: Array<string>): Promise<ResultSet>;
+ */
+napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<QueryContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
+        context->resultSet = context->transaction->Query(*(context->rdbPredicates), context->columns);
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
 
@@ -576,7 +617,7 @@ struct ExecuteContext : public TransactionContext {
         GetInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], sql) == OK);
-        if (argc > 1 &&!JSUtils::IsNull(env, argv[1])) {
+        if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
             CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[1], bindArgs) == OK);
         }
         return OK;
