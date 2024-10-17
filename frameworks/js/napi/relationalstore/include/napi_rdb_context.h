@@ -18,6 +18,7 @@
 
 #include "napi_async_call.h"
 #include "napi_rdb_predicates.h"
+#include "transaction.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -64,6 +65,8 @@ struct RdbStoreContext : public RdbStoreContextBase {
     std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
     bool isQuerySql = false;
     uint32_t expiredTime = 0;
+    int32_t transactionType = 0;
+    std::shared_ptr<Transaction> transaction;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),

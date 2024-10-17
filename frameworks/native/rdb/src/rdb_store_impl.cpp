@@ -57,6 +57,7 @@
 #include "runtime_config.h"
 #include "security_policy.h"
 #include "sqlite_shared_result_set.h"
+#include "transaction_impl.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
@@ -2658,5 +2659,10 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         ret = conn->Backup({}, {}, true, slaveStatus_);
     }
     return ret;
+}
+
+std::shared_ptr<Transaction> RdbStoreImpl::CreateTransaction(int32_t type)
+{
+    return std::make_shared<TransactionImpl>();
 }
 } // namespace OHOS::NativeRdb

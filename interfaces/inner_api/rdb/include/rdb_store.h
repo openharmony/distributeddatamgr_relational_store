@@ -31,6 +31,7 @@
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_store_config.h"
+#include "transaction.h"
 
 namespace OHOS::NativeRdb {
 class API_EXPORT RdbStore {
@@ -693,6 +694,11 @@ public:
     virtual int SetSearchable(bool isSearchable)
     {
         return E_ERROR;
+    }
+
+    virtual std::shared_ptr<Transaction> CreateTransaction(int32_t type = TransactionType::DEFERRED)
+    {
+        return nullptr;
     }
 };
 } // namespace OHOS::NativeRdb

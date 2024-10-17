@@ -195,6 +195,7 @@ public:
     int32_t UnlockCloudContainer() override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    std::shared_ptr<Transaction> CreateTransaction(int32_t type = TransactionType::DEFERRED) override;
     int32_t ExchangeSlaverToMaster();
 
 private:
