@@ -42,7 +42,7 @@ int32_t JSDFManager::GetFreedTid(void *data)
         if (tid != 0) {
             freedTid = tid;
         } else {
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
             tid = 0;
 #else
             tid = gettid();
