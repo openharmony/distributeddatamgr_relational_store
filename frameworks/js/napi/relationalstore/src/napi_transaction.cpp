@@ -551,7 +551,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
-        context->resultSet = context->transaction->Query(*(context->rdbPredicates), context->columns);
+        context->resultSet = context->transaction->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -597,7 +597,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction != nullptr);
-        context->resultSet = context->transaction->QuerySql(context->sql, context->bindArgs);
+        context->resultSet = context->transaction->QueryByStep(context->sql, context->bindArgs);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {

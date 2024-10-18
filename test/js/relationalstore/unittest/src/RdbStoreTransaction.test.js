@@ -119,12 +119,12 @@ describe('rdbStoreTransactionTest', function () {
             var num = await transaction.batchInsert("test", valueBucketArray)
             expect(2).assertEqual(num);
 
-            await transaction.commit()
-
             // let resultSet = await transaction.querySql("select * from test")
             // console.log(TAG + "testTransactionBatchInsert0001 result count " + resultSet.rowCount)
             // expect(2).assertEqual(resultSet.rowCount)
             // resultSet.close()
+
+            await transaction.commit()
         } catch (e) {
             console.log(TAG + e);
             expect(null).assertFail()
@@ -166,7 +166,6 @@ describe('rdbStoreTransactionTest', function () {
             }
             var num = await transaction.update( updateValueBucket, predicates)
             expect(1).assertEqual(num);
-            await transaction.commit()
 
             // let resultSet = await transaction.query(predicates)
             // console.log(TAG + "testTransactionUpdate0001 result count " + resultSet.rowCount)
@@ -179,6 +178,7 @@ describe('rdbStoreTransactionTest', function () {
             // const salary = resultSet.getLong(resultSet.getColumnIndex("salary"))
             // expect(25).assertEqual(age);
             // resultSet.close()
+            await transaction.commit()
         } catch (e) {
             console.log(TAG + e);
             expect(null).assertFail()
@@ -214,12 +214,12 @@ describe('rdbStoreTransactionTest', function () {
             predicates.equalTo("name", "lisi");
             var num = await transaction.delete(predicates)
             expect(1).assertEqual(num);
-            await transaction.commit()
 
             // let resultSet = await transaction.query(predicates)
             // console.log(TAG + "testTransactionDelete0001 result count " + resultSet.rowCount)
             // expect(0).assertEqual(resultSet.rowCount)
             // resultSet.close()
+            await transaction.commit()
         } catch (e) {
             console.log(TAG + e);
             expect(null).assertFail()
@@ -288,12 +288,12 @@ describe('rdbStoreTransactionTest', function () {
             num = await transaction.deleteSync(predicates);
             expect(1).assertEqual(num);
 
-            await transaction.commit()
-
             // let resultSet = await transaction.querySync(predicates)
             // console.log(TAG + "testTransactionSyncInterface0001 result count " + resultSet.rowCount)
             // expect(0).assertEqual(resultSet.rowCount)
             // resultSet.close()
+
+            await transaction.commit()
         } catch (e) {
             console.log(TAG + e);
             expect(null).assertFail()
@@ -327,7 +327,7 @@ describe('rdbStoreTransactionTest', function () {
 
             await transaction.rollback()
 
-            // let resultSet = await transaction.query(predicates)
+            // let resultSet = await rdbStore.query(predicates)
             // console.log(TAG + "testTransactionRollback0001 result count " + resultSet.rowCount)
             // expect(0).assertEqual(resultSet.rowCount)
             // resultSet.close()

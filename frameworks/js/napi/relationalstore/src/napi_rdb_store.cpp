@@ -658,11 +658,11 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 
 int ParseTransactionType(const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
 {
-    context->transactionType = NativeRdb::DEFERRED;
+    context->transactionType = Transaction::DEFERRED;
     if (argc > 0 && !JSUtils::IsNull(env, argv[0])) {
         auto status = JSUtils::Convert2ValueExt(env, argv[0], context->transactionType);
-        bool checked = status == napi_ok && context->transactionType >= NativeRdb::DEFERRED &&
-                       context->transactionType <= NativeRdb::EXCLUSIVE;
+        bool checked = status == napi_ok && context->transactionType >= Transaction::DEFERRED &&
+                       context->transactionType <= Transaction::EXCLUSIVE;
         CHECK_RETURN_SET(checked, std::make_shared<ParamError>("type", "a TransactionType"));
     }
     return OK;
@@ -2228,8 +2228,9 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        context->transaction = context->rdbStore->CreateTransaction(context->transactionType);
-        return (context->transaction != nullptr) ? E_OK : E_ERROR;
+        int32_t code = E_ERROR;
+        std::tie(code, context->transaction) = context->rdbStore->CreateTransaction(context->transactionType);
+        return (code == E_OK && context->transaction != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = TransactionProxy::NewInstance(env, context->transaction);
