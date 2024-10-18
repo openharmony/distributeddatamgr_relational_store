@@ -1,0 +1,24 @@
+diff a/frameworks/js/napi/relationalstore/include/napi_rdb_context.h b/frameworks/js/napi/relationalstore/include/napi_rdb_context.h	(rejected hunks)
+@@ -18,6 +18,7 @@
+
+ #include "napi_async_call.h"
+ #include "napi_rdb_predicates.h"
++#include "values_buckets.h"
+
+ namespace OHOS {
+ namespace RelationalStoreJsKit {
+@@ -37,6 +38,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
+     std::vector<std::string> columns;
+     ValuesBucket valuesBucket;
+     std::vector<ValuesBucket> valuesBuckets;
++    ValuesBuckets sharedValuesBuckets;
+     std::map<std::string, ValueObject> numberMaps;
+     std::vector<ValueObject> bindArgs;
+     int64_t int64Output;
+@@ -75,4 +77,4 @@ struct RdbStoreContext : public RdbStoreContextBase {
+ };
+ } // namespace RelationalStoreJsKit
+ } // namespace OHOS
+-#endif // NAPI_RDB_CONTEXT_H
+\ No newline at end of file
++#endif // NAPI_RDB_CONTEXT_H
