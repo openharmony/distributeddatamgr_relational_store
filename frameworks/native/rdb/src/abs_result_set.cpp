@@ -79,8 +79,8 @@ AbsResultSet::AbsResultSet()
 
 AbsResultSet::AbsResultSet(bool safe) : globalMtx_(safe)
 {
-
 }
+
 AbsResultSet::~AbsResultSet()
 {
     rowPos_ = INIT_POS;

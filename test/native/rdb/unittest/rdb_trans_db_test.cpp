@@ -354,10 +354,10 @@ HWTEST_F(RdbTransDBTest, InsertWithConflictResolution_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
     row.Put("name", "xiaohua");
-    errCode = transDB_->InsertWithConflictResolution(rowId,TABLE_NAME, row, ConflictResolution::ON_CONFLICT_REPLACE);
+    errCode = transDB_->InsertWithConflictResolution(rowId, TABLE_NAME, row, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(errCode, E_INVALID_ARGS);
     row.Put("attachments", ValueObject());
-    errCode = transDB_->InsertWithConflictResolution(rowId,TABLE_NAME, row, ConflictResolution::ON_CONFLICT_REPLACE);
+    errCode = transDB_->InsertWithConflictResolution(rowId, TABLE_NAME, row, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(errCode, E_OK);
     auto resultSet = transDB_->QueryByStep("select * from TEST");
     ASSERT_NE(resultSet, nullptr);
@@ -381,10 +381,10 @@ HWTEST_F(RdbTransDBTest, Replace_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
     row.Put("name", "xiaohua");
-    errCode = transDB_->Replace(rowId,TABLE_NAME, row);
+    errCode = transDB_->Replace(rowId, TABLE_NAME, row);
     ASSERT_EQ(errCode, E_INVALID_ARGS);
     row.Put("attachments", ValueObject());
-    errCode = transDB_->Replace(rowId,TABLE_NAME, row);
+    errCode = transDB_->Replace(rowId, TABLE_NAME, row);
     ASSERT_EQ(errCode, E_OK);
     auto resultSet = transDB_->QueryByStep("select * from TEST");
     ASSERT_NE(resultSet, nullptr);
@@ -525,7 +525,7 @@ HWTEST_F(RdbTransDBTest, Update_002, TestSize.Level1)
     updateRow.Put("attachment",
         ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     int32_t updatedNum = -1;
-    std::tie(errCode, updatedNum) = transDB_->Update(TABLE_NAME, updateRow, "id > ? and  id < ?", {0, 10});
+    std::tie(errCode, updatedNum) = transDB_->Update(TABLE_NAME, updateRow, "id > ? and  id < ?", { 0, 10 });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(updatedNum, 9);
     auto resultSet = transDB_->QueryByStep("select * from TEST where id > ? and  id < ? order by id", { 0, 10 });
@@ -977,7 +977,8 @@ HWTEST_F(RdbTransDBTest, Execute_Insert_002, TestSize.Level1)
     auto [errCode, value] = transDB_->Execute("INSERT INTO TEST(id, name) VALUES (?,?)", { 100, "xiaohong" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(value, ValueObject(1));
-    std::tie(errCode, value) = transDB_->Execute("INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)", { 100, "xiaoming" });
+    std::tie(errCode, value) = transDB_->Execute(
+        "INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)", { 100, "xiaoming" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(value, ValueObject(-1));
     auto resultSet = transDB_->QueryByStep("select * from TEST where id == ?", RdbStore::Values{ 100 });
@@ -1094,7 +1095,7 @@ HWTEST_F(RdbTransDBTest, Execute_INVALID_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_INVALID_ARGS);
     std::tie(errCode, value) = transDB_->Execute(" DETACH DATABASE ?", { "/data/test/a.db" });
     ASSERT_EQ(errCode, E_INVALID_ARGS);
-    std::tie(errCode, value)  = transDB_->Execute(" select * from TEST where id == ?", RdbStore::Values{ 100 });
+    std::tie(errCode, value) = transDB_->Execute(" select * from TEST where id == ?", RdbStore::Values{ 100 });
     ASSERT_EQ(errCode, E_INVALID_ARGS);
 }
 

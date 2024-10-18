@@ -867,9 +867,11 @@ HWTEST_F(RdbStoreImplTest, CreateTransaction_001, TestSize.Level1)
     auto [errCode, trans] = store_->CreateTransaction(Transaction::DEFERRED);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_NE(trans, nullptr);
+    trans = nullptr;
     std::tie(errCode, trans) = store_->CreateTransaction(Transaction::IMMEDIATE);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_NE(trans, nullptr);
+    trans = nullptr;
     std::tie(errCode, trans) = store_->CreateTransaction(Transaction::EXCLUSIVE);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_NE(trans, nullptr);
@@ -905,7 +907,7 @@ HWTEST_F(RdbStoreImplTest, CreateTransaction_003, TestSize.Level1)
     int32_t errCode = E_OK;
     std::shared_ptr<Transaction> trans = nullptr;
     for (int i = 0; i < 100; ++i) {
-        std::tie(errCode, trans) = store_->CreateTransaction(Transaction::EXCLUSIVE);
+        std::tie(errCode, trans) = store_->CreateTransaction(Transaction::DEFERRED);
         if (trans == nullptr) {
             break;
         }

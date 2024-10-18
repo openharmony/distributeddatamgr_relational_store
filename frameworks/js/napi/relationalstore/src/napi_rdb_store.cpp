@@ -1281,19 +1281,6 @@ napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, out);
 }
 
-napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
-{
-    napi_value thisObj = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-    RDB_NAPI_ASSERT(
-        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-    bool out = rdbStoreProxy->GetInstance()->IsOpen();
-    LOG_DEBUG("RdbStoreProxy::IsOpen out is : %{public}d", out);
-    return JSUtils::Convert2JSValue(env, out);
-}
-
 napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
