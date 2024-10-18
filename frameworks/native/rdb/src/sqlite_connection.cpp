@@ -144,13 +144,13 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool c
     bool hasFailure = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true);
     bool walOverLimit = bugInfo.find(FILE_SUFFIXES[WAL_INDEX].debug_) != bugInfo.end() &&
         bugInfo[FILE_SUFFIXES[WAL_INDEX].debug_].size_ > SLAVE_WAL_SIZE_LIMIT;
-    LOG_INFO("slave cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]%{public}s %{public}s"
-        ",[%{public}d,%{public}d,%{public}d,%{public}d]",
+    LOG_INFO("slave cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]%{public}s "
+             "%{public}s,[%{public}d,%{public}d,%{public}d,%{public}d]",
         config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
         config.GetRoleType(), config.IsReadOnly(),
         Reportor::FormatBrief(bugInfo, SqliteUtils::Anonymous(config.GetName())).c_str(),
-        Reportor::FormatBrief(Connection::Collect(config_), "master").c_str(),
-        isSlaveExist, isSlaveLockExist, hasFailure, walOverLimit);
+        Reportor::FormatBrief(Connection::Collect(config_), "master").c_str(), isSlaveExist, isSlaveLockExist,
+        hasFailure, walOverLimit);
     if (config.GetHaMode() == HAMode::MANUAL_TRIGGER &&
         (checkSlaveExist && (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
