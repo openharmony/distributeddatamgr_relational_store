@@ -36,6 +36,7 @@ public:
     int32_t Step() override;
     int32_t Reset() override;
     int32_t Execute(const std::vector<ValueObject>& args) override;
+    int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>>& args) override;
     std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject>& args) override;
     int32_t Changes() const override;
     int64_t LastInsertRowId() const override;
@@ -52,6 +53,7 @@ public:
 private:
     friend class RdConnection;
     int Prepare(GRD_DB *db, const std::string &sql);
+    int32_t Bind(const std::vector<std::reference_wrapper<ValueObject>>& args);
     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
     int IsValid(int index) const;
 

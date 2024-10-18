@@ -82,6 +82,7 @@ public:
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
     int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string& table, const ValuesBuckets& values) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
