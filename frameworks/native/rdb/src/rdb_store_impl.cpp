@@ -41,6 +41,7 @@
 #include "sqlite_statement.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "values_buckets.h"
 #include "task_executor.h"
 #include "traits.h"
 
@@ -395,7 +396,7 @@ int RdbStoreImpl::BatchInsertEntry(int64_t &outInsertNum, const std::string &tab
     auto executeSqlArgs = GenerateSql(table, values, connection->GetMaxVariable());
     if (executeSqlArgs.empty()) {
         LOG_ERROR("empty, table=%{public}s, values:%{public}zu, max number:%{public}d.", table.c_str(),
-            values.size(), connection->GetMaxVariable());
+                  rowSize, connection->GetMaxVariable());
         return E_INVALID_ARGS;
     }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -417,13 +418,12 @@ int RdbStoreImpl::BatchInsertEntry(int64_t &outInsertNum, const std::string &tab
         }
     }
     connection = nullptr;
-    outInsertNum = static_cast<int64_t>(values.size());
+    outInsertNum = static_cast<int64_t>(rowSize);
     DoCloudSync(table);
     return E_OK;
 }
 
-RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets,
-    int limit)
+auto RdbStoreImpl::GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit)
 {
     std::vector<std::vector<ValueObject>> values;
     std::map<std::string, uint32_t> fields;
@@ -463,7 +463,38 @@ RdbStoreImpl::ExecuteSqls RdbStoreImpl::GenerateSql(const std::string& table, co
     }
     sql.pop_back();
     sql.append(") VALUES ");
-    return SqliteSqlBuilder::MakeExecuteSqls(sql, std::move(args), fields.size(), limit);
+    return SqliteSqlBuilder::MakeExecuteSqls(sql, args, fields.size(), limit);
+}
+
+auto RdbStoreImpl::GenerateSql(const std::string& table, const ValuesBuckets& buckets, int limit)
+{
+    auto [fields, values] = buckets.GetFieldsAndValues();
+    auto columnSize = fields->size();
+    auto rowSize = buckets.RowSize();
+    LOG_INFO("columnSize=%{public}zu, rowSize=%{public}zu", columnSize, rowSize);
+
+    std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, emptyValueObjectRef_);
+    std::string sql = "INSERT OR REPLACE INTO " + table + " (";
+    size_t columnIndex = 0;
+    for (auto &field : *fields) {
+        for (size_t row = 0; row < rowSize; ++row) {
+            auto [errorCode, value] = buckets.Get(row, std::ref(field));
+            if (errorCode != E_OK) {
+                LOG_ERROR("not found %{public}s in row=%{public}zu", field.c_str(), row);
+                continue;
+            }
+            auto type = value.get().GetType();
+            if (type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_ASSETS) {
+                SetAssetStatus(value.get(), AssetValue::STATUS_INSERT);
+            }
+            args[columnIndex + row * columnSize] = value;
+        }
+        columnIndex++;
+        sql.append(field).append(",");
+    }
+    sql.pop_back();
+    sql.append(") VALUES ");
+    return SqliteSqlBuilder::MakeExecuteSqls(sql, args, columnSize, limit);
 }
 
 int RdbStoreImpl::Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &values)

@@ -360,14 +360,14 @@ SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
         return sqlStr;
     };
     std::string executeSql;
-    ExecuteSqls executeSqls;
+    ExecuteSqlsType<T> executeSqls;
     auto start = args.begin();
     if (executeTimes != 0) {
         executeSql = appendAgsSql(maxRowNumbersOneTimes);
-        std::vector<std::vector<ValueObject>> sqlArgs;
+        std::vector<std::vector<T>> sqlArgs;
         size_t maxVariableNumbers = maxRowNumbersOneTimes * static_cast<size_t>(fieldSize);
         for (size_t i = 0; i < executeTimes; ++i) {
-            std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
+            std::vector<T> bindValueArgs(start, start + maxVariableNumbers);
             sqlArgs.emplace_back(std::move(bindValueArgs));
             start += maxVariableNumbers;
         }

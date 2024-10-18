@@ -1,0 +1,24 @@
+diff a/frameworks/native/rdb/include/rd_statement.h b/frameworks/native/rdb/include/rd_statement.h	(rejected hunks)
+@@ -39,6 +39,7 @@ public:
+     int32_t Step() override;
+     int32_t Reset() override;
+     int32_t Execute(const std::vector<ValueObject>& args) override;
++    int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>>& args) override;
+     std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject>& args) override;
+     int32_t Changes() const override;
+     int64_t LastInsertRowId() const override;
+@@ -55,6 +56,7 @@ public:
+ private:
+     friend class RdConnection;
+     int Prepare(GRD_DB *db, const std::string &sql);
++    int32_t Bind(const std::vector<std::reference_wrapper<ValueObject>>& args);
+     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
+     int IsValid(int index) const;
+
+@@ -73,4 +75,4 @@ private:
+ };
+ } // namespace NativeRdb
+ } // namespace OHOS
+-#endif // NATIVE_RDB_RD_STATEMENT_H
+\ No newline at end of file
++#endif // NATIVE_RDB_RD_STATEMENT_H
