@@ -42,6 +42,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
   "${relational_store_native_path}/rdb/src/trans_db.cpp",
   "${relational_store_native_path}/rdb/src/transaction.cpp",
+  "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
   "${relational_store_native_path}/rdb/src/values_buckets.cpp",
