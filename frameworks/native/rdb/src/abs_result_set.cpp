@@ -26,7 +26,6 @@
 #include "result_set.h"
 #include "sqlite_utils.h"
 
-
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -74,10 +73,14 @@ void RowEntity::Clear(int32_t size)
     indexs_.resize(size);
 }
 
-AbsResultSet::AbsResultSet() : rowPos_(INIT_POS), isClosed_(false), lastErr_(E_OK)
+AbsResultSet::AbsResultSet()
 {
 }
 
+AbsResultSet::AbsResultSet(bool safe) : globalMtx_(safe)
+{
+
+}
 AbsResultSet::~AbsResultSet()
 {
     rowPos_ = INIT_POS;

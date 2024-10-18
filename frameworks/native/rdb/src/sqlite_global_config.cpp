@@ -20,6 +20,7 @@
 #include <chrono>
 #include <cerrno>
 #include <cinttypes>
+#include <string.h>
 #include "logger.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
