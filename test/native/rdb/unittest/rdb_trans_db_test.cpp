@@ -1106,7 +1106,6 @@ HWTEST_F(RdbTransDBTest, Execute_INVALID_001, TestSize.Level1)
 HWTEST_F(RdbTransDBTest, QueryByStep_ThreadSafe_001, TestSize.Level1)
 {
     ValuesBucket row = row_;
-    int32_t changed = -1;
     auto [errCode, rowId] = transDB_->Insert(TABLE_NAME, row);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
