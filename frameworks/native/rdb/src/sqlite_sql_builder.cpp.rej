@@ -1,0 +1,34 @@
+diff a/frameworks/native/rdb/src/sqlite_sql_builder.cpp b/frameworks/native/rdb/src/sqlite_sql_builder.cpp	(rejected hunks)
+@@ -296,16 +296,16 @@ std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
+ }
+ 
+ template<typename T>
+-std::vector<std::pair<std::string, std::vector<std::vector<T>>>> SqliteSqlBuilder::MakeExecuteSqls(
+-        const std::string &sql, const std::vector<T> &args, int fieldSize, int limit)
++SqliteSqlBuilder::ExecuteSqlsType<T> SqliteSqlBuilder::MakeExecuteSqls(
++    const std::string &sql, const std::vector<T> &args, int fieldSize, int limit)
+ {
+     if (fieldSize == 0) {
+-        return {};
++        return ExecuteSqlsType<T>();
+     }
+     size_t rowNumbers = args.size() / static_cast<size_t>(fieldSize);
+     size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
+     if (maxRowNumbersOneTimes == 0) {
+-        return {};
++        return ExecuteSqlsType<T>();
+     }
+     size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
+     size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
+@@ -341,9 +341,9 @@ std::vector<std::pair<std::string, std::vector<std::vector<T>>>> SqliteSqlBuilde
+     return executeSqls;
+ }
+ 
+-template SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
++template SqliteSqlBuilder::ExecuteSqlsType<ValueObject> SqliteSqlBuilder::MakeExecuteSqls(
+     const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limit);
+-template SqliteSqlBuilder::ExecuteSqlsRef SqliteSqlBuilder::MakeExecuteSqls(
++template SqliteSqlBuilder::ExecuteSqlsType<std::reference_wrapper<ValueObject>> SqliteSqlBuilder::MakeExecuteSqls(
+     const std::string &sql, const std::vector<std::reference_wrapper<ValueObject>> &args, int fieldSize, int limit);
+ 
+ std::string SqliteSqlBuilder::HandleTable(const std::string &tableName)
