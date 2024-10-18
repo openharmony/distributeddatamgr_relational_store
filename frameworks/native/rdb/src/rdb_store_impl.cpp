@@ -2661,8 +2661,27 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     return ret;
 }
 
-std::shared_ptr<Transaction> RdbStoreImpl::CreateTransaction(int32_t type)
+std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction(int32_t type)
 {
-    return std::make_shared<TransactionImpl>();
+    auto [errCode, conn] = connectionPool_->CreateTransConn();
+    if (conn == nullptr) {
+        return { errCode, nullptr };
+    }
+    std::shared_ptr<Transaction> trans;
+    std::tie(errCode, trans) = Transaction::Create(type, conn, config_.GetName());
+    if (trans == nullptr) {
+        return { errCode, nullptr };
+    }
+
+    std::lock_guard<decltype(mutex_)> guard(mutex_);
+    for (auto it = transactions_.begin(); it != transactions_.end();) {
+        if (it->expired()) {
+            it = transactions_.erase(it);
+        } else {
+            it++;
+        }
+    }
+    transactions_.push_back(trans);
+    return { errCode, trans };
 }
 } // namespace OHOS::NativeRdb

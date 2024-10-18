@@ -251,9 +251,9 @@ static napi_value ExportTransactionType(napi_env env)
     napi_value transactionType = nullptr;
     napi_create_object(env, &transactionType);
 
-    SET_NAPI_PROPERTY(transactionType, "DEFERRED", int32_t(NativeRdb::TransactionType::DEFERRED));
-    SET_NAPI_PROPERTY(transactionType, "IMMEDIATE", int32_t(NativeRdb::TransactionType::IMMEDIATE));
-    SET_NAPI_PROPERTY(transactionType, "EXCLUSIVE", int32_t(NativeRdb::TransactionType::EXCLUSIVE));
+    SET_NAPI_PROPERTY(transactionType, "DEFERRED", int32_t(NativeRdb::Transaction::DEFERRED));
+    SET_NAPI_PROPERTY(transactionType, "IMMEDIATE", int32_t(NativeRdb::Transaction::IMMEDIATE));
+    SET_NAPI_PROPERTY(transactionType, "EXCLUSIVE", int32_t(NativeRdb::Transaction::EXCLUSIVE));
     napi_object_freeze(env, transactionType);
     return transactionType;
 }
