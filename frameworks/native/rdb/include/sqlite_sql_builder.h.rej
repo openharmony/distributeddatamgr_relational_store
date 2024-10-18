@@ -1,9 +1,0 @@
-diff a/frameworks/native/rdb/include/sqlite_sql_builder.h b/frameworks/native/rdb/include/sqlite_sql_builder.h	(rejected hunks)
-@@ -26,7 +26,6 @@ namespace OHOS {
- namespace NativeRdb {
- class SqliteSqlBuilder {
- public:
--    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
-     SqliteSqlBuilder();
-     ~SqliteSqlBuilder();
-     static std::string BuildUpdateString(const ValuesBucket &values, const std::string &tableName,
