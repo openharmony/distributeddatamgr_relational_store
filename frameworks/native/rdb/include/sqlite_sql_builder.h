@@ -54,8 +54,11 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
     static std::string GetSqlArgs(size_t size);
 
-    static ExecuteSqls MakeExecuteSqls(
-        const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit);
+    template<typename T>
+    using ExecuteSqlsType = std::vector<std::pair<std::string, std::vector<std::vector<T>>>>;
+    template<typename T>
+    static ExecuteSqlsType<T> MakeExecuteSqls(const std::string &sql, const std::vector<T> &args, int fieldSize,
+                                              int limit);
 private:
     static void AppendClause(std::string &builder, const std::string &name,
         const std::string &clause, const std::string &table = "");
