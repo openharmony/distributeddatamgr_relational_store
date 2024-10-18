@@ -31,25 +31,21 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
-
-StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::string &sql,
-    const std::vector<ValueObject> &args)
-    : AbsResultSet(), sql_(sql), args_(std::move(args))
+StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, bool safe)
+    : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
 {
-    auto begin = std::chrono::steady_clock::now();
-    conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
         isClosed_ = true;
         return;
     }
 
-    auto preparStart = std::chrono::steady_clock::now();
+    auto prepareStart = std::chrono::steady_clock::now();
     auto errCode = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
         return;
     }
-    auto preparEnd = std::chrono::steady_clock::now();
+    auto prepareEnd = std::chrono::steady_clock::now();
     auto statement = GetStatement();
     if (statement == nullptr) {
         return;
@@ -60,15 +56,14 @@ StepResultSet::StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::st
         lastErr_ = E_OK;
     }
     auto queryEnd = std::chrono::steady_clock::now();
-    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - begin).count();
-    if (totalCostTime >= TIME_OUT) {
-        int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - begin).count();
-        int64_t preparCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparEnd - preparStart).count();
-        int64_t countCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - preparEnd).count();
-        LOG_WARN("total[%{public}" PRId64 "] acquir[%{public}" PRId64 "] prepar[%{public}" PRId64
-                 "] count[%{public}" PRId64 "] rowCount[%{public}d] "
-                 "sql[%{public}s]",
-            totalCostTime, acquirCost, preparCost, countCost, rowCount_, SqliteUtils::Anonymous(sql_).c_str());
+    int64_t totalCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - start).count();
+    if (totalCost >= TIME_OUT) {
+        int64_t acquireCost = std::chrono::duration_cast<std::chrono::milliseconds>(prepareStart - start).count();
+        int64_t prepareCost = std::chrono::duration_cast<std::chrono::milliseconds>(prepareEnd - prepareStart).count();
+        int64_t countCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - prepareEnd).count();
+        LOG_WARN("total[%{public}" PRId64 "]<%{public}" PRId64 ",%{public}" PRId64 ",%{public}" PRId64
+                 "> count[%{public}d] sql[%{public}s]",
+            totalCost, acquireCost, prepareCost, countCost, rowCount_, SqliteUtils::Anonymous(sql_).c_str());
     }
 }
 
@@ -82,18 +77,19 @@ StepResultSet::~StepResultSet()
  */
 int StepResultSet::PrepareStep()
 {
-    if (sqliteStatement_ != nullptr) {
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    if (statement_ != nullptr) {
         return E_OK;
     }
 
-    if (conn_ == nullptr) {
+    if (isClosed_ || conn_ == nullptr) {
         lastErr_ = E_ALREADY_CLOSED;
         return lastErr_;
     }
 
     auto type = SqliteUtils::GetSqlStatementType(sql_);
     if (type == SqliteUtils::STATEMENT_ERROR) {
-        LOG_ERROR("invalid sql_ %{public}s!", sql_.c_str());
+        LOG_ERROR("invalid sql_ %{public}s!", SqliteUtils::Anonymous(sql_).c_str());
         lastErr_ = E_INVALID_ARGS;
         return lastErr_;
     }
@@ -119,10 +115,7 @@ int StepResultSet::PrepareStep()
         return lastErr_;
     }
 
-    sqliteStatement_ = std::move(statement);
-    if (sqliteStatement_ == nullptr) {
-        LOG_ERROR("sqliteStatement_ is nullptr.");
-    }
+    statement_ = std::move(statement);
     return E_OK;
 }
 
@@ -271,9 +264,13 @@ int StepResultSet::Close()
         return E_OK;
     }
     isClosed_ = true;
-    conn_ = nullptr;
-    sqliteStatement_ = nullptr;
-    auto args = std::move(args_);
+    {
+        std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+        conn_ = nullptr;
+        statement_ = nullptr;
+        auto args = std::move(args_);
+        auto sql = std::move(sql_);
+    }
     Reset();
     return E_OK;
 }
@@ -371,11 +368,12 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
 
 std::shared_ptr<Statement> StepResultSet::GetStatement()
 {
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     if (isClosed_ || conn_ == nullptr) {
         return nullptr;
     }
 
-    return sqliteStatement_;
+    return statement_;
 }
 } // namespace NativeRdb
 } // namespace OHOS

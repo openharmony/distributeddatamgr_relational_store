@@ -36,40 +36,36 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+using namespace std::chrono;
 constexpr int64_t TIME_OUT = 1500;
-SqliteSharedResultSet::SqliteSharedResultSet(std::shared_ptr<ConnectionPool> pool, std::string path,
-    std::string sql, const std::vector<ValueObject>& bindArgs)
-    : AbsSharedResultSet(path), isOnlyFillBlock_(false), blockCapacity_(0), qrySql_(std::move(sql)),
-      bindArgs_(std::move(bindArgs))
+SqliteSharedResultSet::SqliteSharedResultSet(Time start, Conn conn, std::string sql, const Values &args,
+    const std::string &path)
+    : AbsSharedResultSet(path), conn_(std::move(conn)), qrySql_(std::move(sql)), bindArgs_(args)
 {
-    auto queryStart = std::chrono::steady_clock::now();
-    conn_ = pool->AcquireRef(true);
     if (conn_ == nullptr) {
         isClosed_ = true;
         return;
     }
-    auto preparStart = std::chrono::steady_clock::now();
+
+    auto prepareBegin = steady_clock::now();
     auto [statement, errCode] = PrepareStep();
     if (errCode != E_OK) {
         LOG_ERROR("step resultset ret %{public}d", errCode);
         return;
     }
     statement_ = statement;
-    auto initCountStart = std::chrono::steady_clock::now();
+    auto countBegin = steady_clock::now();
     rowCount_ = InitRowCount();
-    auto queryEnd = std::chrono::steady_clock::now();
-    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - queryStart).count();
-    if (totalCostTime >= TIME_OUT) {
-        int64_t acquirCost = std::chrono::duration_cast<std::chrono::milliseconds>(preparStart - queryStart).count();
-        int64_t preparCost =
-            std::chrono::duration_cast<std::chrono::milliseconds>(initCountStart - preparStart).count();
-        int64_t initCountCost =
-            std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - initCountStart).count();
-        LOG_WARN("query totalCostTime[%{public}" PRId64 "] acquirCost[%{public}" PRId64 "] preparCost[%{public}" PRId64
-            "] "
-            "initCountCost[%{public}" PRId64 "] rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
-            totalCostTime, acquirCost, preparCost, initCountCost, rowCount_, qrySql_.c_str(), path.c_str());
+    auto endTime = steady_clock::now();
+    int64_t totalCost = duration_cast<milliseconds>(endTime - start).count();
+    if (totalCost >= TIME_OUT) {
+        int64_t acquireCost = duration_cast<milliseconds>(prepareBegin - start).count();
+        int64_t prepareCost = duration_cast<milliseconds>(countBegin - prepareBegin).count();
+        int64_t countCost = duration_cast<milliseconds>(endTime - countBegin).count();
+        LOG_WARN("total[%{public}" PRId64 "]<%{public}" PRId64 ",%{public}" PRId64 ",%{public}" PRId64
+                 "> rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
+            totalCost, acquireCost, prepareCost, countCost, rowCount_, qrySql_.c_str(),
+            SqliteUtils::Anonymous(path).c_str());
     }
 }
 

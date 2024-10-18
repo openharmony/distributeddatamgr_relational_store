@@ -771,7 +771,11 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
+#else
         context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
+#endif
         context->rdbStore = nullptr;
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
