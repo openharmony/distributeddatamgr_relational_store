@@ -38,8 +38,8 @@ public:
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
-    int BatchInsert(
-        int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string& table, const ValuesBuckets& values) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
@@ -149,7 +149,8 @@ private:
     int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
         ConflictResolution conflictResolution);
-    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
+    template<typename T>
+    int BatchInsertEntry(const std::string& table, const T& values, size_t rowSize, int64_t& outInsertNum);
     int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
