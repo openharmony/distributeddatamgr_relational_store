@@ -15,7 +15,11 @@
 #define LOG_TAG "RdConnection"
 #include "rd_connection.h"
 
+#include <securec.h>
+#include <string>
+
 #include "logger.h"
+#include "grd_api_manager.h"
 #include "rd_statement.h"
 #include "rdb_errno.h"
 #include "rdb_security_manager.h"
@@ -35,7 +39,7 @@ const int32_t RdConnection::regDeleter_ = Connection::RegisterDeleter(DB_VECTOR,
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
-    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+    if (!IsUsingArkData() || config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         result.first = E_NOT_SUPPORT;
         return result;
     }
@@ -65,6 +69,7 @@ int32_t RdConnection::Repair(const RdbStoreConfig& config)
     }
     std::vector<uint8_t> key = config.GetEncryptKey();
     errCode = RdUtils::RdDbRepair(dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str());
+    key.assign(key.size(), 0);
     if (errCode != E_OK) {
         LOG_ERROR("Fail to repair db.");
     }
@@ -113,8 +118,13 @@ std::string RdConnection::GetConfigStr(const std::vector<uint8_t> &keys, bool is
 {
     std::string config = "{";
     if (isEncrypt) {
+        const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
+        char keyBuff[keyBuffSize];
         config += "\"isEncrypted\":1,";
-        config += "\"hexPassword\":" + RdUtils::GetEncryptKey(keys) + ",";
+        config += "\"hexPassword\":\"";
+        config += RdUtils::GetEncryptKey(keys, keyBuff, keyBuffSize);
+        config += "\",";
+        (void)memset_s(keyBuff, keyBuffSize, 0, keyBuffSize);
     }
     config += RdConnection::GRD_OPEN_CONFIG_STR;
     config += "}";
@@ -140,9 +150,21 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
         }
     }
 
-    std::vector<uint8_t> key = config.GetEncryptKey();    
-    errCode = RdUtils::RdDbOpen(
-        dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::string configStr = GetConfigStr(key, config.IsEncrypt());
+    errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    if (errCode == E_CHANGE_UNENCRYPTED_TO_ENCRYPTED) {
+        errCode = RdUtils::RdDbRekey(dbPath.c_str(), GetConfigStr({}, false).c_str(), key);
+        if (errCode != E_OK) {
+            key.assign(key.size(), 0);
+            RdUtils::ClearAndZeroString(configStr);
+            LOG_ERROR("Can not rekey caylay db %{public}d.", errCode);
+            return errCode;
+        }
+        errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    }
+    key.assign(key.size(), 0);
+    RdUtils::ClearAndZeroString(configStr);
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
         return errCode;
@@ -196,7 +218,10 @@ int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
     }
     std::vector<uint8_t> key = config.GetEncryptKey();
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-    errCode = RdUtils::RdDbRekey(dbPath.c_str(), GetConfigStr(key, config.IsEncrypt()).c_str(), newKey);
+    std::string configStr = GetConfigStr(key, config.IsEncrypt());
+    errCode = RdUtils::RdDbRekey(dbPath.c_str(), configStr.c_str(), newKey);
+    RdUtils::ClearAndZeroString(configStr);
+    key.assign(key.size(), 0);
     newKey.assign(newKey.size(), 0);
     if (errCode != E_OK) {
         LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
@@ -263,12 +288,27 @@ int32_t RdConnection::Unsubscribe(const std::string& event,
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     bool isAsync, SlaveStatus &slaveStatus)
 {
-    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
+    if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
+        return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
+    }
+    if (config_.IsEncrypt()) {
+        std::vector<uint8_t> key = config_.GetEncryptKey();
+        int32_t ret = RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), key);
+        key.assign(key.size(), 0);
+        return ret;
+    }
+    return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), {});
 }
 
 int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     SlaveStatus &slaveStatus)
 {
+    if (destEncryptKey.empty()) {
+        std::vector<uint8_t> key = config_.GetEncryptKey();
+        int32_t ret = RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), key);
+        key.assign(key.size(), 0);
+        return ret;
+    }
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), destEncryptKey);
 }
 
