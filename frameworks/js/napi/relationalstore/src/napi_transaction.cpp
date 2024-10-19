@@ -387,7 +387,9 @@ struct UpdateContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket) == OK);
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates) == OK);
+        // 'argv[2]' is an optional parameter
         if (argc > 2 && !JSUtils::IsNull(env, argv[2])) {
+            // 'argv[2]' represents a ConflictResolution parameter
             CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution));
         }
         return OK;
@@ -435,7 +437,9 @@ struct InsertContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], tableName) == OK);
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[1], valuesBucket) == OK);
+        // 'argv[2]' is an optional parameter
         if (argc > 2 && !JSUtils::IsNull(env, argv[2])) {
+            // 'argv[2]' represents a ConflictResolution parameter
             CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution));
         }
         return OK;
