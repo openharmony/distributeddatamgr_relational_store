@@ -297,7 +297,7 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
         return;
     }
 
-    auto inTrans = (isInTransaction_ || transCount_ == 0);
+    auto inTrans = (isInTransaction_ || transCount_ > 0);
     auto errCode = node->Unused(inTrans);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         writers_.Dump("WAL writers_", inTrans);
