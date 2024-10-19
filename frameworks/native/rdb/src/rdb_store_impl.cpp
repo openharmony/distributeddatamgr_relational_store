@@ -1827,7 +1827,6 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
         return {E_NOT_SUPPORT, 0};
     }
 
-    auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     int64_t tmpTrxId = 0;
     auto [errCode, connection] = connectionPool_->CreateTransConn(false);
     if (connection == nullptr) {
