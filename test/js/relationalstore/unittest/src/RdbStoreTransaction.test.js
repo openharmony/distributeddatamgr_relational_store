@@ -352,7 +352,7 @@ describe('rdbStoreTransactionTest', function () {
      * @tc.name testTransactionIsolation. EXCLUSIVE and EXCLUSIVE
      * @tc.desc 1.begin EXCLUSIVE Transaction
      *          2.begin EXCLUSIVE Transaction again
-     *          3.throw 14800015
+     *          3.throw 14800024
      */
     it('testTransactionIsolation0001', 0, async function (done) {
         console.log(TAG + "************* testTransactionIsolation0001 start *************");
@@ -365,7 +365,7 @@ describe('rdbStoreTransactionTest', function () {
         } catch (e) {
             await exclusiveTrans.rollback();
             console.log(TAG + e);
-            expect(e.code).assertEqual(14800015)
+            expect(e.code).assertEqual(14800024)
             console.log(TAG + "testTransactionIsolation0001 success");
         }
         done()
@@ -394,15 +394,18 @@ describe('rdbStoreTransactionTest', function () {
                     "salary": 100.5,
                 }
                 var insertRow = await exclusiveTrans.insert("test", valueBucket);
+                console.log(TAG + "testTransactionIsolation0002 exclusiveTrans.insert row " + insertRow)
                 expect(1).assertEqual(insertRow)
 
                 var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+                console.log(TAG + "testTransactionIsolation0002 querySqlSync before commit count " + resultSet.rowCount);
                 expect(0).assertEqual(resultSet.rowCount);
                 resultSet.close()
 
                 await exclusiveTrans.commit();
 
                 resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+                console.log(TAG + "testTransactionIsolation0002 querySqlSync after commit count " + resultSet.rowCount);
                 expect(1).assertEqual(resultSet.rowCount);
                 resultSet.close()
 
@@ -443,18 +446,21 @@ describe('rdbStoreTransactionTest', function () {
             }
             try {
                 await rdbStore.insert("test", valueBucket);
+                console.log(TAG + "testTransactionIsolation0003 rdbStore.insert success ");
                 expect(null).assertFail()
             } catch (e) {
                 console.log(TAG + e);
-                expect(e.code).assertEqual(14800015)
+                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "insert failed");
             }
-            var insertNum = await immediateTrans.insert("test", valueBucket);
-            expect(insertNum).assertEqual(1);
+            var insertRow = await immediateTrans.insert("test", valueBucket);
+            console.log(TAG + "testTransactionIsolation0003 immediateTrans.insert row " + insertRow);
+            expect(insertRow).assertEqual(1);
 
             await immediateTrans.commit();
 
             var resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0003 querySqlSync count " + resultSet.rowCount);
             expect(1).assertEqual(resultSet.rowCount);
             resultSet.close()
         } catch (e) {
@@ -494,6 +500,7 @@ describe('rdbStoreTransactionTest', function () {
             await rdbStore.insert("test", valueBucket);
 
             var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0004 querySqlSync1 count " + resultSet.rowCount);
             expect(1).assertEqual(resultSet.rowCount);
             resultSet.close()
 
@@ -502,17 +509,20 @@ describe('rdbStoreTransactionTest', function () {
             await deferredTrans.insert("test", valueBucket);
 
             resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0004 querySqlSync2 count " + resultSet.rowCount);
             expect(2).assertEqual(resultSet.rowCount);
 
             try {
                 await rdbStore.insert("test", valueBucket);
+                console.log(TAG + "testTransactionIsolation0004 insert success ");
                 expect(null).assertFail()
             } catch (e) {
                 console.log(TAG + e);
-                expect(e.code).assertEqual(14800015)
+                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "insert failed");
             }
             resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0004 querySqlSync3 count " + resultSet.rowCount);
             expect(3).assertEqual(resultSet.rowCount);
 
             await deferredTrans.commit();
@@ -520,6 +530,7 @@ describe('rdbStoreTransactionTest', function () {
             await rdbStore.insert("test", valueBucket);
 
             resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0004 querySqlSync4 count " + resultSet.rowCount);
             expect(4).assertEqual(resultSet.rowCount);
             resultSet.close()
         } catch (e) {
@@ -561,24 +572,28 @@ describe('rdbStoreTransactionTest', function () {
             }
             catch (e) {
                 console.log(TAG + e);
-                expect(e.code).assertEqual(14800015)
+                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "insert failed");
             }
-            var num = await immediateTrans.insert("test", valueBucket);
-            expect(1).assertEqual(num);
+            var insertRow = await immediateTrans.insert("test", valueBucket);
+            console.log(TAG + "testTransactionIsolation0005 immediateTrans.insert row " + insertRow);
+            expect(1).assertEqual(insertRow);
 
             var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0005 querySqlSync count " + resultSet.rowCount);
             expect(1).assertEqual(resultSet.rowCount);
             resultSet.close()
 
             await immediateTrans.commit();
 
-            num = await deferredTrans.insert("test", valueBucket);
-            expect(1).assertEqual(num);
+            insertRow = await deferredTrans.insert("test", valueBucket);
+            console.log(TAG + "testTransactionIsolation0005 deferredTrans.insert row " + insertRow);
+            expect(1).assertEqual(insertRow);
 
             await deferredTrans.commit();
 
             resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            console.log(TAG + "testTransactionIsolation0005 querySqlSync count " + resultSet.rowCount);
             expect(2).assertEqual(resultSet.rowCount);
             resultSet.close()
         } catch (e) {
@@ -616,8 +631,9 @@ describe('rdbStoreTransactionTest', function () {
                 "age": 18,
                 "salary": 100.5,
             }
-            var num = await rdbStore.insert("test", valueBucket);
-            expect(1).assertEqual(num);
+            var rowId = await rdbStore.insert("test", valueBucket);
+            console.log(TAG + "testTransactionIsolation0006 insert row " + rowId);
+            expect(1).assertEqual(rowId);
 
             const updateValueBucket = {
                 "name": "deferredTrans1",
@@ -626,34 +642,40 @@ describe('rdbStoreTransactionTest', function () {
             }
             let predicates = new data_relationalStore.RdbPredicates("test");
             predicates.equalTo("name", "lisi")
-            num = await deferredTrans1.updateSync(updateValueBucket, predicates)
-            expect(1).assertEqual(num);
+            rowId = await deferredTrans1.updateSync(updateValueBucket, predicates)
+            console.log(TAG + "testTransactionIsolation0006 insert row " + rowId);
+            expect(1).assertEqual(rowId);
 
             let deletePredicates = new data_relationalStore.RdbPredicates("test");
             predicates.equalTo("age", "18");
             try{
                 await deferredTrans2.delete(deletePredicates)
+                console.log(TAG + "testTransactionIsolation0006 deferredTrans2.delete success ");
+                expect(null).assertFail()
             }catch (e) {
                 console.log(TAG + e);
-                expect(e.code).assertEqual(14800015)
+                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "insert failed");
             }
 
             await deferredTrans1.commit();
 
             var resultSet = deferredTrans2.querySqlSync("select * from test");
+            console.log(TAG + "testTransactionIsolation0006 deferredTrans2.querySqlSync count " + resultSet.rowCount);
             expect(1).assertEqual(resultSet.rowCount);
             expect(true).assertEqual(resultSet.goToFirstRow())
             const name = resultSet.getString(resultSet.getColumnIndex("name"))
             expect("deferredTrans1").assertEqual(name);
             resultSet.close()
 
-            num = await deferredTrans2.deleteSync(deletePredicates)
+            var num = await deferredTrans2.deleteSync(deletePredicates)
+            console.log(TAG + "testTransactionIsolation0006 delete num " + num);
             expect(1).assertEqual(num);
 
             await deferredTrans2.commit();
 
             resultSet = rdbStore.querySqlSync("select * from test");
+            console.log(TAG + "testTransactionIsolation0006 rdbStore.querySqlSync count " + resultSet.rowCount);
             expect(0).assertEqual(resultSet.rowCount);
             resultSet.close()
         } catch (e) {

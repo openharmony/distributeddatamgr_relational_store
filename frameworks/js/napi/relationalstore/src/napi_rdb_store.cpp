@@ -2230,7 +2230,11 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         int32_t code = E_ERROR;
         std::tie(code, context->transaction) = context->rdbStore->CreateTransaction(context->transactionType);
-        return (code == E_OK && context->transaction != nullptr) ? E_OK : E_ERROR;
+        if (code != E_OK) {
+            context->transaction = nullptr;
+            return code;
+        }
+        return context->transaction != nullptr ? OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = TransactionProxy::NewInstance(env, context->transaction);
