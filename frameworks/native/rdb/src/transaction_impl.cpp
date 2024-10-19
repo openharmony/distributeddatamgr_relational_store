@@ -56,7 +56,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
 
 std::string TransactionImpl::GetBeginSql(int32_t type)
 {
-    if (type < 0 || type >= static_cast<int32_t>(TransactionType::TRANS_BUTT)) {
+    if (type < TransactionType::DEFERRED || type >= static_cast<int32_t>(TransactionType::TRANS_BUTT)) {
         LOG_ERROR("invalid type=%{public}d", type);
         return {};
     }
