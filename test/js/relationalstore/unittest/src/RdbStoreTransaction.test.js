@@ -103,7 +103,7 @@ describe('rdbStoreTransactionTest', function () {
     it('testTransactionBatchInsert0001', 0, async function (done) {
         console.log(TAG + "************* testTransactionBatchInsert0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
-        var transaction = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        var transaction = await rdbStore.createTransaction()
         try {
             const valueBucket = {
                 "name": "zhangsan",
@@ -276,7 +276,7 @@ describe('rdbStoreTransactionTest', function () {
                 "salary": 100.5,
                 "blobType": u8,
             }
-            var num = await transaction.insertSync("test", valueBucket);
+            var num = await transaction.insertSync("test", valueBucket, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
             expect(1).assertEqual(num);
             const updateValueBucket = {
                 "name": "update",
@@ -315,8 +315,7 @@ describe('rdbStoreTransactionTest', function () {
      * @tc.name Normal test case of transactions, insert and update a row of data
      * @tc.desc 1.Execute beginTransaction
      *          2.Insert data
-     *          2.Delete data
-     *          3.Execute commit
+     *          3.rollback data
      *          4.Query data
      */
     it('testTransactionRollback0001', 0, async function (done) {
@@ -334,7 +333,7 @@ describe('rdbStoreTransactionTest', function () {
 
             await transaction.rollback()
 
-            let resultSet = await rdbStore.querySqlSync("select * from test")
+            let resultSet = rdbStore.querySqlSync("select * from test")
             console.log(TAG + "testTransactionRollback0001 result count " + resultSet.rowCount)
             expect(0).assertEqual(resultSet.rowCount)
             resultSet.close()
@@ -346,6 +345,326 @@ describe('rdbStoreTransactionTest', function () {
         }
         done()
         console.log(TAG + "************* testTransactionRollback0001 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0001
+     * @tc.name testTransactionIsolation. EXCLUSIVE and EXCLUSIVE
+     * @tc.desc 1.begin EXCLUSIVE Transaction
+     *          2.begin EXCLUSIVE Transaction again
+     *          3.throw 14800015
+     */
+    it('testTransactionIsolation0001', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0001 start *************");
+        var exclusiveTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE)
+        try {
+            var trans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE)
+            trans.commit();
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0001 failed");
+        } catch (e) {
+            await exclusiveTrans.rollback();
+            console.log(TAG + e);
+            expect(e.code).assertEqual(14800015)
+            console.log(TAG + "testTransactionIsolation0001 success");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0001 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0002
+     * @tc.name testTransactionIsolation. DEFERRED and EXCLUSIVE
+     * @tc.desc 1.begin DEFERRED Transaction
+     *          2.begin EXCLUSIVE Transaction again
+     *          3.insert data with EXCLUSIVE Transaction
+     *          4.query data with DEFERRED Transaction -> no data
+     *          5.execute commit with EXCLUSIVE Transaction
+     *          6.query data with DEFERRED Transaction -> has data
+     */
+    it('testTransactionIsolation0002', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0002 start *************");
+        var deferredTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        try {
+            var exclusiveTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE)
+            try {
+                const valueBucket = {
+                    "name": "lisi",
+                    "age": 18,
+                    "salary": 100.5,
+                }
+                var insertRow = await exclusiveTrans.insert("test", valueBucket);
+                expect(1).assertEqual(insertRow)
+
+                var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+                expect(0).assertEqual(resultSet.rowCount);
+                resultSet.close()
+
+                await exclusiveTrans.commit();
+
+                resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+                expect(1).assertEqual(resultSet.rowCount);
+                resultSet.close()
+
+            } catch (e) {
+                exclusiveTrans.rollback();
+                console.log(TAG + e);
+                expect(null).assertFail()
+                console.log(TAG + "insert failed");
+            }
+            await deferredTrans.commit();
+        } catch (e) {
+            await deferredTrans.rollback();
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0002 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0002 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0003
+     * @tc.name testTransactionIsolation. IMMEDIATE and rdbStore
+     * @tc.desc 1.begin IMMEDIATE Transaction
+     *          2.insert data with rdbStore -> busy
+     *          3.insert data with IMMEDIATE Transaction
+     *          4.execute commit with IMMEDIATE Transaction
+     *          5.query data with rdbStore -> has data
+     */
+    it('testTransactionIsolation0003', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0003 start *************");
+        var immediateTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE)
+        try {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+            }
+            try {
+                await rdbStore.insert("test", valueBucket);
+                expect(null).assertFail()
+            } catch (e) {
+                console.log(TAG + e);
+                expect(e.code).assertEqual(14800015)
+                console.log(TAG + "insert failed");
+            }
+            var insertNum = await immediateTrans.insert("test", valueBucket);
+            expect(insertNum).assertEqual(1);
+
+            await immediateTrans.commit();
+
+            var resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(1).assertEqual(resultSet.rowCount);
+            resultSet.close()
+        } catch (e) {
+            await immediateTrans.rollback();
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0003 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0003 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0004
+     * @tc.name testTransactionIsolation. DEFERRED and rdbStore
+     * @tc.desc 1.begin DEFERRED Transaction
+     *          2.insert data with rdbStore
+     *          3.query data with DEFERRED Transaction -> has data
+     *          4.insert data with rdbStore again
+     *          5.insert data with DEFERRED Transaction
+     *          6.query data with rdbStore -> has 2 row
+     *          7.insert data with rdbStore again -> busy
+     *          8.query data with DEFERRED Transaction -> has 3 row
+     *          9.execute commit with DEFERRED Transaction
+     *          10.insert data with rdbStore again
+     *          11.query data with rdbStore -> has 4 row
+     */
+    it('testTransactionIsolation0004', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0004 start *************");
+        var deferredTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        try {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+            }
+            await rdbStore.insert("test", valueBucket);
+
+            var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(1).assertEqual(resultSet.rowCount);
+            resultSet.close()
+
+            await rdbStore.insert("test", valueBucket);
+
+            await deferredTrans.insert("test", valueBucket);
+
+            resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(2).assertEqual(resultSet.rowCount);
+
+            try {
+                await rdbStore.insert("test", valueBucket);
+                expect(null).assertFail()
+            } catch (e) {
+                console.log(TAG + e);
+                expect(e.code).assertEqual(14800015)
+                console.log(TAG + "insert failed");
+            }
+            resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(3).assertEqual(resultSet.rowCount);
+
+            await deferredTrans.commit();
+
+            await rdbStore.insert("test", valueBucket);
+
+            resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(4).assertEqual(resultSet.rowCount);
+            resultSet.close()
+        } catch (e) {
+            await deferredTrans.rollback();
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0004 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0004 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0005
+     * @tc.name testTransactionIsolation. DEFERRED and IMMEDIATE
+     * @tc.desc 1.begin DEFERRED Transaction
+     *          2.begin IMMEDIATE Transaction
+     *          3.insert data with DEFERRED Transaction -> busy
+     *          4.insert data with IMMEDIATE Transaction
+     *          5.query data with DEFERRED Transaction -> no data
+     *          6.execute commit with IMMEDIATE Transaction
+     *          7.insert data with DEFERRED Transaction
+     *          8.execute commit with DEFERRED Transaction
+     *          9.query data with rdbStore -> has 4 row
+     */
+    it('testTransactionIsolation0005', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0005 start *************");
+        var deferredTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        var immediateTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE)
+        try {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+            }
+            try {
+                await deferredTrans.insert("test", valueBucket);
+                expect(null).assertFail()
+            }
+            catch (e) {
+                console.log(TAG + e);
+                expect(e.code).assertEqual(14800015)
+                console.log(TAG + "insert failed");
+            }
+            var num = await immediateTrans.insert("test", valueBucket);
+            expect(1).assertEqual(num);
+
+            var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(1).assertEqual(resultSet.rowCount);
+            resultSet.close()
+
+            await immediateTrans.commit();
+
+            num = await deferredTrans.insert("test", valueBucket);
+            expect(1).assertEqual(num);
+
+            await deferredTrans.commit();
+
+            resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
+            expect(2).assertEqual(resultSet.rowCount);
+            resultSet.close()
+        } catch (e) {
+            await immediateTrans.rollback();
+            await deferredTrans.rollback();
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0005 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0005 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionIsolation0006
+     * @tc.name testTransactionIsolation. DEFERRED and DEFERRED
+     * @tc.desc 1.insert data with rdbStore
+     *          2.begin DEFERRED Transaction1
+     *          3.begin DEFERRED Transaction2
+     *          4.update data with DEFERRED Transaction1
+     *          5.delete data with DEFERRED Transaction2 -> busy
+     *          6.execute commit with DEFERRED Transaction1
+     *          7.query data with DEFERRED Transaction2 -> has updated data
+     *          8.delete data with DEFERRED Transaction2
+     *          9.execute commit with DEFERRED Transaction2
+     *          10.query data with rdbStore -> has 0 row
+     */
+    it('testTransactionIsolation0006', 0, async function (done) {
+        console.log(TAG + "************* testTransactionIsolation0006 start *************");
+        var deferredTrans1 = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        var deferredTrans2 = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED)
+        try {
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+            }
+            var num = await rdbStore.insert("test", valueBucket);
+            expect(1).assertEqual(num);
+
+            const updateValueBucket = {
+                "name": "deferredTrans1",
+                "age": 18,
+                "salary": 100.5,
+            }
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo("name", "lisi")
+            num = await deferredTrans1.updateSync(updateValueBucket, predicates)
+            expect(1).assertEqual(num);
+
+            let deletePredicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo("age", "18");
+            try{
+                await deferredTrans2.delete(deletePredicates)
+            }catch (e) {
+                console.log(TAG + e);
+                expect(e.code).assertEqual(14800015)
+                console.log(TAG + "insert failed");
+            }
+
+            await deferredTrans1.commit();
+
+            var resultSet = deferredTrans2.querySqlSync("select * from test");
+            expect(1).assertEqual(resultSet.rowCount);
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            expect("deferredTrans1").assertEqual(name);
+            resultSet.close()
+
+            num = await deferredTrans2.deleteSync(deletePredicates)
+            expect(1).assertEqual(num);
+
+            await deferredTrans2.commit();
+
+            resultSet = rdbStore.querySqlSync("select * from test");
+            expect(0).assertEqual(resultSet.rowCount);
+            resultSet.close()
+        } catch (e) {
+            await deferredTrans2.rollback();
+            await deferredTrans1.rollback();
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testTransactionIsolation0006 failed");
+        }
+        done()
+        console.log(TAG + "************* testTransactionIsolation0006 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
