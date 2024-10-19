@@ -299,7 +299,8 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     if (errCode != E_OK) {
         return errCode;
     }
-    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references, type);
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references,
+        distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
