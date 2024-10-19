@@ -368,6 +368,12 @@ bool ValueObject::operator<(const ValueObject &rhs) const
         case TYPE_BLOB:
             result = Blob(*this) < Blob(rhs);
             break;
+        case TYPE_ASSET:
+            result = Asset(*this) < Asset(rhs);
+            break;
+        case TYPE_ASSETS:
+            result = Assets(*this) < Assets(rhs);
+            break;
         case TYPE_VECS:
             result = FloatVector(*this) < FloatVector(rhs);
             break;
@@ -378,6 +384,16 @@ bool ValueObject::operator<(const ValueObject &rhs) const
             break;
     }
     return result;
+}
+
+bool ValueObject::operator==(const ValueObject &rhs) const
+{
+    return !(rhs < *this || *this < rhs);
+}
+
+bool ValueObject::operator!=(const ValueObject &rhs) const
+{
+    return (rhs < *this || *this < rhs);
 }
 } // namespace NativeRdb
 } // namespace OHOS
