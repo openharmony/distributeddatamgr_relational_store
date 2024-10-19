@@ -146,7 +146,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
       "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 

@@ -56,7 +56,6 @@
 #include "runtime_config.h"
 #include "security_policy.h"
 #include "sqlite_shared_result_set.h"
-#include "transaction_impl.h"
 #endif
 
 #ifdef WINDOWS_PLATFORM
