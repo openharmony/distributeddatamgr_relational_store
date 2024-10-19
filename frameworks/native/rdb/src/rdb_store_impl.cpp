@@ -1829,10 +1829,10 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
 
     auto time = static_cast<uint64_t>(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
     int64_t tmpTrxId = 0;
-    auto [errCode, connection] = connectionPool_->CreateTransConn();
+    auto [errCode, connection] = connectionPool_->CreateTransConn(false);
     if (connection == nullptr) {
-        LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".",
-            SqliteUtils::Anonymous(name_).c_str(), time);
+        LOG_ERROR("Get null connection, storeName: %{public}s errCode:0x%{public}x.",
+            SqliteUtils::Anonymous(name_).c_str(), errCode);
         return {errCode, 0};
     }
     tmpTrxId = newTrxId_.fetch_add(1);

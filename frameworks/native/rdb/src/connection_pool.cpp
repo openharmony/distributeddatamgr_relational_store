@@ -202,9 +202,9 @@ void ConnPool::SetInTransaction(bool isInTransaction)
     isInTransaction_.store(isInTransaction);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn()
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
-    if (transCount_ >= MAX_TRANS) {
+    if (transCount_ >= MAX_TRANS && limited) {
         return { E_CON_OVER_LIMIT, nullptr };
     }
     auto [errCode, node] = writers_.Create();
