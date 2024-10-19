@@ -91,7 +91,7 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
             static_cast<uint32_t>(rebuiltType), SqliteUtils::Anonymous(storeConfig.GetName()).c_str(),
             storeConfig.IsEncrypt(), errCode, errno);
     } else {
-        Reportor::ReportRestore(Reportor::Create(storeConfig, E_OK, "RestoreType:Rebuild"));
+        Reportor::ReportRestore(Reportor::Create(storeConfig, E_OK, "RestoreType:Rebuild"), false);
     }
 
     return result;
@@ -159,7 +159,7 @@ int32_t ConnPool::GetMaxReaders(const RdbStoreConfig &config)
     }
 }
 
-std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode> node)
+std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans)
 {
     if (node == nullptr) {
         return nullptr;
@@ -169,12 +169,20 @@ std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode>
     if (conn == nullptr) {
         return nullptr;
     }
-    return std::shared_ptr<Connection>(conn.get(), [pool = weak_from_this(), node](Connection *) {
+    if (isTrans) {
+        transCount_++;
+    }
+
+    return std::shared_ptr<Connection>(conn.get(), [pool = weak_from_this(), node, isTrans](auto *) mutable {
         auto realPool = pool.lock();
         if (realPool == nullptr) {
             return;
         }
-        realPool->ReleaseNode(node);
+        if (isTrans) {
+            realPool->transCount_--;
+        }
+        realPool->ReleaseNode(node, !isTrans);
+        node = nullptr;
     });
 }
 
@@ -194,9 +202,13 @@ void ConnPool::SetInTransaction(bool isInTransaction)
     isInTransaction_.store(isInTransaction);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateConnection(bool isReadOnly)
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn()
 {
-    return Connection::Create(config_, true);
+    if (transCount_ >= MAX_TRANS) {
+        return { E_CON_OVER_LIMIT, nullptr };
+    }
+    auto [errCode, node] = writers_.Create();
+    return { errCode, Convert2AutoConn(node, true) };
 }
 
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
@@ -279,20 +291,24 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     });
 }
 
-void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node)
+void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
 {
     if (node == nullptr) {
         return;
     }
-    auto errCode = node->Unused(isInTransaction_);
-    if (errCode == E_SQLITE_LOCKED) {
-        readers_.Dump("WAL Over Limit", isInTransaction_);
+
+    auto inTrans = (isInTransaction_ || transCount_ == 0);
+    auto errCode = node->Unused(inTrans);
+    if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+        writers_.Dump("WAL writers_", inTrans);
+        readers_.Dump("WAL readers_", inTrans);
     }
 
-    if (node->IsWriter()) {
-        writers_.Release(node);
+    auto &container = node->IsWriter() ? writers_ : readers_;
+    if (reuse) {
+        container.Release(node);
     } else {
-        readers_.Release(node);
+        container.Drop(node);
     }
 }
 
@@ -350,7 +366,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     }
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        auto [retVal, connection] = CreateConnection(false);
+        auto [retVal, connection] = CreateTransConn();
 
         if (connection == nullptr) {
             LOG_ERROR("Get null connection.");
@@ -561,6 +577,28 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
     return nullptr;
 }
 
+std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Create()
+{
+    if (creator_ == nullptr) {
+        return { E_NOT_SUPPORT, nullptr };
+    }
+
+    auto [errCode, conn] = creator_();
+    if (conn == nullptr) {
+        return { errCode, nullptr };
+    }
+
+    auto node = std::make_shared<ConnNode>(conn);
+    if (node == nullptr) {
+        return { E_ERROR, nullptr };
+    }
+    node->id_ = MIN_TRANS_ID + trans_;
+    conn->SetId(node->id_);
+    details_.push_back(node);
+    trans_++;
+    return { E_OK, node };
+}
+
 int32_t ConnPool::Container::ExtendNode()
 {
     if (creator_ == nullptr) {
@@ -648,6 +686,16 @@ int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
             nodes_.push_front(node);
             count_++;
         }
+    }
+    cond_.notify_one();
+    return E_OK;
+}
+
+int32_t ConnectionPool::Container::Drop(std::shared_ptr<ConnNode> node)
+{
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        RelDetails(node);
     }
     cond_.notify_one();
     return E_OK;

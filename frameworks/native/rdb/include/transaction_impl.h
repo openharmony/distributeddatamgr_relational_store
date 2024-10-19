@@ -12,35 +12,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NATIVE_RDB_TRANSACTIONIMPL_H
-#define NATIVE_RDB_TRANSACTIONIMPL_H
+#ifndef NATIVE_RDB_TRANSACTION_IMPL_H
+#define NATIVE_RDB_TRANSACTION_IMPL_H
+
+#include <mutex>
 #include <memory>
+#include <vector>
+
+#include "connection.h"
 #include "transaction.h"
 
-namespace OHOS {
-namespace NativeRdb {
+namespace OHOS::NativeRdb {
+class RdbStore;
 class TransactionImpl : public Transaction {
 public:
-    TransactionImpl() = default;
-    ~TransactionImpl() = default;
-    int32_t Begin() override;
+    TransactionImpl(std::shared_ptr<Connection> connection, const std::string &name);
+    ~TransactionImpl() override;
+
     int32_t Commit() override;
     int32_t Rollback() override;
     int32_t Close() override;
 
-    std::pair<int32_t, int64_t> Insert(const std::string &table, const ValuesBucket &values,
-        ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) override;
-    std::pair<int32_t, int64_t> BatchInsert(const std::string &table,
-        const std::vector<ValuesBucket> &values) override;
-    std::pair<int32_t, int64_t> Delete(const AbsRdbPredicates &values) override;
-    std::pair<int32_t, int64_t> Update(const ValuesBucket &values, const AbsRdbPredicates &predicates,
-        ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE) override;
-    std::shared_ptr<ResultSet> Query(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
-    std::shared_ptr<ResultSet> QuerySql(const std::string &sql, const std::vector<ValueObject> &args) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const std::vector<ValueObject> &args) override;
-};
+    std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
+    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
+    std::pair<int32_t, int32_t> Update(const Row &row, const AbsRdbPredicates &predicates,
+                                       Resolution resolution) override;
+    std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args) override;
+    std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
 
-} // namespace NativeRdb
-} // namespace OHOS
-#endif //NATIVE_RDB_TRANSACTIONIMPL_H
+    static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
+        int32_t type, std::shared_ptr<Connection> connection, const std::string &name);
+
+private:
+    static std::string GetBeginSql(int32_t type);
+    int32_t Begin(int32_t type);
+    int32_t CloseInner();
+    std::shared_ptr<RdbStore> GetStore();
+    void AddResultSet(std::weak_ptr<ResultSet> resultSet);
+
+    std::string name_;
+    std::recursive_mutex mutex_;
+    std::shared_ptr<RdbStore> store_;
+    std::shared_ptr<Connection> connection_;
+    std::vector<std::weak_ptr<ResultSet>> resultSets_;
+
+    static const int32_t regCreator_;
+    static constexpr char COMMIT_SQL[] = "COMMIT;";
+    static constexpr char ROLLBACK_SQL[] = "ROLLBACK;";
+    static constexpr const char *BEGIN_SQLS[] = { "BEGIN DEFERRED;", "BEGIN IMMEDIATE;", "BEGIN EXCLUSIVE;" };
+};
+}
+#endif

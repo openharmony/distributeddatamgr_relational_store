@@ -50,7 +50,7 @@ public:
     static bool RegCollector(Connection::Collector collector);
     static void Report(const RdbCorruptedEvent &eventInfo);
     static void ReportFault(const RdbCorruptedEvent &eventInfo);
-    static void ReportRestore(const RdbCorruptedEvent &eventInfo);
+    static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static std::string Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
 

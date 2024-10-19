@@ -61,7 +61,6 @@ private:
     static napi_value Detach(napi_env env, napi_callback_info info);
     static napi_value GetPath(napi_env env, napi_callback_info info);
     static napi_value IsMemoryRdb(napi_env env, napi_callback_info info);
-    static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
     static napi_value IsReadOnly(napi_env env, napi_callback_info info);
     static napi_value BeginTransaction(napi_env env, napi_callback_info info);
     static napi_value BeginTrans(napi_env env, napi_callback_info info);
@@ -70,7 +69,6 @@ private:
     static napi_value Commit(napi_env env, napi_callback_info info);
     static napi_value QueryByStep(napi_env env, napi_callback_info info);
     static napi_value IsInTransaction(napi_env env, napi_callback_info info);
-    static napi_value IsOpen(napi_env env, napi_callback_info info);
     static napi_value GetVersion(napi_env env, napi_callback_info info);
     static napi_value GetRebuilt(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);

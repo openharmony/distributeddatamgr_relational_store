@@ -856,3 +856,79 @@ HWTEST_F(RdbStoreImplTest, SetSearchableTest, TestSize.Level2)
     result = store->SetSearchable(true);
     EXPECT_EQ(E_OK, result);
 }
+
+/* *
+ * @tc.name: CreateTransaction_001
+ * @tc.desc: create the DEFERRED, IMMEDIATE, EXCLUSIVE transaction.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, CreateTransaction_001, TestSize.Level1)
+{
+    auto [errCode, trans] = store_->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(trans, nullptr);
+    trans = nullptr;
+    std::tie(errCode, trans) = store_->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(trans, nullptr);
+    trans = nullptr;
+    std::tie(errCode, trans) = store_->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(trans, nullptr);
+}
+
+/* *
+ * @tc.name: CreateTransaction_002
+ * @tc.desc: create the invalid type transaction.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, CreateTransaction_002, TestSize.Level1)
+{
+    auto [errCode, trans] = store_->CreateTransaction(-1);
+    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(trans, nullptr);
+    std::tie(errCode, trans) = store_->CreateTransaction(Transaction::TRANS_BUTT);
+    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(trans, nullptr);
+    std::tie(errCode, trans) = store_->CreateTransaction(100);
+    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(trans, nullptr);
+}
+
+/* *
+ * @tc.name: CreateTransaction_003
+ * @tc.desc: create the over the max trans.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, CreateTransaction_003, TestSize.Level1)
+{
+    constexpr size_t MAX_TRANS = 4;
+    std::vector<std::shared_ptr<Transaction>> entries;
+    int32_t errCode = E_OK;
+    std::shared_ptr<Transaction> trans = nullptr;
+    for (int i = 0; i < 100; ++i) {
+        std::tie(errCode, trans) = store_->CreateTransaction(Transaction::DEFERRED);
+        if (trans == nullptr) {
+            break;
+        }
+        entries.push_back(std::move(trans));
+    }
+    ASSERT_EQ(errCode, E_CON_OVER_LIMIT);
+    ASSERT_EQ(entries.size(), MAX_TRANS);
+}
+
+/* *
+ * @tc.name: CreateTransaction_004
+ * @tc.desc: create the auto release trans.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, CreateTransaction_004, TestSize.Level1)
+{
+    int i = 0;
+    for (i = 0; i < 20; ++i) {
+        auto [errCode, trans] = store_->CreateTransaction(Transaction::EXCLUSIVE);
+        ASSERT_EQ(errCode, E_OK);
+        ASSERT_NE(trans, nullptr);
+    }
+    ASSERT_EQ(i, 20);
+}

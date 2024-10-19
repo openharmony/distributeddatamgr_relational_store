@@ -381,6 +381,10 @@ public:
 
     bool operator<(const ValueObject &rhs) const;
 
+    bool operator==(const ValueObject &rhs) const;
+
+    bool operator!=(const ValueObject &rhs) const;
+
 private:
     template<class T>
     int Get(T &output) const;
