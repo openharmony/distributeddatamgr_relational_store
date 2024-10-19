@@ -60,7 +60,8 @@ public:
     static double RdSqlColDouble(GRD_SqlStmt *stmt, uint32_t idx);
     static const float *RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
 
-    static std::string GetEncryptKey(const std::vector<uint8_t> &encryptedKey);
+    static void ClearAndZeroString(std::string &str);
+    static const char *GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize);
     static int RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
     static int RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
     static int RdDbRekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey);

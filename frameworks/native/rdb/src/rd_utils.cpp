@@ -20,6 +20,7 @@
 #include <iostream>
 #include <securec.h>
 #include <sstream>
+#include <string>
 
 #include "grd_error.h"
 #include "grd_api_manager.h"
@@ -39,8 +40,8 @@ struct GrdErrnoPair {
 
 const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
+    { GRD_REBUILD_DATABASE, E_OK},
     { GRD_NO_DATA, E_NO_MORE_ROWS },
-    { GRD_INNER_ERR, E_ERROR },
     { GRD_DATA_CORRUPTED, E_SQLITE_CORRUPT },
     { GRD_INVALID_FILE_FORMAT, E_SQLITE_CORRUPT  },
     { GRD_PRIMARY_KEY_VIOLATION, E_SQLITE_CONSTRAINT},
@@ -58,8 +59,7 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_DISK_SPACE_FULL, E_SQLITE_FULL },
 
     { GRD_PERMISSION_DENIED, E_SQLITE_PERM },
-    { GRD_CIPHER_ERROR, E_SQLITE_PERM },
-    { GRD_PASSWORD_UNMATCHED, E_SQLITE_PERM },
+    { GRD_PASSWORD_UNMATCHED, E_SQLITE_CANTOPEN },
     { GRD_PASSWORD_NEED_REKEY, E_CHANGE_UNENCRYPTED_TO_ENCRYPTED },
 
     { GRD_NAME_TOO_LONG, E_SQLITE_CONSTRAINT},
@@ -70,12 +70,13 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_WRONG_STMT_OBJECT, E_INVALID_OBJECT_TYPE},
     { GRD_DATA_CONFLICT, E_INVALID_CONFLICT_FLAG },
 
-    { GRD_REBUILD_DATABASE, E_ERROR},
+    { GRD_INNER_ERR, E_ERROR },
     { GRD_FAILED_MEMORY_RELEASE, E_ERROR },
     { GRD_NOT_AVAILABLE, E_ERROR },
     { GRD_INVALID_FORMAT, E_ERROR },
     { GRD_TIME_OUT, E_ERROR },
     { GRD_DB_INSTANCE_ABNORMAL, E_ERROR },
+    { GRD_CIPHER_ERROR, E_ERROR },
 };
 
 int RdUtils::TransferGrdErrno(int err)
@@ -452,14 +453,24 @@ const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, ui
     return GRD_KVApiInfo.DBSqlColumnFloatVector(stmt, idx, dim);
 }
 
-std::string RdUtils::GetEncryptKey(const std::vector<uint8_t> &encryptedKey)
+void RdUtils::ClearAndZeroString(std::string &str)
 {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (auto i : encryptedKey) {
-        ss << std::setw(2) << std::hex << static_cast<int>(i); // 设置输出的长度为2个字符
+    str.clear();
+    std::fill(str.begin(), str.end(), char(0));
+}
+
+const char *RdUtils::GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize)
+{
+    char *buffer = nullptr;
+    for (size_t i = 0; i < encryptedKey.size(); i++) {
+        buffer = (char *)(outBuff + i * 2); // each uint8_t will convert to 2 hex char
+        // each uint8_t will convert to 2 hex char
+        errno_t err = snprintf_s(buffer, outBufSize - i * 2, outBufSize - i * 2, "%02x", encryptedKey[i]);
+        if (err < 0) {
+            return nullptr;
+        }
     }
-    return ss.str();
+    return outBuff;
 }
 
 int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey)
@@ -470,9 +481,17 @@ int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<
     if (GRD_KVApiInfo.DBBackupApi == nullptr) {
         return E_NOT_SUPPORT;
     }
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
+    char key[keySize];
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey).c_str() : nullptr;
-    return TransferGrdErrno(GRD_KVApiInfo.DBBackupApi(db, backupDbFile, &info));
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    int ret = TransferGrdErrno(GRD_KVApiInfo.DBBackupApi(db, backupDbFile, &info));
+    errno_t err = memset_s(key, keySize, 0, keySize);
+    if (err != E_OK) {
+        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
+        return E_ERROR;
+    }
+    return ret;
 }
 
 int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey)
@@ -483,22 +502,38 @@ int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector
     if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
         return E_NOT_SUPPORT;
     }
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
+    char key[keySize];
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey).c_str() : nullptr;
-    return TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, &info));
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    int ret = TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, &info));
+    errno_t err = memset_s(key, keySize, 0, keySize);
+    if (err != E_OK) {
+        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
+        return E_ERROR;
+    }
+    return ret;
 }
 
 int RdUtils::RdDbRekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey)
 {
-    if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
+    if (GRD_KVApiInfo.DBReKeyApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
     }
-    if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
+    if (GRD_KVApiInfo.DBReKeyApi == nullptr) {
         return E_NOT_SUPPORT;
     }
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
+    char key[keySize];
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey).c_str() : nullptr;
-    return TransferGrdErrno(GRD_KVApiInfo.DBReKeyApi(dbFile, configStr, &info));
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    int ret = TransferGrdErrno(GRD_KVApiInfo.DBReKeyApi(dbFile, configStr, &info));
+    errno_t err = memset_s(key, keySize, 0, keySize);
+    if (err != E_OK) {
+        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
+        return E_ERROR;
+    }
+    return ret;
 }
 
 

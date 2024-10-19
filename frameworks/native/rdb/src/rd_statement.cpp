@@ -298,8 +298,7 @@ std::pair<int32_t, int32_t> RdStatement::Count()
 int32_t RdStatement::Step()
 {
     if (stmtHandle_ == nullptr) {
-        LOG_ERROR("statement already close.");
-        return E_ALREADY_CLOSED;
+        return E_OK;
     }
     if (isStepInPrepare_ && stepCnt_ == 1) {
         stepCnt_++;
