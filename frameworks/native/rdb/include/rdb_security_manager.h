@@ -73,6 +73,7 @@ public:
         KeyFiles(const std::string &dbPath, bool openFile = true);
         ~KeyFiles();
         const std::string &GetKeyFile(KeyFileType type);
+        int32_t InitKeyPath();
         int32_t DestroyLock();
         int32_t Lock();
         int32_t Unlock();
