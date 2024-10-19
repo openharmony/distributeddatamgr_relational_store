@@ -785,7 +785,11 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
+#else
         context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
+#endif
         context->rdbStore = nullptr;
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
@@ -1288,19 +1292,6 @@ napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     bool out = rdbStoreProxy->GetInstance()->IsInTransaction();
     LOG_DEBUG("RdbStoreProxy::IsInTransaction out is : %{public}d", out);
-    return JSUtils::Convert2JSValue(env, out);
-}
-
-napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
-{
-    napi_value thisObj = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-    RDB_NAPI_ASSERT(
-        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-    bool out = rdbStoreProxy->GetInstance()->IsOpen();
-    LOG_DEBUG("RdbStoreProxy::IsOpen out is : %{public}d", out);
     return JSUtils::Convert2JSValue(env, out);
 }
 
