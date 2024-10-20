@@ -202,9 +202,9 @@ void ConnPool::SetInTransaction(bool isInTransaction)
     isInTransaction_.store(isInTransaction);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn()
+std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
-    if (transCount_ >= MAX_TRANS) {
+    if (transCount_ >= MAX_TRANS && limited) {
         return { E_CON_OVER_LIMIT, nullptr };
     }
     auto [errCode, node] = writers_.Create();
@@ -297,7 +297,7 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
         return;
     }
 
-    auto inTrans = (isInTransaction_ || transCount_ == 0);
+    auto inTrans = (isInTransaction_ || transCount_ > 0);
     auto errCode = node->Unused(inTrans);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         writers_.Dump("WAL writers_", inTrans);
