@@ -42,7 +42,7 @@ public:
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
-    std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn();
+    std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn(bool limited = true);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     // this interface is only provided for resultSet
