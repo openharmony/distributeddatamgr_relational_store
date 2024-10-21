@@ -376,16 +376,24 @@ int RdbStoreImpl::Insert(int64_t &outRowId, const std::string &table, const Valu
 int RdbStoreImpl::BatchInsert(int64_t &outInsertNum, const std::string &table, const std::vector<ValuesBucket> &values)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
-    return BatchInsertEntry(outInsertNum, table, values);
+    return BatchInsertEntry(table, values, values.size(), outInsertNum);
 }
 
-int RdbStoreImpl::BatchInsertEntry(int64_t &outInsertNum, const std::string &table,
-    const std::vector<ValuesBucket> &values)
+std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &values)
+{
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    int64_t rowSize = 0;
+    auto ret = BatchInsertEntry(table, values, values.RowSize(), rowSize);
+    return { ret, rowSize };
+}
+
+template<typename T>
+int RdbStoreImpl::BatchInsertEntry(const std::string &table, const T &values, size_t rowSize, int64_t &outInsertNum)
 {
     if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
         return E_NOT_SUPPORT;
     }
-    if (values.empty()) {
+    if (rowSize == 0) {
         outInsertNum = 0;
         return E_OK;
     }
