@@ -130,7 +130,7 @@ public:
     static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
     static constexpr EncryptAlgo DB_DEFAULT_ENCRYPT_ALGO = AES_256_GCM;
     static constexpr int DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
-    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 512;
+    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 1024;
     static constexpr int DB_MAX_CRYPTO_PAGE_SIZE = 65536;
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
