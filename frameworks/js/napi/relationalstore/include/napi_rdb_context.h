@@ -26,6 +26,12 @@ namespace RelationalStoreJsKit {
 class ResultSetProxy;
 using namespace OHOS::NativeRdb;
 struct RdbStoreContextBase : public ContextBase {
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
+    {
+        auto rdb = std::move(rdbStore);
+        rdbStore = nullptr;
+        return rdb;
+    }
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
 };
 
@@ -65,8 +71,6 @@ struct RdbStoreContext : public RdbStoreContextBase {
     std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
     bool isQuerySql = false;
     uint32_t expiredTime = 0;
-    int32_t transactionType = 0;
-    std::shared_ptr<Transaction> transaction;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
@@ -77,6 +81,11 @@ struct RdbStoreContext : public RdbStoreContextBase {
     virtual ~RdbStoreContext()
     {
     }
+};
+
+struct CreateTransactionContext : public RdbStoreContextBase {
+    int32_t transactionType = 0;
+    std::shared_ptr<Transaction> transaction;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
