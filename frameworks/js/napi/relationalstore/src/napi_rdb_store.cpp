@@ -450,20 +450,6 @@ int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbSt
     return OK;
 }
 
-int ParseAlias(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->aliasName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->aliasName.empty(), std::make_shared<ParamError>("aliasName", "not empty"));
-    return OK;
-}
-
-int ParsePath(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
-{
-    context->pathName = JSUtils::Convert2String(env, arg);
-    CHECK_RETURN_SET(!context->pathName.empty(), std::make_shared<ParamError>("pathName", "not empty"));
-    return OK;
-}
-
 int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->bindArgs.clear();
@@ -1108,18 +1094,6 @@ napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, out);
 }
 
-napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
-{
-    napi_value thisObj = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr && rdbStoreProxy->GetInstance() != nullptr,
-        std::make_shared<ParamError>("RdbStore", "valid"));
-    bool out = rdbStoreProxy->GetInstance()->IsMemoryRdb();
-    LOG_DEBUG("RdbStoreProxy::IsMemoryRdb out is : %{public}d", out);
-    return JSUtils::Convert2JSValue(env, out);
-}
-
 napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
 {
     napi_value thisObj = nullptr;
@@ -1281,19 +1255,6 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
-}
-
-napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
-{
-    napi_value thisObj = nullptr;
-    napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
-    RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    RDB_NAPI_ASSERT(env, rdbStoreProxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-    RDB_NAPI_ASSERT(
-        env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-    bool out = rdbStoreProxy->GetInstance()->IsInTransaction();
-    LOG_DEBUG("RdbStoreProxy::IsInTransaction out is : %{public}d", out);
-    return JSUtils::Convert2JSValue(env, out);
 }
 
 napi_value RdbStoreProxy::GetVersion(napi_env env, napi_callback_info info)
