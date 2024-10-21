@@ -40,14 +40,20 @@ struct TransactionContext : public ContextBase {
             LOG_ERROR("TransactionProxy native instance is nullptr! code:%{public}d!", status);
             return;
         }
-        transaction = reinterpret_cast<TransactionProxy *>(boundObj)->GetInstance();
+        transaction_ = reinterpret_cast<TransactionProxy *>(boundObj)->GetInstance();
+    }
+    std::shared_ptr<NativeRdb::Transaction> StealTransaction()
+    {
+        auto trans = std::move(transaction_);
+        transaction_ = nullptr;
+        return trans;
     }
     int32_t ParseRdbPredicatesProxy(napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates);
     int32_t ParseSendableValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
     int32_t ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
     int32_t ParseValuesBuckets(napi_env env, napi_value arg, std::vector<ValuesBucket> &valuesBuckets);
     int32_t ParseConflictResolution(napi_env env, napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
-    std::shared_ptr<NativeRdb::Transaction> transaction = nullptr;
+    std::shared_ptr<NativeRdb::Transaction> transaction_ = nullptr;
     static constexpr int32_t KEY_INDEX = 0;
     static constexpr int32_t VALUE_INDEX = 1;
 };
@@ -245,7 +251,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
     auto *proxy = new (std::nothrow) TransactionProxy();
     if (proxy == nullptr) {
-        LOG_ERROR("TransactionProxy::Initialize new failed, proxy is nullptr.");
+        LOG_ERROR("no memory, new TransactionProxy failed!");
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
@@ -254,7 +260,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
+            LOG_ERROR("memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
                 uintptr_t(hint));
             return;
         }
@@ -264,7 +270,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
     };
     napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
     if (status != napi_ok) {
-        LOG_ERROR("TransactionProxy napi_wrap failed! code:%{public}d!", status);
+        LOG_ERROR("napi_wrap failed! code:%{public}d!", status);
         finalize(env, proxy, proxy);
         return nullptr;
     }
@@ -276,7 +282,8 @@ struct CommitContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
 };
@@ -292,8 +299,8 @@ napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
-        return context->transaction->Commit();
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        return context->StealTransaction()->Commit();
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -305,11 +312,12 @@ napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-struct RollBackContext : public TransactionContext {
+struct RollbackContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
 };
@@ -321,13 +329,13 @@ struct RollBackContext : public TransactionContext {
  */
 napi_value TransactionProxy::Rollback(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<CommitContext>();
+    auto context = std::make_shared<RollbackContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
-        return context->transaction->Rollback();
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        return context->StealTransaction()->Rollback();
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -344,12 +352,14 @@ struct DeleteContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<ParamNumError>("1"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
         return OK;
     }
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
-    int64_t deleteRows;
+
+    int64_t deleteRows = -1;
 };
 
 /*
@@ -364,8 +374,8 @@ napi_value TransactionProxy::Delete(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
-        auto [code, deleteRows] = context->transaction->Delete(*(context->rdbPredicates));
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        auto [code, deleteRows] = context->StealTransaction()->Delete(*(context->rdbPredicates));
         context->deleteRows = deleteRows;
         return code;
     };
@@ -384,7 +394,8 @@ struct UpdateContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket) == OK);
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates) == OK);
         // 'argv[2]' is an optional parameter
@@ -398,7 +409,7 @@ struct UpdateContext : public TransactionContext {
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
     NativeRdb::ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE;
 
-    int64_t updateRows;
+    int64_t updateRows = -1;
 };
 
 /*
@@ -413,9 +424,9 @@ napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
-        auto [code, updateRows] =
-            context->transaction->Update(context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        auto [code, updateRows] = context->StealTransaction()->Update(
+            context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
         context->updateRows = updateRows;
         return code;
     };
@@ -434,7 +445,8 @@ struct InsertContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], tableName) == OK);
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[1], valuesBucket) == OK);
         // 'argv[2]' is an optional parameter
@@ -448,7 +460,7 @@ struct InsertContext : public TransactionContext {
     ValuesBucket valuesBucket;
     NativeRdb::ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE;
 
-    int64_t insertRows;
+    int64_t insertRows = -1;
 };
 
 /*
@@ -463,9 +475,9 @@ napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
-        auto [code, insertRows] =
-            context->transaction->Insert(context->tableName, context->valuesBucket, context->conflictResolution);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        auto [code, insertRows] = context->StealTransaction()->Insert(
+            context->tableName, context->valuesBucket, context->conflictResolution);
         context->insertRows = insertRows;
         return code;
     };
@@ -484,7 +496,8 @@ struct BatchInsertContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
@@ -493,7 +506,7 @@ struct BatchInsertContext : public TransactionContext {
     std::string tableName;
     std::vector<ValuesBucket> valuesBuckets;
 
-    int64_t insertRows;
+    int64_t insertRows = -1;
 };
 
 /*
@@ -508,8 +521,8 @@ napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
-        auto [code, insertRows] = context->transaction->BatchInsert(context->tableName, context->valuesBuckets);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        auto [code, insertRows] = context->StealTransaction()->BatchInsert(context->tableName, context->valuesBuckets);
         context->insertRows = insertRows;
         return code;
     };
@@ -528,7 +541,8 @@ struct QueryContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
             ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[1], columns) == OK,
@@ -554,8 +568,8 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr && context->rdbPredicates != nullptr);
-        context->resultSet = context->transaction->QueryByStep(*(context->rdbPredicates), context->columns);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        context->resultSet = context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -573,7 +587,8 @@ struct QuerySqlContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], sql) == OK, std::make_shared<ParamError>("sql", "a string."));
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
@@ -600,8 +615,8 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
-        context->resultSet = context->transaction->QueryByStep(context->sql, context->bindArgs);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -619,7 +634,7 @@ struct ExecuteContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], sql) == OK);
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
             CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[1], bindArgs) == OK);
@@ -644,9 +659,9 @@ napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->transaction != nullptr);
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
         auto status = E_ERROR;
-        std::tie(status, context->output) = context->transaction->Execute(context->sql, context->bindArgs);
+        std::tie(status, context->output) = context->StealTransaction()->Execute(context->sql, context->bindArgs);
         return status;
     };
     auto output = [context](napi_env env, napi_value &result) {

@@ -166,6 +166,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("close", Close),
             DECLARE_NAPI_FUNCTION("attach", Attach),
             DECLARE_NAPI_FUNCTION("detach", Detach),
+            DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
             DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery),
             DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables),
@@ -183,7 +184,6 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("queryLockedRow", QueryLockedRow),
             DECLARE_NAPI_FUNCTION("lockCloudContainer", LockCloudContainer),
             DECLARE_NAPI_FUNCTION("unlockCloudContainer", UnlockCloudContainer),
-            DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
 #endif
         };
         AddSyncFunctions(properties);
@@ -656,7 +656,8 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-int ParseTransactionType(const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
+int ParseTransactionType(
+    const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context)
 {
     context->transactionType = Transaction::DEFERRED;
     if (argc > 0 && !JSUtils::IsNull(env, argv[0])) {
@@ -2212,7 +2213,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<RdbStoreContext>();
+    auto context = std::make_shared<CreateTransactionContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTransactionType(env, argc, argv, context));
@@ -2220,7 +2221,7 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         int32_t code = E_ERROR;
-        std::tie(code, context->transaction) = context->rdbStore->CreateTransaction(context->transactionType);
+        std::tie(code, context->transaction) = context->StealRdbStore()->CreateTransaction(context->transactionType);
         if (code != E_OK) {
             context->transaction = nullptr;
             return code;
