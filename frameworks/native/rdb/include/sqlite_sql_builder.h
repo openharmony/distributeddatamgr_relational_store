@@ -26,7 +26,6 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSqlBuilder {
 public:
-    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     SqliteSqlBuilder();
     ~SqliteSqlBuilder();
     static std::string BuildDeleteString(const std::string &tableName, const std::string &index,
