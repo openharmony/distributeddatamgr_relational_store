@@ -2164,10 +2164,14 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_ERROR;
     }
 
+    RdbSecurityManager::KeyFiles keyFiles(path_);
+    keyFiles.Lock();
+
     std::string destPath;
     if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
         int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
+            keyFiles.Unlock();
             return ret;
         }
     }
@@ -2194,6 +2198,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         Reportor::ReportRestore(Reportor::Create(config_, E_OK));
         rebuild_ = RebuiltType::NONE;
     }
+    keyFiles.Unlock();
     if (!cloudTables_.empty()) {
         DoCloudSync("");
     }
