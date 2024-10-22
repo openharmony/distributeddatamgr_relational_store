@@ -127,10 +127,14 @@ private:
         const std::string &sql, const ValueObject &object, int sqlType);
 
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
+    using ExecuteSqlsRef =
+        std::vector<std::pair<std::string, std::vector<std::vector<std::reference_wrapper<ValueObject>>>>>;
     using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    auto GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    auto GenerateSql(const std::string& table, const ValuesBuckets& buckets, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -165,6 +169,9 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+        
+    static inline ValueObject emptyValueObject_;
+    static inline std::reference_wrapper<ValueObject> emptyValueObjectRef_ = emptyValueObject_;
 };
 } // namespace OHOS::NativeRdb
 #endif
