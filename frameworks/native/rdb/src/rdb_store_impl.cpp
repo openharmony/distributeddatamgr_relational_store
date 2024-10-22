@@ -2187,7 +2187,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    NotifyDataChange();
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);
@@ -2195,6 +2194,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
             auto syncerParam = syncerParam_;
             syncerParam.infos_ = Connection::Collect(config_);
             service->AfterOpen(syncerParam);
+            NotifyDataChange();
         }
     }
 #endif
