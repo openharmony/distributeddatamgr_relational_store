@@ -539,11 +539,11 @@ describe('rdbEncryptTest', function () {
 
     /**
      * @tc.name RDB decrypt test
-     * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0030
+     * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0070
      * @tc.desc RDB decrypt function attach test
      */
     it('RdbDecryptTest_0070', 0, async function () {
-        console.info(TAG + "************* RdbDecryptTest_0030 start *************")
+        console.info(TAG + "************* RdbDecryptTest_0070 start *************")
         let config = {
             name: "DecryptTest0070.db",
             securityLevel: data_relationalStore.SecurityLevel.S1,
@@ -611,6 +611,37 @@ describe('rdbEncryptTest', function () {
         
         await store.close()
         console.log(TAG + "************* RdbDecryptTest_0070 end *************")
+    })
+
+    /**
+     * @tc.name RDB decrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0080
+     * @tc.desc RDB decrypt function invalid page size (512) test
+     */
+    it('RdbDecryptTest_0080', 0, async function () {
+        console.info(TAG + "************* RdbDecryptTest_0080 start *************")
+        let invalid_page_size_config = {
+            name: "nondefault.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+            cryptoParam: {
+                encryptionKey: new Uint8Array(['t', 'e', 's', 't', 'k', 'e', 'y']),
+                iterationCount: 25000,
+                encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC,
+                hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
+                kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
+                cryptoPageSize: 512
+            }
+        }
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Invalid page size 512 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        console.log(TAG + "************* RdbDecryptTest_0080 end *************")
     })
 
     console.log(TAG + "*************Unit Test End*************")
