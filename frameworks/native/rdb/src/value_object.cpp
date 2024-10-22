@@ -350,6 +350,9 @@ bool ValueObject::operator<(const ValueObject &rhs) const
 
     bool result = true;
     switch (GetType()) {
+        case TYPE_NULL:
+            result = false;
+            break;
         case TYPE_INT:
             result = int64_t(*this) < int64_t(rhs);
             break;

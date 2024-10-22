@@ -71,7 +71,7 @@ bool BigInteger::operator==(const BigInteger& other)
 
 bool BigInteger::operator<(const BigInteger &rhs)
 {
-    return value_ < rhs.value_;
+    return sign_ != rhs.sign_ ? (sign_ > rhs.sign_) : (sign_ == 0 ? (value_ < rhs.value_) : (rhs.value_ < value_));
 }
 
 int32_t BigInteger::Sign() const
