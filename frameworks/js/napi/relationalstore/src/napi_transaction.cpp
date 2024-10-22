@@ -570,7 +570,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
         context->resultSet = context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns);
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->resultSet);
@@ -617,7 +617,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs);
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, context->resultSet);
