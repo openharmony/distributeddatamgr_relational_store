@@ -334,22 +334,20 @@ std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
     return args;
 }
 
-SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
-    const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit)
+template<typename T>
+SqliteSqlBuilder::ExecuteSqlsType<T> SqliteSqlBuilder::MakeExecuteSqls(
+    const std::string &sql, const std::vector<T> &args, int fieldSize, int limit)
 {
     if (fieldSize == 0) {
-        return ExecuteSqls();
+        return ExecuteSqlsType<T>();
     }
     size_t rowNumbers = args.size() / static_cast<size_t>(fieldSize);
     size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
     if (maxRowNumbersOneTimes == 0) {
-        return ExecuteSqls();
+        return ExecuteSqlsType<T>();
     }
     size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
     size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
-    LOG_DEBUG("rowNumbers %{public}zu, maxRowNumbersOneTimes %{public}zu, executeTimes %{public}zu,"
-        "remainingRows %{public}zu, fieldSize %{public}d, limit %{public}d",
-        rowNumbers, maxRowNumbersOneTimes, executeTimes, remainingRows, fieldSize, limit);
     std::string singleRowSqlArgs = "(" + SqliteSqlBuilder::GetSqlArgs(fieldSize) + ")";
     auto appendAgsSql = [&singleRowSqlArgs, &sql] (size_t rowNumber) {
         std::string sqlStr = sql;
@@ -376,10 +374,15 @@ SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
 
     if (remainingRows != 0) {
         executeSql = appendAgsSql(remainingRows);
-        std::vector<std::vector<ValueObject>> sqlArgs(1, std::vector<ValueObject>(start, args.end()));
+        std::vector<std::vector<T>> sqlArgs(1, std::vector<T>(start, args.end()));
         executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
     }
     return executeSqls;
 }
+
+template SqliteSqlBuilder::ExecuteSqlsType<ValueObject> SqliteSqlBuilder::MakeExecuteSqls(
+    const std::string &sql, const std::vector<ValueObject> &args, int fieldSize, int limit);
+template SqliteSqlBuilder::ExecuteSqlsType<std::reference_wrapper<ValueObject>> SqliteSqlBuilder::MakeExecuteSqls(
+    const std::string &sql, const std::vector<std::reference_wrapper<ValueObject>> &args, int fieldSize, int limit);
 } // namespace NativeRdb
 } // namespace OHOS

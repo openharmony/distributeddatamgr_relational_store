@@ -132,7 +132,6 @@ private:
     using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
-    ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
     auto GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
     auto GenerateSql(const std::string& table, const ValuesBuckets& buckets, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
