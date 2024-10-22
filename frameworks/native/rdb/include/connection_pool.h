@@ -50,6 +50,8 @@ public:
     std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
     std::pair<int32_t, SharedConn> DisableWal();
     int32_t EnableWal();
+    int32_t Dump(bool isWriter, const char *header);
+
     int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
@@ -76,7 +78,7 @@ private:
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        int32_t Unused(bool inTrans);
+        int32_t Unused(int32_t count);
     };
 
     struct Container {
@@ -109,7 +111,7 @@ private:
         int32_t Drop(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
-        int32_t Dump(const char *header, bool inTrans);
+        int32_t Dump(const char *header, int32_t count);
 
     private:
         int32_t ExtendNode();

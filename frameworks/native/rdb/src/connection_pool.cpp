@@ -205,7 +205,8 @@ void ConnPool::SetInTransaction(bool isInTransaction)
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
     if (transCount_ >= MAX_TRANS && limited) {
-        return { E_CON_OVER_LIMIT, nullptr };
+        writers_.Dump("NO TRANS", transCount_ + isInTransaction_);
+        return { E_DATABASE_BUSY, nullptr };
     }
     auto [errCode, node] = writers_.Create();
     return { errCode, Convert2AutoConn(node, true) };
@@ -263,7 +264,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
     auto node = container->Acquire(ms);
     if (node == nullptr) {
         const char *header = (isReadOnly && maxReader_ != 0) ? "readers_" : "writers_";
-        container->Dump(header, isInTransaction_);
+        container->Dump(header, isInTransaction_ + transCount_);
         return nullptr;
     }
     return Convert2AutoConn(node);
@@ -277,7 +278,7 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     }
     auto node = writers_.Acquire(ms);
     if (node == nullptr) {
-        writers_.Dump("writers_", isInTransaction_);
+        writers_.Dump("writers_", isInTransaction_ + transCount_);
         return nullptr;
     }
     auto conn = node->connect_;
@@ -297,11 +298,10 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
         return;
     }
 
-    auto inTrans = (isInTransaction_ || transCount_ > 0);
-    auto errCode = node->Unused(inTrans);
+    auto transCount = transCount_ + isInTransaction_;
+    auto errCode = node->Unused(transCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-        writers_.Dump("WAL writers_", inTrans);
-        readers_.Dump("WAL readers_", inTrans);
+        writers_.Dump("WAL writers_", transCount);
     }
 
     auto &container = node->IsWriter() ? writers_ : readers_;
@@ -449,6 +449,13 @@ int ConnPool::EnableWal()
     return errCode;
 }
 
+int32_t ConnectionPool::Dump(bool isWriter, const char *header)
+{
+    Container *container = (isWriter || maxReader_ != 0) ? &writers_ : &readers_;
+    container->Dump(header, isInTransaction_ + transCount_);
+    return E_OK;
+}
+
 ConnPool::ConnNode::ConnNode(std::shared_ptr<Conn> conn) : connect_(std::move(conn))
 {
 }
@@ -466,7 +473,7 @@ int64_t ConnPool::ConnNode::GetUsingTime() const
     return duration_cast<milliseconds>(time).count();
 }
 
-int32_t ConnPool::ConnNode::Unused(bool inTrans)
+int32_t ConnPool::ConnNode::Unused(int32_t count)
 {
     time_ = steady_clock::now();
     if (connect_ == nullptr) {
@@ -478,7 +485,7 @@ int32_t ConnPool::ConnNode::Unused(bool inTrans)
         tid_ = 0;
     }
 
-    if (inTrans) {
+    if (count > 0) {
         return E_OK;
     }
     auto timeout = time_ > (failedTime_ + minutes(CHECK_POINT_INTERVAL)) || time_ < failedTime_;
@@ -751,11 +758,11 @@ bool ConnPool::Container::IsFull()
     return total_ == count_;
 }
 
-int32_t ConnPool::Container::Dump(const char *header, bool inTrans)
+int32_t ConnPool::Container::Dump(const char *header, int32_t count)
 {
     std::string info;
     std::vector<std::shared_ptr<ConnNode>> details;
-    std::string title = "B_M_T_C[" + std::to_string(inTrans) + "," + std::to_string(max_) + "," +
+    std::string title = "B_M_T_C[" + std::to_string(count) + "," + std::to_string(max_) + "," +
                         std::to_string(total_) + "," + std::to_string(count_) + "]";
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
@@ -779,11 +786,11 @@ int32_t ConnPool::Container::Dump(const char *header, bool inTrans)
             .append(">");
         // 256 represent that limit to info length
         if (info.size() > 256) {
-            LOG_WARN("%{public}s %{public}s: %{public}s", header, title.c_str(), info.c_str());
+            LOG_WARN("%{public}s %{public}s:%{public}s", header, title.c_str(), info.c_str());
             info.clear();
         }
     }
-    LOG_WARN("%{public}s %{public}s: %{public}s", header, title.c_str(), info.c_str());
+    LOG_WARN("%{public}s %{public}s:%{public}s", header, title.c_str(), info.c_str());
     return 0;
 }
 } // namespace NativeRdb
