@@ -1867,6 +1867,9 @@ int RdbStoreImpl::RollBack()
     }
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
+        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        }
         // size + 1 means the number of transactions in process
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1,
             SqliteUtils::Anonymous(name_).c_str());
@@ -1959,8 +1962,8 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || E_SQLITE_LOCKED) {
-            Reportor::Report(Reportor::Create(config_, E_DATABASE_BUSY, "ErrorType: Busy"));
+        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
         }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
             SqliteUtils::Anonymous(name_).c_str());
@@ -2177,6 +2180,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Disable(syncerParam_);
     }
 #endif
+    bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     NotifyDataChange();
@@ -2191,7 +2195,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     if (errCode == E_OK) {
-        Reportor::ReportRestore(Reportor::Create(config_, E_OK));
+        Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
     if (!cloudTables_.empty()) {
