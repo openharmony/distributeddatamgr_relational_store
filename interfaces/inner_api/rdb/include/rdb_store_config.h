@@ -249,7 +249,7 @@ public:
     /**
     * @brief The constant indicates the database minimum crypto page size.
     */
-    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 512;
+    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 1024;
 
     /**
     * @brief The constant indicates the database maximum crypto page size.
