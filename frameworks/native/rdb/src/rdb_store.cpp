@@ -317,18 +317,20 @@ int RdbStore::ExecuteAndGetString(std::string &outValue, const std::string &sql,
 
 int RdbStore::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args)
 {
-    (void)outValue;
-    (void)sql;
-    (void)args;
-    return E_NOT_SUPPORT;
+    auto [errCode, value] = Execute(sql, args);
+    if (errCode == E_OK) {
+        (void)value.GetLong(outValue);
+    }
+    return errCode;
 }
 
 int RdbStore::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
 {
-    (void)outValue;
-    (void)sql;
-    (void)args;
-    return E_NOT_SUPPORT;
+    auto [errCode, value] = Execute(sql, args);
+    if (errCode == E_OK) {
+        (void)value.GetLong(outValue);
+    }
+    return errCode;
 }
 
 int RdbStore::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey)
