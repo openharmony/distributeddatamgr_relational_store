@@ -1132,4 +1132,66 @@ HWTEST_F(RdbTransDBTest, QueryByStep_ThreadSafe_001, TestSize.Level1)
         threads[i] = nullptr;
     }
 }
+
+/* *
+ * @tc.name: ExecuteForLastInsertRowId_001
+ * @tc.desc: INSERT OR IGNORE INTO TEST(id, name) VALUES(?,?)
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, ExecuteForLastInsertRowId_001, TestSize.Level1)
+{
+    int64_t rowId = 0;
+    auto errCode =
+        transDB_->ExecuteForLastInsertedRowId(rowId, "INSERT INTO TEST(id, name) VALUES (?,?)", { 100, "xiaohong" });
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(rowId, 1);
+    errCode = transDB_->ExecuteForLastInsertedRowId(rowId, "INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)",
+        { 100, "xiaoming" });
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(rowId, -1);
+    auto resultSet = transDB_->QueryByStep("select * from TEST where id == ?", RdbStore::Values{ 100 });
+    ASSERT_NE(resultSet, nullptr);
+    errCode = resultSet->GoToNextRow();
+    ASSERT_EQ(errCode, E_OK);
+    RowEntity rowEntity;
+    errCode = resultSet->GetRow(rowEntity);
+    ASSERT_EQ(errCode, E_OK);
+    auto row = rowEntity.Steal();
+    ASSERT_TRUE(row["id"] == ValueObject(100));
+    ASSERT_TRUE(row["name"] == ValueObject("xiaohong"));
+    int32_t count = -1;
+    errCode = resultSet->GetRowCount(count);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(count, 1);
+}
+
+/* *
+ * @tc.name: ExecuteForChangedRowCount_001
+ * @tc.desc: UPDATE TEST SET id=?, name=?
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, ExecuteForChangedRowCount_001, TestSize.Level1)
+{
+    auto [errCode, value] = transDB_->Execute("INSERT INTO TEST(id, name) VALUES (?,?)", { 100, "xiaohong" });
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(value, ValueObject(1));
+    int64_t changedRow = 0;
+    errCode = transDB_->ExecuteForChangedRowCount(changedRow, "UPDATE TEST SET id=?, name=?", { 100, "xiaoming" });
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(changedRow, 1);
+    auto resultSet = transDB_->QueryByStep("select * from TEST where id == ?", RdbStore::Values{ 100 });
+    ASSERT_NE(resultSet, nullptr);
+    errCode = resultSet->GoToNextRow();
+    ASSERT_EQ(errCode, E_OK);
+    RowEntity rowEntity;
+    errCode = resultSet->GetRow(rowEntity);
+    ASSERT_EQ(errCode, E_OK);
+    auto row = rowEntity.Steal();
+    ASSERT_TRUE(row["id"] == ValueObject(100));
+    ASSERT_TRUE(row["name"] == ValueObject("xiaoming"));
+    int32_t count = -1;
+    errCode = resultSet->GetRowCount(count);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(count, 1);
+}
 } // namespace Test

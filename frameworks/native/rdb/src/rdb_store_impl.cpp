@@ -1014,6 +1014,10 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
         }
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
+            if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+                connectionPool_->Dump(true, "BATCH");
+                return { errCode, -1 };
+            }
             if (errCode != E_OK) {
                 LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,sql:%{public}s", errCode,
                     bindArgs.size(), table.c_str(), sql.c_str());
@@ -1155,7 +1159,10 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("RDB_STORE Execute SQL ERROR.");
+        LOG_ERROR("failed,error:0x%{public}x sql:%{public}s.", errCode, sql.c_str());
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "EXECUTE");
+        }
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
@@ -1208,7 +1215,10 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("execute sql failed, sql: %{public}s, error: %{public}d.", sql.c_str(), errCode);
+        LOG_ERROR("failed,error:0x%{public}x sql:%{public}s.", errCode, sql.c_str());
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "EXECUTE");
+        }
         return { errCode, object };
     }
 
@@ -1224,7 +1234,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(std::share
 {
     int32_t errCode = E_OK;
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        int outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+        int64_t outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
         return { errCode, ValueObject(outValue) };
     }
 
@@ -1269,10 +1279,10 @@ int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, c
     }
     auto [err, object] = statement->ExecuteForValue(args);
     if (err != E_OK) {
-        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", sql.c_str(), errCode);
+        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", sql.c_str(), err);
     }
     outValue = object;
-    return errCode;
+    return err;
 }
 
 int RdbStoreImpl::ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args)
@@ -1306,6 +1316,9 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     auto beginExec = std::chrono::steady_clock::now();
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "INSERT");
+        }
         return errCode;
     }
     auto beginResult = std::chrono::steady_clock::now();
@@ -1337,6 +1350,9 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
     }
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "UPG DEL");
+        }
         return errCode;
     }
     outValue = statement->Changes();
@@ -1346,7 +1362,6 @@ int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string
 int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &backupFilePath)
 {
     if (databasePath.empty()) {
-        LOG_ERROR("Empty databasePath.");
         return E_INVALID_FILE_PATH;
     }
 
@@ -1804,9 +1819,11 @@ int RdbStoreImpl::BeginTransaction()
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "BEGIN");
+        }
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
-
         return errCode;
     }
     connectionPool_->SetInTransaction(true);
@@ -2328,6 +2345,9 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
     std::shared_ptr<Transaction> trans;
     std::tie(errCode, trans) = Transaction::Create(type, conn, config_.GetName());
     if (trans == nullptr) {
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            connectionPool_->Dump(true, "TRANS");
+        }
         return { errCode, nullptr };
     }
 
