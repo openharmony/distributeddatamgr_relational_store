@@ -203,6 +203,7 @@ private:
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
     int GetDestPath(std::string &destPath);
+    int IsCanRestore();
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
