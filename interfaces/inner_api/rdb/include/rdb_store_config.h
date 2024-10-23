@@ -214,7 +214,7 @@ public:
         int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
         int32_t hmacAlgo = HmacAlgo::SHA256;
         int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
-        int32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
+        uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
         mutable std::vector<uint8_t> encryptKey_{};
         API_EXPORT CryptoParam();
         API_EXPORT ~CryptoParam();
@@ -244,17 +244,12 @@ public:
     /**
     * @brief The constant indicates the database default crypto page size.
     */
-    static constexpr int DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
+    static constexpr uint32_t DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
 
     /**
-    * @brief The constant indicates the database minimum crypto page size.
+    * @brief The constant indicates the bit mask of the invalid range of crypto page size.
     */
-    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 1024;
-
-    /**
-    * @brief The constant indicates the database maximum crypto page size.
-    */
-    static constexpr int DB_MAX_CRYPTO_PAGE_SIZE = 65536;
+    static constexpr uint32_t DB_INVALID_CRYPTO_PAGE_SIZE_MASK = 0xFFFE03FF;
 
     /**
      * @brief Constructor.

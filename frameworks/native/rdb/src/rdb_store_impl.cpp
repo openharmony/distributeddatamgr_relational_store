@@ -1554,7 +1554,7 @@ int RdbStoreImpl::SetDefaultEncryptSql(
 {
     auto errCode = statement->Prepare(sql);
     if (errCode != E_OK) {
-        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
             config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
             config.GetCryptoParam().cryptoPageSize);
@@ -1562,7 +1562,7 @@ int RdbStoreImpl::SetDefaultEncryptSql(
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
-        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
             config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
             config.GetCryptoParam().cryptoPageSize);
