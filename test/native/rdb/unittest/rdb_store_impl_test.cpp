@@ -913,7 +913,7 @@ HWTEST_F(RdbStoreImplTest, CreateTransaction_003, TestSize.Level1)
         }
         entries.push_back(std::move(trans));
     }
-    ASSERT_EQ(errCode, E_CON_OVER_LIMIT);
+    ASSERT_EQ(errCode, E_DATABASE_BUSY);
     ASSERT_EQ(entries.size(), MAX_TRANS);
 }
 
