@@ -522,7 +522,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 {
     if (!config.GetCryptoParam().IsValid()) {
-        LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+        LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
             config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
             config.GetCryptoParam().cryptoPageSize);
