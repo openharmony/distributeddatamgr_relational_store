@@ -2163,7 +2163,7 @@ int RdbStoreImpl::GetDestPath(std::string &destPath)
     return E_OK;
 }
 
-int IsCanRestore()
+int RdbStoreImpl::IsCanRestore()
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if (isReadOnly_) {
