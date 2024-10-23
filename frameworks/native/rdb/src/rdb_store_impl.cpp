@@ -2163,7 +2163,7 @@ int RdbStoreImpl::GetDestPath(std::string &destPath)
     return E_OK;
 }
 
-int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
+int IsCanRestore()
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if (isReadOnly_) {
@@ -2175,9 +2175,18 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
             connectionPool_ == nullptr);
         return E_ERROR;
     }
+    return E_OK;
+}
+
+int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
+{
+    int ret = IsCanRestore()
+    if (ret != E_OK) {
+        return ret;
+    }
 
     std::string destPath;
-    int ret = GetDataBasePath(backupPath, destPath);
+    ret = GetDataBasePath(backupPath, destPath);
     if (ret != E_OK) {
         return ret;
     }
@@ -2186,7 +2195,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     keyFiles.Lock();
 
     if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        int ret = GetDestPath(destPath);
+        ret = GetDestPath(destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
             return ret;
