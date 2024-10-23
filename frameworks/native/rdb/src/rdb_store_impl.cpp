@@ -2180,7 +2180,7 @@ int RdbStoreImpl::IsCanRestore()
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
-    int ret = IsCanRestore()
+    int ret = IsCanRestore();
     if (ret != E_OK) {
         return ret;
     }
