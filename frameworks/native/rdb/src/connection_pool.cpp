@@ -264,7 +264,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
     auto node = container->Acquire(ms);
     if (node == nullptr) {
         const char *header = (isReadOnly && maxReader_ != 0) ? "readers_" : "writers_";
-        container->Dump(header, isInTransaction_ + transCount_);
+        container->Dump(header, transCount_ + isInTransaction_);
         return nullptr;
     }
     return Convert2AutoConn(node);
@@ -278,7 +278,7 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     }
     auto node = writers_.Acquire(ms);
     if (node == nullptr) {
-        writers_.Dump("writers_", isInTransaction_ + transCount_);
+        writers_.Dump("writers_", transCount_ + isInTransaction_);
         return nullptr;
     }
     auto conn = node->connect_;
@@ -451,8 +451,8 @@ int ConnPool::EnableWal()
 
 int32_t ConnectionPool::Dump(bool isWriter, const char *header)
 {
-    Container *container = (isWriter || maxReader_ != 0) ? &writers_ : &readers_;
-    container->Dump(header, isInTransaction_ + transCount_);
+    Container *container = (isWriter || maxReader_ == 0) ? &writers_ : &readers_;
+    container->Dump(header, transCount_ + isInTransaction_);
     return E_OK;
 }
 
