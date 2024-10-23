@@ -2144,12 +2144,8 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
-int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)
+int RdbStoreImpl::GetDestPath(std::string &destPath)
 {
-    int ret = GetDataBasePath(backupPath, destPath);
-    if (ret != E_OK) {
-        return ret;
-    }
     std::string tempPath = destPath + ".tmp";
     if (access(tempPath.c_str(), F_OK) == E_OK) {
         destPath = tempPath;
@@ -2180,12 +2176,17 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_ERROR;
     }
 
-    RdbSecurityManager::KeyFiles keyFiles(path_);
+    std::string destPath;
+    int ret = GetDataBasePath(backupPath, destPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    RdbSecurityManager::KeyFiles keyFiles(destPath);
     keyFiles.Lock();
 
-    std::string destPath;
     if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        int ret = GetDestPath(backupPath, destPath);
+        int ret = GetDestPath(destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
             return ret;
