@@ -2202,6 +2202,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 #endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    keyFiles.Unlock();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
@@ -2214,7 +2215,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         }
     }
 #endif
-    keyFiles.Unlock();
     if (errCode == E_OK) {
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
