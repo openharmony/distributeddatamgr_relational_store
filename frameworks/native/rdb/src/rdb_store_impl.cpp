@@ -713,6 +713,9 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
 
 void RdbStoreImpl::InitDelayNotifier()
 {
+    if (delayNotifier_ != nullptr) {
+        return;
+    }
     if (delayNotifier_ == nullptr) {
         delayNotifier_ = std::make_shared<DelayNotify>();
     }
