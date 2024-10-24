@@ -94,52 +94,45 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_001, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = TransactionTest::store_;
 
     auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_NE(transaction, nullptr);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
 
     auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(1, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
 
     result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(2, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
 
     result = store->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[2]), RdbStore::NO_ACTION);
-    EXPECT_EQ(result.first, E_SQLITE_BUSY);
+    ASSERT_EQ(result.first, E_SQLITE_BUSY);
 
     auto resultSet = transaction->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    if (resultSet != nullptr) {
-        int32_t rowCount{};
-        ret = resultSet->GetRowCount(rowCount);
-        EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(rowCount, 2);
-    }
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
 
     ret = transaction->Commit();
-    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(ret, E_OK);
 
-    if (resultSet != nullptr) {
-        ValueObject value;
-        ret = resultSet->Get(0, value);
-        EXPECT_EQ(ret, E_ALREADY_CLOSED);
-    }
+    ValueObject value;
+    ret = resultSet->Get(0, value);
+    ASSERT_EQ(ret, E_ALREADY_CLOSED);
 
     result = store->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[2]), RdbStore::NO_ACTION);
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(3, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(3, result.second);
 
     result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 
     resultSet = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    if (resultSet != nullptr) {
-        int32_t rowCount{};
-        resultSet->GetRowCount(rowCount);
-        EXPECT_EQ(rowCount, 3);
-    }
+    ASSERT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 3);
 }
 
 /**
@@ -152,42 +145,247 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = TransactionTest::store_;
 
     auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_NE(transaction, nullptr);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
 
     auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(1, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
 
     result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(2, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
 
     ret = transaction->Rollback();
-    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(ret, E_OK);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    if (resultSet != nullptr) {
-        int32_t rowCount{};
-        ret = resultSet->GetRowCount(rowCount);
-        EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(rowCount, 0);
-    }
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 0);
 
     result = store->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[2]), RdbStore::NO_ACTION);
-    EXPECT_EQ(result.first, E_OK);
-    EXPECT_EQ(3, result.second);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(3, result.second);
 
     result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 
     resultSet = store->QueryByStep("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-    if (resultSet != nullptr) {
-        int32_t rowCount{};
-        ret = resultSet->GetRowCount(rowCount);
-        EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(rowCount, 1);
-    }
+    ASSERT_NE(resultSet, nullptr);
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 1);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_003
+ * @tc.desc: batchInsert
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_003, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Rows rows {
+        UTUtils::SetRowData(UTUtils::g_rowData[0]),
+        UTUtils::SetRowData(UTUtils::g_rowData[1]),
+        UTUtils::SetRowData(UTUtils::g_rowData[2]),
+    };
+    auto result = transaction->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 3);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 3);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_004
+ * @tc.desc: batchInsert
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_004, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::RefRows rows;
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[2]));
+
+    auto result = transaction->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 3);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 3);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_005
+ * @tc.desc: Update
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_005, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    result = transaction->Update("test", UTUtils::SetRowData(UTUtils::g_rowData[1]), "id=1");
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+    ret = resultSet->GoToFirstRow();
+    ASSERT_EQ(ret, E_OK);
+    int32_t columnIndex{};
+    ret = resultSet->GetColumnIndex("id", columnIndex);
+    ASSERT_EQ(ret, E_OK);
+    int32_t id{};
+    ret = resultSet->GetInt(columnIndex, id);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(id, 2);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", ValueObject(2));
+    result = transaction->Update(UTUtils::SetRowData(UTUtils::g_rowData[2]), predicates);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+    ret = resultSet->GoToFirstRow();
+    ASSERT_EQ(ret, E_OK);
+    resultSet->GetColumnIndex("id", columnIndex);
+    ret = resultSet->GetInt(columnIndex, id);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(id, 3);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_006
+ * @tc.desc: Delete
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_006, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::RefRows rows;
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[2]));
+
+    auto result = transaction->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 3);
+
+    result = transaction->Delete("test", "id=1");
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", ValueObject(2));
+    result = transaction->Delete(predicates);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+    ret = resultSet->GoToFirstRow();
+    ASSERT_EQ(ret, E_OK);
+    int32_t columnIndex{};
+    resultSet->GetColumnIndex("id", columnIndex);
+    int32_t id{};
+    ret = resultSet->GetInt(columnIndex, id);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(id, 3);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_007
+ * @tc.desc: Execute
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_007, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto res = transaction->Execute(
+        "CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
+    ASSERT_EQ(res.first, E_OK);
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto result = transaction->Insert("test1", row);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 1);
 }
