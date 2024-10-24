@@ -2211,11 +2211,11 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         }
     }
 #endif
+    keyFiles.Unlock();
     if (errCode == E_OK) {
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
-    keyFiles.Unlock();
     if (!cloudTables_.empty()) {
         DoCloudSync("");
     }
