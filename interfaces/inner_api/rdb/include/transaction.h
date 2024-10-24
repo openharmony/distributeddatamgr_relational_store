@@ -113,6 +113,18 @@ public:
     virtual std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) = 0;
 
     /**
+     * @brief Updates data in the database based on specified conditions.
+     *
+     * @param table Indicates the target table.
+     * @param row Indicates the row of data to be updated in the database.
+     * The key-value pairs are associated with column names of the database table.
+     * @param whereClause Indicates the where clause.
+     * @param args Indicates the where arguments.
+     */
+    virtual std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where = "",
+                                       const Values &args = {}, Resolution resolution = NO_ACTION) = 0;
+
+    /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
      *
      * @param values Indicates the row of data to be updated in the database.
@@ -121,6 +133,16 @@ public:
      */
     virtual std::pair<int32_t, int32_t> Update(const Row &row, const AbsRdbPredicates &predicates,
                                                Resolution resolution = NO_ACTION) = 0;
+
+    /**
+     * @brief Deletes data from the database based on specified conditions.
+     *
+     * @param table Indicates the target table.
+     * @param whereClause Indicates the where clause.
+     * @param args Indicates the where arguments.
+     */
+    virtual std::pair<int32_t, int32_t> Delete(const std::string &table, const std::string &whereClause = "",
+                                               const Values &args = {}) = 0;
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
