@@ -2284,7 +2284,6 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
         return false;
     }
     int ret = GetSlaveName(config_.GetPath(), destPath);
-    GetSlaveName(config_.GetPath(), destPath);
     if (ret != E_OK) {
         destPath = {};
         return false;
