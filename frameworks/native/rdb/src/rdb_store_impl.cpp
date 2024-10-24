@@ -716,9 +716,7 @@ void RdbStoreImpl::InitDelayNotifier()
     if (delayNotifier_ != nullptr) {
         return;
     }
-    if (delayNotifier_ == nullptr) {
-        delayNotifier_ = std::make_shared<DelayNotify>();
-    }
+    delayNotifier_ = std::make_shared<DelayNotify>();
     if (delayNotifier_ == nullptr) {
         LOG_ERROR("Init delay notifier failed.");
         return;
