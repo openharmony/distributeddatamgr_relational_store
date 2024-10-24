@@ -713,9 +713,10 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
 
 void RdbStoreImpl::InitDelayNotifier()
 {
-    if (delayNotifier_ == nullptr) {
-        delayNotifier_ = std::make_shared<DelayNotify>();
+    if (delayNotifier_ != nullptr) {
+        return;
     }
+    delayNotifier_ = std::make_shared<DelayNotify>();
     if (delayNotifier_ == nullptr) {
         LOG_ERROR("Init delay notifier failed.");
         return;
@@ -2181,16 +2182,15 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 
     if (!isOpen_ || connectionPool_ == nullptr) {
-        LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
-            connectionPool_ == nullptr);
+        LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, connectionPool_ == nullptr);
         return E_ERROR;
     }
 
-    RdbSecurityManager::KeyFiles keyFiles(path_);
-    keyFiles.Lock();
-
     std::string destPath;
-    if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
+    bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
+    RdbSecurityManager::KeyFiles keyFiles(destPath);
+    keyFiles.Lock();
+    if (!isOK) {
         int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
@@ -2205,6 +2205,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 #endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    keyFiles.Unlock();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
@@ -2221,7 +2222,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
-    keyFiles.Unlock();
     if (!cloudTables_.empty()) {
         DoCloudSync("");
     }
