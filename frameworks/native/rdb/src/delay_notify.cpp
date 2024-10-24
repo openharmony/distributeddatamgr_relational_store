@@ -69,9 +69,7 @@ void DelayNotify::SetExecutorPool(std::shared_ptr<ExecutorPool> pool)
 
 void DelayNotify::SetTask(Task task)
 {
-    if (task_ == nullptr) {
-        task_ = std::move(task);
-    }
+    task_ = std::move(task);
 }
 
 void DelayNotify::StartTimer()
