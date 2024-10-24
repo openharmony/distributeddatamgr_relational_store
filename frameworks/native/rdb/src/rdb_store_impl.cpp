@@ -2174,7 +2174,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     if (isReadOnly_) {
         return E_NOT_SUPPORT;
     }
-
     if (!isOpen_ || connectionPool_ == nullptr) {
         LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
             connectionPool_ == nullptr);
