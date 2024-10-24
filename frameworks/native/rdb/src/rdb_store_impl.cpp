@@ -1880,7 +1880,7 @@ int RdbStoreImpl::RollBack()
     }
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+        if (errCode == E_DATABASE_BUSY) {
             Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
         }
         // size + 1 means the number of transactions in process
@@ -1890,6 +1890,9 @@ int RdbStoreImpl::RollBack()
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
         return errCode;
@@ -1975,7 +1978,7 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+        if (errCode == E_DATABASE_BUSY) {
             Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
         }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
@@ -1984,6 +1987,9 @@ int RdbStoreImpl::Commit()
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+        }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
         return errCode;
