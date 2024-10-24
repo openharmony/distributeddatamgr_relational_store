@@ -2175,6 +2175,8 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 
     if (!isOpen_ || connectionPool_ == nullptr) {
+        LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
+            connectionPool_ == nullptr);
         return E_ERROR;
     }
 
@@ -2281,7 +2283,12 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
     if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {
         return false;
     }
+    int ret = GetSlaveName(config_.GetPath(), destPath);
     GetSlaveName(config_.GetPath(), destPath);
+    if (ret != E_OK) {
+        destPath = {};
+        return false;
+    }
     if (isRestore && access(destPath.c_str(), F_OK) != 0) {
         LOG_WARN("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
         return false;
