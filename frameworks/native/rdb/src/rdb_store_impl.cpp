@@ -2167,7 +2167,7 @@ int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPa
     return E_OK;
 }
 
-int RdbStoreImpl::IsEnableRestore()
+int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if (isReadOnly_) {
@@ -2175,18 +2175,7 @@ int RdbStoreImpl::IsEnableRestore()
     }
 
     if (!isOpen_ || connectionPool_ == nullptr) {
-        LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
-            connectionPool_ == nullptr);
         return E_ERROR;
-    }
-    return E_OK;
-}
-
-int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
-{
-    int ret = IsEnableRestore();
-    if (ret != E_OK) {
-        return ret;
     }
 
     std::string destPath;
