@@ -2144,8 +2144,12 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     return connectionPool_->ConfigLocale(localeStr);
 }
 
-int RdbStoreImpl::GetDestPath(std::string &destPath)
+int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)
 {
+    int ret = GetDataBasePath(backupPath, destPath);
+    if (ret != E_OK) {
+        return ret;
+    }
     std::string tempPath = destPath + ".tmp";
     if (access(tempPath.c_str(), F_OK) == E_OK) {
         destPath = tempPath;
@@ -2163,7 +2167,7 @@ int RdbStoreImpl::GetDestPath(std::string &destPath)
     return E_OK;
 }
 
-int RdbStoreImpl::IsCanRestore()
+int RdbStoreImpl::IsEnableRestore()
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if (isReadOnly_) {
@@ -2180,22 +2184,17 @@ int RdbStoreImpl::IsCanRestore()
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
-    int ret = IsCanRestore();
+    int ret = IsEnableRestore();
     if (ret != E_OK) {
         return ret;
     }
 
     std::string destPath;
-    ret = GetDataBasePath(backupPath, destPath);
-    if (ret != E_OK) {
-        return ret;
-    }
-
+    bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
     RdbSecurityManager::KeyFiles keyFiles(destPath);
     keyFiles.Lock();
-
-    if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        ret = GetDestPath(destPath);
+    if (!isOK) {
+        ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
             return ret;
@@ -2293,11 +2292,7 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
     if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {
         return false;
     }
-    int ret = GetSlaveName(config_.GetPath(), destPath);
-    if (ret != E_OK) {
-        destPath = {};
-        return false;
-    }
+    GetSlaveName(config_.GetPath(), destPath);
     if (isRestore && access(destPath.c_str(), F_OK) != 0) {
         LOG_WARN("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
         return false;
