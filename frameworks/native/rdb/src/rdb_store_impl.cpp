@@ -2185,7 +2185,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     RdbSecurityManager::KeyFiles keyFiles(destPath);
     keyFiles.Lock();
     if (!isOK) {
-        ret = GetDestPath(backupPath, destPath);
+        int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
             return ret;
