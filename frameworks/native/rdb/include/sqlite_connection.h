@@ -105,12 +105,6 @@ private:
     int SetBusyTimeout(int timeout);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
-    static void MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv);
-    static void MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value **argv);
-    static void CompAssets(
-        std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string, ValueObject::Asset> &newAssets);
-    static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
-
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
     int32_t UnsubscribeLocalDetail(
@@ -132,8 +126,6 @@ private:
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr } };
-    static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
-    static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
     static constexpr int CHECKPOINT_TIME = 500;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m

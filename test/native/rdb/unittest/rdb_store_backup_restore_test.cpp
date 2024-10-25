@@ -19,6 +19,7 @@
 #include <string>
 
 #include "common.h"
+#include "file_ex.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -519,4 +520,224 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_008, TestSize.Level2)
 
     EXPECT_EQ(0, access(BACKUP_DATABASE_NAME, F_OK));
     EXPECT_EQ(0, access(slaveDataBaseName, F_OK));
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_009
+ * @tc.desc: sql func empty param test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_009, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    auto res = store->ExecuteSql("SELECT import_db_from_path()");
+
+    EXPECT_EQ(res, E_SQLITE_ERROR);
+
+    auto [code, result] = store->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_010
+ * @tc.desc: source db empty path test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_010, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    auto res = store->ExecuteSql("SELECT import_db_from_path('')");
+
+    EXPECT_EQ(res, E_SQLITE_CANTOPEN);
+
+    auto [code, result] = store->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_011
+ * @tc.desc: souce db not exist test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_011, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    auto res = store->ExecuteSql("SELECT import_db_from_path('/path/not_exist.db')");
+
+    EXPECT_EQ(res, E_SQLITE_CANTOPEN);
+
+    auto [code, result] = store->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_012
+ * @tc.desc: source db corrupt test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_012, TestSize.Level2)
+{
+    int errCode = E_OK;
+    std::string destDbPath = "/data/test/dest.db";
+    std::string sourceDbPath = "/data/test/source.db";
+
+    RdbStoreConfig config(destDbPath);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto dest = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(dest, nullptr);
+
+    RdbStoreConfig sourceConfig(sourceDbPath);
+    sourceConfig.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper1;
+    auto source = RdbHelper::GetRdbStore(sourceConfig, 1, helper1, errCode);
+    source = nullptr;
+
+    std::fstream sourceFile(sourceDbPath, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(sourceFile.is_open());
+    sourceFile.seekp(0x0f40, std::ios::beg);
+    std::vector<char> buffer(32, 0xFF);
+    sourceFile.write(buffer.data(), buffer.size());
+    sourceFile.close();
+
+    auto res = dest->ExecuteSql("SELECT import_db_from_path('" + sourceDbPath + "')");
+
+    EXPECT_EQ(res, E_SQLITE_CORRUPT);
+
+    auto [code, result] = dest->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    dest = nullptr;
+    RdbHelper::DeleteRdbStore(destDbPath);
+    RdbHelper::DeleteRdbStore(sourceDbPath);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_013
+ * @tc.desc: import from source db test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_013, TestSize.Level2)
+{
+    int errCode = E_OK;
+    std::string destDbPath = "/data/test/dest.db";
+    std::string sourceDbPath = "/data/test/source.db";
+
+    RdbStoreConfig config(destDbPath);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto dest = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(dest, nullptr);
+
+    RdbStoreConfig sourceConfig(sourceDbPath);
+    sourceConfig.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper1;
+    auto source = RdbHelper::GetRdbStore(sourceConfig, 1, helper1, errCode);
+
+    for (uint i = 0; i < 100; i++) {
+        std::vector<ValuesBucket> valuesBuckets;
+
+        for (uint j = 0; j < 100; j++) {
+            ValuesBucket value;
+
+            value.Put("name", "zhangsan");
+            value.PutString("name", "zhangSan");
+            valuesBuckets.push_back(std::move(value));
+        }
+
+        int64_t insertRowCount;
+        int error = source->BatchInsert(insertRowCount, "test", valuesBuckets);
+        EXPECT_EQ(error, E_OK);
+    }
+    source = nullptr;
+    EXPECT_EQ(E_OK, dest->ExecuteSql("SELECT import_db_from_path('" + sourceDbPath + "')"));
+
+    auto resultSet = dest->QuerySql("SELECT * FROM test");
+    int rowCount;
+    EXPECT_EQ(E_OK, resultSet->GetRowCount(rowCount));
+
+    EXPECT_EQ(rowCount, 10000);
+
+    auto [code, result] = dest->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    dest = nullptr;
+    RdbHelper::DeleteRdbStore(destDbPath);
+    RdbHelper::DeleteRdbStore(sourceDbPath);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_014
+ * @tc.desc: sql func empty param test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    auto res = store->ExecuteSql("SELECT import_db_from_path");
+
+    EXPECT_EQ(res, E_SQLITE_SCHEMA);
+
+    auto [code, result] = store->Execute("pragma integrity_check");
+    std::string val;
+    result.GetString(val);
+    EXPECT_EQ(E_OK, code);
+    EXPECT_EQ("ok", val);
+
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
 }
