@@ -34,6 +34,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
@@ -509,7 +510,10 @@ if (is_ohos && !build_ohos_sdk) {
   base_deps = [ "${plugins_path}/libs/icu:icu_android" ]
 
   ohos_source_set("native_rdb") {
-    defines = [ "ANDROID_PLATFORM" ]
+    defines = [
+      "ANDROID_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     part_name = "relational_store"
 

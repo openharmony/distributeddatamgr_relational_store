@@ -291,6 +291,260 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         done();
         console.log(TAG + "************* RdbBackupRestoreBackupTest_0060 end *************")
     })
+    /**
+     * @tc.name RDB BackupRestore by sql test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0062
+     * @tc.desc sql func empty param test
+     */
+    it('RdbBackupRestoreBackupTest_0062', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0062 start *************")
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        try {
+            await destDb.executeSql(`select import_db_from_path()`);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0062 ******" + JSON.stringify(error));
+            expect(error.code).assertEqual(14800021);
+        }
+        
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
+
+    /**
+     * @tc.name RDB BackupRestore by sql test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0063
+     * @tc.desc empty path test
+     */
+    it('RdbBackupRestoreBackupTest_0063', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0063 start *************")
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        try {
+            await destDb.executeSql(`select import_db_from_path('')`);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0063 ******" + JSON.stringify(error));
+            expect(error.code).assertEqual(14800030);
+        }
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
+
+    /**
+     * @tc.name RDB BackupRestore by sql test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0064
+     * @tc.desc souce db not exist test
+     */
+    it('RdbBackupRestoreBackupTest_0064', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0064 start *************")
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        try {
+            await destDb.executeSql(`select import_db_from_path('/path/not_exist.db')`);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0064 ******" + JSON.stringify(error));
+            expect(error.code).assertEqual(14800030);
+        }
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
+
+    /**
+     * @tc.name RDB BackupRestore by sql test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0065
+     * @tc.desc RDB dest store in transaction
+     */
+    it('RdbBackupRestoreBackupTest_0065', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0065 start *************")
+
+        const SOURCE_STORE_NAME = "Source.db";
+        const SOURCE_STORE_PATH = "/data/storage/el2/database/entry/rdb/Source.db";
+        
+        const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+        const sourceDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: SOURCE_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        await sourceDb.executeSql(CREATE_TABLE_TEST, null);  
+        await sourceDb.close();
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        destDb.beginTransaction();
+
+        try {
+            await destDb.executeSql(`select import_db_from_path('${SOURCE_STORE_PATH}')`);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0065 ******" + JSON.stringify(error));
+            expect(error.code).assertEqual(14800024);
+        }
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, SOURCE_STORE_NAME);
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
+
+    /**
+     * @tc.name RDB import_db_from_path sql func test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0070
+     * @tc.desc source store corrupted
+     */
+    it('RdbBackupRestoreBackupTest_0070', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0070 start *************")
+
+        const SOURCE_STORE_NAME = "Source.db";
+        const SOURCE_STORE_PATH = "/data/storage/el2/database/entry/rdb/Source.db";
+        
+        const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+        const sourceDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: SOURCE_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        await sourceDb.executeSql(CREATE_TABLE_TEST, null);  
+        await sourceDb.close();
+
+        const fileStream = await fileio.createStream(SOURCE_STORE_PATH, 'r+');
+        const buffer = new ArrayBuffer(32);
+        const uint8View = new Uint8Array(buffer);
+        uint8View.forEach((val, index) => {
+          uint8View[index] = 0xFF;
+        });
+
+        await fileStream.write(buffer, { offset: 0x0f40, length: uint8View.length });
+        fileStream.closeSync();
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        try {
+            await destDb.executeSql(`select import_db_from_path('${SOURCE_STORE_PATH}')`);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0070 ******" + JSON.stringify(error));
+            expect(error.code).assertEqual(14800011);
+        }
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, SOURCE_STORE_NAME);
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
+
+    /**
+     * @tc.name RDB import_db_from_path sql func test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0080
+     * @tc.desc execute import check row count
+     */
+    it('RdbBackupRestoreBackupTest_0080', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0080 start *************")
+
+        const SOURCE_STORE_NAME = "Source.db";
+        
+        const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+        const sourceDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: SOURCE_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        await sourceDb.executeSql(CREATE_TABLE_TEST, null);
+        let times = 100;
+
+        while (times--) {
+          const valuesBuckets = new Array(100).fill(0).map((it, index) => {
+            return {
+                  "data1": "hello" + index,
+                  "data2": 10,
+                  "data3": 1.0,
+                  "data4": new Uint8Array([1, 2, 3]),
+            }
+          });
+          await sourceDb.batchInsert('test', valuesBuckets);
+        }
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = sourceDb.querySync(predicates);
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0080 start ************* rowCount: " + resultSet.rowCount);
+
+        await resultSet.close();
+        await sourceDb.close();
+
+
+        const DEST_STORE_NAME = "Dest.db";
+        const destDb = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: DEST_STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S3
+            }
+        )
+
+        try {
+            await destDb.executeSql("select import_db_from_path('/data/storage/el2/database/entry/rdb/Source.db')");
+            
+            let predicates = await new data_relationalStore.RdbPredicates("test")
+            let resultSet = destDb.querySync(predicates);
+            expect(resultSet.rowCount).assertEqual(100 * 100);
+        } catch (error) {
+            console.error("****** RdbBackupRestoreBackupTest_0080 ******" + JSON.stringify(error));
+            expect().assertFail();
+        }
+        expect('ok', await destDb.execute("pragma integrity_check"));
+        await data_relationalStore.deleteRdbStore(context, SOURCE_STORE_NAME);
+        await data_relationalStore.deleteRdbStore(context, DEST_STORE_NAME);
+        done();
+    })
 
     console.log(TAG + "*************Unit Test End*************")
 }

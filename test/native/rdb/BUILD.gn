@@ -140,6 +140,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/share_block.cpp",
     "../../../frameworks/native/rdb/src/shared_block_serializer_info.cpp",
     "../../../frameworks/native/rdb/src/sqlite_connection.cpp",
+    "../../../frameworks/native/rdb/src/sqlite_default_function.cpp",
     "../../../frameworks/native/rdb/src/sqlite_global_config.cpp",
     "../../../frameworks/native/rdb/src/sqlite_shared_result_set.cpp",
     "../../../frameworks/native/rdb/src/sqlite_sql_builder.cpp",
