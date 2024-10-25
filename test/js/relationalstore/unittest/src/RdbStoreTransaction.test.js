@@ -96,6 +96,148 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
+     * @tc.number testTransactionInsert0002
+     * @tc.name Abnormal test case of transaction, insert a type mismatch data
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data
+     *          3.Execute commit
+     */
+    it('testTransactionInsert0002', 0, async function (done) {
+        console.log(TAG + "************* testTransactionInsert0002 start *************");
+        let u8 = new Uint8Array([1, 2, 3]);
+        let transaction = await rdbStore?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+        try {
+            const valueBucket = {
+                "id": "test",
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            };
+            let row = transaction?.insertSync("test", valueBucket);
+            console.log(TAG + "testTransactionInsert0002 insert row:" + row);
+            expect(null).assertFail();
+            await transaction?.commit();
+        } catch (e) {
+            await transaction?.rollback();
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800033)
+            console.log(TAG + "testTransactionInsert0002 failed");
+        }
+        done();
+        console.log(TAG + "************* testTransactionInsert0002 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionInsert0003
+     * @tc.name Abnormal test case of transaction, insert with an abnormal table
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert data to a no exist table
+     *          3.Execute commit
+     */
+    it('testTransactionInsert0003', 0, async function (done) {
+        console.log(TAG + "************* testTransactionInsert0003 start *************");
+        let u8 = new Uint8Array([1, 2, 3]);
+        let transaction = await rdbStore?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.DEFERRED
+        });
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            };
+            let row = await transaction?.insert("testNotExist", valueBucket);
+            console.log(TAG + "testTransactionInsert0003 insert row:" + row);
+            expect(null).assertFail();
+            await transaction?.commit();
+        } catch (e) {
+            await transaction?.rollback();
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800021)
+            console.log(TAG + "testTransactionInsert0003 failed");
+        }
+        done();
+        console.log(TAG + "************* testTransactionInsert0003 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionInsert0004
+     * @tc.name Abnormal test case of transaction, insert an more attribute data
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert insert an more attribute data
+     *          3.Execute commit
+     */
+    it('testTransactionInsert0004', 0, async function (done) {
+        console.log(TAG + "************* testTransactionInsert0004 start *************");
+        let u8 = new Uint8Array([1, 2, 3]);
+        let transaction = await rdbStore?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+        });
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+                "notExist": "test"
+            };
+            let row = transaction?.insertSync("test", valueBucket);
+            console.log(TAG + "testTransactionInsert0004 insert row:" + row);
+            expect(null).assertFail();
+            await transaction?.commit();
+        } catch (e) {
+            await transaction?.rollback();
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800021)
+            console.log(TAG + "testTransactionInsert0004 failed");
+        }
+        done();
+        console.log(TAG + "************* testTransactionInsert0004 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionInsert0005
+     * @tc.name Abnormal test case of transaction, continuously insert data until the limit is exceeded
+     * @tc.desc 1.Execute beginTransaction
+     *          2.Insert insert an more attribute data
+     *          3.Execute commit
+     */
+    it('testTransactionInsert0005', 0, async function (done) {
+        console.log(TAG + "************* testTransactionInsert0005 start *************");
+        let u8 = new Uint8Array([1, 2, 3]);
+        let transaction = await rdbStore?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+
+        let nameStr = "lisi" + "e".repeat(1024 * 1024 * 100) + "zhangsan"
+        try {
+            const valueBucket = {
+                "name": nameStr,
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            };
+            for (let i = 0; i < 100; i++) {
+                let row = await transaction?.insert("test", valueBucket);
+                console.log(TAG + "testTransactionInsert0005 insert row:" + row);
+            }
+            await transaction?.commit();
+            console.log(TAG + "testTransactionInsert0005 success");
+            expect(null).assertFail();
+        } catch (e) {
+            await transaction?.rollback();
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800047)
+            console.log(TAG + "testTransactionInsert0005 failed");
+        }
+        done();
+        console.log(TAG + "************* testTransactionInsert0005 end *************");
+    })
+    /**
      * @tc.number testTransactionBatchInsert0001
      * @tc.name Normal test case of transactions, insert a row of data
      * @tc.desc 1.Execute beginTransaction
@@ -150,7 +292,7 @@ describe('rdbStoreTransactionTest', function () {
         console.log(TAG + "************* testTransactionUpdate0001 start *************");
         var u8 = new Uint8Array([1, 2, 3])
         var transaction = await rdbStore.createTransaction({
-            transactionType:data_relationalStore.TransactionType.IMMEDIATE
+            transactionType: data_relationalStore.TransactionType.IMMEDIATE
         })
         try {
             const valueBucket = {
@@ -643,8 +785,8 @@ describe('rdbStoreTransactionTest', function () {
         })
         try {
             var trans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
-        })
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            })
             trans.commit();
             expect(null).assertFail()
             console.log(TAG + "testTransactionIsolation0001 failed");
@@ -676,8 +818,8 @@ describe('rdbStoreTransactionTest', function () {
         })
         try {
             var exclusiveTrans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
-        })
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            })
             try {
                 const valueBucket = {
                     "name": "lisi",
@@ -786,7 +928,8 @@ describe('rdbStoreTransactionTest', function () {
     it('testTransactionIsolation0004', 0, async function (done) {
         console.log(TAG + "************* testTransactionIsolation0004 start *************");
         var deferredTrans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.DEFERRED})
+            transactionType: data_relationalStore.TransactionType.DEFERRED
+        })
         try {
             const valueBucket = {
                 "name": "lisi",
@@ -997,8 +1140,8 @@ describe('rdbStoreTransactionTest', function () {
         })
         try {
             var exclusiveTrans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
-        })
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            })
             try {
                 const valueBucket = {
                     "name": "lisi",
@@ -1015,8 +1158,8 @@ describe('rdbStoreTransactionTest', function () {
                 expect(1).assertEqual(resultSet.rowCount);
 
                 var deferredTrans2 = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.DEFERRED
-        })
+                    transactionType: data_relationalStore.TransactionType.DEFERRED
+                })
                 try {
                     resultSet = deferredTrans2.querySqlSync("select * from test where name = ?", ["lisi"]);
                     console.log(TAG + "testTransactionIsolation0007 deferredTrans2 querySqlSync after exclusiveTrans commit count " + resultSet.rowCount);
@@ -1077,8 +1220,8 @@ describe('rdbStoreTransactionTest', function () {
             resultSet.close()
             try {
                 var exclusiveTrans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
-        })
+                    transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+                })
                 console.log(TAG + "begin EXCLUSIVE success abnormal");
                 exclusiveTrans.rollback();
             } catch (e) {
@@ -1094,8 +1237,8 @@ describe('rdbStoreTransactionTest', function () {
 
             try {
                 var exclusiveTrans = await rdbStore.createTransaction({
-            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
-        })
+                    transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+                })
                 console.log(TAG + "begin EXCLUSIVE success");
                 try {
                     resultSet = exclusiveTrans.querySqlSync("select * from test");
@@ -1519,6 +1662,76 @@ describe('rdbStoreTransactionTest', function () {
         }
         done()
         console.log(TAG + "************* testTransactionEnd0007 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionBusy0001
+     * @tc.name Abnormal test case of createTransaction
+     * @tc.desc 1.Execute beginTransaction 5 times
+     */
+    it('testTransactionBusy0001', 0, async function (done) {
+        console.log(TAG + "************* testTransactionBusy0001 start *************");
+        let transactions = [];
+        try {
+            for (let i = 0; i < 5; i++) {
+                transactions.push(await rdbStore?.createTransaction({
+                    transactionType: data_relationalStore.TransactionType.DEFERRED
+                }));
+                console.log(TAG + "testTransactionBusy0001 createTransaction success. i " + i);
+            }
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            // expect(e.code).assertEqual(14800000)
+            expect(e.code).assertEqual(14800015)
+            console.log(TAG + "testTransactionBusy0001 failed");
+        }
+        done();
+        transactions.forEach(element => {
+            element?.rollback();
+            console.log(TAG + "testTransactionBusy0001 rollback");
+        });
+        console.log(TAG + "************* testTransactionBusy0001 end *************");
+    })
+
+    /**
+     * @tc.number testTransactionWithReadOnlyStore0001
+     * @tc.name createTransactionWithReadOnlyStore
+     * @tc.desc 1.Get a readOnly store
+     *          2.createTransaction with readOnly store
+     */
+    it('testTransactionWithReadOnlyStore0001', 0, async function (done) {
+        console.log(TAG + "************* testTransactionWithReadOnlyStore0001 start *************");
+        let storeConfig = {
+            name: "ReadOnlyTransactionTest.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+        let store = await data_relationalStore.getRdbStore(context, storeConfig);
+        await store.close()
+        storeConfig.isReadOnly = true;
+        let readOnlyStore = await data_relationalStore.getRdbStore(context, storeConfig);
+        expect(readOnlyStore === null).assertFalse();
+        try {
+            let transaction = await readOnlyStore?.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
+            console.log(TAG + "testTransactionWithReadOnlyStore0001 createTransaction success");
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+            };
+            let row = transaction?.insertSync("test", valueBucket);
+            console.log(TAG + "testTransactionWithReadOnlyStore0001 insert row:" + row);
+            await transaction?.rollback();
+            expect(null).assertFail();
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(801)
+            console.log(TAG + "testTransactionWithReadOnlyStore0001 success");
+        }
+        await data_relationalStore.deleteRdbStore(context, storeConfig);
+        done();
+        console.log(TAG + "************* testTransactionWithReadOnlyStore0001 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
