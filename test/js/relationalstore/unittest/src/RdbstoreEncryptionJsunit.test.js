@@ -616,7 +616,7 @@ describe('rdbEncryptTest', function () {
     /**
      * @tc.name RDB decrypt test
      * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0080
-     * @tc.desc RDB decrypt function invalid page size (512) test
+     * @tc.desc RDB decrypt function invalid page size (-1/512/4294967296/MAX_SAFE_INTEGER)
      */
     it('RdbDecryptTest_0080', 0, async function () {
         console.info(TAG + "************* RdbDecryptTest_0080 start *************")
@@ -636,12 +636,77 @@ describe('rdbEncryptTest', function () {
         try {
             let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
             expect().assertFail()
-            console.error(`Invalid page size 512 should fail, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`Page size 512 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = -1
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size -1 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = 4294967296
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size 4294967296 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = Number.MAX_SAFE_INTEGER
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size MAX_SAFE_INTEGER should fail, error code: ${err.code}, err msg: ${err.message}`);
         } catch (err) {
             expect("401").assertEqual(err.code)
         }
 
         console.log(TAG + "************* RdbDecryptTest_0080 end *************")
+    })
+
+    /**
+     * @tc.name RDB decrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0090
+     * @tc.desc RDB decrypt function valid page size (1024/65536) test
+     */
+    it('RdbDecryptTest_0090', 0, async function () {
+        console.info(TAG + "************* RdbDecryptTest_0090 start *************")
+        let valid_page_size_config = {
+            name: "validPageSize.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+            cryptoParam: {
+                encryptionKey: new Uint8Array(['t', 'e', 's', 't', 'k', 'e', 'y']),
+                iterationCount: 25000,
+                encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC,
+                hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
+                kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
+                cryptoPageSize: 1024
+            }
+        }
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, valid_page_size_config)
+        } catch (err) {
+            console.error(`Valid page size 1024 failed, error code: ${err.code}, err message: ${err.message}`);
+            expect().assertFail()
+        }
+
+        valid_page_size_config.cryptoParam.cryptoPageSize = 65536
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, valid_page_size_config)
+        } catch (err) {
+            console.error(`Valid page size 65536 failed, error code: ${err.code}, err message: ${err.message}`);
+            expect().assertFail()
+        }
+
+        console.log(TAG + "************* RdbDecryptTest_0090 end *************")
     })
 
     console.log(TAG + "*************Unit Test End*************")
