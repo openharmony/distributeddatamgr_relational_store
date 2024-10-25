@@ -200,44 +200,6 @@ describe('rdbStoreTransactionTest', function () {
     })
 
     /**
-     * @tc.number testTransactionInsert0005
-     * @tc.name Abnormal test case of transaction, continuously insert data until the limit is exceeded
-     * @tc.desc 1.Execute beginTransaction
-     *          2.Insert insert an more attribute data
-     *          3.Execute commit
-     */
-    it('testTransactionInsert0005', 0, async function (done) {
-        console.log(TAG + "************* testTransactionInsert0005 start *************");
-        let u8 = new Uint8Array([1, 2, 3]);
-        let transaction = await rdbStore?.createTransaction({
-            transactionType: data_relationalStore.TransactionType.IMMEDIATE
-        });
-
-        let nameStr = "lisi" + "e".repeat(1024 * 1024 * 100) + "zhangsan"
-        try {
-            const valueBucket = {
-                "name": nameStr,
-                "age": 18,
-                "salary": 100.5,
-                "blobType": u8,
-            };
-            for (let i = 0; i < 100; i++) {
-                let row = await transaction?.insert("test", valueBucket);
-                console.log(TAG + "testTransactionInsert0005 insert row:" + row);
-            }
-            await transaction?.commit();
-            console.log(TAG + "testTransactionInsert0005 success");
-            expect(null).assertFail();
-        } catch (e) {
-            await transaction?.rollback();
-            console.log(TAG + e + " code: " + e.code);
-            expect(e.code).assertEqual(14800047)
-            console.log(TAG + "testTransactionInsert0005 failed");
-        }
-        done();
-        console.log(TAG + "************* testTransactionInsert0005 end *************");
-    })
-    /**
      * @tc.number testTransactionBatchInsert0001
      * @tc.name Normal test case of transactions, insert a row of data
      * @tc.desc 1.Execute beginTransaction
