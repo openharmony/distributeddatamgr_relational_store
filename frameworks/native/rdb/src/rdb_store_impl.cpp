@@ -2338,6 +2338,10 @@ int32_t RdbStoreImpl::GetDbType() const
 
 std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction(int32_t type)
 {
+    if (isReadOnly_) {
+        return { E_NOT_SUPPORT, nullptr};
+    }
+
     auto [errCode, conn] = connectionPool_->CreateTransConn();
     if (conn == nullptr) {
         return { errCode, nullptr };
