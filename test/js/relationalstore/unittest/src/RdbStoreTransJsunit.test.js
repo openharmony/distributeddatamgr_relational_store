@@ -34,7 +34,9 @@ async function insertInThread(context, transType, insertCount = 1) {
     const TAG = "[RELATIONAL_STORE_JS_KITS_TEST]"
     let rdbTrans;
     try {
-        rdbTrans = await rdbStore.createTransaction(transType);
+        rdbTrans = await rdbStore.createTransaction({
+            transactionType: transType
+        });
         console.log(TAG + 'insertInThread after createTrans');
 
         const u8 = new Uint8Array([1, 2, 3]);
@@ -64,7 +66,9 @@ async function queryInThread(context, transType, querySql) {
     const TAG = "[RELATIONAL_STORE_JS_KITS_TEST]"
     let rdbTrans;
     try {
-        rdbTrans = await rdbStore.createTransaction(transType);
+        rdbTrans = await rdbStore.createTransaction({
+            transactionType: transType
+        });
 
         const resultSet = await rdbTrans.querySql(querySql);
         const rowCount = resultSet.rowCount;
@@ -118,7 +122,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.update({ age: 20 }, updatePredicates);
@@ -153,7 +159,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.update({ age: 20 }, updatePredicates);
@@ -188,7 +196,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.update({ age: 20 }, updatePredicates);
@@ -215,7 +225,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdateSync0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -250,7 +262,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdateSync0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -285,7 +299,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdateSync0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -328,7 +344,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             rdbTrans.updateSync({ age: 20 }, updatePredicates);
@@ -363,7 +381,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             rdbTrans.updateSync({ age: 20 }, updatePredicates);
@@ -398,7 +418,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             };
             const rowId = await rdbStore.insert("test", valueBucket);
             expect(rowId).assertEqual(1);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             rdbTrans.updateSync({ age: 20 }, updatePredicates);
@@ -435,7 +457,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = await rdbTrans.delete(updatePredicates);
@@ -470,7 +494,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = await rdbTrans.delete(updatePredicates);
@@ -505,7 +531,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = await rdbTrans.delete(updatePredicates);
@@ -541,7 +569,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.delete(updatePredicates);
@@ -575,7 +605,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.delete(updatePredicates);
@@ -609,7 +641,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             await rdbTrans.delete(updatePredicates);
@@ -643,7 +677,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -678,7 +714,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -713,7 +751,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -749,7 +789,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -784,7 +826,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -819,7 +863,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
             })
             const rowId = await rdbStore.batchInsert("test", valueBuckets);
             expect(rowId).assertEqual(3);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const updatePredicates = new data_relationalStore.RdbPredicates("test");
             updatePredicates.equalTo('name', 'lisi');
             const deleteRows = rdbTrans.deleteSync(updatePredicates);
@@ -844,7 +890,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -872,7 +920,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -900,7 +950,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -928,7 +980,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0011 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -956,7 +1010,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0012 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -984,7 +1040,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransQuery0013 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -1020,7 +1078,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1057,7 +1117,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1094,7 +1156,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1131,7 +1195,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1172,7 +1238,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1209,7 +1277,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1246,7 +1316,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1283,7 +1355,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1320,7 +1394,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1357,7 +1433,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1398,7 +1476,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1438,7 +1518,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
 
             await rdbStore.batchInsert('test', valueBuckets);
 
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1475,7 +1557,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1512,7 +1596,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1549,7 +1635,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1586,7 +1674,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1623,7 +1713,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1660,7 +1752,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
                     "blobType": u8,
                 };
             })
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
 
             const insertCount = await rdbTrans.batchInsert('test', valueBuckets);
             expect(insertCount).assertEqual(10);
@@ -1817,7 +1911,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
     it('testRdbTransactionRollBack0001', 0, async (done) => {
         console.log(TAG + "************* testRdbTransactionRollBack0001 start *************");
         const u8 = new Uint8Array([1, 2, 3]);
-        const trans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+        const trans = await rdbStore.createTransaction({
+            transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+        });
         try {
             const valueBucket = {
                 "id": 1,
