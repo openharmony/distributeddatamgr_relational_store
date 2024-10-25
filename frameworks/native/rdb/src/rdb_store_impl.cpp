@@ -94,6 +94,10 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.password_ = config.GetEncryptKey();
     syncerParam_.haMode_ = config.GetHaMode();
     syncerParam_.roleType_ = config.GetRoleType();
+    syncerParam_.tokenIds_ = config.GetPromiseInfo().tokenIds_;
+    syncerParam_.uids_ = config.GetPromiseInfo().uids_;
+    syncerParam_.user_ = config.GetPromiseInfo().user_;
+    syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
@@ -872,7 +876,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
       fileType_(config.GetDatabaseFileType())
 {
-    path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
+    path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
@@ -881,7 +885,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
       fileType_(config.GetDatabaseFileType())
 {
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
-    path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
+    path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
     bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !isReadOnly_) {

@@ -68,6 +68,10 @@ struct RdbSyncerParam {
     bool isSearchable_ = false;
     std::vector<uint8_t> password_;
     std::map<std::string, RdbDebugInfo> infos_;
+    std::vector<uint32_t> tokenIds_;
+    std::vector<int32_t> uids_;
+    std::string user_;
+    std::vector<std::string> permissionNames_ = {};
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);

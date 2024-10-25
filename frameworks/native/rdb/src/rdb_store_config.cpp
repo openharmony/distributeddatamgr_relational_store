@@ -585,6 +585,16 @@ void RdbStoreConfig::SetHaMode(int32_t haMode)
     haMode_ = haMode;
 }
 
+PromiseInfo RdbStoreConfig::GetPromiseInfo() const
+{
+    return promiseInfo_;
+}
+
+void RdbStoreConfig::SetPromiseInfo(PromiseInfo promiseInfo)
+{
+    promiseInfo_ = promiseInfo;
+}
+
 void RdbStoreConfig::EnableRekey(bool enable)
 {
     autoRekey_ = enable;
