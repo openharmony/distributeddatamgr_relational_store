@@ -38,8 +38,8 @@ public:
     ~RdbStoreImpl() override;
     const RdbStoreConfig &GetConfig();
     int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
-    int BatchInsert(
-        int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string& table, const ValuesBuckets& values) override;
     int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
     int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution) override;
@@ -127,10 +127,13 @@ private:
         const std::string &sql, const ValueObject &object, int sqlType);
 
     using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
+    using ExecuteSqlsRef =
+        std::vector<std::pair<std::string, std::vector<std::vector<std::reference_wrapper<ValueObject>>>>>;
     using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
-    ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    auto GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
+    auto GenerateSql(const std::string& table, const ValuesBuckets& buckets, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     int ExecuteSqlInner(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteGetLongInner(const std::string &sql, const std::vector<ValueObject> &bindArgs);
@@ -149,7 +152,8 @@ private:
     int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
         const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
         ConflictResolution conflictResolution);
-    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
+    template<typename T>
+    int BatchInsertEntry(const std::string& table, const T& values, size_t rowSize, int64_t& outInsertNum);
     int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
@@ -164,6 +168,9 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     uint32_t rebuild_;
+        
+    static inline ValueObject emptyValueObject_;
+    static inline std::reference_wrapper<ValueObject> emptyValueObjectRef_ = emptyValueObject_;
 };
 } // namespace OHOS::NativeRdb
 #endif

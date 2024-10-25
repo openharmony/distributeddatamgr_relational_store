@@ -41,6 +41,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
+  "${relational_store_native_path}/rdb/src/values_buckets.cpp",
 ]
 
 if (!is_ohos) {
