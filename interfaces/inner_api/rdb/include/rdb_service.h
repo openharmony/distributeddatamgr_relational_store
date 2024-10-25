@@ -90,6 +90,8 @@ public:
     virtual int32_t UnlockCloudContainer(const RdbSyncerParam &param) = 0;
 
     virtual int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) = 0;
+
+    virtual int32_t GetPromiseInfo(const RdbSyncerParam &param) = 0;
 };
 }
 } // namespace OHOS::DistributedRdb

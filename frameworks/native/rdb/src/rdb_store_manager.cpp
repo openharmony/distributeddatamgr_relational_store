@@ -89,7 +89,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
 {
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
-    auto path = config.GetRoleType() == VISITOR ? config.GetVisitorDir() : config.GetPath();
+    auto path = config.GetRoleType() != OWNER ? config.GetVisitorDir() : config.GetPath();
     auto pool = TaskExecutor::GetInstance().GetExecutor();
     pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [path, config, this]() {
         if (IsConfigInvalidChanged(path, config)) {
@@ -100,12 +100,20 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (rdbStore != nullptr) {
         return rdbStore;
     }
+
     rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
         return nullptr;
     }
-
+    if (config.GetRoleType() == VISITOR_WRITE) {
+        Param param = GetSyncParam(config);
+        int32_t status = GetPromiseFromService(param);
+        if (status != E_OK) {
+            LOG_ERROR("failed, storeName:%{public}s, status:%{public}d", config.GetName().c_str(), status);
+            return nullptr;
+        }
+    }
     if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
         errCode = SetSecurityLabel(config);
         if (errCode != E_OK) {
@@ -174,6 +182,10 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
     syncerParam.isSearchable_ = config.IsSearchable();
     syncerParam.roleType_ = config.GetRoleType();
     syncerParam.haMode_ = config.GetHaMode();
+    syncerParam.tokenIds_ = config.GetPromiseInfo().tokenIds_;
+    syncerParam.uids_ = config.GetPromiseInfo().uids_;
+    syncerParam.user_ = config.GetPromiseInfo().user_;
+    syncerParam.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     return syncerParam;
 }
 
@@ -191,6 +203,27 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
     err = service->BeforeOpen(param);
     if (err != DistributedRdb::RDB_OK && err != DistributedRdb::RDB_NO_META) {
         LOG_ERROR("BeforeOpen failed, err is %{public}d.", err);
+        return E_ERROR;
+    }
+    return E_OK;
+#endif
+    return E_ERROR;
+}
+
+int32_t RdbStoreManager::GetPromiseFromService(DistributedRdb::RdbSyncerParam &param)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    if (err == E_NOT_SUPPORT) {
+        return E_ERROR;
+    }
+    if (err != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
+        return E_ERROR;
+    }
+    err = service->GetPromiseInfo(param);
+    if (err != DistributedRdb::RDB_OK) {
+        LOG_ERROR("failed, err is %{public}d.", err);
         return E_ERROR;
     }
     return E_OK;

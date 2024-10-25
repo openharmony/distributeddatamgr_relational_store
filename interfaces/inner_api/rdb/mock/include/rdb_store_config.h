@@ -73,6 +73,7 @@ enum HAMode : int32_t {
 enum RoleType : uint32_t {
     OWNER = 0,
     VISITOR,
+    VISITOR_WRITE,
 };
 
 enum DBType : uint32_t {
@@ -110,6 +111,13 @@ struct ScalarFunctionInfo {
     ScalarFunctionInfo(ScalarFunction function, int argc) : function_(function), argc_(argc) {}
     ScalarFunction function_;
     int argc_;
+};
+
+struct PromiseInfo {
+    std::string user_ = "";
+    std::vector<uint32_t> tokenIds_ = {};
+    std::vector<int32_t> uids_ = {};
+    std::vector<std::string> permissionNames_ = {};
 };
 
 class RdbStoreConfig {
@@ -246,6 +254,8 @@ public:
     void SetIter(int32_t iter) const;
     int32_t GetIter() const;
     int32_t GetHaMode() const;
+    PromiseInfo GetPromiseInfo() const;
+    void SetPromiseInfo(PromiseInfo promiseInfo);
     void SetHaMode(int32_t haMode);
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
@@ -285,6 +295,7 @@ private:
     std::string journalMode_;
     std::string syncMode_;
     std::string databaseFileType;
+    PromiseInfo promiseInfo_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
