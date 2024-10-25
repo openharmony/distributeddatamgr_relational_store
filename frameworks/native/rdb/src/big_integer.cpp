@@ -69,6 +69,11 @@ bool BigInteger::operator==(const BigInteger& other)
     return value_ == other.value_;
 }
 
+bool BigInteger::operator<(const BigInteger &rhs)
+{
+    return sign_ != rhs.sign_ ? (sign_ > rhs.sign_) : (sign_ == 0 ? (value_ < rhs.value_) : (rhs.value_ < value_));
+}
+
 int32_t BigInteger::Sign() const
 {
     return sign_;
