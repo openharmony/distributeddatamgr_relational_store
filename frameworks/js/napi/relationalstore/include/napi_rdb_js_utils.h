@@ -75,6 +75,10 @@ struct ContextParam {
     bool isStageMode = true;
 };
 
+struct TransactionOptions {
+    int32_t transactionType = 0;
+};
+
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
 
@@ -92,6 +96,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, CryptoParam &cryptoParam
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &transactionOptions);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &context);
