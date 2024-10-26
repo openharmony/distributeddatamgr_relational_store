@@ -304,7 +304,6 @@ SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(const std::string 
     auto [fields, values] = buckets.GetFieldsAndValues();
     auto columnSize = fields->size();
     auto rowSize = buckets.RowSize();
-    LOG_INFO("columnSize=%{public}zu, rowSize=%{public}zu", columnSize, rowSize);
     std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, nullRef_);
     std::string sql = "INSERT OR REPLACE INTO " + table + " (";
     size_t columnIndex = 0;
@@ -312,7 +311,6 @@ SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(const std::string 
         for (size_t row = 0; row < rowSize; ++row) {
             auto [errorCode, value] = buckets.Get(row, std::ref(field));
             if (errorCode != E_OK) {
-                LOG_ERROR("not found %{public}s in row=%{public}zu", field.c_str(), row);
                 continue;
             }
             SqliteSqlBuilder::UpdateAssetStatus(value.get(), AssetValue::STATUS_INSERT);
