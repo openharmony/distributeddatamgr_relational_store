@@ -17,6 +17,7 @@
 #define NAPI_RDB_CONTEXT_H
 
 #include "napi_async_call.h"
+#include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
 #include "transaction.h"
 #include "values_buckets.h"
@@ -84,7 +85,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
 };
 
 struct CreateTransactionContext : public RdbStoreContextBase {
-    int32_t transactionType = 0;
+    AppDataMgrJsKit::JSUtils::TransactionOptions transactionOptions;
     std::shared_ptr<Transaction> transaction;
 };
 } // namespace RelationalStoreJsKit

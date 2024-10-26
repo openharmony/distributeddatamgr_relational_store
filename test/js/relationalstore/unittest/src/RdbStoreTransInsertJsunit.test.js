@@ -60,7 +60,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -88,7 +90,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -116,7 +120,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -144,7 +150,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0011 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -172,7 +180,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0012 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -200,7 +210,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsert0013 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -228,7 +240,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -257,7 +271,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -286,7 +302,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -315,7 +333,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0011 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -344,7 +364,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0012 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -373,7 +395,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransInsertSync0013 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -402,7 +426,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -434,7 +460,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -466,7 +494,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -498,7 +528,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0011 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -530,7 +562,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0012 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -562,7 +596,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsert0013 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -594,7 +630,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -626,7 +664,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -658,7 +698,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -690,7 +732,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0011 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -722,7 +766,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0012 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -754,7 +800,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransBatchInsertSync0013 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBuckets = new Array(100).fill(0).map(() => {
                 const valueBucket = {
                     "name": "lisi",
@@ -786,7 +834,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdate0001 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.DEFERRED);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.DEFERRED
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -821,7 +871,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdate0002 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.EXCLUSIVE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
@@ -856,7 +908,9 @@ describe('rdbStoreTransactionJsunitTest', function () {
         console.log(TAG + "************* testRdbTransUpdate0003 start *************");
         try {
             const u8 = new Uint8Array([1, 2, 3]);
-            const rdbTrans = await rdbStore.createTransaction(data_relationalStore.TransactionType.IMMEDIATE);
+            const rdbTrans = await rdbStore.createTransaction({
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
+            });
             const valueBucket = {
                 "name": "lisi",
                 "age": 18,
