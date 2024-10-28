@@ -316,6 +316,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
@@ -341,6 +342,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
@@ -423,6 +425,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
     deps += [
@@ -446,6 +449,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
     deps += [
@@ -521,6 +525,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
@@ -596,6 +601,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
+      "${relational_store_native_path}/rdb/mock/src/rd_connection.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
