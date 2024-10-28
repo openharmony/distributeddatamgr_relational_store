@@ -889,8 +889,9 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
     bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !isReadOnly_) {
-        LOG_ERROR("database corrupt, rebuild database %{public}s", SqliteUtils::Anonymous(name_).c_str());
+    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && !isReadOnly_) {
+        LOG_ERROR("database corrupt, %{public}s, %{public}s", SqliteUtils::Anonymous(name_).c_str(),
+            Reportor::FormatBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         RdbParam param;
         param.bundleName_ = config_.GetBundleName();
@@ -2307,14 +2308,13 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
 
 bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 {
-    std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
     std::string slaveDbPath = SqliteUtils::GetSlavePath(config_.GetPath());
-    return access(failureFlagFile.c_str(), F_OK) == 0 || access(slaveDbPath.c_str(), F_OK) != 0;
+    return SqliteUtils::IsSlaveInvalid(config_.GetPath()) || (access(slaveDbPath.c_str(), F_OK) != 0);
 }
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
 {
-    if (isReadOnly_) {
+    if (isReadOnly_ || rebuild_ != RebuiltType::NONE) {
         return E_OK;
     }
     auto conn = connectionPool_->AcquireConnection(false);
