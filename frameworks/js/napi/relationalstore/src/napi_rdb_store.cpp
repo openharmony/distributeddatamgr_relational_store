@@ -472,8 +472,8 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
         // The blob is an empty vector.
-        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
-        if (valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+        // If the API version is less than 14, and insert null. Otherwise, insert an empty vector.
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 14) {
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
@@ -561,8 +561,8 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         // The blob is an empty vector.
-        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
-        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+        // If the API version is less than 14, and insert null. Otherwise, insert an empty vector.
+        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 14) {
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
