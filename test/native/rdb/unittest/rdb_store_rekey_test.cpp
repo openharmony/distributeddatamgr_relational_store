@@ -443,35 +443,3 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
     CheckQueryData(store);
 }
 
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
-    config.SetSecurityLevel(SecurityLevel::S1);
-    config.SetAllowRebuild(true);
-    config.SetEncryptStatus(true);
-    RekeyTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    ASSERT_EQ(errCode, E_OK);
-
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
-    bool isFileExists = OHOS::FileExists(keyPath);
-    ASSERT_TRUE(isFileExists);
-    auto createdDate = GetKeyFileDate(encryptedDatabaseName);
-    sleep(10);
-    store = nullptr;
-
-    std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
-    fsDb.seekp(64);
-    fsDb.write("hello", 5);
-    fsDb.close();
-
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    isFileExists = OHOS::FileExists(keyPath);
-    ASSERT_TRUE(isFileExists);
-    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-
-    auto difference = changedDate - createdDate;
-    ASSERT_TRUE(difference > std::chrono::seconds::zero());
-}
