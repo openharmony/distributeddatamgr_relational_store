@@ -897,8 +897,6 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         }
 #endif
         config_.SetIter(0);
-        RdbSecurityManager::GetInstance().DelKeyFile(path_, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-        RdbSecurityManager::GetInstance().DelKeyFile(path_, RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
