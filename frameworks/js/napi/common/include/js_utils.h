@@ -57,6 +57,9 @@ struct JsFeatureSpace {
     bool isComponent;
 };
 
+void SetHapVersion(int32_t hapversion);
+int32_t GetHapVersion();
+
 int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);

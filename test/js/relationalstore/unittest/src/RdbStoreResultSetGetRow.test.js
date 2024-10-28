@@ -180,12 +180,66 @@ describe('rdbStoreResultSetGetRowTest', function () {
     })
 
     /**
-     * @tc.name rdb store resultSet insert undefined value and verify test
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRowTest0005
+     * @tc.desc insert blob: null
+     */
+    it('rdbStoreResultSetGetRowTest0005', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0005 start *************");
+        let valueBucket = {
+            "data1": "",
+            "data2": 10,
+            "data3": 1.0,
+            "data4": null,
+            "data5": true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket);
+        expect(1).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates, ["data4"])
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        let valueBucket_ret = resultSet.getRow();
+        expect(null).assertEqual(valueBucket_ret.data4);
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0005 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
      * @tc.number rdbStoreResultSetGetRowTest0006
+     * @tc.desc insert blob: new Uint8Array()
+     */
+    it('rdbStoreResultSetGetRowTest0006', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0006 start *************");
+        let valueBucket = {
+            "data1": "",
+            "data2": 10,
+            "data3": 1.0,
+            "data4": new Uint8Array(),
+            "data5": true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket);
+        expect(1).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates, ["data4"])
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        let valueBucket_ret = resultSet.getRow();
+        expect(null).assertEqual(valueBucket_ret.data4);
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0006 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet insert undefined value and verify test
+     * @tc.number rdbStoreResultSetGetRowTest0007
      * @tc.desc resultSet getRow test
      */
-    it('rdbStoreInsertUndefinedValueTest0006', 0, async function (done) {
-        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0006 start *************");
+    it('rdbStoreInsertUndefinedValueTest0007', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 start *************");
         let valueBucket = {
             data2: 10,
             data6: undefined
@@ -200,21 +254,21 @@ describe('rdbStoreResultSetGetRowTest', function () {
         let valueBucket_ret = resultSet.getRow();
         expect(10).assertEqual(valueBucket_ret["data2"]);
         done();
-        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0006 end   *************");
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 end   *************");
     })
 
     /**
      * @tc.name rdb store resultSet insert undefined value and verify test
-     * @tc.number rdbStoreResultSetGoToLastRow0001
+     * @tc.number rdbStoreResultSetGoToLastRow0008
      * @tc.desc resultSet goToFirstRow test
      */
-    it('rdbStoreInsertUndefinedValueTest0007', 0, async function () {
-        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 start *************");
+    it('rdbStoreInsertUndefinedValueTest0008', 0, async function () {
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0008 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
         expect(false).assertEqual(resultSet.goToFirstRow());
         expect(false).assertEqual(resultSet.goToLastRow());
-        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0007 end   *************");
+        console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0008 end   *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })

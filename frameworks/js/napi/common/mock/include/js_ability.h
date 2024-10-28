@@ -65,6 +65,7 @@ public:
     static std::shared_ptr<Context> GetContext(napi_env env, napi_value object);
     static std::shared_ptr<Context> GetStageModeContext(napi_env env, napi_value value);
     static std::shared_ptr<Context> GetCurrentAbility(napi_env env, napi_value value);
+    static int32_t GetHapVersion(napi_env env, napi_value value);
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
