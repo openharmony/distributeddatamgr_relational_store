@@ -14,6 +14,7 @@
  */
 #define LOG_TAG "JSAbility"
 #include "js_ability.h"
+#include "js_utils.h"
 
 #include <cstdlib>
 
@@ -143,6 +144,11 @@ int Context::GetSystemDatabaseDir(const std::string &dataGroupId, std::string &d
 {
     databaseDir = databaseDir_;
     return 0;
+}
+
+int32_t JSAbility::GetHapVersion(napi_env env, napi_value value)
+{
+    return JSUtils::GetHapVersion();
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

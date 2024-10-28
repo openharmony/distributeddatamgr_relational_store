@@ -14,9 +14,12 @@
  */
 #define LOG_TAG "JSAbility"
 #include "js_ability.h"
+#include "js_utils.h"
 
 #include "extension_context.h"
 #include "logger.h"
+
+#define API_VERSION_MOD 100
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
@@ -163,6 +166,20 @@ std::shared_ptr<Context> JSAbility::GetCurrentAbility(napi_env env, napi_value v
         return nullptr;
     }
     return std::make_shared<Context>(abilityContext);
+}
+
+int32_t JSAbility::GetHapVersion(napi_env env, napi_value value)
+{
+    auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
+    if (stageContext == nullptr) {
+        return napi_invalid_arg;
+    }
+    auto appInfo = stageContext->GetApplicationInfo();
+    if (appInfo != nullptr) {
+        return appInfo->apiTargetVersion % API_VERSION_MOD;
+    }
+    LOG_WARN("GetApplicationInfo failed.");
+    return napi_invalid_arg;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS

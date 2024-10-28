@@ -410,6 +410,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         ASSERT(status == napi_ok, "get applicationInfo.name failed.", napi_invalid_arg);
         status = GetNamedProperty(env, appInfo, "systemApp", param.isSystemApp, true);
         ASSERT(status == napi_ok, "get applicationInfo.systemApp failed.", napi_invalid_arg);
+        int32_t hapVersion = JSAbility::GetHapVersion(env, jsValue);
+        JSUtils::SetHapVersion(hapVersion);
     }
     return napi_ok;
 }
