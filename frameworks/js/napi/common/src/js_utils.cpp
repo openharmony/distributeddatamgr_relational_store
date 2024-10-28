@@ -33,6 +33,10 @@ using namespace OHOS::Rdb;
 
 namespace OHOS {
 namespace AppDataMgrJsKit {
+namespace JSUtils {
+    static int32_t g_hapVersion = -1;  // the current apiVersion of hap
+}
+
 static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.cloudData", "ZGF0YS5jbG91ZERhdGE=", true },
     { "ohos.data.dataAbility", "ZGF0YS5kYXRhQWJpbGl0eQ==", true },
@@ -42,6 +46,16 @@ static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.rdb", "ZGF0YS5yZGI=", true },
     { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
+
+void JSUtils::SetHapVersion(int32_t hapversion)
+{
+    g_hapVersion = hapversion;
+}
+
+int32_t JSUtils::GetHapVersion()
+{
+    return g_hapVersion;
+}
 
 const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
 {
