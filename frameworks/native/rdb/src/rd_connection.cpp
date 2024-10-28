@@ -305,11 +305,11 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
 {
     if (destEncryptKey.empty()) {
         std::vector<uint8_t> key = config_.GetEncryptKey();
-        int32_t ret = RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), key);
+        int32_t ret = RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), key);
         key.assign(key.size(), 0);
         return ret;
     }
-    return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), destEncryptKey);
+    return RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), destEncryptKey);
 }
 
 ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
