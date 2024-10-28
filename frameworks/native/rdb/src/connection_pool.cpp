@@ -31,7 +31,7 @@
 #include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "rd_connection.h
+#include "rd_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
