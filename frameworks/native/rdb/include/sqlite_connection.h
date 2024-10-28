@@ -81,6 +81,11 @@ private:
         const char *debug_ = nullptr;
     };
 
+    enum SlaveOpenPolicy : int32_t {
+        FORCE_OPEN = 0,
+        OPEN_IF_DB_VALID // DB exists and there are no -slaveFailure and -syncInterrupt files
+    };
+
     int InnerOpen(const RdbStoreConfig &config);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
@@ -113,10 +118,12 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool checkSlaveExist = true);
-    int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
-    int IsRepairable();
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(const RdbStoreConfig &config,
+        SlaveOpenPolicy slaveOpenPolicy);
+    int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, SlaveStatus &status);
     int ExchangeVerify(bool isRestore);
+    int SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus);
+    int IsRestoreFeasible(bool ignoreDataDiff);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
         bool isWrite);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
