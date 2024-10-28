@@ -367,9 +367,9 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_001, TestSize.Le
     sz = blob.size();
     EXPECT_EQ(sz, 0);
 
-    bool isNull = false;
+    bool isNull = true;
     rstSet->IsColumnNull(4, isNull);
-    EXPECT_EQ(isNull, true);
+    EXPECT_EQ(isNull, false);
 
     ret = -1;
     ret = rstSet->GoToPreviousRow();

@@ -51,8 +51,8 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
             toSetLevel) ? E_OK : E_CONFIG_INVALID_CHANGE;
         if (errCode != E_OK) {
             auto currentLevel = GetFileSecurityLevel(config.GetPath());
-            LOG_ERROR("Set security level from %{public}s to %{public}s, result:%{public}d.", currentLevel.c_str(),
-                toSetLevel.c_str(), errCode);
+            LOG_ERROR("Set security level from %{public}s to %{public}s, result:%{public}d, errno:%{public}d.",
+                currentLevel.c_str(), toSetLevel.c_str(), errCode, errno);
         }
         return errCode;
     }
