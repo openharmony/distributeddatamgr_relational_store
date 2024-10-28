@@ -31,6 +31,7 @@
 #include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rd_connection.h
 
 namespace OHOS {
 namespace NativeRdb {
@@ -366,19 +367,19 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     }
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        auto [retVal, connection] = CreateTransConn();
-
-        if (connection == nullptr) {
-            LOG_ERROR("Get null connection.");
-            return retVal;
-        }
-        retVal = connection->Restore(backupPath, newKey, slaveStatus);
+        Connection::Delete(config_);
+        RdConnection conn(config_, false);
+        auto retVal = conn.Restore(backupPath, newKey, slaveStatus);
         if (retVal != E_OK) {
             LOG_ERROR("RdDbRestore error.");
             return retVal;
         }
-        CloseAllConnections();
+
         auto [errCode, node] = Init();
+        if (errCode != E_OK) {
+            LOG_ERROR("init fail");
+        }
+        LOG_INFO("i think restore succ!, retVal is %{public}d", retVal);
         return errCode;
     }
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
