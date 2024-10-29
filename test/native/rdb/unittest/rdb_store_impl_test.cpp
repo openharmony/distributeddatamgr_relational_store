@@ -731,3 +731,56 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_LT(sqlite3_memory_used(), currentMemory);
 }
+
+/* *
+ * @tc.name: LockCloudContainerTest
+ * @tc.desc: lock cloudContainer testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, LockCloudContainerTest, TestSize.Level2)
+{
+    int errCode = E_OK;
+    // GetRdbService failed if rdbstoreconfig bundlename_ empty
+    auto ret = store_->LockCloudContainer();
+    EXPECT_EQ(E_INVALID_ARGS, ret.first);
+    EXPECT_EQ(0, ret.second);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    // GetRdbService succeeded if configuration file has already been configured
+    ret = store->LockCloudContainer();
+    EXPECT_NE(E_OK, ret.first);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: UnlockCloudContainerTest
+ * @tc.desc: unlock cloudContainer testCase
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, UnlockCloudContainerTest, TestSize.Level2)
+{
+    int errCode = E_OK;
+    // GetRdbService failed if rdbstoreconfig bundlename_ empty
+    auto result = store_->UnlockCloudContainer();
+    EXPECT_EQ(E_INVALID_ARGS, result);
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetName("RdbStore_impl_test.db");
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    // GetRdbService succeeded if configuration file has already been configured
+    result = store->UnlockCloudContainer();
+    EXPECT_NE(E_OK, result);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+}
