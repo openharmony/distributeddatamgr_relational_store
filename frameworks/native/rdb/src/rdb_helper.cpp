@@ -77,15 +77,10 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (dbFileName.empty()) {
         return E_INVALID_FILE_PATH;
     }
-    std::string shmFileName = dbFileName + "-shm";
-    std::string walFileName = dbFileName + "-wal";
-    if (access(dbFileName.c_str(), F_OK) != 0 && access(shmFileName.c_str(), F_OK) != 0 &&
-        access(walFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("Store to delete doesn't exist, path %{public}s", SqliteUtils::Anonymous(dbFileName).c_str());
-        return E_OK; // not not exist
+    if (access(dbFileName.c_str(), F_OK) == 0) {
+        RdbStoreManager::GetInstance().Delete(dbFileName);
     }
 
-    RdbStoreManager::GetInstance().Delete(dbFileName);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
     DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
 
@@ -109,14 +104,9 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
     if (dbFile.empty()) {
         return E_INVALID_FILE_PATH;
     }
-    std::string shmFile = dbFile + "-shm";
-    std::string walFile = dbFile + "-wal";
-    if (access(dbFile.c_str(), F_OK) != 0 && access(shmFile.c_str(), F_OK) != 0 &&
-        access(walFile.c_str(), F_OK) != 0) {
-        LOG_ERROR("not exist, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
-        return E_OK; // not not exist
+    if (access(dbFile.c_str(), F_OK) == 0) {
+        RdbStoreManager::GetInstance().Delete(dbFile);
     }
-    RdbStoreManager::GetInstance().Delete(dbFile);
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
     LOG_INFO("Delete rdb store, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
