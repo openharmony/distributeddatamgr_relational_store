@@ -520,6 +520,7 @@ RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, KeyFil
     keyFiles.Lock();
     auto &keyFile = keyFiles.GetKeyFile(keyFileType);
     if (IsKeyFileEmpty(keyFile)) {
+        keyFiles.InitKeyPath();
         if (!SaveSecretKeyToFile(keyFile)) {
             keyFiles.Unlock();
             LOG_ERROR("Failed to save key type:%{public}d err:%{public}d.", keyFileType, errno);
@@ -641,10 +642,6 @@ int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std:
 RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
 {
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
-    if (!InitPath(dbKeyDir)) {
-        LOG_ERROR(
-            "dbKeyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(dbKeyDir).c_str());
-    }
     const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
     if (!InitPath(lockDir)) {
         LOG_ERROR("lockDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(lockDir).c_str());
@@ -677,6 +674,15 @@ const std::string &RdbSecurityManager::KeyFiles::GetKeyFile(KeyFileType type)
         return keys_[PUB_KEY_FILE];
     }
     return keys_[PUB_KEY_FILE_NEW_KEY];
+}
+
+int32_t RdbSecurityManager::KeyFiles::InitKeyPath()
+{
+    const std::string keyDir = StringUtils::ExtractFilePath(keys_[PUB_KEY_FILE]);
+    if (!InitPath(keyDir)) {
+        LOG_ERROR("keyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(keyDir).c_str());
+    }
+    return E_OK;
 }
 
 int32_t RdbSecurityManager::KeyFiles::Lock()
