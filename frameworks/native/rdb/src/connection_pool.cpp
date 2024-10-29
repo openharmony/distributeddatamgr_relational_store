@@ -368,23 +368,22 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
         auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
-            LOG_ERROR("create connection fail, retVal is %{public}d", retVal);
+            LOG_ERROR("create connection fail, erroce:%{public}d", retVal);
             return retVal;
         }
 
         retVal = conn->Restore(backupPath, newKey, slaveStatus);
         if (retVal != E_OK) {
-            LOG_ERROR("RdDbRestore error. retVal is %{public}d", retVal);
+            LOG_ERROR("Restore failed, errCode:0x%{public}x", retVal);
             return retVal;
         }
 
         conn = nullptr;
         auto initRes = Init();
         if (initRes.first != E_OK) {
-            LOG_ERROR("init fail, errCode is %{public}d", initRes.first);
+            LOG_ERROR("init fail, errCode:%{public}d", initRes.first);
             return initRes.first;
         }
-        LOG_INFO("restore db succ!, retVal is %{public}d", retVal);
         return retVal;
     }
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
