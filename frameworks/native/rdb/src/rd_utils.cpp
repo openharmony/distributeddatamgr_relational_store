@@ -494,7 +494,7 @@ int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<
     return ret;
 }
 
-int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey)
+int RdUtils::RdDbRestore(const char *dbFile, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey)
 {
     if (GRD_KVApiInfo.DBRestoreApi == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
@@ -506,7 +506,7 @@ int RdUtils::RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector
     char key[keySize];
     GRD_CipherInfoT info = { 0 };
     info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
-    int ret = TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(db, backupDbFile, &info));
+    int ret = TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(dbFile, backupDbFile, &info));
     errno_t err = memset_s(key, keySize, 0, keySize);
     if (err != E_OK) {
         LOG_ERROR("can not memset 0, size %{public}zu", keySize);

@@ -63,7 +63,7 @@ public:
     static void ClearAndZeroString(std::string &str);
     static const char *GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize);
     static int RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
-    static int RdDbRestore(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
+    static int RdDbRestore(const char *dbFile, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
     static int RdDbRekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey);
 
     static int RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version);
