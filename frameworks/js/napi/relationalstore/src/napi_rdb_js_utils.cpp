@@ -26,6 +26,7 @@
 #include "rdb_sql_utils.h"
 #include "rdb_types.h"
 #include "result_set.h"
+#include "transaction.h"
 
 #define NAPI_CALL_RETURN_ERR(theCall, retVal) \
     do {                                      \
@@ -315,6 +316,28 @@ int32_t GetLevel(SecurityLevel level, SecurityLevel &out)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, CryptoParam &cryptoParam)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "encryptionKey", cryptoParam.encryptKey_), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "iterationCount", cryptoParam.iterNum, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "encryptionAlgo", cryptoParam.encryptAlgo, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "hmacAlgo", cryptoParam.hmacAlgo, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "kdfAlgo", cryptoParam.kdfAlgo, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "cryptoPageSize", cryptoParam.cryptoPageSize, true), napi_invalid_arg);
+    
+    return napi_ok;
+}
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 {
     int32_t status = GetNamedProperty(env, jsValue, "encrypt", rdbConfig.isEncrypt, true);
@@ -355,6 +378,19 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
  
     status = GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
     ASSERT(OK == status, "get haMode failed.", napi_invalid_arg);
+
+    status = GetNamedProperty(env, jsValue, "cryptoParam", rdbConfig.cryptoParam, true);
+    ASSERT(OK == status, "get cryptoParam failed.", napi_invalid_arg);
+    return napi_ok;
+}
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &transactionOptions)
+{
+    int32_t status = GetNamedProperty(env, jsValue, "transactionType", transactionOptions.transactionType, true);
+    bool checked = transactionOptions.transactionType >= Transaction::DEFERRED &&
+                   transactionOptions.transactionType <= Transaction::EXCLUSIVE;
+    ASSERT(OK == status && checked, "get transactionType failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -476,6 +512,8 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetArea(param.area);
     rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
     rdbStoreConfig.SetHaMode(rdbConfig.haMode);
+
+    rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
     return rdbStoreConfig;
 }
 
@@ -521,6 +559,17 @@ bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
 {
     for (auto &valueBucket : values) {
         if (HasDuplicateAssets(valueBucket)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const ValuesBuckets &values)
+{
+    const auto &[fields, vals] = values.GetFieldsAndValues();
+    for (const auto &valueObject : *vals) {
+        if (HasDuplicateAssets(valueObject)) {
             return true;
         }
     }

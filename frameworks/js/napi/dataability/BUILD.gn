@@ -31,6 +31,7 @@ ohos_shared_library("dataability") {
 
   sources = [
     "${relational_store_js_common_path}/src/js_utils.cpp",
+    "${relational_store_napi_path}/common/src/js_df_manager.cpp",
     "src/entry_point.cpp",
     "src/napi_data_ability_predicates.cpp",
     "src/napi_predicates_utils.cpp",

@@ -761,9 +761,9 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_024, TestSize.Level1)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    std::string encryptAlgo = "sha256";
+    EncryptAlgo encryptAlgo = EncryptAlgo::AES_256_GCM;
     config.SetEncryptAlgo(encryptAlgo);
-    std::string retEncryptAlgo = config.GetEncryptAlgo();
+    EncryptAlgo retEncryptAlgo = config.GetEncryptAlgo();
     EXPECT_EQ(encryptAlgo, retEncryptAlgo);
 
     ConfigTestOpenCallback helper;
@@ -773,12 +773,6 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_024, TestSize.Level1)
     store = nullptr;
     auto ret = RdbHelper::DeleteRdbStore(dbPath);
     EXPECT_EQ(ret, E_OK);
-
-    config.SetEncryptAlgo("");
-    retEncryptAlgo = config.GetEncryptAlgo();
-    EXPECT_EQ("", retEncryptAlgo);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
 }
 
 /**

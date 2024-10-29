@@ -30,7 +30,8 @@ public:
     static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
     static constexpr ssize_t DB_WAL_SIZE_LIMIT_MIN = 20 * 1024 * 1024; /* default wal file maximum size : 20M */
-    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MAX = 1024 * 1024 * 1024; /* default wal file maximum size : 1G */
+    static constexpr ssize_t DB_WAL_WARNING_SIZE = 256 * 1024 * 1024; /* default wal file maximum size : 256M */
+    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MAX = 512 * 1024 * 1024; /* default wal file maximum size : 512M */
     static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
     static constexpr int APP_DEFAULT_UMASK = 0002;
     static constexpr int SQLITE_MAX_COLUMN = 2000;
@@ -47,10 +48,20 @@ public:
     static constexpr char DEFAULE_SYNC_MODE[] = "FULL";
     static constexpr char MEMORY_DB_PATH[] = ":memory:";
     static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
+    static constexpr char CODEC_HMAC_ALGO_PREFIX[] = "PRAGMA codec_hmac_algo='";
+    static constexpr char CODEC_KDF_ALGO_PREFIX[] = "PRAGMA codec_kdf_algo='";
+    static constexpr char CODEC_PAGE_SIZE_PREFIX[] = "PRAGMA codec_page_size=";
     static constexpr char CODEC_REKEY_HMAC_ALGO[] = "PRAGMA codec_rekey_hmac_algo=sha256";
     static constexpr char CIPHER_DEFAULT_ALGO[] = "PRAGMA codec_cipher='aes-256-gcm'";
+    static constexpr char CIPHER_ALGO_PREFIX[] = "PRAGMA codec_cipher='";
+    static constexpr char ALGO_SUFFIX[] = "'";
     static constexpr char CIPHER_KDF_ITER[] = "PRAGMA codec_kdf_iter=";
     static constexpr char CIPHER_DEFAULT_ATTACH_HMAC_ALGO[] = "PRAGMA cipher_default_attach_hmac_algo=sha256";
+    static constexpr char CIPHER_DEFAULT_ATTACH_CIPHER_PREFIX[] = "PRAGMA cipher_default_attach_cipher='";
+    static constexpr char CIPHER_DEFAULT_ATTACH_HMAC_ALGO_PREFIX[] = "PRAGMA cipher_default_attach_hmac_algo='";
+    static constexpr char CIPHER_DEFAULT_ATTACH_KDF_ALGO_PREFIX[] = "PRAGMA cipher_default_attach_kdf_algo='";
+    static constexpr char CIPHER_DEFAULT_ATTACH_PAGE_SIZE_PREFIX[] = "PRAGMA cipher_default_attach_page_size=";
+    static constexpr char CIPHER_DEFAULT_ATTACH_KDF_ITER_PREFIX[] = "PRAGMA cipher_default_attach_kdf_iter=";
 };
 
 class SqliteGlobalConfig {

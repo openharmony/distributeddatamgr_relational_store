@@ -32,6 +32,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 RdStatement::RdStatement()
 {
 }
@@ -116,7 +117,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
             (!EndWithNull(newSql, curIdx) && !TryEatSymbol(newSql, ';', curIdx))) {
             return E_INCORRECT_SQL;
         }
-        
+
         readOnly_ = false;
         sql_ = newSql;
         return setPragmas_["user_version"](version);
@@ -128,7 +129,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     int ret = RdUtils::RdSqlPrepare(db, newSql.c_str(), newSql.length(), &tmpStmt, nullptr);
     if (ret != E_OK) {
         if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
-            RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
+            Reportor::ReportFault(Reportor::Create(*config_, ret));
         }
         if (tmpStmt != nullptr) {
             (void)RdUtils::RdSqlFinalize(tmpStmt);
@@ -246,23 +247,32 @@ int32_t RdStatement::Prepare(const std::string& sql)
 
 int32_t RdStatement::Bind(const std::vector<ValueObject>& args)
 {
+    std::vector<std::reference_wrapper<ValueObject>> refArgs;
+    for (auto &object : args) {
+        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+    }
+    return Bind(refArgs);
+}
+
+int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>& args)
+{
     uint32_t index = 1;
     int ret = E_OK;
     for (auto &arg : args) {
-        switch (arg.GetType()) {
+        switch (arg.get().GetType()) {
             case ValueObjectType::TYPE_NULL: {
                 ret = RdUtils::RdSqlBindNull(stmtHandle_, index);
                 break;
             }
             case ValueObjectType::TYPE_INT: {
                 int64_t value = 0;
-                arg.GetLong(value);
+                arg.get().GetLong(value);
                 ret = RdUtils::RdSqlBindInt64(stmtHandle_, index, value);
                 break;
             }
             case ValueObjectType::TYPE_DOUBLE: {
                 double doubleVal = 0;
-                arg.GetDouble(doubleVal);
+                arg.get().GetDouble(doubleVal);
                 ret = RdUtils::RdSqlBindDouble(stmtHandle_, index, doubleVal);
                 break;
             }
@@ -296,7 +306,7 @@ int32_t RdStatement::Step()
     }
     int ret = RdUtils::RdSqlStep(stmtHandle_);
     if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
-        RdbFaultHiViewReporter::ReportFault(RdbFaultHiViewReporter::Create(*config_, ret));
+        Reportor::ReportFault(Reportor::Create(*config_, ret));
     }
     stepCnt_++;
     return ret;
@@ -313,6 +323,15 @@ int32_t RdStatement::Reset()
 }
 
 int32_t RdStatement::Execute(const std::vector<ValueObject>& args)
+{
+    std::vector<std::reference_wrapper<ValueObject>> refArgs;
+    for (auto &object : args) {
+        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+    }
+    return Execute(refArgs);
+}
+
+int32_t RdStatement::Execute(const std::vector<std::reference_wrapper<ValueObject>>& args)
 {
     if (!readOnly_ && strcmp(sql_.c_str(), GlobalExpr::PRAGMA_VERSION) == 0) {
         // It has already set version in prepare procedure

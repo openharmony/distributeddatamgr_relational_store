@@ -21,7 +21,7 @@ const INVALID_STATE = -1;
 const INVALID_STR = '';
 const MAX_SIZE = 4 * 1024 * 1024 * 1024 - 1;
 
-export var cloudExtension;
+export let cloudExtension;
 (function (a) {
     let f;
     (function (f) {
@@ -484,7 +484,7 @@ export var cloudExtension;
                         }
                         else if (t1 instanceof Uint8Array) {
                             u.writeInt(f.BLOB);
-                            var l3 = [];
+                            let l3 = [];
                             for (let f2 = 0; f2 < t1.length; f2++) {
                                 l3.push(t1[f2]);
                             }
