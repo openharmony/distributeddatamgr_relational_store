@@ -31,7 +31,6 @@
 #include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "rd_connection.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -367,19 +366,31 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     }
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        Connection::Delete(config_);
-        RdConnection conn(config_, false);
-        auto retVal = conn.Restore(backupPath, newKey, slaveStatus);
+        auto initRes = Init();
+        if (initRes.first != E_OK) {
+            LOG_ERROR("init fail, errCode is %{public}", initRes.first);
+            return initRes.first;
+        }
+
+        auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
-            LOG_ERROR("RdDbRestore error.");
+            LOG_ERROR("create connection fail, retVal is %{public}d", retVal);
             return retVal;
         }
 
-        auto [errCode, node] = Init();
-        if (errCode != E_OK) {
-            LOG_ERROR("init fail");
+        retVal = conn->Restore(backupPath, newKey, slaveStatus);
+        if (retVal != E_OK) {
+            LOG_ERROR("RdDbRestore error. retVal is %{public}d", retVal);
+            return retVal;
         }
-        LOG_INFO("i think restore succ!, retVal is %{public}d", retVal);
+
+        CloseAllConnections();
+        initRes = Init();
+        if (initRes.first != E_OK) {
+            LOG_ERROR("init fail, errCode is %{public}", initRes.first);
+            return initRes.first;
+        }
+        LOG_INFO("restore db succ!, retVal is %{public}d", retVal);
         return errCode;
     }
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);

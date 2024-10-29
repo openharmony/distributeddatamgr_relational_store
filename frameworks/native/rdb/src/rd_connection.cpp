@@ -303,13 +303,30 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
 int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     SlaveStatus &slaveStatus)
 {
-    if (destEncryptKey.empty()) {
-        std::vector<uint8_t> key = config_.GetEncryptKey();
-        int32_t ret = RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), key);
-        key.assign(key.size(), 0);
+    auto ret = RdUtils::RdDbClose(dbHandle_, 0);
+    if (ret != E_OK) {
+        LOG_ERROR("close db failed");
         return ret;
     }
-    return RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), destEncryptKey);
+
+    if (destEncryptKey.empty()) {
+        std::vector<uint8_t> key = config_.GetEncryptKey();
+        ret = RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), key);
+        key.assign(key.size(), 0);
+    } else {
+        ret = RdUtils::RdDbRestore(config_.GetPath().c_str(), databasePath.c_str(), destEncryptKey);
+    }
+
+    if (ret != E_OK) {
+        LOG_ERROR("restore db failed, %{public}d", ret);
+    }
+
+    ret = InnerOpen(config_);
+    if (ret != E_OK) {
+        LOG_ERROR("reopen db failed:%{public}d", ret);
+        return ret;
+    }
+    return ret;
 }
 
 ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
