@@ -230,7 +230,7 @@ int32_t RdbStoreManager::GetPromiseFromService(DistributedRdb::RdbSyncerParam &p
         LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
         return E_ERROR;
     }
-    err = service->GetPromiseInfo(param);
+    err = service->VerifyPromiseInfo(param);
     if (err != DistributedRdb::RDB_OK) {
         LOG_ERROR("failed, err is %{public}d.", err);
         return E_ERROR;
