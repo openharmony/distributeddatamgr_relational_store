@@ -43,17 +43,6 @@ int32_t RdConnection::Repair(const RdbStoreConfig& config)
     return E_NOT_SUPPORT;
 }
 
-static constexpr const char *RD_POST_FIXES[] = {
-    "",
-    ".redo",
-    ".undo",
-    ".ctrl",
-    ".ctrl.dwr",
-    ".safe",
-    ".map",
-    ".corruptedflg",
-};
-
 int32_t RdConnection::Delete(const RdbStoreConfig &config)
 {
     (void)config;
