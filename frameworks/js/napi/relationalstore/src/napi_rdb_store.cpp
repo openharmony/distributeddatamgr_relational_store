@@ -472,8 +472,8 @@ int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
         int32_t ret = JSUtils::Convert2Value(env, element, valueObject.value);
         CHECK_RETURN_SET(ret == OK, std::make_shared<ParamError>(std::to_string(i), "ValueObject"));
         // The blob is an empty vector.
-        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
-        if (valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+        // If the API version is less than 14, and insert null. Otherwise, insert an empty vector.
+        if (valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 14) {
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
@@ -561,8 +561,8 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         // The blob is an empty vector.
-        // If the API version is less than 12, and insert null. Otherwise, insert an empty vector.
-        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 12) {
+        // If the API version is less than 14, and insert null. Otherwise, insert an empty vector.
+        if (ret == napi_ok && valueObject.GetType() == ValueObject::TYPE_BLOB && JSUtils::GetHapVersion() < 14) {
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
@@ -642,15 +642,13 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-int ParseTransactionType(
+int ParseTransactionOptions(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context)
 {
-    context->transactionType = Transaction::DEFERRED;
+    context->transactionOptions.transactionType = Transaction::DEFERRED;
     if (argc > 0 && !JSUtils::IsNull(env, argv[0])) {
-        auto status = JSUtils::Convert2ValueExt(env, argv[0], context->transactionType);
-        bool checked = status == napi_ok && context->transactionType >= Transaction::DEFERRED &&
-                       context->transactionType <= Transaction::EXCLUSIVE;
-        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("type", "a TransactionType"));
+        auto status = JSUtils::Convert2Value(env, argv[0], context->transactionOptions);
+        CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("options", "a transactionOptions"));
     }
     return OK;
 }
@@ -2177,12 +2175,13 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
     auto context = std::make_shared<CreateTransactionContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN(OK == ParseTransactionType(env, argc, argv, context));
+        CHECK_RETURN(OK == ParseTransactionOptions(env, argc, argv, context));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         int32_t code = E_ERROR;
-        std::tie(code, context->transaction) = context->StealRdbStore()->CreateTransaction(context->transactionType);
+        std::tie(code, context->transaction) =
+            context->StealRdbStore()->CreateTransaction(context->transactionOptions.transactionType);
         if (code != E_OK) {
             context->transaction = nullptr;
             return code;

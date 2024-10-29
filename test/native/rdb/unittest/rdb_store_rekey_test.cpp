@@ -442,3 +442,4 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
     ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
     CheckQueryData(store);
 }
+

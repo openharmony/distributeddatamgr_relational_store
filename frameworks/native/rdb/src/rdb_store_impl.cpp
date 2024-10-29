@@ -717,9 +717,10 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
 
 void RdbStoreImpl::InitDelayNotifier()
 {
-    if (delayNotifier_ == nullptr) {
-        delayNotifier_ = std::make_shared<DelayNotify>();
+    if (delayNotifier_ != nullptr) {
+        return;
     }
+    delayNotifier_ = std::make_shared<DelayNotify>();
     if (delayNotifier_ == nullptr) {
         LOG_ERROR("Init delay notifier failed.");
         return;
@@ -1569,7 +1570,7 @@ int RdbStoreImpl::SetDefaultEncryptSql(
 {
     auto errCode = statement->Prepare(sql);
     if (errCode != E_OK) {
-        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+        LOG_ERROR("Prepare failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
             config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
             config.GetCryptoParam().cryptoPageSize);
@@ -1577,7 +1578,7 @@ int RdbStoreImpl::SetDefaultEncryptSql(
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
-        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+        LOG_ERROR("Execute failed: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
             config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
             config.GetCryptoParam().cryptoPageSize);
@@ -1884,7 +1885,7 @@ int RdbStoreImpl::RollBack()
     }
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+        if (errCode == E_DATABASE_BUSY) {
             Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
         }
         // size + 1 means the number of transactions in process
@@ -1894,6 +1895,9 @@ int RdbStoreImpl::RollBack()
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
         return errCode;
@@ -1979,7 +1983,7 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+        if (errCode == E_DATABASE_BUSY) {
             Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
         }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
@@ -1988,6 +1992,9 @@ int RdbStoreImpl::Commit()
     }
     errCode = statement->Execute();
     if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+        }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
             transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
         return errCode;
@@ -2179,16 +2186,15 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 
     if (!isOpen_ || connectionPool_ == nullptr) {
-        LOG_ERROR("The connection pool is created: %{public}d, pool is null: %{public}d", isOpen_,
-            connectionPool_ == nullptr);
+        LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, connectionPool_ == nullptr);
         return E_ERROR;
     }
 
-    RdbSecurityManager::KeyFiles keyFiles(path_);
-    keyFiles.Lock();
-
     std::string destPath;
-    if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
+    bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
+    RdbSecurityManager::KeyFiles keyFiles(destPath);
+    keyFiles.Lock();
+    if (!isOK) {
         int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
             keyFiles.Unlock();
@@ -2203,6 +2209,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 #endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    keyFiles.Unlock();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
@@ -2219,7 +2226,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
-    keyFiles.Unlock();
     if (!cloudTables_.empty()) {
         DoCloudSync("");
     }
@@ -2338,6 +2344,10 @@ int32_t RdbStoreImpl::GetDbType() const
 
 std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction(int32_t type)
 {
+    if (isReadOnly_) {
+        return { E_NOT_SUPPORT, nullptr};
+    }
+
     auto [errCode, conn] = connectionPool_->CreateTransConn();
     if (conn == nullptr) {
         return { errCode, nullptr };

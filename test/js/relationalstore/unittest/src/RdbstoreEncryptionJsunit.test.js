@@ -70,7 +70,7 @@ const STORE_CONFIG_NON_DEFAULT = {
     }
 }
 
-async function CreatRdbStore(context, STORE_CONFIG) {
+async function CreateRdbStore(context, STORE_CONFIG) {
     let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG)
     await rdbStore.executeSql(CREATE_TABLE_TEST, null)
     let u8 = new Uint8Array([1, 2, 3])
@@ -211,7 +211,7 @@ describe('rdbEncryptTest', function () {
      */
     it('RdbEncryptTest_0030', 0, async function (done) {
         await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
-        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
+        let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         let predicates = new data_relationalStore.RdbPredicates("test")
         predicates.equalTo("name", "zhangsan")
         let resultSet = await rdbStore.query(predicates)
@@ -239,19 +239,42 @@ describe('rdbEncryptTest', function () {
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
      * @tc.desc RDB Encrypt function test
      */
-    it('RdbEncryptTest_0040', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
-        let rdbStore = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT)
-        rdbStore = null
-
+    it('RdbEncryptTest_0040', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0040 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         try {
-            rdbStore = await CreatRdbStore(context, STORE_CONFIG_WRONG)
-            expect(false).assertTrue()
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
+          expect(rdbStore !== null).assertTrue();
         } catch (err) {
-            expect(err.code).assertEqual(14800011);
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
         }
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0040 end *************");
+    })
 
-        await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
+    /**
+     * @tc.name RdbEncryptTest_0041
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0041
+     * @tc.desc RDB Encrypt function test
+     * @tc.size MediumTest
+     * @tc.type Function
+     * @tc.level Level 1
+     */
+    it('RdbEncryptTest_0041', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0041 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_WRONG);
+        try {
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+          expect(rdbStore !== null).assertTrue();
+        } catch (err) {
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0041 end *************");
     })
 
     /**
@@ -297,10 +320,10 @@ describe('rdbEncryptTest', function () {
         let rdbStore2;
         // create 'rdbstore1'
         try {
-            rdbStore1 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT);
+            rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // query 'rdbstore1'
@@ -315,10 +338,10 @@ describe('rdbEncryptTest', function () {
 
         // create 'rdbStore2'
         try {
-            rdbStore2 = await CreatRdbStore(context, STORE_CONFIG_ENCRYPT2)
+            rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create table and query 'rdbStore1'
@@ -616,7 +639,7 @@ describe('rdbEncryptTest', function () {
     /**
      * @tc.name RDB decrypt test
      * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0080
-     * @tc.desc RDB decrypt function invalid page size (512) test
+     * @tc.desc RDB decrypt function invalid page size (-1/512/4294967296/MAX_SAFE_INTEGER)
      */
     it('RdbDecryptTest_0080', 0, async function () {
         console.info(TAG + "************* RdbDecryptTest_0080 start *************")
@@ -636,12 +659,77 @@ describe('rdbEncryptTest', function () {
         try {
             let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
             expect().assertFail()
-            console.error(`Invalid page size 512 should fail, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`Page size 512 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = -1
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size -1 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = 4294967296
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size 4294967296 should fail, error code: ${err.code}, err message: ${err.message}`);
+        } catch (err) {
+            expect("401").assertEqual(err.code)
+        }
+
+        invalid_page_size_config.cryptoParam.cryptoPageSize = Number.MAX_SAFE_INTEGER
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, invalid_page_size_config)
+            expect().assertFail()
+            console.error(`Page size MAX_SAFE_INTEGER should fail, error code: ${err.code}, err msg: ${err.message}`);
         } catch (err) {
             expect("401").assertEqual(err.code)
         }
 
         console.log(TAG + "************* RdbDecryptTest_0080 end *************")
+    })
+
+    /**
+     * @tc.name RDB decrypt test
+     * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0090
+     * @tc.desc RDB decrypt function valid page size (1024/65536) test
+     */
+    it('RdbDecryptTest_0090', 0, async function () {
+        console.info(TAG + "************* RdbDecryptTest_0090 start *************")
+        let valid_page_size_config = {
+            name: "validPageSize.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+            cryptoParam: {
+                encryptionKey: new Uint8Array(['t', 'e', 's', 't', 'k', 'e', 'y']),
+                iterationCount: 25000,
+                encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC,
+                hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
+                kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
+                cryptoPageSize: 1024
+            }
+        }
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, valid_page_size_config)
+        } catch (err) {
+            console.error(`Valid page size 1024 failed, error code: ${err.code}, err message: ${err.message}`);
+            expect().assertFail()
+        }
+
+        valid_page_size_config.cryptoParam.cryptoPageSize = 65536
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, valid_page_size_config)
+        } catch (err) {
+            console.error(`Valid page size 65536 failed, error code: ${err.code}, err message: ${err.message}`);
+            expect().assertFail()
+        }
+
+        console.log(TAG + "************* RdbDecryptTest_0090 end *************")
     })
 
     console.log(TAG + "*************Unit Test End*************")

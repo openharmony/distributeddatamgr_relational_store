@@ -70,15 +70,18 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
         storeCache_.erase(path);
         // If rdbStore is not null, it means that the config has changed.
         if (rdbStore != nullptr) {
+            auto pool = TaskExecutor::GetInstance().GetExecutor();
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, rdbStore]() {
+                Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE,
+                    "ErrorType:Config diff!" + RdbStoreConfig::Format(rdbStore->GetConfig(), config)));
+            });
             LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
                      " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
                      " %{public}s",
                 config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
                 config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(),
                 config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(), config.GetCustomDir().c_str(),
-                RdbFaultHiViewReporter::FormatBrief(
-                    Connection::Collect(config), SqliteUtils::Anonymous(config.GetName()))
-                    .c_str());
+                Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
         }
     }
     return nullptr;
@@ -87,26 +90,20 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
+    RdbStoreConfig modifyConfig = config;
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
-    auto path = config.GetRoleType() != OWNER ? config.GetVisitorDir() : config.GetPath();
-    auto pool = TaskExecutor::GetInstance().GetExecutor();
-    pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [path, config, this]() {
-        if (IsConfigInvalidChanged(path, config)) {
-            Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE, "ErrorType:Encrypt diff"));
-        }
-    });
-    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(config, path);
+    auto path = modifyConfig.GetRoleType() != OWNER ? modifyConfig.GetVisitorDir() : modifyConfig.GetPath();
+    bundleName_ = modifyConfig.GetBundleName();
+    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(modifyConfig, path);
     if (rdbStore != nullptr) {
         return rdbStore;
     }
-
-    rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);
-    if (errCode != E_OK) {
-        LOG_ERROR("RdbStoreManager GetRdbStore fail to open RdbStore as memory issue, rc=%{public}d", errCode);
+    if (modifyConfig.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
+        errCode = E_CONFIG_INVALID_CHANGE;
         return nullptr;
     }
-    if (config.GetRoleType() == VISITOR_WRITE) {
+    if (modifyConfig.GetRoleType() == VISITOR_WRITE) {
         Param param = GetSyncParam(config);
         int32_t status = GetPromiseFromService(param);
         if (status != E_OK) {
@@ -114,23 +111,29 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
             return nullptr;
         }
     }
-    if (config.GetRoleType() == OWNER && !config.IsReadOnly()) {
-        errCode = SetSecurityLabel(config);
+    rdbStore = std::make_shared<RdbStoreImpl>(modifyConfig, errCode);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbStore fail path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
+        return nullptr;
+    }
+
+    if (modifyConfig.GetRoleType() == OWNER && !modifyConfig.IsReadOnly()) {
+        errCode = SetSecurityLabel(modifyConfig);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d",
-                SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetSecurityLevel(), errCode);
+                SqliteUtils::Anonymous(modifyConfig.GetName()).c_str(), modifyConfig.GetSecurityLevel(), errCode);
             return nullptr;
         }
-        if (config.IsVector()) {
+        if (modifyConfig.IsVector()) {
             storeCache_[path] = rdbStore;
             return rdbStore;
         }
         (void)rdbStore->ExchangeSlaverToMaster();
-        errCode = ProcessOpenCallback(*rdbStore, config, version, openCallback);
+        errCode = ProcessOpenCallback(*rdbStore, modifyConfig, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                SqliteUtils::Anonymous(config.GetName()).c_str(), SqliteUtils::Anonymous(config.GetPath()).c_str(),
-                errCode);
+                SqliteUtils::Anonymous(modifyConfig.GetName()).c_str(),
+                SqliteUtils::Anonymous(modifyConfig.GetPath()).c_str(), errCode);
             return nullptr;
         }
     }
@@ -139,11 +142,11 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     return rdbStore;
 }
 
-bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, const RdbStoreConfig &config)
+bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config)
 {
     Param param = GetSyncParam(config);
     Param tempParam;
-    if (bundleName_.empty()) {
+    if (config.GetBundleName().empty()) {
         LOG_WARN("Config has no bundleName, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
@@ -156,14 +159,20 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, const RdbS
             return false;
         };
     };
-
-    if (tempParam.level_ != param.level_ || tempParam.area_ != param.area_ ||
-        tempParam.isEncrypt_ != param.isEncrypt_) {
-        LOG_ERROR("Store config invalid change, storeName %{public}s, securitylevel: %{public}d -> %{public}d, "
-                  "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
+    bool isLevelInvalidChange = (tempParam.level_ > param.level_);
+    bool isEncryptInvalidChange = (tempParam.isEncrypt_ != param.isEncrypt_);
+    bool isAreaInvalidChange = (tempParam.area_ != param.area_);
+    if (isLevelInvalidChange || isEncryptInvalidChange || isAreaInvalidChange) {
+        LOG_WARN("Store config invalid change, storePath %{public}s, securitylevel: %{public}d -> %{public}d, "
+                 "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
             SqliteUtils::Anonymous(path).c_str(), tempParam.level_, param.level_, tempParam.area_, param.area_,
             tempParam.isEncrypt_, param.isEncrypt_);
-        return true;
+        if (isLevelInvalidChange) {
+            return true;
+        }
+        if (isEncryptInvalidChange) {
+            config.SetEncryptStatus(tempParam.isEncrypt_);
+        }
     }
     return false;
 }
