@@ -40,6 +40,35 @@ struct AssetValue {
     std::string size;
     std::string hash;
     std::string path;
+
+    bool operator<(const AssetValue &ref) const
+    {
+        if (name != ref.name) {
+            return name < ref.name;
+        }
+        if (status != ref.status) {
+            return status < ref.status;
+        }
+        if (id != ref.id) {
+            return id < ref.id;
+        }
+        if (uri != ref.uri) {
+            return uri < ref.uri;
+        }
+        if (createTime != ref.createTime) {
+            return createTime < ref.createTime;
+        }
+        if (modifyTime != ref.modifyTime) {
+            return modifyTime < ref.modifyTime;
+        }
+        if (size != ref.size) {
+            return size < ref.size;
+        }
+        if (hash != ref.hash) {
+            return hash < ref.hash;
+        }
+        return path < ref.path;
+    }
 };
 }
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H

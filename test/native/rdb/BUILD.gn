@@ -86,6 +86,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_distributed_test.cpp",
     "unittest/rdb_double_write_test.cpp",
     "unittest/rdb_encrypt_decrypt_test.cpp",
+    "unittest/rdb_execute_rd_test.cpp",
     "unittest/rdb_execute_test.cpp",
     "unittest/rdb_get_store_test.cpp",
     "unittest/rdb_helper_test.cpp",
@@ -107,6 +108,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_store_interface_test.cpp",
     "unittest/rdb_store_rekey_test.cpp",
     "unittest/rdb_store_subscribe_test.cpp",
+    "unittest/rdb_trans_db_test.cpp",
     "unittest/rdb_transaction_test.cpp",
     "unittest/rdb_update_test.cpp",
     "unittest/rdb_upgrade_test.cpp",
@@ -114,6 +116,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_value_bucket_test.cpp",
     "unittest/rdb_wal_limit_test.cpp",
     "unittest/sqlite_utils_test.cpp",
+    "unittest/transaction_test.cpp",
     "unittest/value_object_test.cpp",
   ]
 
@@ -142,8 +145,10 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/sqlite_sql_builder.cpp",
     "../../../frameworks/native/rdb/src/sqlite_statement.cpp",
     "../../../frameworks/native/rdb/src/sqlite_utils.cpp",
+    "../../../frameworks/native/rdb/src/step_result_set.cpp",
     "../../../frameworks/native/rdb/src/string_utils.cpp",
     "../../../frameworks/native/rdb/src/task_executor.cpp",
+    "../../../frameworks/native/rdb/src/trans_db.cpp",
   ]
 
   configs = [ ":module_private_config" ]

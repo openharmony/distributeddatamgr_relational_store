@@ -22,7 +22,7 @@ void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
     (void)eventInfo;
 }
 
-void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair)
 {
     (void)eventInfo;
 }

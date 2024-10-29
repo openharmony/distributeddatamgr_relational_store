@@ -44,8 +44,8 @@ namespace OHOS::NativeRdb {
 class DelayNotify;
 class RdbStoreLocalObserver {
 public:
-    explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
-    virtual ~RdbStoreLocalObserver() {};
+    explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer){};
+    virtual ~RdbStoreLocalObserver(){};
     void OnChange()
     {
         observer_->OnChange();
@@ -54,14 +54,15 @@ public:
     {
         return observer_;
     }
+
 private:
     DistributedRdb::RdbStoreObserver *observer_ = nullptr;
 };
 
 class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
 public:
-    explicit RdbStoreLocalSharedObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
-    virtual ~RdbStoreLocalSharedObserver() {};
+    explicit RdbStoreLocalSharedObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer){};
+    virtual ~RdbStoreLocalSharedObserver(){};
     void OnChange() override
     {
         observer_->OnChange();
@@ -70,6 +71,7 @@ public:
     {
         return observer_;
     }
+
 private:
     DistributedRdb::RdbStoreObserver *observer_ = nullptr;
 };
@@ -79,45 +81,23 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config);
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
-    const RdbStoreConfig &GetConfig();
-    int Insert(int64_t &outRowId, const std::string &table, const ValuesBucket &values) override;
-    int BatchInsert(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values) override;
-    int Replace(int64_t &outRowId, const std::string &table, const ValuesBucket &initialValues) override;
-    int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
-        ConflictResolution conflictResolution) override;
-    int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs) override;
-    int Update(int &changedRows, const std::string &table, const ValuesBucket &values, const std::string &whereClause,
-        const std::vector<ValueObject> &bindArgs) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause, const std::vector<std::string> &whereArgs,
-        ConflictResolution conflictResolution) override;
-    int UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
-        ConflictResolution conflictResolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
-        const std::vector<std::string> &whereArgs) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
-        const std::vector<ValueObject> &bindArgs) override;
-    std::shared_ptr<AbsSharedResultSet> Query(int &errCode, bool distinct,
-        const std::string &table, const std::vector<std::string> &columns,
-        const std::string &whereClause, const std::vector<ValueObject> &bindArgs, const std::string &groupBy,
-        const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset) override;
-    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
-        const std::vector<std::string> &sqlArgs) override;
-    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteSql(const std::string& sql, const std::vector<ValueObject>& bindArgs) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string& sql, const std::vector<ValueObject>& bindArgs,
-        int64_t trxId) override;
-    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteAndGetString(std::string &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs) override;
-    int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
-        const std::vector<ValueObject> &bindArgs) override;
-    int Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) override;
+    std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int, int64_t> BatchInsert(const std::string& table, const ValuesBuckets& values) override;
+    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
+        Resolution resolution) override;
+    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
+    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args) override;
+    std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
+        const Fields &columns, int &errCode) override;
+    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const AbsRdbPredicates &predicates,
+        const Fields &columns) override;
+    int ExecuteSql(const std::string &sql, const Values &args) override;
+    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
+    int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
+    int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
+    int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args) override;
+    int ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args) override;
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int BeginTransaction() override;
@@ -133,71 +113,49 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
-    int ConfigLocale(const std::string &localeStr);
+    int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey) override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
-    std::string GetName();
-    std::string GetFileType();
-    std::shared_ptr<ResultSet> QueryByStep(const std::string& sql, const std::vector<std::string>& sqlArgs) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const std::vector<ValueObject> &args) override;
-    std::shared_ptr<ResultSet> QueryByStep(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
-    std::shared_ptr<AbsSharedResultSet> Query(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
-    std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
-    int Update(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates) override;
-    int Delete(int &deletedRows, const AbsRdbPredicates &predicates) override;
-
-    std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns, int &errCode) override;
-
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
-
-    std::string ObtainDistributedTableName(const std::string& device, const std::string& table, int &errCode) override;
-
+    std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
-
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
-
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
-
-    int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
-    int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer) override;
-
-    int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
-
-    int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer) override;
-
+    int Subscribe(const SubscribeOption &option, RdbStoreObserver *observer) override;
+    int UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer) override;
+    int SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
+    int UnsubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
     int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
-
     int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
-
     int Notify(const std::string &event) override;
-
     int SetSearchable(bool isSearchable) override;
-
-    ModifyTime GetModifyTime(const std::string& table, const std::string& columnName,
-        std::vector<PRIKey>& keys) override;
-
+    ModifyTime GetModifyTime(const std::string &table, const std::string &columnName,
+        std::vector<PRIKey> &keys) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
-    std::pair<int32_t, int32_t> Attach(
-        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
-    std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
+    std::pair<int32_t, int32_t> Attach(const RdbStoreConfig &config, const std::string &attachName,
+        int32_t waitTime) override;
+    std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;
     int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
     int32_t GetDbType() const override;
-
     std::pair<int32_t, uint32_t> LockCloudContainer() override;
     int32_t UnlockCloudContainer() override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
+
+    // not virtual functions /
+    const RdbStoreConfig &GetConfig();
+    int ConfigLocale(const std::string &localeStr);
+    std::string GetName();
+    std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
 
+protected:
+    std::string GetLogTableName(const std::string &tableName) override;
+
 private:
-    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
 
@@ -210,49 +168,37 @@ private:
         const std::string &sql, const ValueObject &object, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
-    ExecuteSqls GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
-    void SetAssetStatus(const ValueObject &val, int32_t status);
     void DoCloudSync(const std::string &table);
     int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
         const AsyncDetail &async);
-    int InnerBackup(const std::string& databasePath,
-        const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
-    ModifyTime GetModifyTimeByRowId(const std::string& logTable, std::vector<PRIKey>& keys);
+    int InnerBackup(const std::string &databasePath,
+        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
+    ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
     Uri GetUri(const std::string &event);
-    int SubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
-    int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
-    int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocalAll(const SubscribeOption& option);
-    int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
-    int UnSubscribeLocalSharedAll(const SubscribeOption& option);
-    int32_t UnsubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
+    int SubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer);
+    int SubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer);
+    int32_t SubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
+    int SubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
+    int UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer);
+    int UnSubscribeLocalAll(const SubscribeOption &option);
+    int UnSubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer);
+    int UnSubscribeLocalSharedAll(const SubscribeOption &option);
+    int32_t UnsubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
+    int UnSubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
-    bool ColHasSpecificField(const std::vector<std::string> &columns);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
     std::vector<ValueObject> CreateBackupBindArgs(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey);
-    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
-    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
+    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, std::shared_ptr<Connection> conn) const;
+    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, bool read = false) const;
     int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
         const std::vector<uint8_t> &key, int32_t waitTime);
-    int SetDefaultEncryptSql(
-        const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config);
+    int SetDefaultEncryptSql(const std::shared_ptr<Statement> &statement, std::string sql,
+        const RdbStoreConfig &config);
     int SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
-    int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
-        ConflictResolution conflictResolution);
-    int UpdateWithConflictResolutionEntry(int &changedRows, const std::string &table, const ValuesBucket &values,
-        const std::string &whereClause, const std::vector<ValueObject> &bindArgs,
-        ConflictResolution conflictResolution);
-    int BatchInsertEntry(int64_t& outInsertNum, const std::string& table, const std::vector<ValuesBucket>& values);
-    int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
-    std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
-        int64_t trxId);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
@@ -287,6 +233,7 @@ private:
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+    std::list<std::weak_ptr<Transaction>> transactions_;
 };
 } // namespace OHOS::NativeRdb
 #endif

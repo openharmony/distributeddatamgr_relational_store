@@ -26,6 +26,7 @@
 #include "rdb_sql_utils.h"
 #include "rdb_types.h"
 #include "result_set.h"
+#include "transaction.h"
 
 #define NAPI_CALL_RETURN_ERR(theCall, retVal) \
     do {                                      \
@@ -383,6 +384,16 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     return napi_ok;
 }
 
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &transactionOptions)
+{
+    int32_t status = GetNamedProperty(env, jsValue, "transactionType", transactionOptions.transactionType, true);
+    bool checked = transactionOptions.transactionType >= Transaction::DEFERRED &&
+                   transactionOptions.transactionType <= Transaction::EXCLUSIVE;
+    ASSERT(OK == status && checked, "get transactionType failed.", napi_invalid_arg);
+    return napi_ok;
+}
+
 int32_t GetCurrentAbilityParam(napi_env env, napi_value jsValue, ContextParam &param)
 {
     std::shared_ptr<Context> context = JSAbility::GetCurrentAbility(env, jsValue);
@@ -548,6 +559,17 @@ bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
 {
     for (auto &valueBucket : values) {
         if (HasDuplicateAssets(valueBucket)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool HasDuplicateAssets(const ValuesBuckets &values)
+{
+    const auto &[fields, vals] = values.GetFieldsAndValues();
+    for (const auto &valueObject : *vals) {
+        if (HasDuplicateAssets(valueObject)) {
             return true;
         }
     }

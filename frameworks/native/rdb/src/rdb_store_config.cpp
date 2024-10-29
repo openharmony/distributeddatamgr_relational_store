@@ -628,14 +628,8 @@ bool RdbStoreConfig::CryptoParam::IsValid() const
         return false;
     }
 
-    int32_t pageSize = cryptoPageSize;
-    if (pageSize < DB_MIN_CRYPTO_PAGE_SIZE || pageSize > DB_MAX_CRYPTO_PAGE_SIZE) {
-        return false;
-    }
-    if (!((pageSize != 0) && ((pageSize & (pageSize - 1)) == 0))) {
-        return false;
-    }
-    return true;
+    return (cryptoPageSize != 0) && ((cryptoPageSize & DB_INVALID_CRYPTO_PAGE_SIZE_MASK) == 0) &&
+           (cryptoPageSize & (cryptoPageSize - 1)) == 0;
 }
 
 std::string RdbStoreConfig::Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig)

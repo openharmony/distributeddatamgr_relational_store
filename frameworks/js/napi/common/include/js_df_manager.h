@@ -31,5 +31,5 @@ private:
 };
 }
 
-constexpr auto LOWER_24_BITS_MASK =  (1 << 24) - 1;
+constexpr auto LOWER_24_BITS_MASK =  (1u << 24) - 1;
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_JS_NAPI_COMMON_JSUAF_MANAGER_H

@@ -37,6 +37,7 @@ sources = [
   "src/napi_rdb_store.cpp",
   "src/napi_rdb_store_helper.cpp",
   "src/napi_result_set.cpp",
+  "src/napi_transaction.cpp",
   "src/napi_uv_queue.cpp",
 ]
 
@@ -101,6 +102,7 @@ if (is_ohos) {
     buildos = "windows"
     defines = [
       "WINDOWS_PLATFORM",
+      "CROSS_PLATFORM",
       "API_EXPORT=__declspec(dllimport)",
     ]
 
@@ -137,7 +139,10 @@ if (is_ohos) {
     ]
 
     buildos = "mac"
-    defines = [ "MAC_PLATFORM" ]
+    defines = [
+      "MAC_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
@@ -213,7 +218,10 @@ if (is_ohos) {
       "-stdlib=libc++",
     ]
 
-    defines = [ "IOS_PLATFORM" ]
+    defines = [
+      "IOS_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
