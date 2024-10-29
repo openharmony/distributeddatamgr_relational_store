@@ -748,8 +748,8 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize
 {
     std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
 
-    int changedRows;
-    int64_t id;
+    int changedRows = 0;
+    int64_t id = -1;
     ValuesBucket values;
 
     int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));

@@ -230,7 +230,7 @@ public:
      * @param val Indicates an Assets input parameter.
      */
     API_EXPORT ValueObject(BigInt val);
-    
+
     /**
      * @brief Constructor.
      * This constructor is used to convert the FloatVector input parameter to a value of type ValueObject.
@@ -378,6 +378,12 @@ public:
     {
         return value;
     }
+
+    bool operator<(const ValueObject &rhs) const;
+
+    bool operator==(const ValueObject &rhs) const;
+
+    bool operator!=(const ValueObject &rhs) const;
 
 private:
     template<class T>

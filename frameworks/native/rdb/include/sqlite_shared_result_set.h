@@ -22,11 +22,11 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 #include "abs_shared_result_set.h"
 #include "connection.h"
 #include "shared_block.h"
-#include "connection_pool.h"
 #include "statement.h"
 #include "value_object.h"
 
@@ -34,8 +34,10 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSharedResultSet : public AbsSharedResultSet {
 public:
-    SqliteSharedResultSet(std::shared_ptr<ConnectionPool> pool, std::string path,
-        std::string sql, const std::vector<ValueObject> &bindArgs);
+    using Values = std::vector<ValueObject>;
+    using Conn = std::shared_ptr<Connection>;
+    using Time = std::chrono::steady_clock::time_point;
+    SqliteSharedResultSet(Time start, Conn conn, std::string sql, const Values &args, const std::string &path);
     ~SqliteSharedResultSet() override;
     int Close() override;
     int32_t OnGo(int oldPosition, int newPosition) override;
@@ -72,7 +74,6 @@ private:
     std::shared_ptr<Statement> statement_;
     std::string qrySql_;
     std::vector<ValueObject> bindArgs_;
-    std::vector<std::string> columnNames_;
     std::mutex mutex_;
 };
 } // namespace NativeRdb

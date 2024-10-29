@@ -27,6 +27,8 @@
 #include "result_set.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "values_buckets.h"
+
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using Asset = OHOS::NativeRdb::AssetValue;
@@ -41,7 +43,12 @@ using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
+using ValuesBuckets = OHOS::NativeRdb::ValuesBuckets;
 using HAMode = NativeRdb::HAMode;
+using HmacAlgo = NativeRdb::HmacAlgo;
+using KdfAlgo = NativeRdb::KdfAlgo;
+using EncryptAlgo = NativeRdb::EncryptAlgo;
+using CryptoParam = NativeRdb::RdbStoreConfig::CryptoParam;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -56,6 +63,7 @@ struct RdbConfig {
     std::string path;
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;
+    CryptoParam cryptoParam;
 };
 
 struct ContextParam {
@@ -65,6 +73,10 @@ struct ContextParam {
     int32_t area;
     bool isSystemApp = false;
     bool isStageMode = true;
+};
+
+struct TransactionOptions {
+    int32_t transactionType = 0;
 };
 
 template<>
@@ -80,7 +92,13 @@ template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject);
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, CryptoParam &cryptoParam);
+
+template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &transactionOptions);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &context);
@@ -125,6 +143,7 @@ bool HasDuplicateAssets(const ValueObject &value);
 bool HasDuplicateAssets(const std::vector<ValueObject> &values);
 bool HasDuplicateAssets(const ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<ValuesBucket> &values);
+bool HasDuplicateAssets(const ValuesBuckets &values);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

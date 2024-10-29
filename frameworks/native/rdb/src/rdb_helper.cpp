@@ -17,6 +17,7 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "rdb_security_manager.h"
 #include "rdb_store_manager.h"
 #include "rdb_trace.h"
@@ -30,6 +31,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode)
@@ -80,11 +82,12 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
     if (access(dbFileName.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(dbFileName);
     }
+    RdbStoreConfig config(dbFileName);
+    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
 
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
     DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
 
-    RdbStoreConfig config(dbFileName);
     config.SetDBType(DB_SQLITE);
     int errCodeSqlite = Connection::Delete(config);
 
@@ -107,6 +110,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(dbFile);
     }
+    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
     LOG_INFO("Delete rdb store, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());

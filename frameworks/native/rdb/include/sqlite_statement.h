@@ -44,6 +44,7 @@ public:
     int Reset() override;
     int Finalize() override;
     int Execute(const std::vector<ValueObject> &args) override;
+    int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>> &args) override;
     std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args) override;
     int Changes() const override;
     int64_t LastInsertRowId() const override;
@@ -82,6 +83,7 @@ private:
 
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int BindArgs(const std::vector<ValueObject> &bindArgs);
+    int BindArgs(const std::vector<std::reference_wrapper<ValueObject>> &bindArgs);
     int IsValid(int index) const;
     int InnerStep();
     int InnerFinalize();
@@ -104,7 +106,7 @@ private:
     std::shared_ptr<Connection> conn_;
     std::string sql_;
     mutable std::vector<int32_t> types_;
-    std::shared_ptr<SqliteStatement> slave_;
+    std::shared_ptr<Statement> slave_;
     const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb

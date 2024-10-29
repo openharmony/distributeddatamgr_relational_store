@@ -22,7 +22,7 @@ void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
     (void)eventInfo;
 }
 
-void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair)
 {
     (void)eventInfo;
 }
@@ -83,10 +83,6 @@ std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &event
     return "";
 }
 
-bool RdbFaultHiViewReporter::HandTimeout(const std::string &dbPath)
-{
-    return false;
-}
 std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
 {
     (void)debugs;

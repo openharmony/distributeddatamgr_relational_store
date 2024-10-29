@@ -26,7 +26,8 @@ namespace OHOS {
 namespace NativeRdb {
 class SqliteSqlBuilder {
 public:
-    using ExecuteSqls = std::vector<std::pair<std::string, std::vector<std::vector<ValueObject>>>>;
+    using RefValue = std::reference_wrapper<ValueObject>;
+    using BatchRefSqls = std::vector<std::pair<std::string, std::vector<std::vector<RefValue>>>>;
     SqliteSqlBuilder();
     ~SqliteSqlBuilder();
     static std::string BuildUpdateString(const ValuesBucket &values, const std::string &tableName,
@@ -48,16 +49,20 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
     static std::string GetSqlArgs(size_t size);
 
-    static ExecuteSqls MakeExecuteSqls(
-        const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit);
+    static BatchRefSqls GenerateSqls(const std::string &table, const ValuesBuckets &buckets, int limit);
+    static void UpdateAssetStatus(const ValueObject &value, int32_t status);
 private:
+    static BatchRefSqls MakeExecuteSqls(const std::string &sql, const std::vector<RefValue> &args, int fieldSize,
+        int limit);
     static void AppendClause(std::string &builder, const std::string &name,
         const std::string &clause, const std::string &table = "");
     static void AppendColumns(
         std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
 
     static constexpr const char *SHARING_RESOURCE = "sharing_resource";
-
+    static constexpr uint32_t EXPANSION = 2;
+    static ValueObject nullObject_;
+    static std::reference_wrapper<ValueObject> nullRef_;
     static std::string HandleTable(const std::string &tableName);
 };
 } // namespace NativeRdb

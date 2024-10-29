@@ -73,6 +73,10 @@ typedef struct GRD_DbValueT {
     } value;
 } GRD_DbValueT;
 
+typedef struct GRD_CipherInfo {
+    const char *hexPassword;
+} GRD_CipherInfoT;
+
 typedef struct GRD_DB GRD_DB;
 
 #ifdef __cplusplus
