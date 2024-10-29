@@ -167,7 +167,6 @@ HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
     RdbStoreConfig config(dbPath);
     std::string bundleName = "com.ohos.config.GetDatabase";
     config.SetBundleName(bundleName);
-    config.SetSecurityLevel(SecurityLevel::S1);
     config.SetArea(1);
     config.SetEncryptStatus(true);
 
@@ -193,7 +192,6 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
     RdbStoreConfig config(dbPath);
     std::string bundleName = "com.ohos.config.GetDatabase";
     config.SetBundleName(bundleName);
-    config.SetSecurityLevel(SecurityLevel::S1);
     config.SetArea(1);
     config.SetEncryptStatus(true);
 
@@ -206,7 +204,7 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(rdbStore1, nullptr);
 
-    config.SetSecurityLevel(SecurityLevel::S2);
+    config.SetEncryptStatus(false);
     std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(rdbStore2, nullptr);

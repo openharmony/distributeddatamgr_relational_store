@@ -84,6 +84,7 @@ private:
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
+    static napi_value CreateTransaction(napi_env env, napi_callback_info info);
     static Descriptor GetDescriptors();
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
     static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
@@ -92,7 +93,6 @@ private:
     static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
     static napi_value LockCloudContainer(napi_env env, napi_callback_info info);
     static napi_value UnlockCloudContainer(napi_env env, napi_callback_info info);
-    static napi_value CreateTransaction(napi_env env, napi_callback_info info);
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
 
