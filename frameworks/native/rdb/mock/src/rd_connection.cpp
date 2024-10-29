@@ -113,7 +113,7 @@ bool RdConnection::IsWriter() const
 
 int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
 {
-    (void)config
+    (void)config;
     return E_NOT_SUPPORT;
 }
 
@@ -130,7 +130,7 @@ int32_t RdConnection::LimitWalSize()
 
 int32_t RdConnection::ConfigLocale(const std::string& localeStr)
 {
-    (void)localeStr
+    (void)localeStr;
     return E_NOT_SUPPORT;
 }
 
