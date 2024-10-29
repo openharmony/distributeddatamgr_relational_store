@@ -319,6 +319,7 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
 
     if (ret != E_OK) {
         LOG_ERROR("restore db failed, %{public}d", ret);
+        return ret;
     }
 
     ret = InnerOpen(config_);

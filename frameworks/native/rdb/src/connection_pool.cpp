@@ -366,12 +366,6 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     }
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        auto initRes = Init();
-        if (initRes.first != E_OK) {
-            LOG_ERROR("init fail, errCode is %{public}d", initRes.first);
-            return initRes.first;
-        }
-
         auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
             LOG_ERROR("create connection fail, retVal is %{public}d", retVal);
@@ -384,8 +378,8 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             return retVal;
         }
 
-        CloseAllConnections();
-        initRes = Init();
+        conn = nullptr;
+        auto initRes = Init();
         if (initRes.first != E_OK) {
             LOG_ERROR("init fail, errCode is %{public}d", initRes.first);
             return initRes.first;
