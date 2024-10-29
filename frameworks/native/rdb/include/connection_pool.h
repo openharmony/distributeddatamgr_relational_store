@@ -42,7 +42,7 @@ public:
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
-    std::pair<int32_t, std::shared_ptr<Connection>> CreateConnection(bool isReadOnly);
+    std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn(bool limited = true);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     // this interface is only provided for resultSet
@@ -50,6 +50,8 @@ public:
     std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
     std::pair<int32_t, SharedConn> DisableWal();
     int32_t EnableWal();
+    int32_t Dump(bool isWriter, const char *header);
+
     int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
@@ -76,16 +78,18 @@ private:
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        int32_t Unused(bool inTrans);
+        int32_t Unused(int32_t count);
     };
 
     struct Container {
         using Creator = std::function<std::pair<int32_t, std::shared_ptr<Connection>>()>;
         static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
+        static constexpr int32_t MIN_TRANS_ID = 10000;
         bool disable_ = true;
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;
+        int trans_ = 0;
         int32_t left_ = 0;
         int32_t right_ = 0;
         std::chrono::seconds timeout_;
@@ -99,13 +103,15 @@ private:
         int32_t ConfigLocale(const std::string &locale);
         std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
         std::list<std::shared_ptr<ConnNode>> AcquireAll(std::chrono::milliseconds milliS);
+        std::pair<int32_t, std::shared_ptr<ConnNode>> Create();
 
         void Disable();
         void Enable();
         int32_t Release(std::shared_ptr<ConnNode> node);
+        int32_t Drop(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
-        int32_t Dump(const char *header, bool inTrans);
+        int32_t Dump(const char *header, int32_t count);
 
     private:
         int32_t ExtendNode();
@@ -115,8 +121,8 @@ private:
     explicit ConnectionPool(const RdbStoreConfig &storeConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> Init(bool isAttach = false, bool needWriter = false);
     int32_t GetMaxReaders(const RdbStoreConfig &config);
-    std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
-    void ReleaseNode(std::shared_ptr<ConnNode> node);
+    std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans = false);
+    void ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse = true);
     int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
     bool CheckIntegrity(const std::string &dbPath);
@@ -124,6 +130,7 @@ private:
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS_COUNT = 2;
+    static constexpr uint32_t MAX_TRANS = 4;
     const RdbStoreConfig &config_;
     RdbStoreConfig attachConfig_;
     Container writers_;
@@ -136,6 +143,7 @@ private:
     std::mutex transMutex_;
     bool transactionUsed_;
     std::atomic<bool> isInTransaction_ = false;
+    std::atomic<uint32_t> transCount_ = 0;
 };
 
 } // namespace NativeRdb

@@ -143,6 +143,15 @@ void SqliteStatement::ReadFile2Buffer()
 
 int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 {
+    std::vector<std::reference_wrapper<ValueObject>> refBindArgs;
+    for (auto &object : bindArgs) {
+        refBindArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+    }
+    return BindArgs(refBindArgs);
+}
+
+int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObject>> &bindArgs)
+{
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_PREPARE, seqId_);
     if (bound_) {
         sqlite3_reset(stmt_);
@@ -151,12 +160,12 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
     bound_ = true;
     int index = 1;
     for (auto &arg : bindArgs) {
-        auto action = ACTIONS[arg.value.index()];
+        auto action = ACTIONS[arg.get().value.index()];
         if (action == nullptr) {
-            LOG_ERROR("not support the type %{public}zu", arg.value.index());
+            LOG_ERROR("not support the type %{public}zu", arg.get().value.index());
             return E_INVALID_ARGS;
         }
-        auto errCode = action(stmt_, index, arg.value);
+        auto errCode = action(stmt_, index, arg.get().value);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("Bind has error: %{public}d, sql: %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
             return SQLiteError::ErrNo(errCode);
@@ -332,6 +341,15 @@ int SqliteStatement::Finalize()
 }
 
 int SqliteStatement::Execute(const std::vector<ValueObject> &args)
+{
+    std::vector<std::reference_wrapper<ValueObject>> refArgs;
+    for (auto &object : args) {
+        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+    }
+    return Execute(refArgs);
+}
+
+int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueObject>> &args)
 {
     int count = static_cast<int>(args.size());
     if (count != numParameters_) {

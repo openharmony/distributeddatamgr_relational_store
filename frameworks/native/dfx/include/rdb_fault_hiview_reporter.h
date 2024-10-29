@@ -50,14 +50,14 @@ public:
     static bool RegCollector(Connection::Collector collector);
     static void Report(const RdbCorruptedEvent &eventInfo);
     static void ReportFault(const RdbCorruptedEvent &eventInfo);
-    static void ReportRestore(const RdbCorruptedEvent &eventInfo);
+    static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static std::string Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
+    static bool IsReportCorruptedFault(const std::string &dbPath);
 
 private:
     static void Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos);
     static std::string GetFileStatInfo(const DebugInfo &debugInfo);
-    static bool IsReportCorruptedFault(const std::string &dbPath);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static std::string GetTimeWithMilliseconds(time_t sec, int64_t nsec);

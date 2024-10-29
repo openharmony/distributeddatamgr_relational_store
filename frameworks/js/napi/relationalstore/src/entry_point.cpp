@@ -18,6 +18,7 @@
 #include "napi_rdb_store_helper.h"
 #include "napi_rdb_const_properties.h"
 #include "napi_result_set.h"
+#include "napi_transaction.h"
 #include "napi/native_api.h"
 
 using namespace OHOS::RelationalStoreJsKit;
@@ -32,6 +33,7 @@ static napi_value Init(napi_env env, napi_value exports)
     RdbStoreProxy::Init(env, exports);
     RdbPredicatesProxy::Init(env, exports);
     ResultSetProxy::Init(env, exports);
+    TransactionProxy::Init(env, exports);
     InitConstProperties(env, exports);
     return exports;
 }

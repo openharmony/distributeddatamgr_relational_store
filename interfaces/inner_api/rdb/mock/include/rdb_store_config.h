@@ -119,7 +119,7 @@ public:
         int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
         int32_t hmacAlgo = HmacAlgo::SHA256;
         int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
-        int32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
+        uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
         mutable std::vector<uint8_t> encryptKey_{};
         CryptoParam();
         ~CryptoParam();
@@ -129,9 +129,8 @@ public:
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
     static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
     static constexpr EncryptAlgo DB_DEFAULT_ENCRYPT_ALGO = AES_256_GCM;
-    static constexpr int DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
-    static constexpr int DB_MIN_CRYPTO_PAGE_SIZE = 512;
-    static constexpr int DB_MAX_CRYPTO_PAGE_SIZE = 65536;
+    static constexpr uint32_t DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
+    static constexpr uint32_t DB_INVALID_CRYPTO_PAGE_SIZE_MASK = 0xFFFE03FF;
     RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK, bool readOnly = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE, const std::string &syncMode = "",

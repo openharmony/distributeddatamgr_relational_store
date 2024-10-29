@@ -25,10 +25,10 @@
 #include "lru_bucket.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
-#include "rdb_store_impl.h"
 
 namespace OHOS {
 namespace NativeRdb {
+class RdbStoreImpl;
 class RdbStoreManager {
 public:
     static RdbStoreManager &GetInstance();

@@ -23,13 +23,16 @@
 #include "rdb_trace.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
-
+#include "traits.h"
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 std::vector<std::string> g_onConflictClause = {
     "", " OR ROLLBACK", " OR ABORT", " OR FAIL", " OR IGNORE", " OR REPLACE"
 };
+ValueObject SqliteSqlBuilder::nullObject_;
+std::reference_wrapper<ValueObject> SqliteSqlBuilder::nullRef_ = SqliteSqlBuilder::nullObject_;
+
 SqliteSqlBuilder::SqliteSqlBuilder() {}
 SqliteSqlBuilder::~SqliteSqlBuilder() {}
 
@@ -295,22 +298,45 @@ std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
     return args;
 }
 
-SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
-    const std::string &sql, std::vector<ValueObject> &&args, int fieldSize, int limit)
+SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(const std::string &table, const ValuesBuckets &buckets,
+    int limit)
+{
+    auto [fields, values] = buckets.GetFieldsAndValues();
+    auto columnSize = fields->size();
+    auto rowSize = buckets.RowSize();
+    std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, nullRef_);
+    std::string sql = "INSERT OR REPLACE INTO " + table + " (";
+    size_t columnIndex = 0;
+    for (auto &field : *fields) {
+        for (size_t row = 0; row < rowSize; ++row) {
+            auto [errorCode, value] = buckets.Get(row, std::ref(field));
+            if (errorCode != E_OK) {
+                continue;
+            }
+            SqliteSqlBuilder::UpdateAssetStatus(value.get(), AssetValue::STATUS_INSERT);
+            args[columnIndex + row * columnSize] = value;
+        }
+        columnIndex++;
+        sql.append(field).append(",");
+    }
+    sql.pop_back();
+    sql.append(") VALUES ");
+    return SqliteSqlBuilder::MakeExecuteSqls(sql, args, columnSize, limit);
+}
+
+SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::MakeExecuteSqls(const std::string &sql,
+    const std::vector<RefValue> &args, int fieldSize, int limit)
 {
     if (fieldSize == 0) {
-        return ExecuteSqls();
+        return BatchRefSqls();
     }
     size_t rowNumbers = args.size() / static_cast<size_t>(fieldSize);
     size_t maxRowNumbersOneTimes = static_cast<size_t>(limit / fieldSize);
     if (maxRowNumbersOneTimes == 0) {
-        return ExecuteSqls();
+        return BatchRefSqls();
     }
     size_t executeTimes = rowNumbers / maxRowNumbersOneTimes;
     size_t remainingRows = rowNumbers % maxRowNumbersOneTimes;
-    LOG_DEBUG("rowNumbers %{public}zu, maxRowNumbersOneTimes %{public}zu, executeTimes %{public}zu,"
-        "remainingRows %{public}zu, fieldSize %{public}d, limit %{public}d",
-        rowNumbers, maxRowNumbersOneTimes, executeTimes, remainingRows, fieldSize, limit);
     std::string singleRowSqlArgs = "(" + SqliteSqlBuilder::GetSqlArgs(fieldSize) + ")";
     auto appendAgsSql = [&singleRowSqlArgs, &sql](size_t rowNumber) {
         std::string sqlStr = sql;
@@ -321,14 +347,14 @@ SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
         return sqlStr;
     };
     std::string executeSql;
-    ExecuteSqls executeSqls;
+    BatchRefSqls executeSqls;
     auto start = args.begin();
     if (executeTimes != 0) {
         executeSql = appendAgsSql(maxRowNumbersOneTimes);
-        std::vector<std::vector<ValueObject>> sqlArgs;
+        std::vector<std::vector<RefValue>> sqlArgs;
         size_t maxVariableNumbers = maxRowNumbersOneTimes * static_cast<size_t>(fieldSize);
         for (size_t i = 0; i < executeTimes; ++i) {
-            std::vector<ValueObject> bindValueArgs(start, start + maxVariableNumbers);
+            std::vector<RefValue> bindValueArgs(start, start + maxVariableNumbers);
             sqlArgs.emplace_back(std::move(bindValueArgs));
             start += maxVariableNumbers;
         }
@@ -337,7 +363,7 @@ SqliteSqlBuilder::ExecuteSqls SqliteSqlBuilder::MakeExecuteSqls(
 
     if (remainingRows != 0) {
         executeSql = appendAgsSql(remainingRows);
-        std::vector<std::vector<ValueObject>> sqlArgs(1, std::vector<ValueObject>(start, args.end()));
+        std::vector<std::vector<RefValue>> sqlArgs(1, std::vector<RefValue>(start, args.end()));
         executeSqls.emplace_back(std::make_pair(executeSql, std::move(sqlArgs)));
     }
     return executeSqls;
@@ -353,6 +379,24 @@ std::string SqliteSqlBuilder::HandleTable(const std::string &tableName)
         return tableName;
     }
     return "'" + tableName + "'";
+}
+
+void SqliteSqlBuilder::UpdateAssetStatus(const ValueObject &val, int32_t status)
+{
+    if (val.GetType() == ValueObject::TYPE_ASSET) {
+        auto *asset = Traits::get_if<ValueObject::Asset>(&val.value);
+        if (asset != nullptr) {
+            asset->status = static_cast<AssetValue::Status>(status);
+        }
+    }
+    if (val.GetType() == ValueObject::TYPE_ASSETS) {
+        auto *assets = Traits::get_if<ValueObject::Assets>(&val.value);
+        if (assets != nullptr) {
+            for (auto &asset : *assets) {
+                asset.status = static_cast<AssetValue::Status>(status);
+            }
+        }
+    }
 }
 } // namespace NativeRdb
 } // namespace OHOS

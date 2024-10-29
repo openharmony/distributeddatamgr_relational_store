@@ -24,7 +24,7 @@
 #include "rdb_open_callback.h"
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-
+namespace Test {
 class RdbReadOnlyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -506,4 +506,26 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0022, TestSize.Level1)
     uint64_t cursor = 1;
     auto ret = store->CleanDirtyData("test", cursor);
     EXPECT_EQ(E_NOT_SUPPORT, ret);
+}
+
+/**
+ * @tc.name: RdbStore_CreateTransaction_001
+ * @tc.desc: test Create Transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReadOnlyTest, RdbStore_CreateTransaction_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
+    auto [errCode, trans] = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(E_NOT_SUPPORT, errCode);
+    EXPECT_EQ(trans, nullptr);
+
+    std::tie(errCode, trans) = store->CreateTransaction(Transaction::IMMEDIATE);
+    EXPECT_EQ(E_NOT_SUPPORT, errCode);
+    EXPECT_EQ(trans, nullptr);
+
+    std::tie(errCode, trans) = store->CreateTransaction(Transaction::EXCLUSIVE);
+    EXPECT_EQ(E_NOT_SUPPORT, errCode);
+    EXPECT_EQ(trans, nullptr);
+}
 }

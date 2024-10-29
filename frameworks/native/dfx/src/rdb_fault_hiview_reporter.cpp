@@ -60,9 +60,9 @@ void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
     }
 }
 
-void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair)
 {
-    if (IsReportCorruptedFault(eventInfo.path)) {
+    if (IsReportCorruptedFault(eventInfo.path) && repair) {
         return;
     }
     RdbCorruptedEvent eventInfoAppend = eventInfo;

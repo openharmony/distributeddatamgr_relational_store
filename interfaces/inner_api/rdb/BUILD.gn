@@ -29,6 +29,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
@@ -39,8 +40,12 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   "${relational_store_native_path}/rdb/src/step_result_set.cpp",
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  "${relational_store_native_path}/rdb/src/trans_db.cpp",
+  "${relational_store_native_path}/rdb/src/transaction.cpp",
+  "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
+  "${relational_store_native_path}/rdb/src/values_buckets.cpp",
 ]
 
 if (!is_ohos) {
@@ -273,7 +278,10 @@ if (is_ohos && !build_ohos_sdk) {
       defines += [ "RDB_SUPPORT_ICU" ]
     }
 
-    defines += [ "WINDOWS_PLATFORM" ]
+    defines += [
+      "WINDOWS_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
@@ -379,7 +387,10 @@ if (is_ohos && !build_ohos_sdk) {
       defines += [ "RDB_SUPPORT_ICU" ]
     }
 
-    defines += [ "MAC_PLATFORM" ]
+    defines += [
+      "MAC_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
@@ -571,7 +582,10 @@ if (is_ohos && !build_ohos_sdk) {
   base_deps = [ "${plugins_path}/libs/icu:icu_ios" ]
 
   ohos_source_set("native_rdb") {
-    defines = [ "IOS_PLATFORM" ]
+    defines = [
+      "IOS_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     part_name = "relational_store"
     sources = base_sources
