@@ -366,20 +366,25 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     }
     if (config_.GetDBType() == DB_VECTOR) {
         CloseAllConnections();
-        auto [retVal, connection] = CreateTransConn();
-
-        if (connection == nullptr) {
-            LOG_ERROR("Get null connection.");
-            return retVal;
-        }
-        retVal = connection->Restore(backupPath, newKey, slaveStatus);
+        auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
-            LOG_ERROR("RdDbRestore error.");
+            LOG_ERROR("create connection fail, erroce:%{public}d", retVal);
             return retVal;
         }
-        CloseAllConnections();
-        auto [errCode, node] = Init();
-        return errCode;
+
+        retVal = conn->Restore(backupPath, newKey, slaveStatus);
+        if (retVal != E_OK) {
+            LOG_ERROR("Restore failed, errCode:0x%{public}x", retVal);
+            return retVal;
+        }
+
+        conn = nullptr;
+        auto initRes = Init();
+        if (initRes.first != E_OK) {
+            LOG_ERROR("init fail, errCode:%{public}d", initRes.first);
+            return initRes.first;
+        }
+        return retVal;
     }
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
 }

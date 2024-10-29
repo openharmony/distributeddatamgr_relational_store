@@ -34,11 +34,15 @@ public:
 
     static const std::string databaseName;
     static std::shared_ptr<RdbStore> store;
+    static const std::string restoreDatabaseName;
+    static const std::string backupDatabaseName;
 };
 
 INSTANTIATE_TEST_CASE_P(, RdbExecuteRdTest, testing::Values(false, true));
 
 const std::string RdbExecuteRdTest::databaseName = RDB_TEST_PATH + "execute_test.db";
+const std::string RdbExecuteRdTest::restoreDatabaseName = RDB_TEST_PATH + "execute_test_restore.db";
+const std::string RdbExecuteRdTest::backupDatabaseName = RDB_TEST_PATH + "execute_test_backup.db";
 std::shared_ptr<RdbStore> RdbExecuteRdTest::store = nullptr;
 
 class ExecuteTestOpenRdCallback : public RdbOpenCallback {
@@ -918,4 +922,72 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_018, TestSize.Level1)
         RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
         EXPECT_EQ(store, nullptr);
     }
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_001
+ * @tc.desc: backup and restore
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
+{
+    //create new db instance
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbExecuteRdTest::restoreDatabaseName);
+    config.SetIsVector(true);
+    config.SetSecurityLevel(SecurityLevel::S4);
+    config.SetEncryptStatus(GetParam());
+    if (GetParam()) { // check if encrypt
+        config.SetHaMode(HAMode::MAIN_REPLICA);
+    }
+    config.SetAllowRebuild(true);
+    ExecuteTestOpenRdCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, repr floatvector(8));";
+    std::string sqlInsert = "INSERT INTO test VALUES(1, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');";
+    std::string sqlQuery = "SELECT id FROM test order by repr <-> '[1.1, 0.3, 2.2, 6.6, 1.5, 3.1, 0.6, 0.2]' limit 3;";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+    res = store->Execute(sqlInsert.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+    
+    std::vector<uint8_t> encryptKey;
+    if (GetParam()) {
+        encryptKey = config.GetEncryptKey();
+    }
+
+    int ret = store->Backup(RdbExecuteRdTest::backupDatabaseName, encryptKey);
+    EXPECT_EQ(ret, E_OK);
+
+    res = store->Execute("delete from test where id = 1;");
+    EXPECT_EQ(E_OK, res.first);
+
+    ret = store->Restore(RdbExecuteRdTest::backupDatabaseName, encryptKey);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sqlQuery.c_str(), std::vector<ValueObject>());
+
+    //check the result
+    EXPECT_NE(resultSet, nullptr);
+    EXPECT_EQ(resultSet->GoToNextRow(), E_OK);
+    std::vector<std::string> colNames = {};
+    resultSet->GetAllColumnNames(colNames);
+    EXPECT_EQ(colNames.size(), 1);
+    int columnIndex = 0;
+    int intVal = 0;
+    resultSet->GetColumnIndex("id", columnIndex);
+    resultSet->GetInt(columnIndex, intVal);
+    EXPECT_EQ(columnIndex, 0);
+    EXPECT_EQ(intVal, 1);
+    EXPECT_EQ(E_OK, resultSet->Close());
+    res = store->Execute("DROP TABLE test;");
+    EXPECT_EQ(E_OK, res.first);
+    
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::restoreDatabaseName);
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::backupDatabaseName);
 }
