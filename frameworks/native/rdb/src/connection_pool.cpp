@@ -368,7 +368,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
         auto initRes = Init();
         if (initRes.first != E_OK) {
-            LOG_ERROR("init fail, errCode is %{public}", initRes.first);
+            LOG_ERROR("init fail, errCode is %{public}d", initRes.first);
             return initRes.first;
         }
 
@@ -387,11 +387,11 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
         initRes = Init();
         if (initRes.first != E_OK) {
-            LOG_ERROR("init fail, errCode is %{public}", initRes.first);
+            LOG_ERROR("init fail, errCode is %{public}d", initRes.first);
             return initRes.first;
         }
         LOG_INFO("restore db succ!, retVal is %{public}d", retVal);
-        return errCode;
+        return retVal;
     }
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
 }
