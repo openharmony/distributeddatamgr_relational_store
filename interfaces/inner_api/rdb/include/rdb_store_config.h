@@ -143,6 +143,10 @@ enum RoleType : uint32_t {
       * The user has read-only permission.
     */
     VISITOR,
+    /**
+      * The user has specific administrative rights.
+    */
+    VISITOR_WRITE,
 };
 
 enum DBType : uint32_t {
@@ -201,6 +205,14 @@ struct ScalarFunctionInfo {
     ScalarFunction function_;
     int argc_;
 };
+
+struct PromiseInfo {
+    std::string user_ = "";
+    std::vector<uint32_t> tokenIds_ = {};
+    std::vector<int32_t> uids_ = {};
+    std::vector<std::string> permissionNames_ = {};
+};
+
 /**
  * Manages relational database configurations.
  */
@@ -656,6 +668,10 @@ public:
 
     int32_t GetIter() const;
 
+    PromiseInfo GetPromiseInfo() const;
+
+    void SetPromiseInfo(PromiseInfo promiseInfo);
+
     int32_t GetHaMode() const;
  
     void SetHaMode(int32_t haMode);
@@ -705,6 +721,7 @@ private:
     std::string journalMode_;
     std::string syncMode_;
     std::string databaseFileType;
+    PromiseInfo promiseInfo_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

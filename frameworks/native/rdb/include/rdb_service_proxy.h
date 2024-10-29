@@ -88,6 +88,8 @@ public:
 
     int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
 
+    int32_t VerifyPromiseInfo(const RdbSyncerParam &param) override;
+
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;

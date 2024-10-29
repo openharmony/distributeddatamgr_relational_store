@@ -48,6 +48,7 @@ private:
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
+    int32_t GetPromiseFromService(DistributedRdb::RdbSyncerParam &param);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
     std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
