@@ -318,7 +318,8 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     }
 
     if (ret != E_OK) {
-        LOG_ERROR("restore db failed, %{public}d", ret);
+        LOG_ERROR("restore failed, original datapath:%{public}s, restorepath:%{public}s, errcode:%{public}d",
+        config_.GetPath().c_str(), databasePath.c_str(), ret);
         return ret;
     }
 
