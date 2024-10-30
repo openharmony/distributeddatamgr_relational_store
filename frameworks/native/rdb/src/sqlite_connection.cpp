@@ -85,8 +85,10 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 {
     auto path = config.GetPath();
+    auto slavePath = SqliteUtils::GetSlavePath(path);
     for (auto &suffix : FILE_SUFFIXES) {
         SqliteUtils::DeleteFile(path + suffix.suffix_);
+        SqliteUtils::DeleteFile(slavePath + suffix.suffix_);
     }
     return E_OK;
 }
