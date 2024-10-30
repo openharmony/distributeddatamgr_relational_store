@@ -901,7 +901,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         }
 #endif
         config_.SetIter(0);
-        if(config_.IsEncrypt()){
+        if (config_.IsEncrypt()) {
             auto key = config_.GetEncryptKey();
             RdbSecurityManager::GetInstance().RestoreKeyFile(path_, key);
             key.assign(key.size(), 0);
