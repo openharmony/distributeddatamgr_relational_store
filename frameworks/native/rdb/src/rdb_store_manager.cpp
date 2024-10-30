@@ -61,30 +61,34 @@ RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE)
 
 std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreConfig &config, const std::string &path)
 {
-    if (storeCache_.find(path) != storeCache_.end()) {
-        std::shared_ptr<RdbStoreImpl> rdbStore = storeCache_[path].lock();
-        if (rdbStore != nullptr && rdbStore->GetConfig() == config) {
-            return rdbStore;
-        }
-        // TOD reconfigure store should be repeated this
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
+        return nullptr;
+    }
+    std::shared_ptr<RdbStoreImpl> rdbStore = it->second.lock();
+    if (rdbStore == nullptr) {
         storeCache_.erase(path);
-        // If rdbStore is not null, it means that the config has changed.
-        if (rdbStore != nullptr) {
-            auto pool = TaskExecutor::GetInstance().GetExecutor();
+        return nullptr;
+    }
+    if (!(rdbStore->GetConfig() == config)) {
+        storeCache_.erase(path);
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (pool != nullptr) {
             pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, rdbStore]() {
                 Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE,
                     "ErrorType:Config diff!" + RdbStoreConfig::Format(rdbStore->GetConfig(), config)));
             });
-            LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
-                     " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
-                     " %{public}s",
-                config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
-                config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(),
-                config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(), config.GetCustomDir().c_str(),
-                Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
         }
+        LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
+                 " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
+                 " %{public}s",
+            config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
+            config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
+            config.GetRoleType(), config.IsReadOnly(), config.GetCustomDir().c_str(),
+            Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
+        return nullptr;
     }
-    return nullptr;
+    return rdbStore;
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
