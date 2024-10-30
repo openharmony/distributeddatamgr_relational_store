@@ -142,7 +142,8 @@ void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uin
         return;
     }
     if (err != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err, param.storeName_.c_str());
+        LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+            SqliteUtils::Anonymous(param.storeName_).c_str());
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
             pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() { UploadSchema(param, retry); });
@@ -151,7 +152,8 @@ void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uin
     }
     err = service->AfterOpen(param);
     if (err != E_OK) {
-        LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err, param.storeName_.c_str());
+        LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err,
+            SqliteUtils::Anonymous(param.storeName_).c_str());
     }
 }
 
@@ -327,7 +329,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     InitSyncerParam();
     if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
-        LOG_ERROR("database corrupt, rebuild database %{public}s", name_.c_str());
+        LOG_ERROR("database corrupt, rebuild database %{public}s", SqliteUtils::Anonymous(name_).c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
@@ -343,7 +345,8 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     }
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
-        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode, path_.c_str());
+        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
+            SqliteUtils::Anonymous(path_).c_str());
         return;
     }
 
@@ -900,7 +903,7 @@ int RdbStoreImpl::ExecuteSqlEntry(const std::string &sql, const std::vector<Valu
         statement = nullptr;
         if (vSchema_ < static_cast<int64_t>(version)) {
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                     name_.c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
+                     SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
             vSchema_ = version;
             errCode = connectionPool_->RestartReaders();
         }
@@ -949,7 +952,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(std::share
         auto [err, version] = statement->ExecuteForValue();
         if (vSchema_ < static_cast<int64_t>(version)) {
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                     name_.c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
+                     SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
             vSchema_ = version;
             errCode = connectionPool_->RestartReaders();
         }
@@ -1131,7 +1134,7 @@ int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<Valu
  */
 int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    LOG_INFO("Backup db: %{public}s.", config_.GetName().c_str());
+    LOG_INFO("Backup db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if ((config_.GetRoleType() == VISITOR)) {
         return E_NOT_SUPPORT;
     }
@@ -1349,7 +1352,8 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     } else if (err != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
                   "[%{public}s]",
-            err, config_.GetName().c_str(), attachName.c_str(), config.GetName().c_str());
+            err, SqliteUtils::Anonymous(config_.GetName()).c_str(), attachName.c_str(),
+            SqliteUtils::Anonymous(config.GetName()).c_str());
         return { err, 0 };
     }
     if (!attachedInfo_.Insert(attachName, dbPath)) {
@@ -1382,7 +1386,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach", errCode,
-            config_.GetName().c_str(), attachName.c_str());
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), attachName.c_str());
         return { errCode, 0 };
     }
 
@@ -1453,7 +1457,7 @@ int RdbStoreImpl::BeginTransaction()
     errCode = statement->Execute();
     if (errCode != E_OK) {
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
-            transactionId, name_.c_str(), errCode);
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
 
         return errCode;
     }
@@ -1462,7 +1466,7 @@ int RdbStoreImpl::BeginTransaction()
     // 1 means the number of transactions in process
     if (transactionId > 1) {
         LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
-            transactionId, name_.c_str(), errCode);
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
     }
 
     return E_OK;
@@ -1479,7 +1483,8 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
     int64_t tmpTrxId = 0;
     auto [errCode, connection] = connectionPool_->CreateConnection(false);
     if (connection == nullptr) {
-        LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
+        LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".",
+            SqliteUtils::Anonymous(name_).c_str(), time);
         return {errCode, 0};
     }
     tmpTrxId = newTrxId_.fetch_add(1);
@@ -1504,7 +1509,8 @@ int RdbStoreImpl::RollBack()
     size_t transactionId = connectionPool_->GetTransactionStack().size();
 
     if (connectionPool_->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId, name_.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId,
+            SqliteUtils::Anonymous(name_).c_str());
         return E_NO_TRANSACTION_IN_SESSION;
     }
     BaseTransaction transaction = connectionPool_->GetTransactionStack().top();
@@ -1515,7 +1521,8 @@ int RdbStoreImpl::RollBack()
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
         // size + 1 means the number of transactions in process
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1, name_.c_str());
+        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1,
+            SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
@@ -1525,7 +1532,7 @@ int RdbStoreImpl::RollBack()
     // 1 means the number of transactions in process
     if (transactionId > 1) {
         LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
-            transactionId, name_.c_str(), errCode);
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
     }
     return E_OK;
 }
@@ -1548,7 +1555,8 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
     auto result = trxConnMap_.Find(trxId);
     auto connection = result.second;
     if (connection == nullptr) {
-        LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".", name_.c_str(), time);
+        LOG_ERROR("Get null connection, storeName: %{public}s time:%{public}" PRIu64 ".",
+            SqliteUtils::Anonymous(name_).c_str(), time);
         return E_ERROR;
     }
     auto [ret, statement] = GetStatement(sql, connection);
@@ -1557,9 +1565,8 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
     }
     ret = statement->Execute(bindArgs);
     if (ret != E_OK) {
-        LOG_ERROR(
-            "transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
-            name_.c_str(), ret);
+        LOG_ERROR("transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
+            SqliteUtils::Anonymous(name_).c_str(), ret);
         trxConnMap_.Erase(trxId);
         return ret;
     }
@@ -1594,20 +1601,22 @@ int RdbStoreImpl::Commit()
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
         LOG_WARN("id: %{public}zu, storeName: %{public}s, sql: %{public}s",
-            transactionId, name_.c_str(), sqlStr.c_str());
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), sqlStr.c_str());
         connectionPool_->GetTransactionStack().pop();
         return E_OK;
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId, name_.c_str());
+        LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
+            SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
     connectionPool_->SetInTransaction(false);
     // 1 means the number of transactions in process
     if (transactionId > 1) {
-        LOG_WARN("id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId, name_.c_str(), errCode);
+        LOG_WARN("id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
+            SqliteUtils::Anonymous(name_).c_str(), errCode);
     }
     connectionPool_->GetTransactionStack().pop();
     return E_OK;
@@ -1760,7 +1769,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
-    LOG_INFO("Restore db: %{public}s.", config_.GetName().c_str());
+    LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
     if (config_.IsReadOnly()) {
         return E_NOT_SUPPORT;
     }
@@ -2009,7 +2018,7 @@ int32_t RdbStoreImpl::SubscribeLocalDetail(const SubscribeOption &option,
     int32_t errCode = connection->Subscribe(option.event, observer);
     if (errCode != E_OK) {
         LOG_ERROR("subscribe local detail observer failed. db name:%{public}s errCode:%{public}" PRId32,
-            config_.GetName().c_str(), errCode);
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), errCode);
     }
     return errCode;
 }
@@ -2142,7 +2151,7 @@ int32_t RdbStoreImpl::UnsubscribeLocalDetail(const SubscribeOption& option,
     int32_t errCode = connection->Unsubscribe(option.event, observer);
     if (errCode != E_OK) {
         LOG_ERROR("unsubscribe local detail observer failed. db name:%{public}s errCode:%{public}" PRId32,
-            config_.GetName().c_str(), errCode);
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), errCode);
     }
     return errCode;
 }

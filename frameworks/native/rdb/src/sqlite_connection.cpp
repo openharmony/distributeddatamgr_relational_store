@@ -135,8 +135,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool i
     int errCode = slaveConnection_->InnerOpen(config);
     if (errCode != E_OK) {
         if (errCode == E_SQLITE_CORRUPT) {
-            LOG_WARN("slave corrupt, rebuild:%{public}s",
-                SqliteUtils::Anonymous(config.GetPath()).c_str());
+            LOG_WARN("slave corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
             (void)Delete(config);
             errCode = slaveConnection_->InnerOpen(config);
             if (errCode != E_OK) {
@@ -215,17 +214,28 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
+        struct stat fileInfo;
+        if (stat(dbPath.c_str(), &fileInfo) == 0) {
+            LOG_INFO("open database path [%{public}s] ino[%{public}" PRIu32
+                     "] config is [%{public}d, %{public}d, %{public}d, %{public}d, %{public}s, %{public}s, %{public}d,"
+                     "%{public}d, %{public}d]",
+                SqliteUtils::Anonymous(dbPath).c_str(), static_cast<uint32_t>(fileInfo.st_ino), config.IsEncrypt(),
+                config.GetArea(), config.GetHaMode(), config.GetSecurityLevel(),
+                SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetBundleName().c_str(), config.GetRoleType(),
+                config.IsReadOnly(), config.GetDBType());
+        }
         TryCheckPoint();
         ValueObject checkResult{"ok"};
         auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
         if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
             auto sql = INTEGRITIES[index];
             if (sql != nullptr) {
-                LOG_INFO("%{public}s : %{public}s, ", sql, config.GetName().c_str());
+                LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
                 std::tie(errCode, checkResult) = ExecuteForValue(sql);
             }
             if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
-                LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s", config.GetName().c_str(),
+                LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
+                    SqliteUtils::Anonymous(config.GetName()).c_str(),
                     static_cast<std::string>(checkResult).c_str(), sql);
             }
         }
@@ -240,7 +250,7 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
-            errCode, dbPath.c_str(), openFileFlags, errno);
+            errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
         if (pos != std::string::npos) {
@@ -543,7 +553,8 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
-    LOG_INFO("name = %{public}s, iter = %{public}d", config.GetName().c_str(), config.GetIter());
+    LOG_INFO("name = %{public}s, iter = %{public}d", SqliteUtils::Anonymous(config.GetName()).c_str(),
+        config.GetIter());
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
     newKey.assign(newKey.size(), 0);
@@ -578,15 +589,15 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
         if (!newKey.empty()) {
-            LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s",
-                config.GetIter(), errCode, errno, config.GetName().c_str());
+            LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
+                errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
             errCode = SetEncryptKey(newKey, config.GetIter());
         }
         newKey.assign(newKey.size(), 0);
         if (errCode != E_OK) {
             errCode = SetServiceKey(config, errCode);
             LOG_ERROR("fail, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
-                errCode, errno, config.GetName().c_str());
+                errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
             return errCode;
         }
         config.ChangeEncryptKey();
@@ -1210,13 +1221,13 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
             continue;
         }
         if (access(path.c_str(), F_OK) != 0) {
-            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, path.c_str());
+            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, SqliteUtils::Anonymous(path).c_str());
             return E_INVALID_FILE_PATH;
         }
         err = sqlite3_load_extension(dbHandle, path.c_str(), nullptr, nullptr);
         if (err != SQLITE_OK) {
-            LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s",
-                err, errno, sqlite3_errmsg(dbHandle), path.c_str());
+            LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s", err, errno,
+                sqlite3_errmsg(dbHandle), SqliteUtils::Anonymous(path).c_str());
             break;
         }
     }
@@ -1399,7 +1410,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     ret = connection->MasterSlaveExchange(true);
     if (ret != E_OK) {
         LOG_ERROR("repair failed, [%{public}s]->[%{public}s], err:%{public}d", rdbSlaveStoreConfig.GetName().c_str(),
-            config.GetName().c_str(), ret);
+            SqliteUtils::Anonymous(config.GetName()).c_str(), ret);
         return ret;
     }
     LOG_INFO("repair main success:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());

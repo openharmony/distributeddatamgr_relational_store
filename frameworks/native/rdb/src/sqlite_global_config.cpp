@@ -60,12 +60,13 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE
         || err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
-            LOG_INFO("Error(%{public}d) %{public}s ", err, msg);
+            LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
         }
     } else if (errType == SQLITE_WARNING) {
         LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
-        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, msg);
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno,
+            SqliteUtils::Anonymous(msg).c_str());
     }
 }
 
@@ -110,8 +111,8 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
 
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         if (config.GetRoleType() == VISITOR) {
-            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d", config.GetName().c_str(),
-                config.GetRoleType());
+            LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d",
+                SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetRoleType());
             return E_NOT_SUPPORT;
         }
         dbPath = SqliteGlobalConfig::GetMemoryDbPath();
