@@ -966,7 +966,11 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Backup(context->tableName, context->newKey);
+        auto res = rdbStore->Backup(context->tableName, context->newKey);
+        if (res == E_DB_NOT_EXIST) {
+            return E_OK;
+        }
+        return res;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
