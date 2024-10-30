@@ -901,6 +901,11 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         }
 #endif
         config_.SetIter(0);
+        if(config_.IsEncrypt()){
+            auto key = config_.GetEncryptKey();
+            RdbSecurityManager::GetInstance().RestoreKeyFile(path_, key);
+            key.assign(key.size(), 0);
+        }
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
