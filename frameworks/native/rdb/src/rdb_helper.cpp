@@ -75,29 +75,13 @@ int DeleteRdFiles(const std::string &dbFileName)
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (dbFileName.empty()) {
-        return E_INVALID_FILE_PATH;
-    }
-    if (access(dbFileName.c_str(), F_OK) == 0) {
-        RdbStoreManager::GetInstance().Delete(dbFileName);
-    }
     RdbStoreConfig config(dbFileName);
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
-
-    RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
-    DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
-
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = Connection::Delete(config);
+    int errCodeSqlite = DeleteRdbStore(config);
 
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = Connection::Delete(config);
-
-    int errCode = (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
-    LOG_INFO("Delete rdb store ret sqlite=%{public}d, vector=%{public}d, path %{public}s",
-        errCodeSqlite, errCodeVector, SqliteUtils::Anonymous(dbFileName).c_str());
-    return errCode;
+    int errCodeVector = DeleteRdbStore(config);
+    return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
 }
 
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
@@ -110,10 +94,13 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(dbFile);
     }
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
     Connection::Delete(config);
+
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
-    LOG_INFO("Delete rdb store, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
+
+    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
+    LOG_INFO("Delete rdb store, dbType:%{public}d, path %{public}s", config.GetDBType(),
+        SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
 }
 } // namespace NativeRdb
