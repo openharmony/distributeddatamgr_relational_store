@@ -63,7 +63,9 @@ constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
 constexpr int SqliteConnection::BACKUP_PAGES_PRE_STEP; // 1024 * 4 * 12800 == 50m
 constexpr int SqliteConnection::BACKUP_PRE_WAIT_TIME;
 constexpr ssize_t SqliteConnection::SLAVE_WAL_SIZE_LIMIT;
+constexpr ssize_t SqliteConnection::SLAVE_INTEGRITY_CHECK_LIMIT;
 constexpr uint32_t SqliteConnection::NO_ITER;
+constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
@@ -1452,12 +1454,12 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) != 0) {
         return E_NOT_SUPPORT;
     }
-    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::OPEN_IF_DB_VALID);
+    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
     if (ret != E_OK) {
         return ret;
     }
     connection->slaveConnection_ = conn;
-    ret = connection->IsRestoreFeasible(true);
+    ret = connection->VeritySlaveIntegrity();
     if (ret != E_OK) {
         return ret;
     }
@@ -1478,56 +1480,21 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     return ret;
 }
 
-int32_t SqliteConnection::IsRestoreFeasible(bool ignoreDataDiff)
-{
-    if (slaveConnection_ == nullptr) {
-        return E_ALREADY_CLOSED;
-    }
-    if (SqliteUtils::IsSlaveInterrupted(config_.GetPath())) {
-        LOG_ERROR("unavailable slave, %{public}s", config_.GetName().c_str());
-        return E_SQLITE_CORRUPT;
-    }
-    std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
-    auto [qRet, qObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (qRet == E_SQLITE_CORRUPT || (static_cast<int64_t>(qObj) == 0L)) {
-        LOG_INFO("cancel repair, ret:%{public}d", qRet);
-        return E_SQLITE_CORRUPT;
-    }
-    auto [cRet, cObj] = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
-    if (cRet == E_OK && (static_cast<std::string>(cObj) != "ok")) {
-        LOG_ERROR("slave may corrupt, cancel, ret:%{public}s, cRet:%{public}d",
-            static_cast<std::string>(cObj).c_str(), cRet);
-        return E_SQLITE_CORRUPT;
-    }
-    if (ignoreDataDiff) {
-        return E_OK;
-    }
-    std::tie(cRet, cObj) = ExecuteForValue(querySql);
-    auto cVal = std::get_if<int64_t>(&cObj.value);
-    if (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L)) {
-        LOG_INFO("main empty, need restore, %{public}s", config_.GetName().c_str());
-        return E_OK;
-    }
-    std::tie(cRet, cObj) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-    cVal = std::get_if<int64_t>(&cObj.value);
-    if (cVal == nullptr || (cVal != nullptr && static_cast<int64_t>(*cVal) == 0L)) {
-        std::tie(cRet, cObj) = slaveConnection_->ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-        cVal = std::get_if<int64_t>(&cObj.value);
-        if (cVal != nullptr && static_cast<int64_t>(*cVal) > 0L) {
-            return E_OK;
-        }
-    }
-    if (SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
-        LOG_ERROR("incomplete slave, %{public}s", config_.GetName().c_str());
-        return E_SQLITE_CORRUPT;
-    }
-    return E_OK;
-}
-
 int SqliteConnection::ExchangeVerify(bool isRestore)
 {
     if (isRestore) {
-        return IsRestoreFeasible(false);
+        int err = VeritySlaveIntegrity();
+        if (err != E_OK) {
+            return err;
+        }
+        if (IsDbVersionBelowSlave()) {
+            return E_OK;
+        }
+        if (SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
+            LOG_ERROR("incomplete slave, %{public}s", config_.GetName().c_str());
+            return E_SQLITE_CORRUPT;
+        }
+        return E_OK;
     }
     if (slaveConnection_ == nullptr) {
         return E_ALREADY_CLOSED;
@@ -1570,6 +1537,77 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         }
     }
     return result;
+}
+
+int SqliteConnection::VeritySlaveIntegrity()
+{
+    if (slaveConnection_ == nullptr) {
+        return E_ALREADY_CLOSED;
+    }
+
+    RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
+    std::map<std::string, DebugInfo> bugInfo = Connection::Collect(slaveCfg);
+    LOG_INFO("%{public}s", Reportor::FormatBrief(bugInfo, SqliteUtils::Anonymous(slaveCfg.GetName())).c_str());
+
+    if (SqliteUtils::IsSlaveInterrupted(config_.GetPath())) {
+        return E_SQLITE_CORRUPT;
+    }
+
+    std::string sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    auto [err, obj] = slaveConnection_->ExecuteForValue(sql);
+    auto val = std::get_if<int64_t>(&obj.value);
+    if (err == E_SQLITE_CORRUPT || (val != nullptr && static_cast<int64_t>(*val) == 0L)) {
+        LOG_ERROR("slave %{public}d", err);
+        return E_SQLITE_CORRUPT;
+    }
+
+    int64_t mCount = 0L;
+    if (dbHandle_ != nullptr) {
+        std::tie(err, obj) = ExecuteForValue(sql);
+        val = std::get_if<int64_t>(&obj.value);
+        if (val != nullptr) {
+            mCount = static_cast<int64_t>(*val);
+        }
+    }
+    bool isSlaveDbOverLimit = bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end() &&
+        bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_ > SLAVE_INTEGRITY_CHECK_LIMIT;
+    if (isSlaveDbOverLimit && mCount == 0L) {
+        return SqliteUtils::IsSlaveInvalid(config_.GetPath()) ? E_SQLITE_CORRUPT : E_OK;
+    }
+
+    std::tie(err, obj) = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
+    if (err == E_OK && (static_cast<std::string>(obj) != "ok")) {
+        LOG_ERROR("slave corrupt, ret:%{public}s, cRet:%{public}d, %{public}d",
+            static_cast<std::string>(obj).c_str(), err, errno);
+        SqliteUtils::SetSlaveInvalid(config_.GetPath());
+        return E_SQLITE_CORRUPT;
+    }
+    return E_OK;
+}
+
+bool SqliteConnection::IsDbVersionBelowSlave()
+{
+    if (slaveConnection_ == nullptr) {
+        return false;
+    }
+
+    auto[cRet, cObj] = ExecuteForValue("SELECT COUNT(*) FROM sqlite_master WHERE type='table';");
+    auto cVal = std::get_if<int64_t>(&cObj.value);
+    if (cRet == E_SQLITE_CORRUPT || (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L))) {
+        LOG_INFO("main empty, %{public}d, %{public}s", cRet, config_.GetName().c_str());
+        return true;
+    }
+
+    std::tie(cRet, cObj) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
+    if (cVal == nullptr || (cVal != nullptr && static_cast<int64_t>(*cVal) == 0L)) {
+        std::tie(cRet, cObj) = slaveConnection_->ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
+        cVal = std::get_if<int64_t>(&cObj.value);
+        if (cVal != nullptr && static_cast<int64_t>(*cVal) > 0L) {
+            LOG_INFO("version, %{public}" PRId64, static_cast<int64_t>(*cVal));
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace NativeRdb
 } // namespace OHOS
