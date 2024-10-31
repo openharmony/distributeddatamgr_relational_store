@@ -171,9 +171,6 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
                  "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
             SqliteUtils::Anonymous(path).c_str(), tempParam.level_, param.level_, tempParam.area_, param.area_,
             tempParam.isEncrypt_, param.isEncrypt_);
-        if (isLevelInvalidChange) {
-            return true;
-        }
         if (isEncryptInvalidChange) {
             config.SetEncryptStatus(tempParam.isEncrypt_);
         }
