@@ -29,11 +29,11 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
- 
+
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
- 
+
 class RdbDoubleWriteTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -65,7 +65,7 @@ public:
         BACKUP_FINISHED,
     };
 };
- 
+
 const std::string RdbDoubleWriteTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
 const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "insert_test_slave.db";
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
@@ -75,41 +75,41 @@ const int BLOB_SIZE = 3;
 const uint8_t EXPECTED_BLOB_DATA[] {1, 2, 3};
 const int CHECKAGE = 18;
 const double CHECKCOLUMN = 100.5;
- 
+
 class DoubleWriteTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
- 
+
 const std::string DoubleWriteTestOpenCallback::CREATE_TABLE_TEST =
     std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                                                   "name TEXT NOT NULL, age INTEGER, salary "
                                                                   "REAL, blobType BLOB)");
- 
+
 int DoubleWriteTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
 }
- 
+
 int DoubleWriteTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }
- 
+
 void RdbDoubleWriteTest::SetUpTestCase(void)
 {
 }
- 
+
 void RdbDoubleWriteTest::TearDownTestCase(void)
 {
 }
- 
+
 void RdbDoubleWriteTest::SetUp(void)
 {
 }
- 
+
 void RdbDoubleWriteTest::TearDown(void)
 {
     store = nullptr;
@@ -133,7 +133,7 @@ void RdbDoubleWriteTest::InitDb()
     store->ExecuteSql("DELETE FROM test");
     slaveStore->ExecuteSql("DELETE FROM test");
 }
- 
+
 /**
  * @tc.name: RdbStore_DoubleWrite_001
  * @tc.desc: test RdbStore doubleWrite
@@ -144,7 +144,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
     InitDb();
     int64_t id;
     ValuesBucket values;
- 
+
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 18);
@@ -153,7 +153,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
     int ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
- 
+
     values.Clear();
     values.PutInt("id", 2);
     values.PutString("name", std::string("lisi"));
@@ -163,7 +163,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
- 
+
     values.Clear();
     values.PutInt("id", 3);
     values.PutString("name", std::string("lisi"));
@@ -226,13 +226,13 @@ void RdbDoubleWriteTest::TryInterruptBackup()
     EXPECT_EQ(err, E_OK);
     LOG_INFO("----------interrupt backup---------");
 }
- 
+
 void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
     EXPECT_NE(resultSet, nullptr);
- 
+
     int columnIndex;
     int intVal;
     std::string strVal;
@@ -241,13 +241,13 @@ void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     int ret = resultSet->GetRowIndex(position);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(position, -1);
- 
+
     ret = resultSet->GetColumnType(0, columnType);
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
- 
+
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
- 
+
     ret = resultSet->GetColumnIndex("id", columnIndex);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(columnIndex, 0);
@@ -257,7 +257,7 @@ void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, intVal);
- 
+
     ret = resultSet->GetColumnIndex("name", columnIndex);
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetColumnType(columnIndex, columnType);
@@ -266,21 +266,21 @@ void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ("zhangsan", strVal);
- 
+
     RdbDoubleWriteTest::CheckAge(resultSet);
     RdbDoubleWriteTest::CheckSalary(resultSet);
     RdbDoubleWriteTest::CheckBlob(resultSet);
- 
+
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
- 
+
     ret = resultSet->GetColumnType(columnIndex, columnType);
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
- 
+
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
- 
+
 void RdbDoubleWriteTest::CheckAge(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
@@ -295,7 +295,7 @@ void RdbDoubleWriteTest::CheckAge(std::shared_ptr<ResultSet> &resultSet)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(CHECKAGE, intVal);
 }
- 
+
 void RdbDoubleWriteTest::CheckSalary(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
@@ -310,7 +310,7 @@ void RdbDoubleWriteTest::CheckSalary(std::shared_ptr<ResultSet> &resultSet)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(CHECKCOLUMN, dVal);
 }
- 
+
 void RdbDoubleWriteTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
 {
     int columnIndex;
@@ -328,7 +328,7 @@ void RdbDoubleWriteTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
         EXPECT_EQ(EXPECTED_BLOB_DATA[i], blob[i]);
     }
 }
- 
+
 void RdbDoubleWriteTest::CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode,
     const std::string &tableName)
 {
@@ -349,7 +349,7 @@ void RdbDoubleWriteTest::CheckNumber(std::shared_ptr<RdbStore> &store, int num, 
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
 {
     InitDb();
- 
+
     int64_t id;
     ValuesBucket values;
     values.PutInt("id", 1);
@@ -361,10 +361,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     auto [ret2, outValue2] = store->Execute("UPDATE test SET age= 18 WHERE id = 1");
     EXPECT_EQ(E_OK, ret2);
-    
+
     RdbDoubleWriteTest::CheckResultSet(slaveStore);
 }
- 
+
 /**
  * @tc.name: RdbStore_DoubleWrite_004
  * @tc.desc: test RdbStore updata
@@ -373,9 +373,9 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
 {
     InitDb();
- 
+
     int64_t id;
- 
+
     ValuesBucket values;
     values.PutInt("id", 1);
     values.PutString("name", std::string("zhangsan"));
@@ -383,17 +383,17 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret = store->Insert(id, "test", values);
- 
+
     int changedRows;
     values.Clear();
     values.PutInt("age", 18);
     ret = store->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
-    
+
     RdbDoubleWriteTest::CheckResultSet(slaveStore);
 }
- 
+
 /**
  * @tc.name: RdbStore_DoubleWrite_005
  * @tc.desc: test RdbStore delete
@@ -402,7 +402,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
 {
     InitDb();
- 
+
     ValuesBucket values;
     int64_t id;
     values.PutInt("id", 1);
@@ -413,7 +413,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
     int ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
- 
+
     values.Clear();
     values.PutInt("id", 2);
     values.PutString("name", std::string("lisi"));
@@ -423,7 +423,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
- 
+
     values.Clear();
     values.PutInt("id", 3);
     values.PutString("name", std::string("lisi"));
@@ -433,13 +433,13 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
     ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
- 
+
     int deletedRows;
     ret = store->Delete(deletedRows, "test", "id = 2");
     ret = store->Delete(deletedRows, "test", "id = 3");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, deletedRows);
-    
+
     RdbDoubleWriteTest::CheckNumber(slaveStore, 1);
 }
 
@@ -1051,4 +1051,31 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
 
     RdbDoubleWriteTest::CheckNumber(store, count + 1);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_031
+ * @tc.desc: open db, delete main.db, deleteRdbStore, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_031, TestSize.Level1)
+{
+    InitDb();
+    remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
+    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
+    EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_032
+ * @tc.desc: open db, delete main.db, deleteRdbStore, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
+{
+    InitDb();
+    remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
 }
