@@ -14,6 +14,9 @@
 */
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <iostream>
@@ -454,6 +457,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(true);
     config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -463,20 +467,27 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
-    auto createdDate = GetKeyFileDate(encryptedDatabaseName);
-    sleep(2);
+    struct stat fileStat;
+    ino_t inodeNumber1 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber1 = fileStat.st_ino;
+    }
     store = nullptr;
 
-    std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
-    fsDb.seekp(64);
-    fsDb.write("hello", 5);
-    fsDb.close();
+    {
+        std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
+        fsDb.seekp(64);
+        fsDb.write("hello", 5);
+        fsDb.close();
+    }
 
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
-    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ino_t inodeNumber2 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber2 = fileStat.st_ino;
+    }
 
-    auto difference = changedDate - createdDate;
-    ASSERT_TRUE(difference > std::chrono::seconds::zero());
+    ASSERT_NE(inodeNumber1, inodeNumber2);
 }
