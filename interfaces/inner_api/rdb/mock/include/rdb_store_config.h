@@ -256,7 +256,6 @@ public:
     PromiseInfo GetPromiseInfo() const;
     void SetPromiseInfo(PromiseInfo promiseInfo);
     void SetHaMode(int32_t haMode);
-    void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
     void SetCryptoParam(CryptoParam cryptoParam);
     CryptoParam GetCryptoParam() const;

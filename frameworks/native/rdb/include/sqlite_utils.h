@@ -43,6 +43,8 @@ public:
     static constexpr int ENABLE_LOAD_EXTENSION = 1;
     static constexpr int MAX_LOAD_EXTENSION_COUNT = 16;
     static constexpr const char* REP = "#_";
+    static constexpr const char* SLAVE_FAILURE = "-slaveFailure";
+    static constexpr const char* SLAVE_INTERRUPT = "-syncInterrupt";
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSupportSqlForExecute(int sqlType);
@@ -58,8 +60,11 @@ public:
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
     static std::string GetSlavePath(const std::string& name);
-    static bool TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
-        bool isSlaveFailure = false);
+    static int SetSlaveInvalid(const std::string &dbPath);
+    static int SetSlaveInterrupted(const std::string &dbPath);
+    static bool IsSlaveInvalid(const std::string &dbPath);
+    static bool IsSlaveInterrupted(const std::string &dbPath);
+    static void SetSlaveValid(const std::string &dbPath);
     static const char *HmacAlgoDescription(int32_t hmacAlgo);
     static const char *KdfAlgoDescription(int32_t kdfAlgo);
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);

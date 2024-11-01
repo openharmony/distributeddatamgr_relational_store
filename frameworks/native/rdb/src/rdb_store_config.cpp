@@ -348,11 +348,6 @@ void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) c
     cryptoParam_.encryptKey_ = encryptKey;
 }
 
-void RdbStoreConfig::SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey)
-{
-    newEncryptKey_ = newEncryptKey;
-}
-
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
     return cryptoParam_.encryptKey_;

@@ -260,36 +260,6 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
     return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
 }
 
-bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
-    bool isSlaveFailure)
-{
-    std::string lockFile = isSlaveFailure ? dbPath + "-slaveFailure" : dbPath + "-syncInterrupt";
-    if (isDelete) {
-        if (std::remove(lockFile.c_str()) != 0) {
-            return false;
-        } else {
-            LOG_INFO("remove %{public}s", Anonymous(lockFile).c_str());
-            return true;
-        }
-    } else {
-        if (access(lockFile.c_str(), F_OK) == 0) {
-            return true;
-        }
-        if (needCreate) {
-            std::ofstream src(lockFile.c_str(), std::ios::binary);
-            if (src.is_open()) {
-                LOG_INFO("open %{public}s", Anonymous(lockFile).c_str());
-                src.close();
-                return true;
-            } else {
-                LOG_WARN("open errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
-                return false;
-            }
-        }
-        return false;
-    }
-}
-
 std::string SqliteUtils::GetSlavePath(const std::string& name)
 {
     std::string suffix(".db");
@@ -343,5 +313,40 @@ const char *SqliteUtils::EncryptAlgoDescription(int32_t encryptAlgo)
     }
 }
 
+int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
+{
+    std::ofstream src((dbPath + SLAVE_FAILURE).c_str(), std::ios::binary);
+    if (src.is_open()) {
+        src.close();
+        return E_OK;
+    }
+    return E_ERROR;
+}
+
+int SqliteUtils::SetSlaveInterrupted(const std::string &dbPath)
+{
+    std::ofstream src((dbPath + SLAVE_INTERRUPT).c_str(), std::ios::binary);
+    if (src.is_open()) {
+        src.close();
+        return E_OK;
+    }
+    return E_ERROR;
+}
+
+bool SqliteUtils::IsSlaveInvalid(const std::string &dbPath)
+{
+    return access((dbPath + SLAVE_FAILURE).c_str(), F_OK) == 0;
+}
+
+bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)
+{
+    return access((dbPath + SLAVE_INTERRUPT).c_str(), F_OK) == 0;
+}
+
+void SqliteUtils::SetSlaveValid(const std::string &dbPath)
+{
+    std::remove((dbPath + SLAVE_INTERRUPT).c_str());
+    std::remove((dbPath + SLAVE_FAILURE).c_str());
+}
 } // namespace NativeRdb
 } // namespace OHOS
