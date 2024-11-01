@@ -66,8 +66,8 @@ public:
     };
 };
 
-const std::string RdbDoubleWriteTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
-const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "insert_test_slave.db";
+const std::string RdbDoubleWriteTest::DATABASE_NAME = RDB_TEST_PATH + "dual_write_test.db";
+const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "dual_write_test_slave.db";
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
@@ -1078,4 +1078,43 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     RdbHelper::DeleteRdbStore(config);
     EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_033
+ * @tc.desc: open db, write, close, corrupt, open SINGLE db, check
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
+{
+    InitDb();
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    store = nullptr;
+    slaveStore = nullptr;
+
+    std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = {0x6, 0x6};
+    file.write(bytes, 2);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    RebuiltType rebuiltType;
+    store->GetRebuilt(rebuiltType);
+    EXPECT_EQ(rebuiltType, RebuiltType::REPAIRED);
+
+    RdbDoubleWriteTest::CheckNumber(store, count);
 }

@@ -81,9 +81,12 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     errCode = Connection::Repair(storeConfig);
     if (errCode == E_OK) {
         rebuiltType = RebuiltType::REPAIRED;
-    } else {
+    } else if (storeConfig.GetAllowRebuild()) {
         Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
+    } else {
+        errCode = E_SQLITE_CORRUPT;
+        return result;
     }
     pool = Create(storeConfig, errCode);
     if (errCode != E_OK) {

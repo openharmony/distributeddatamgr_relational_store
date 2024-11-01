@@ -81,6 +81,11 @@ private:
         const char *debug_ = nullptr;
     };
 
+    enum SlaveOpenPolicy : int32_t {
+        FORCE_OPEN = 0,
+        OPEN_IF_DB_VALID // DB exists and there are no -slaveFailure and -syncInterrupt files
+    };
+
     int InnerOpen(const RdbStoreConfig &config);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
@@ -113,10 +118,13 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    int CreateSlaveConnection(const RdbStoreConfig &config, bool checkSlaveExist = true);
-    int ExchangeSlaverToMaster(bool isRestore, SlaveStatus &status);
-    int IsRepairable();
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(const RdbStoreConfig &config,
+        SlaveOpenPolicy slaveOpenPolicy);
+    int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, SlaveStatus &status);
     int ExchangeVerify(bool isRestore);
+    int SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus);
+    int VeritySlaveIntegrity();
+    bool IsDbVersionBelowSlave();
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
         bool isWrite);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
@@ -134,7 +142,9 @@ private:
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
     static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647; // 2147483647 = 2g - 1
+    static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
     static constexpr uint32_t NO_ITER = 0;
+    static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
