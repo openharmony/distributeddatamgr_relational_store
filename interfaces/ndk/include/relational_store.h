@@ -159,14 +159,14 @@ typedef struct {
 /**
  * @brief Define OH_Rdb_ConfigV2 type.
  *
- * @since 13
+ * @since 14
  */
 typedef struct OH_Rdb_ConfigV2 OH_Rdb_ConfigV2;
 
 /**
  * @brief Define Rdb_DBType type.
  *
- * @since 13
+ * @since 14
  */
 typedef enum Rdb_DBType {
     /**
@@ -190,7 +190,7 @@ typedef enum Rdb_DBType {
  * The possible cause is that the address space of the application is full, As a result, the space
  * cannot be allocated.
  * @see OH_Rdb_ConfigV2
- * @since 13
+ * @since 14
  */
 OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig();
 
@@ -202,7 +202,7 @@ OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig();
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config);
 
@@ -215,7 +215,7 @@ int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config);
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *databaseDir);
 
@@ -228,7 +228,7 @@ int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *databaseDir);
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName);
 
@@ -241,7 +241,7 @@ int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName);
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName);
 
@@ -254,7 +254,7 @@ int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName);
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetModuleName(OH_Rdb_ConfigV2 *config, const char *moduleName);
 
@@ -263,11 +263,11 @@ int OH_Rdb_SetModuleName(OH_Rdb_ConfigV2 *config, const char *moduleName);
  *
  * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
  * Indicates the configuration of the database related to this RDB store.
- * @param isEncrypt Indicates whether the database is encrypted.
+ * @param isEncrypted Indicates whether the database is encrypted.
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetEncrypted(OH_Rdb_ConfigV2 *config, bool isEncrypted);
 
@@ -280,7 +280,7 @@ int OH_Rdb_SetEncrypted(OH_Rdb_ConfigV2 *config, bool isEncrypted);
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetSecurityLevel(OH_Rdb_ConfigV2 *config, int securityLevel);
 
@@ -289,10 +289,11 @@ int OH_Rdb_SetSecurityLevel(OH_Rdb_ConfigV2 *config, int securityLevel);
  *
  * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
  * Indicates the configuration of the database related to this RDB store
+ * @param area Represents the security area of the database.
  * @return Returns the status code of the execution. Successful execution returns RDB_OK,
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
 
@@ -304,15 +305,15 @@ int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support db types.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType);
 
 /**
  * @brief Get support db type list
- * @param numType The output parameter, which is used to recieve the length of the support db type array.
+ * @param typeCount The output parameter, which is used to recieve the length of the support db type array.
  * @return Return Rdb_DBType array contains supported db type, array length is number of support type
- * @since 13
+ * @since 14
  */
 const int *OH_Rdb_GetSupportedDbType(int *typeCount);
 
@@ -379,7 +380,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
  *         If the Config is empty, config.size does not match, or errCode is empty.
  * Get database path failed.Get RDB Store fail. Nullptr is returned.
  * @see OH_Rdb_ConfigV2, OH_Rdb_Store.
- * @since 13
+ * @since 14
  */
 OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode);
 
@@ -420,7 +421,7 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config);
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_ErrCode.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config);
 
@@ -502,14 +503,14 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
  * @brief Write operations are performed using the specified transaction represented by the transaction ID
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
- * @param sql Indicates the SQL statement to execute.
  * @param trxId The transaction ID of the specified transaction, must be greater than 0
+ * @param sql Indicates the SQL statement to execute.
  * @return Returns the status code of the execution.
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
  * @see OH_Rdb_Store.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_ExecuteByTrxId(OH_Rdb_Store *store, int64_t trxId, const char *sql);
 
@@ -571,7 +572,7 @@ int OH_Rdb_Commit(OH_Rdb_Store *store);
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
  * @see OH_Rdb_Store.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_BeginTransWithTrxId(OH_Rdb_Store *store, int64_t *trxId);
 
@@ -585,7 +586,7 @@ int OH_Rdb_BeginTransWithTrxId(OH_Rdb_Store *store, int64_t *trxId);
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
  * @see OH_Rdb_Store.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_RollBackByTrxId(OH_Rdb_Store *store, int64_t trxId);
 
@@ -599,7 +600,7 @@ int OH_Rdb_RollBackByTrxId(OH_Rdb_Store *store, int64_t trxId);
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
  *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
  * @see OH_Rdb_Store.
- * @since 13
+ * @since 14
  */
 int OH_Rdb_CommitByTrxId(OH_Rdb_Store *store, int64_t trxId);
 
