@@ -2242,6 +2242,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn
 {
     auto config  = config_;
     config.SetHaMode(HAMode::SINGLE);
+    config.SetCreateNecessary(false);
     auto [result, conn] = Connection::Create(config, true);
     if (result != E_OK || conn == nullptr) {
         LOG_ERROR("create connection failed, err:%{public}d", result);
