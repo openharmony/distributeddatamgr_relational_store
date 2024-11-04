@@ -734,6 +734,7 @@ bool ConnectionPool::CheckIntegrity(const std::string &dbPath)
     RdbStoreConfig config(config_);
     config.SetPath(dbPath);
     config.SetIntegrityCheck(IntegrityCheck::FULL);
+    config.SetHaMode(HAMode::SINGLE);
     auto [ret, connection] = Connection::Create(config, true);
     return ret == E_OK;
 }
