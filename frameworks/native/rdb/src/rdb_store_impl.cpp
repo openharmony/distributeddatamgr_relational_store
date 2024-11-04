@@ -31,6 +31,7 @@
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_radar_reporter.h"
+#include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -46,13 +47,12 @@
 #include "traits.h"
 
 #include "directory_ex.h"
-
+#include "rdb_fault_hiview_reporter.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "delay_notify.h"
 #include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
-#include "rdb_security_manager.h"
 #include "relational_store_manager.h"
 #include "runtime_config.h"
 #include "security_policy.h"
@@ -69,6 +69,8 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
+using Reportor = RdbFaultHiViewReporter;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -77,39 +79,40 @@ static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 
-void RdbStoreImpl::InitSyncerParam()
+void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
-    syncerParam_.bundleName_ = config_.GetBundleName();
-    syncerParam_.hapName_ = config_.GetModuleName();
-    syncerParam_.storeName_ = config_.GetName();
-    syncerParam_.customDir_ = config_.GetCustomDir();
-    syncerParam_.area_ = config_.GetArea();
-    syncerParam_.level_ = static_cast<int32_t>(config_.GetSecurityLevel());
-    syncerParam_.type_ = config_.GetDistributedType();
-    syncerParam_.isEncrypt_ = config_.IsEncrypt();
-    syncerParam_.isAutoClean_ = config_.GetAutoClean();
-    syncerParam_.isSearchable_ = config_.IsSearchable();
-    syncerParam_.password_ = {};
-    syncerParam_.haMode_ = config_.GetHaMode();
-    syncerParam_.roleType_ = config_.GetRoleType();
+    syncerParam_.bundleName_ = config.GetBundleName();
+    syncerParam_.hapName_ = config.GetModuleName();
+    syncerParam_.storeName_ = config.GetName();
+    syncerParam_.customDir_ = config.GetCustomDir();
+    syncerParam_.area_ = config.GetArea();
+    syncerParam_.level_ = static_cast<int32_t>(config.GetSecurityLevel());
+    syncerParam_.type_ = config.GetDistributedType();
+    syncerParam_.isEncrypt_ = config.IsEncrypt();
+    syncerParam_.isAutoClean_ = config.GetAutoClean();
+    syncerParam_.isSearchable_ = config.IsSearchable();
+    syncerParam_.password_ = config.GetEncryptKey();
+    syncerParam_.haMode_ = config.GetHaMode();
+    syncerParam_.roleType_ = config.GetRoleType();
+    if (created) {
+        syncerParam_.infos_ = Connection::Collect(config);
+    }
 }
 
 int RdbStoreImpl::InnerOpen()
 {
-    LOG_DEBUG("open %{public}s.", SqliteUtils::Anonymous(path_).c_str());
+    isOpen_ = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    pool_ = TaskExecutor::GetInstance().GetExecutor();
-    
-    if (config_.GetRoleType() == OWNER) {
-        AfterOpen(config_);
+    if (isReadOnly_) {
+        return E_OK;
     }
 
+    AfterOpen(syncerParam_);
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
     }
 #endif
-    isOpen_ = true;
     return E_OK;
 }
 
@@ -123,21 +126,9 @@ std::string RdbStoreImpl::GetSecManagerName(const RdbStoreConfig &config)
     return name;
 }
 
-void RdbStoreImpl::AfterOpen(const RdbStoreConfig &config)
+void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
 {
-    std::vector<uint8_t> key = config.GetEncryptKey();
-    syncerParam_.password_ = std::vector<uint8_t>(key.data(), key.data() + key.size());
-    key.assign(key.size(), 0);
-    if (pool_ != nullptr) {
-        auto param = syncerParam_;
-        auto retry = 0;
-        UploadSchema(param, retry);
-    }
-}
-
-void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry)
-{
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
         return;
     }
@@ -146,7 +137,7 @@ void RdbStoreImpl::UploadSchema(const DistributedRdb::RdbSyncerParam &param, uin
             SqliteUtils::Anonymous(param.storeName_).c_str());
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() { UploadSchema(param, retry); });
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() { AfterOpen(param, retry); });
         }
         return;
     }
@@ -250,7 +241,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
         tmp[columnName] = value;
         auto hashKey = DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(tmp);
         if (hashKey.empty()) {
-            LOG_DEBUG("hash key fail.");
+            LOG_DEBUG("hash key fail");
             continue;
         }
         hashKeys.emplace_back(ValueObject(hashKey));
@@ -298,14 +289,14 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
 
 int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        LOG_ERROR("not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType());
         return E_NOT_SUPPORT;
-    }
-    if (table.empty()) {
-        return E_INVALID_ARGS;
     }
     auto connection = connectionPool_->AcquireConnection(false);
     if (connection == nullptr) {
+        LOG_ERROR("db is busy. table:%{public}s", SqliteUtils::Anonymous(table).c_str());
         return E_DATABASE_BUSY;
     }
     int errCode = connection->CleanDirtyData(table, cursor);
@@ -314,32 +305,38 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 #endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
-    : config_(config), isOpen_(false), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
-      isEncrypt_(config.IsEncrypt()), path_(config.GetPath()), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType()), connectionPool_(nullptr), rebuild_(RebuiltType::NONE)
+    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
+      fileType_(config.GetDatabaseFileType())
 {
+    path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
+    isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : config_(config), isReadOnly_(config.IsReadOnly()), isMemoryRdb_(config.IsMemoryRdb()),
-      isEncrypt_(config.IsEncrypt()), name_(config.GetName()), fileType_(config.GetDatabaseFileType()),
-      rebuild_(RebuiltType::NONE)
+    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
+      fileType_(config.GetDatabaseFileType())
 {
+    isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
+    bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
-    InitSyncerParam();
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !config.IsReadOnly()) {
+    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !isReadOnly_) {
         LOG_ERROR("database corrupt, rebuild database %{public}s", SqliteUtils::Anonymous(name_).c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+        RdbParam param;
+        param.bundleName_ = config_.GetBundleName();
+        param.storeName_ = config_.GetName();
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (service != nullptr) {
-            service->Disable(syncerParam_);
+            service->Disable(param);
         }
 #endif
+        config_.SetIter(0);
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
+        created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         if (service != nullptr) {
-            service->Enable(syncerParam_);
+            service->Enable(param);
         }
 #endif
     }
@@ -349,21 +346,13 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
             SqliteUtils::Anonymous(path_).c_str());
         return;
     }
-
+    InitSyncerParam(config_, created);
     InnerOpen();
 }
 
 RdbStoreImpl::~RdbStoreImpl()
 {
     connectionPool_ = nullptr;
-}
-
-void RdbStoreImpl::RemoveDbFiles(std::string &path)
-{
-    SqliteUtils::DeleteFile(path);
-    SqliteUtils::DeleteFile(path + "-shm");
-    SqliteUtils::DeleteFile(path + "-wal");
-    SqliteUtils::DeleteFile(path + "-journal");
 }
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
@@ -393,7 +382,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
 template<typename T>
 int RdbStoreImpl::BatchInsertEntry(const std::string &table, const T &values, size_t rowSize, int64_t &outInsertNum)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (rowSize == 0) {
@@ -524,7 +513,7 @@ int RdbStoreImpl::InsertWithConflictResolutionEntry(int64_t &outRowId, const std
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (table.empty()) {
@@ -628,7 +617,6 @@ int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::stri
 int RdbStoreImpl::UpdateWithConflictResolution(int &changedRows, const std::string &table, const ValuesBucket &values,
     const std::string &whereClause, const std::vector<ValueObject> &bindArgs, ConflictResolution conflictResolution)
 {
-    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     return UpdateWithConflictResolutionEntry(changedRows, table, values, whereClause, bindArgs, conflictResolution);
 }
 
@@ -638,7 +626,7 @@ int RdbStoreImpl::UpdateWithConflictResolutionEntry(int &changedRows, const std:
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (table.empty()) {
@@ -709,7 +697,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     const std::vector<ValueObject> &bindArgs)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (table.empty()) {
@@ -772,7 +760,7 @@ std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStoreImpl::QuerySharingResourc
     if (config_.GetDBType() == DB_VECTOR) {
         return { E_NOT_SUPPORT, nullptr };
     }
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return { errCode, nullptr };
     }
@@ -793,7 +781,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(const std::string &device,
     }
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
     std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (err == E_NOT_SUPPORT) {
         errCode = err;
         return nullptr;
@@ -847,6 +835,18 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     }
     return std::make_shared<SqliteSharedResultSet>(connectionPool_, path_, sql, bindArgs);
 }
+
+void RdbStoreImpl::NotifyDataChange()
+{
+    int errCode = RegisterDataChangeCallback();
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterDataChangeCallback is failed, err is %{public}d.", errCode);
+    }
+    DistributedRdb::RdbChangedData rdbChangedData;
+    if (delayNotifier_ != nullptr) {
+        delayNotifier_->UpdateNotify(rdbChangedData, true);
+    }
+}
 #endif
 
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
@@ -878,7 +878,7 @@ int RdbStoreImpl::ExecuteSqlEntry(const std::string &sql, const std::vector<Valu
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR || (config_.IsReadOnly())) {
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_) {
         return E_NOT_SUPPORT;
     }
     int ret = CheckAttach(sql);
@@ -963,12 +963,12 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(std::share
 std::pair<int32_t, ValueObject> RdbStoreImpl::ExecuteEntry(const std::string &sql,
     const std::vector<ValueObject> &bindArgs, int64_t trxId)
 {
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     ValueObject object;
-    if (config_.IsReadOnly()) {
+    if (isReadOnly_) {
         return { E_NOT_SUPPORT, object };
     }
 
-    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
         LOG_ERROR("Not support the sqlType: %{public}d, sql: %{public}s", sqlType, sql.c_str());
@@ -1041,7 +1041,7 @@ int RdbStoreImpl::ExecuteAndGetString(
 int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     auto [errCode, statement] = GetStatement(sql, false);
@@ -1059,7 +1059,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql,
     const std::vector<ValueObject> &bindArgs)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     auto [errCode, statement] = GetStatement(sql, false);
@@ -1135,7 +1135,7 @@ int RdbStoreImpl::ExecuteSqlInner(const std::string &sql, const std::vector<Valu
 int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
     LOG_INFO("Backup db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
-    if ((config_.GetRoleType() == VISITOR)) {
+    if (isReadOnly_) {
         return E_NOT_SUPPORT;
     }
     std::string backupFilePath;
@@ -1148,6 +1148,9 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
         return ret;
     }
 
+    RdbSecurityManager::KeyFiles keyFiles(backupFilePath);
+    keyFiles.Lock();
+
     auto deleteDirtyFiles = [&backupFilePath] {
         auto res = SqliteUtils::DeleteFile(backupFilePath);
         res = SqliteUtils::DeleteFile(backupFilePath + "-shm") && res;
@@ -1158,6 +1161,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     auto walFile = backupFilePath + "-wal";
     if (access(walFile.c_str(), F_OK) == E_OK) {
         if (!deleteDirtyFiles()) {
+            keyFiles.Unlock();
             return E_ERROR;
         }
     }
@@ -1165,7 +1169,12 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     if (access(tempPath.c_str(), F_OK) == E_OK) {
         SqliteUtils::DeleteFile(backupFilePath);
     } else {
-        SqliteUtils::RenameFile(backupFilePath, tempPath);
+        if (access(backupFilePath.c_str(), F_OK) == E_OK && !SqliteUtils::RenameFile(backupFilePath, tempPath)) {
+            LOG_ERROR("rename backup file failed, path:%{public}s, errno:%{public}d",
+                SqliteUtils::Anonymous(backupFilePath).c_str(), errno);
+            keyFiles.Unlock();
+            return E_ERROR;
+        }
     }
     ret = InnerBackup(backupFilePath, destEncryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
@@ -1175,6 +1184,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     } else {
         SqliteUtils::DeleteFile(tempPath);
     }
+    keyFiles.Unlock();
     return ret;
 }
 
@@ -1183,44 +1193,51 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
  */
 int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
 {
-    if (config_.GetRoleType() == VISITOR) {
+    if (isReadOnly_) {
         return E_NOT_SUPPORT;
-    } else if (config_.GetDBType() == DB_VECTOR) {
+    }
+
+    if (config_.GetDBType() == DB_VECTOR) {
+        if (config_.IsEncrypt()) {
+            return E_NOT_SUPPORT;
+        }
+
         auto conn = connectionPool_->AcquireConnection(false);
         if (conn == nullptr) {
             return E_BASE;
         }
-        if (isEncrypt_) {
-            return E_NOT_SUPPORT;
-        }
-        return conn->Backup(databasePath, {});
+        return conn->Backup(databasePath, {}, false, slaveStatus_);
     }
+
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
         auto conn = connectionPool_->AcquireConnection(false);
-        return conn == nullptr ? E_BASE : conn->Backup(databasePath, {});
+        return conn == nullptr ? E_BASE : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
-    auto [errCode, statement] = GetStatement(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO, true);
-    if (statement == nullptr) {
-        return E_BASE;
+
+    auto [errCode, statement] = CreateWriteableStmt(GlobalExpr::CIPHER_DEFAULT_ATTACH_HMAC_ALGO);
+    if (errCode != E_OK || statement == nullptr) {
+        return errCode;
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(databasePath);
-    if (!destEncryptKey.empty() && !isEncrypt_) {
+    if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
         bindArgs.emplace_back(destEncryptKey);
         statement->Execute();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    } else if (isEncrypt_) {
+    } else if (config_.IsEncrypt()) {
         std::vector<uint8_t> key = config_.GetEncryptKey();
         bindArgs.emplace_back(key);
         key.assign(key.size(), 0);
         statement->Execute();
-#endif
     } else {
-        std::string str = "";
-        bindArgs.emplace_back(str);
+        bindArgs.emplace_back("");
     }
     errCode = statement->Prepare(GlobalExpr::ATTACH_BACKUP_SQL);
     errCode = statement->Execute(bindArgs);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = statement->Prepare(GlobalExpr::PRAGMA_BACKUP_JOUR_MODE_WAL);
+    errCode = statement->Execute();
     if (errCode != E_OK) {
         return errCode;
     }
@@ -1316,9 +1333,8 @@ int RdbStoreImpl::AttachInner(
 std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly()) ||
-        config_.GetHaMode() != HAMode::SINGLE) {
-        return {E_NOT_SUPPORT, 0};
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || config_.GetHaMode() != HAMode::SINGLE) {
+        return { E_NOT_SUPPORT, 0 };
     }
     std::string dbPath;
     int err = SqliteGlobalConfig::GetDbPath(config, dbPath);
@@ -1327,7 +1343,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     }
 
     // encrypted databases are not supported to attach a non encrypted database.
-    if (!config.IsEncrypt() && isEncrypt_) {
+    if (!config.IsEncrypt() && config_.IsEncrypt()) {
         return { E_NOT_SUPPORT, 0 };
     }
 
@@ -1364,7 +1380,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
 
 std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, int32_t waitTime)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, 0 };
     }
     if (!attachedInfo_.Contains(attachName)) {
@@ -1408,8 +1424,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
-    bool isRead = (config_.IsReadOnly()) || (config_.GetRoleType() == VISITOR);
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isRead);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
         return errCode;
     }
@@ -1427,7 +1442,7 @@ int RdbStoreImpl::GetVersion(int &version)
  */
 int RdbStoreImpl::SetVersion(int version)
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.IsReadOnly())) {
+    if ((config_.GetRoleType() == VISITOR) || isReadOnly_) {
         return E_NOT_SUPPORT;
     }
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
@@ -1444,7 +1459,7 @@ int RdbStoreImpl::BeginTransaction()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     // size + 1 means the number of transactions in process
@@ -1475,7 +1490,7 @@ int RdbStoreImpl::BeginTransaction()
 std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (!config_.IsVector() || config_.IsReadOnly()) {
+    if (!config_.IsVector() || isReadOnly_) {
         return {E_NOT_SUPPORT, 0};
     }
 
@@ -1503,7 +1518,7 @@ int RdbStoreImpl::RollBack()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     size_t transactionId = connectionPool_->GetTransactionStack().size();
@@ -1520,12 +1535,23 @@ int RdbStoreImpl::RollBack()
     }
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
+        if (errCode == E_DATABASE_BUSY) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        }
         // size + 1 means the number of transactions in process
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1,
             SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
+    if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        }
+        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
+        return errCode;
+    }
     if (connectionPool_->GetTransactionStack().empty()) {
         connectionPool_->SetInTransaction(false);
     }
@@ -1540,13 +1566,12 @@ int RdbStoreImpl::RollBack()
 int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute,
     const std::vector<ValueObject> &bindArgs)
 {
-    if ((!config_.IsVector()) || (config_.IsReadOnly())) {
+    if ((!config_.IsVector()) || isReadOnly_) {
         return E_NOT_SUPPORT;
     }
     if (trxId == 0) {
         return E_INVALID_ARGS;
     }
-
     if (!trxConnMap_.Contains(trxId)) {
         LOG_ERROR("trxId hasn't appeared before %{public}" PRIu64, trxId);
         return E_INVALID_ARGS;
@@ -1564,16 +1589,10 @@ int RdbStoreImpl::ExecuteByTrxId(const std::string &sql, int64_t trxId, bool clo
         return ret;
     }
     ret = statement->Execute(bindArgs);
-    if (ret != E_OK) {
-        LOG_ERROR("transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
-            SqliteUtils::Anonymous(name_).c_str(), ret);
-        trxConnMap_.Erase(trxId);
-        return ret;
-    }
     if (closeConnAfterExecute) {
         trxConnMap_.Erase(trxId);
     }
-    return E_OK;
+    return ret;
 }
 
 int RdbStoreImpl::RollBack(int64_t trxId)
@@ -1589,7 +1608,7 @@ int RdbStoreImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard<std::mutex> lockGuard(connectionPool_->GetTransactionStackMutex());
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     size_t transactionId = connectionPool_->GetTransactionStack().size();
@@ -1607,11 +1626,22 @@ int RdbStoreImpl::Commit()
     }
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
+        if (errCode == E_DATABASE_BUSY) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+        }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
             SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
     errCode = statement->Execute();
+    if (errCode != E_OK) {
+        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
+            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+        }
+        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d",
+            transactionId, SqliteUtils::Anonymous(name_).c_str(), errCode);
+        return errCode;
+    }
     connectionPool_->SetInTransaction(false);
     // 1 means the number of transactions in process
     if (transactionId > 1) {
@@ -1630,7 +1660,7 @@ int RdbStoreImpl::Commit(int64_t trxId)
 
 bool RdbStoreImpl::IsInTransaction()
 {
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR)) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return false;
     }
     return connectionPool_->IsInTransaction();
@@ -1724,12 +1754,13 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
             return;
         }
     }
-    if (pool_ == nullptr) {
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    if (pool == nullptr) {
         return;
     }
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
-    pool_->Schedule(interval, [this]() {
+    pool->Schedule(interval, [this]() {
         std::shared_ptr<std::set<std::string>> ptr;
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -1761,47 +1792,56 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     }
 
     if (connectionPool_ == nullptr) {
-        LOG_ERROR("connectionPool_ is null.");
+        LOG_ERROR("connectionPool_ is null");
         return E_ERROR;
     }
     return connectionPool_->ConfigLocale(localeStr);
 }
 
+int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)
+{
+    int ret = GetDataBasePath(backupPath, destPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::string tempPath = destPath + ".tmp";
+    if (access(tempPath.c_str(), F_OK) == E_OK) {
+        destPath = tempPath;
+    } else {
+        auto walFile = destPath + "-wal";
+        if (access(walFile.c_str(), F_OK) == E_OK) {
+            return E_ERROR;
+        }
+    }
+ 
+    if (access(destPath.c_str(), F_OK) != E_OK) {
+        LOG_ERROR("The backupFilePath does not exists.");
+        return E_INVALID_FILE_PATH;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
-    if (config_.IsReadOnly()) {
+    if (isReadOnly_) {
         return E_NOT_SUPPORT;
     }
 
-    if (!isOpen_) {
-        LOG_ERROR("The connection pool has been closed.");
-        return E_ERROR;
-    }
-    if (connectionPool_ == nullptr) {
-        LOG_ERROR("The connectionPool_ is null.");
+    if (!isOpen_ || connectionPool_ == nullptr) {
+        LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, connectionPool_ == nullptr);
         return E_ERROR;
     }
 
     std::string destPath;
-    if (!TryGetMasterSlaveBackupPath(backupPath, destPath, true)) {
-        int ret = GetDataBasePath(backupPath, destPath);
+    bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
+    RdbSecurityManager::KeyFiles keyFiles(destPath);
+    keyFiles.Lock();
+    if (!isOK) {
+        int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
+            keyFiles.Unlock();
             return ret;
-        }
-        std::string tempPath = destPath + ".tmp";
-        if (access(tempPath.c_str(), F_OK) == E_OK) {
-            destPath = tempPath;
-        } else {
-            auto walFile = destPath + "-wal";
-            if (access(walFile.c_str(), F_OK) == E_OK) {
-                return E_ERROR;
-            }
-        }
-
-        if (access(destPath.c_str(), F_OK) != E_OK) {
-            LOG_ERROR("The backupFilePath does not exists.");
-            return E_INVALID_FILE_PATH;
         }
     }
 
@@ -1811,14 +1851,25 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         service->Disable(syncerParam_);
     }
 #endif
-    int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey);
+    bool corrupt = Reportor::IsReportCorruptedFault(path_);
+    int errCode = connectionPool_->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    keyFiles.Unlock();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);
-        return errCode;
+        if (errCode == E_OK) {
+            auto syncerParam = syncerParam_;
+            syncerParam.infos_ = Connection::Collect(config_);
+            service->AfterOpen(syncerParam);
+            NotifyDataChange();
+        }
     }
 #endif
+    if (errCode == E_OK) {
+        Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
+        rebuild_ = RebuiltType::NONE;
+    }
     return errCode;
 }
 
@@ -1845,28 +1896,30 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     const DistributedRdb::DistributedConfig &distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR || config_.IsReadOnly()) {
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_) {
         return E_NOT_SUPPORT;
     }
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
-    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references, type);
+    int32_t errorCode = service->SetDistributedTables(syncerParam_, tables, distributedConfig.references,
+        distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
     }
     if (type == DistributedRdb::DISTRIBUTED_CLOUD) {
         auto conn = connectionPool_->AcquireConnection(false);
-        if (conn == nullptr) {
-            LOG_WARN("acquire conn failed when set distributed.");
-        } else if (conn->IsExchange(config_).first) {
-            (void)conn->Backup({}, {});
+        if (conn != nullptr) {
+            auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+            if (strategy == ExchangeStrategy::BACKUP) {
+                (void)conn->Backup({}, {}, false, slaveStatus_);
+            }
         }
     }
     if (type != DistributedRdb::DISTRIBUTED_CLOUD || !distributedConfig.autoSync) {
@@ -1890,7 +1943,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
         DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
     errCode = deviceManager.GetEncryptedUuidByNetworkId(device, uuid);
     if (errCode != E_OK) {
-        LOG_ERROR("GetUuid is failed.");
+        LOG_ERROR("GetUuid is failed");
         return "";
     }
 
@@ -1937,7 +1990,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
 int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,
     const DistributedRdb::PredicatesMemo &predicates, const RdbStore::AsyncDetail &async)
 {
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
         return errCode;
     }
@@ -1972,7 +2025,7 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption& option, RdbStoreObserver
     auto &list = localObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
-            LOG_ERROR("duplicate subscribe.");
+            LOG_ERROR("duplicate subscribe");
             return E_OK;
         }
     }
@@ -1988,7 +2041,7 @@ int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption& option, RdbStoreOb
     auto &list = localSharedObservers_.find(option.event)->second;
     for (auto it = list.begin(); it != list.end(); it++) {
         if ((*it)->getObserver() == observer) {
-            LOG_ERROR("duplicate subscribe.");
+            LOG_ERROR("duplicate subscribe");
             return E_OK;
         }
     }
@@ -2025,7 +2078,7 @@ int32_t RdbStoreImpl::SubscribeLocalDetail(const SubscribeOption &option,
 
 int RdbStoreImpl::SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
 {
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -2158,7 +2211,7 @@ int32_t RdbStoreImpl::UnsubscribeLocalDetail(const SubscribeOption& option,
 
 int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer)
 {
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -2226,7 +2279,7 @@ int RdbStoreImpl::Notify(const std::string &event)
 
 int RdbStoreImpl::SetSearchable(bool isSearchable)
 {
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
         return errCode;
@@ -2239,7 +2292,7 @@ int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserve
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -2251,7 +2304,7 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -2260,17 +2313,18 @@ int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObser
 
 void RdbStoreImpl::InitDelayNotifier()
 {
-    if (delayNotifier_ == nullptr) {
-        delayNotifier_ = std::make_shared<DelayNotify>();
+    if (delayNotifier_ != nullptr) {
+        return;
     }
+    delayNotifier_ = std::make_shared<DelayNotify>();
     if (delayNotifier_ == nullptr) {
         LOG_ERROR("Init delay notifier failed.");
         return;
     }
-    delayNotifier_->SetExecutorPool(pool_);
+    delayNotifier_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
     delayNotifier_->SetTask([param = syncerParam_]
-        (const DistributedRdb::RdbChangedData& rdbChangedData, uint32_t delay) -> int {
-        auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        (const DistributedRdb::RdbChangedData& rdbChangedData, const RdbNotifyConfig& rdbNotifyConfig) -> int {
+        auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (errCode == E_NOT_SUPPORT) {
             return errCode;
         }
@@ -2278,7 +2332,7 @@ void RdbStoreImpl::InitDelayNotifier()
             LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
             return errCode;
         }
-        return service->NotifyDataChange(param, rdbChangedData, delay);
+        return service->NotifyDataChange(param, rdbChangedData, rdbNotifyConfig);
     });
 }
 
@@ -2288,11 +2342,14 @@ int RdbStoreImpl::RegisterDataChangeCallback()
         return E_OK;
     }
 
-    if ((config_.GetRoleType() == VISITOR) || (config_.GetDBType() == DB_VECTOR) || (config_.IsReadOnly())) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
     auto callBack = [delayNotifier = delayNotifier_](const std::set<std::string> &tables) {
+        if (tables.size() == 0) {
+            return;
+        }
         DistributedRdb::RdbChangedData rdbChangedData;
         for (const auto& table : tables) {
             rdbChangedData.tableData[table].isTrackedDataChange = true;
@@ -2386,7 +2443,7 @@ std::pair<int32_t, uint32_t> RdbStoreImpl::LockCloudContainer()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
         LOG_ERROR("not support");
         return { errCode, 0 };
@@ -2407,7 +2464,7 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
         LOG_ERROR("not support");
         return errCode;
@@ -2424,6 +2481,18 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
     return errCode;
 }
 #endif
+
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::CreateWriteableStmt(const std::string &sql)
+{
+    auto config  = config_;
+    config.SetHaMode(HAMode::SINGLE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("create connection failed, err:%{public}d", errCode);
+        return { errCode, nullptr };
+    }
+    return conn->CreateStatement(sql, conn);
+}
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     const std::string &sql, std::shared_ptr<Connection> conn) const
@@ -2454,16 +2523,11 @@ int RdbStoreImpl::InterruptBackup()
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_NOT_SUPPORT;
     }
-    auto conn = connectionPool_->AcquireConnection(false);
-    if (conn == nullptr) {
-        return E_DATABASE_BUSY;
+    if (slaveStatus_ == SlaveStatus::BACKING_UP) {
+        slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
+        return E_OK;
     }
-    int32_t ret = conn->InterruptBackup();
-    if (ret != E_OK) {
-        LOG_ERROR("InterruptBackup failed");
-        return ret;
-    }
-    return E_OK;
+    return E_INVALID_INTERRUPT;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const
@@ -2471,11 +2535,7 @@ int32_t RdbStoreImpl::GetBackupStatus() const
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER && config_.GetHaMode() != HAMode::MAIN_REPLICA) {
         return SlaveStatus::UNDEFINED;
     }
-    auto conn = connectionPool_->AcquireConnection(false);
-    if (conn == nullptr) {
-        return SlaveStatus::UNDEFINED;
-    }
-    return conn->GetBackupStatus();
+    return slaveStatus_;
 }
 
 bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore)
@@ -2493,5 +2553,37 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
         return false;
     }
     return true;
+}
+
+bool RdbStoreImpl::IsSlaveDiffFromMaster() const
+{
+    std::string failureFlagFile = config_.GetPath() + "-slaveFailure";
+    std::string slaveDbPath = SqliteUtils::GetSlavePath(config_.GetPath());
+    return access(failureFlagFile.c_str(), F_OK) == 0 || access(slaveDbPath.c_str(), F_OK) != 0;
+}
+
+int32_t RdbStoreImpl::ExchangeSlaverToMaster()
+{
+    if (isReadOnly_) {
+        return E_OK;
+    }
+    auto conn = connectionPool_->AcquireConnection(false);
+    if (conn == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+    auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+    if (strategy != ExchangeStrategy::NOT_HANDLE) {
+        LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
+    }
+    int ret = E_OK;
+    if (strategy == ExchangeStrategy::RESTORE) {
+        conn = nullptr;
+        // disable is required before restore
+        ret = Restore({}, {});
+    } else if (strategy == ExchangeStrategy::BACKUP) {
+        // async backup
+        ret = conn->Backup({}, {}, true, slaveStatus_);
+    }
+    return ret;
 }
 } // namespace OHOS::NativeRdb

@@ -49,6 +49,7 @@ describe('rdbStoreExcuteTest', function () {
     afterEach(async function () {
         console.info(TAG + 'afterEach')
         await rdbStore.executeSql("DROP TABLE IF EXISTS test");
+        await rdbStore.executeSql("DROP TABLE IF EXISTS test2");
     })
 
     afterAll(async function () {
@@ -343,7 +344,6 @@ describe('rdbStoreExcuteTest', function () {
      * @tc.desc 1. Create table
      *          2. Insert data
      *          3. Query data
-     *          4. Drop table
      */
     it('testSyncExecute0012', 0, async function (done) {
         console.info(TAG + "************* testSyncExecute0012 start *************");
@@ -461,13 +461,41 @@ describe('rdbStoreExcuteTest', function () {
     })
 
     /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Execute_0017
+     * @tc.name Normal test case of Execute, if special characters before the sql
+     * @tc.desc 1. Create table
+     *          2. Insert data
+     *          3. Query data
+     */
+    it('testSyncExecute0017', 0, async function (done) {
+        console.info(TAG + "************* testSyncExecute0017 start *************");
+        try {
+            rdbStore.executeSync("   CREATE TABLE IF NOT EXISTS test2 (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+ 
+            let ret = rdbStore.executeSync("\r\nINSERT INTO test2(name, age, salary) VALUES (?, ?, ?)", ['tt', 28, 50000]);
+            expect(1).assertEqual(ret);
+ 
+            let resultSet = await rdbStore.querySql("SELECT * FROM test2");
+            expect(1).assertEqual(resultSet.rowCount)
+            resultSet.close();
+        } catch (err) {
+            expect(null).assertFail();
+            console.error(`execute sql failed, code:${err.code}, message: ${err.message}`);
+        }
+        done();
+        console.info(TAG + "************* testSyncExecute0017 end   *************");
+    })
+
+    /**
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Insert_0010
      * @tc.name Abnormal test case of sync
      * @tc.desc 1.Close rdbStore
      *          2.Call beginTransaction
      */
-    it('testSyncExecute0017', 0, async function () {
-        console.log(TAG + "************* testSyncExecute0017 start *************");
+    it('testSyncExecute0018', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0018 start *************");
 
         const STORE_NAME = "AfterCloseTest.db"
         const config = {
@@ -494,7 +522,7 @@ describe('rdbStoreExcuteTest', function () {
         }
 
         await relationalStore.deleteRdbStore(context, STORE_NAME);
-        console.log(TAG + "************* testSyncExecute0017 end *************");
+        console.log(TAG + "************* testSyncExecute0018 end *************");
     })
 
     /**
@@ -503,8 +531,8 @@ describe('rdbStoreExcuteTest', function () {
      * @tc.desc 1.Close rdbStore
      *          2.Call beginTransaction
      */
-    it('testSyncExecute0018', 0, async function () {
-        console.log(TAG + "************* testSyncExecute0018 start *************");
+    it('testSyncExecute0019', 0, async function () {
+        console.log(TAG + "************* testSyncExecute0019 start *************");
 
         const STORE_NAME = "AfterCloseTest.db"
         const config = {
@@ -531,7 +559,7 @@ describe('rdbStoreExcuteTest', function () {
         }
 
         await relationalStore.deleteRdbStore(context, STORE_NAME);
-        console.log(TAG + "************* testSyncExecute0018 end *************");
+        console.log(TAG + "************* testSyncExecute0019 end *************");
     })
     console.info(TAG + "*************Unit Test End*************");
 })

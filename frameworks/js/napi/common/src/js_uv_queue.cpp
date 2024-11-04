@@ -202,23 +202,6 @@ void UvQueue::DoUvCallback(uv_work_t *work, int status)
     GenCallbackTask(entry)();
 }
 
-void UvQueue::DoUvPromise(uv_work_t *work, int status)
-{
-    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
-        delete data;
-        delete work;
-    });
-
-    Scope scope(entry->env_);
-    napi_value argv[ARG_BUTT] = { nullptr };
-    auto argc = entry->GetArgv(argv, ARG_BUTT);
-    if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
-        napi_reject_deferred(entry->env_, entry->defer_, argv[ARG_ERROR]);
-    } else {
-        napi_resolve_deferred(entry->env_, entry->defer_, argv[ARG_DATA]);
-    }
-}
-
 UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
 {
     return [entry]() {
@@ -244,6 +227,24 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         }
         entry->BindPromise(promise);
     };
+}
+
+void UvQueue::DoUvPromise(uv_work_t *work, int status)
+{
+    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
+        delete data;
+        delete work;
+    });
+
+    Scope scope(entry->env_);
+
+    napi_value argv[ARG_BUTT] = { nullptr };
+    auto argc = entry->GetArgv(argv, ARG_BUTT);
+    if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
+        napi_reject_deferred(entry->env_, entry->defer_, argv[ARG_ERROR]);
+    } else {
+        napi_resolve_deferred(entry->env_, entry->defer_, argv[ARG_DATA]);
+    }
 }
 
 UvQueue::UvEntry::~UvEntry()

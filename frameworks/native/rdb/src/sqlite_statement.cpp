@@ -28,6 +28,8 @@
 #include "rdb_sql_statistic.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
+
+#include "relational_store_client.h"
 #include "share_block.h"
 #include "shared_block_serializer_info.h"
 #include "sqlite3.h"
@@ -35,12 +37,15 @@
 #include "sqlite_connection.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
 SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
@@ -54,6 +59,7 @@ SqliteStatement::~SqliteStatement()
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
     conn_ = nullptr;
+    config_ = nullptr;
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
@@ -69,7 +75,16 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
-        return SQLiteError::ErrNo(errCode);
+        if (errCode == SQLITE_NOTADB) {
+            ReadFile2Buffer();
+        }
+        int ret = SQLiteError::ErrNo(errCode);
+        if (config_ != nullptr &&
+            (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
+            Reportor::ReportFault(Reportor::Create(*config_, ret));
+        }
+        PrintInfoForDbError(ret, newSql);
+        return ret;
     }
     InnerFinalize(); // finalize the old
     sql_ = newSql;
@@ -79,6 +94,53 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     types_ = std::vector<int32_t>(columnCount_, COLUMN_TYPE_INVALID);
     numParameters_ = sqlite3_bind_parameter_count(stmt_);
     return E_OK;
+}
+
+void SqliteStatement::PrintInfoForDbError(int errCode, const std::string &sql)
+{
+    if (config_ == nullptr) {
+        return;
+    }
+
+    if (errCode == E_SQLITE_ERROR && sql == std::string(GlobalExpr::PRAGMA_VERSION) + "=?") {
+        return;
+    }
+
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED ||
+        errCode == E_SQLITE_IOERR || errCode == E_SQLITE_CANTOPEN) {
+        LOG_ERROR("DbError errCode:%{public}d errno:%{public}d DbName: %{public}s ", errCode, errno,
+            SqliteUtils::Anonymous(config_->GetName()).c_str());
+    }
+}
+
+void SqliteStatement::ReadFile2Buffer()
+{
+    if (config_ == nullptr) {
+        return;
+    }
+    std::string fileName;
+    if (SqliteGlobalConfig::GetDbPath(*config_, fileName) != E_OK || access(fileName.c_str(), F_OK) != 0) {
+        return;
+    }
+    uint64_t buffer[BUFFER_LEN] = {0x0};
+    FILE *file = fopen(fileName.c_str(), "r");
+    if (file == nullptr) {
+        LOG_ERROR(
+            "open db file failed: %{public}s, errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
+        return;
+    }
+    size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
+    if (readSize != BUFFER_LEN) {
+        LOG_ERROR("read db file size: %{public}zu, errno is %{public}d", readSize, errno);
+        (void)fclose(file);
+        return;
+    }
+    constexpr int bufferSize = 4;
+    for (uint32_t i = 0; i < BUFFER_LEN; i += bufferSize) {
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
+            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+    }
+    (void)fclose(file);
 }
 
 int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
@@ -145,6 +207,7 @@ int SqliteStatement::Prepare(const std::string &sql)
         int errCode = slave_->Prepare(sql);
         if (errCode != E_OK) {
             LOG_WARN("slave prepare Error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
@@ -171,8 +234,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
     }
 
     if (count > numParameters_) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql: %{public}s", count, numParameters_,
-            sql_.c_str());
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -185,9 +247,35 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
         int errCode = slave_->Bind(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave bind error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
+}
+
+std::pair<int32_t, int32_t> SqliteStatement::Count()
+{
+    int32_t count = INVALID_COUNT;
+    int32_t status = E_OK;
+    int32_t retry = 0;
+    do {
+        status = Step();
+        if (status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) {
+            retry++;
+            usleep(RETRY_INTERVAL);
+            continue;
+        }
+        count++;
+    } while (status == E_OK || ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < MAX_RETRY_TIMES));
+    if (status != E_NO_MORE_ROWS) {
+        Reset();
+        return { status, INVALID_COUNT };
+    }
+    if (retry > 0) {
+        LOG_WARN("locked, retry=%{public}d, sql=%{public}s", retry, sql_.c_str());
+    }
+    Reset();
+    return { E_OK, count };
 }
 
 int SqliteStatement::Step()
@@ -197,7 +285,7 @@ int SqliteStatement::Step()
         return ret;
     }
     if (slave_) {
-        ret = slave_->InnerStep();
+        ret = slave_->Step();
         if (ret != E_OK) {
             LOG_WARN("slave step error:%{public}d", ret);
         }
@@ -208,7 +296,13 @@ int SqliteStatement::Step()
 int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
-    return SQLiteError::ErrNo(sqlite3_step(stmt_));
+    auto errCode = sqlite3_step(stmt_);
+    int ret = SQLiteError::ErrNo(errCode);
+    if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
+        Reportor::ReportFault(Reportor::Create(*config_, ret));
+    }
+    PrintInfoForDbError(ret, sql_);
+    return ret;
 }
 
 int SqliteStatement::Reset()
@@ -260,8 +354,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
 {
     int count = static_cast<int>(args.size());
     if (count != numParameters_) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", count, numParameters_,
-            sql_.c_str());
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d)", count, numParameters_);
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -269,10 +362,12 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         if (!conn_->IsWriter() && !ReadOnly()) {
             return E_EXECUTE_WRITE_IN_READ_CONNECTION;
         }
-
         auto errCode = conn_->LimitWalSize();
         if (errCode != E_OK) {
-            return errCode;
+            int sqlType = SqliteUtils::GetSqlStatementType(sql_);
+            if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
+                return errCode;
+            }
         }
     }
 
@@ -290,6 +385,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         int errCode = slave_->Execute(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave execute error:%{public}d", errCode);
+            SqliteUtils::TryAccessSlaveLock(config_->GetPath(), false, true, true);
         }
     }
     return E_OK;
@@ -623,6 +719,7 @@ int SqliteStatement::ModifyLockStatus(const std::string &table, const std::vecto
     LOG_ERROR("Lock/Unlock failed, err is %{public}d.", ret);
     return E_ERROR;
 }
+
 int SqliteStatement::InnerFinalize()
 {
     if (stmt_ == nullptr) {
@@ -636,7 +733,6 @@ int SqliteStatement::InnerFinalize()
     columnCount_ = -1;
     numParameters_ = 0;
     types_ = std::vector<int32_t>();
-    config_ = nullptr;
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);

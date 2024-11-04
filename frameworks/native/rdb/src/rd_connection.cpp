@@ -34,7 +34,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto& [errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
-        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(isWrite);
+        std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(config, isWrite);
         if (connection == nullptr) {
             LOG_ERROR("SqliteConnection::Open new failed, connection is nullptr.");
             return result;
@@ -71,6 +71,7 @@ static constexpr const char *RD_POST_FIXES[] = {
     ".ctrl.dwr",
     ".safe",
     ".map",
+    ".corruptedflg",
 };
 
 int32_t RdConnection::Delete(const RdbStoreConfig &config)
@@ -85,7 +86,9 @@ int32_t RdConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-RdConnection::RdConnection(bool isWriter) : isWriter_(isWriter) {}
+RdConnection::RdConnection(const RdbStoreConfig &config, bool isWriter) : isWriter_(isWriter), config_(config)
+{
+}
 
 RdConnection::~RdConnection()
 {
@@ -123,6 +126,7 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
 {
     auto stmt = std::make_shared<RdStatement>();
     stmt->conn_ = conn;
+    stmt->config_ = &config_;
     stmt->setPragmas_["user_version"] = ([this](const int &value) -> int32_t {
         return RdUtils::RdDbSetVersion(dbHandle_, GRD_CONFIG_USER_VERSION, value);
     });
@@ -151,7 +155,7 @@ int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::TryCheckPoint()
+int32_t RdConnection::TryCheckPoint(bool timeout)
 {
     return E_NOT_SUPPORT;
 }
@@ -204,7 +208,7 @@ int32_t RdConnection::Unsubscribe(const std::string& event,
 }
 
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    bool isAsync)
+    bool isAsync, SlaveStatus &slaveStatus)
 {
     uint32_t size = destEncryptKey.size();
     if (size != 0) {
@@ -213,7 +217,8 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
     return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
-int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    SlaveStatus &slaveStatus)
 {
     uint32_t size = destEncryptKey.size();
     if (size != 0) {
@@ -222,19 +227,9 @@ int32_t RdConnection::Restore(const std::string &databasePath, const std::vector
     return RdUtils::RdDbRestore(dbHandle_, databasePath.c_str(), nullptr, 0);
 }
 
-int32_t RdConnection::InterruptBackup()
+ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
 {
-    return E_NOT_SUPPORT;
-}
-
-int32_t RdConnection::GetBackupStatus() const
-{
-    return SlaveStatus::UNDEFINED;
-}
-
-std::pair<bool, bool> RdConnection::IsExchange(const RdbStoreConfig &config)
-{
-    return { false, false };
+    return ExchangeStrategy::NOT_HANDLE;
 }
 } // namespace NativeRdb
 } // namespace OHOS

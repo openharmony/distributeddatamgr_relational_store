@@ -58,11 +58,11 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_001, TestSize.Level1)
 
 HWTEST_F(RdUtilsTest, RdUtils_Test_002, TestSize.Level1)
 {
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_INTEGER), ColumnType::TYPE_INTEGER);
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_FLOAT), ColumnType::TYPE_FLOAT);
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_TEXT), ColumnType::TYPE_STRING);
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_BLOB), ColumnType::TYPE_BLOB);
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_FLOATVECTOR), ColumnType::TYPE_FLOAT32_ARRAY);
-    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_SQL_DATATYPE_NULL), ColumnType::TYPE_NULL);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_INTEGER), ColumnType::TYPE_INTEGER);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_FLOAT), ColumnType::TYPE_FLOAT);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_TEXT), ColumnType::TYPE_STRING);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_BLOB), ColumnType::TYPE_BLOB);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_FLOATVECTOR), ColumnType::TYPE_FLOAT32_ARRAY);
+    EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_NULL), ColumnType::TYPE_NULL);
 }
 } // namespace Test

@@ -39,6 +39,7 @@ public:
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
     int Bind(const std::vector<ValueObject> &args) override;
+    std::pair<int32_t, int32_t> Count() override;
     int Step() override;
     int Reset() override;
     int Finalize() override;
@@ -87,6 +88,14 @@ private:
     int InnerStep();
     int InnerFinalize();
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
+    void ReadFile2Buffer();
+    void PrintInfoForDbError(int errCode, const std::string &sql);
+
+    static constexpr uint32_t BUFFER_LEN = 16;
+
+    static constexpr int MAX_RETRY_TIMES = 50;
+    // Interval of retrying query in millisecond
+    static constexpr int RETRY_INTERVAL = 1000;
 
     bool readOnly_;
     bool bound_ = false;
@@ -95,9 +104,9 @@ private:
     uint32_t seqId_ = 0;
     sqlite3_stmt *stmt_;
     std::shared_ptr<Connection> conn_;
-    std::shared_ptr<SqliteStatement> slave_;
     std::string sql_;
     mutable std::vector<int32_t> types_;
+    std::shared_ptr<Statement> slave_;
     const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
