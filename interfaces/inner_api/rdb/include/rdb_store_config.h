@@ -609,6 +609,10 @@ public:
 
     IntegrityCheck GetIntegrityCheck() const;
 
+    void SetIter(int32_t iter) const;
+ 
+    int32_t GetIter() const;
+
     void SetPluginLibs(const std::vector<std::string> &pluginLibs);
 
     std::vector<std::string> GetPluginLibs() const;
@@ -621,9 +625,7 @@ public:
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
-    void SetIter(int32_t iter) const;
-
-    int32_t GetIter() const;
+    void SetJournalMode(const std::string &journalMode);
 
     void EnableRekey(bool enable);
 

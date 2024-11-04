@@ -38,7 +38,7 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 {
     umask(GlobalExpr::APP_DEFAULT_UMASK);
 
-    sqlite3_config(SQLITE_CONFIG_LOOKASIDE, 0, 0);
+    sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
     sqlite3_config(SQLITE_CONFIG_LOG, &Log,
         GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
@@ -57,6 +57,9 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     bool verboseLog = (data != nullptr);
     auto errType = static_cast<unsigned int>(err);
     errType &= 0xFF;
+    if (errType == SQLITE_ERROR && strstr(msg, "\"?\": syntax error in \"PRAGMA user_ve") != nullptr) {
+        return;
+    }
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE
         || err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {

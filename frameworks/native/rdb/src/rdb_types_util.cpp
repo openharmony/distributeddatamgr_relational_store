@@ -20,14 +20,25 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_,
         input.level_, input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_,
-        input.isSearchable_, input.haMode_);
+        input.isSearchable_, input.haMode_, input.infos_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 {
     return ITypesUtil::Unmarshal(data, output.bundleName_, output.hapName_, output.storeName_, output.area_,
         output.level_, output.type_, output.isEncrypt_, output.password_, output.customDir_, output.isAutoClean_,
-        output.isSearchable_, output.haMode_);
+        output.isSearchable_, output.haMode_, output.infos_);
+}
+
+template<>
+bool Marshalling(const NotifyConfig &input, MessageParcel &data)
+{
+    return ITypesUtil::Marshal(data, input.delay_, input.isFull_);
+}
+template<>
+bool Unmarshalling(NotifyConfig &output, MessageParcel &data)
+{
+    return ITypesUtil::Unmarshal(data, output.delay_, output.isFull_);
 }
 
 template<>
@@ -206,7 +217,7 @@ bool Unmarshalling(Reference &output, MessageParcel &data)
 template<>
 bool Marshalling(const BigInt& input, MessageParcel& data)
 {
-    return ITypesUtil::Marshal(data, input.Sign(), input.Value());
+    return Marshal(data, input.Sign(), input.Value());
 }
 
 template<>
@@ -214,10 +225,20 @@ bool Unmarshalling(BigInt& output, MessageParcel& data)
 {
     int32_t sign = 0;
     std::vector<uint64_t> value;
-    if (!ITypesUtil::Unmarshal(data, sign, value)) {
+    if (!Unmarshal(data, sign, value)) {
         return false;
     }
     output = BigInt(sign, std::move(value));
     return true;
+}
+template<>
+bool Marshalling(const DebugInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.inode_, input.mode_, input.uid_, input.gid_);
+}
+template<>
+bool Unmarshalling(DebugInfo &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.inode_, output.mode_, output.uid_, output.gid_);
 }
 }

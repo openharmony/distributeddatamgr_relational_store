@@ -18,11 +18,11 @@
 
 namespace OHOS::NativeRdb {
 
-
-bool RdbRadar::hasHostPkg_ = false;
 std::string RdbRadar::hostPkg_{ "" };
+std::mutex RdbRadar::mutex_;
 
-RdbRadar::RdbRadar(Scene scene, const char* funcName, std::string bundleName) : scene_(scene), funcName_(funcName)
+RdbRadar::RdbRadar(Scene scene, const char *funcName, std::string bundleName)
+    : scene_(scene), funcName_(funcName), bundleName_(bundleName)
 {
 }
 
@@ -47,7 +47,8 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
     (void)funcName_;
 }
 
-void RdbRadar::GetHostPkgInfo(std::string bundleName)
+std::string RdbRadar::GetHostPkgInfo()
 {
+    return "";
 }
 }

@@ -38,7 +38,7 @@ public:
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
-    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &storeConfig, int &errCode);
+    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config, int &errCode);
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
         (const RdbStoreConfig &storeConfig, int &errCode);
@@ -53,7 +53,7 @@ public:
     int RestartReaders();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-        const std::vector<uint8_t> &newKey);
+        const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();
@@ -64,17 +64,19 @@ public:
 
 private:
     struct ConnNode {
+        static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
         bool using_ = false;
         int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point failedTime_;
         std::shared_ptr<Connection> connect_;
 
         explicit ConnNode(std::shared_ptr<Connection> conn);
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        void Unused();
+        int32_t Unused(bool inTrans);
     };
 
     struct Container {
@@ -103,7 +105,7 @@ private:
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
-        int32_t Dump(const char *header);
+        int32_t Dump(const char *header, bool inTrans);
 
     private:
         int32_t ExtendNode();
@@ -115,7 +117,9 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node);
     void ReleaseNode(std::shared_ptr<ConnNode> node);
-    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath);
+    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
+    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
+    bool CheckIntegrity(const std::string &dbPath);
 
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;

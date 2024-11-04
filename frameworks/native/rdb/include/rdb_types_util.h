@@ -26,6 +26,7 @@
 namespace OHOS::ITypesUtil {
 using SubOption = DistributedRdb::SubscribeOption;
 using SyncerParam = DistributedRdb::RdbSyncerParam;
+using NotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Option = DistributedRdb::RdbService::Option;
 using RdbPredicates = DistributedRdb::PredicatesMemo;
 using RdbOperation = DistributedRdb::RdbPredicateOperation;
@@ -44,10 +45,15 @@ using RdbChangedData = DistributedRdb::RdbChangedData;
 using RdbProperties = DistributedRdb::RdbChangeProperties;
 using Reference = DistributedRdb::Reference;
 using BigInt = NativeRdb::BigInteger;
+using DebugInfo = DistributedRdb::RdbDebugInfo;;
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(SyncerParam &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const NotifyConfig &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(NotifyConfig &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const Option &input, MessageParcel &data);
 template<>
@@ -116,5 +122,9 @@ template<>
 API_EXPORT bool Marshalling(const BigInt &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(BigInt &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const DebugInfo &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(DebugInfo &output, MessageParcel &data);
 }
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
