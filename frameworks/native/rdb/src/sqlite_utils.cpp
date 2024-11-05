@@ -348,5 +348,13 @@ void SqliteUtils::SetSlaveValid(const std::string &dbPath)
     std::remove((dbPath + SLAVE_INTERRUPT).c_str());
     std::remove((dbPath + SLAVE_FAILURE).c_str());
 }
+
+bool SqliteUtils::DeleteDirtyFiles(const std::string &backupFilePath)
+{
+    auto res = DeleteFile(backupFilePath);
+    res = DeleteFile(backupFilePath + "-shm") && res;
+    res = DeleteFile(backupFilePath + "-wal") && res;
+    return res;
+}
 } // namespace NativeRdb
 } // namespace OHOS
