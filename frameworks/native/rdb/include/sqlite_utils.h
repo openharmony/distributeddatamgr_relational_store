@@ -68,6 +68,7 @@ public:
     static const char *HmacAlgoDescription(int32_t hmacAlgo);
     static const char *KdfAlgoDescription(int32_t kdfAlgo);
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
+    static bool DeleteDirtyFiles(const std::string &backupFilePath);
 
 private:
     struct SqlType {
