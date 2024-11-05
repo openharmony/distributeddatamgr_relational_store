@@ -84,6 +84,18 @@ public:
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
+    class CloudTables {
+    public:
+        int32_t AddTables(const std::vector<std::string> &tables);
+        int32_t RmvTables(const std::vector<std::string> &tables);
+        int32_t Changed(const std::string &table);
+        std::set<std::string> Steal();
+
+    private:
+        std::mutex mutex_;
+        std::set<std::string> tables_;
+        std::set<std::string> changes_;
+    };
 
     int InnerOpen();
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
@@ -133,8 +145,7 @@ private:
     std::string fileType_;
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
-    std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
-    std::set<std::string> cloudTables_;
+    std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;
