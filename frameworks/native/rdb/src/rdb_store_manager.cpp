@@ -70,13 +70,14 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
         storeCache_.erase(path);
         return nullptr;
     }
-    if (!(rdbStore->GetConfig() == config)) {
+    auto configCache = rdbStore->GetConfig();
+    if (!(configCache == config)) {
         storeCache_.erase(path);
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool != nullptr) {
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, rdbStore]() {
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [configCache, config]() {
                 Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE,
-                    "ErrorType:Config diff!" + RdbStoreConfig::Format(rdbStore->GetConfig(), config)));
+                    "ErrorType:Config diff!" + RdbStoreConfig::Format(configCache, config)));
             });
         }
         LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
