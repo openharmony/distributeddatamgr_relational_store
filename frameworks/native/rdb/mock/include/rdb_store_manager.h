@@ -44,9 +44,10 @@ private:
     using Param = DistributedRdb::RdbSyncerParam;
     int ProcessOpenCallback(RdbStore &rdbStore,
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
-    bool IsConfigInvalidChanged(const std::string &path, const RdbStoreConfig &config);
+    bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     Param GetSyncParam(const RdbStoreConfig &config);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
     std::string bundleName_;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
