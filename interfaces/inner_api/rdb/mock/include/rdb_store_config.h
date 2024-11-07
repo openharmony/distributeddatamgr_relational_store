@@ -231,6 +231,7 @@ public:
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
     void EnableRekey(bool enable);
+    static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
 
 private:
     void ClearEncryptKey();

@@ -924,7 +924,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
 
     std::string bundleName = "com.ohos.config.test30";
     config.SetBundleName(bundleName);
-    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetSecurityLevel(SecurityLevel::S2);
     config.SetArea(0);
     config.SetEncryptStatus(false);
 
@@ -937,10 +937,10 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_029, TestSize.Level1)
     store = nullptr;
 
     auto invalidConfig = config;
-    invalidConfig.SetSecurityLevel(SecurityLevel::S2);
+    invalidConfig.SetSecurityLevel(SecurityLevel::S1);
     store = RdbHelper::GetRdbStore(invalidConfig, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    EXPECT_EQ(store, nullptr);
     store = nullptr;
 
     RdbHelper::DeleteRdbStore(dbPath);
@@ -1013,6 +1013,38 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_032, TestSize.Level1)
     timeout = 301;
     config.SetWriteTime(timeout);
     EXPECT_EQ(300, config.GetWriteTime());
+}
+
+/**
+ * @tc.name: RdbStoreConfig_033
+ * @tc.desc: test RdbStoreConfig SetSecurityLevel S2->S1
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_033, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test_33.db";
+    RdbStoreConfig config(dbPath);
+
+    std::string bundleName = "com.ohos.config.test33";
+    config.SetBundleName(bundleName);
+    config.SetSecurityLevel(SecurityLevel::S2);
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    store = nullptr;
+
+    auto invalidConfig = config;
+    invalidConfig.SetSecurityLevel(SecurityLevel::S1);
+    store = RdbHelper::GetRdbStore(invalidConfig, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+    EXPECT_EQ(store, nullptr);
+    store = nullptr;
+
+    RdbHelper::DeleteRdbStore(dbPath);
 }
 
 /**

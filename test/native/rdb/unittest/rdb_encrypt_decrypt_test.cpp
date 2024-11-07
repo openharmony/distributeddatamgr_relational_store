@@ -338,6 +338,59 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_Encrypt_010
+ * @tc.desc: test create encrypted Rdb and open in non encrypted mode ,then E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.TestEncrypt10");
+
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key";
+    int ret = access(keyPath.c_str(), F_OK);
+    EXPECT_EQ(ret, 0);
+
+    config.SetEncryptStatus(false);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_011
+ * @tc.desc: test create unencrypted Rdb and open in encrypted mode ,then E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_011, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::UNENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    config.SetBundleName("com.example.TestEncrypt11");
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::string keyPath = RDB_TEST_PATH + "key/unencrypted.pub_key";
+    int ret = access(keyPath.c_str(), F_OK);
+    EXPECT_EQ(ret, -1);
+
+    config.SetEncryptStatus(true);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
  * @tc.name: RdbStore_RdbPassword_001
  * @tc.desc: Abnomal test RdbStore RdbPassword class
  * @tc.type: FUNC
