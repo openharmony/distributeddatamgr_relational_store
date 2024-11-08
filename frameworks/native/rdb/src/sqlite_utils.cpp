@@ -315,6 +315,9 @@ const char *SqliteUtils::EncryptAlgoDescription(int32_t encryptAlgo)
 
 int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
 {
+    if (IsSlaveInvalid(dbPath)) {
+        return E_OK;
+    }
     std::ofstream src((dbPath + SLAVE_FAILURE).c_str(), std::ios::binary);
     if (src.is_open()) {
         src.close();
@@ -325,6 +328,9 @@ int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
 
 int SqliteUtils::SetSlaveInterrupted(const std::string &dbPath)
 {
+    if (IsSlaveInterrupted(dbPath)) {
+        return E_OK;
+    }
     std::ofstream src((dbPath + SLAVE_INTERRUPT).c_str(), std::ios::binary);
     if (src.is_open()) {
         src.close();
