@@ -158,6 +158,20 @@ protected:
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
+    using Options = DistributedRdb::RdbService::Option;
+    using Memo = DistributedRdb::PredicatesMemo;
+    class CloudTables {
+    public:
+        int32_t AddTables(const std::vector<std::string> &tables);
+        int32_t RmvTables(const std::vector<std::string> &tables);
+        int32_t Changed(const std::string &table);
+        std::set<std::string> Steal();
+
+    private:
+        std::mutex mutex_;
+        std::set<std::string> tables_;
+        std::set<std::string> changes_;
+    };
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int InnerOpen();
@@ -170,7 +184,7 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
-    int InnerSync(const DistributedRdb::RdbService::Option &option, const DistributedRdb::PredicatesMemo &predicates,
+    static int InnerSync(const RdbParam &param, const Options &option, const Memo &predicates,
         const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
@@ -227,8 +241,7 @@ private:
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
-    std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
-    std::set<std::string> cloudTables_;
+    std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
