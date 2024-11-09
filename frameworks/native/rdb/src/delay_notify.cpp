@@ -93,7 +93,7 @@ void DelayNotify::StartTimer()
                 pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
         }
 
-        if (autoSyncInterval_ == AUTO_SYNC_INTERVAL || changedData.tableData.empty()) {
+        if (changedData.tableData.empty()) {
             return;
         }
 
