@@ -1022,7 +1022,9 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
         if (statement == nullptr) {
-            continue;
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, sql:%{public}s",
+                errCode, bindArgs.size(), table.c_str(), sql.c_str());
+            return { E_OK, -1 };
         }
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
