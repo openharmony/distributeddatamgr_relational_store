@@ -133,6 +133,7 @@ public:
     bool IsReadOnly() const override;
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
+    bool IsSlaveDiffFromMaster() const override;
     int ConfigLocale(const std::string &localeStr);
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     std::string GetName();
@@ -187,36 +188,26 @@ public:
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime = 2) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime = 2) override;
-    int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
-    int InterruptBackup() override;
-    int32_t GetDbType() const override;
     void AfterOpen(const RdbStoreConfig &config);
+    int ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock) override;
+    int32_t GetDbType() const override;
+    int32_t ExchangeSlaverToMaster();
     std::pair<int32_t, uint32_t> LockCloudContainer() override;
     int32_t UnlockCloudContainer() override;
+    int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
 
-protected:
-    int InnerOpen();
-    void InitSyncerParam();
-    const RdbStoreConfig config_;
-    bool isOpen_ = false;
-    bool isReadOnly_;
-    bool isMemoryRdb_;
-    bool isEncrypt_;
-    int64_t vSchema_ = 0;
-    std::string path_;
-    std::string name_;
-    std::string fileType_;
-
 private:
-    ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
-    std::atomic<int64_t> newTrxId_ = 1;
+    using Stmt = std::shared_ptr<Statement>;
+    using RdbParam = DistributedRdb::RdbSyncerParam;
+
+    static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    int InnerOpen();
+    void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
         const std::string &sql, const ValueObject &object, int sqlType);
-
-    using Stmt = std::shared_ptr<Statement>;
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     auto GenerateSql(const std::string& table, const std::vector<ValuesBucket>& buckets, int limit);
@@ -235,8 +226,6 @@ private:
     int SubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
     int32_t SubscribeLocalDetail(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption& option, RdbStoreObserver *observer);
-    static void UploadSchema(const DistributedRdb::RdbSyncerParam &param, uint32_t retry);
-
     int UnSubscribeLocal(const SubscribeOption& option, RdbStoreObserver *observer);
     int UnSubscribeLocalAll(const SubscribeOption& option);
     int UnSubscribeLocalShared(const SubscribeOption& option, RdbStoreObserver *observer);
@@ -246,13 +235,12 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     bool ColHasSpecificField(const std::vector<std::string> &columns);
-    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
+    std::pair<int32_t, Stmt> CreateWriteableStmt(const std::string &sql);
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
     std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
     int AttachInner(const std::string &attachName,
         const std::string &dbPath, const std::vector<uint8_t> &key, int32_t waitTime);
     std::string GetSecManagerName(const RdbStoreConfig &config);
-    void RemoveDbFiles(std::string &path);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
     int InsertWithConflictResolutionEntry(int64_t &outRowId, const std::string &table, const ValuesBucket &values,
         ConflictResolution conflictResolution);
@@ -262,9 +250,12 @@ private:
     template<typename T>
     int BatchInsertEntry(const std::string& table, const T& values, size_t rowSize, int64_t& outInsertNum);
     int ExecuteSqlEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs);
-    int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     std::pair<int32_t, ValueObject> ExecuteEntry(const std::string& sql, const std::vector<ValueObject>& bindArgs,
         int64_t trxId);
+    int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
+    void NotifyDataChange();
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
+    int GetDestPath(const std::string &backupPath, std::string &destPath);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -273,23 +264,29 @@ private:
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
-    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
+    bool isOpen_ = false;
+    bool isReadOnly_ = false;
+    bool isMemoryRdb_;
+    uint32_t rebuild_ = RebuiltType::NONE;
+    SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
+    int64_t vSchema_ = 0;
+    std::atomic<int64_t> newTrxId_ = 1;
+    const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
-
-    std::shared_ptr<ExecutorPool> pool_;
-    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
-
+    std::string path_;
+    std::string name_;
+    std::string fileType_;
     mutable std::shared_mutex rwMutex_;
-
-    std::set<std::string> cloudTables_;
-
     std::mutex mutex_;
-    std::shared_ptr<std::set<std::string>> syncTables_;
+    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
+    std::shared_ptr<std::set<std::string>> syncTables_ = nullptr;
+    std::set<std::string> cloudTables_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
-    uint32_t rebuild_;
-    
+    ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+
     static inline ValueObject emptyValueObject_;
     static inline std::reference_wrapper<ValueObject> emptyValueObjectRef_ = emptyValueObject_;
 };

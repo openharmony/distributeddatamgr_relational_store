@@ -501,15 +501,16 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
 
     // newPath == currentPath, writeConnectionUsed == true
     auto connection = connectionPool->AcquireConnection(false);
-    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    SlaveStatus curStatus;
+    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey, curStatus);
     EXPECT_EQ(E_ERROR, errCode);
     connection = nullptr;
     // newPath == currentPath
-    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey);
+    errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey, curStatus);
     EXPECT_NE(E_OK, errCode);
     // newPath != currentPath
     const std::string newPath2 = RDB_TEST_PATH + "tmp.db";
-    errCode = connectionPool->ChangeDbFileForRestore(newPath2, backupPath, newKey);
+    errCode = connectionPool->ChangeDbFileForRestore(newPath2, backupPath, newKey, curStatus);
     EXPECT_EQ(E_ERROR, errCode);
 }
 

@@ -222,7 +222,6 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_004, TestSize.Level2
     EXPECT_NE(E_OK, errCode);
 
     std::string path = RdbStoreDistributedTest::DRDB_PATH + "test.db";
-    RdbHelper::DeleteRdbStore(path);
     RdbStoreConfig config(path);
     TestOpenCallback callback;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);

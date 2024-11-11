@@ -30,14 +30,17 @@ DelayNotify::~DelayNotify()
         pool_->Remove(delaySyncTaskId_);
     }
     if (task_ != nullptr && changedData_.tableData.size() > 0) {
-        auto errCode = task_(changedData_, 0);
+        DistributedRdb::RdbNotifyConfig rdbNotifyConfig;
+        rdbNotifyConfig.delay_ = 0;
+        rdbNotifyConfig.isFull_ = isFull_;
+        auto errCode = task_(changedData_, rdbNotifyConfig);
         if (errCode != 0) {
             LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
         }
     }
 }
 
-void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData)
+void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData, bool isFull)
 {
     LOG_DEBUG("Update changed data.");
     {
@@ -51,6 +54,7 @@ void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData
                 changedData_.tableData.insert_or_assign(k, v);
             }
         }
+        isFull_ |= isFull;
     }
     StartTimer();
 }
@@ -72,9 +76,11 @@ void DelayNotify::StartTimer()
 {
     DistributedRdb::RdbChangedData changedData;
     bool needExecTask = false;
+    bool isFull = false;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         changedData.tableData = changedData_.tableData;
+        isFull = isFull_;
         if (pool_ == nullptr) {
             return;
         }
@@ -106,7 +112,10 @@ void DelayNotify::StartTimer()
     }
 
     if (needExecTask) {
-        task_(changedData, SERVICE_INTERVAL);
+        DistributedRdb::RdbNotifyConfig rdbNotifyConfig;
+        rdbNotifyConfig.delay_ = SERVICE_INTERVAL;
+        rdbNotifyConfig.isFull_ = isFull;
+        task_(changedData, rdbNotifyConfig);
     }
 }
 
@@ -122,14 +131,21 @@ void DelayNotify::ExecuteTask()
 {
     LOG_DEBUG("Notify data change.");
     DistributedRdb::RdbChangedData changedData;
+    bool isFull = false;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         changedData.tableData = std::move(changedData_.tableData);
+        isFull = isFull_;
         RestoreDefaultSyncInterval();
         StopTimer();
+        isFull_ = false;
+        isInitialized_ = false;
     }
-    if (task_ != nullptr && changedData.tableData.size() > 0) {
-        int errCode = task_(changedData, 0);
+    if (task_ != nullptr && (changedData.tableData.size() > 0 || isFull)) {
+        DistributedRdb::RdbNotifyConfig rdbNotifyConfig;
+        rdbNotifyConfig.delay_ = 0;
+        rdbNotifyConfig.isFull_ = isFull;
+        int errCode = task_(changedData, rdbNotifyConfig);
         if (errCode != 0) {
             LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
             std::lock_guard<std::mutex> lock(mutex_);

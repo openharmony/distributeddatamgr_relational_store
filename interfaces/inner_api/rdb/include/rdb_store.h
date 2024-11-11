@@ -575,6 +575,14 @@ public:
      */
     virtual int Notify(const std::string &event) = 0;
 
+    /**
+     * @brief Check the slave database is different from current database.
+     */
+    virtual bool IsSlaveDiffFromMaster() const
+    {
+        return false;
+    }
+
     virtual int32_t GetDbType() const
     {
         return DB_SQLITE;

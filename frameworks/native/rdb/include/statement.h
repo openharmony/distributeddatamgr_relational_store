@@ -34,6 +34,7 @@ public:
     virtual ~Statement() = default;
     virtual int32_t Prepare(const std::string &sql) = 0;
     virtual int32_t Bind(const std::vector<ValueObject> &args = {}) = 0;
+    virtual std::pair<int32_t, int32_t> Count() = 0;
     virtual int32_t Step() = 0;
     virtual int32_t Reset() = 0;
     virtual int32_t Finalize() = 0;
@@ -57,6 +58,8 @@ public:
     {
         return 0;
     }
+
+    static constexpr int INVALID_COUNT = -1;
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_STATEMENT_H
