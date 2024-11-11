@@ -122,26 +122,35 @@ HWTEST_F(RdbSecurityManagerTest, LockUnlock, TestSize.Level1)
 HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
 {
     int errCode = E_OK;
-    std::string name = "secret_key_load_test";
-    RdbStoreConfig config(RDB_TEST_PATH + name);
+    std::string dbPath = RDB_TEST_PATH + "secret_key_load_test.db";
+    RdbStoreConfig config(dbPath);
     config.SetEncryptStatus(true);
+    config.SetBundleName(BUNDLE_NAME);
     RdbStoreSecurityManagerTestOpenCallback helper;
 
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
-    
-    RdbSecurityManager::KeyFiles keyFile(RDB_TEST_PATH);
+    store = nullptr;
 
+    RdbSecurityManager::KeyFiles keyFile(dbPath);
     const std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    std::vector<char> keyfile1;
+    ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfile1));
+
     std::vector<char> content = { 'a' };
     bool ret = OHOS::SaveBufferToFile(file, content);
     ASSERT_TRUE(ret);
-    RdbPassword pwd =
-        RdbSecurityManager::GetInstance().GetRdbPassword(RDB_TEST_PATH, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
-    ASSERT_EQ(pwd.GetSize(), 0);
+    
+    std::vector<char> keyfile2;
+    ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfile2));
+    ASSERT_NE(keyfile1.size(), keyfile2.size());
 
-    auto store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    RdbStoreConfig config1(dbPath);
+    config1.SetEncryptStatus(true);
+    config1.SetBundleName(BUNDLE_NAME);
+    RdbStoreSecurityManagerTestOpenCallback helper1;
+    auto store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store1, nullptr);
 
