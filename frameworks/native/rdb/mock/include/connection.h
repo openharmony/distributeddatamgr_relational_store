@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
 namespace OHOS::NativeRdb {
@@ -29,18 +30,22 @@ class RdbStoreConfig;
 class Statement;
 class Connection {
 public:
+    using Info = DistributedRdb::RdbDebugInfo;
     using SConn = std::shared_ptr<Connection>;
     using Stmt = std::shared_ptr<Statement>;
     using Notifier = std::function<void(const std::set<std::string> &tables)>;
     using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
     using Repairer = int32_t (*)(const RdbStoreConfig &config);
     using Deleter = int32_t (*)(const RdbStoreConfig &config);
+    using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
     static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t Repair(const RdbStoreConfig &config);
     static int32_t Delete(const RdbStoreConfig &config);
+    static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     static int32_t RegisterCreator(int32_t dbType, Creator creator);
     static int32_t RegisterRepairer(int32_t dbType, Repairer repairer);
     static int32_t RegisterDeleter(int32_t dbType, Deleter deleter);
+    static int32_t RegisterCollector(int32_t dbType, Collector collector);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
@@ -50,7 +55,7 @@ public:
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
     virtual int32_t ReSetKey(const RdbStoreConfig &config) = 0;
-    virtual int32_t TryCheckPoint() = 0;
+    virtual int32_t TryCheckPoint(bool timeout) = 0;
     virtual int32_t LimitWalSize() = 0;
     virtual int32_t ConfigLocale(const std::string &localeStr) = 0;
     virtual int32_t CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
@@ -63,11 +68,10 @@ public:
     virtual int32_t Unsubscribe(const std::string &event,
         const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync = false) = 0;
-    virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey) = 0;
-    virtual int32_t InterruptBackup() = 0;
-    virtual int32_t GetBackupStatus() const = 0;
-    virtual std::pair<bool, bool> IsExchange(const RdbStoreConfig &config) = 0;
+        bool isAsync, SlaveStatus &slaveStatus) = 0;
+    virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        SlaveStatus &slaveStatus) = 0;
+    virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
 
 private:
     int32_t id_ = 0;

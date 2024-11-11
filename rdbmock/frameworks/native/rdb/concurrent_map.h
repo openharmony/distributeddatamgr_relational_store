@@ -181,6 +181,12 @@ public:
         return count;
     }
 
+    mapped_type &operator[](const key_type &key) noexcept
+    {
+        std::lock_guard<decltype(mutex_)> lock(mutex_);
+        return entries_[key];
+    }
+
     void ForEach(const std::function<bool(const key_type &, mapped_type &)> &action)
     {
         if (action == nullptr) {

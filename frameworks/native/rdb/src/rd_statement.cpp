@@ -26,10 +26,13 @@
 #include "rd_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 RdStatement::RdStatement()
 {
 }
@@ -125,6 +128,9 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     GRD_SqlStmt *tmpStmt = nullptr;
     int ret = RdUtils::RdSqlPrepare(db, newSql.c_str(), newSql.length(), &tmpStmt, nullptr);
     if (ret != E_OK) {
+        if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+            Reportor::ReportFault(Reportor::Create(*config_, ret));
+        }
         if (tmpStmt != nullptr) {
             (void)RdUtils::RdSqlFinalize(tmpStmt);
         }
@@ -137,14 +143,14 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     columnCount_ = RdUtils::RdSqlColCnt(tmpStmt);
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
     if (readOnly_) {
+        isStepInPrepare_ = true;
         ret = Step();
         if (ret != E_OK && ret != E_NO_MORE_ROWS) {
             return ret;
         }
         GetProperties();
-        ret = Reset();
-        if (ret != E_OK) {
-            return ret;
+        if (ret == E_NO_MORE_ROWS) {
+            Reset();
         }
     }
     return E_OK;
@@ -164,6 +170,7 @@ int RdStatement::Finalize()
     sql_ = "";
     columnCount_ = 0;
     readOnly_ = false;
+    config_ = nullptr;
     return E_OK;
 }
 
@@ -283,12 +290,26 @@ int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>
     return E_OK;
 }
 
+std::pair<int32_t, int32_t> RdStatement::Count()
+{
+    return { E_NOT_SUPPORT, INVALID_COUNT };
+}
+
 int32_t RdStatement::Step()
 {
     if (stmtHandle_ == nullptr) {
         return E_OK;
     }
-    return RdUtils::RdSqlStep(stmtHandle_);
+    if (isStepInPrepare_ && stepCnt_ == 1) {
+        stepCnt_++;
+        return E_OK;
+    }
+    int ret = RdUtils::RdSqlStep(stmtHandle_);
+    if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
+        Reportor::ReportFault(Reportor::Create(*config_, ret));
+    }
+    stepCnt_++;
+    return ret;
 }
 
 int32_t RdStatement::Reset()
@@ -296,6 +317,8 @@ int32_t RdStatement::Reset()
     if (stmtHandle_ == nullptr) {
         return E_OK;
     }
+    stepCnt_ = 0;
+    isStepInPrepare_ = false;
     return RdUtils::RdSqlReset(stmtHandle_);
 }
 
@@ -487,6 +510,5 @@ void RdStatement::GetProperties()
 {
     columnCount_ = RdUtils::RdSqlColCnt(stmtHandle_);
 }
-
 } // namespace NativeRdb
 } // namespace OHOS

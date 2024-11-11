@@ -270,5 +270,19 @@ describe('rdbStoreResultSetGetRowTest', function () {
         expect(false).assertEqual(resultSet.goToLastRow());
         console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0008 end   *************");
     })
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGoToLastRow0009
+     * @tc.desc resultSet goToFirstRow test
+     */
+    it('rdbStoreResultSetGetRowTest0009', 0, async function () {
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0009 start *************");
+        let querySql = "SELECT 1";
+        let resultSet = await rdbStore.querySql(querySql);
+        expect(true).assertEqual(resultSet.goToFirstRow());
+        let valueBucket_ret = resultSet.getRow();
+        expect(1).assertEqual(valueBucket_ret["1"]);
+        console.log(TAG + "************* rdbStoreResultSetGetRowTest0009 end   *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })

@@ -24,6 +24,8 @@
 #include "statement.h"
 #include "value_object.h"
 #include "rd_connection.h"
+#include "rdb_store_config.h"
+
 namespace OHOS {
 namespace NativeRdb {
 class RdStatement final : public Statement {
@@ -33,6 +35,7 @@ public:
     int Finalize() override;
     int32_t Prepare(const std::string& sql) override;
     int32_t Bind(const std::vector<ValueObject>& args) override;
+    std::pair<int32_t, int32_t> Count() override;
     int32_t Step() override;
     int32_t Reset() override;
     int32_t Execute(const std::vector<ValueObject>& args) override;
@@ -58,6 +61,8 @@ private:
     int IsValid(int index) const;
 
     bool readOnly_ = false;
+    bool isStepInPrepare_ = false;
+    int stepCnt_ = 0;
     std::string sql_ = "";
     GRD_SqlStmt *stmtHandle_ = nullptr;
     GRD_DB *dbHandle_ = nullptr;
@@ -66,6 +71,7 @@ private:
 
     std::map<std::string, std::function<int32_t(const int &value)>> setPragmas_;
     std::map<std::string, std::function<int32_t(int &version)>> getPragmas_;
+    const RdbStoreConfig *config_ = nullptr;
 };
 } // namespace NativeRdb
 } // namespace OHOS

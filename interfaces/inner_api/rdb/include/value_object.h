@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +24,6 @@
 #include "asset_value.h"
 #include "big_integer.h"
 #include "rdb_visibility.h"
-
-#ifdef Nil
-#undef Nil
-#endif
-
 namespace OHOS {
 namespace NativeRdb {
 /**
@@ -402,7 +398,7 @@ private:
         /** Indicates the ValueObject type is assets.*/
         "ASSETS",
         /** Indicates the ValueObject type is vecs.*/
-        "VECS",
+        "FLOATVECTOR",
         /** Indicates the ValueObject type is bigint.*/
         "UNLIMITED INT"
     };

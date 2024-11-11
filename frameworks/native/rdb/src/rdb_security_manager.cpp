@@ -383,7 +383,9 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
             break;
         }
         retryCount++;
-        usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+        if (ret != HKS_SUCCESS) {
+            usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+        }
     }
     LOG_INFO("bundleName:%{public}s, retry:%{public}u, error:%{public}d", bundleName.c_str(), retryCount, ret);
     return ret;
@@ -482,9 +484,9 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     }
 
     auto size = content.size();
-    auto offset = 0;
+    std::size_t offset = 0;
     auto iter = content.begin();
-    if (offset + 1 >= size) {
+    if (offset + 1 >= static_cast<std::size_t>(size)) {
         return false;
     }
     keyData.distributed = *iter;
@@ -492,11 +494,11 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     offset++;
 
     std::vector<uint8_t> createTime;
-    if (offset + sizeof(time_t) / sizeof(uint8_t) >= size) {
+    if (offset + static_cast<std::size_t>(sizeof(time_t) / sizeof(uint8_t)) >= size) {
         return false;
     }
     offset += sizeof(time_t) / sizeof(uint8_t);
-    for (int i = 0; i < static_cast<int>(sizeof(time_t) / sizeof(uint8_t)); i++) {
+    for (std::size_t i = 0; i < sizeof(time_t) / sizeof(uint8_t); i++) {
         createTime.push_back(*iter);
         iter++;
     }
@@ -505,7 +507,7 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
         keyData.timeValue = *reinterpret_cast<time_t *>(&createTime[0]);
     }
 
-    if (offset + AEAD_LEN >= size) {
+    if (offset + AEAD_LEN >= static_cast<std::size_t>(size)) {
         return false;
     }
     offset = size;

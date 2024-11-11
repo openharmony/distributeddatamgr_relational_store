@@ -348,7 +348,7 @@ private:
         /** Indicates the ValueObject type is assets.*/
         "ASSETS",
         /** Indicates the ValueObject type is vecs.*/
-        "VECS",
+        "FLOATVECTOR",
         /** Indicates the ValueObject type is bigint.*/
         "UNLIMITED INT"
     };
