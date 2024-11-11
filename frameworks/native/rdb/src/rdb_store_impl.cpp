@@ -2097,7 +2097,7 @@ std::string RdbStoreImpl::GetName()
 void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    auto needSync = cloudInfo_->Changed(table);
+    auto needSync = cloudInfo_->Change(table);
     if (!needSync) {
         return;
     }
@@ -2378,7 +2378,7 @@ int32_t RdbStoreImpl::CloudTables::RmvTables(const std::vector<std::string> &tab
     return E_OK;
 }
 
-int32_t RdbStoreImpl::CloudTables::Changed(const std::string &table)
+bool RdbStoreImpl::CloudTables::Change(const std::string &table)
 {
     bool needSync = false;
     {
@@ -2386,7 +2386,7 @@ int32_t RdbStoreImpl::CloudTables::Changed(const std::string &table)
         if (tables_.empty() || (!table.empty() && tables_.find(table) == tables_.end())) {
             return needSync;
         }
-
+        // from empty, then need schedule the cloud sync, others only wait the schedule execute
         needSync = changes_.empty();
         if (!table.empty()) {
             changes_.insert(table);
