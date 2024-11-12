@@ -33,6 +33,7 @@ public:
     void TearDown();
 
     static const std::string READONLY_DATABASE_NAME;
+    static const std::string READONLY_DATABASE_NAME_18; // for testcase 18
     static const std::string READONLY_DATABASE_BAK_NAME;
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> readOnlyStore;
@@ -40,6 +41,7 @@ public:
 
 const std::string RdbReadOnlyTest::DATABASE_NAME = RDB_TEST_PATH + "database.db";
 const std::string RdbReadOnlyTest::READONLY_DATABASE_NAME = RDB_TEST_PATH + "readOnly.db";
+const std::string RdbReadOnlyTest::READONLY_DATABASE_NAME_18 = RDB_TEST_PATH + "readOnly1.db";
 const std::string RdbReadOnlyTest::READONLY_DATABASE_BAK_NAME = RDB_TEST_PATH + "readOnlyBak.db";
 std::shared_ptr<RdbStore> RdbReadOnlyTest::readOnlyStore = nullptr;
 
@@ -406,14 +408,14 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0018, TestSize.Level1)
         return;
     }
     int errCode = E_ERROR;
-    RdbStoreConfig config(RdbReadOnlyTest::READONLY_DATABASE_NAME);
+    RdbStoreConfig config(RdbReadOnlyTest::READONLY_DATABASE_NAME_18);
     config.SetBundleName("com.example.readOnly.rdb");
     config.SetReadOnly(true);
     config.SetIsVector(true);
     ReadOnlyTestOpenCallback helper;
     // user_version is 1
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(nullptr, store);
+    ASSERT_NE(nullptr, store);
 
     auto [ret, id] = store->BeginTrans();
     EXPECT_EQ(E_NOT_SUPPORT, ret);
