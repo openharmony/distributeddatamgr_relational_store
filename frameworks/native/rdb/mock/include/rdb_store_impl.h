@@ -88,7 +88,7 @@ private:
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
         int32_t RmvTables(const std::vector<std::string> &tables);
-        int32_t Changed(const std::string &table);
+        bool Change(const std::string &table);
         std::set<std::string> Steal();
 
     private:
