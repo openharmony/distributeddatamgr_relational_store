@@ -77,6 +77,7 @@ using RdbMgr = DistributedRdb::RdbManagerImpl;
 static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
+static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
@@ -1432,7 +1433,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
         return ret;
     }
 
-    RdbSecurityManager::KeyFiles keyFiles(backupFilePath);
+    RdbSecurityManager::KeyFiles keyFiles(path_ + BACKUP_RESTORE);
     keyFiles.Lock();
 
     auto deleteDirtyFiles = [&backupFilePath] {
@@ -2181,10 +2182,10 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_ERROR;
     }
 
+    RdbSecurityManager::KeyFiles keyFiles(path_ + BACKUP_RESTORE);
+    keyFiles.Lock();
     std::string destPath;
     bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
-    RdbSecurityManager::KeyFiles keyFiles(destPath);
-    keyFiles.Lock();
     if (!isOK) {
         int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
