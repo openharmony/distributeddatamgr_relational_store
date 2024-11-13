@@ -18,6 +18,8 @@
 
 #include "accesstoken_kit.h"
 #include "cloud_manager.h"
+#include "cloud_types.h"
+#include "cloud_types_util.h"
 #include "logger.h"
 #include "token_setproc.h"
 
@@ -211,6 +213,116 @@ HWTEST_F(CloudDataTest, CloudDataTest_003, TestSize.Level0)
         EXPECT_EQ(status, CloudService::ERROR);
         EXPECT_TRUE(info.empty());
     }
+}
+
+/* *
+ * @tc.name: EnableCloud001
+ * @tc.desc: Test the EnableCloud API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, EnableCloud001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    std::map<std::string, int32_t> switches;
+    switches.emplace(TEST_BUNDLE_NAME, 0);
+    auto status = proxy->EnableCloud(TEST_ACCOUNT_ID, switches);
+    EXPECT_NE(status, CloudService::SUCCESS);
+}
+
+/* *
+ * @tc.name: DisableCloud001
+ * @tc.desc: Test the DisableCloud API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, DisableCloud001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    auto status = proxy->DisableCloud(TEST_ACCOUNT_ID);
+    EXPECT_NE(status, CloudService::SUCCESS);
+}
+
+/* *
+ * @tc.name: ChangeAppSwitch001
+ * @tc.desc: Test the ChangeAppSwitch API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, ChangeAppSwitch001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    auto status = proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, 0);
+    EXPECT_NE(status, CloudService::SUCCESS);
+}
+
+/* *
+ * @tc.name: Clean001
+ * @tc.desc: Test the Clean API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Clean001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    std::map<std::string, int32_t> actions;
+    actions.emplace(TEST_BUNDLE_NAME, 0);
+    auto status = proxy->Clean(TEST_ACCOUNT_ID, actions);
+    EXPECT_EQ(status, CloudService::ERROR);
+}
+
+/* *
+ * @tc.name: NotifyDataChange001
+ * @tc.desc: Test the NotifyDataChange API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, NotifyDataChange001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    auto status = proxy->NotifyDataChange("id", "data", 100);
+    EXPECT_EQ(status, CloudService::INVALID_ARGUMENT);
+}
+
+/* *
+ * @tc.name: NotifyDataChange002
+ * @tc.desc: Test the NotifyDataChange API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, NotifyDataChange002, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    auto status = proxy->NotifyDataChange(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME);
+    EXPECT_EQ(status, CloudService::INVALID_ARGUMENT);
+}
+
+/* *
+ * @tc.name: SetGlobalCloudStrategy001
+ * @tc.desc: Test the SetGlobalCloudStrategy API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, SetGlobalCloudStrategy001, TestSize.Level0)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state, CloudService::SUCCESS);
+    std::vector<CommonType::Value> values = { 0 };
+    auto status = proxy->SetGlobalCloudStrategy(Strategy::STRATEGY_NETWORK, values);
+    EXPECT_EQ(status, CloudService::SUCCESS);
 }
 
 /* *
