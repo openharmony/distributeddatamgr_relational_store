@@ -42,6 +42,20 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
+constexpr int32_t SELECT_SIZE = 7;
+constexpr int32_t INSERT_INTO_SIZE = 12;
+constexpr int32_t UPDATE_SIZE = 7;
+constexpr int32_t DELETE_FROM_SIZE = 12;
+constexpr int32_t CREATE_DATABASE_SIZE = 16;
+constexpr int32_t CREATE_TABLE_SIZE = 13;
+constexpr int32_t DROP_TABLE_SIZE = 11;
+constexpr int32_t DROP_DATABASE_SIZE = 14;
+constexpr int32_t PRAGMA_SIZE = 7;
+constexpr int32_t DROP_TABLE_IFEXITS_SIZE = 21;
+constexpr int32_t DROP_DATABASE_IFEXITS_SIZE = 24;
+constexpr int32_t ALTER_TABLE_SIZE = 12;
+constexpr int32_t OTHER_SIZE = 7;
+constexpr int32_t START_SIZE = 0;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -235,6 +249,137 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     std::string fileName = srcFile.substr(end); // rdb file name
     fileName = GetAnonymousName(fileName);
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
+}
+
+bool IsSpecialChar(char c)
+{
+    return (c == ' ' || c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == '(' || c == ')' || c == ';');
+}
+
+std::vector<std::string> SplitString(const std::string &input)
+{
+    std::vector<std::string> result;
+    std::string word;
+    for (char c : input) {
+        if (!IsSpecialChar(c)) {
+            word += c;
+        } else {
+            if (!word.empty()) {
+                result.push_back(word);
+                word.clear();
+            }
+            result.push_back(std::string(1, c));
+        }
+    }
+    if (!word.empty()) {
+        result.push_back(word);
+    }
+    return result;
+}
+
+std::string ProcessString(const std::string &input)
+{
+    std::vector<std::string> words = SplitString(input);
+    std::string result;
+    for (const std::string &word : words) {
+        std::string processedWord;
+        if (word.size() <= 2) {
+            processedWord = word;
+            std::transform(processedWord.begin(), processedWord.end(), processedWord.begin(), [](char c) {
+                if (std::isdigit(c)) {
+                    return '*';
+                } else {
+                    return c;
+                }
+            });
+            if (word.size() == 2) {
+                for (int i = 0; i < 1; i++) {
+                    processedWord[i] = '*';
+                }
+            }
+
+        } else {
+            processedWord = word;
+            std::transform(processedWord.begin(), processedWord.end(), processedWord.begin(), [](char c) {
+                if (std::isdigit(c)) {
+                    return '*';
+                } else {
+                    return c;
+                }
+            });
+
+            int halfLength = processedWord.size() / 2;
+            for (int i = halfLength / 2; i <= (halfLength / 2) * 3; i++) {
+                processedWord[i] = '*';
+            }
+        }
+        result += processedWord;
+    }
+
+    return result;
+}
+
+std::string SqliteUtils::AnonymousSql(const std::string &sql)
+{
+    std::regex SELECT_REGEX("SELECT\\s+(.)\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex INSERT_REGEX("INSERT\\s+INTO\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex UPDATE_REGEX("UPDATE\\s+([^\\s]+)", std::regex_constants::icase);
+    std::regex DELETE_REGEX("DELETE\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex CREATE_DATABASE_REGEX("CREATE\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex CREATE_TABLE_REGEX("CREATE\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex DROP_TABLE_REGAX("DROP\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex DROP_DATABASE_REGEX("DROP\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex PRAGMA_REGEX("PRAGMA\\s+(.*)", std::regex_constants::icase);
+    std::regex DROP_TABLE_IF_EXITS_REGEX("DROP\\s+TABLE\\s+IF\\s+EXISTS\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex DROP_DATABASE_IF_EXITS_REGEX(
+        "DROP\\s+DATABASE\\s+IF\\s+EXISTS\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex ALTER_TABLE_REGEX("ALTER\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+
+    std::smatch match;
+    if (std::regex_search(sql, match, SELECT_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, SELECT_SIZE) + ProcessString(sql.substr(SELECT_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, INSERT_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, INSERT_INTO_SIZE) + ProcessString(sql.substr(INSERT_INTO_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, UPDATE_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, UPDATE_SIZE) + ProcessString(sql.substr(UPDATE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, DELETE_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, DELETE_FROM_SIZE) + ProcessString(sql.substr(DELETE_FROM_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, CREATE_DATABASE_REGEX)) {
+        std::string MaskedSql =
+            sql.substr(START_SIZE, CREATE_DATABASE_SIZE) + ProcessString(sql.substr(CREATE_DATABASE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, CREATE_TABLE_REGEX)) {
+        std::string MaskedSql =
+            sql.substr(START_SIZE, CREATE_TABLE_SIZE) + ProcessString(sql.substr(CREATE_DATABASE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, DROP_TABLE_IF_EXITS_REGEX)) {
+        std::string MaskedSql =
+            sql.substr(START_SIZE, DROP_TABLE_IFEXITS_SIZE) + ProcessString(sql.substr(DROP_TABLE_IFEXITS_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, DROP_DATABASE_IF_EXITS_REGEX)) {
+        std::string MaskedSql =
+            sql.substr(START_SIZE, DROP_DATABASE_IFEXITS_SIZE) + ProcessString(sql.substr(DROP_DATABASE_IFEXITS_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, DROP_TABLE_REGAX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, DROP_TABLE_SIZE) + ProcessString(sql.substr(DROP_TABLE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, DROP_DATABASE_REGEX)) {
+        std::string MaskedSql =
+            sql.substr(START_SIZE, DROP_DATABASE_SIZE) + ProcessString(sql.substr(DROP_DATABASE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, ALTER_TABLE_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, ALTER_TABLE_SIZE) + ProcessString(sql.substr(ALTER_TABLE_SIZE));
+        return MaskedSql;
+    } else if (std::regex_search(sql, match, PRAGMA_REGEX)) {
+        std::string MaskedSql = sql.substr(START_SIZE, PRAGMA_SIZE) + ProcessString(sql.substr(PRAGMA_SIZE));
+        return MaskedSql;
+    }
+    std::string maskedSql = sql.substr(START_SIZE, OTHER_SIZE) + ProcessString(sql.substr(OTHER_SIZE));
+    return maskedSql;
 }
 
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
