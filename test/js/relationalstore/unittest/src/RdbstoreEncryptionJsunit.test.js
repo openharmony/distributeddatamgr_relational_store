@@ -15,8 +15,10 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
+import factory from '@ohos.data.distributedKVStore'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
+const TEST_BUNDLE_NAME = "com.example.myapplication"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
 
@@ -732,5 +734,50 @@ describe('rdbEncryptTest', function () {
         console.log(TAG + "************* RdbDecryptTest_0090 end *************")
     })
 
+     /**
+    * @tc.number testEncryptRdbAndKv0002
+    * @tc.name Normal test case of using encrypt kv, then using rdb attach interface
+    * @tc.desc 1.Get encrypt kv db
+    *          2.Get encrypt rdb1
+    *          3.rdb1.backup(rdb2)
+    *          4.rdb1.restore(rdb2)
+    */
+    it('testEncryptRdbAndKv0002', 0, async () => {
+        console.log(TAG + "************* testEncryptRdbAndKv0002 start *************");
+        let kvConfig = {
+            bundleName: TEST_BUNDLE_NAME,
+            context: context
+        }
+        let options = {
+            createIfMissing: true,
+            encrypt: true,
+            backup: false,
+            autoSync: false,
+            kvStoreType: factory.KVStoreType.SINGLE_VERSION,
+            securityLevel: factory.SecurityLevel.S2,
+        }
+        let rdbConfig = {
+            name: "RdbTest.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+        }
+        let kvManager = factory.createKVManager(kvConfig);
+        try {
+            let kvDb = await kvManager.getKVStore('kvDb', options)
+            rdbConfig.name = "RdbTest1.db"
+            let rdbStore1 = await data_relationalStore.getRdbStore(context, rdbConfig);
+            await rdbStore1.backup("RdbTest2.db");
+            await rdbStore1.restore("RdbTest2.db");
+            expect(true).assertTrue();
+        } catch (err) {
+            console.log(TAG + err);
+            expect(null).assertFail();
+            console.log(TAG + "testEncryptRdbAndKv0002 failed");
+        }
+        await kvManager.closeKVStore(TEST_BUNDLE_NAME, 'kvDb');
+        await data_relationalStore.deleteRdbStore(context, "RdbTest1.db");
+        await data_relationalStore.deleteRdbStore(context, "RdbTest2.db");
+        console.log(TAG + "************* testEncryptRdbAndKv0002 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************")
 })
