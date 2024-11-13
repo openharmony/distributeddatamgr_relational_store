@@ -1002,7 +1002,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
 
 int SqliteConnection::LimitWalSize()
 {
-    if (!isConfigured_ || !isWriter_ || config_.IsMemoryRdb()) {
+    if (!isConfigured_ || !isWriter_) {
         return E_OK;
     }
 
