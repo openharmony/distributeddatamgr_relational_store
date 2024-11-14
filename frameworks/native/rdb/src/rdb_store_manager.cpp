@@ -43,7 +43,6 @@ using namespace OHOS::Rdb;
 using Reportor = RdbFaultHiViewReporter;
 __attribute__((used))
 const bool RdbStoreManager::regCollector_ = RdbFaultHiViewReporter::RegCollector(RdbStoreManager::Collector);
-constexpr int RETRY_INTERVAL = 1;
 RdbStoreManager &RdbStoreManager::GetInstance()
 {
     static RdbStoreManager manager;
@@ -70,16 +69,8 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
         storeCache_.erase(path);
         return nullptr;
     }
-    auto configCache = rdbStore->GetConfig();
-    if (!(configCache == config)) {
+    if (!(rdbStore->GetConfig() == config)) {
         storeCache_.erase(path);
-        auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (pool != nullptr) {
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [configCache, config]() {
-                Reportor::Report(Reportor::Create(config, E_CONFIG_INVALID_CHANGE,
-                    "ErrorType:Config diff!" + RdbStoreConfig::Format(configCache, config)));
-            });
-        }
         LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
                  " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
                  " %{public}s",
