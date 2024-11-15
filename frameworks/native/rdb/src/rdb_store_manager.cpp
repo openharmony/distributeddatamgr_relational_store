@@ -66,11 +66,11 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
     }
     std::shared_ptr<RdbStoreImpl> rdbStore = it->second.lock();
     if (rdbStore == nullptr) {
-        storeCache_.erase(path);
+        storeCache_.erase(it);
         return nullptr;
     }
     if (!(rdbStore->GetConfig() == config)) {
-        storeCache_.erase(path);
+        storeCache_.erase(it);
         LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
                  " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
                  " %{public}s",
