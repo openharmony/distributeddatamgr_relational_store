@@ -160,14 +160,9 @@ int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObje
     bound_ = true;
     int index = 1;
     for (auto &arg : bindArgs) {
-        auto valueType = arg.get().value.index();
-        if (valueType < ValueObject::TYPE_NULL || valueType >= ValueObject::TYPE_BUTT) {
-            LOG_ERROR("index is out of range, index is %{public}zu", valueType);
-            return E_INVALID_ARGS;
-        }
-        auto action = ACTIONS[valueType];
+        auto action = ACTIONS[arg.get().value.index()];
         if (action == nullptr) {
-            LOG_ERROR("not support the type %{public}zu", valueType);
+            LOG_ERROR("not support the type %{public}zu", arg.get().value.index());
             return E_INVALID_ARGS;
         }
         auto errCode = action(stmt_, index, arg.get().value);
