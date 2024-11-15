@@ -371,7 +371,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
         auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
-            LOG_ERROR("create connection fail, erroce:%{public}d", retVal);
+            LOG_ERROR("create connection fail, errCode:%{public}d", retVal);
             return retVal;
         }
 
@@ -735,8 +735,17 @@ bool ConnectionPool::CheckIntegrity(const std::string &dbPath)
     config.SetPath(dbPath);
     config.SetIntegrityCheck(IntegrityCheck::FULL);
     config.SetHaMode(HAMode::SINGLE);
-    auto [ret, connection] = Connection::Create(config, true);
-    return ret == E_OK;
+    for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
+        auto [ret, connection] = Connection::Create(config, true);
+        if (ret == E_OK) {
+            return true;
+        }
+        if (ret != E_SQLITE_CORRUPT || !config.IsEncrypt()) {
+            break;
+        }
+        config.SetIter(ITER_V1);
+    }
+    return false;
 }
 
 int32_t ConnPool::Container::Clear()
