@@ -830,4 +830,251 @@ describe('rdbAssetResultSetTest', function () {
         done();
         console.log(TAG + "************* testGetAssetsUpdate2 end *************");
     })
+
+    /**
+     * @tc.name update asset
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateAsset_0010
+     * @tc.desc The original Asset is Null, Update Asset
+     */
+    it('testUpdateAsset0001', 0, async function (done) {
+        console.log(TAG + "************* testUpdateAsset0001 start *************");
+        let valuesBucket = {
+            "data1": null
+        }
+
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        let id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+        } catch (e) {
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        const asset5 =  {
+            name: "name5",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_UPDATE,
+        }
+        valuesBucket = {
+            "data1" : asset5,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testUpdateAsset0001 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testUpdateAsset0001 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            let asset = resultSet1.getAsset(resultSet1.getColumnIndex("data1"))
+            expect("name5").assertEqual(asset.name);
+            expect("uri5").assertEqual(asset.uri);
+            expect("createTime5").assertEqual(asset.createTime);
+            expect("modifyTime5").assertEqual(asset.modifyTime);
+            expect("size5").assertEqual(asset.size);
+            expect("path5").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testUpdateAsset0001 end *************");
+    })
+
+    /**
+     * @tc.name update asset
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateAsset_0020
+     * @tc.desc Asset name inconsistent, the update is not successful
+     */
+    it('testUpdateAsset0002', 0, async function (done) {
+        console.log(TAG + "************* testUpdateAsset0002 start *************");
+        let valuesBucket = {
+            "data1": asset1
+        }
+
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        let id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+        } catch (e) {
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        const asset5 =  {
+            name: "name5",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_UPDATE,
+        }
+        valuesBucket = {
+            "data1" : asset5,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testUpdateAsset0002 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testUpdateAsset0002 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            let asset = resultSet1.getAsset(resultSet1.getColumnIndex("data1"))
+            expect("uri1").assertEqual(asset.uri);
+            expect("createTime1").assertEqual(asset.createTime);
+            expect("modifyTime1").assertEqual(asset.modifyTime);
+            expect("size1").assertEqual(asset.size);
+            expect("path1").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_INSERT).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testUpdateAsset0002 end *************");
+    })
+
+    /**
+     * @tc.name update asset
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateAsset_0030
+     * @tc.desc Update Asset normally, and the updated Asset.status should be ASSET_DELETE
+     */
+    it('testUpdateAsset0003', 0, async function (done) {
+        console.log(TAG + "************* testUpdateAsset0004 start *************");
+        let valuesBucket = {
+            "data1": asset1
+        }
+
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        let id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+        } catch (e) {
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        const asset5 =  {
+            name: "name1",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_DELETE,
+        }
+        valuesBucket = {
+            "data1" : asset5,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testUpdateAsset0003 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testUpdateAsset0003 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            let asset = resultSet1.getAsset(resultSet1.getColumnIndex("data1"))
+            expect(data_relationalStore.AssetStatus.ASSET_DELETE).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testUpdateAsset0003 end *************");
+    })
+
+    /**
+     * @tc.name update asset
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_UpdateAsset_0040
+     * @tc.desc Update Asset normally, and the updated Asset.status should be ASSET_UPDATE
+     */
+    it('testUpdateAsset0004', 0, async function (done) {
+        console.log(TAG + "************* testUpdateAsset0004 start *************");
+        let valuesBucket = {
+            "data1": asset1
+        }
+        await rdbStore.insert("test", valuesBucket)
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        let id;
+        try {
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            id = resultSet.getLong(resultSet.getColumnIndex("id"))
+        } catch (e) {
+            console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        const asset5 =  {
+            name: "name1",
+            uri: "uri5",
+            createTime: "createTime5",
+            modifyTime: "modifyTime5",
+            size: "size5",
+            path: "path5",
+            status: data_relationalStore.AssetStatus.ASSET_NORMAL,
+        }
+        valuesBucket = {
+            "data1" : asset5,
+        }
+        predicates.equalTo("id", id);
+        await rdbStore.update(valuesBucket, predicates);
+        console.log(TAG + "************* testUpdateAsset0004 update success *************");
+        let predicates1 = await new data_relationalStore.RdbPredicates("test");
+        let resultSet1 = await rdbStore.query(predicates1);
+        console.log(TAG + "************* testUpdateAsset0004 query success *************");
+        try {
+            expect(true).assertEqual(resultSet1.goToFirstRow())
+            let asset = resultSet1.getAsset(resultSet1.getColumnIndex("data1"))
+            expect("uri5").assertEqual(asset.uri);
+            expect("createTime5").assertEqual(asset.createTime);
+            expect("modifyTime5").assertEqual(asset.modifyTime);
+            expect("size5").assertEqual(asset.size);
+            expect("path5").assertEqual(asset.path);
+            expect(data_relationalStore.AssetStatus.ASSET_UPDATE).assertEqual(asset.status);
+        } catch (e) {
+            console.log(TAG + "update throw error: " + e.code + ", message is " + e.message);
+            expect(null).assertFail();
+        }
+        resultSet.close();
+        expect(true).assertEqual(resultSet.isClosed)
+        resultSet1.close();
+        expect(true).assertEqual(resultSet1.isClosed)
+        resultSet = null
+        resultSet1 = null
+        done();
+        console.log(TAG + "************* testUpdateAsset0004 end *************");
+    })
 })

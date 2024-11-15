@@ -552,6 +552,9 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
         case TABLE_DETAIL_V0: {
             auto length = sizeof(TableDetailsV0) * (tableLength + 1);
             auto *detailsV0 = (TableDetailsV0 *)ResizeBuff(length);
+            if (detailsV0 == nullptr) {
+                return nullptr;
+            }
             (void)memset_s(detailsV0, length, 0, length);
             int index = 0;
             for (const auto &pair : tableDetails_) {

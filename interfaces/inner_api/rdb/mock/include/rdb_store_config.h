@@ -229,6 +229,7 @@ public:
     void SetHaMode(int32_t haMode);
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
+    void SetJournalMode(const std::string &journalMode);
 
     void EnableRekey(bool enable);
     static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);

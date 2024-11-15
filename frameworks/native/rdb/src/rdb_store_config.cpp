@@ -119,6 +119,11 @@ void RdbStoreConfig::SetJournalMode(JournalMode journalMode)
     this->journalMode_ = GetJournalModeValue(journalMode);
 }
 
+void RdbStoreConfig::SetJournalMode(const std::string &journalMode)
+{
+    this->journalMode_ = journalMode;
+}
+
 void RdbStoreConfig::SetDatabaseFileType(DatabaseFileType type)
 {
     this->databaseFileType = GetDatabaseFileTypeValue(type);
@@ -551,6 +556,16 @@ IntegrityCheck RdbStoreConfig::GetIntegrityCheck() const
     return checkType_;
 }
 
+int32_t RdbStoreConfig::GetIter() const
+{
+    return iter_;
+}
+ 
+void RdbStoreConfig::SetIter(int32_t iter) const
+{
+    iter_ = iter;
+}
+
 void RdbStoreConfig::SetPluginLibs(const std::vector<std::string> &pluginLibs)
 {
     pluginLibs_ = pluginLibs;
@@ -561,11 +576,6 @@ std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
     return pluginLibs_;
 }
 
-int32_t RdbStoreConfig::GetIter() const
-{
-    return iter_;
-}
-
 int32_t RdbStoreConfig::GetHaMode() const
 {
     return haMode_;
@@ -574,11 +584,6 @@ int32_t RdbStoreConfig::GetHaMode() const
 void RdbStoreConfig::SetHaMode(int32_t haMode)
 {
     haMode_ = haMode;
-}
-
-void RdbStoreConfig::SetIter(int32_t iter) const
-{
-    iter_ = iter;
 }
 
 void RdbStoreConfig::EnableRekey(bool enable)

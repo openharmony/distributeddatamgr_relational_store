@@ -250,6 +250,9 @@ uint32_t *SharedBlock::AllocRowOffset()
     uint32_t rowPos = mHeader->rowNums % ROW_NUM_IN_A_GROUP;
     RowGroupHeader *group = static_cast<RowGroupHeader *>(OffsetToPtr(mHeader->groupOffset[groupPos]));
     mHeader->rowNums += 1;
+    if (group == nullptr) {
+        return nullptr;
+    }
     return group->rowOffsets + rowPos;
 }
 

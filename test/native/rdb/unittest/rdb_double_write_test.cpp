@@ -18,10 +18,14 @@
 
 #include <fstream>
 #include <string>
+#include "sys/types.h"
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "logger.h"
 #include "common.h"
 #include "sqlite_utils.h"
+#include "file_ex.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -43,8 +47,10 @@ public:
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
     void CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK,
         const std::string &tableName = "test");
-    void Insert(int64_t start, int count, bool isSlave = false);
-    void WaitForBackupFinish(int32_t expectStatus);
+    void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
+    void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
+    void TryInterruptBackup();
+    void InitDb();
 
     static const std::string DATABASE_NAME;
     static const std::string SLAVE_DATABASE_NAME;
@@ -103,6 +109,17 @@ void RdbDoubleWriteTest::TearDownTestCase(void)
  
 void RdbDoubleWriteTest::SetUp(void)
 {
+}
+ 
+void RdbDoubleWriteTest::TearDown(void)
+{
+    store = nullptr;
+    slaveStore = nullptr;
+    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
+}
+
+void RdbDoubleWriteTest::InitDb()
+{
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
@@ -118,13 +135,6 @@ void RdbDoubleWriteTest::SetUp(void)
     slaveStore->ExecuteSql("DELETE FROM test");
 }
  
-void RdbDoubleWriteTest::TearDown(void)
-{
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // 200ms delay
-}
- 
 /**
  * @tc.name: RdbStore_DoubleWrite_001
  * @tc.desc: test RdbStore doubleWrite
@@ -132,8 +142,7 @@ void RdbDoubleWriteTest::TearDown(void)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+    InitDb();
     int64_t id;
     ValuesBucket values;
  
@@ -169,7 +178,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
     RdbDoubleWriteTest::CheckResultSet(slaveStore);
 }
 
-void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave)
+void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave, int dataSize)
 {
     ValuesBucket values;
     int64_t id = start;
@@ -177,7 +186,11 @@ void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave)
     for (int i = 0; i < count; i++) {
         values.Clear();
         values.PutInt("id", id);
-        values.PutString("name", std::string("zhangsan"));
+        if (dataSize > 0) {
+            values.PutString("name", std::string(dataSize, 'a'));
+        } else {
+            values.PutString("name", std::string("zhangsan"));
+        }
         values.PutInt("age", CHECKAGE);
         values.PutDouble("salary", CHECKCOLUMN);
         values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
@@ -191,16 +204,28 @@ void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave)
     }
 }
 
-void RdbDoubleWriteTest::WaitForBackupFinish(int32_t expectStatus)
+void RdbDoubleWriteTest::WaitForBackupFinish(int32_t expectStatus, int maxTimes)
 {
     int32_t curStatus = store->GetBackupStatus();
     int tryTimes = 0;
-    while (curStatus != expectStatus && (++tryTimes <= 5)) { // 5 is try time
-        usleep(50000); // 50000 is wait time
+    while (curStatus != expectStatus && (++tryTimes <= maxTimes)) {
+        usleep(50000); // 50000 delay
         curStatus = store->GetBackupStatus();
     }
     LOG_INFO("----------cur backup Status:%{public}d---------", curStatus);
     ASSERT_EQ(curStatus, expectStatus);
+}
+
+void RdbDoubleWriteTest::TryInterruptBackup()
+{
+    int err = store->InterruptBackup();
+    int tryTimes = 0;
+    while (err != E_OK && (++tryTimes <= 1000)) { // 1000 is try time
+        usleep(10000); // 10000 delay
+        err = store->InterruptBackup();
+    }
+    EXPECT_EQ(err, E_OK);
+    LOG_INFO("----------interrupt backup---------");
 }
  
 void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
@@ -316,32 +341,7 @@ void RdbDoubleWriteTest::CheckNumber(std::shared_ptr<RdbStore> &store, int num, 
     EXPECT_EQ(ret, errCode);
     EXPECT_EQ(num, countNum);
 }
- 
-/**
- * @tc.name: RdbStore_DoubleWrite_002
- * @tc.desc: test RdbStore waL limit
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_002, TestSize.Level1)
-{
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
-    int64_t id = 10;
-    ValuesBucket values;
-    for (int i = 0; i < 25158; i++) {
-        id++;
-        values.Clear();
-        values.PutInt("id", id);
-        values.PutString("name", std::string("zhangsan"));
-        values.PutInt("age", CHECKAGE);
-        values.PutDouble("salary", CHECKCOLUMN);
-        values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-        int ret = store->Insert(id, "test", values);
-        EXPECT_EQ(ret, E_OK);
-    }
-    RdbDoubleWriteTest::CheckNumber(slaveStore, 25158);
-}
- 
+
 /**
  * @tc.name: RdbStore_DoubleWrite_003
  * @tc.desc: test RdbStore execute
@@ -349,8 +349,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_002, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+    InitDb();
  
     int64_t id;
     ValuesBucket values;
@@ -374,8 +373,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+    InitDb();
  
     int64_t id;
  
@@ -404,8 +402,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+    InitDb();
  
     ValuesBucket values;
     int64_t id;
@@ -454,9 +451,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
 {
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
-
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::SINGLE);
@@ -490,7 +484,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    InitDb();
     int64_t id = 10;
     int count = 100;
     Insert(id, count);
@@ -531,6 +525,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
 {
+    InitDb();
     int64_t id = 10;
     Insert(id, 100);
     id = 200;
@@ -548,7 +543,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    InitDb();
     int64_t id = 10;
     int count = 100;
     Insert(id, count);
@@ -581,7 +576,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
     EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
     LOG_INFO("RdbStore_DoubleWrite_010 reopen slave db finish");
-
+    WaitForBackupFinish(BACKUP_FINISHED);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
 
@@ -592,7 +587,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
+    InitDb();
     int64_t id = 10;
     int count = 100;
     Insert(id, count);
@@ -630,8 +625,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDoubleWriteTest::store;
-    std::shared_ptr<RdbStore> &slaveStore = RdbDoubleWriteTest::slaveStore;
+    InitDb();
 
     int err = store->BeginTransaction();
     EXPECT_EQ(err, E_OK);
@@ -659,9 +653,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
 {
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
-
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
@@ -703,9 +694,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
 {
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
-
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
@@ -745,6 +733,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
 {
+    InitDb();
     int64_t id = 10;
     int count = 100;
     ValuesBucket values;
@@ -800,12 +789,14 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
 {
+    InitDb();
     int64_t id = 10;
     int count = 100;
     Insert(id, count);
     LOG_INFO("RdbStore_DoubleWrite_016 insert finish");
 
     store = nullptr;
+    LOG_INFO("RdbStore_DoubleWrite_016 close finish");
 
     SqliteUtils::DeleteFile(DATABASE_NAME);
     SqliteUtils::DeleteFile(DATABASE_NAME + "-shm");
@@ -821,21 +812,92 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     LOG_INFO("RdbStore_DoubleWrite_016 reopen db finish");
 
+    WaitForBackupFinish(BACKUP_FINISHED);
+
     RdbDoubleWriteTest::CheckNumber(store, count);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
 
 /**
- * @tc.name: RdbStore_DoubleWrite_017
- * @tc.desc: open MAIN_REPLICA db, write, close, reopen, corrupt db, restore, check count
+ * @tc.name: RdbStore_DoubleWrite_018
+ * @tc.desc: open MAIN_REPLICA db, update slave, insert, M succ && S failed,
+ *           check failureFlag, backup, check failureFlag
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_017, TestSize.Level1)
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
 {
-    int64_t id = 10;
-    int count = 100;
-    Insert(id, count);
-    LOG_INFO("RdbStore_DoubleWrite_017 insert finish");
+    InitDb();
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 3 WHERE id = 1");
+    EXPECT_EQ(E_OK, ret2);
+
+    int64_t id2;
+    ValuesBucket values2;
+    values2.PutInt("id", 3);
+    values2.PutString("name", std::string("zhangsan"));
+    values2.PutInt("age", 25);
+    values2.PutDouble("salary", CHECKCOLUMN);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret3 = store->Insert(id2, "test", values2);
+    EXPECT_EQ(E_OK, ret3);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
+
+    int errCode;
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_FALSE(isFlagFileExists);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_019
+ * @tc.desc: open MAIN_REPLICA db, update slave, insert, M succ && S failed,
+ *           check failureFlag, reopen, check failureFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
+{
+    InitDb();
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 3 WHERE id = 1");
+    EXPECT_EQ(E_OK, ret2);
+
+    int64_t id2;
+    ValuesBucket values2;
+    values2.PutInt("id", 3);
+    values2.PutString("name", std::string("zhangsan"));
+    values2.PutInt("age", 25);
+    values2.PutDouble("salary", CHECKCOLUMN);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret3 = store->Insert(id2, "test", values2);
+    EXPECT_EQ(E_OK, ret3);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
 
     store = nullptr;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
@@ -844,23 +906,333 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_017, TestSize.Level1)
     DoubleWriteTestOpenCallback helper;
     int errCode;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    store = nullptr;
+    isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_FALSE(isFlagFileExists);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_022
+ * @tc.desc: open SINGLE db, write, close, reopen MAIN_REPLICA db, wait for backup, insert, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_022, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id = 10;
+    int strSize = 1024 * 100;
+    int count = 2000;
+    Insert(id, count, false, strSize);
+    LOG_INFO("RdbStore_DoubleWrite_022 insert finish");
+
+    store = nullptr;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_022 reopen db finish");
+
+    WaitForBackupFinish(BACKUP_FINISHED);
+
+    id = 6666;
+    Insert(id, count);
+    LOG_INFO("RdbStore_DoubleWrite_022 insert db finish");
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_022 reopen slave db finish");
+
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count + count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_023
+ * @tc.desc: open MANUAL_TRIGGER db, write, backup async, interrupt, backup async, wait finish, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_023, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    ASSERT_TRUE(store->IsSlaveDiffFromMaster());
+    LOG_INFO("RdbStore_DoubleWrite_023 reopen finish");
+
+    int64_t id = 10;
+    int strSize = 1024 * 100;
+    int count = 2000;
+    Insert(id, count, false, strSize);
+    LOG_INFO("RdbStore_DoubleWrite_023 insert finish");
+
+    std::thread thread([this]() {
+        LOG_INFO("RdbStore_DoubleWrite_023 t1 backup begin");
+        EXPECT_EQ(store->Backup(std::string(""), {}), E_BACKUP_INTERRUPT);
+        LOG_INFO("RdbStore_DoubleWrite_023 t1 backup end");
+    });
+    LOG_INFO("RdbStore_DoubleWrite_023 begin interrupt");
+    TryInterruptBackup();
+    LOG_INFO("RdbStore_DoubleWrite_023 interrupt end");
+    EXPECT_EQ(store->GetBackupStatus(), SlaveStatus::BACKUP_INTERRUPT);
+    thread.join();
+
+    std::thread thread1([this]() {
+        LOG_INFO("RdbStore_DoubleWrite_023 t2 backup begin");
+        EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+        LOG_INFO("RdbStore_DoubleWrite_023 t2 backup end");
+    });
+    WaitForBackupFinish(BACKUP_FINISHED);
+    LOG_INFO("RdbStore_DoubleWrite_023 wait finish");
+    thread1.join();
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_023 reopen slave db finish");
+
+    RdbDoubleWriteTest::CheckNumber(store, count);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_024
+ * @tc.desc: open SINGLE db, write, close, reopen MAIN_REPLICA db, wait for backup, insert, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_024, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id = 10;
+    int strSize = 1024 * 200;
+    int count = 1000;
+    Insert(id, count, false, strSize);
+    LOG_INFO("RdbStore_DoubleWrite_024 insert finish");
+
+    store = nullptr;
+    LOG_INFO("RdbStore_DoubleWrite_024 close finish");
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_024 reopen db finish");
+
+    usleep(200000); // 200000 us delay
+    store = nullptr;
+    LOG_INFO("RdbStore_DoubleWrite_024 close again");
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_024 reopen slave");
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_025
+ * @tc.desc: open SINGLE db, write, close, reopen MAIN_REPLICA db, insert, wait for backup, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_025, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id = 10;
+    int strSize = 1024 * 200;
+    int count = 1000;
+    Insert(id, count, false, strSize);
+    LOG_INFO("RdbStore_DoubleWrite_025 insert finish");
+
+    store = nullptr;
+    LOG_INFO("RdbStore_DoubleWrite_025 close finish");
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_025 reopen db finish");
+
+    id = 6666;
+    LOG_INFO("RdbStore_DoubleWrite_025 begin insert");
+    Insert(id, count, false, strSize);
+    LOG_INFO("RdbStore_DoubleWrite_025 insert end");
+
+    WaitForBackupFinish(BACKUP_FINISHED, 1000); // 1000 is max retry time
+    LOG_INFO("RdbStore_DoubleWrite_025 wait finish");
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_025 reopen slave");
+
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int countNum;
+    EXPECT_EQ(resultSet->GetRowCount(countNum), errCode);
+    EXPECT_GT(countNum, count);
+    EXPECT_LE(countNum, count + count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_026
+ * @tc.desc: open MANUAL_TRIGGER db, write, restore, insert, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_026, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     ASSERT_NE(store, nullptr);
-    LOG_INFO("RdbStore_DoubleWrite_017 reopen db finish");
+
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    EXPECT_EQ(store->Restore(std::string(""), {}), E_INVALID_FILE_PATH);
+
+    id = 2000;
+    Insert(id, count);
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_027
+ * @tc.desc: open MANUAL_TRIGGER db, write, close, corrupt db, reopen, insert, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_027, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    config.SetAllowRebuild(true);
+    DoubleWriteTestOpenCallback helper;
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+
+    store = nullptr;
 
     std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
     ASSERT_TRUE(file.is_open() == true);
-    file.seekp(0, std::ios::beg);
+    file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
     char bytes[2] = {0x6, 0x6};
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
-    LOG_INFO("RdbStore_DoubleWrite_017 corrupt db finish");
 
-    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
-    LOG_INFO("RdbStore_DoubleWrite_017 restore db finish");
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    id = 1000;
+    Insert(id, count);
+    RdbDoubleWriteTest::CheckNumber(store, count + count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_029
+ * @tc.desc: open db, write, corrupt slave db, backup, backup, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_029, TestSize.Level1)
+{
+    InitDb();
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    std::fstream slaveFile(SLAVE_DATABASE_NAME, std::ios::in | std::ios::out | std::ios::trunc);
+    ASSERT_TRUE(slaveFile.is_open() == true);
+    slaveFile << "0000";
+    slaveFile.flush();
+    slaveFile.close();
+
+    std::fstream slaveWalFile(SLAVE_DATABASE_NAME + "-wal", std::ios::in | std::ios::out | std::ios::trunc);
+    ASSERT_TRUE(slaveWalFile.is_open() == true);
+    slaveWalFile << "0000";
+    slaveWalFile.flush();
+    slaveWalFile.close();
+
+    EXPECT_NE(store->Backup(std::string(""), {}), E_OK);
+    LOG_INFO("RdbStore_DoubleWrite_029 backup again");
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
 
     RdbDoubleWriteTest::CheckNumber(store, count);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, -1, E_SQLITE_IOERR);
+
+    int errCode = E_OK;
+    slaveStore = nullptr;
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_030
+ * @tc.desc: open db, write, update slave, insert, check failure, restore, check count
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
+{
+    InitDb();
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+
+    auto [ret2, outValue2] = slaveStore->Execute("UPDATE test SET id = 666 WHERE id = 22");
+    EXPECT_EQ(E_OK, ret2);
+
+    id = 666;
+    Insert(id, 1);
+
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+
+    EXPECT_NE(store->Restore(std::string(""), {}), E_OK);
+
+    RdbDoubleWriteTest::CheckNumber(store, count + 1);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
