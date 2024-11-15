@@ -41,7 +41,7 @@ public:
     int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) override;
 
     int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
-        const std::vector<Reference> &references, int32_t type = DISTRIBUTED_DEVICE) override;
+        const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) override;
 
     int32_t Sync(const RdbSyncerParam& param, const Option& option,
                  const PredicatesMemo& predicates, const AsyncDetail &async) override;
@@ -72,22 +72,21 @@ public:
     int32_t Delete(const RdbSyncerParam &param) override;
 
     int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData,
-        uint32_t delay = 0) override;
+        const RdbNotifyConfig &rdbNotifyConfig) override;
 
     int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) override;
 
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const RdbSyncerParam &param,
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
-
     int32_t Disable(const RdbSyncerParam& param) override;
-
     int32_t Enable(const RdbSyncerParam& param) override;
-
     int32_t GetPassword(const RdbSyncerParam& param, std::vector<uint8_t> &key) override;
 
     std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam& param) override;
 
     int32_t UnlockCloudContainer(const RdbSyncerParam& param) override;
+
+    int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
@@ -107,10 +106,10 @@ private:
 
     int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
 
-    int32_t DoUnSubscribe(const RdbSyncerParam& param);
-	
+    int32_t DoUnSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
+
     int32_t DoRegister(const RdbSyncerParam &param);
-	
+
     int32_t DoUnRegister(const RdbSyncerParam &param);
 
     uint32_t GetSeqNum();

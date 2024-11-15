@@ -51,11 +51,17 @@ constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
     /* the sql string length less than 3 can not be any type sql */
-    if (sql.length() < 3) {
+    auto alnum = std::find_if(sql.begin(), sql.end(), [](int ch) { return !std::isspace(ch) && !std::iscntrl(ch); });
+    if (alnum == sql.end()) {
         return STATEMENT_ERROR;
     }
-    /* analyze the sql type through first 3 character */
-    std::string prefixSql = StrToUpper(sql.substr(0, 3));
+    auto pos = static_cast<std::string::size_type>(alnum - sql.begin());
+    /* 3 represents the number of prefix characters that need to be extracted and checked */
+    if (pos + 3 >= sql.length()) {
+        return STATEMENT_ERROR;
+    }
+    /* analyze the sql type through first 3 characters */
+    std::string prefixSql = StrToUpper(sql.substr(pos, 3));
     SqlType type = { prefixSql.c_str(), STATEMENT_OTHER };
     auto comp = [](const SqlType &first, const SqlType &second) {
         return strcmp(first.sql, second.sql) < 0;
@@ -114,6 +120,9 @@ const char *SqliteUtils::GetConflictClause(int conflictResolution)
 
 bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
+    if (access(filePath.c_str(), F_OK) != 0) {
+        return true;
+    }
     auto ret = remove(filePath.c_str());
     if (ret != 0) {
         LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret,
@@ -193,13 +202,13 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
 
 std::string SqliteUtils::AnonyDigits(const std::string &fileName)
 {
-    int digitsNum = fileName.size();
+    std::string::size_type digitsNum = fileName.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
         return fileName;
     }
-    constexpr int longDigits = 7;
-    int endDigitsNum = 4;
-    int shortEndDigitsNum = 3;
+    constexpr std::string::size_type longDigits = 7;
+    std::string::size_type endDigitsNum = 4;
+    std::string::size_type shortEndDigitsNum = 3;
     std::string name = fileName;
     std::string last = "";
     if (digitsNum >= CONTINUOUS_DIGITS_MINI_SIZE && digitsNum < longDigits) {
@@ -232,16 +241,17 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
-int SqliteUtils::GetFileSize(const std::string &fileName)
+ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
 {
     struct stat fileStat;
     if (fileName.empty() || stat(fileName.c_str(), &fileStat) < 0) {
-        LOG_ERROR("Failed to get file infos, errno: %{public}d, fileName:%{public}s",
-                  errno, Anonymous(fileName).c_str());
+        if (errno != ENOENT) {
+            LOG_ERROR("failed, errno: %{public}d, fileName:%{public}s", errno, Anonymous(fileName).c_str());
+        }
         return 0;
     }
-
-    return static_cast<int>(fileStat.st_size);
+ 
+    return fileStat.st_size;
 }
 
 bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
@@ -254,15 +264,15 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
     return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
 }
 
-bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate)
+bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
+    bool isSlaveFailure)
 {
-    std::string lockFile = dbPath + "-locker";
+    std::string lockFile = isSlaveFailure ? dbPath + "-slaveFailure" : dbPath + "-syncInterrupt";
     if (isDelete) {
         if (std::remove(lockFile.c_str()) != 0) {
-            LOG_WARN("remove slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
             return false;
         } else {
-            LOG_INFO("remove slave lock %{public}s", Anonymous(lockFile).c_str());
+            LOG_INFO("remove %{public}s", Anonymous(lockFile).c_str());
             return true;
         }
     } else {
@@ -272,11 +282,11 @@ bool SqliteUtils::TryAccessSlaveLock(const std::string &dbPath, bool isDelete, b
         if (needCreate) {
             std::ofstream src(lockFile.c_str(), std::ios::binary);
             if (src.is_open()) {
-                LOG_INFO("create slave lock %{public}s", Anonymous(lockFile).c_str());
+                LOG_INFO("open %{public}s", Anonymous(lockFile).c_str());
                 src.close();
                 return true;
             } else {
-                LOG_WARN("open slave lock failed errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
+                LOG_WARN("open errno %{public}d %{public}s", errno, Anonymous(lockFile).c_str());
                 return false;
             }
         }

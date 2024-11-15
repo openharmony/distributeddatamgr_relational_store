@@ -25,13 +25,13 @@ namespace NativeRdb {
 
 class GlobalExpr {
 public:
-    static constexpr bool CALLBACK_LOG_SWITCH = true;       /* Sqlite callback log switch */
-    static constexpr bool DB_AUTO_CHECK = false;       /* Sqlite callback log switch */
+    static constexpr bool CALLBACK_LOG_SWITCH = true;      /* Sqlite callback log switch */
     static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024; /* 8MB */
     static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
-    static constexpr int DB_WAL_SIZE_LIMIT_MIN = 20 * 1024 * 1024; /* default wal file maximum size : 20M */
-    static constexpr int DB_WAL_SIZE_LIMIT_MAX = 200 * 1024 * 1024; /* default wal file maximum size : 200M */
+    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MIN = 20 * 1024 * 1024; /* default wal file maximum size : 20M */
+    static constexpr ssize_t DB_WAL_WARNING_SIZE = 256 * 1024 * 1024; /* default wal file maximum size : 256M */
+    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MAX = 512 * 1024 * 1024; /* default wal file maximum size : 512M */
     static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
     static constexpr int APP_DEFAULT_UMASK = 0002;
     static constexpr int SQLITE_MAX_COLUMN = 2000;
@@ -42,6 +42,7 @@ public:
     static constexpr char EXPORT_SQL[] = "SELECT export_database('backup')";
     static constexpr char DETACH_BACKUP_SQL[] = "detach backup";
     static constexpr char PRAGMA_JOUR_MODE_EXP[] = "PRAGMA journal_mode";
+    static constexpr char PRAGMA_BACKUP_JOUR_MODE_WAL[] = "PRAGMA backup.journal_mode=WAL";
     static constexpr char PRAGMA_VERSION[] = "PRAGMA user_version";
     static constexpr char JOURNAL_MODE_WAL[] = "WAL";
     static constexpr char DEFAULE_SYNC_MODE[] = "FULL";

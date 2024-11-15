@@ -82,7 +82,7 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_006, TestSize.Level1)
     // fileName size is 0
     EXPECT_EQ(0, SqliteUtils::GetFileSize(""));
 }
-
+ 
 /**
  * @tc.name: RdbStore_SqliteUtils_007
  * @tc.desc: AbNormal testCase of string_utils, if fileName is ""
@@ -95,7 +95,7 @@ HWTEST_F(RdbUtilsTest, RdbStore_SqliteUtils_007, TestSize.Level1)
 
 /**
  * @tc.name: GetSqlStatementType_001
- * @tc.desc: AbNormal testCase of string_utils, if fileName is ""
+ * @tc.desc: Normal testCase of GetSqlStatementType
  * @tc.type: FUNC
  */
 HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
@@ -121,4 +121,19 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_001, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAZZZZZZZ"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("SAAAAAAAA"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("PROCESS"));
+}
+
+/**
+ * @tc.name: GetSqlStatementType_002
+ * @tc.desc: Normal testCase of GetSqlStatementType
+ *           1.Spaces before the sql
+ *           2.Enter before the sql
+ *           3.Non-alphanumeric and non-numeric before the sql
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbUtilsTest, GetSqlStatementType_002, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::STATEMENT_SELECT, SqliteUtils::GetSqlStatementType("   select * from text"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("\r\nupdate test set id = ?"));
+    EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("~!@# attach database ? as ?"));
 }
