@@ -319,7 +319,7 @@ std::string ProcessString(const std::string &input)
     return result;
 }
 
-std::string SqliteUtils::AnonymousSql(const std::string &sql)
+std::string SqliteUtils::AnonySql(const std::string &sql)
 {
     std::regex SELECT_REGEX("SELECT\\s+(.)\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
     std::regex INSERT_REGEX("INSERT\\s+INTO\\s+([^\\s;]+)", std::regex_constants::icase);
@@ -354,7 +354,7 @@ std::string SqliteUtils::AnonymousSql(const std::string &sql)
         return MaskedSql;
     } else if (std::regex_search(sql, match, CREATE_TABLE_REGEX)) {
         std::string MaskedSql =
-            sql.substr(START_SIZE, CREATE_TABLE_SIZE) + ProcessString(sql.substr(CREATE_DATABASE_SIZE));
+            sql.substr(START_SIZE, CREATE_TABLE_SIZE) + ProcessString(sql.substr(CREATE_TABLE_SIZE));
         return MaskedSql;
     } else if (std::regex_search(sql, match, DROP_TABLE_IF_EXITS_REGEX)) {
         std::string MaskedSql =
@@ -378,8 +378,8 @@ std::string SqliteUtils::AnonymousSql(const std::string &sql)
         std::string MaskedSql = sql.substr(START_SIZE, PRAGMA_SIZE) + ProcessString(sql.substr(PRAGMA_SIZE));
         return MaskedSql;
     }
-    std::string maskedSql = sql.substr(START_SIZE, OTHER_SIZE) + ProcessString(sql.substr(OTHER_SIZE));
-    return maskedSql;
+    std::string MaskedSql = sql.substr(START_SIZE, OTHER_SIZE) + ProcessString(sql.substr(OTHER_SIZE));
+    return MaskedSql;
 }
 
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
