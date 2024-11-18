@@ -12,34 +12,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "rdb_store_impl.h"
-
 #include <gtest/gtest.h>
 
+#include <fstream>
 #include <map>
 #include <string>
-#include <fstream>
 
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_store_impl.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
 class RdbStoreBackupRestoreTest : public testing::Test {
 public:
-    static void SetUpTestCase() {}
-    static void TearDownTestCase() {}
-    void SetUp() {}
-    void TearDown() {}
+    static void SetUpTestCase()
+    {
+    }
+    static void TearDownTestCase()
+    {
+    }
+    void SetUp();
+    void TearDown();
+    void CorruptDoubleWriteStore();
     void CheckResultSet(std::shared_ptr<RdbStore> &store);
     void CheckAge(std::shared_ptr<ResultSet> &resultSet);
     void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
 
     static constexpr char DATABASE_NAME[] = "/data/test/backup_restore_test.db";
+    static constexpr char slaveDataBaseName[] = "/data/test/backup_restore_test_slave.db";
     static constexpr char BACKUP_DATABASE_NAME[] = "/data/test/backup_restore_test_backup.db";
 };
 
@@ -64,113 +69,34 @@ int RdbStoreBackupRestoreTestOpenCallback::OnUpgrade(RdbStore &store, int oldVer
 {
     return E_OK;
 }
-
-void RdbStoreBackupRestoreTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
+void RdbStoreBackupRestoreTest::SetUp(void)
 {
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
-    EXPECT_NE(resultSet, nullptr);
-
-    int columnIndex;
-    int intVal;
-    std::string strVal;
-    ColumnType columnType;
-    int position;
-    int ret = resultSet->GetRowIndex(position);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(position, -1);
-
-    ret = resultSet->GetColumnType(0, columnType);
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-
-    ret = resultSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_OK);
-
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnIndex, 0);
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_INTEGER);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_STRING);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
-
-    CheckAge(resultSet);
-    CheckSalary(resultSet);
-    CheckBlob(resultSet);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
+    RdbHelper::ClearCache();
+    int errocode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(E_OK, errocode);
+    errocode = RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(E_OK, errocode);
 }
-
-void RdbStoreBackupRestoreTest::CheckAge(std::shared_ptr<ResultSet> &resultSet)
+void RdbStoreBackupRestoreTest::TearDown(void)
 {
-    int columnIndex;
-    int intVal;
-    ColumnType columnType;
-    int ret = resultSet->GetColumnIndex("age", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_INTEGER);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    // 18: age is 18
-    EXPECT_EQ(18, intVal);
+    RdbHelper::ClearCache();
+    int errocode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(E_OK, errocode);
+    errocode = RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(E_OK, errocode);
 }
-
-void RdbStoreBackupRestoreTest::CheckSalary(std::shared_ptr<ResultSet> &resultSet)
+void RdbStoreBackupRestoreTest::CorruptDoubleWriteStore(void)
 {
-    int columnIndex;
-    double dVal;
-    ColumnType columnType;
-    int ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_FLOAT);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    // 100.5: salary is 100.5
-    EXPECT_EQ(100.5, dVal);
-}
-
-void RdbStoreBackupRestoreTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
-{
-    int columnIndex;
-    std::vector<uint8_t> blob;
-    ColumnType columnType;
-    int ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetColumnType(columnIndex, columnType);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(columnType, ColumnType::TYPE_BLOB);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    // 3: blob size
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    // 1: blob[0] is 1
-    EXPECT_EQ(1, blob[0]);
-    // 2: blob[1] is 2
-    EXPECT_EQ(2, blob[1]);
-    // 3: blob[2] is 3
-    EXPECT_EQ(3, blob[2]);
+    std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    const int seekPosition = 30;
+    file.seekp(seekPosition, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    const int bytesToWrite = 2;
+    char bytes[bytesToWrite] = { 0x6, 0x6 };
+    file.write(bytes, bytesToWrite);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
 }
 
 /* *
@@ -211,10 +137,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
     ret = store->Restore(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
-    CheckResultSet(store);
-
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
 }
 
 /* *
@@ -269,9 +197,6 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
 
     ret = store->ExecuteSql(RdbStoreBackupRestoreTestOpenCallback::CREATE_TABLE_TEST);
     EXPECT_EQ(ret, E_OK);
-
-    RdbHelper::DeleteRdbStore(DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
 }
 
 /* *
@@ -314,8 +239,284 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
     ret = store->Restore(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
-    CheckResultSet(store);
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
 
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_004
+ * @tc.desc: hamode is replica, backup and deletestore and restore, after restore can insert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.Put("id", 1);
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.Put("id", 2);
+    values.Put("name", std::string("lisa"));
+    values.Put("age", 19);
+    values.Put("salary", 101);
+    values.Put("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    resultSet = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "lisa" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_005
+ * @tc.desc: hamode is replica , backup and restore for broken original db, and after restore can insert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_005, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.Put("id", 1);
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    store = nullptr;
+    CorruptDoubleWriteStore();
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+
+    int deletedRows = 0;
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_006
+ * @tc.desc: hamode is replica , backup and restore, aftre restore ,store can insert data and delete data and query
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_006, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.Put("id", 1);
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows = 0;
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    deletedRows = 0;
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+    resultSet = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_007
+ * @tc.desc: hamode is replica , deletestore , cannot backup and restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.Put("id", 1);
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_DB_NOT_EXIST);
+    EXPECT_NE(0, access(BACKUP_DATABASE_NAME, F_OK));
+    EXPECT_NE(0, access(slaveDataBaseName, F_OK));
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_INVALID_FILE_PATH);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_SQLITE_IOERR);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_008
+ * @tc.desc: hamode is replica , backup and restore, check slavestore and backupstore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_008, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.Put("id", 1);
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    int deletedRows = 0;
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, deletedRows);
+
+    ret = store->Restore(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    ret = resultSet->Close();
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_EQ(0, access(BACKUP_DATABASE_NAME, F_OK));
+    EXPECT_EQ(0, access(slaveDataBaseName, F_OK));
 }
