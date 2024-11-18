@@ -967,7 +967,6 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 
 int SqliteConnection::TryCheckPoint(bool timeout)
 {
-    
     if (!isWriter_) {
         return E_NOT_SUPPORT;
     }
