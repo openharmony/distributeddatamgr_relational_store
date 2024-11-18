@@ -170,7 +170,8 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0025, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from bigint_table."), "select v***e*, v***e* f*** big*******le.");
+    EXPECT_EQ(
+        SqliteUtils::AnonySql("select value1, value2 from bigint_table."), "select v***e*, v***e* f*** big*******le.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
@@ -192,7 +193,8 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0028, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0029, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("UPDATE test SET age = 18 WHERE id = 1."), "UPDATE t*** *ET *ge = ** W***E *d = *.");
+    EXPECT_EQ(
+        SqliteUtils::AnonySql("UPDATE test SET age = 18 WHERE id = 1."), "UPDATE t*** *ET *ge = ** W***E *d = *.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0030, TestSize.Level1)
@@ -254,8 +256,8 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0039, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
 {
-    EXPECT_EQ(
-        SqliteUtils::AnonySql("ALTER TABLE test ADD COLUMN address TEXT;"), "ALTER TABLE t*** *DD C***MN a***ess T***;");
+    EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE test ADD COLUMN address TEXT;"),
+        "ALTER TABLE t*** *DD C***MN a***ess T***;");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
@@ -263,5 +265,5 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
     EXPECT_EQ(
         SqliteUtils::AnonySql(
             "CREATE                        TABLE       TEST (id INT PRIMARY KEY, name TEXT, extend BLOB, code REAL, years UNLIMITED INT, attachment ASSET, attachments ASSETS)."),
-        "CREATE                        T***E       T*** (*d *NT P***ARY *EY, n*** T***, e***nd B***, c*** R***, y***s UN*****ED *NT, at*****ent A***T, at*****ents A***TS).");
+        "CREATE TABLE T*** (*d *NT P***ARY *EY, n*** T***, e***nd B***, c*** R***, y***s UN*****ED *NT, at*****ent A***T, at*****ents A***TS).");
 }
