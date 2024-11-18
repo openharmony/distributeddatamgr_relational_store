@@ -29,6 +29,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
@@ -39,6 +40,9 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   "${relational_store_native_path}/rdb/src/step_result_set.cpp",
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  "${relational_store_native_path}/rdb/src/trans_db.cpp",
+  "${relational_store_native_path}/rdb/src/transaction.cpp",
+  "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
   "${relational_store_native_path}/rdb/src/values_buckets.cpp",
@@ -588,11 +592,9 @@ if (is_ohos && !build_ohos_sdk) {
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
     ]
-
-    external_deps = [ "c_utils:utils" ]
-
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]

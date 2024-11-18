@@ -26,6 +26,7 @@
 #include "rdb_sql_utils.h"
 #include "rdb_types.h"
 #include "result_set.h"
+#include "transaction.h"
 
 #define NAPI_CALL_RETURN_ERR(theCall, retVal) \
     do {                                      \
@@ -355,6 +356,16 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
  
     status = GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
     ASSERT(OK == status, "get haMode failed.", napi_invalid_arg);
+    return napi_ok;
+}
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &transactionOptions)
+{
+    int32_t status = GetNamedProperty(env, jsValue, "transactionType", transactionOptions.transactionType, true);
+    bool checked = transactionOptions.transactionType >= Transaction::DEFERRED &&
+                   transactionOptions.transactionType <= Transaction::EXCLUSIVE;
+    ASSERT(OK == status && checked, "get transactionType failed.", napi_invalid_arg);
     return napi_ok;
 }
 

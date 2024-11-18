@@ -700,7 +700,11 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+        context->resultSet = obj->rdbStore_->QueryByStep(*(context->rdbPredicates), context->columns);
+#else
         context->resultSet = obj->rdbStore_->Query(*(context->rdbPredicates), context->columns);
+#endif
         LOG_DEBUG("RdbStoreProxy::Query result is nullptr ? %{public}d.", (context->resultSet == nullptr));
         return (context->resultSet != nullptr) ? OK : ERR;
     };
