@@ -312,9 +312,7 @@ std::string ProcessString(const std::string &input)
                 }
             });
             if (word.size() == 2) {
-                for (int i = 0; i < 1; i++) {
-                    processedWord[i] = '*';
-                }
+                processedWord[0] = '*';
             }
 
         } else {
