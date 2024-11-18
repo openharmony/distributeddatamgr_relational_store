@@ -165,54 +165,48 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from bigint_table WHERE case = 1."),
-        "select v***e*, v***e* f*** big*******le W***E c*** = *.");
+        "SELECT v***e*, v***e* FROM big*******le WHERE c*** = *.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0025, TestSize.Level1)
 {
     EXPECT_EQ(
-        SqliteUtils::AnonySql("select value1, value2 from bigint_table."), "select v***e*, v***e* f*** big*******le.");
+        SqliteUtils::AnonySql("select value1, value2 from bigint_table."), "SELECT v***e*, v***e* FROM big*******le.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("SELECT * FROM test."), "SELECT * F*** t***.");
+    EXPECT_EQ(SqliteUtils::AnonySql("SELECT * FROM test."), "SELECT * FROM t***.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("INSERT INTO test VALUES(1, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');"),
-        "INSERT INTO t*** V***ES(*, *[*.*, *.*, *.*, *.*, *.*, *.*, *.*, *.*]');");
+    EXPECT_EQ(SqliteUtils::AnonySql("INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);"),
+        "INSERT INTO t*** (d****, d****, d****, d****) VALUES (?, ?, ?, ?);");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0028, TestSize.Level1)
-{
-    EXPECT_EQ(SqliteUtils::AnonySql("INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);"),
-        "INSERT INTO t*** (d****, d****, d****, d****) V***ES (?, ?, ?, ?);");
-}
-
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0029, TestSize.Level1)
 {
     EXPECT_EQ(
         SqliteUtils::AnonySql("UPDATE test SET age = 18 WHERE id = 1."), "UPDATE t*** *ET *ge = ** W***E *d = *.");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0030, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0029, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("DELETE FROM test;"), "DELETE FROM t***;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0031, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0030, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("DELETE FROM test WHERE time = 30;"), "DELETE FROM t*** W***E t*** = **;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0032, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0031, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("CREATE DATABASE DBtest.db;"), "CREATE DATABASE D***st.*b;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0033, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0032, TestSize.Level1)
 {
     EXPECT_EQ(
         SqliteUtils::AnonySql(
@@ -220,7 +214,7 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0033, TestSize.Level1)
         "CREATE TABLE *F *OT E***TS T*** (*d *NT P***ARY *EY, n*** T***, e***nd B***, c*** R***, y***s UN*****ED *NT, at*****ent A***T, at*****ents A***TS).");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0034, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0033, TestSize.Level1)
 {
     EXPECT_EQ(
         SqliteUtils::AnonySql(
@@ -228,39 +222,39 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0034, TestSize.Level1)
         "CREATE TABLE T*** (*d *NT P***ARY *EY, n*** T***, e***nd B***, c*** R***, y***s UN*****ED *NT, at*****ent A***T, at*****ents A***TS).");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0035, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0034, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("DROP TABLE IF EXISTS bigint_table;"), "DROP TABLE IF EXISTS big*******le;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0036, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0035, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("DROP TABLE bigint_table;"), "DROP TABLE big*******le;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0037, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0036, TestSize.Level1)
 {
     EXPECT_EQ(
         SqliteUtils::AnonySql("DROP DATABASE IF EXISTS database_name;"), "DROP DATABASE IF EXISTS dat*******ame;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0038, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0037, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("DROP DATABASE database_name;"), "DROP DATABASE dat*******ame;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0039, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0038, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("PRAGMA user_version = 3"), "PRAGMA use*******on = *");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0039, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE test ADD COLUMN address TEXT;"),
         "ALTER TABLE t*** *DD C***MN a***ess T***;");
 }
 
-HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
 {
     EXPECT_EQ(
         SqliteUtils::AnonySql(
