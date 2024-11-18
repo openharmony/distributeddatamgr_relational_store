@@ -167,21 +167,43 @@ describe('rdbEncryptTest', function () {
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0040
      * @tc.desc RDB encrypt function test
      */
-    it('RdbEncryptTest_0040', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0040 start *************")
-        context = ability_featureAbility.getContext()
-
-        await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
+    it('RdbEncryptTest_0040', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0040 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         try {
-            await CreateRdbStore(context, STORE_CONFIG_WRONG)
-            expect().assertFail()
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
+          expect(rdbStore !== null).assertTrue();
         } catch (err) {
-            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
         }
-
-        await console.log(TAG + "************* RdbEncryptTest_0040 end *************")
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0040 end *************");
     })
 
+    /**
+     * @tc.name RdbEncryptTest_0041
+     * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0041
+     * @tc.desc RDB Encrypt function test
+     * @tc.size MediumTest
+     * @tc.type Function
+     * @tc.level Level 1
+     */
+    it('RdbEncryptTest_0041', 0, async function (done) {
+        console.log(TAG + "************* RdbEncryptTest_0041 start *************");
+        context = ability_featureAbility.getContext();
+        await CreateRdbStore(context, STORE_CONFIG_WRONG);
+        try {
+          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+          expect(rdbStore !== null).assertTrue();
+        } catch (err) {
+          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+          expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* RdbEncryptTest_0041 end *************");
+    })
     /**
      * @tc.name Scenario testcase of RDB, get correct encrypt file when open database
      * @tc.number SUB_DDM_RDB_JS_RdbEncryptTest_0050
@@ -200,7 +222,7 @@ describe('rdbEncryptTest', function () {
             rdbStore1 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore1 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // query 'rdbstore1'
@@ -218,7 +240,7 @@ describe('rdbEncryptTest', function () {
             rdbStore2 = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT2)
         } catch (err) {
             expect().assertFail()
-            console.error(`CreatRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
+            console.error(`CreateRdbStore2 failed, error code: ${err.code}, err message: ${err.message}`);
         }
 
         // create table and query 'rdbStore1'

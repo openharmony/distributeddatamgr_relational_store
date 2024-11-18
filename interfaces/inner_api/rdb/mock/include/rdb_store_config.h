@@ -232,6 +232,7 @@ public:
     void SetJournalMode(const std::string &journalMode);
 
     void EnableRekey(bool enable);
+    static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
 
 private:
     void ClearEncryptKey();
