@@ -21,8 +21,8 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using JsErrorCode = OHOS::RelationalStoreJsKit::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
-    { E_NOT_STAGE_MODE, 14801001, "Only supported in stage mode." },
-    { E_DATA_GROUP_ID_INVALID, 14801002, "The data group id is invalid." },
+    { E_NOT_STAGE_MODE, 14801001, "The operation is supported in the stage model only." },
+    { E_DATA_GROUP_ID_INVALID, 14801002, "Invalid data ground ID." },
     { NativeRdb::E_NOT_SELECT, 14800019, "The SQL must be a query statement." },
     { NativeRdb::E_COLUMN_OUT_RANGE, 14800013, "Column out of bounds." },
     { NativeRdb::E_INVALID_FILE_PATH, 14800010, "Invalid database path." },
@@ -35,7 +35,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_TYPE_MISMATCH, 14800051, "The type of the distributed table does not match." },
     { NativeRdb::E_SQLITE_FULL, 14800029, "SQLite: The database is full." },
     { NativeRdb::E_NOT_SUPPORT_THE_SQL, 14800021, "SQLite: Generic error."},
-    { NativeRdb::E_ATTACHED_DATABASE_EXIST, 14800016, "The database is already attached." },
+    { NativeRdb::E_ATTACHED_DATABASE_EXIST, 14800016, "The database alias already exists." },
     { NativeRdb::E_SQLITE_ERROR, 14800021, "SQLite: Generic error." },
     { NativeRdb::E_SQLITE_CORRUPT, 14800011, "Database corrupted." },
     { NativeRdb::E_SQLITE_ABORT, 14800022, "SQLite: Callback routine requested an abort." },
