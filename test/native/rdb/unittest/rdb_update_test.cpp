@@ -579,6 +579,39 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
 }
 
 /**
+ * @tc.name: RdbStore_UpdateWithConflictResolution_007
+ * @tc.desc: test RdbStore UpdateWithConflictResolution
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+
+    int changedRows = 0;
+    int64_t id = -1;
+    ValuesBucket values;
+
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.PutInt("id", 2);
+    values.PutInt("age", 19);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
+        static_cast<ConflictResolution>(6));
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
+    EXPECT_EQ(0, changedRows);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutInt("age", 19);
+    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
+        static_cast<ConflictResolution>(-1));
+    EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
+    EXPECT_EQ(0, changedRows);
+}
+
+/**
  * @tc.name: RdbStore_UpdateSqlBuilder_001
  * @tc.desc: test RdbStore UpdateSqlBuilder
  * @tc.type: FUNC

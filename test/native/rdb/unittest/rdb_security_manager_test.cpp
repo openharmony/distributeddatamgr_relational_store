@@ -21,6 +21,7 @@
 
 #include "common.h"
 #include "rdb_errno.h"
+#include "rdb_helper.h"
 #include "file_ex.h"
 
 using namespace testing::ext;
@@ -56,6 +57,18 @@ void RdbSecurityManagerTest::SetUp(void)
 void RdbSecurityManagerTest::TearDown(void)
 {
 }
+
+class RdbStoreSecurityManagerTestOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override
+    {
+        return E_OK;
+    }
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
+};
 
 /**
  * @tc.name: Insert_BigInt_INT64
@@ -108,16 +121,30 @@ HWTEST_F(RdbSecurityManagerTest, LockUnlock, TestSize.Level1)
  */
 HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
 {
+    int errCode = E_OK;
     std::string name = "secret_key_load_test";
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
-    RdbSecurityManager::KeyFiles keyFile(keyPath);
+    RdbStoreConfig config(RDB_TEST_PATH + name);
+    config.SetEncryptStatus(true);
+    RdbStoreSecurityManagerTestOpenCallback helper;
+
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+    
+    RdbSecurityManager::KeyFiles keyFile(RDB_TEST_PATH);
 
     const std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
     std::vector<char> content = { 'a' };
     bool ret = OHOS::SaveBufferToFile(file, content);
     ASSERT_TRUE(ret);
     RdbPassword pwd =
-        RdbSecurityManager::GetInstance().GetRdbPassword(keyPath, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+        RdbSecurityManager::GetInstance().GetRdbPassword(RDB_TEST_PATH, RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
     ASSERT_EQ(pwd.GetSize(), 0);
+
+    auto store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store1, nullptr);
+
+    RdbHelper::DeleteRdbStore(config);
 }
 }

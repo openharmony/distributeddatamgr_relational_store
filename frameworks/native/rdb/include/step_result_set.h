@@ -30,8 +30,10 @@ namespace OHOS {
 namespace NativeRdb {
 class StepResultSet : public AbsResultSet {
 public:
-    StepResultSet(std::shared_ptr<ConnectionPool> pool, const std::string &sql,
-        const std::vector<ValueObject> &selectionArgs);
+    using Values = std::vector<ValueObject>;
+    using Conn = std::shared_ptr<Connection>;
+    using Time = std::chrono::steady_clock::time_point;
+    StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, bool safe = false);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
@@ -60,12 +62,11 @@ private:
     static const int EMPTY_ROW_COUNT = 0;
 
     bool isSupportCountRow_ = true;
-    std::shared_ptr<Statement> sqliteStatement_;
+    std::shared_ptr<Statement> statement_;
     std::shared_ptr<Connection> conn_;
 
     std::string sql_;
     std::vector<ValueObject> args_;
-    mutable std::shared_mutex mutex_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -62,7 +62,9 @@ constexpr const char *SqliteConnection::MERGE_ASSET_FUNC;
 constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
 constexpr int SqliteConnection::BACKUP_PAGES_PRE_STEP; // 1024 * 4 * 12800 == 50m
 constexpr int SqliteConnection::BACKUP_PRE_WAIT_TIME;
+constexpr ssize_t SqliteConnection::SLAVE_WAL_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::NO_ITER;
+constexpr uint32_t SqliteConnection::WAL_INDEX;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -128,6 +130,7 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
     : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0), filePath(""),
       config_(config)
 {
+    backupId_ = TaskExecutor::INVALID_TASK_ID;
 }
 
 int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool checkSlaveExist)
@@ -135,21 +138,28 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool c
     if (config.GetHaMode() != HAMode::MAIN_REPLICA && config.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_OK;
     }
+    std::map<std::string, DebugInfo> bugInfo = Connection::Collect(config);
     bool isSlaveExist = access(config.GetPath().c_str(), F_OK) == 0;
     bool isSlaveLockExist = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false);
     bool hasFailure = SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, false, true);
+    bool walOverLimit = bugInfo.find(FILE_SUFFIXES[WAL_INDEX].debug_) != bugInfo.end() &&
+        bugInfo[FILE_SUFFIXES[WAL_INDEX].debug_].size_ > SLAVE_WAL_SIZE_LIMIT;
+    LOG_INFO("slave cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]%{public}s "
+             "%{public}s,[%{public}d,%{public}d,%{public}d,%{public}d]",
+        config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
+        config.GetRoleType(), config.IsReadOnly(),
+        Reportor::FormatBrief(bugInfo, SqliteUtils::Anonymous(config.GetName())).c_str(),
+        Reportor::FormatBrief(Connection::Collect(config_), "master").c_str(), isSlaveExist, isSlaveLockExist,
+        hasFailure, walOverLimit);
     if (config.GetHaMode() == HAMode::MANUAL_TRIGGER &&
-        (checkSlaveExist && (!isSlaveExist || isSlaveLockExist || hasFailure))) {
-        LOG_INFO("not dual write on manual, slave:%{public}d, lock:%{public}d, failure:%{public}d", isSlaveExist,
-            isSlaveLockExist, hasFailure);
+        (checkSlaveExist && (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
+        if (walOverLimit) {
+            SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
+        }
         return E_OK;
     }
 
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
-        LOG_INFO("slave cfg:[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]%{public}s",
-            config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
-            config.GetRoleType(), config.IsReadOnly(),
-            Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
     int errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
@@ -955,7 +965,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
     if (errCode != SQLITE_OK) {
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
-        return E_ERROR;
+        return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
 }

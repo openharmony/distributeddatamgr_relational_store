@@ -61,7 +61,6 @@ private:
     static napi_value Detach(napi_env env, napi_callback_info info);
     static napi_value GetPath(napi_env env, napi_callback_info info);
     static napi_value IsMemoryRdb(napi_env env, napi_callback_info info);
-    static napi_value IsHoldingConnection(napi_env env, napi_callback_info info);
     static napi_value IsReadOnly(napi_env env, napi_callback_info info);
     static napi_value BeginTransaction(napi_env env, napi_callback_info info);
     static napi_value BeginTrans(napi_env env, napi_callback_info info);
@@ -70,7 +69,6 @@ private:
     static napi_value Commit(napi_env env, napi_callback_info info);
     static napi_value QueryByStep(napi_env env, napi_callback_info info);
     static napi_value IsInTransaction(napi_env env, napi_callback_info info);
-    static napi_value IsOpen(napi_env env, napi_callback_info info);
     static napi_value GetVersion(napi_env env, napi_callback_info info);
     static napi_value GetRebuilt(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
@@ -86,6 +84,7 @@ private:
     static napi_value Notify(napi_env env, napi_callback_info info);
     static napi_value QuerySharingResource(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
+    static napi_value CreateTransaction(napi_env env, napi_callback_info info);
     static Descriptor GetDescriptors();
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
     static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
