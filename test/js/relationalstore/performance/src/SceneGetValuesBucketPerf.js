@@ -48,7 +48,7 @@ function CREATE_UINT8_ARRAY(len) {
 
 const CONST_UINT8_ARRAY = CREATE_UINT8_ARRAY(127);
 
-const DB_NAME = "resultSetPerf.db";
+const DB_NAME = "GetValuesBucketPerf.db";
 const STORE_CONFIG = {
   name: DB_NAME,
   securityLevel: dataRdb.SecurityLevel.S3
