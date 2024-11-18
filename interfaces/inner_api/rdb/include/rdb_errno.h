@@ -306,7 +306,7 @@ static constexpr int E_SQLITE_FULL = (E_BASE + 0x34);
 static constexpr int E_NOT_SUPPORT_THE_SQL = (E_BASE + 0x35);
 
 /**
- * @brief The database is already attached.
+ * @brief The database alias already exists.
  */
 static constexpr int E_ATTACHED_DATABASE_EXIST = (E_BASE + 0x36);
 
