@@ -766,8 +766,20 @@ describe('rdbEncryptTest', function () {
             let kvDb = await kvManager.getKVStore('kvDb', options)
             rdbConfig.name = "RdbTest1.db"
             let rdbStore1 = await data_relationalStore.getRdbStore(context, rdbConfig);
+            await rdbStore1?.executeSql(CREATE_TABLE_TEST);
+            console.log(TAG + "testEncryptRdbAndKv0002 create table test success");
             await rdbStore1.backup("RdbTest2.db");
+            console.log(TAG + "testEncryptRdbAndKv0002 backup success");
+            await rdbStore1?.executeSql("drop table test");
+            console.log(TAG + "testEncryptRdbAndKv0002 drop table test success");
             await rdbStore1.restore("RdbTest2.db");
+            console.log(TAG + "testEncryptRdbAndKv0002 restore success");
+            let valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+            };
+            await rdbStore1.insert("test", valueBucket)
             expect(true).assertTrue();
         } catch (err) {
             console.log(TAG + err);

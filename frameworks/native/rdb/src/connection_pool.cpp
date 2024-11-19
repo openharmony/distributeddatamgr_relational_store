@@ -423,17 +423,27 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         Connection::Delete(config);
     }
 
-    int ret = E_OK;
-    if (!SqliteUtils::CopyFile(backupPath, newPath)) {
-        ret = E_ERROR;
+    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+    int32_t errCode = E_OK;
+    std::shared_ptr<Connection> pool;
+    for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
+        std::tie(errCode, pool) = Init();
+        if (errCode == E_OK) {
+            break;
+        }
+        if (errCode != E_SQLITE_CORRUPT || !config_.IsEncrypt()) {
+            break;
+        }
+        config_.SetIter(ITER_V1);
     }
-    auto result = Init();
-    if (result.first != E_OK) {
+    if (errCode != E_OK) {
         CloseAllConnections();
         Connection::Delete(config_);
-        result = Init();
+        std::tie(errCode, pool) = Init();
+        LOG_WARN("restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
+            SqliteUtils::Anonymous(backupPath).c_str());
     }
-    return ret == E_OK ? result.first : ret;
+    return copyRet ? errCode : E_ERROR;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
