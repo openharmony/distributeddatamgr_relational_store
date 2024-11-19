@@ -594,7 +594,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//third_party/sqlite:sqlite_static",
     ]
-    
+
     external_deps = [ "c_utils:utils" ]
 
     cflags_cc = [ "-std=c++17" ]
