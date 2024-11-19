@@ -44,18 +44,12 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
-constexpr int32_t INSERT_INTO_VALUES_SIZE = 20;
-constexpr int32_t INSERT_INTO_SIZE = 12;
-constexpr int32_t UPDATE_SIZE = 6;
-constexpr int32_t DELETE_FROM_SIZE = 11;
 constexpr int32_t CREATE_DATABASE_SIZE = 15;
-constexpr int32_t CREATE_TABLE_SIZE = 12;
 constexpr int32_t DROP_TABLE_SIZE = 11;
 constexpr int32_t DROP_DATABASE_SIZE = 13;
 constexpr int32_t PRAGMA_SIZE = 6;
 constexpr int32_t DROP_TABLE_IFEXITS_SIZE = 19;
 constexpr int32_t DROP_DATABASE_IFEXITS_SIZE = 22;
-constexpr int32_t ALTER_TABLE_SIZE = 11;
 constexpr int32_t OTHER_SIZE = 6;
 constexpr int32_t START_SIZE = 0;
 
@@ -257,11 +251,6 @@ bool IsSpecialChar(char c)
 {
     return (c == ' ' || c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == '(' || c == ')' || c == ';');
 }
-std::string ReplaceMultipleSpaces(const std::string &str)
-{
-    std::string result = StringUtils::Trim(str);
-    return std::regex_replace(result, std::regex(" +"), " ");
-}
 
 std::vector<std::string> SplitString(const std::string &input)
 {
@@ -284,125 +273,202 @@ std::vector<std::string> SplitString(const std::string &input)
     return result;
 }
 
-std::string ProcessSensitiveString(const std::string &input)
+std::string ReplaceMultipleSpaces(const std::string &str)
+{
+    std::string result = str;
+    if (result.empty()) {
+        return result;
+    }
+
+    result.erase(0, result.find_first_not_of(" "));
+    result.erase(result.find_last_not_of(" ") + 1);
+    return std::regex_replace(result, std::regex(" +"), " ");
+}
+
+std::string ProcessString(const std::string &input)
 {
     std::vector<std::string> words = SplitString(input);
     std::string result;
     for (const std::string &word : words) {
-        std::string processedWord;
-        if (word.size() <= 2) {
-            processedWord = word;
-            std::transform(processedWord.begin(), processedWord.end(), processedWord.begin(), [](char c) {
-                if (std::isdigit(c)) {
-                    return '*';
-                } else {
-                    return c;
-                }
-            });
-            if (word.size() == 2) {
-                processedWord[0] = '*';
-            }
-
+        std::string processedWord = word;
+        if (word.size() == 1 && std::isdigit(word[0])) {
+            processedWord[0] = '*';
+        } else if (word.size() >= 2 && word.size() <= 4) {
+            processedWord[0] = '*';
         } else {
-            processedWord = word;
-            std::transform(processedWord.begin(), processedWord.end(), processedWord.begin(), [](char c) {
-                if (std::isdigit(c)) {
-                    return '*';
-                } else {
-                    return c;
-                }
-            });
-
-            int halfLength = processedWord.size() / 2;
-            for (int i = halfLength / 2; i <= (halfLength / 2) * 3; i++) {
+            int length = processedWord.length() - 3;
+            for (int i = 0; i < length; i++) {
                 processedWord[i] = '*';
             }
         }
         result += processedWord;
     }
+    return result;
+}
+
+std::string ProcessFront(std::string str)
+{
+    size_t lastSpacePos;
+    if (!str.empty() && str.back() == ' ') {
+        str = str.substr(0, str.length() - 1);
+    }
+    lastSpacePos = str.find_last_of(' ');
+    if (lastSpacePos != std::string::npos) {
+        str.replace(lastSpacePos + 1, str.length() - lastSpacePos,
+            ProcessString(str.substr(lastSpacePos + 1, str.length() - lastSpacePos)));
+    }
+    return str;
+}
+
+std::string ProcessBack(std::string str)
+{
+    std::vector<std::string> tokens;
+    std::string delimiter = ",";
+    size_t pos = 0;
+
+    while ((pos = str.find(delimiter)) != std::string::npos) {
+        std::string token = str.substr(0, pos);
+        tokens.push_back(token);
+        str.erase(0, pos + delimiter.length());
+    }
+
+    tokens.push_back(str);
+
+    std::string result;
+
+    for (const auto &token : tokens) {
+        std::string repToken = ReplaceMultipleSpaces(token);
+        size_t spacePos = repToken.find(' ');
+
+        if (spacePos != std::string::npos) {
+            std::string replacedToken = ProcessString(repToken.substr(0, spacePos)) + repToken.substr(spacePos);
+
+            if (!result.empty()) {
+                result += ", ";
+            }
+
+            result += replacedToken;
+        }
+    }
 
     return result;
 }
 
+std::string MaskedCreateSql(std::string sql)
+{
+    auto pre = sql.find("(");
+    auto end = sql.rfind(")");
+    auto front = sql.substr(0, pre);
+    auto back = sql.substr(pre, end - pre);
+    front = ProcessFront(front);
+    back = ProcessBack(back);
+    return front + " " + back + ")";
+}
+
 std::string SqliteUtils::AnonySql(const std::string &sql)
 {
-    std::regex SELECT_REGEX("SELECT\\s+(.*)\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex INSERT_REGEX("INSERT\\s+INTO\\s+(.*)\\s+VALUES\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex UPDATE_REGEX("UPDATE\\s+([^\\s]+)", std::regex_constants::icase);
-    std::regex DELETE_REGEX("DELETE\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex CREATE_DATABASE_REGEX("CREATE\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex CREATE_TABLE_REGEX("CREATE\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex DROP_TABLE_REGAX("DROP\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex DROP_DATABASE_REGEX("DROP\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex PRAGMA_REGEX("PRAGMA\\s+(.*)", std::regex_constants::icase);
-    std::regex DROP_TABLE_IF_EXITS_REGEX("DROP\\s+TABLE\\s+IF\\s+EXISTS\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex DROP_DATABASE_IF_EXITS_REGEX(
+    std::regex REGEX_SELECT("SELECT\\s+(.*)\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_INSERT("INSERT\\s+INTO\\s+(.*)\\s+VALUES\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_UPDATE("UPDATE\\s+(.*)\\s+SET\\s+(.*)\\s+WHERE\\s+([^\\s]+)", std::regex_constants::icase);
+    std::regex REGEX_DELETE("DELETE\\s+FROM\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_CREATE_DATABASE("CREATE\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_CREATE_TABLE("CREATE\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGAX_DROP_TABLE("DROP\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_DROP_DATABASE("DROP\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_PRAGMA("PRAGMA\\s+(.*)", std::regex_constants::icase);
+    std::regex REGEX_DROP_TABLE_IF_EXITS("DROP\\s+TABLE\\s+IF\\s+EXISTS\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_DROP_DATABASE_IF_EXITS(
         "DROP\\s+DATABASE\\s+IF\\s+EXISTS\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex ALTER_TABLE_REGEX("ALTER\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_ALTER_TABLE_DROP(
+        "ALTER\\s+TABLE\\s+(.*)\\s+DROP COLUMN\\s+([^\\s;]+)", std::regex_constants::icase);
+    std::regex REGEX_ALTER_TABLE_ADD("ALTER\\s+TABLE\\s+(.*)\\s+ADD COLUMN\\s+([^\\s;]+)", std::regex_constants::icase);
 
     std::string replaceSql = ReplaceMultipleSpaces(sql);
     std::smatch match;
-    if (std::regex_search(replaceSql, match, SELECT_REGEX)) {
+    if (std::regex_search(replaceSql, match, REGEX_SELECT)) {
         std::string columns = match[1].str();
         std::string table = match[2].str();
         std::string MaskedSql = std::regex_replace(
-            replaceSql, SELECT_REGEX, "SELECT " + ProcessSensitiveString(columns) + " FROM " + ProcessSensitiveString(table));
-        std::regex WHERE_REGEX("WHERE\\s+(.*)", std::regex_constants::icase);
-        std::smatch WHERE_MATCH;
-        if (std::regex_search(MaskedSql, WHERE_MATCH, WHERE_REGEX)) {
-            std::string whereClause = WHERE_MATCH[1].str();
-            MaskedSql = std::regex_replace(MaskedSql, WHERE_REGEX, "WHERE " + ProcessSensitiveString(whereClause));
+            replaceSql, REGEX_SELECT, "SELECT " + ProcessString(columns) + " FROM " + ProcessString(table));
+        std::regex where_regex("WHERE\\s+(.*)", std::regex_constants::icase);
+        std::smatch where_match;
+        if (std::regex_search(MaskedSql, where_match, where_regex)) {
+            std::string whereClause = where_match[1].str();
+            MaskedSql = std::regex_replace(MaskedSql, where_regex, "WHERE " + ProcessString(whereClause));
         }
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, INSERT_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_INSERT)) {
         std::string columns = match[1].str();
-        std::string MaskedSql = "INSERT INTO " + ProcessSensitiveString(replaceSql.substr(INSERT_INTO_SIZE, columns.length())) +
-                                " VALUES " +
-                                ProcessSensitiveString(replaceSql.substr(INSERT_INTO_VALUES_SIZE + columns.length()));
+        std::string MaskedSql = "INSERT INTO " + ProcessString(replaceSql.substr(12, columns.length())) + " VALUES " +
+                                ProcessString(replaceSql.substr(20 + columns.length()));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, UPDATE_REGEX)) {
-        std::string MaskedSql =
-            replaceSql.substr(START_SIZE, UPDATE_SIZE) + ProcessSensitiveString(replaceSql.substr(UPDATE_SIZE));
+    } else if (std::regex_search(replaceSql, match, REGEX_UPDATE)) {
+        std::string columns = match[1].str();
+        std::string table = match[2].str();
+        std::string table2 = match[3].str();
+        std::string MaskedSql = "UPDATE " + ProcessString(columns) + " SET " + ProcessString(table) + " WHERE " +
+                                ProcessString(replaceSql.substr(19 + columns.length() + table.length()));
+
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, DELETE_REGEX)) {
-        std::string MaskedSql =
-            replaceSql.substr(START_SIZE, DELETE_FROM_SIZE) + ProcessSensitiveString(replaceSql.substr(DELETE_FROM_SIZE));
+    } else if (std::regex_search(replaceSql, match, REGEX_DELETE)) {
+        std::string table = match[1].str();
+        std::string MaskedTable = ProcessString(table);
+        std::string MaskedSql = std::regex_replace(replaceSql, REGEX_DELETE, "DELETE FROM " + MaskedTable);
+        std::regex where_regex("WHERE\\s+(.*)", std::regex_constants::icase);
+        std::smatch where_match;
+        if (std::regex_search(MaskedSql, where_match, where_regex)) {
+            std::string whereClause = where_match[1].str();
+            std::string maskedWhere = ProcessString(whereClause);
+            MaskedSql = std::regex_replace(MaskedSql, where_regex, "WHERE " + maskedWhere);
+        }
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, CREATE_DATABASE_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_CREATE_DATABASE)) {
         std::string MaskedSql = replaceSql.substr(START_SIZE, CREATE_DATABASE_SIZE) +
-                                ProcessSensitiveString(replaceSql.substr(CREATE_DATABASE_SIZE));
+                                ProcessString(replaceSql.substr(CREATE_DATABASE_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, CREATE_TABLE_REGEX)) {
-        std::string MaskedSql =
-            replaceSql.substr(START_SIZE, CREATE_TABLE_SIZE) + ProcessSensitiveString(replaceSql.substr(CREATE_TABLE_SIZE));
+    } else if (std::regex_search(replaceSql, match, REGEX_CREATE_TABLE)) {
+        std::string MaskedSql = MaskedCreateSql(replaceSql);
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, DROP_TABLE_IF_EXITS_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_DROP_TABLE_IF_EXITS)) {
         std::string MaskedSql = replaceSql.substr(START_SIZE, DROP_TABLE_IFEXITS_SIZE) +
-                                ProcessSensitiveString(replaceSql.substr(DROP_TABLE_IFEXITS_SIZE));
+                                ProcessString(replaceSql.substr(DROP_TABLE_IFEXITS_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, DROP_DATABASE_IF_EXITS_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_DROP_DATABASE_IF_EXITS)) {
         std::string MaskedSql = replaceSql.substr(START_SIZE, DROP_DATABASE_IFEXITS_SIZE) +
-                                ProcessSensitiveString(replaceSql.substr(DROP_DATABASE_IFEXITS_SIZE));
+                                ProcessString(replaceSql.substr(DROP_DATABASE_IFEXITS_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, DROP_TABLE_REGAX)) {
+    } else if (std::regex_search(replaceSql, match, REGAX_DROP_TABLE)) {
         std::string MaskedSql =
-            replaceSql.substr(START_SIZE, DROP_TABLE_SIZE) + ProcessSensitiveString(replaceSql.substr(DROP_TABLE_SIZE));
+            replaceSql.substr(START_SIZE, DROP_TABLE_SIZE) + ProcessString(replaceSql.substr(DROP_TABLE_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, DROP_DATABASE_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_DROP_DATABASE)) {
         std::string MaskedSql =
-            replaceSql.substr(START_SIZE, DROP_DATABASE_SIZE) + ProcessSensitiveString(replaceSql.substr(DROP_DATABASE_SIZE));
+            replaceSql.substr(START_SIZE, DROP_DATABASE_SIZE) + ProcessString(replaceSql.substr(DROP_DATABASE_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, ALTER_TABLE_REGEX)) {
+    } else if (std::regex_search(replaceSql, match, REGEX_PRAGMA)) {
         std::string MaskedSql =
-            replaceSql.substr(START_SIZE, ALTER_TABLE_SIZE) + ProcessSensitiveString(replaceSql.substr(ALTER_TABLE_SIZE));
+            replaceSql.substr(START_SIZE, PRAGMA_SIZE) + ProcessString(replaceSql.substr(PRAGMA_SIZE));
         return MaskedSql;
-    } else if (std::regex_search(replaceSql, match, PRAGMA_REGEX)) {
-        std::string MaskedSql =
-            replaceSql.substr(START_SIZE, PRAGMA_SIZE) + ProcessSensitiveString(replaceSql.substr(PRAGMA_SIZE));
+    } else if (std::regex_search(replaceSql, match, REGEX_ALTER_TABLE_DROP)) {
+        std::string columns = match[1].str();
+        std::string table = match[2].str();
+        std::string MaskedSql = std::regex_replace(replaceSql, REGEX_ALTER_TABLE_DROP,
+            "ALTER TABLE " + ProcessString(columns) + " DROP COLUMN " + ProcessString(table));
+        return MaskedSql;
+    } else if (std::regex_search(replaceSql, match, REGEX_ALTER_TABLE_ADD)) {
+        std::string columns = match[1].str();
+        std::string table = match[2].str();
+        std::string MaskedSql = std::regex_replace(replaceSql, REGEX_ALTER_TABLE_ADD,
+            "ALTER TABLE " + ProcessString(columns) + " ADD COLUMN " + ProcessString(table));
         return MaskedSql;
     }
-    std::string MaskedSql = replaceSql.substr(START_SIZE, OTHER_SIZE) + ProcessSensitiveString(replaceSql.substr(OTHER_SIZE));
-    return MaskedSql;
+    if (replaceSql.length() > OTHER_SIZE) {
+        std::string MaskedSql =
+            replaceSql.substr(START_SIZE, OTHER_SIZE) + ProcessString(replaceSql.substr(OTHER_SIZE));
+        return MaskedSql;
+    }
+
+    return sql;
 }
 
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
