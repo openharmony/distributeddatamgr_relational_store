@@ -260,6 +260,28 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_001, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: Rdb_BatchInsertTest_002
+ * @tc.desc: Abnormal testCase for BatchInsert, if column is not exist.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_002, TestSize.Level2)
+{
+    store_->ExecuteSql("CREATE TABLE batchInsertTest "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, data INTEGER, data1 INTEGER, "
+                       "data2 INTEGER);");
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data", ValueObject(0));
+    valuesBucket.PutInt("data1", ValueObject(1));
+    valuesBucket.PutInt("data2", ValueObject(2));
+    valuesBucket.PutInt("NonexistentColumn", ValueObject(3));
+    std::vector<ValuesBucket> valuesBuckets = { valuesBucket };
+    int64_t insertNum = 1;
+    int ret = store_->BatchInsert(insertNum, "batchInsertTest", valuesBuckets);
+    EXPECT_EQ(-1, insertNum);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/* *
  * @tc.name: Rdb_QueryTest_001
  * @tc.desc: Abnormal testCase for Query, if table name is empty
  * @tc.type: FUNC

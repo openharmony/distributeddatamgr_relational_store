@@ -406,5 +406,37 @@ describe('rdbStoreInsertTest', function () {
 
         console.log(TAG + "************* testRdbStorebatchInsert002 end *************");
     })
+
+     /**
+         * @tc.name: rdb batchInsert test
+         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0003
+         * @tc.desc: rdb batchInsert not exist column test
+         * @tc.require: issueIB3DGQ
+         */
+     it('testRdbStorebatchInsert003', 0, async function () {
+        console.log(TAG + "************* testRdbStorebatchInsert003 start *************");
+
+        await rdbStore.executeSql("delete from test");
+
+        let valueBucketArray = new Array();
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 11.5,
+            "blobType": u8,
+            "notexistcolumn": 1,
+        }
+        valueBucketArray.push(valueBucket);
+
+        let errCode = await rdbStore.batchInsert("test", valueBucketArray);
+        expect(-1).assertEqual(errCode);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(0).assertEqual(count);
+        resultSet.close()
+        console.log(TAG + "************* testRdbStorebatchInsert003 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })

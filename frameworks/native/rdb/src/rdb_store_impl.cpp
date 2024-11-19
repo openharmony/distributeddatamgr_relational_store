@@ -77,6 +77,7 @@ using RdbMgr = DistributedRdb::RdbManagerImpl;
 static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
+static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
@@ -318,9 +319,9 @@ int RdbStoreImpl::SetDistributedTables(const std::vector<std::string> &tables, i
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
         if (distributedConfig.autoSync) {
-            cloudTables_.insert(tables.begin(), tables.end());
+            cloudInfo_->AddTables(tables);
         } else {
-            std::for_each(tables.begin(), tables.end(), [this](const auto &table) { cloudTables_.erase(table); });
+            cloudInfo_->RmvTables(tables);
             return E_OK;
         }
     }
@@ -383,23 +384,23 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
-    ret = InnerSync(rdbOption, predicate.GetDistributedPredicates(), async);
+    ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
 }
 
-int RdbStoreImpl::InnerSync(const DistributedRdb::RdbService::Option &option,
-                            const DistributedRdb::PredicatesMemo &predicates, const RdbStore::AsyncDetail &async)
+int RdbStoreImpl::InnerSync(const RdbParam &param, const Options &option, const Memo &predicates,
+    const AsyncDetail &async)
 {
-    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (errCode == E_NOT_SUPPORT) {
         return errCode;
     }
     if (errCode != E_OK) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.",
-            errCode, syncerParam_.bundleName_.c_str());
+        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.", errCode,
+            param.bundleName_.c_str());
         return errCode;
     }
-    errCode = service->Sync(syncerParam_, option, predicates, async);
+    errCode = service->Sync(param, option, predicates, async);
     if (errCode != E_OK) {
         LOG_ERROR("Sync is failed, err is %{public}d.", errCode);
         return errCode;
@@ -817,7 +818,8 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
     if (errCode == E_WAIT_COMPENSATED_SYNC) {
         LOG_DEBUG("Start compensation sync.");
         DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true };
-        InnerSync(option, AbsRdbPredicates(predicates.GetTableName()).GetDistributedPredicates(), nullptr);
+        auto memo = AbsRdbPredicates(predicates.GetTableName()).GetDistributedPredicates();
+        InnerSync(syncerParam_, option, memo, nullptr);
         return E_OK;
     }
     if (errCode != E_OK) {
@@ -1011,7 +1013,9 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
         if (statement == nullptr) {
-            continue;
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, sql:%{public}s",
+                errCode, bindArgs.size(), table.c_str(), sql.c_str());
+            return { E_OK, -1 };
         }
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
@@ -1419,7 +1423,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
         return ret;
     }
 
-    RdbSecurityManager::KeyFiles keyFiles(backupFilePath);
+    RdbSecurityManager::KeyFiles keyFiles(path_ + BACKUP_RESTORE);
     keyFiles.Lock();
 
     auto deleteDirtyFiles = [&backupFilePath] {
@@ -2039,26 +2043,9 @@ std::string RdbStoreImpl::GetName()
 void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    {
-        std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
-        if (cloudTables_.empty() || (!table.empty() && cloudTables_.find(table) == cloudTables_.end())) {
-            return;
-        }
-    }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (syncTables_ == nullptr) {
-            syncTables_ = std::make_shared<std::set<std::string>>();
-        }
-        auto empty = syncTables_->empty();
-        if (table.empty()) {
-            syncTables_->insert(cloudTables_.begin(), cloudTables_.end());
-        } else {
-            syncTables_->insert(table);
-        }
-        if (!empty) {
-            return;
-        }
+    auto needSync = cloudInfo_->Change(table);
+    if (!needSync) {
+        return;
     }
     auto pool = TaskExecutor::GetInstance().GetExecutor();
     if (pool == nullptr) {
@@ -2066,19 +2053,18 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
     }
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
-    pool->Schedule(interval, [this]() {
-        std::shared_ptr<std::set<std::string>> ptr;
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            ptr = syncTables_;
-            syncTables_ = nullptr;
+    pool->Schedule(interval, [cloudInfo = std::weak_ptr<CloudTables>(cloudInfo_), param = syncerParam_]() {
+        auto changeInfo = cloudInfo.lock();
+        if (changeInfo == nullptr) {
+            return ;
         }
-        if (ptr == nullptr) {
+        auto tables = changeInfo->Steal();
+        if (tables.empty()) {
             return;
         }
         DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
-        InnerSync(option,
-            AbsRdbPredicates(std::vector<std::string>(ptr->begin(), ptr->end())).GetDistributedPredicates(), nullptr);
+        auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
+        InnerSync(param, option, memo, nullptr);
     });
 #endif
 }
@@ -2139,10 +2125,10 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_ERROR;
     }
 
+    RdbSecurityManager::KeyFiles keyFiles(path_ + BACKUP_RESTORE);
+    keyFiles.Lock();
     std::string destPath;
     bool isOK = TryGetMasterSlaveBackupPath(backupPath, destPath, true);
-    RdbSecurityManager::KeyFiles keyFiles(destPath);
-    keyFiles.Lock();
     if (!isOK) {
         int ret = GetDestPath(backupPath, destPath);
         if (ret != E_OK) {
@@ -2175,6 +2161,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
+    DoCloudSync("");
     return errCode;
 }
 
@@ -2317,5 +2304,52 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
     }
     transactions_.push_back(trans);
     return { errCode, trans };
+}
+
+int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto &table : tables) {
+        tables_.insert(table);
+    }
+    return E_OK;
+}
+
+int32_t RdbStoreImpl::CloudTables::RmvTables(const std::vector<std::string> &tables)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto &table : tables) {
+        tables_.erase(table);
+    }
+    return E_OK;
+}
+
+bool RdbStoreImpl::CloudTables::Change(const std::string &table)
+{
+    bool needSync = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (tables_.empty() || (!table.empty() && tables_.find(table) == tables_.end())) {
+            return needSync;
+        }
+        // from empty, then need schedule the cloud sync, others only wait the schedule execute.
+        needSync = changes_.empty();
+        if (!table.empty()) {
+            changes_.insert(table);
+        } else {
+            changes_.insert(tables_.begin(), tables_.end());
+        }
+    }
+    return needSync;
+}
+
+std::set<std::string> RdbStoreImpl::CloudTables::Steal()
+{
+    std::set<std::string> result;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        result = std::move(changes_);
+    }
+    return result;
 }
 } // namespace OHOS::NativeRdb
