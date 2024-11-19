@@ -592,9 +592,11 @@ if (is_ohos && !build_ohos_sdk) {
     deps += [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
-      "//commonlibrary/c_utils/base:utilsbase",
       "//third_party/sqlite:sqlite_static",
     ]
+    
+    external_deps = [ "c_utils:utils" ]
+
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
