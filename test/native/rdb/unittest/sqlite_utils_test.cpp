@@ -270,7 +270,7 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0042, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("DROP TABLE table;"), "DROP TABLE **ble;");
+    EXPECT_EQ(SqliteUtils::AnonySql("DROP TABLE table1;"), "DROP TABLE ***le1;");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0043, TestSize.Level1)
