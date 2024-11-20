@@ -270,6 +270,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
         expect(false).assertEqual(resultSet.goToLastRow());
         console.log(TAG + "************* rdbStoreInsertUndefinedValueTest0008 end   *************");
     })
+
     /**
      * @tc.name rdb store resultSet getRow test
      * @tc.number rdbStoreResultSetGoToLastRow0009

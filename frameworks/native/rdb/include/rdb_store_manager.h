@@ -25,10 +25,10 @@
 #include "lru_bucket.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
-#include "rdb_store_impl.h"
 
 namespace OHOS {
 namespace NativeRdb {
+class RdbStoreImpl;
 class RdbStoreManager {
 public:
     static RdbStoreManager &GetInstance();
@@ -49,8 +49,8 @@ private:
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     static Param GetSyncParam(const RdbStoreConfig &config);
-    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;

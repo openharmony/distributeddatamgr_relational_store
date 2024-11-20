@@ -17,7 +17,9 @@
 #define NAPI_RDB_CONTEXT_H
 
 #include "napi_async_call.h"
+#include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
+#include "transaction.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -25,6 +27,12 @@ namespace RelationalStoreJsKit {
 class ResultSetProxy;
 using namespace OHOS::NativeRdb;
 struct RdbStoreContextBase : public ContextBase {
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
+    {
+        auto rdb = std::move(rdbStore);
+        rdbStore = nullptr;
+        return rdb;
+    }
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
 };
 
@@ -74,6 +82,11 @@ struct RdbStoreContext : public RdbStoreContextBase {
     virtual ~RdbStoreContext()
     {
     }
+};
+
+struct CreateTransactionContext : public RdbStoreContextBase {
+    AppDataMgrJsKit::JSUtils::TransactionOptions transactionOptions;
+    std::shared_ptr<Transaction> transaction;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
