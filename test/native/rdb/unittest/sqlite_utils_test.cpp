@@ -164,19 +164,19 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from table WHERE case = 1."),
-        "select ***ue1, ***ue2 from **ble WHERE *ase = *.");
+    EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from table1 WHERE case = 1."),
+        "select ***ue1, ***ue2 from ***le1 WHERE *ase = *.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0025, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("select district value1, value2 from table WHERE case = 1 groupby value1 limit 1."),
-        "select district ***ue1, ***ue2 from **ble WHERE *ase = * groupby ***ue1 limit *.");
+    EXPECT_EQ(SqliteUtils::AnonySql("select district value1, value2 from table1 WHERE case = 1 groupby value1 limit 1."),
+        "select district ***ue1, ***ue2 from ***le1 WHERE *ase = * groupby ***ue1 limit *.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from table."), "select ***ue1, ***ue2 from **ble.");
+    EXPECT_EQ(SqliteUtils::AnonySql("select value1, value2 from table1."), "select ***ue1, ***ue2 from ***le1.");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
