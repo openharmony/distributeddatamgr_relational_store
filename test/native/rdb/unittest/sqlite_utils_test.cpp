@@ -256,10 +256,10 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0039, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
 {
-    EXPECT_EQ(
-        SqliteUtils::AnonySql(
-            "CREATE TABLE TEST (id INT PRIMARY KEY, name TEXT, extend BLOB, code REAL, years UNLIMITED INT, ment ASSET, ments ASSETS)."),
-        "CREATE TABLE *EST (*d INT PRIMARY KEY, *ame TEXT, ***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS)");
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE TEST (id INT PRIMARY KEY, name TEXT, "
+                                    "extend BLOB, code REAL, years UNLIMITED INT, ment ASSET, ments ASSETS)."),
+        "CREATE TABLE *EST (*d INT PRIMARY KEY, *ame TEXT, "
+        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS)");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
