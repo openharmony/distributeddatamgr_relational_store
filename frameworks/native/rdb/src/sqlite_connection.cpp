@@ -455,7 +455,8 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
         slaveStmt->config_ = &slaveConnection_->config_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
-            LOG_WARN("prepare slave stmt failed:%{public}d, sql:%{public}s", errCode, sql.c_str());
+            LOG_WARN(
+                "prepare slave stmt failed:%{public}d, sql:%{public}s", errCode, SqliteUtils::AnonySql(sql).c_str());
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
             return { E_OK, statement };
         }
@@ -857,7 +858,7 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(const std::str
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("execute sql failed, errCode:%{public}d, sql:%{public}s, args size:%{public}zu",
-            SQLiteError::ErrNo(errCode), sql.c_str(), bindArgs.size());
+            SQLiteError::ErrNo(errCode), SqliteUtils::AnonySql(sql).c_str(), bindArgs.size());
     }
     return { errCode, object };
 }
