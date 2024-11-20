@@ -50,13 +50,13 @@ constexpr int32_t MIN_ANONYMIZE_LENGTH = 2;
 constexpr int32_t MAX_ANONYMIZE_LENGTH = 4;
 constexpr int32_t OTHER_SIZE = 6;
 constexpr int32_t START_SIZE = 0;
-constexpr const char *SELECT_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT", "FROM",
-    "WHERE", "DISTRICT" };
-constexpr const char *INSERT_ARRAY[] = { "INSERT", "INTO", "VALUES" };
-constexpr const char *UPDATE_ARRAY[] = { "UPDATE", "SET", "WHERE", "AND", "OR" };
-constexpr const char *DELETE_ARRAY[] = { "DELETE", "FROM", "WHERE" };
-constexpr const char *DROP_ARRAY[] = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
-constexpr const char *PRAGMA_ARRAY[] = { "PRAGMA" };
+const std::vector<std::string> SELECT_ARRAY = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT",
+    "FROM", "WHERE", "DISTRICT" };
+const std::vector<std::string> INSERT_ARRAY = { "INSERT", "INTO", "VALUES" };
+const std::vector<std::string> UPDATE_ARRAY = { "UPDATE", "SET", "WHERE", "AND", "OR" };
+const std::vector<std::string> DELETE_ARRAY = { "DELETE", "FROM", "WHERE" };
+const std::vector<std::string> DROP_ARRAY = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
+const std::vector<std::string> PRAGMA_ARRAY = { "PRAGMA" };
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -326,18 +326,14 @@ std::string AnonyString(const std::string &input)
     return result;
 }
 
-std::string AnonySqlString(const std::string &input, const char *const array[])
+std::string AnonySqlString(const std::string &input, const std::vector<std::string> &array)
 {
     std::vector<std::string> words = SplitString(input);
     std::string result;
-    std::vector<std::string> arrayVector;
-    for (int i = 0; array[i] != nullptr; i++) {
-        arrayVector.emplace_back(array[i]);
-    }
     for (const std::string &word : words) {
         std::string anonyWord = word;
         std::string upperWord = SqliteUtils::StrToUpper(word);
-        if (std::find(arrayVector.begin(), arrayVector.end(), upperWord) == arrayVector.end()) {
+        if (std::find(array.begin(), array.end(), upperWord) == array.end()) {
             anonyWord = AnonyWord(anonyWord);
         }
         result += anonyWord;
