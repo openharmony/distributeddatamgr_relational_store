@@ -569,7 +569,7 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_002, TestSize.Level2)
     // set TrackerTable
     DistributedDB::TrackerSchema tracker;
     tracker.tableName = "test_callback_t2";
-    tracker.extendColName = "";
+    tracker.extendColNames = { "id" };
     tracker.trackerColNames = { "id", "timestamp" };
     using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
@@ -614,7 +614,7 @@ HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_003, TestSize.Level2)
     // set TrackerTable
     DistributedDB::TrackerSchema tracker;
     tracker.tableName = "test_callback_t3";
-    tracker.extendColName = "";
+    tracker.extendColNames = { "id" };
     tracker.trackerColNames = { "id", "timestamp" };
     using Delegate = DistributedDB::RelationalStoreDelegate;
     DistributedDB::RelationalStoreManager rStoreManager("test_app", "test_user_id", 0);
