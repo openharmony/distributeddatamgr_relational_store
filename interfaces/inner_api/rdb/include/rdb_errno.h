@@ -423,4 +423,3 @@ static constexpr int E_INNER_WARNING = (E_BASE + 0x4c);
 } // namespace OHOS
 
 #endif
-

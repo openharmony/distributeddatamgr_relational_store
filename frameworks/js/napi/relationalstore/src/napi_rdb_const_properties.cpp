@@ -211,6 +211,19 @@ static napi_value ExportHAMode(napi_env env)
     return haMode;
 }
 
+
+static napi_value ExportTransactionType(napi_env env)
+{
+    napi_value transactionType = nullptr;
+    napi_create_object(env, &transactionType);
+
+    SET_NAPI_PROPERTY(transactionType, "DEFERRED", int32_t(NativeRdb::Transaction::DEFERRED));
+    SET_NAPI_PROPERTY(transactionType, "IMMEDIATE", int32_t(NativeRdb::Transaction::IMMEDIATE));
+    SET_NAPI_PROPERTY(transactionType, "EXCLUSIVE", int32_t(NativeRdb::Transaction::EXCLUSIVE));
+    napi_object_freeze(env, transactionType);
+    return transactionType;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -229,6 +242,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
         DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
         DECLARE_NAPI_PROPERTY("HAMode", ExportHAMode(env)),
+        DECLARE_NAPI_PROPERTY("TransactionType", ExportTransactionType(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

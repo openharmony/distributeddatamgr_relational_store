@@ -2453,7 +2453,7 @@ describe('rdbPredicatesTest', function () {
         console.log(TAG + "************* testIn0004 end *************");
     })
 
-        /**
+    /**
      * @tc.name predicates in normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0194
      * @tc.desc predicates in normal test

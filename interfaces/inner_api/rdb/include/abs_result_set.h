@@ -297,6 +297,11 @@ public:
     API_EXPORT int Close() override;
 
 protected:
+    /**
+     * @brief Constructor.
+     */
+    API_EXPORT explicit AbsResultSet(bool safe);
+
     template<typename Mtx>
     class Lock {
     public:
@@ -344,7 +349,8 @@ protected:
     int rowPos_ = INIT_POS;
     bool isClosed_ = false;
     int rowCount_ = NO_COUNT;
-    int32_t lastErr_;
+    int32_t lastErr_ = E_OK;
+
 private:
     int InitColumnNames();
 

@@ -87,9 +87,13 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
     RdbStoreConfig modifyConfig = config;
+    if (config.IsVector() && config.GetStorageMode() == StorageMode::MODE_MEMORY) {
+        LOG_ERROR("GetRdbStore type not support memory mode.");
+        return nullptr;
+    }
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
     std::lock_guard<std::mutex> lock(mutex_);
-    auto path = modifyConfig.GetRoleType() != OWNER ? modifyConfig.GetVisitorDir() : modifyConfig.GetPath();
+    auto path = modifyConfig.GetRoleType() == VISITOR ? modifyConfig.GetVisitorDir() : modifyConfig.GetPath();
     bundleName_ = modifyConfig.GetBundleName();
     std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(modifyConfig, path);
     if (rdbStore != nullptr) {
@@ -99,7 +103,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         errCode = E_CONFIG_INVALID_CHANGE;
         return nullptr;
     }
-
     rdbStore = std::make_shared<RdbStoreImpl>(modifyConfig, errCode);
     if (errCode != E_OK) {
         LOG_ERROR("GetRdbStore fail path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
