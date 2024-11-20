@@ -29,4 +29,4 @@ int32_t Transaction::RegisterCreator(Creator creator)
     creator_ = std::move(creator);
     return E_OK;
 }
-}
+} // namespace OHOS::NativeRdb

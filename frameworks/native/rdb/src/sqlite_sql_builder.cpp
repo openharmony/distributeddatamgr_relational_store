@@ -298,8 +298,8 @@ std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
     return args;
 }
 
-SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(const std::string &table, const ValuesBuckets &buckets,
-    int limit)
+SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(
+    const std::string &table, const ValuesBuckets &buckets, int limit)
 {
     auto [fields, values] = buckets.GetFieldsAndValues();
     auto columnSize = fields->size();
@@ -324,8 +324,8 @@ SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(const std::string 
     return SqliteSqlBuilder::MakeExecuteSqls(sql, args, columnSize, limit);
 }
 
-SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::MakeExecuteSqls(const std::string &sql,
-    const std::vector<RefValue> &args, int fieldSize, int limit)
+SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::MakeExecuteSqls(
+    const std::string &sql, const std::vector<RefValue> &args, int fieldSize, int limit)
 {
     if (fieldSize == 0) {
         return BatchRefSqls();

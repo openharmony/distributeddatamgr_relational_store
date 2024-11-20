@@ -99,10 +99,9 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
-    Sqlite3SharedBlockMethods sqliteBlock = { 1, &serializer, info->isCountAllRows, info->startPos,
-        info->requiredPos, SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob,
-        SeriPutNull, SeriPutOther
-    };
+    Sqlite3SharedBlockMethods sqliteBlock = { 1, &serializer, info->isCountAllRows, info->startPos, info->requiredPos,
+        SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob, SeriPutNull,
+        SeriPutOther };
     auto db = sqlite3_db_handle(stmt);
     int err = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
     if (err != SQLITE_OK) {
@@ -181,8 +180,7 @@ void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
         info->sharedBlock->SetColumnNum(info->columnNum);
         info->startPos += info->addedRows;
         info->addedRows = 0;
-        fillOneRowResult =
-            FillOneRow(info->sharedBlock, stmt, info->columnNum, info->startPos, info->addedRows);
+        fillOneRowResult = FillOneRow(info->sharedBlock, stmt, info->columnNum, info->startPos, info->addedRows);
     }
 
     if (fillOneRowResult == FILL_ONE_ROW_SUCESS) {
@@ -194,8 +192,8 @@ void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
     }
 }
 
-FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns,
-    int startPos, int addedRows)
+FillOneRowResult FillOneRow(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows)
 {
     int status = sharedBlock->AllocRow();
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
@@ -241,9 +239,8 @@ FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *
     return result;
 }
 
-
-FillOneRowResult FillOneRowOfString(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
-    int addedRows, int pos)
+FillOneRowResult FillOneRowOfString(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     const char *text = reinterpret_cast<const char *>(sqlite3_column_text(statement, pos));
     if (text == nullptr) {
@@ -262,8 +259,8 @@ FillOneRowResult FillOneRowOfString(AppDataFwk::SharedBlock *sharedBlock, sqlite
     return FILL_ONE_ROW_SUCESS;
 }
 
-FillOneRowResult FillOneRowOfLong(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
-    int addedRows, int pos)
+FillOneRowResult FillOneRowOfLong(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     int64_t value = sqlite3_column_int64(statement, pos);
     int status = sharedBlock->PutLong(addedRows, pos, value);
@@ -275,8 +272,8 @@ FillOneRowResult FillOneRowOfLong(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     return FILL_ONE_ROW_SUCESS;
 }
 
-FillOneRowResult FillOneRowOfFloat(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
-    int addedRows, int pos)
+FillOneRowResult FillOneRowOfFloat(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     double value = sqlite3_column_double(statement, pos);
     int status = sharedBlock->PutDouble(addedRows, pos, value);
@@ -288,8 +285,8 @@ FillOneRowResult FillOneRowOfFloat(AppDataFwk::SharedBlock *sharedBlock, sqlite3
     return FILL_ONE_ROW_SUCESS;
 }
 
-FillOneRowResult FillOneRowOfBlob(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
-    int addedRows, int pos)
+FillOneRowResult FillOneRowOfBlob(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     auto action = &AppDataFwk::SharedBlock::PutBlob;
     auto *declType = sqlite3_column_decltype(statement, pos);
@@ -315,8 +312,8 @@ FillOneRowResult FillOneRowOfBlob(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
     return FILL_ONE_ROW_SUCESS;
 }
 
-FillOneRowResult FillOneRowOfNull(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos,
-    int addedRows, int pos)
+FillOneRowResult FillOneRowOfNull(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     int status = sharedBlock->PutNull(addedRows, pos);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {

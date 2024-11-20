@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "js_df_manager.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "js_utils.h"
@@ -35,7 +36,6 @@
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
-#include "js_df_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -621,7 +621,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
         CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBucket), std::make_shared<ParamError>("Duplicate assets "
-                                                                                                   "are not allowed"));
+                                                                                                    "are not allowed"));
         if (argc == 3) {
             CHECK_RETURN(OK == ParseConflictResolution(env, argv[2], context));
         }
@@ -662,7 +662,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
         CHECK_RETURN_SET_E(!HasDuplicateAssets(context->sharedValuesBuckets),
-                           std::make_shared<ParamError>("Duplicate assets are not allowed"));
+            std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);

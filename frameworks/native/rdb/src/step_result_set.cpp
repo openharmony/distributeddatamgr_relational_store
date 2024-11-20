@@ -17,10 +17,10 @@
 
 #include <unistd.h>
 
+#include "connection_pool.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
-#include "connection_pool.h"
 #include "sqlite_errno.h"
 #include "sqlite_statement.h"
 #include "sqlite_utils.h"

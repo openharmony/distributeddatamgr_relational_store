@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "values_buckets.h"
+
 #include "rdb_errno.h"
 
 namespace OHOS {
@@ -40,7 +41,7 @@ void ValuesBuckets::Put(const ValuesBucket &bucket)
         auto fieldResult = fields_->insert(field);
         auto valueResult = values_->insert(value);
         row.insert(std::make_pair(std::ref(const_cast<std::string &>(*fieldResult.first)),
-                                  std::ref(const_cast<ValueObject &>(*valueResult.first))));
+            std::ref(const_cast<ValueObject &>(*valueResult.first))));
     }
     buckets_.push_back(std::move(row));
 }
@@ -61,5 +62,5 @@ std::pair<int, ValuesBuckets::ValueType> ValuesBuckets::Get(size_t row, const Fi
 
     return { E_OK, it->second };
 }
-}
-}
+} // namespace NativeRdb
+} // namespace OHOS

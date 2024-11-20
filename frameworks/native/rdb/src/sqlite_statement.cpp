@@ -25,6 +25,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "rdb_sql_statistic.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
@@ -34,9 +35,8 @@
 #include "sqlite3ext.h"
 #include "sqlite_connection.h"
 #include "sqlite_errno.h"
-#include "sqlite_utils.h"
-#include "rdb_fault_hiview_reporter.h"
 #include "sqlite_global_config.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -120,7 +120,7 @@ void SqliteStatement::ReadFile2Buffer()
     if (SqliteGlobalConfig::GetDbPath(*config_, fileName) != E_OK || access(fileName.c_str(), F_OK) != 0) {
         return;
     }
-    uint64_t buffer[BUFFER_LEN] = {0x0};
+    uint64_t buffer[BUFFER_LEN] = { 0x0 };
     FILE *file = fopen(fileName.c_str(), "r");
     if (file == nullptr) {
         LOG_ERROR(
@@ -135,8 +135,8 @@ void SqliteStatement::ReadFile2Buffer()
     }
     constexpr int bufferSize = 4;
     for (uint32_t i = 0; i < BUFFER_LEN; i += bufferSize) {
-        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64,
-            i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64, i >> 2,
+            buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
     }
     (void)fclose(file);
 }
@@ -145,7 +145,7 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 {
     std::vector<std::reference_wrapper<ValueObject>> refBindArgs;
     for (auto &object : bindArgs) {
-        refBindArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+        refBindArgs.emplace_back(std::ref(const_cast<ValueObject &>(object)));
     }
     return BindArgs(refBindArgs);
 }
@@ -344,7 +344,7 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
 {
     std::vector<std::reference_wrapper<ValueObject>> refArgs;
     for (auto &object : args) {
-        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+        refArgs.emplace_back(std::ref(const_cast<ValueObject &>(object)));
     }
     return Execute(refArgs);
 }
@@ -384,8 +384,8 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
     if (slave_) {
         int errCode = slave_->Execute(args);
         if (errCode != E_OK) {
-            LOG_ERROR("slave execute error:%{public}d, sql is %{public}s, errno %{public}d",
-                errCode, sql_.c_str(), errno);
+            LOG_ERROR(
+                "slave execute error:%{public}d, sql is %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
         }
     }
@@ -695,8 +695,8 @@ int32_t SqliteStatement::BindBigInt(sqlite3_stmt *stat, int index, const ValueOb
     return sqlite3_bind_blob(stat, index, static_cast<const void *>(rawData.data()), rawData.size(), SQLITE_TRANSIENT);
 }
 
-int SqliteStatement::ModifyLockStatus(const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys,
-    bool isLock)
+int SqliteStatement::ModifyLockStatus(
+    const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
 {
     ::DistributedDB::DBStatus ret;
     auto db = sqlite3_db_handle(stmt_);

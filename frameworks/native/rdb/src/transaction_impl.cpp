@@ -16,6 +16,7 @@
 #define LOG_TAG "TransactionImpl"
 
 #include "transaction_impl.h"
+
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store.h"
@@ -196,8 +197,8 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
-std::pair<int, int> TransactionImpl::Update(const std::string &table, const Row &row, const std::string &where,
-                                            const Values &args, Resolution resolution)
+std::pair<int, int> TransactionImpl::Update(
+    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
     auto store = GetStore();
     if (store == nullptr) {
@@ -207,20 +208,20 @@ std::pair<int, int> TransactionImpl::Update(const std::string &table, const Row 
     return store->Update(table, row, where, args, resolution);
 }
 
-std::pair<int32_t, int32_t> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-                                                    Resolution resolution)
+std::pair<int32_t, int32_t> TransactionImpl::Update(
+    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs(),
-                         resolution);
+    return store->Update(
+        predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs(), resolution);
 }
 
-std::pair<int32_t, int32_t> TransactionImpl::Delete(const std::string &table, const std::string &whereClause,
-                                                    const Values &args)
+std::pair<int32_t, int32_t> TransactionImpl::Delete(
+    const std::string &table, const std::string &whereClause, const Values &args)
 {
     auto store = GetStore();
     if (store == nullptr) {
@@ -287,4 +288,4 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql,
     }
     return store->Execute(sql, args);
 }
-}
+} // namespace OHOS::NativeRdb

@@ -26,8 +26,8 @@ std::string StringUtils::SurroundWithQuote(const std::string &value, const std::
 }
 
 // Join array members as parameters of a function call.
-std::string StringUtils::SurroundWithFunction(const std::string &function, const std::string &separator,
-    const std::vector<std::string> &array)
+std::string StringUtils::SurroundWithFunction(
+    const std::string &function, const std::string &separator, const std::vector<std::string> &array)
 {
     std::string builder(function);
     builder += "(";
@@ -60,12 +60,12 @@ std::vector<std::string> StringUtils::Split(const std::string &str, const std::s
     return res;
 }
 
-std::string StringUtils::ExtractFilePath(const std::string& fileFullName)
+std::string StringUtils::ExtractFilePath(const std::string &fileFullName)
 {
     return std::string(fileFullName).substr(0, fileFullName.rfind("/") + 1);
 }
 
-std::string StringUtils::ExtractFileName(const std::string& fileFullName)
+std::string StringUtils::ExtractFileName(const std::string &fileFullName)
 {
     return std::string(fileFullName).substr(fileFullName.rfind("/") + 1, fileFullName.size());
 }

@@ -155,8 +155,8 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
     }
     auto report = (record_.total_.times_.load() - record_.completed_.times_.load()) / EXCEPT_DELTA;
     if (report > record_.reportTimes_ && record_.executed_ != nullptr) {
-        LOG_WARN("Warning:Times:(C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64") Last time("
-            "C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64")",
+        LOG_WARN("Warning:Times:(C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64 ") Last time("
+                 "C:%{public}" PRId64 ", E:%{public}" PRId64 ", F:%{public}" PRId64 ")",
             record_.total_.times_.load(), record_.executed_->times_.load(), record_.completed_.times_.load(),
             record_.total_.lastTime_, record_.executed_->lastTime_, record_.completed_.lastTime_);
     }

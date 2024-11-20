@@ -21,8 +21,7 @@
 namespace OHOS::RelationalStoreJsKit {
 using namespace OHOS::Rdb;
 
-NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback)
-    : env_(env)
+NapiUvQueue::NapiUvQueue(napi_env env, napi_value callback) : env_(env)
 {
     napi_create_reference(env, callback, 1, &callback_);
     napi_get_uv_event_loop(env, &loop_);
@@ -45,7 +44,7 @@ bool NapiUvQueue::operator==(napi_value value)
 
 void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
 {
-    uv_work_t* work = new (std::nothrow) uv_work_t;
+    uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }

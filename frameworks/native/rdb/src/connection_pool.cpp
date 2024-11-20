@@ -295,7 +295,7 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     });
 }
 
-void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
+void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse)
 {
     if (node == nullptr) {
         return;

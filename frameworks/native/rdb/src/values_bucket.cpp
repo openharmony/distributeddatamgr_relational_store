@@ -86,7 +86,7 @@ void ValuesBucket::PutNull(const std::string &columnName)
     values_.insert(std::make_pair(columnName, ValueObject()));
 }
 
-void ValuesBucket::Put(const std::string &columnName,  const ValueObject &value)
+void ValuesBucket::Put(const std::string &columnName, const ValueObject &value)
 {
     values_.insert_or_assign(columnName, value);
 }

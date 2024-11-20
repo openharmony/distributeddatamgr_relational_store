@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "logger.h"
 #include "napi_async_call.h"
 #include "napi_rdb_error.h"
