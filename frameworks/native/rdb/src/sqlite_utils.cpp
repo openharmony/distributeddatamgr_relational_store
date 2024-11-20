@@ -61,15 +61,6 @@ const std::vector<std::string> PRAGMA_ARRAY = { "PRAGMA" };
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 
-using AnonySqlFunction = std::string (*)(const std::string &sql, const std::string &array);
-using AnonyCreateSqlFunction = std::string (*)(const std::string &replaceSql);
-using AnonyAlterSqlFunction = std::string (*)(const std::smatch &match, const std::string &replaceSql);
-
-struct SqlTypeHandler {
-    const char *type;
-    std::variant<AnonySqlFunction, AnonyCreateSqlFunction, AnonyAlterSqlFunction> handler;
-};
-
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
     /* the sql string length less than 3 can not be any type sql */
@@ -472,30 +463,40 @@ std::string AnonyAlterSql(const std::string &replaceSql)
     return replaceSql;
 }
 
-constexpr SqlTypeHandler SQL_TYPE_HANDLERS[] = { { "SEL", AnonySelectSql }, { "INS", AnonyInsertSql },
-    { "UPD", AnonyUpdateSql }, { "DEL", AnonyDeleteSql }, { "CRE", AnonyCreateSql }, { "DRO", AnonyDropSql },
-    { "PRA", AnonyPragmaSql }, { "ALT", AnonyAlterSql } };
 
 std::string SqliteUtils::AnonySql(const std::string &sql)
 {
     std::string replaceSql = ReplaceMultipleSpaces(sql);
     std::string sqlType;
     if (replaceSql.size() > SQL_TYPE_SIZE) {
-        sqlType = SqliteUtils::StrToUpper(replaceSql.substr(START_SIZE, SQL_TYPE_SIZE));
+        sqlType = StrToUpper(replaceSql.substr(START_SIZE, SQL_TYPE_SIZE));
     } else {
         return replaceSql;
     }
-
-    for (const auto &handler : SQL_TYPE_HANDLERS) {
-        if (handler.type == sqlType) {
-            if (std::holds_alternative<AnonySqlFunction>(handler.handler)) {
-                return std::get<AnonySqlFunction>(handler.handler)(replaceSql, "");
-            } else if (std::holds_alternative<AnonyCreateSqlFunction>(handler.handler)) {
-                return std::get<AnonyCreateSqlFunction>(handler.handler)(replaceSql);
-            } else if (std::holds_alternative<AnonyAlterSqlFunction>(handler.handler)) {
-                return std::get<AnonyAlterSqlFunction>(handler.handler)(std::smatch(), replaceSql);
-            }
-        }
+    std::smatch match;
+    if (sqlType == "SEL") {
+        return AnonySqlString(replaceSql, SELECT_ARRAY);
+    }
+    if (sqlType == "INS") {
+        return AnonySqlString(replaceSql, INSERT_ARRAY);
+    }
+    if (sqlType == "UPD") {
+        return AnonySqlString(replaceSql, UPDATE_ARRAY);
+    }
+    if (sqlType == "DEL") {
+        return AnonySqlString(replaceSql, DELETE_ARRAY);
+    }
+    if (sqlType == "CRE") {
+        return AnonyCreateSql(replaceSql);
+    }
+    if (sqlType == "DRO") {
+        return AnonySqlString(replaceSql, DROP_ARRAY);
+    }
+    if (sqlType == "PRA") {
+        return AnonySqlString(replaceSql, PRAGMA_ARRAY);
+    }
+    if (sqlType == "ALT") {
+        return AnonyAlterSql(replaceSql);
     }
 
     if (replaceSql.length() > OTHER_SIZE) {
