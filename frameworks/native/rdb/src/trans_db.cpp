@@ -233,7 +233,8 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
         auto [err, version] = statement->ExecuteForValue();
         if (vSchema_ < static_cast<int64_t>(version)) {
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version), SqliteUtils::AnonySql(sql).c_str());
+                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version),
+                SqliteUtils::AnonySql(sql).c_str());
             vSchema_ = version;
         }
     }

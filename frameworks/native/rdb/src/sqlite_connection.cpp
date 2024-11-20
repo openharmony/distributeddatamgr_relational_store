@@ -456,7 +456,8 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
         slaveStmt->config_ = &slaveConnection_->config_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
-            LOG_WARN("prepare slave stmt failed:%{public}d, sql:%{public}s", errCode, SqliteUtils::AnonySql(sql).c_str());
+            LOG_WARN(
+                "prepare slave stmt failed:%{public}d, sql:%{public}s", errCode, SqliteUtils::AnonySql(sql).c_str());
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
             return { E_OK, statement };
         }
