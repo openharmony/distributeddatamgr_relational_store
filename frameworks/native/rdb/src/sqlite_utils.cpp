@@ -481,7 +481,7 @@ std::string SqliteUtils::AnonySql(const std::string &sql)
     std::string replaceSql = ReplaceMultipleSpaces(sql);
     std::string sqlType;
     if (replaceSql.size() > SQL_TYPE_SIZE) {
-        sqlType = SqliteUtils::StrToUpper(replaceSql.substr(0, 3));
+        sqlType = SqliteUtils::StrToUpper(replaceSql.substr(START_SIZE, SQL_TYPE_SIZE));
     } else {
         return replaceSql;
     }
