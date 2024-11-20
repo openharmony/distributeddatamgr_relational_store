@@ -63,8 +63,8 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, Assets &
         return 0;
     }
     std::vector<uint8_t> alignData;
-    alignData.assign(data, data + sizeof (ASSETS_MAGIC));
-    used += sizeof (ASSETS_MAGIC);
+    alignData.assign(data, data + sizeof(ASSETS_MAGIC));
+    used += sizeof(ASSETS_MAGIC);
     auto hostMagicWord = Endian::LeToH(*(reinterpret_cast<decltype(&ASSETS_MAGIC)>(alignData.data())));
     if (hostMagicWord != ASSETS_MAGIC) {
         return 0;
@@ -99,8 +99,8 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const Asset &asset)
     auto leMagic = Endian::HToLe(ASSET_MAGIC);
     auto magicU8 = reinterpret_cast<uint8_t *>(const_cast<uint32_t *>(&leMagic));
     rawData.insert(rawData.end(), magicU8, magicU8 + sizeof(ASSET_MAGIC));
-    rawData.insert(rawData.end(), reinterpret_cast<uint8_t *>(&size),
-        reinterpret_cast<uint8_t *>(&size) + sizeof(size));
+    rawData.insert(
+        rawData.end(), reinterpret_cast<uint8_t *>(&size), reinterpret_cast<uint8_t *>(&size) + sizeof(size));
     rawData.insert(rawData.end(), data.begin(), data.end());
     return rawData;
 }
@@ -132,7 +132,7 @@ size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, std::map
     return used;
 }
 
-size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteger& bigint)
+size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, BigInteger &bigint)
 {
     size_t used = 0;
     if (sizeof(BIG_INT) > length - used) {
@@ -176,7 +176,7 @@ size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, BigInteg
     return used;
 }
 
-size_t RawDataParser::ParserRawData(const uint8_t* data, size_t length, RawDataParser::Floats& floats)
+size_t RawDataParser::ParserRawData(const uint8_t *data, size_t length, RawDataParser::Floats &floats)
 {
     size_t used = 0;
     if (sizeof(FLOUT32_ARRAY) > length - used) {
@@ -219,12 +219,12 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const std::map<std::string, A
     return PackageRawData(res);
 }
 
-std::vector<uint8_t> RawDataParser::PackageRawData(const BigInteger& bigint)
+std::vector<uint8_t> RawDataParser::PackageRawData(const BigInteger &bigint)
 {
     size_t offset = 0;
     auto size = sizeof(BIG_INT) + sizeof(uint32_t) + sizeof(uint64_t) * (bigint.Size() + 1);
     std::vector<uint8_t> rawData(size, 0);
-    uint8_t* data = rawData.data();
+    uint8_t *data = rawData.data();
     *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(BIG_INT);
     offset += sizeof(BIG_INT);
     *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(uint32_t(bigint.Sign()));
@@ -242,12 +242,12 @@ std::vector<uint8_t> RawDataParser::PackageRawData(const BigInteger& bigint)
     return rawData;
 }
 
-std::vector<uint8_t> RawDataParser::PackageRawData(const RawDataParser::Floats& floats)
+std::vector<uint8_t> RawDataParser::PackageRawData(const RawDataParser::Floats &floats)
 {
     size_t offset = 0;
     auto size = sizeof(FLOUT32_ARRAY) + sizeof(uint32_t) + sizeof(float) * floats.size();
     std::vector<uint8_t> rawData(size, 0);
-    uint8_t* data = rawData.data();
+    uint8_t *data = rawData.data();
     *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(FLOUT32_ARRAY);
     offset += sizeof(FLOUT32_ARRAY);
     *(reinterpret_cast<uint32_t *>(&data[offset])) = Endian::HToLe(uint32_t(floats.size()));

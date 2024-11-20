@@ -330,5 +330,5 @@ int CacheResultSet::GetSize(int columnIndex, size_t &size)
 {
     return E_NOT_SUPPORT;
 }
-}
+} // namespace NativeRdb
 } // namespace OHOS

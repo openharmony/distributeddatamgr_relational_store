@@ -245,7 +245,7 @@ std::string RdbStoreConfig::GetJournalModeValue(JournalMode journalMode)
         case JournalMode::MODE_TRUNCATE:
             return "TRUNCATE";
         case JournalMode::MODE_PERSIST:
-            return  "PERSIST";
+            return "PERSIST";
         case JournalMode::MODE_MEMORY:
             return "MEMORY";
         case JournalMode::MODE_WAL:
@@ -331,7 +331,7 @@ int RdbStoreConfig::GetReadConSize() const
 
 void RdbStoreConfig::SetReadConSize(int readConSize)
 {
-    readConSize_= readConSize;
+    readConSize_ = readConSize;
 }
 
 void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)

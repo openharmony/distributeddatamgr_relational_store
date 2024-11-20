@@ -260,8 +260,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
-                uintptr_t(hint));
+            LOG_ERROR("memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data), uintptr_t(hint));
             return;
         }
         TransactionProxy *proxy = reinterpret_cast<TransactionProxy *>(data);
@@ -282,8 +281,7 @@ struct CommitContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
 };
@@ -316,8 +314,7 @@ struct RollbackContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
 };
@@ -352,8 +349,7 @@ struct DeleteContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<ParamNumError>("1"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
         return OK;
     }
@@ -394,8 +390,7 @@ struct UpdateContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket) == OK);
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates) == OK);
         // 'argv[2]' is an optional parameter
@@ -445,8 +440,7 @@ struct InsertContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], tableName) == OK);
         CHECK_RETURN_ERR(ParseValuesBucket(env, argv[1], valuesBucket) == OK);
         // 'argv[2]' is an optional parameter
@@ -496,8 +490,7 @@ struct BatchInsertContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
@@ -541,8 +534,7 @@ struct QueryContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
             ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[1], columns) == OK,
@@ -587,8 +579,7 @@ struct QuerySqlContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
         GetInstance(self);
-        ASSERT_RETURN_SET_ERROR(
-            transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], sql) == OK, std::make_shared<ParamError>("sql", "a string."));
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {

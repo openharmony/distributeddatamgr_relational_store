@@ -29,10 +29,10 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-void RowEntity::Put(const std::string& name, int32_t index, ValueObject&& value)
+void RowEntity::Put(const std::string &name, int32_t index, ValueObject &&value)
 {
     if (index < 0 || index >= static_cast<int>(indexs_.size())) {
-        return ;
+        return;
     }
     auto it = values_.emplace(name, std::move(value));
     indexs_[index] = it.first;
@@ -144,13 +144,13 @@ int AbsResultSet::InitColumnNames()
     }
 
     for (size_t i = 0; i < names.size(); ++i) {
-        columnMap_.insert(std::pair{names[i], i});
+        columnMap_.insert(std::pair{ names[i], i });
     }
     columnCount_ = static_cast<int>(names.size());
     return E_OK;
 }
 
-int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t>& blob)
+int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
 {
     ValueObject object;
     int errorCode = Get(columnIndex, object);
@@ -196,7 +196,7 @@ int AbsResultSet::GetInt(int columnIndex, int &value)
     return E_OK;
 }
 
-int AbsResultSet::GetLong(int columnIndex, int64_t& value)
+int AbsResultSet::GetLong(int columnIndex, int64_t &value)
 {
     ValueObject object;
     int errorCode = Get(columnIndex, object);
@@ -213,7 +213,7 @@ int AbsResultSet::GetLong(int columnIndex, int64_t& value)
     return E_OK;
 }
 
-int AbsResultSet::GetDouble(int columnIndex, double& value)
+int AbsResultSet::GetDouble(int columnIndex, double &value)
 {
     ValueObject object;
     int errorCode = Get(columnIndex, object);
@@ -399,7 +399,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         lowerName = lowerName.substr(periodIndex + 1);
     }
     std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-    for (const auto& [name, index] : columnMap_) {
+    for (const auto &[name, index] : columnMap_) {
         std::string temp = name;
         std::transform(name.begin(), name.end(), temp.begin(), ::tolower);
         if (lowerName == temp) {
@@ -425,7 +425,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
         return E_COLUMN_OUT_RANGE;
     }
 
-    for (const auto& [name, index] : columnMap_) {
+    for (const auto &[name, index] : columnMap_) {
         if (index == columnIndex) {
             columnName = name;
             return E_OK;

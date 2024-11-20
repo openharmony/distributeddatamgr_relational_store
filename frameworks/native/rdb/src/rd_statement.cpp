@@ -15,19 +15,19 @@
 #define LOG_TAG "RdStatement"
 #include "rd_statement.h"
 
-#include <iomanip>
-#include <sstream>
 #include <chrono>
 #include <cinttypes>
+#include <iomanip>
+#include <sstream>
+
 #include "logger.h"
 #include "raw_data_parser.h"
-#include "rdb_errno.h"
 #include "rd_connection.h"
 #include "rd_utils.h"
-#include "sqlite_global_config.h"
-#include "sqlite_utils.h"
+#include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "sqlite_global_config.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -181,8 +181,8 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
         case ValueObjectType::TYPE_BLOB: {
             std::vector<uint8_t> blob;
             arg.GetBlob(blob);
-            ret = RdUtils::RdSqlBindBlob(stmtHandle_, index, static_cast<const void *>(blob.data()), blob.size(),
-                nullptr);
+            ret = RdUtils::RdSqlBindBlob(
+                stmtHandle_, index, static_cast<const void *>(blob.data()), blob.size(), nullptr);
             break;
         }
         case ValueObjectType::TYPE_BOOL: {
@@ -195,23 +195,23 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
             ValueObject::Asset asset;
             arg.GetAsset(asset);
             auto rawData = RawDataParser::PackageRawData(asset);
-            ret = RdUtils::RdSqlBindBlob(stmtHandle_, index, static_cast<const void *>(rawData.data()),
-                rawData.size(), nullptr);
+            ret = RdUtils::RdSqlBindBlob(
+                stmtHandle_, index, static_cast<const void *>(rawData.data()), rawData.size(), nullptr);
             break;
         }
         case ValueObjectType::TYPE_ASSETS: {
             ValueObject::Assets assets;
             arg.GetAssets(assets);
             auto rawData = RawDataParser::PackageRawData(assets);
-            ret = RdUtils::RdSqlBindBlob(stmtHandle_, index, static_cast<const void *>(rawData.data()),
-                rawData.size(), nullptr);
+            ret = RdUtils::RdSqlBindBlob(
+                stmtHandle_, index, static_cast<const void *>(rawData.data()), rawData.size(), nullptr);
             break;
         }
         case ValueObjectType::TYPE_VECS: {
             ValueObject::FloatVector vectors;
             arg.GetVecs(vectors);
-            ret = RdUtils::RdSqlBindFloatVector(stmtHandle_, index,
-                static_cast<float *>(vectors.data()), vectors.size(), nullptr);
+            ret = RdUtils::RdSqlBindFloatVector(
+                stmtHandle_, index, static_cast<float *>(vectors.data()), vectors.size(), nullptr);
             break;
         }
         default: {
@@ -237,7 +237,7 @@ int RdStatement::IsValid(int index) const
     return E_OK;
 }
 
-int32_t RdStatement::Prepare(const std::string& sql)
+int32_t RdStatement::Prepare(const std::string &sql)
 {
     if (dbHandle_ == nullptr) {
         return E_ERROR;
@@ -245,16 +245,16 @@ int32_t RdStatement::Prepare(const std::string& sql)
     return Prepare(dbHandle_, sql);
 }
 
-int32_t RdStatement::Bind(const std::vector<ValueObject>& args)
+int32_t RdStatement::Bind(const std::vector<ValueObject> &args)
 {
     std::vector<std::reference_wrapper<ValueObject>> refArgs;
     for (auto &object : args) {
-        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+        refArgs.emplace_back(std::ref(const_cast<ValueObject &>(object)));
     }
     return Bind(refArgs);
 }
 
-int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>& args)
+int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>> &args)
 {
     uint32_t index = 1;
     int ret = E_OK;
@@ -322,16 +322,16 @@ int32_t RdStatement::Reset()
     return RdUtils::RdSqlReset(stmtHandle_);
 }
 
-int32_t RdStatement::Execute(const std::vector<ValueObject>& args)
+int32_t RdStatement::Execute(const std::vector<ValueObject> &args)
 {
     std::vector<std::reference_wrapper<ValueObject>> refArgs;
     for (auto &object : args) {
-        refArgs.emplace_back(std::ref(const_cast<ValueObject&>(object)));
+        refArgs.emplace_back(std::ref(const_cast<ValueObject &>(object)));
     }
     return Execute(refArgs);
 }
 
-int32_t RdStatement::Execute(const std::vector<std::reference_wrapper<ValueObject>>& args)
+int32_t RdStatement::Execute(const std::vector<std::reference_wrapper<ValueObject>> &args)
 {
     if (!readOnly_ && strcmp(sql_.c_str(), GlobalExpr::PRAGMA_VERSION) == 0) {
         // It has already set version in prepare procedure
@@ -351,7 +351,7 @@ int32_t RdStatement::Execute(const std::vector<std::reference_wrapper<ValueObjec
     return ret;
 }
 
-std::pair<int, ValueObject> RdStatement::ExecuteForValue(const std::vector<ValueObject>& args)
+std::pair<int, ValueObject> RdStatement::ExecuteForValue(const std::vector<ValueObject> &args)
 {
     int ret = E_OK;
     if (readOnly_ && strcmp(sql_.c_str(), GlobalExpr::PRAGMA_VERSION) == 0) {
@@ -397,7 +397,7 @@ std::pair<int32_t, std::string> RdStatement::GetColumnName(int32_t index) const
     if (ret != E_OK) {
         return { ret, "" };
     }
-    const char* name = RdUtils::RdSqlColName(stmtHandle_, index);
+    const char *name = RdUtils::RdSqlColName(stmtHandle_, index);
     if (name == nullptr) {
         LOG_ERROR("column_name is null.");
         return { E_ERROR, "" };
@@ -464,8 +464,7 @@ std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
             break;
         case ColumnType::TYPE_FLOAT32_ARRAY: {
             uint32_t dim = 0;
-            auto vectors =
-                reinterpret_cast<const float *>(RdUtils::RdSqlColumnFloatVector(stmtHandle_, index, &dim));
+            auto vectors = reinterpret_cast<const float *>(RdUtils::RdSqlColumnFloatVector(stmtHandle_, index, &dim));
             std::vector<float> vecData;
             if (dim > 0 || vectors != nullptr) {
                 vecData.resize(dim);
@@ -501,7 +500,7 @@ bool RdStatement::SupportBlockInfo() const
     return false;
 }
 
-int32_t RdStatement::FillBlockInfo(SharedBlockInfo* info) const
+int32_t RdStatement::FillBlockInfo(SharedBlockInfo *info) const
 {
     return E_NOT_SUPPORT;
 }

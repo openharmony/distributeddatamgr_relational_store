@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-static constexpr const char* FLAG[AbsPredicates::Origin::BUTT] = { "0x02", "0x0", "0x0" };
+static constexpr const char *FLAG[AbsPredicates::Origin::BUTT] = { "0x02", "0x0", "0x0" };
 AbsPredicates::AbsPredicates()
 {
     Initial();
@@ -563,7 +563,7 @@ void AbsPredicates::AppendWhereClauseWithInOrNotIn(
     whereClause += field + StringUtils::SurroundWithFunction(methodName, ",", replaceValues);
 }
 
-std::string AbsPredicates::GetStatement()  const
+std::string AbsPredicates::GetStatement() const
 {
     return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
 }

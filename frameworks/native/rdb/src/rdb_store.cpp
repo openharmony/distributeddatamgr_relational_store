@@ -18,8 +18,8 @@
 #include "sqlite_utils.h"
 #include "traits.h"
 namespace OHOS::NativeRdb {
-RdbStore::ModifyTime::ModifyTime(std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys,
-    bool isFromRowId)
+RdbStore::ModifyTime::ModifyTime(
+    std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys, bool isFromRowId)
     : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
 {
     for (auto &[_, priKey] : hash_) {
@@ -119,8 +119,8 @@ int RdbStore::Insert(int64_t &outRowId, const std::string &table, const Row &row
     return errCode;
 }
 
-int RdbStore::InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const Row &row,
-    Resolution resolution)
+int RdbStore::InsertWithConflictResolution(
+    int64_t &outRowId, const std::string &table, const Row &row, Resolution resolution)
 {
     auto [errCode, rowid] = Insert(table, row, resolution);
     if (errCode == E_OK) {
@@ -156,8 +156,8 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
     return { E_NOT_SUPPORT, -1 };
 }
 
-std::pair<int, int> RdbStore::Update(const std::string &table, const Row &row, const std::string &where,
-    const Values &args, Resolution resolution)
+std::pair<int, int> RdbStore::Update(
+    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
     (void)table;
     (void)row;
@@ -167,8 +167,8 @@ std::pair<int, int> RdbStore::Update(const std::string &table, const Row &row, c
     return { E_NOT_SUPPORT, 0 };
 }
 
-int RdbStore::Update(int &changedRows, const std::string &table, const Row &row, const std::string &whereClause,
-    const Values &args)
+int RdbStore::Update(
+    int &changedRows, const std::string &table, const Row &row, const std::string &whereClause, const Values &args)
 {
     auto [errCode, changes] = Update(table, row, whereClause, args, NO_ACTION);
     if (errCode == E_OK) {
@@ -182,8 +182,8 @@ int RdbStore::Update(int &changedRows, const Row &row, const AbsRdbPredicates &p
     return Update(changedRows, predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
-int RdbStore::Update(int &changedRows, const std::string &table, const Row &row, const std::string &whereClause,
-    const Olds &args)
+int RdbStore::Update(
+    int &changedRows, const std::string &table, const Row &row, const std::string &whereClause, const Olds &args)
 {
     return Update(changedRows, table, row, whereClause, ToValues(args));
 };
@@ -223,8 +223,8 @@ std::shared_ptr<AbsSharedResultSet> RdbStore::Query(int &errCode, bool distinct,
     const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset)
 {
     std::string sql;
-    errCode = SqliteSqlBuilder::BuildQueryString(distinct, table, "", columns, whereClause, groupBy, indexName,
-        orderBy, limit, offset, sql);
+    errCode = SqliteSqlBuilder::BuildQueryString(
+        distinct, table, "", columns, whereClause, groupBy, indexName, orderBy, limit, offset, sql);
     if (errCode != E_OK) {
         return nullptr;
     }
@@ -268,8 +268,8 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
     return QueryByStep(sql, predicates.GetBindArgs());
 }
 
-std::shared_ptr<ResultSet> RdbStore::RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-    const Fields &columns, int &errCode)
+std::shared_ptr<ResultSet> RdbStore::RemoteQuery(
+    const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode)
 {
     (void)device;
     (void)predicates;
@@ -278,8 +278,8 @@ std::shared_ptr<ResultSet> RdbStore::RemoteQuery(const std::string &device, cons
     return nullptr;
 }
 
-std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStore::QuerySharingResource(const AbsRdbPredicates &predicates,
-    const Fields &columns)
+std::pair<int32_t, std::shared_ptr<ResultSet>> RdbStore::QuerySharingResource(
+    const AbsRdbPredicates &predicates, const Fields &columns)
 {
     (void)predicates;
     (void)columns;
@@ -430,8 +430,8 @@ int RdbStore::Restore(const std::string &backupPath, const std::vector<uint8_t> 
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
-    const DistributedRdb::DistributedConfig &distributedConfig)
+int RdbStore::SetDistributedTables(
+    const std::vector<std::string> &tables, int32_t type, const DistributedRdb::DistributedConfig &distributedConfig)
 {
     (void)tables;
     (void)type;
@@ -469,28 +469,28 @@ int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, 
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::Subscribe(const SubscribeOption& option, RdbStoreObserver *observer)
+int RdbStore::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     (void)option;
     (void)observer;
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer)
+int RdbStore::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
 {
     (void)option;
     (void)observer;
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+int RdbStore::SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
     (void)option;
     (void)observer;
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer)
+int RdbStore::UnsubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
     (void)option;
     (void)observer;
@@ -545,8 +545,8 @@ int32_t RdbStore::GetBackupStatus() const
     return SlaveStatus::UNDEFINED;
 }
 
-RdbStore::ModifyTime RdbStore::GetModifyTime(const std::string &table, const std::string &column,
-    std::vector<PRIKey> &keys)
+RdbStore::ModifyTime RdbStore::GetModifyTime(
+    const std::string &table, const std::string &column, std::vector<PRIKey> &keys)
 {
     (void)table;
     (void)column;
@@ -567,8 +567,8 @@ int RdbStore::GetRebuilt(RebuiltType &rebuilt)
     return E_NOT_SUPPORT;
 }
 
-std::pair<int32_t, int32_t> RdbStore::Attach(const RdbStoreConfig &config, const std::string &attachName,
-    int32_t waitTime)
+std::pair<int32_t, int32_t> RdbStore::Attach(
+    const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
 {
     (void)config;
     (void)attachName;
@@ -600,4 +600,4 @@ std::string RdbStore::GetLogTableName(const std::string &tableName)
 {
     return "naturalbase_rdb_aux_" + tableName + "_log";
 }
-}
+} // namespace OHOS::NativeRdb

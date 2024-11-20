@@ -17,14 +17,16 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <chrono>
+
 #include <cerrno>
+#include <chrono>
 #include <cinttypes>
 #include <cstring>
+
 #include "logger.h"
+#include "rdb_errno.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
-#include "rdb_errno.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -41,8 +43,7 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
-    sqlite3_config(SQLITE_CONFIG_LOG, &Log,
-        GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
+    sqlite3_config(SQLITE_CONFIG_LOG, &Log, GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
 
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
@@ -61,16 +62,15 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     if (errType == SQLITE_ERROR && strstr(msg, "\"?\": syntax error in \"PRAGMA user_ve") != nullptr) {
         return;
     }
-    if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE
-        || err == SQLITE_WARNING_AUTOINDEX) {
+    if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE ||
+        err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
             LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
         }
     } else if (errType == SQLITE_WARNING) {
         LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
-        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno,
-            SqliteUtils::Anonymous(msg).c_str());
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, SqliteUtils::Anonymous(msg).c_str());
     }
 }
 

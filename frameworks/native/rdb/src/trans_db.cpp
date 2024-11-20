@@ -104,8 +104,8 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-std::pair<int, int> TransDB::Update(const std::string &table, const Row &row, const std::string &where,
-    const Values &args, Resolution resolution)
+std::pair<int, int> TransDB::Update(
+    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));

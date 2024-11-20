@@ -20,11 +20,11 @@
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
-#include "rdb_radar_reporter.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -33,9 +33,9 @@
 #endif
 #include "security_policy.h"
 #endif
+#include "rdb_fault_hiview_reporter.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
-#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 namespace NativeRdb {

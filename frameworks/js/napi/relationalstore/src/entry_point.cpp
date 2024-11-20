@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
+#include "napi/native_api.h"
+#include "napi_rdb_const_properties.h"
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_store.h"
 #include "napi_rdb_store_helper.h"
-#include "napi_rdb_const_properties.h"
 #include "napi_result_set.h"
 #include "napi_transaction.h"
-#include "napi/native_api.h"
 
 using namespace OHOS::RelationalStoreJsKit;
 

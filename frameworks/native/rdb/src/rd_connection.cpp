@@ -16,10 +16,11 @@
 #include "rd_connection.h"
 
 #include <securec.h>
+
 #include <string>
 
-#include "logger.h"
 #include "grd_api_manager.h"
+#include "logger.h"
 #include "rd_statement.h"
 #include "rdb_errno.h"
 #include "rdb_security_manager.h"
@@ -36,14 +37,14 @@ const int32_t RdConnection::regRepairer_ = Connection::RegisterRepairer(DB_VECTO
 __attribute__((used))
 const int32_t RdConnection::regDeleter_ = Connection::RegisterDeleter(DB_VECTOR, RdConnection::Delete);
 
-std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig& config, bool isWrite)
+std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     if (!IsUsingArkData() || config.GetStorageMode() == StorageMode::MODE_MEMORY) {
         result.first = E_NOT_SUPPORT;
         return result;
     }
-    auto& [errCode, conn] = result;
+    auto &[errCode, conn] = result;
     for (size_t i = 0; i < ITERS_COUNT; i++) {
         std::shared_ptr<RdConnection> connection = std::make_shared<RdConnection>(config, isWrite);
         if (connection == nullptr) {
@@ -59,7 +60,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
     return result;
 }
 
-int32_t RdConnection::Repair(const RdbStoreConfig& config)
+int32_t RdConnection::Repair(const RdbStoreConfig &config)
 {
     std::string dbPath = "";
     auto errCode = SqliteGlobalConfig::GetDbPath(config, dbPath);
@@ -131,7 +132,6 @@ std::string RdConnection::GetConfigStr(const std::vector<uint8_t> &keys, bool is
     return config;
 }
 
-
 int RdConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath = "";
@@ -177,7 +177,7 @@ int32_t RdConnection::OnInitialize()
     return E_NOT_SUPPORT;
 }
 
-std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string& sql, Connection::SConn conn)
+std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string &sql, Connection::SConn conn)
 {
     auto stmt = std::make_shared<RdStatement>();
     stmt->conn_ = conn;
@@ -205,7 +205,7 @@ bool RdConnection::IsWriter() const
     return isWriter_;
 }
 
-int32_t RdConnection::ReSetKey(const RdbStoreConfig& config)
+int32_t RdConnection::ReSetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
         return E_OK;
@@ -243,17 +243,17 @@ int32_t RdConnection::LimitWalSize()
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::ConfigLocale(const std::string& localeStr)
+int32_t RdConnection::ConfigLocale(const std::string &localeStr)
 {
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::CleanDirtyData(const std::string& table, uint64_t cursor)
+int32_t RdConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::SubscribeTableChanges(const Connection::Notifier& notifier)
+int32_t RdConnection::SubscribeTableChanges(const Connection::Notifier &notifier)
 {
     return E_NOT_SUPPORT;
 }
@@ -273,20 +273,20 @@ int32_t RdConnection::ClearCache()
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Subscribe(const std::string& event,
-    const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
+int32_t RdConnection::Subscribe(
+    const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer)
 {
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Unsubscribe(const std::string& event,
-    const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer)
+int32_t RdConnection::Unsubscribe(
+    const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer)
 {
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    bool isAsync, SlaveStatus &slaveStatus)
+int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
+    SlaveStatus &slaveStatus)
 {
     if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
         return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
@@ -300,8 +300,8 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
     return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), {});
 }
 
-int32_t RdConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    SlaveStatus &slaveStatus)
+int32_t RdConnection::Restore(
+    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus)
 {
     auto ret = RdUtils::RdDbClose(dbHandle_, 0);
     if (ret != E_OK) {

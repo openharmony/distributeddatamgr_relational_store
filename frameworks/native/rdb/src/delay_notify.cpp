@@ -14,6 +14,7 @@
 */
 #define LOG_TAG "DelayNotify"
 #include "delay_notify.h"
+
 #include "logger.h"
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -45,7 +46,7 @@ void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData
     LOG_DEBUG("Update changed data.");
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        for (auto& [k, v] : changedData.tableData) {
+        for (auto &[k, v] : changedData.tableData) {
             if (!v.isTrackedDataChange) {
                 continue;
             }
@@ -148,7 +149,7 @@ void DelayNotify::ExecuteTask()
         if (errCode != 0) {
             LOG_ERROR("NotifyDataChange is failed, err is %{public}d.", errCode);
             std::lock_guard<std::mutex> lock(mutex_);
-            for (auto& [k, v] : changedData.tableData) {
+            for (auto &[k, v] : changedData.tableData) {
                 changedData_.tableData.insert_or_assign(k, v);
             }
             return;
@@ -194,4 +195,4 @@ PauseDelayNotify::~PauseDelayNotify()
         delayNotifier_->Resume();
     }
 }
-}
+} // namespace OHOS::NativeRdb
