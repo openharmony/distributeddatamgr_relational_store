@@ -16,97 +16,99 @@
 #ifndef RELATIONAL_STORE_IMPL_RDBPREDICATES_FFI_H
 #define RELATIONAL_STORE_IMPL_RDBPREDICATES_FFI_H
 
-#include "relational_store_utils.h"
 #include <memory>
+#include <string>
+
 #include "ffi_remote_data.h"
 #include "rdb_predicates.h"
-#include <string>
+#include "relational_store_utils.h"
 #include "value_object.h"
 
 namespace OHOS {
 namespace Relational {
-    class RdbPredicatesImpl : public OHOS::FFI::FFIData {
-    public:
-        OHOS::FFI::RuntimeType* GetRuntimeType() override
-        {
-            return GetClassType();
-        }
+class RdbPredicatesImpl : public OHOS::FFI::FFIData {
+public:
+    OHOS::FFI::RuntimeType *GetRuntimeType() override
+    {
+        return GetClassType();
+    }
 
-        explicit RdbPredicatesImpl(const char* tableName);
+    explicit RdbPredicatesImpl(const char *tableName);
 
-        explicit RdbPredicatesImpl(std::shared_ptr<NativeRdb::RdbPredicates> predicates);
+    explicit RdbPredicatesImpl(std::shared_ptr<NativeRdb::RdbPredicates> predicates);
 
-        void InDevices(const char** devicesArray, int64_t devicesSize);
+    void InDevices(const char **devicesArray, int64_t devicesSize);
 
-        void InAllDevices();
+    void InAllDevices();
 
-        void BeginWrap();
+    void BeginWrap();
 
-        void EndWrap();
+    void EndWrap();
 
-        void Or();
+    void Or();
 
-        void And();
+    void And();
 
-        void Contains(const char* field, const char* value);
+    void Contains(const char *field, const char *value);
 
-        void BeginsWith(const char* field, const char* value);
+    void BeginsWith(const char *field, const char *value);
 
-        void EndsWith(const char* field, const char* value);
+    void EndsWith(const char *field, const char *value);
 
-        void IsNull(const char* field);
+    void IsNull(const char *field);
 
-        void IsNotNull(const char* field);
+    void IsNotNull(const char *field);
 
-        void Like(const char* field, const char* value);
+    void Like(const char *field, const char *value);
 
-        void Glob(const char* field, const char* value);
+    void Glob(const char *field, const char *value);
 
-        void OrderByAsc(const char* field);
+    void OrderByAsc(const char *field);
 
-        void OrderByDesc(const char* field);
+    void OrderByDesc(const char *field);
 
-        void Distinct();
+    void Distinct();
 
-        void LimitAs(int32_t value);
+    void LimitAs(int32_t value);
 
-        void OffsetAs(int32_t rowOffset);
-        
-        void GroupBy(const char** fieldsArray, int64_t fieldsSize);
+    void OffsetAs(int32_t rowOffset);
 
-        void IndexedBy(const char* field);
+    void GroupBy(const char **fieldsArray, int64_t fieldsSize);
 
-        void LessThanOrEqualTo(const char* field, ValueType value);
+    void IndexedBy(const char *field);
 
-        void EqualTo(const char* field, ValueType value);
+    void LessThanOrEqualTo(const char *field, ValueType value);
 
-        void GreaterThanOrEqualTo(const char* field, ValueType value);
+    void EqualTo(const char *field, ValueType value);
 
-        void GreaterThan(const char* field, ValueType value);
+    void GreaterThanOrEqualTo(const char *field, ValueType value);
 
-        void NotBetween(const char* field, ValueType lowValue, ValueType highValue);
+    void GreaterThan(const char *field, ValueType value);
 
-        void LessThan(const char* field, ValueType value);
+    void NotBetween(const char *field, ValueType lowValue, ValueType highValue);
 
-        void Between(const char* field, ValueType lowValue, ValueType highValue);
+    void LessThan(const char *field, ValueType value);
 
-        void In(const char* field, ValueType* values, int64_t valuesSize);
+    void Between(const char *field, ValueType lowValue, ValueType highValue);
 
-        void NotIn(const char* field, ValueType* values, int64_t valuesSize);
+    void In(const char *field, ValueType *values, int64_t valuesSize);
 
-        void NotEqualTo(const char* field, ValueType value);
+    void NotIn(const char *field, ValueType *values, int64_t valuesSize);
 
-        std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates();
-    private:
-        std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
+    void NotEqualTo(const char *field, ValueType value);
 
-        friend class OHOS::FFI::RuntimeType;
+    std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates();
 
-        friend class OHOS::FFI::TypeBase;
+private:
+    std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
 
-        static OHOS::FFI::RuntimeType* GetClassType();
-    };
-}
-}
+    friend class OHOS::FFI::RuntimeType;
+
+    friend class OHOS::FFI::TypeBase;
+
+    static OHOS::FFI::RuntimeType *GetClassType();
+};
+} // namespace Relational
+} // namespace OHOS
 
 #endif
