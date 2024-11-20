@@ -138,6 +138,7 @@ private:
     };
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
+    static constexpr int CHECKPOINT_TIME = 1000;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;

@@ -16,7 +16,6 @@
 #include "connection_pool.h"
 
 #include <base_transaction.h>
-
 #include <condition_variable>
 #include <iterator>
 #include <mutex>
@@ -181,10 +180,10 @@ std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode>
         if (realPool == nullptr) {
             return;
         }
+        realPool->ReleaseNode(node, !isTrans);
         if (isTrans) {
             realPool->transCount_--;
         }
-        realPool->ReleaseNode(node, !isTrans);
         node = nullptr;
     });
 }
@@ -295,16 +294,24 @@ SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
     });
 }
 
-void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node,  bool reuse)
+void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse)
 {
     if (node == nullptr) {
         return;
     }
 
+    auto now = steady_clock::now();
+    auto timeout = now > (failedTime_.load() + minutes(CHECK_POINT_INTERVAL)) || now < failedTime_.load();
     auto transCount = transCount_ + isInTransaction_;
-    auto errCode = node->Unused(transCount);
+    auto remainCount = reuse ? transCount : transCount - 1;
+    auto errCode = node->Unused(remainCount, timeout);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         writers_.Dump("WAL writers_", transCount);
+        readers_.Dump("WAL readers_", transCount);
+    }
+
+    if (node->IsWriter() && (errCode != E_INNER_WARNING && errCode != E_NOT_SUPPORT)) {
+        failedTime_ = errCode != E_OK ? now : steady_clock::time_point();
     }
 
     auto &container = node->IsWriter() ? writers_ : readers_;
@@ -491,28 +498,22 @@ int64_t ConnPool::ConnNode::GetUsingTime() const
     return duration_cast<milliseconds>(time).count();
 }
 
-int32_t ConnPool::ConnNode::Unused(int32_t count)
+int32_t ConnPool::ConnNode::Unused(int32_t count, bool timeout)
 {
-    time_ = steady_clock::now();
     if (connect_ == nullptr) {
         return E_OK;
     }
 
     connect_->ClearCache();
+    int32_t errCode = E_INNER_WARNING;
+    if (count <= 0) {
+        errCode = connect_->TryCheckPoint(timeout);
+    }
+
+    time_ = steady_clock::now();
     if (!connect_->IsWriter()) {
         tid_ = 0;
     }
-
-    if (count > 0) {
-        return E_OK;
-    }
-    auto timeout = time_ > (failedTime_ + minutes(CHECK_POINT_INTERVAL)) || time_ < failedTime_;
-    int32_t errCode = connect_->TryCheckPoint(timeout);
-    if (errCode == E_INNER_WARNING || errCode == E_NOT_SUPPORT) {
-        return E_OK;
-    }
-
-    failedTime_ = errCode != E_OK ? time_ : steady_clock::time_point();
     return errCode;
 }
 
