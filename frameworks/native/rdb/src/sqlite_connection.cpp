@@ -168,6 +168,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
         (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
+            Reportor::Report(Reportor::Create(config, E_SQLITE_ERROR, "ErrorType: slaveWalOverLimit"));
         }
         return result;
     }
@@ -1394,6 +1395,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus)
                 (void)SqliteConnection::Delete(slaveConfig.GetPath());
             }
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
+            Reportor::Report(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveBackupInterrupt"));
         }
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
