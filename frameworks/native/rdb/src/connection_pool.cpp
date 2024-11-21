@@ -396,12 +396,12 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
         return retVal;
     }
-    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
+    return RestoreMasterDb(newPath, backupPath, slaveStatus);
 }
 
-int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
 {
-    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
+    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() == HAMode::MAIN_REPLICA) {
         auto connection = AcquireConnection(false);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
@@ -409,28 +409,8 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         return connection->Restore(backupPath, {}, slaveStatus);
     }
 
-    return RestoreMasterDb(newPath, backupPath);
-}
-
-int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
-{
-    if (!CheckIntegrity(backupPath)) {
-        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-        return E_SQLITE_CORRUPT;
-    }
-    SqliteUtils::DeleteFile(backupPath + "-shm");
-    SqliteUtils::DeleteFile(backupPath + "-wal");
-
     CloseAllConnections();
-    Connection::Delete(config_);
-
-    if (config_.GetPath() != newPath) {
-        RdbStoreConfig config(newPath);
-        config.SetPath(newPath);
-        Connection::Delete(config);
-    }
-
-    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+    int ret = Connection::Restore(config_, backupPath, newPath);
     int32_t errCode = E_OK;
     std::shared_ptr<Connection> pool;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
@@ -450,7 +430,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         LOG_WARN("restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
             SqliteUtils::Anonymous(backupPath).c_str());
     }
-    return copyRet ? errCode : E_ERROR;
+    return ret == E_OK ? errCode : ret;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
