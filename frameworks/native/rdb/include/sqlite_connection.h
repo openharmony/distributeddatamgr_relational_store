@@ -149,7 +149,6 @@ private:
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
     static constexpr uint32_t ITER_V1 = 5000;
-    static constexpr uint32_t ITERS_COUNT = 2;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
