@@ -38,7 +38,7 @@ public:
     /**
      * @brief Destructor.
      */
-    ~SharedResultSet() {}
+    virtual ~SharedResultSet() {}
 
     /**
      * @brief Obtains a block from the {@link SharedResultSet}.
