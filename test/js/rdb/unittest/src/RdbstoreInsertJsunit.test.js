@@ -24,7 +24,7 @@ const STORE_CONFIG = {
     name: "InsertTest.db",
 }
 
-var rdbStore = undefined;
+let rdbStore = undefined;
 
 describe('rdbStoreInsertTest', function () {
     beforeAll(async function () {
@@ -57,7 +57,7 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0001 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -122,7 +122,7 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0002', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0002 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -150,7 +150,7 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0003', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0003 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         {
             const valueBucket = {
                 "name": "zhangsan",
@@ -185,8 +185,8 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0004', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0004 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
+        let u8 = new Uint8Array([1, 2, 3])
+        let nameStr = "abcd" + "e".repeat(2000) + "./&*$!@()"
         const valueBucket = {
             "name": nameStr,
             "age": 19,
@@ -219,8 +219,8 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0005', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0005 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "苹果是水果" + "e".repeat(2000)
+        let u8 = new Uint8Array([1, 2, 3])
+        let nameStr = "苹果是水果" + "e".repeat(2000)
         const valueBucket = {
             "name": nameStr,
             "age": 20,
@@ -253,8 +253,8 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreInsert0006', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreInsert0006 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
-        var nameStr = "西瓜是水果" + "e".repeat(2000) + "好吃又好看"
+        let u8 = new Uint8Array([1, 2, 3])
+        let nameStr = "西瓜是水果" + "e".repeat(2000) + "好吃又好看"
         const valueBucket = {
             "name": nameStr,
             "age": 21,
@@ -287,7 +287,7 @@ describe('rdbStoreInsertTest', function () {
      */
     it('testRdbStoreGetString0001', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreGetString0001 start *************");
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "",
             "age": 21,
@@ -322,7 +322,7 @@ describe('rdbStoreInsertTest', function () {
     it('testRdbStorebatchInsert001', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert001 start *************");
 
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "zhangsan",
             "age": 18,
@@ -354,7 +354,7 @@ describe('rdbStoreInsertTest', function () {
 
         let valueBucketArray = new Array();
 
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "zhangsan",
             "age": 18,
@@ -420,7 +420,7 @@ describe('rdbStoreInsertTest', function () {
 
         let valueBucketArray = new Array();
 
-        var u8 = new Uint8Array([1, 2, 3])
+        let u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "zhangsan",
             "age": 18,
@@ -437,6 +437,27 @@ describe('rdbStoreInsertTest', function () {
         expect(0).assertEqual(count);
         resultSet.close()
         console.log(TAG + "************* testRdbStorebatchInsert003 end *************");
+    })
+
+     /**
+         * @tc.name: rdb batchInsert test
+         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0004
+         * @tc.desc: Test with empty valueBucket in rdb batchInsert
+         * @tc.require: issueIB3DGQ
+         */
+     it('testRdbStorebatchInsert004', 0, async function () {
+        console.log(TAG + "************* testRdbStorebatchInsert004 start *************");
+
+        await rdbStore.executeSql("delete from test");
+
+        let valueBucketArray = [];
+        let errCode = await rdbStore.batchInsert("test", valueBucketArray);
+        expect(0).assertEqual(errCode);
+        let resultSet = await rdbStore.querySql("SELECT * FROM test");
+        let count = resultSet.rowCount;
+        expect(0).assertEqual(count);
+        resultSet.close()
+        console.log(TAG + "************* testRdbStorebatchInsert004 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
 })
