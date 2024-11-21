@@ -68,7 +68,6 @@ constexpr uint32_t SqliteConnection::NO_ITER;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
 constexpr uint32_t SqliteConnection::ITER_V1;
-constexpr uint32_t SqliteConnection::ITERS_COUNT;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -1619,19 +1618,14 @@ bool SqliteConnection::IsDbVersionBelowSlave()
 
 int SqliteConnection::CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath)
 {
-    std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
-    auto &[ret, conn] = result;
     RdbStoreConfig srcConfig(config);
     srcConfig.SetPath(srcPath);
     srcConfig.SetIntegrityCheck(IntegrityCheck::FULL);
     srcConfig.SetHaMode(HAMode::SINGLE);
-    for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
+    auto [ret, conn] = Connection::Create(srcConfig, true);
+    if (ret == E_SQLITE_CORRUPT && srcConfig.IsEncrypt() && srcConfig.GetIter() != ITER_V1) {
+        srcConfig.SetIter(ITER_V1);
         std::tie(ret, conn) = Connection::Create(srcConfig, true);
-        if (ret == E_SQLITE_CORRUPT && srcConfig.IsEncrypt()) {
-            srcConfig.SetIter(ITER_V1);
-        } else {
-            break;
-        }
     }
     if (ret != E_OK) {
         LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(srcPath).c_str());
