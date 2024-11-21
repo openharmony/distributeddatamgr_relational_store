@@ -67,6 +67,7 @@ constexpr ssize_t SqliteConnection::SLAVE_INTEGRITY_CHECK_LIMIT;
 constexpr uint32_t SqliteConnection::NO_ITER;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
+constexpr uint32_t SqliteConnection::ITER_V1;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -75,6 +76,8 @@ __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 __attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
+__attribute__((used))
+const int32_t SqliteConnection::regRestorer_ = Connection::RegisterRestorer(DB_SQLITE, SqliteConnection::Restore);
 
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
@@ -1448,6 +1451,9 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
 
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 {
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        return SqliteConnection::Restore(config, SqliteUtils::GetSlavePath(config.GetPath()), config.GetPath());
+    }
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
     if (connection == nullptr) {
         return E_ERROR;
@@ -1611,6 +1617,87 @@ bool SqliteConnection::IsDbVersionBelowSlave()
         }
     }
     return false;
+}
+
+int SqliteConnection::CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath)
+{
+    RdbStoreConfig srcConfig(config);
+    srcConfig.SetPath(srcPath);
+    srcConfig.SetIntegrityCheck(IntegrityCheck::FULL);
+    srcConfig.SetHaMode(HAMode::SINGLE);
+    auto [ret, conn] = Connection::Create(srcConfig, true);
+    if (ret == E_SQLITE_CORRUPT && srcConfig.IsEncrypt() && srcConfig.GetIter() != ITER_V1) {
+        srcConfig.SetIter(ITER_V1);
+        std::tie(ret, conn) = Connection::Create(srcConfig, true);
+    }
+    if (ret != E_OK) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(srcPath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    conn = nullptr;
+    SqliteUtils::DeleteFile(srcPath + "-shm");
+    SqliteUtils::DeleteFile(srcPath + "-wal");
+    Connection::Delete(config);
+
+    if (config.GetPath() != destPath) {
+        RdbStoreConfig dstConfig(destPath);
+        Connection::Delete(dstConfig);
+    }
+
+    if (!SqliteUtils::CopyFile(srcPath, destPath)) {
+        return E_ERROR;
+    }
+    return E_OK;
+}
+
+int32_t SqliteConnection::Restore(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath)
+{
+    if (config.GetHaMode() == HAMode::SINGLE || !SqliteUtils::IsSlaveDbName(srcPath)) {
+        return SqliteConnection::CopyDb(config, srcPath, destPath);
+    }
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
+    if (connection == nullptr) {
+        return E_ERROR;
+    }
+    RdbStoreConfig slaveConfig = connection->GetSlaveRdbStoreConfig(config);
+    if (access(slaveConfig.GetPath().c_str(), F_OK) != 0) {
+        return E_NOT_SUPPORT;
+    }
+    auto [ret, conn] = connection->CreateSlaveConnection(slaveConfig, SlaveOpenPolicy::FORCE_OPEN);
+    if (ret != E_OK) {
+        return ret;
+    }
+    connection->slaveConnection_ = conn;
+
+    int openMainRes = connection->InnerOpen(config);
+    ret = connection->VeritySlaveIntegrity();
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (openMainRes == E_OK && SqliteUtils::IsSlaveInvalid(config.GetPath()) && !connection->IsDbVersionBelowSlave()) {
+        return E_SQLITE_CORRUPT;
+    }
+
+    ret = SQLiteError::ErrNo(sqlite3_wal_checkpoint_v2(connection->slaveConnection_->dbHandle_, nullptr,
+        SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr));
+    if (ret != E_OK) {
+        LOG_ERROR("chk %{public}d %{public}d %{public}s", ret, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
+        return ret;
+    }
+    connection->slaveConnection_ = nullptr;
+    connection = nullptr;
+
+    if (!SqliteUtils::RenameFile(slaveConfig.GetPath(), config.GetPath())) {
+        LOG_ERROR("rename %{public}d %{public}s", errno, SqliteUtils::Anonymous(config.GetName()).c_str());
+        return E_ERROR;
+    }
+    for (auto &suffix : FILE_SUFFIXES) {
+        if (suffix.suffix_ != nullptr && !std::string(suffix.suffix_).empty()) {
+            SqliteUtils::DeleteFile(config.GetPath() + suffix.suffix_);
+        }
+    }
+    Connection::Delete(slaveConfig.GetPath());
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
