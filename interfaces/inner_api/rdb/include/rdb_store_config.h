@@ -671,6 +671,14 @@ public:
     PromiseInfo GetPromiseInfo() const;
 
     void SetPromiseInfo(PromiseInfo promiseInfo);
+     
+    ssize_t GetCheckpointSize() const;
+    
+    ssize_t GetStartCheckpointSize() const;
+
+    ssize_t GetWalLimitSize() const;
+
+    void SetWalLimitSize(ssize_t size);
 
     int32_t GetHaMode() const;
  
@@ -720,6 +728,9 @@ private:
     std::string syncMode_;
     std::string databaseFileType;
     PromiseInfo promiseInfo_;
+    ssize_t walLimitSize_;
+    ssize_t checkpointSize_;
+    ssize_t startCheckpointSize_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

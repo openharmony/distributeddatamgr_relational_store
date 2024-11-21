@@ -31,7 +31,8 @@ public:
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
     static constexpr ssize_t DB_WAL_SIZE_LIMIT_MIN = 20 * 1024 * 1024; /* default wal file maximum size : 20M */
     static constexpr ssize_t DB_WAL_WARNING_SIZE = 256 * 1024 * 1024; /* default wal file maximum size : 256M */
-    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MAX = 512 * 1024 * 1024; /* default wal file maximum size : 512M */
+    static constexpr ssize_t DB_WAL_DEFAULT_SIZE = 0x20000000; /* default wal file size 512M */
+    static constexpr ssize_t DB_WAL_SIZE_LIMIT_MAX = 0x7FFFFFFF; /* default wal file maximum size : 2G - 1 */
     static constexpr int WAL_AUTO_CHECKPOINT = 100;  /* 100 pages */
     static constexpr int APP_DEFAULT_UMASK = 0002;
     static constexpr int SQLITE_MAX_COLUMN = 2000;
