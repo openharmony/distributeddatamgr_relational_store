@@ -206,6 +206,8 @@ int SqliteStatement::Prepare(const std::string &sql)
         if (errCode != E_OK) {
             LOG_WARN("slave prepare Error:%{public}d", errCode);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            RdbStoreConfig slaveConfig(SqliteUtils::GetSlavePath(config_->GetPath()));
+            Reportor::ReportFault(Reportor::Create(slaveConfig, errCode, "ErrorType: slavePrepareErr"));
         }
     }
     return E_OK;
@@ -247,6 +249,8 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
         if (errCode != E_OK) {
             LOG_ERROR("slave bind error:%{public}d", errCode);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            RdbStoreConfig slaveConfig(SqliteUtils::GetSlavePath(config_->GetPath()));
+            Reportor::Report(Reportor::Create(slaveConfig, errCode, "ErrorType: slaveBindErr"));
         }
     }
     return E_OK;
@@ -387,6 +391,8 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
             LOG_ERROR("slave execute error:%{public}d, sql is %{public}s, errno %{public}d",
                 errCode, sql_.c_str(), errno);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            RdbStoreConfig slaveConfig(SqliteUtils::GetSlavePath(config_->GetPath()));
+            Reportor::Report(Reportor::Create(slaveConfig, errCode, "ErrorType: slaveExecErr"));
         }
     }
     return E_OK;
