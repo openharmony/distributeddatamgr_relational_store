@@ -15,11 +15,11 @@
 #define LOG_TAG "NapiRdbPredicates"
 #include "napi_rdb_predicates.h"
 
+#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
-#include "js_df_manager.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -482,7 +482,6 @@ napi_value RdbPredicatesProxy::NotLike(napi_env env, napi_callback_info info)
     predicatesProxy->GetInstance()->NotLike(field, value);
     return thiz;
 }
-
 
 napi_value RdbPredicatesProxy::Glob(napi_env env, napi_callback_info info)
 {

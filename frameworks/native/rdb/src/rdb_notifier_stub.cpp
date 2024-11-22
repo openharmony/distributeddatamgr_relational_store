@@ -34,7 +34,7 @@ RdbNotifierStub::~RdbNotifierStub() noexcept
 {
 }
 
-bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
+bool RdbNotifierStub::CheckInterfaceToken(MessageParcel &data)
 {
     auto localDescriptor = GetDescriptor();
     auto remoteDescriptor = data.ReadInterfaceToken();
@@ -45,8 +45,7 @@ bool RdbNotifierStub::CheckInterfaceToken(MessageParcel& data)
     return true;
 }
 
-int RdbNotifierStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
-                                     MessageOption &option)
+int RdbNotifierStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     LOG_DEBUG("code:%{public}u, callingPid:%{public}d", code, IPCSkeleton::GetCallingPid());
     if (!CheckInterfaceToken(data)) {

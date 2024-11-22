@@ -138,8 +138,8 @@ bool SqliteUtils::DeleteFile(const std::string &filePath)
     }
     auto ret = remove(filePath.c_str());
     if (ret != 0) {
-        LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret,
-            Anonymous(filePath).c_str());
+        LOG_WARN(
+            "remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, Anonymous(filePath).c_str());
         return false;
     }
     return true;
@@ -530,7 +530,7 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
     return (pos != std::string::npos) && (pos == fileName.size() - slaveSuffix.size());
 }
 
-std::string SqliteUtils::GetSlavePath(const std::string& name)
+std::string SqliteUtils::GetSlavePath(const std::string &name)
 {
     std::string suffix(".db");
     std::string slaveSuffix("_slave.db");

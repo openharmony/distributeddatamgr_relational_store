@@ -333,7 +333,7 @@ int32_t Convert2Value(napi_env env, napi_value input, CryptoParam &cryptoParam)
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "kdfAlgo", cryptoParam.kdfAlgo, true), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(
         GetNamedProperty(env, input, "cryptoPageSize", cryptoParam.cryptoPageSize, true), napi_invalid_arg);
-    
+
     return napi_ok;
 }
 
@@ -375,7 +375,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     GetNamedProperty(env, jsValue, "pluginLibs", rdbConfig.pluginLibs, true);
     ASSERT(OK == status, "get pluginLibs failed.", napi_invalid_arg);
- 
+
     status = GetNamedProperty(env, jsValue, "haMode", rdbConfig.haMode, true);
     ASSERT(OK == status, "get haMode failed.", napi_invalid_arg);
 

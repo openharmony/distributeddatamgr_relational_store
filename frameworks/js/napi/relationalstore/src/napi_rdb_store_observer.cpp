@@ -103,7 +103,6 @@ void NapiRdbStoreObserver::OnChange()
         [](napi_env env, int &argc, napi_value *argv) {});
 }
 
-
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
 {
     table = info->first;

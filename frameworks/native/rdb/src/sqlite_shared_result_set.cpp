@@ -17,29 +17,29 @@
 
 #include <rdb_errno.h>
 
+#include <cinttypes>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <tuple>
-#include <cinttypes>
 
 #include "logger.h"
-#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_sql_utils.h"
 #include "result_set.h"
 #include "share_block.h"
 #include "sqlite_connection.h"
+#include "sqlite_errno.h"
 #include "sqlite_statement.h"
 #include "sqlite_utils.h"
-#include "sqlite_errno.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 constexpr int64_t TIME_OUT = 1500;
-SqliteSharedResultSet::SqliteSharedResultSet(Time start, Conn conn, std::string sql, const Values &args,
-    const std::string &path)
+SqliteSharedResultSet::SqliteSharedResultSet(
+    Time start, Conn conn, std::string sql, const Values &args, const std::string &path)
     : AbsSharedResultSet(path), conn_(std::move(conn)), qrySql_(std::move(sql)), bindArgs_(args)
 {
     if (conn_ == nullptr) {
@@ -141,8 +141,8 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 std::pair<int, std::vector<std::string>> SqliteSharedResultSet::GetColumnNames()
 {
     if (isClosed_) {
-        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
-            E_ALREADY_CLOSED, qrySql_.c_str());
+        LOG_ERROR(
+            "fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, qrySql_.c_str());
         return { E_ALREADY_CLOSED, {} };
     }
 
@@ -179,15 +179,15 @@ int SqliteSharedResultSet::Close()
 int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 {
     if (isClosed_) {
-        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
-            E_ALREADY_CLOSED, qrySql_.c_str());
+        LOG_ERROR(
+            "fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, qrySql_.c_str());
         return E_ALREADY_CLOSED;
     }
     if (GetBlock() == nullptr) {
         return E_ERROR;
     }
-    if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos()
-        || oldPosition == rowCount_) {
+    if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos() ||
+        oldPosition == rowCount_) {
         return FillBlock(newPosition);
     }
     return E_OK;
@@ -215,12 +215,12 @@ int SqliteSharedResultSet::FillBlock(int requiredPos)
         return errCode;
     }
     blockCapacity_ = block->GetRowNum();
-    if ((block->GetStartPos() == block->GetLastPos() && (uint32_t)rowCount_ != block->GetStartPos())
-        || ((uint32_t)requiredPos < block->GetStartPos() || block->GetLastPos() <= (uint32_t)requiredPos)
-        || block->GetStartPos() > 0) {
+    if ((block->GetStartPos() == block->GetLastPos() && (uint32_t)rowCount_ != block->GetStartPos()) ||
+        ((uint32_t)requiredPos < block->GetStartPos() || block->GetLastPos() <= (uint32_t)requiredPos) ||
+        block->GetStartPos() > 0) {
         LOG_WARN("blockRowNum=%{public}d, requiredPos= %{public}d, startPos_= %{public}" PRIu32
-             ", lastPos_= %{public}" PRIu32 ", blockPos_= %{public}" PRIu32 ".",
-        rowCount_, requiredPos, block->GetStartPos(), block->GetLastPos(), block->GetBlockPos());
+                 ", lastPos_= %{public}" PRIu32 ", blockPos_= %{public}" PRIu32 ".",
+            rowCount_, requiredPos, block->GetStartPos(), block->GetLastPos(), block->GetBlockPos());
     }
     return E_OK;
 }

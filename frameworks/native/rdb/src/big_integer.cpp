@@ -30,17 +30,17 @@ BigInteger::BigInteger(int32_t sign, std::vector<uint64_t>&& trueForm)
 {
 }
 
-BigInteger::BigInteger(const BigInteger& other)
+BigInteger::BigInteger(const BigInteger &other)
 {
     operator=(other);
 }
 
-BigInteger::BigInteger(BigInteger&& other)
+BigInteger::BigInteger(BigInteger &&other)
 {
     operator=(std::move(other));
 }
 
-BigInteger& BigInteger::operator=(const BigInteger& other)
+BigInteger &BigInteger::operator=(const BigInteger &other)
 {
     if (this == &other) {
         return *this;
@@ -50,7 +50,7 @@ BigInteger& BigInteger::operator=(const BigInteger& other)
     return *this;
 }
 
-BigInteger& BigInteger::operator=(BigInteger&& other)
+BigInteger &BigInteger::operator=(BigInteger &&other)
 {
     if (this == &other) {
         return *this;
@@ -61,7 +61,7 @@ BigInteger& BigInteger::operator=(BigInteger&& other)
     return *this;
 }
 
-bool BigInteger::operator==(const BigInteger& other)
+bool BigInteger::operator==(const BigInteger &other)
 {
     if (sign_ != other.sign_) {
         return false;
@@ -84,7 +84,7 @@ size_t BigInteger::Size() const
     return value_.size();
 }
 
-const uint64_t* BigInteger::TrueForm() const
+const uint64_t *BigInteger::TrueForm() const
 {
     return value_.data();
 }
@@ -93,4 +93,4 @@ std::vector<uint64_t> BigInteger::Value() const
 {
     return value_;
 }
-}
+} // namespace OHOS::NativeRdb
