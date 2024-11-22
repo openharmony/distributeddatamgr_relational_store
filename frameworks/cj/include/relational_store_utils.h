@@ -16,173 +16,171 @@
 #ifndef RELATIONAL_STORE_UTILS_H
 #define RELATIONAL_STORE_UTILS_H
 
-#include "value_object.h"
-#include "securec.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
+#include "securec.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace Relational {
-    char* MallocCString(const std::string& origin);
+char *MallocCString(const std::string &origin);
 
-    struct StoreConfig {
-        char* name;
-        int32_t securityLevel;
-        bool encrypt;
-        char* dataGroupId;
-        char* customDir;
-        bool isSearchable;
-        bool autoCleanDirtyData;
-    };
+struct StoreConfig {
+    char *name;
+    int32_t securityLevel;
+    bool encrypt;
+    char *dataGroupId;
+    char *customDir;
+    bool isSearchable;
+    bool autoCleanDirtyData;
+};
 
-    struct Asset {
-        const char* name;
-        const char* uri;
-        const char* path;
-        const char* createTime;
-        const char* modifyTime;
-        const char* size;
-        int32_t status;
-    };
+struct Asset {
+    const char *name;
+    const char *uri;
+    const char *path;
+    const char *createTime;
+    const char *modifyTime;
+    const char *size;
+    int32_t status;
+};
 
-    struct Assets {
-        Asset* head;
-        int64_t size;
-    };
+struct Assets {
+    Asset *head;
+    int64_t size;
+};
 
-    struct CArrUI8 {
-        uint8_t* head;
-        int64_t size;
-    };
+struct CArrUI8 {
+    uint8_t *head;
+    int64_t size;
+};
 
-    struct CArrStr {
-        char** head;
-        int64_t size;
-    };
+struct CArrStr {
+    char **head;
+    int64_t size;
+};
 
-    CArrStr VectorToCArrStr(const std::vector<std::string> &devices);
+CArrStr VectorToCArrStr(const std::vector<std::string> &devices);
 
-    std::vector<std::string> CArrStrToVector(CArrStr carr);
-    
-    struct ValueType {
-        int64_t integer;
-        double dou;
-        char* string;
-        bool boolean;
-        CArrUI8 Uint8Array;
-        Asset asset;
-        Assets assets;
-        uint8_t tag;
-    };
+std::vector<std::string> CArrStrToVector(CArrStr carr);
 
-    enum TagType {
-        TYPE_NULL, TYPE_INT, TYPE_DOU, TYPE_STR, TYPE_BOOL, TYPE_BLOB, TYPE_ASSET, TYPE_ASSETS
-    };
+struct ValueType {
+    int64_t integer;
+    double dou;
+    char *string;
+    bool boolean;
+    CArrUI8 Uint8Array;
+    Asset asset;
+    Assets assets;
+    uint8_t tag;
+};
 
-    struct ValuesBucket {
-        char** key;
-        ValueType* value;
-        int64_t size;
-    };
+enum TagType { TYPE_NULL, TYPE_INT, TYPE_DOU, TYPE_STR, TYPE_BOOL, TYPE_BLOB, TYPE_ASSET, TYPE_ASSETS };
 
-    NativeRdb::ValueObject ValueTypeToValueObject(const ValueType& value);
+struct ValuesBucket {
+    char **key;
+    ValueType *value;
+    int64_t size;
+};
 
-    struct CArrInt32 {
-        int32_t* head;
-        int64_t size;
-    };
+NativeRdb::ValueObject ValueTypeToValueObject(const ValueType &value);
 
-    struct CArrSyncResult {
-        char** str;
-        int32_t* num;
-        int64_t size;
-    };
+struct CArrInt32 {
+    int32_t *head;
+    int64_t size;
+};
 
-    ValueType ValueObjectToValueType(const NativeRdb::ValueObject &object);
+struct CArrSyncResult {
+    char **str;
+    int32_t *num;
+    int64_t size;
+};
 
-    struct RetPRIKeyType {
-        int64_t integer;
-        double dou;
-        char* string;
-        uint8_t tag;
-    };
+ValueType ValueObjectToValueType(const NativeRdb::ValueObject &object);
 
-    std::variant<std::monostate, std::string, int64_t, double> RetPRIKeyTypeToVariant(RetPRIKeyType &value);
+struct RetPRIKeyType {
+    int64_t integer;
+    double dou;
+    char *string;
+    uint8_t tag;
+};
 
-    RetPRIKeyType VariantToRetPRIKeyType(const std::variant<std::monostate, std::string, int64_t, double> &value);
+std::variant<std::monostate, std::string, int64_t, double> RetPRIKeyTypeToVariant(RetPRIKeyType &value);
 
-    struct CArrPRIKeyType {
-        RetPRIKeyType* head;
-        int64_t size;
-    };
+RetPRIKeyType VariantToRetPRIKeyType(const std::variant<std::monostate, std::string, int64_t, double> &value);
 
-    std::vector<NativeRdb::RdbStore::PRIKey> CArrPRIKeyTypeToPRIKeyArray(CArrPRIKeyType &cPrimaryKeys);
+struct CArrPRIKeyType {
+    RetPRIKeyType *head;
+    int64_t size;
+};
 
-    struct ModifyTime {
-        RetPRIKeyType* key;
-        uint64_t* value;
-        int64_t size;
-    };
+std::vector<NativeRdb::RdbStore::PRIKey> CArrPRIKeyTypeToPRIKeyArray(CArrPRIKeyType &cPrimaryKeys);
 
-    ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode);
+struct ModifyTime {
+    RetPRIKeyType *key;
+    uint64_t *value;
+    int64_t size;
+};
 
-    struct RetChangeInfo {
-        char* table;
-        int32_t type;
-        CArrPRIKeyType inserted;
-        CArrPRIKeyType updated;
-        CArrPRIKeyType deleted;
-    };
+ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode);
 
-    struct CArrRetChangeInfo {
-        RetChangeInfo* head;
-        int64_t size;
-    };
+struct RetChangeInfo {
+    char *table;
+    int32_t type;
+    CArrPRIKeyType inserted;
+    CArrPRIKeyType updated;
+    CArrPRIKeyType deleted;
+};
 
-    CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserver::PrimaryKey> arr);
+struct CArrRetChangeInfo {
+    RetChangeInfo *head;
+    int64_t size;
+};
 
-    RetChangeInfo ToRetChangeInfo(const DistributedRdb::Origin &origin,
-        DistributedRdb::RdbStoreObserver::ChangeInfo::iterator info);
+CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserver::PrimaryKey> arr);
 
-    CArrRetChangeInfo ToCArrRetChangeInfo(const DistributedRdb::Origin &origin,
-        const DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
-        DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo);
+RetChangeInfo ToRetChangeInfo(
+    const DistributedRdb::Origin &origin, DistributedRdb::RdbStoreObserver::ChangeInfo::iterator info);
 
-    struct CStatistic {
-        uint32_t total;
-        uint32_t successful;
-        uint32_t failed;
-        uint32_t remained;
-    };
+CArrRetChangeInfo ToCArrRetChangeInfo(const DistributedRdb::Origin &origin,
+    const DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
+    DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo);
 
-    CStatistic ToStatistic(DistributedRdb::Statistic statistic);
+struct CStatistic {
+    uint32_t total;
+    uint32_t successful;
+    uint32_t failed;
+    uint32_t remained;
+};
 
-    struct CTableDetails {
-        CStatistic upload;
-        CStatistic download;
-    };
+CStatistic ToStatistic(DistributedRdb::Statistic statistic);
 
-    CTableDetails ToCTableDetails(DistributedRdb::TableDetail detail);
+struct CTableDetails {
+    CStatistic upload;
+    CStatistic download;
+};
 
-    struct CDetails {
-        char** key;
-        CTableDetails* value;
-        int64_t size;
-    };
+CTableDetails ToCTableDetails(DistributedRdb::TableDetail detail);
 
-    CDetails ToCDetails(DistributedRdb::TableDetails details);
+struct CDetails {
+    char **key;
+    CTableDetails *value;
+    int64_t size;
+};
 
-    struct CProgressDetails {
-        int32_t schedule;
-        int32_t code;
-        CDetails details;
-    };
+CDetails ToCDetails(DistributedRdb::TableDetails details);
 
-    CProgressDetails ToCProgressDetails(const  DistributedRdb::Details &details);
+struct CProgressDetails {
+    int32_t schedule;
+    int32_t code;
+    CDetails details;
+};
 
-    struct RetDistributedConfig {
-        bool autoSync;
-    };
-}
-}
+CProgressDetails ToCProgressDetails(const DistributedRdb::Details &details);
+
+struct RetDistributedConfig {
+    bool autoSync;
+};
+} // namespace Relational
+} // namespace OHOS
 #endif
