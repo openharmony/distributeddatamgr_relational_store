@@ -306,7 +306,12 @@ typedef enum OH_Rdb_ErrCode {
     /**
      * @brief The error when the connection count is used up.
      */
-    RDB_E_CON_OVER_LIMIT = (E_BASE + 48)
+    RDB_E_CON_OVER_LIMIT = (E_BASE + 48),
+
+    /**
+     * @brief The key parameter is invalid.
+     */
+    RDB_E_INVALID_SECRET_KEY = (E_BASE + 49)
 } OH_Rdb_ErrCode;
 
 #ifdef __cplusplus

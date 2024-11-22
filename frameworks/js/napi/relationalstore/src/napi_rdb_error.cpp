@@ -51,6 +51,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_SQLITE_MISMATCH, 14800033, "SQLite: Data type mismatch." },
     { NativeRdb::E_SQLITE_MISUSE, 14800034, "SQLite: Library used incorrectly." },
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "Config changed." },
+    { NativeRdb::E_INVALID_SECRET_KEY, 14800020, "The key parameter is invalid." },
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
 
