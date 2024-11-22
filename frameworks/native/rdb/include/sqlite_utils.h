@@ -57,6 +57,7 @@ public:
     static bool RenameFile(const std::string &srcFile, const std::string &destFile);
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static std::string Anonymous(const std::string &srcFile);
+    static std::string AnonySql(const std::string &sql);
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
     static std::string GetSlavePath(const std::string& name);
