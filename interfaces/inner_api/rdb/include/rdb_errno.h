@@ -406,6 +406,11 @@ static constexpr int E_SQLITE_SCHEMA = (E_BASE + 0x48);
 static constexpr int E_CANCEL = (E_BASE + 0x49);
 
 /**
+ * @brief The key parameter is invalid.
+ */
+static constexpr int E_INVALID_SECRET_KEY = (E_BASE + 0x4a);
+
+/**
  * @brief Do not use except relational_store
  */
 static constexpr int E_INNER_WARNING = (E_BASE + 0x4c);

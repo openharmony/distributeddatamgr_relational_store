@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <fstream>
 #include <string>
 
 #include "common.h"
@@ -247,6 +248,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
     config.SetEncryptKey(wrongKey);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
 }
 
 /**
@@ -388,6 +390,79 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_011, TestSize.Level1)
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_012
+ * @tc.desc: test key damage, open encrypted database ,then E_INVALID_SECRET_KEY
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_012, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    RdbSecurityManager::KeyFiles keyFile(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    RdbHelper::ClearCache();
+
+    std::ofstream fsDb(file, std::ios_base::binary | std::ios_base::out);
+    fsDb.seekp(64);
+    fsDb.write("hello", 5);
+    fsDb.close();
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_INVALID_SECRET_KEY);
+    ASSERT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Encrypt_013
+ * @tc.desc: test key damage, allowing rebuild and open encrypted database ,then E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_013, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    EncryptTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    int64_t rowid;
+    ValuesBucket values;
+    values.Put("id", 1);
+    values.Put("name", "zhangsan");
+    values.Put("age", 18);
+    values.Put("salary", 100.5);
+    values.Put("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    auto ret = store->Insert(rowid, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowid, 1);
+    RdbSecurityManager::KeyFiles keyFile(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    RdbHelper::ClearCache();
+
+    std::ofstream fsDb(file, std::ios_base::binary | std::ios_base::out);
+    fsDb.seekp(64);
+    fsDb.write("hello", 5);
+    fsDb.close();
+
+    config.SetAllowRebuild(true);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    int count = 1;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(count, 0);
 }
 
 /**
