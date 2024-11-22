@@ -140,7 +140,7 @@ std::string AbsRdbPredicates::GetTableName() const
 std::string AbsRdbPredicates::ToString() const
 {
     std::string args;
-    for (const auto& item : GetWhereArgs()) {
+    for (const auto &item : GetWhereArgs()) {
         args += item + ", ";
     }
     return "TableName = " + GetTableName() + ", {WhereClause:" + GetWhereClause() + ", bindArgs:{" + args + "}"
@@ -150,29 +150,29 @@ std::string AbsRdbPredicates::ToString() const
            + ", isSorted:" + std::to_string(IsSorted()) + "}";
 }
 
-AbsRdbPredicates* AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
+AbsRdbPredicates *AbsRdbPredicates::InDevices(std::vector<std::string> &devices)
 {
     predicates_.devices_ = devices;
     return this;
 }
 
-AbsRdbPredicates* AbsRdbPredicates::InAllDevices()
+AbsRdbPredicates *AbsRdbPredicates::InAllDevices()
 {
     predicates_.devices_.clear();
     return this;
 }
 
-const DistributedRdb::PredicatesMemo& AbsRdbPredicates::GetDistributedPredicates() const
+const DistributedRdb::PredicatesMemo &AbsRdbPredicates::GetDistributedPredicates() const
 {
     int limit = GetLimit();
     if (limit >= 0) {
-        predicates_.AddOperation(DistributedRdb::RdbPredicateOperator::LIMIT,
-                                 std::to_string(limit), std::to_string(GetOffset()));
+        predicates_.AddOperation(
+            DistributedRdb::RdbPredicateOperator::LIMIT, std::to_string(limit), std::to_string(GetOffset()));
     }
     return predicates_;
 }
 
-AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const ValueObject &value)
+AbsRdbPredicates *AbsRdbPredicates::EqualTo(const std::string &field, const ValueObject &value)
 {
     if (auto pval = std::get_if<std::string>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, *pval);
@@ -180,7 +180,7 @@ AbsRdbPredicates* AbsRdbPredicates::EqualTo(const std::string &field, const Valu
     return (AbsRdbPredicates *)AbsPredicates::EqualTo(field, value);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
+AbsRdbPredicates *AbsRdbPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
 {
     if (auto pval = std::get_if<std::string>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, *pval);
@@ -188,26 +188,26 @@ AbsRdbPredicates* AbsRdbPredicates::NotEqualTo(const std::string &field, const V
     return (AbsRdbPredicates *)AbsPredicates::NotEqualTo(field, value);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::And()
+AbsRdbPredicates *AbsRdbPredicates::And()
 {
     predicates_.AddOperation(DistributedRdb::AND, "", "");
     return (AbsRdbPredicates *)AbsPredicates::And();
 }
 
-AbsRdbPredicates* AbsRdbPredicates::Or()
+AbsRdbPredicates *AbsRdbPredicates::Or()
 {
     predicates_.AddOperation(DistributedRdb::OR, "", "");
     return (AbsRdbPredicates *)AbsPredicates::Or();
 }
 
-AbsRdbPredicates* AbsRdbPredicates::OrderByAsc(const std::string &field)
+AbsRdbPredicates *AbsRdbPredicates::OrderByAsc(const std::string &field)
 {
     std::string isAsc = "true";
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);
     return (AbsRdbPredicates *)AbsPredicates::OrderByAsc(field);
 }
 
-AbsRdbPredicates* AbsRdbPredicates::OrderByDesc(const std::string &field)
+AbsRdbPredicates *AbsRdbPredicates::OrderByDesc(const std::string &field)
 {
     std::string isAsc = "false";
     predicates_.AddOperation(DistributedRdb::ORDER_BY, field, isAsc);

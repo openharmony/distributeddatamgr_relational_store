@@ -34,7 +34,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, 14801050, "Failed to get DataObsMgrClient." },
     { NativeRdb::E_TYPE_MISMATCH, 14800051, "The type of the distributed table does not match." },
     { NativeRdb::E_SQLITE_FULL, 14800029, "SQLite: The database is full." },
-    { NativeRdb::E_NOT_SUPPORT_THE_SQL, 14800021, "SQLite: Generic error."},
+    { NativeRdb::E_NOT_SUPPORT_THE_SQL, 14800021, "SQLite: Generic error." },
     { NativeRdb::E_ATTACHED_DATABASE_EXIST, 14800016, "The database alias already exists." },
     { NativeRdb::E_SQLITE_ERROR, 14800021, "SQLite: Generic error." },
     { NativeRdb::E_SQLITE_CORRUPT, 14800011, "Database corrupted." },

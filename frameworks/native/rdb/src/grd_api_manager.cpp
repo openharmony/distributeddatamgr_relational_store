@@ -14,6 +14,7 @@
 */
 #define LOG_TAG "GRD_API_MANAGER"
 #include "grd_api_manager.h"
+
 #include "logger.h"
 
 #ifndef _WIN32
@@ -92,4 +93,3 @@ GRD_APIInfo GetApiInfoInstance()
 
 } // namespace NativeRdb
 } // namespace OHOS
-

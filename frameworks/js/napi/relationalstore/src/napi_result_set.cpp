@@ -17,13 +17,13 @@
 
 #include <functional>
 
+#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_sendable_utils.h"
 #include "napi_rdb_trace.h"
-#include "js_df_manager.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_result_set_bridge.h"
 #include "string_ex.h"
@@ -92,8 +92,8 @@ napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
-                uintptr_t(data), uintptr_t(hint));
+            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
+                uintptr_t(hint));
             return;
         }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);

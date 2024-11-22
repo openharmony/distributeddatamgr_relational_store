@@ -22,8 +22,8 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-SharedBlockSerializerInfo::SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat,
-    int numColumns, int startPos)
+SharedBlockSerializerInfo::SharedBlockSerializerInfo(
+    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos)
     : sharedBlock_(sharedBlock), statement_(stat), anumColumns(numColumns), atotalRows(0), astartPos(startPos),
       raddedRows(0)
 {

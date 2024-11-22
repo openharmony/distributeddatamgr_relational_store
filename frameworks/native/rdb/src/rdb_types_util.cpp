@@ -18,10 +18,9 @@ namespace OHOS::ITypesUtil {
 template<>
 bool Marshalling(const SyncerParam &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_,
-        input.level_, input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_,
-        input.isSearchable_, input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_,
-        input.permissionNames_);
+    return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_, input.level_,
+        input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_, input.isSearchable_,
+        input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_, input.permissionNames_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
@@ -162,14 +161,14 @@ bool Unmarshalling(Statistic &output, MessageParcel &data)
 template<>
 bool Marshalling(const PrimaryKeys &input, MessageParcel &data)
 {
-    return Marshal(data, input[Observer::CHG_TYPE_INSERT], input[Observer::CHG_TYPE_UPDATE],
-        input[Observer::CHG_TYPE_DELETE]);
+    return Marshal(
+        data, input[Observer::CHG_TYPE_INSERT], input[Observer::CHG_TYPE_UPDATE], input[Observer::CHG_TYPE_DELETE]);
 }
 template<>
 bool Unmarshalling(PrimaryKeys &output, MessageParcel &data)
 {
-    return Unmarshal(data, output[Observer::CHG_TYPE_INSERT], output[Observer::CHG_TYPE_UPDATE],
-        output[Observer::CHG_TYPE_DELETE]);
+    return Unmarshal(
+        data, output[Observer::CHG_TYPE_INSERT], output[Observer::CHG_TYPE_UPDATE], output[Observer::CHG_TYPE_DELETE]);
 }
 
 template<>
@@ -217,13 +216,13 @@ bool Unmarshalling(Reference &output, MessageParcel &data)
 }
 
 template<>
-bool Marshalling(const BigInt& input, MessageParcel& data)
+bool Marshalling(const BigInt &input, MessageParcel &data)
 {
     return Marshal(data, input.Sign(), input.Value());
 }
 
 template<>
-bool Unmarshalling(BigInt& output, MessageParcel& data)
+bool Unmarshalling(BigInt &output, MessageParcel &data)
 {
     int32_t sign = 0;
     std::vector<uint64_t> value;
@@ -243,4 +242,4 @@ bool Unmarshalling(DebugInfo &output, MessageParcel &data)
 {
     return Unmarshal(data, output.inode_, output.mode_, output.uid_, output.gid_);
 }
-}
+} // namespace OHOS::ITypesUtil

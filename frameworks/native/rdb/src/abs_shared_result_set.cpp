@@ -82,7 +82,7 @@ int AbsSharedResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     if (errorCode != E_OK) {
         return errorCode;
     }
-    SharedBlock::CellUnit* cellUnit = block->GetCellUnit(block->GetBlockPos(), (uint32_t)columnIndex);
+    SharedBlock::CellUnit *cellUnit = block->GetCellUnit(block->GetBlockPos(), (uint32_t)columnIndex);
     if (!cellUnit) {
         LOG_ERROR("AbsSharedResultSet::GetColumnType cellUnit is null!");
         return E_ERROR;
@@ -140,7 +140,7 @@ int AbsSharedResultSet::GetString(int columnIndex, std::string &value)
     return AbsResultSet::GetString(columnIndex, value);
 }
 
-int AbsSharedResultSet::Get(int32_t col, ValueObject& value)
+int AbsSharedResultSet::Get(int32_t col, ValueObject &value)
 {
     auto block = GetBlock();
     int errorCode = CheckState(col);
@@ -251,7 +251,7 @@ void AbsSharedResultSet::Finalize()
     Close();
 }
 
-int AbsSharedResultSet::GetCustomerValue(int index, ValueObject& value, SharedBlock *block)
+int AbsSharedResultSet::GetCustomerValue(int index, ValueObject &value, SharedBlock *block)
 {
     auto *cellUnit = block->GetCellUnit(block->GetBlockPos(), index);
     if (cellUnit == nullptr) {
@@ -310,7 +310,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     if (rowPos_ < 0 || rowPos_ >= count) {
         return E_ROW_OUT_RANGE;
     }
-    
+
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
         return E_COLUMN_OUT_RANGE;

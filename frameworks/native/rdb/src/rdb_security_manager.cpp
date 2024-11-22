@@ -17,10 +17,11 @@
 
 #include <fcntl.h>
 #include <securec.h>
-#include <string>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <string>
 
 #include "directory_ex.h"
 #include "file_ex.h"
@@ -106,7 +107,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         return HKS_ERROR_INVALID_ARGUMENT;
     }
 
-    struct HksBlob input = {MAX_UPDATE_SIZE, inData->data};
+    struct HksBlob input = { MAX_UPDATE_SIZE, inData->data };
     uint8_t *end = inData->data + inData->size - 1;
     outData->size = 0;
     struct HksBlob output = { MAX_OUTDATA_SIZE, outData->data };
@@ -162,7 +163,7 @@ int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias,
 
 RdbSecurityManager::RdbSecurityManager()
     : nonce_(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE)),
-      aad_(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD)){};
+      aad_(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD)) {};
 
 RdbSecurityManager::~RdbSecurityManager() = default;
 

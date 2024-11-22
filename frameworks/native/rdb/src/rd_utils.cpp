@@ -16,14 +16,15 @@
 #define LOG_TAG "RdUtils"
 #include "rd_utils.h"
 
+#include <securec.h>
+
 #include <iomanip>
 #include <iostream>
-#include <securec.h>
 #include <sstream>
 #include <string>
 
-#include "grd_error.h"
 #include "grd_api_manager.h"
+#include "grd_error.h"
 #include "logger.h"
 #include "remote_result_set.h"
 
@@ -40,13 +41,13 @@ struct GrdErrnoPair {
 
 const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_OK, E_OK },
-    { GRD_REBUILD_DATABASE, E_OK},
+    { GRD_REBUILD_DATABASE, E_OK },
     { GRD_NO_DATA, E_NO_MORE_ROWS },
     { GRD_DATA_CORRUPTED, E_SQLITE_CORRUPT },
-    { GRD_INVALID_FILE_FORMAT, E_SQLITE_CORRUPT  },
-    { GRD_PRIMARY_KEY_VIOLATION, E_SQLITE_CONSTRAINT},
-    { GRD_RESTRICT_VIOLATION, E_SQLITE_CONSTRAINT},
-    { GRD_CONSTRAINT_CHECK_VIOLATION, E_SQLITE_CONSTRAINT},
+    { GRD_INVALID_FILE_FORMAT, E_SQLITE_CORRUPT },
+    { GRD_PRIMARY_KEY_VIOLATION, E_SQLITE_CONSTRAINT },
+    { GRD_RESTRICT_VIOLATION, E_SQLITE_CONSTRAINT },
+    { GRD_CONSTRAINT_CHECK_VIOLATION, E_SQLITE_CONSTRAINT },
     { GRD_NOT_SUPPORT, E_NOT_SUPPORT },
     { GRD_OVER_LIMIT, E_SQLITE_CONSTRAINT },
     { GRD_INVALID_ARGS, E_INVALID_ARGS },
@@ -62,12 +63,12 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_PASSWORD_UNMATCHED, E_SQLITE_CANTOPEN },
     { GRD_PASSWORD_NEED_REKEY, E_CHANGE_UNENCRYPTED_TO_ENCRYPTED },
 
-    { GRD_NAME_TOO_LONG, E_SQLITE_CONSTRAINT},
-    { GRD_INVALID_TABLE_DEFINITION, E_SQLITE_SCHEMA},
-    { GRD_SEMANTIC_ERROR, E_NOT_SUPPORT_THE_SQL},
-    { GRD_SYNTAX_ERROR, E_NOT_SUPPORT_THE_SQL},
-    { GRD_DATA_MISMATCH, E_SQLITE_MISMATCH},
-    { GRD_WRONG_STMT_OBJECT, E_INVALID_OBJECT_TYPE},
+    { GRD_NAME_TOO_LONG, E_SQLITE_CONSTRAINT },
+    { GRD_INVALID_TABLE_DEFINITION, E_SQLITE_SCHEMA },
+    { GRD_SEMANTIC_ERROR, E_NOT_SUPPORT_THE_SQL },
+    { GRD_SYNTAX_ERROR, E_NOT_SUPPORT_THE_SQL },
+    { GRD_DATA_MISMATCH, E_SQLITE_MISMATCH },
+    { GRD_WRONG_STMT_OBJECT, E_INVALID_OBJECT_TYPE },
     { GRD_DATA_CONFLICT, E_INVALID_CONFLICT_FLAG },
 
     { GRD_INNER_ERR, E_ERROR },
@@ -292,8 +293,7 @@ void RdSqlFreeFloatArr(void *floatElement)
     delete[] ((float *)floatElement);
 }
 
-int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
-    uint32_t dim, void (*freeFunc)(void *))
+int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val, uint32_t dim, void (*freeFunc)(void *))
 {
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
@@ -535,7 +535,6 @@ int RdUtils::RdDbRekey(const char *dbFile, const char *configStr, const std::vec
     }
     return ret;
 }
-
 
 int RdUtils::RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version)
 {

@@ -28,7 +28,7 @@
 
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
-using RdbServiceProxy =  DistributedRdb::RdbServiceProxy;
+using RdbServiceProxy = DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 
@@ -36,8 +36,7 @@ class DeathStub : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");
 };
-class DeathStubImpl : public IRemoteStub<DeathStub> {
-};
+class DeathStubImpl : public IRemoteStub<DeathStub> {};
 std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager(const std::string &bundleName)
 {
     auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -61,11 +60,11 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
     return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService, observer](const auto *) {});
 }
 
-static void LinkToDeath(const sptr<IRemoteObject>& remote)
+static void LinkToDeath(const sptr<IRemoteObject> &remote)
 {
-    auto& manager = RdbManagerImpl::GetInstance();
-    sptr<RdbManagerImpl::ServiceDeathRecipient> deathRecipient =
-        new(std::nothrow) RdbManagerImpl::ServiceDeathRecipient(&manager);
+    auto &manager = RdbManagerImpl::GetInstance();
+    sptr<RdbManagerImpl::ServiceDeathRecipient> deathRecipient = new (std::nothrow)
+        RdbManagerImpl::ServiceDeathRecipient(&manager);
     if (deathRecipient == nullptr) {
         LOG_ERROR("new ServiceDeathRecipient failed.");
         return;
@@ -84,7 +83,7 @@ RdbManagerImpl::~RdbManagerImpl()
     LOG_INFO("destroy.");
 }
 
-RdbManagerImpl& RdbManagerImpl::GetInstance()
+RdbManagerImpl &RdbManagerImpl::GetInstance()
 {
     static RdbManagerImpl manager;
     return manager;
@@ -187,9 +186,9 @@ sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::str
     }
 
     MessageParcel reply;
-    MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(
-        static_cast<uint32_t>(KvStoreInterfaceCode::GET_FEATURE_INTERFACE), data, reply, mo);
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t error =
+        Remote()->SendRequest(static_cast<uint32_t>(KvStoreInterfaceCode::GET_FEATURE_INTERFACE), data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest returned %{public}d", error);
         return nullptr;
@@ -217,9 +216,9 @@ int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundl
     }
 
     MessageParcel reply;
-    MessageOption mo { MessageOption::TF_SYNC };
-    int32_t error = Remote()->SendRequest(
-        static_cast<uint32_t>(KvStoreInterfaceCode::REGISTER_DEATH_OBSERVER), data, reply, mo);
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t error =
+        Remote()->SendRequest(static_cast<uint32_t>(KvStoreInterfaceCode::REGISTER_DEATH_OBSERVER), data, reply, mo);
     if (error != 0) {
         LOG_ERROR("SendRequest returned %{public}d", error);
         return E_ERROR;
