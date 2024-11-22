@@ -21,6 +21,7 @@
 #include "rdb_errno.h"
 #include "rdb_security_manager.h"
 #include "string_utils.h"
+#include "sqlite_global_config.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -35,6 +36,9 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
 {
     name_ = StringUtils::ExtractFileName(name);
     cryptoParam_.encryptKey_ = encryptKey;
+    walLimitSize_ = GlobalExpr::DB_WAL_DEFAULT_SIZE;
+    checkpointSize_ = GlobalExpr::DB_WAL_WARNING_SIZE;
+    startCheckpointSize_ = GlobalExpr::DB_WAL_SIZE_LIMIT_MIN;
 }
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -590,6 +594,36 @@ PromiseInfo RdbStoreConfig::GetPromiseInfo() const
 void RdbStoreConfig::SetPromiseInfo(PromiseInfo promiseInfo)
 {
     promiseInfo_ = promiseInfo;
+}
+
+ssize_t RdbStoreConfig::GetWalLimitSize() const
+{
+    return walLimitSize_;
+}
+
+void RdbStoreConfig::SetWalLimitSize(ssize_t size)
+{
+    if (size < GlobalExpr::DB_WAL_DEFAULT_SIZE) {
+        size = GlobalExpr::DB_WAL_DEFAULT_SIZE;
+    }
+    if (size > GlobalExpr::DB_WAL_SIZE_LIMIT_MAX) {
+        size = GlobalExpr::DB_WAL_SIZE_LIMIT_MAX;
+    }
+    walLimitSize_ = size;
+    // '(size >> 1) + (size >> 2)' Size of the WAL file that does not checkpoint within 5 minutes when sqlite_busy
+    checkpointSize_ = (size >> 1) + (size >> 2);
+    // '(size >> 5) + (size >> 7)' Size of the WAL file for starting checkpoint.
+    startCheckpointSize_ = (size >> 5) + (size >> 7);
+}
+
+ssize_t RdbStoreConfig::GetCheckpointSize() const
+{
+    return checkpointSize_;
+}
+
+ssize_t RdbStoreConfig::GetStartCheckpointSize() const
+{
+    return startCheckpointSize_;
 }
 
 void RdbStoreConfig::EnableRekey(bool enable)

@@ -16,7 +16,6 @@
 #include "connection_pool.h"
 
 #include <base_transaction.h>
-
 #include <condition_variable>
 #include <iterator>
 #include <mutex>
@@ -181,10 +180,10 @@ std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode>
         if (realPool == nullptr) {
             return;
         }
+        realPool->ReleaseNode(node, !isTrans);
         if (isTrans) {
             realPool->transCount_--;
         }
-        realPool->ReleaseNode(node, !isTrans);
         node = nullptr;
     });
 }
@@ -301,10 +300,18 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse)
         return;
     }
 
+    auto now = steady_clock::now();
+    auto timeout = now > (failedTime_.load() + minutes(CHECK_POINT_INTERVAL)) || now < failedTime_.load();
     auto transCount = transCount_ + isInTransaction_;
-    auto errCode = node->Unused(transCount);
+    auto remainCount = reuse ? transCount : transCount - 1;
+    auto errCode = node->Unused(remainCount, timeout);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         writers_.Dump("WAL writers_", transCount);
+        readers_.Dump("WAL readers_", transCount);
+    }
+
+    if (node->IsWriter() && (errCode != E_INNER_WARNING && errCode != E_NOT_SUPPORT)) {
+        failedTime_ = errCode != E_OK ? now : steady_clock::time_point();
     }
 
     auto &container = node->IsWriter() ? writers_ : readers_;
@@ -389,12 +396,12 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
         return retVal;
     }
-    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
+    return RestoreMasterDb(newPath, backupPath, slaveStatus);
 }
 
-int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
 {
-    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
+    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() == HAMode::MAIN_REPLICA) {
         auto connection = AcquireConnection(false);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
@@ -402,28 +409,8 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
         return connection->Restore(backupPath, {}, slaveStatus);
     }
 
-    return RestoreMasterDb(newPath, backupPath);
-}
-
-int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
-{
-    if (!CheckIntegrity(backupPath)) {
-        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-        return E_SQLITE_CORRUPT;
-    }
-    SqliteUtils::DeleteFile(backupPath + "-shm");
-    SqliteUtils::DeleteFile(backupPath + "-wal");
-
     CloseAllConnections();
-    Connection::Delete(config_);
-
-    if (config_.GetPath() != newPath) {
-        RdbStoreConfig config(newPath);
-        config.SetPath(newPath);
-        Connection::Delete(config);
-    }
-
-    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+    int ret = Connection::Restore(config_, backupPath, newPath);
     int32_t errCode = E_OK;
     std::shared_ptr<Connection> pool;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
@@ -443,7 +430,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         LOG_WARN("restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
             SqliteUtils::Anonymous(backupPath).c_str());
     }
-    return copyRet ? errCode : E_ERROR;
+    return ret == E_OK ? errCode : ret;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
@@ -491,28 +478,22 @@ int64_t ConnPool::ConnNode::GetUsingTime() const
     return duration_cast<milliseconds>(time).count();
 }
 
-int32_t ConnPool::ConnNode::Unused(int32_t count)
+int32_t ConnPool::ConnNode::Unused(int32_t count, bool timeout)
 {
-    time_ = steady_clock::now();
     if (connect_ == nullptr) {
         return E_OK;
     }
 
     connect_->ClearCache();
+    int32_t errCode = E_INNER_WARNING;
+    if (count <= 0) {
+        errCode = connect_->TryCheckPoint(timeout);
+    }
+
+    time_ = steady_clock::now();
     if (!connect_->IsWriter()) {
         tid_ = 0;
     }
-
-    if (count > 0) {
-        return E_OK;
-    }
-    auto timeout = time_ > (failedTime_ + minutes(CHECK_POINT_INTERVAL)) || time_ < failedTime_;
-    int32_t errCode = connect_->TryCheckPoint(timeout);
-    if (errCode == E_INNER_WARNING || errCode == E_NOT_SUPPORT) {
-        return E_OK;
-    }
-
-    failedTime_ = errCode != E_OK ? time_ : steady_clock::time_point();
     return errCode;
 }
 

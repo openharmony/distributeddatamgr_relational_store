@@ -44,6 +44,7 @@ public:
     static int32_t Delete(const RdbStoreConfig &config);
     static int32_t Delete(const std::string &path);
     static int32_t Repair(const RdbStoreConfig &config);
+    static int32_t Restore(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
@@ -127,6 +128,7 @@ private:
     bool IsDbVersionBelowSlave();
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
         bool isWrite);
+    static int CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
         {"", "DB"},
         {"-shm", "SHM"},
@@ -138,6 +140,7 @@ private:
     };
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
+    static constexpr int CHECKPOINT_TIME = 1000;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
@@ -146,10 +149,12 @@ private:
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
+    static constexpr uint32_t ITER_V1 = 5000;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
+    static const int32_t regRestorer_;
 
     std::atomic<uint64_t> backupId_;
     sqlite3 *dbHandle_;

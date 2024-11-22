@@ -66,19 +66,17 @@ public:
 
 private:
     struct ConnNode {
-        static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
         bool using_ = false;
         int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
-        std::chrono::steady_clock::time_point failedTime_;
         std::shared_ptr<Connection> connect_;
 
         explicit ConnNode(std::shared_ptr<Connection> conn);
         std::shared_ptr<Connection> GetConnect();
         int64_t GetUsingTime() const;
         bool IsWriter() const;
-        int32_t Unused(int32_t count);
+        int32_t Unused(int32_t count, bool timeout);
     };
 
     struct Container {
@@ -123,10 +121,10 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans = false);
     void ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse = true);
-    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
-    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
+    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
     bool CheckIntegrity(const std::string &dbPath);
 
+    static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS_COUNT = 2;
@@ -144,6 +142,7 @@ private:
     bool transactionUsed_;
     std::atomic<bool> isInTransaction_ = false;
     std::atomic<uint32_t> transCount_ = 0;
+    std::atomic<std::chrono::steady_clock::time_point> failedTime_;
 };
 
 } // namespace NativeRdb
