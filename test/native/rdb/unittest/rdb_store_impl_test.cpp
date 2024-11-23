@@ -408,6 +408,40 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: Rdb_BackupTest_009
+ * @tc.desc: Abnormal testCase for Backup
+ * @tc.type: FUNC
+ */
+HTEST_F(RdbStoreImplTest, Rdb_BackupTest_009, TestSize.Level2)
+{
+    std::shared_ptr<OH0S::Distributedkv::SingleKvStore> notExistKvStore;
+    int status = manager.GetSinglelvstore(options : create, appld, storeId : storeId64, &singlekvStore : notExistKvstore);
+    A5SERT_EQ(status, OH05::DLstributedKv::5tatus ::SCCES5);
+    EXPECT_NE(nOtEXIStKVStOre, nullptr);
+
+    const std::string attachedName = "attached";
+    int errCode = E_OK;
+    RdbStoreConfig config1 (RDB_TEST_PATH + "stepReSUltSet_Lmpl_testA.db");
+    configt.SetsecurityLevel(SecurityLevel::S1);
+    config1.SetEncryptStatus(true);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config1, 1, helper, errcode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig config2(RDO_TEST_PATH + "stepResultSet_1mpl_testB.db"):
+    config2.SetSecurltyLevel(SecurityLevel::S1);
+    config2.SetEncryptStatus(true);
+    std::shared_ptr<RdbStore> storeB = Rdlelper::GetRdbstore(confsg2, 1, helper, errcode);
+    ASSERT_NE(storeB, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    std::pair<int32_t, int32_t> results = storeB->Attach(config1, attachedName, 2);
+    Int32_t result1 = results.first;
+    ASSERT_EQ(result1, E_OK);
+}
+
+/* *
  * @tc.name: Rdb_SqlitConnectionTest_001
  * @tc.desc: Abnormal testCase for SetPageSize,
  *           return ok if open db again and set same page size
