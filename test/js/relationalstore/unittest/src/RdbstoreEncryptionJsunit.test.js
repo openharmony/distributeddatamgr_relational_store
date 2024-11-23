@@ -734,14 +734,63 @@ describe('rdbEncryptTest', function () {
         console.log(TAG + "************* RdbDecryptTest_0090 end *************")
     })
 
-     /**
-    * @tc.number testEncryptRdbAndKv0002
-    * @tc.name Normal test case of using encrypt kv, then using rdb attach interface
-    * @tc.desc 1.Get encrypt kv db
-    *          2.Get encrypt rdb1
-    *          3.rdb1.backup(rdb2)
-    *          4.rdb1.restore(rdb2)
-    */
+    /**
+     * @tc.number testEncryptRdbAndKv0001
+     * @tc.name Normal test case of using encrypt kv, then using rdb attach interface
+     * @tc.desc 1.Get encrypt kv db
+     *          2.Get encrypt rdb1
+     *          3.Get encrypt rdb2
+     *          4.rdb2.attach rdb1
+     */
+    it('testEncryptRdbAndKv0001', 0, async () => {
+        console.log(TAG + "************* testEncryptRdbAndKv0001 start *************");
+        let kvConfig = {
+            bundleName: TEST_BUNDLE_NAME,
+            context: context
+        }
+        let options = {
+            createIfMissing: true,
+            encrypt: true,
+            backup: false,
+            autoSync: false,
+            kvStoreType: factory.KVStoreType.SINGLE_VERSION,
+            securityLevel: factory.SecurityLevel.S2,
+        }
+        let rdbConfig = {
+            name: "RdbTest.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+        }
+        let kvManager = factory.createKVManager(kvConfig);
+        try {
+            let kvDb = await kvManager.getKVStore('kvDb', options)
+            rdbConfig.name = "RdbTest1.db"
+            let rdbStore1 = await data_relationalStore.getRdbStore(context, rdbConfig);
+            rdbConfig.name = "RdbTest2.db"
+            let rdbStore2 = await data_relationalStore.getRdbStore(context, rdbConfig);
+            rdbStore2.close();
+            await rdbStore1.attach(context, rdbConfig, "alias");
+            expect(true).assertTrue();
+        } catch (e) {
+            console.log(TAG + e);
+            expect(null).assertFail();
+            console.log(TAG + "testEncryptRdbAndKv0001 failed");
+        }
+        await kvManager.closeKVStore(TEST_BUNDLE_NAME, 'kvDb');
+        await data_relationalStore.deleteRdbStore(context, "RdbTest1.db");
+        await data_relationalStore.deleteRdbStore(context, "RdbTest2.db");
+        // done();
+        console.log(TAG + "************* testEncryptRdbAndKv0001 end *************");
+    })
+
+    /**
+     * @tc.number testEncryptRdbAndKv0002
+     * @tc.name Normal test case of using encrypt kv, then using rdb attach interface
+     * @tc.desc 1.Get encrypt kv db
+     *          2.Get encrypt rdb1
+     *          3.rdb1.backup(rdb2)
+     *          4.rdb1.restore(rdb2)
+     */
     it('testEncryptRdbAndKv0002', 0, async () => {
         console.log(TAG + "************* testEncryptRdbAndKv0002 start *************");
         let kvConfig = {
