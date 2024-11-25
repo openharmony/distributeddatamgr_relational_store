@@ -14,19 +14,20 @@
  */
 
 #include "rdb_radar_reporter.h"
-#include "rdb_errno.h"
-#include "ipc_skeleton.h"
+
 #include "accesstoken_kit.h"
 #include "hisysevent_c.h"
+#include "ipc_skeleton.h"
+#include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
 
 using namespace Security::AccessToken;
 
-static constexpr const char* ORG_PKG_VALUE = "distributeddata";
-static constexpr const char* EVENT_NAME = "DISTRIBUTED_RDB_BEHAVIOR";
-static constexpr const char* UNKNOW = "unknow";
-static constexpr const char* DISTRIBUTED_DATAMGR = "DISTDATAMGR";
+static constexpr const char *ORG_PKG_VALUE = "distributeddata";
+static constexpr const char *EVENT_NAME = "DISTRIBUTED_RDB_BEHAVIOR";
+static constexpr const char *UNKNOW = "unknow";
+static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 
 std::string RdbRadar::hostPkg_{ "" };
 std::mutex RdbRadar::mutex_;
@@ -45,7 +46,7 @@ RdbRadar::~RdbRadar()
     LocalReport(scene_, funcName_, STATE_FINISH, errCode_);
 }
 
-RdbRadar& RdbRadar::operator=(int errCode)
+RdbRadar &RdbRadar::operator=(int errCode)
 {
     errCode_ = errCode;
     return *this;
@@ -56,7 +57,7 @@ RdbRadar::operator int() const
     return errCode_;
 }
 
-void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int errCode)
+void RdbRadar::LocalReport(int bizSence, const char *funcName, int state, int errCode)
 {
     int stageRes = static_cast<int>(StageRes::RES_SUCCESS);
     if (errCode != E_OK) {
@@ -79,8 +80,8 @@ void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int er
         {.name = "HOST_PKG", .t = HISYSEVENT_STRING, .v = { .s = hostPkgPtr }, .arraySize = 0, },
     };
 
-    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, EVENT_NAME,
-        HISYSEVENT_BEHAVIOR, params, sizeof(params) / sizeof(params[0]));
+    OH_HiSysEvent_Write(
+        DISTRIBUTED_DATAMGR, EVENT_NAME, HISYSEVENT_BEHAVIOR, params, sizeof(params) / sizeof(params[0]));
     return;
 }
 
@@ -102,4 +103,4 @@ std::string RdbRadar::GetHostPkgInfo()
     }
     return hostPkg_;
 }
-}
+} // namespace OHOS::NativeRdb

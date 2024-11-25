@@ -20,12 +20,12 @@
 #include <memory>
 #include <mutex>
 
-#include "refbase.h"
+#include "concurrent_map.h"
+#include "irdb_service.h"
 #include "iremote_object.h"
 #include "iremote_proxy.h"
-#include "concurrent_map.h"
 #include "rdb_types.h"
-#include "irdb_service.h"
+#include "refbase.h"
 
 namespace OHOS::DistributedRdb {
 class RdbService;
@@ -51,8 +51,9 @@ public:
                 owner_->OnRemoteDied();
             }
         }
+
     private:
-        RdbManagerImpl* owner_;
+        RdbManagerImpl *owner_;
     };
 
 private:

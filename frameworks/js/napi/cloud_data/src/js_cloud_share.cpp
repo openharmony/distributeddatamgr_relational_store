@@ -94,7 +94,7 @@ napi_value AllocResourceAndShare(napi_env env, napi_callback_info info)
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->resultSet);
         ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
@@ -122,11 +122,11 @@ napi_value Share(napi_env env, napi_callback_info info)
         // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(), Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "share exit");
 
@@ -142,12 +142,12 @@ napi_value Share(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->Share(ctxt->sharingRes, ctxt->participants, ctxt->results);
         LOG_DEBUG("share result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -173,11 +173,11 @@ napi_value Unshare(napi_env env, napi_callback_info info)
         // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(), Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "unShare exit");
     auto execute = [env, ctxt]() {
@@ -192,12 +192,12 @@ napi_value Unshare(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->Unshare(ctxt->sharingRes, ctxt->participants, ctxt->results);
         LOG_DEBUG("unshare result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -220,8 +220,8 @@ napi_value Exit(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "exit exit");
     auto execute = [env, ctxt]() {
@@ -236,12 +236,12 @@ napi_value Exit(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->Exit(ctxt->sharingRes, ctxt->result);
         LOG_DEBUG("exit sharing result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->result);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -269,11 +269,11 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
         // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
         status = JSUtils::Convert2Value(env, argv[1], ctxt->participants);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(),
-            Status::INVALID_ARGUMENT, "The type of participants must be Array<Participant> and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->participants.empty(), Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "changePrivilege exit");
     auto execute = [env, ctxt]() {
@@ -288,12 +288,12 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->ChangePrivilege(ctxt->sharingRes, ctxt->participants, ctxt->results);
         LOG_DEBUG("change privilege result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -316,8 +316,8 @@ napi_value Query(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "query exit");
     auto execute = [env, ctxt]() {
@@ -332,12 +332,12 @@ napi_value Query(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->Query(ctxt->sharingRes, ctxt->results);
         LOG_DEBUG("query participants result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -361,8 +361,8 @@ napi_value QueryByInvitation(napi_env env, napi_callback_info info)
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->invitationCode);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
-            Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(), Status::INVALID_ARGUMENT,
+            "The type of invitationCode must be string and not empty.");
     });
     ASSERT_NULL(!ctxt->isThrowError, "queryByInvitation exit");
     auto execute = [env, ctxt]() {
@@ -377,12 +377,12 @@ napi_value QueryByInvitation(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->QueryByInvitation(ctxt->invitationCode, ctxt->results);
         LOG_DEBUG("query participants by invitation result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -407,12 +407,12 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
         // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->invitationCode);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(),
-        Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->invitationCode.empty(), Status::INVALID_ARGUMENT,
+            "The type of invitationCode must be string and not empty.");
         int32_t confirmation;
         status = JSUtils::Convert2ValueExt(env, argv[1], confirmation);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK &&
-                confirmation > Confirmation::CFM_NIL && confirmation <= Confirmation::CFM_BUTT,
+        ASSERT_BUSINESS_ERR(ctxt,
+            status == JSUtils::OK && confirmation > Confirmation::CFM_NIL && confirmation <= Confirmation::CFM_BUTT,
             Status::INVALID_ARGUMENT, "The type of status must be Status.");
         ctxt->confirmation = confirmation;
     });
@@ -429,12 +429,12 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->ConfirmInvitation(ctxt->invitationCode, ctxt->confirmation, ctxt->result);
         LOG_DEBUG("confirm invitation result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->result);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -459,12 +459,12 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
         // ShareContext have sharingRes, participants 2 required parameter
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->sharingRes);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(),
-            Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->sharingRes.empty(), Status::INVALID_ARGUMENT,
+            "The type of sharingRes must be string and not empty.");
         int32_t confirmation;
         status = JSUtils::Convert2ValueExt(env, argv[1], confirmation);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK &&
-                confirmation > Confirmation::CFM_NIL && confirmation < Confirmation::CFM_BUTT,
+        ASSERT_BUSINESS_ERR(ctxt,
+            status == JSUtils::OK && confirmation > Confirmation::CFM_NIL && confirmation < Confirmation::CFM_BUTT,
             Status::INVALID_ARGUMENT, "The type of status must be Status.");
         ctxt->confirmation = confirmation;
     });
@@ -481,12 +481,12 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
         }
         int32_t result = proxy->ChangeConfirmation(ctxt->sharingRes, ctxt->confirmation, ctxt->results);
         LOG_DEBUG("change confirmation result %{public}d", result);
-        ctxt->status = (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ?
-            napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->results);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }

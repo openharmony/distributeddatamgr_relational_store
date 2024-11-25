@@ -106,6 +106,6 @@ std::pair<int, std::vector<std::string>> ResultSetUtils::GetColumnNames()
 {
     std::vector<std::string> names;
     auto errCode = resultSet_->GetAllColumnNames(names);
-    return {errCode, std::move(names)};
+    return { errCode, std::move(names) };
 }
-}
+} // namespace OHOS::RdbDataAbilityAdapter

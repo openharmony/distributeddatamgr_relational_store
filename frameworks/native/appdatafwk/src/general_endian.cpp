@@ -13,8 +13,9 @@
 * limitations under the License.
 */
 
-#include "multi_platform_endian.h"
 #include <endian.h>
+
+#include "multi_platform_endian.h"
 
 namespace OHOS {
 uint16_t Endian::LeToH(uint16_t value)
@@ -46,4 +47,4 @@ uint64_t Endian::HToLe(uint64_t value)
 {
     return htole64(value);
 }
-}
+} // namespace OHOS

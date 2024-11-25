@@ -15,10 +15,10 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H
-#include "itypes_util.h"
 #include "cloud_types.h"
-#include "values_bucket.h"
 #include "common_types.h"
+#include "itypes_util.h"
+#include "values_bucket.h"
 
 namespace OHOS::ITypesUtil {
 using Participant = OHOS::CloudData::Participant;

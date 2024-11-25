@@ -59,8 +59,8 @@ std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t 
     (void)nsec;
     return "";
 }
-RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,
-    const std::string &appendix)
+RdbCorruptedEvent RdbFaultHiViewReporter::Create(
+    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix)
 {
     RdbCorruptedEvent eventInfo;
     return eventInfo;
@@ -90,8 +90,8 @@ std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo
     return "";
 }
 
-std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
-    const std::string &header)
+std::string RdbFaultHiViewReporter::FormatBrief(
+    const std::map<std::string, DebugInfo> &debugs, const std::string &header)
 {
     (void)debugs;
     (void)header;

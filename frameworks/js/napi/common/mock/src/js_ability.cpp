@@ -14,10 +14,10 @@
  */
 #define LOG_TAG "JSAbility"
 #include "js_ability.h"
-#include "js_utils.h"
 
 #include <cstdlib>
 
+#include "js_utils.h"
 #include "logger.h"
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 #include "napi_base_context.h"
@@ -106,7 +106,6 @@ std::shared_ptr<Context> JSAbility::GetContext(napi_env env, napi_value value)
     return GetStageModeContext(env, value);
 }
 
-
 std::shared_ptr<Context> JSAbility::GetStageModeContext(napi_env env, napi_value value)
 {
 #if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
@@ -122,13 +121,11 @@ std::shared_ptr<Context> JSAbility::GetStageModeContext(napi_env env, napi_value
 #endif
 }
 
-
 std::shared_ptr<Context> JSAbility::GetCurrentAbility(napi_env env, napi_value value)
 {
     LOG_ERROR("Get context as feature ability mode.");
     return std::make_shared<Context>();
 }
-
 
 bool Context::IsHasProxyDataConfig() const
 {

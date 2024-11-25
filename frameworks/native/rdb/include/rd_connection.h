@@ -16,13 +16,13 @@
 #ifndef NATIVE_RDB_RD_CONNECTION_H
 #define NATIVE_RDB_RD_CONNECTION_H
 
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <vector>
 
+#include "connection.h"
 #include "rd_utils.h"
 #include "rdb_common.h"
-#include "connection.h"
 #include "rdb_store_config.h"
 #include "value_object.h"
 
@@ -32,34 +32,34 @@ namespace NativeRdb {
 
 class RdConnection : public Connection {
 public:
-    static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig& config, bool isWrite);
-    static int32_t Repair(const RdbStoreConfig& config);
-    static int32_t Delete(const RdbStoreConfig& config);
+    static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
+    static int32_t Repair(const RdbStoreConfig &config);
+    static int32_t Delete(const RdbStoreConfig &config);
     RdConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~RdConnection();
     int32_t OnInitialize() override;
-    std::pair<int32_t, Stmt> CreateStatement(const std::string& sql, SConn conn) override;
+    std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
-    int32_t ReSetKey(const RdbStoreConfig& config) override;
+    int32_t ReSetKey(const RdbStoreConfig &config) override;
     int32_t TryCheckPoint(bool timeout) override;
     int32_t LimitWalSize() override;
-    int32_t ConfigLocale(const std::string& localeStr) override;
-    int32_t CleanDirtyData(const std::string& table, uint64_t cursor) override;
-    int32_t SubscribeTableChanges(const Notifier& notifier) override;
+    int32_t ConfigLocale(const std::string &localeStr) override;
+    int32_t CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int32_t SubscribeTableChanges(const Notifier &notifier) override;
     int32_t GetMaxVariable() const override;
     int32_t GetJournalMode() override;
     int32_t ClearCache() override;
-    int32_t Subscribe(const std::string& event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
-    int32_t Unsubscribe(const std::string& event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver>& observer) override;
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync, SlaveStatus &slaveStatus) override;
+    int32_t Subscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Unsubscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
+        SlaveStatus &slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         SlaveStatus &slaveStatus) override;
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
-    
+
 private:
     static constexpr int MAX_VARIABLE_NUM = 500;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
@@ -67,7 +67,7 @@ private:
         "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500";
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;
-    static constexpr uint32_t ITERS[] = {NO_ITER, ITER_V1};
+    static constexpr uint32_t ITERS[] = { NO_ITER, ITER_V1 };
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
     static const int32_t regCreator_;
     static const int32_t regRepairer_;

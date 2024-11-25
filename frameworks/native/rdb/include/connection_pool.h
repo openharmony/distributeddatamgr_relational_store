@@ -40,8 +40,8 @@ public:
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
     static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config, int &errCode);
     ~ConnectionPool();
-    static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption
-        (const RdbStoreConfig &storeConfig, int &errCode);
+    static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption(
+        const RdbStoreConfig &storeConfig, int &errCode);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn(bool limited = true);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
@@ -96,8 +96,8 @@ private:
         std::mutex mutex_;
         std::condition_variable cond_;
         Creator creator_ = nullptr;
-        std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(Creator creator, int32_t max, int32_t timeout,
-            bool disable, bool acquire = false);
+        std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
+            Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire = false);
         int32_t ConfigLocale(const std::string &locale);
         std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
         std::list<std::shared_ptr<ConnNode>> AcquireAll(std::chrono::milliseconds milliS);

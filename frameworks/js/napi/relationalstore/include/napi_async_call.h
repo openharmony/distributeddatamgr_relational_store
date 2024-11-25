@@ -15,9 +15,9 @@
 #ifndef RDB_JS_NAPI_ASYNC_CALL_H
 #define RDB_JS_NAPI_ASYNC_CALL_H
 
-#include <cinttypes>
-#include <chrono>
 #include <atomic>
+#include <chrono>
+#include <cinttypes>
 #include <functional>
 #include <memory>
 
@@ -42,7 +42,7 @@ extern bool g_sync;
 class ContextBase {
 public:
     struct RecordData {
-        std::atomic_uint64_t times_{0};
+        std::atomic_uint64_t times_{ 0 };
         int64_t lastTime_ = 0;
         RecordData() = default;
         RecordData(const RecordData &record)
@@ -50,7 +50,7 @@ public:
             times_.store(record.times_);
             lastTime_ = record.lastTime_;
         }
-        RecordData& operator= (const RecordData &record)
+        RecordData &operator=(const RecordData &record)
         {
             times_.store(record.times_);
             lastTime_ = record.lastTime_;

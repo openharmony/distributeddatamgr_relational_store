@@ -18,7 +18,9 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #include <vector>
+
 #include "grd_type_export.h"
 #include "rdb_errno.h"
 #include "remote_result_set.h"

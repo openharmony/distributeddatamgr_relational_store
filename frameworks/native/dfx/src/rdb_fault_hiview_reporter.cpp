@@ -16,23 +16,24 @@
 
 #include "rdb_fault_hiview_reporter.h"
 
-#include <iomanip>
-#include <sstream>
-
-#include <chrono>
 #include <fcntl.h>
 #include <unistd.h>
-#include <unordered_map>
+
+#include <chrono>
 #include <ctime>
+#include <iomanip>
 #include <mutex>
+#include <sstream>
+#include <unordered_map>
+
+#include "accesstoken_kit.h"
 #include "connection.h"
 #include "hisysevent_c.h"
+#include "ipc_skeleton.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-#include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -52,8 +53,7 @@ void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
         RdbCorruptedEvent eventInfoAppend = eventInfo;
         eventInfoAppend.appendix += Format(eventInfoAppend.debugInfos, "");
         LOG_WARN("corrupted %{public}s errCode:0x%{public}x [%{public}s]",
-            SqliteUtils::Anonymous(eventInfoAppend.storeName).c_str(),
-            eventInfoAppend.errorCode,
+            SqliteUtils::Anonymous(eventInfoAppend.storeName).c_str(), eventInfoAppend.errorCode,
             eventInfoAppend.appendix.c_str());
         Report(eventInfoAppend);
         CreateCorruptedFlag(eventInfo.path);
@@ -167,8 +167,8 @@ std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t 
     return oss.str();
 }
 
-RdbCorruptedEvent RdbFaultHiViewReporter::Create(const RdbStoreConfig &config, int32_t errCode,
-    const std::string &appendix)
+RdbCorruptedEvent RdbFaultHiViewReporter::Create(
+    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix)
 {
     RdbCorruptedEvent eventInfo;
     eventInfo.bundleName = config.GetBundleName();
@@ -250,8 +250,8 @@ std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo
     return appendix;
 }
 
-std::string RdbFaultHiViewReporter::FormatBrief(const std::map<std::string, DebugInfo> &debugs,
-    const std::string &header)
+std::string RdbFaultHiViewReporter::FormatBrief(
+    const std::map<std::string, DebugInfo> &debugs, const std::string &header)
 {
     if (debugs.empty()) {
         return "";

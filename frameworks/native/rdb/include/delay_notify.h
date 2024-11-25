@@ -17,12 +17,13 @@
 #define NATIVE_RDB_DELAY_NOTIFY_H
 #include <atomic>
 #include <chrono>
-#include <map>
-#include <string>
 #include <functional>
+#include <map>
 #include <memory>
-#include "rdb_types.h"
+#include <string>
+
 #include "executor_pool.h"
+#include "rdb_types.h"
 namespace OHOS::NativeRdb {
 class DelayNotify {
 public:
@@ -36,6 +37,7 @@ public:
     void SetAutoSyncInterval(uint32_t autoSyncInterval);
     void Pause();
     void Resume();
+
 private:
     static constexpr uint32_t AUTO_SYNC_INTERVAL = 200;
     static constexpr uint32_t MAX_NOTIFY_INTERVAL = 5000;
@@ -61,9 +63,10 @@ class PauseDelayNotify {
 public:
     explicit PauseDelayNotify(std::shared_ptr<DelayNotify> delayNotifier);
     ~PauseDelayNotify();
+
 private:
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
     std::shared_ptr<DelayNotify> delayNotifier_;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif // NATIVE_RDB_DELAY_NOTIFY_H

@@ -42,6 +42,6 @@ public:
     ~InitDeviceManagerCallback() {};
     void OnRemoteDied() override {};
 };
-}  // namespace DeviceManagerAdaptor
-}  // namespace OHOS
+} // namespace DeviceManagerAdaptor
+} // namespace OHOS
 #endif // RDB_DEVICE_MANAGER_ADAPTER_H

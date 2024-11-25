@@ -28,8 +28,8 @@ public:
         const std::string &function, const std::string &separator, const std::vector<std::string> &array);
 
     static std::vector<std::string> Split(const std::string &str, const std::string &delim);
-    static std::string ExtractFilePath(const std::string& fileFullName);
-    static std::string ExtractFileName(const std::string& fileFullName);
+    static std::string ExtractFilePath(const std::string &fileFullName);
+    static std::string ExtractFileName(const std::string &fileFullName);
     static bool IsEmpty(std::string source)
     {
         return (source.empty());

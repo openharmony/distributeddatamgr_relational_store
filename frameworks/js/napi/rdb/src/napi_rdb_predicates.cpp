@@ -15,11 +15,11 @@
 #define LOG_TAG "RdbPredicatesProxy"
 #include "napi_rdb_predicates.h"
 
+#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
-#include "js_df_manager.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -237,12 +237,12 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldArrayByName(napi_env env, napi
     if (ret != napi_ok && fieldName == "devices") {
         std::string field;
         ret = JSUtils::Convert2Value(env, args[0], field);
-        RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-            std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."), version);
+        RDB_NAPI_ASSERT_FROMV9(
+            env, ret == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."), version);
         fieldarray.push_back(field);
     }
-    RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-        std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, ret == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a " + fieldType + " array."), version);
     return predicatesProxy;
 }
 
@@ -261,8 +261,8 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldByName(
     RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
-        std::make_shared<ParamTypeError>(fieldName, "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, !field.empty(), std::make_shared<ParamTypeError>(fieldName, "a non empty string."), version);
     return predicatesProxy;
 }
 
@@ -281,8 +281,7 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseInt32FieldByName(
     RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), version);
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
-    RDB_NAPI_ASSERT_FROMV9(env,  status == napi_ok,
-        std::make_shared<ParamTypeError>(fieldName, "a number."), version);
+    RDB_NAPI_ASSERT_FROMV9(env, status == napi_ok, std::make_shared<ParamTypeError>(fieldName, "a number."), version);
     return predicatesProxy;
 }
 
@@ -302,12 +301,12 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValueArray(napi_env env, na
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
-        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     int32_t ret = JSUtils::Convert2Value(env, args[1], values);
-    RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-        std::make_shared<ParamTypeError>("value", "a " + valueType + " array."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, ret == napi_ok, std::make_shared<ParamTypeError>("value", "a " + valueType + " array."), version);
     return predicatesProxy;
 }
 
@@ -330,13 +329,13 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndValue(napi_env env, napi_ca
 
     // args[0] represents the first parameter
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env,  !field.empty(),
-        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     // args[1] represents the second parameter
     int ret = JSUtils::Convert2Value(env, args[1], value.value);
-    RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-        std::make_shared<ParamTypeError>("value", "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, ret == napi_ok, std::make_shared<ParamTypeError>("value", "a non empty string."), version);
     return predicatesProxy;
 }
 
@@ -357,8 +356,8 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldAndStringValue(napi_env env, n
     RDB_NAPI_ASSERT_FROMV9(env, argc == 2, std::make_shared<ParamNumError>("2"), version);
 
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env, !field.empty(),
-        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     value = JSUtils::Convert2String(env, args[1]);
     return predicatesProxy;
@@ -382,18 +381,18 @@ RdbPredicatesProxy *RdbPredicatesProxy::ParseFieldLowAndHigh(
 
     // args[0] represents the first parameter
     field = JSUtils::Convert2String(env, args[0]);
-    RDB_NAPI_ASSERT_FROMV9(env, !field.empty(),
-        std::make_shared<ParamTypeError>("field", "a non empty string."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, !field.empty(), std::make_shared<ParamTypeError>("field", "a non empty string."), version);
 
     // args[1] represents the second parameter
     int32_t ret = JSUtils::Convert2Value(env, args[1], low);
-    RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-        std::make_shared<ParamTypeError>("low", "a non empty ValueType."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, ret == napi_ok, std::make_shared<ParamTypeError>("low", "a non empty ValueType."), version);
 
     // args[2] represents the third parameter
     ret = JSUtils::Convert2Value(env, args[2], high);
-    RDB_NAPI_ASSERT_FROMV9(env, ret == napi_ok,
-        std::make_shared<ParamTypeError>("high", "a non empty ValueType."), version);
+    RDB_NAPI_ASSERT_FROMV9(
+        env, ret == napi_ok, std::make_shared<ParamTypeError>("high", "a non empty ValueType."), version);
 
     return predicatesProxy;
 }

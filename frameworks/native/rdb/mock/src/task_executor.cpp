@@ -16,7 +16,7 @@
 #include "task_executor.h"
 
 namespace OHOS::NativeRdb {
-TaskExecutor::TaskExecutor():pool_(nullptr)
+TaskExecutor::TaskExecutor() : pool_(nullptr)
 {
 }
 

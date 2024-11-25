@@ -110,8 +110,8 @@ napi_value NapiQueue::AsyncWork(napi_env env, std::shared_ptr<ContextBase> ctxt,
             ASSERT_VOID(data != nullptr, "napi_async_complete_callback nullptr");
             auto actx = static_cast<AsyncContext *>(data);
             ASSERT_VOID(actx->ctx != nullptr, "napi_async_complete_callback nullptr");
-            LOG_DEBUG("napi_async_complete_callback status=%{public}d, ctxt->status=%{public}d",
-                status, actx->ctx->status);
+            LOG_DEBUG(
+                "napi_async_complete_callback status=%{public}d, ctxt->status=%{public}d", status, actx->ctx->status);
             if ((status != napi_ok) && (actx->ctx->status == napi_ok)) {
                 actx->ctx->status = status;
             }

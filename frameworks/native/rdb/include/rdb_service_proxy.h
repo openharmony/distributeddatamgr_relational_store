@@ -16,12 +16,14 @@
 #ifndef DISTRIBUTED_RDB_RDB_SERVICE_PROXY_H
 #define DISTRIBUTED_RDB_RDB_SERVICE_PROXY_H
 
+#include <iremote_proxy.h>
+
 #include <atomic>
 #include <list>
-#include <iremote_proxy.h>
+
+#include "concurrent_map.h"
 #include "irdb_service.h"
 #include "rdb_notifier_stub.h"
-#include "concurrent_map.h"
 
 namespace OHOS::DistributedRdb {
 class RdbServiceProxy : public IRemoteProxy<IRdbService> {
@@ -32,9 +34,9 @@ public:
         SubscribeOption subscribeOption{ SubscribeMode::REMOTE };
     };
     using Observers = ConcurrentMap<std::string, std::list<ObserverParam>>;
-    explicit RdbServiceProxy(const sptr<IRemoteObject>& object);
+    explicit RdbServiceProxy(const sptr<IRemoteObject> &object);
 
-    std::string ObtainDistributedTableName(const std::string& device, const std::string& table) override;
+    std::string ObtainDistributedTableName(const std::string &device, const std::string &table) override;
 
     int32_t InitNotifier(const RdbSyncerParam &param);
 
@@ -43,14 +45,13 @@ public:
     int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) override;
 
-    int32_t Sync(const RdbSyncerParam& param, const Option& option,
-                 const PredicatesMemo& predicates, const AsyncDetail &async) override;
+    int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
+        const AsyncDetail &async) override;
 
-    int32_t Subscribe(const RdbSyncerParam& param, const SubscribeOption& option,
-                      RdbStoreObserver *observer) override;
+    int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) override;
 
-    int32_t UnSubscribe(const RdbSyncerParam& param, const SubscribeOption& option,
-                        RdbStoreObserver *observer) override;
+    int32_t UnSubscribe(
+        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) override;
 
     int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
@@ -71,20 +72,20 @@ public:
 
     int32_t Delete(const RdbSyncerParam &param) override;
 
-    int32_t NotifyDataChange(const RdbSyncerParam& param, const RdbChangedData &clientChangedData,
+    int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &clientChangedData,
         const RdbNotifyConfig &rdbNotifyConfig) override;
 
-    int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) override;
+    int32_t SetSearchable(const RdbSyncerParam &param, bool isSearchable) override;
 
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const RdbSyncerParam &param,
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
-    int32_t Disable(const RdbSyncerParam& param) override;
-    int32_t Enable(const RdbSyncerParam& param) override;
-    int32_t GetPassword(const RdbSyncerParam& param, std::vector<uint8_t> &key) override;
+    int32_t Disable(const RdbSyncerParam &param) override;
+    int32_t Enable(const RdbSyncerParam &param) override;
+    int32_t GetPassword(const RdbSyncerParam &param, std::vector<uint8_t> &key) override;
 
-    std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam& param) override;
+    std::pair<int32_t, uint32_t> LockCloudContainer(const RdbSyncerParam &param) override;
 
-    int32_t UnlockCloudContainer(const RdbSyncerParam& param) override;
+    int32_t UnlockCloudContainer(const RdbSyncerParam &param) override;
 
     int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
 
@@ -95,20 +96,20 @@ private:
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
     using SyncCallbacks = ConcurrentMap<uint32_t, AsyncDetail>;
     using SyncObservers = ConcurrentMap<std::string, std::list<std::shared_ptr<DetailProgressObserver>>>;
-    std::pair<int32_t, Details> DoSync(const RdbSyncerParam &param, const Option &option,
-        const PredicatesMemo &predicates);
+    std::pair<int32_t, Details> DoSync(
+        const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates);
 
     int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates);
 
-    int32_t DoSync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
-        const AsyncDetail &async);
+    int32_t DoSync(
+        const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async);
 
-    int32_t DoAsync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
-        const AsyncDetail &async);
+    int32_t DoAsync(
+        const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async);
 
-    int32_t DoSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
+    int32_t DoSubscribe(const RdbSyncerParam &param, const SubscribeOption &option);
 
-    int32_t DoUnSubscribe(const RdbSyncerParam& param, const SubscribeOption &option);
+    int32_t DoUnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option);
 
     int32_t DoRegister(const RdbSyncerParam &param);
 
@@ -122,9 +123,9 @@ private:
 
     void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
 
-    static std::string RemoveSuffix(const std::string& name);
+    static std::string RemoveSuffix(const std::string &name);
 
-    std::atomic<uint32_t> seqNum_ {};
+    std::atomic<uint32_t> seqNum_{};
     Observers observers_;
     SyncCallbacks syncCallbacks_;
     SyncObservers syncObservers_;

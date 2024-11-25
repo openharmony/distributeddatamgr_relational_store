@@ -16,9 +16,11 @@
 #ifndef DISTRIBUTEDDATAMGR_NATIVERDB_RDB_PLATFORM_H
 #define DISTRIBUTEDDATAMGR_NATIVERDB_RDB_PLATFORM_H
 
+#include <sys/stat.h>
+
 #include <cstdint>
 #include <string>
-#include <sys/stat.h>
+
 #include "unistd.h"
 #ifdef WINDOWS_PLATFORM
 #include <dir.h>

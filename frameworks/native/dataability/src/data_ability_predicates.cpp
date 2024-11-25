@@ -106,7 +106,7 @@ bool DataAbilityPredicates::Marshalling(OHOS::Parcel &parcel) const
 /**
  * Read from Parcel object.
  */
-DataAbilityPredicates* DataAbilityPredicates::Unmarshalling(OHOS::Parcel &parcel)
+DataAbilityPredicates *DataAbilityPredicates::Unmarshalling(OHOS::Parcel &parcel)
 {
     result = true;
     return new DataAbilityPredicates(&parcel);

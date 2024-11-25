@@ -18,6 +18,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+
 #include "cloud_types.h"
 #include "common_types.h"
 #include "js_cloud_utils.h"
@@ -80,9 +81,7 @@ napi_value SetCloudStrategy(napi_env env, napi_callback_info info)
 
 napi_value InitClient(napi_env env, napi_value exports)
 {
-    napi_property_descriptor properties[] = {
-        DECLARE_NAPI_FUNCTION("setCloudStrategy", SetCloudStrategy)
-    };
+    napi_property_descriptor properties[] = { DECLARE_NAPI_FUNCTION("setCloudStrategy", SetCloudStrategy) };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;
 }
