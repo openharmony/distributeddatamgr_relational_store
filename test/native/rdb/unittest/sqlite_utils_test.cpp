@@ -305,5 +305,5 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0047, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0048, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE table1 DROP COLUMN column1;"), "ALTER TABLE ***le1 DROP COLUMN ****mn1;");
+    EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE test DROP COLUMN name;"), "ALTER TABLE *est DROP COLUMN *ame;");
 }
