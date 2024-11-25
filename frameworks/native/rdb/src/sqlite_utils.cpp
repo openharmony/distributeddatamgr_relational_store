@@ -55,7 +55,7 @@ constexpr const char *SELECT_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT"
 constexpr const char *INSERT_ARRAY[] = { "INSERT", "INTO", "VALUES" };
 constexpr const char *CREATE_ARRAY[] = { "CREATE", "TABLE", "DATABASE", "VIEW", "INDEX", "TRIGGER", "PROCEDURE", "IF",
     "NOT", "EXISTS", "INT", "PRIMARY", "KEY", "TEXT", "BLOB", "REAL", "ASSET", "ASSETS", "NULL", "INTEGER",
-    "UNLIMITED" };
+    "UNLIMITED", "AS", "UNION"};
 constexpr const char *UPDATE_ARRAY[] = { "UPDATE", "SET", "WHERE", "AND", "OR" };
 constexpr const char *DELETE_ARRAY[] = { "DELETE", "FROM", "WHERE" };
 constexpr const char *DROP_ARRAY[] = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
