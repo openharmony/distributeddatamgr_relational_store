@@ -779,7 +779,6 @@ describe('rdbEncryptTest', function () {
         await kvManager.closeKVStore(TEST_BUNDLE_NAME, 'kvDb');
         await data_relationalStore.deleteRdbStore(context, "RdbTest1.db");
         await data_relationalStore.deleteRdbStore(context, "RdbTest2.db");
-        // done();
         console.log(TAG + "************* testEncryptRdbAndKv0001 end *************");
     })
 
