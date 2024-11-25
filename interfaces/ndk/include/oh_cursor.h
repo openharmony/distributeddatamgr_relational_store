@@ -37,9 +37,11 @@
  * @since 10
  */
 
-#include <cstdint>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+
+#include <cstdint>
+
 #include "data_asset.h"
 #ifdef __cplusplus
 extern "C" {

@@ -20,7 +20,6 @@
 
 #include "oh_cursor.h"
 #include "result_set.h"
-#include <memory>
 
 namespace OHOS {
 namespace RdbNdk {

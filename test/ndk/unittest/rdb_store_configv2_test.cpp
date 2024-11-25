@@ -93,7 +93,6 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_001, TestSize.Level1)
     OH_Rdb_DestroyConfig(config);
 }
 
-
 void VdbTest002(const OH_Rdb_ConfigV2 *config)
 {
     int errCode = OH_Rdb_ErrCode::RDB_OK;
@@ -132,7 +131,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_002, TestSize.Level1)
     auto config = InitRdbConfig();
     int errCode = OH_Rdb_SetDbType(config, RDB_CAYLEY);
     EXPECT_TRUE(((!OHOS::NativeRdb::IsUsingArkData()) && errCode == OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED) ||
-    (OHOS::NativeRdb::IsUsingArkData() && errCode == OH_Rdb_ErrCode::RDB_OK));
+                (OHOS::NativeRdb::IsUsingArkData() && errCode == OH_Rdb_ErrCode::RDB_OK));
     if (OHOS::NativeRdb::IsUsingArkData()) {
         VdbTest002(config);
     }
@@ -172,9 +171,9 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_004, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetSecurityLevel(config, S2));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetSecurityLevel(config, S3));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetSecurityLevel(config, S4));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(config, 0)); // 0 is invalid secure level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(config, 0));  // 0 is invalid secure level
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(config, -1)); // -1 is invalid secure level
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(config, 5)); // 5 is invalid secure level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(config, 5));  // 5 is invalid secure level
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL2));
@@ -183,12 +182,12 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_004, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL5));
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(config, -1)); // -1 is invalid area level
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(config, 0)); // 0 is invalid area level
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(config, 8)); // 8 is invalid area level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(config, 0));  // 0 is invalid area level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(config, 8));  // 8 is invalid area level
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetDbType(config, RDB_SQLITE));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 0)); // 0 is invalid db type level
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 6)); // 6 is invalid db type level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 0));  // 0 is invalid db type level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 6));  // 6 is invalid db type level
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, -1)); // -1 is invalid db type level
 
     const int *supportList = OH_Rdb_GetSupportedDbType(nullptr);

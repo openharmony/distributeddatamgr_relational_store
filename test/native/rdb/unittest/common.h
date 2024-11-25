@@ -17,6 +17,7 @@
 #define NATIVE_RDB_TEST_COMMON_H
 
 #include <string>
+
 #include "values_bucket.h"
 
 namespace OHOS {

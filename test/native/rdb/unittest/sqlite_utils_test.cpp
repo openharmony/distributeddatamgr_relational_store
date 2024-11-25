@@ -27,8 +27,8 @@ class SqliteUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void){};
-    void TearDown(void){};
+    void SetUp(void) {};
+    void TearDown(void) {};
 };
 
 void SqliteUtilsTest::SetUpTestCase(void)
@@ -71,22 +71,21 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_006, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_007, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::Anonymous(
-                  "file /data/stage/el2/database/rdb/ddddddd/30005245854585524412855412_rdb_test.db"),
+    EXPECT_EQ(
+        SqliteUtils::Anonymous("file /data/stage/el2/database/rdb/ddddddd/30005245854585524412855412_rdb_test.db"),
         "file /***/el2/***/***5412_rdb_test.db");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_008, TestSize.Level1)
 {
-    EXPECT_EQ(
-        SqliteUtils::Anonymous("file /data/stage/database/rdb/ddddddd/30005245854585524412855412_rdb_test.db"),
+    EXPECT_EQ(SqliteUtils::Anonymous("file /data/stage/database/rdb/ddddddd/30005245854585524412855412_rdb_test.db"),
         "file /***/***5412_rdb_test.db");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_009, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::Anonymous(
-                  "file /data/stage/el2/database/rdb/ddddddd/3E00mnj5H54efg5G4K1ABC5412_rdb_test.db"),
+    EXPECT_EQ(
+        SqliteUtils::Anonymous("file /data/stage/el2/database/rdb/ddddddd/3E00mnj5H54efg5G4K1ABC5412_rdb_test.db"),
         "file /***/el2/***/3E00mnj5H54efg5G4K***5412_rdb_test.db");
 }
 

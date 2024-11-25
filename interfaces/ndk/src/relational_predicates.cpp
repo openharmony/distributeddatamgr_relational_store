@@ -40,8 +40,7 @@ OH_Predicates *RelationalPredicate::EqualTo(OH_Predicates *predicates, const cha
     return self;
 }
 
-OH_Predicates *RelationalPredicate::NotEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::NotEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -149,8 +148,7 @@ OH_Predicates *RelationalPredicate::Between(OH_Predicates *predicates, const cha
     return self;
 }
 
-OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -167,8 +165,7 @@ OH_Predicates *RelationalPredicate::NotBetween(OH_Predicates *predicates, const 
     return self;
 }
 
-OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -182,8 +179,7 @@ OH_Predicates *RelationalPredicate::GreaterThan(OH_Predicates *predicates, const
     return self;
 }
 
-OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -197,8 +193,8 @@ OH_Predicates *RelationalPredicate::LessThan(OH_Predicates *predicates, const ch
     return self;
 }
 
-OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(
+    OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -211,8 +207,8 @@ OH_Predicates *RelationalPredicate::GreaterThanOrEqualTo(OH_Predicates *predicat
     }
     return self;
 }
-OH_Predicates *RelationalPredicate::LessThanOrEqualTo(OH_Predicates *predicates, const char *field,
-    OH_VObject *valueObject)
+OH_Predicates *RelationalPredicate::LessThanOrEqualTo(
+    OH_Predicates *predicates, const char *field, OH_VObject *valueObject)
 {
     auto self = GetSelf(predicates);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(valueObject);
@@ -371,7 +367,7 @@ OHOS::NativeRdb::RdbPredicates &RelationalPredicate::Get()
     return predicates_;
 }
 
-RelationalPredicate* RelationalPredicate::GetSelf(OH_Predicates *predicates)
+RelationalPredicate *RelationalPredicate::GetSelf(OH_Predicates *predicates)
 {
     if (predicates == nullptr || predicates->id != OHOS::RdbNdk::RDB_PREDICATES_CID) {
         LOG_ERROR("cursor invalid. is null %{public}d", (predicates == nullptr));

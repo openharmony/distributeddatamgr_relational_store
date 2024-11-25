@@ -14,9 +14,11 @@
  */
 
 #include "convertor_error_code.h"
+
 #include <algorithm>
-#include "relational_store_error_code.h"
+
 #include "rdb_errno.h"
+#include "relational_store_error_code.h"
 
 namespace OHOS::RdbNdk {
 
@@ -81,8 +83,7 @@ static constexpr NdkErrorCode ERROR_CODE_MAP[] = {
 int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
 {
     auto errorCode = NdkErrorCode{ nativeErrCode, -1 };
-    auto iter = std::lower_bound(ERROR_CODE_MAP,
-        ERROR_CODE_MAP + sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]),
+    auto iter = std::lower_bound(ERROR_CODE_MAP, ERROR_CODE_MAP + sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]),
         errorCode, [](const NdkErrorCode &errorCode1, const NdkErrorCode &errorCode2) {
             return errorCode1.nativeCode < errorCode2.nativeCode;
         });
@@ -92,4 +93,4 @@ int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
     }
     return RDB_E_ERROR;
 }
-}
+} // namespace OHOS::RdbNdk

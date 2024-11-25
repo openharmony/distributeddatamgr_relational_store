@@ -32,15 +32,15 @@ class RelationalStoreManager {
 public:
     static std::string GetDistributedLogTableName(const std::string &tableName);
 };
-}
+} // namespace DistributedDB
 
 DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db);
 
-DistributedDB::DBStatus RegisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
+DistributedDB::DBStatus RegisterStoreObserver(
+    sqlite3 *db, const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
 
-DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
+DistributedDB::DBStatus UnregisterStoreObserver(
+    sqlite3 *db, const std::shared_ptr<DistributedDB::StoreObserver> &storeObserver);
 
 DistributedDB::DBStatus UnregisterStoreObserver(sqlite3 *db);
 
@@ -49,7 +49,6 @@ DistributedDB::DBStatus Lock(
 
 DistributedDB::DBStatus UnLock(
     const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db);
-DistributedDB::DBStatus DropLogicDeletedData(sqlite3* db,
-    const std::string& tableName, uint64_t cursor);
+DistributedDB::DBStatus DropLogicDeletedData(sqlite3 *db, const std::string &tableName, uint64_t cursor);
 
 #endif //RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H

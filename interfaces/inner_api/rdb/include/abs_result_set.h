@@ -16,11 +16,11 @@
 #ifndef NATIVE_RDB_ABS_RESULT_SET_H
 #define NATIVE_RDB_ABS_RESULT_SET_H
 
+#include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <map>
-#include <mutex>
 
 #include "result_set.h"
 #include "value_object.h"
@@ -330,7 +330,7 @@ protected:
         };
 
     private:
-        Mtx* mutex_ = nullptr;
+        Mtx *mutex_ = nullptr;
     };
     using Mutex = Lock<std::mutex>;
 

@@ -725,8 +725,8 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
  * @see OH_Cursor.
  * @since 11
  */
-OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName,
-    OH_VObject *values);
+OH_Cursor *OH_Rdb_FindModifyTime(
+    OH_Rdb_Store *store, const char *tableName, const char *columnName, OH_VObject *values);
 
 /**
  * @brief Describes the change type.

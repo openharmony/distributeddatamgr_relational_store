@@ -41,14 +41,14 @@ public:
      */
     API_EXPORT ValuesBucket(std::map<std::string, ValueObject> values);
     API_EXPORT ValuesBucket(const ValuesBucket &values);
-    API_EXPORT ValuesBucket &operator =(const ValuesBucket &values);
+    API_EXPORT ValuesBucket &operator=(const ValuesBucket &values);
     API_EXPORT ValuesBucket(ValuesBucket &&values) noexcept;
-    API_EXPORT ValuesBucket &operator =(ValuesBucket &&values) noexcept;
+    API_EXPORT ValuesBucket &operator=(ValuesBucket &&values) noexcept;
 
     /**
      * @brief Destructor.
      */
-    API_EXPORT  ~ValuesBucket();
+    API_EXPORT ~ValuesBucket();
 
     /**
      * @brief Put the string value to this {@code ValuesBucket} object for the given column name.

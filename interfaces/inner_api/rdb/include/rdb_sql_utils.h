@@ -29,8 +29,8 @@ public:
     /**
      * @brief get custom data base path.
      */
-    static std::pair<std::string, int> GetDefaultDatabasePath(const std::string &baseDir,
-        const std::string &name, const std::string &customDir = "");
+    static std::pair<std::string, int> GetDefaultDatabasePath(
+        const std::string &baseDir, const std::string &name, const std::string &customDir = "");
 
     /**
      * @brief get default data base path.

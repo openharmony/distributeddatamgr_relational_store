@@ -42,7 +42,7 @@ constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
 
-static int g_supportDbTypes[] = {RDB_SQLITE, RDB_CAYLEY};
+static int g_supportDbTypes[] = { RDB_SQLITE, RDB_CAYLEY };
 
 struct OH_Rdb_ConfigV2 {
     int magicNum = RDB_CONFIG_V2_MAGIC_CODE;
@@ -64,8 +64,8 @@ OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
 int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when destroy.",
-            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when destroy.", (config == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     delete config;
@@ -77,8 +77,8 @@ int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *dataBaseDir)
 {
     if (config == nullptr || dataBaseDir == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("config is null %{public}d or dataBaseDir %{public}d magic num not valid %{public}x "
-            "when Set DataBaseDir.", (config == nullptr), (dataBaseDir == nullptr),
-            (config == nullptr ? 0 : config->magicNum));
+                  "when Set DataBaseDir.",
+            (config == nullptr), (dataBaseDir == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->dataBaseDir = std::string(dataBaseDir);
@@ -89,8 +89,8 @@ int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName)
 {
     if (config == nullptr || storeName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("config is null %{public}d or storeName %{public}d or magic num not ok"
-            "%{public}x When set storeName.", (config == nullptr), (storeName == nullptr),
-            (config == nullptr ? 0 : config->magicNum));
+                  "%{public}x When set storeName.",
+            (config == nullptr), (storeName == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->storeName = std::string(storeName);
@@ -314,13 +314,13 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
 {
     if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE ||
         (OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
-        OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
+            OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
         (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
         (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY)) {
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
-            "dbType %{public}d ret %{public}d", config->magicNum, config->securityLevel, config->area, config->dbType,
-            *errCode);
+                  "dbType %{public}d ret %{public}d",
+            config->magicNum, config->securityLevel, config->area, config->dbType, *errCode);
         return OHOS::NativeRdb::RdbStoreConfig("");
     }
     std::string realPath =
@@ -345,7 +345,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
                   "errCode is NULL ? %{public}d ",
-                  (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
+            (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
         return nullptr;
     }
 
@@ -382,8 +382,8 @@ OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) || errCode == nullptr) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or"
-                  " errCode is NULL ? %{public}d ", (config == nullptr), (config == nullptr ? 0 : config->magicNum),
-                  (errCode == nullptr));
+                  " errCode is NULL ? %{public}d ",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum), (errCode == nullptr));
         return nullptr;
     }
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig = GetRdbStoreConfig(config, errCode);
@@ -719,17 +719,16 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
 
     std::lock_guard<decltype(mutex_)> lock(mutex_);
     auto result = std::any_of(dataObservers_[type].begin(), dataObservers_[type].end(),
-                              [observer](const std::shared_ptr<NDKStoreObserver> &item) {
-                                  return *item.get() == observer;
-                              });
+        [observer](const std::shared_ptr<NDKStoreObserver> &item) { return *item.get() == observer; });
     if (result) {
         LOG_INFO("duplicate subscribe.");
         return OH_Rdb_ErrCode::RDB_OK;
     }
     auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
     auto ndkObserver = std::make_shared<NDKStoreObserver>(observer, type);
-    int subscribeResult = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ?
-        store_->SubscribeObserver(subscribeOption, ndkObserver) : store_->Subscribe(subscribeOption, ndkObserver.get());
+    int subscribeResult = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS)
+                              ? store_->SubscribeObserver(subscribeOption, ndkObserver)
+                              : store_->Subscribe(subscribeOption, ndkObserver.get());
     if (subscribeResult != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed.");
     } else {
@@ -750,8 +749,8 @@ int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserve
             continue;
         }
         auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
-        int errCode = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ?
-            store_->UnsubscribeObserver(subscribeOption, *it) : store_->UnSubscribe(subscribeOption, it->get());
+        int errCode = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ? store_->UnsubscribeObserver(subscribeOption, *it)
+                                                                 : store_->UnSubscribe(subscribeOption, it->get());
         if (errCode != NativeRdb::E_OK) {
             LOG_ERROR("unsubscribe failed.");
             return ConvertorErrorCode::NativeToNdk(errCode);

@@ -37,9 +37,9 @@ public:
      */
     ValuesBucket(std::map<std::string, ValueObject> values);
     ValuesBucket(const ValuesBucket &values);
-    ValuesBucket &operator =(const ValuesBucket &values);
+    ValuesBucket &operator=(const ValuesBucket &values);
     ValuesBucket(ValuesBucket &&values) noexcept;
-    ValuesBucket &operator =(ValuesBucket &&values) noexcept;
+    ValuesBucket &operator=(ValuesBucket &&values) noexcept;
 
     /**
      * @brief Destructor.

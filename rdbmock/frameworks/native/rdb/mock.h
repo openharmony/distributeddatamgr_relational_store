@@ -16,26 +16,29 @@
 #ifndef DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
 #define DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
 
-# include <iostream>
+#include <iostream>
 
 namespace OHOS {
-template <typename T>
+template<typename T>
 class sptr {
 private:
-    T* ptr;
+    T *ptr;
+
 public:
-    sptr(T* p) : ptr(p) {}
+    sptr(T *p) : ptr(p)
+    {
+    }
     ~sptr()
     {
         delete ptr;
     }
 
-    T& operator*()
+    T &operator*()
     {
         return *ptr;
     }
 
-    T* operator->()
+    T *operator->()
     {
         return ptr;
     }
@@ -54,6 +57,6 @@ public:
 namespace NativeRdb {
 __attribute__((visibility("default"))) int gettid();
 }
-}
+} // namespace OHOS
 
 #endif //DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H

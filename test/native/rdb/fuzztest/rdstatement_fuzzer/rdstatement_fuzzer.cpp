@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "rdb_store_config.h"
-#include "rdb_errno.h"
-#include "rdb_store_impl.h"
 #include "rd_statement.h"
+#include "rdb_errno.h"
+#include "rdb_store_config.h"
+#include "rdb_store_impl.h"
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace OHOS {
@@ -26,13 +26,12 @@ void RdStatementPrepareFuzz(const uint8_t *data, size_t size)
     std::string sqlString(reinterpret_cast<const char *>(data), size);
     stmt->Prepare(sqlString);
 }
-}
+} // namespace OHOS
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::RdStatementPrepareFuzz(data, size);
     return 0;
 }
-

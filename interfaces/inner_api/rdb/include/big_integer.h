@@ -15,8 +15,9 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_INTERFACES_INNER_API_RDB_INCLUDE_BIG_INTEGER_H
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_INTERFACES_INNER_API_RDB_INCLUDE_BIG_INTEGER_H
-#include <cinttypes>
 #include <unistd.h>
+
+#include <cinttypes>
 #include <vector>
 
 #include "rdb_visibility.h"
@@ -40,9 +41,10 @@ public:
     const uint64_t *TrueForm() const;
 
     std::vector<uint64_t> Value() const;
+
 private:
     int32_t sign_ = 0;
     std::vector<uint64_t> value_;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_INTERFACES_INNER_API_RDB_INCLUDE_BIG_INTEGER_H

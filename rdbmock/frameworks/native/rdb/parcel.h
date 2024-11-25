@@ -16,7 +16,6 @@
 #ifndef RELATIONAL_STORE_PARCEL_H
 #define RELATIONAL_STORE_PARCEL_H
 
-class MessageParcel {
-};
+class MessageParcel {};
 
 #endif //RELATIONAL_STORE_PARCEL_H

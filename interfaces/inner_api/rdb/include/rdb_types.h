@@ -19,10 +19,10 @@
 #include <cinttypes>
 #include <functional>
 #include <map>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
-#include <set>
 
 namespace OHOS::DistributedRdb {
 enum RdbStatus {
@@ -154,7 +154,7 @@ struct ProgressDetail {
 
 using Briefs = std::map<std::string, int>;
 using Details = std::map<std::string, ProgressDetail>;
-using AsyncBrief = std::function<void(const Briefs&)>;
+using AsyncBrief = std::function<void(const Briefs &)>;
 using AsyncDetail = std::function<void(Details &&)>;
 
 using SyncResult = Briefs;
@@ -198,13 +198,12 @@ struct RdbPredicateOperation {
 };
 
 struct PredicatesMemo {
-    inline void AddOperation(const RdbPredicateOperator op, const std::string& field,
-                             const std::string& value)
+    inline void AddOperation(const RdbPredicateOperator op, const std::string &field, const std::string &value)
     {
         operations_.push_back({ op, field, { value } });
     }
-    inline void AddOperation(const RdbPredicateOperator op, const std::string& field,
-                             const std::vector<std::string>& values)
+    inline void AddOperation(
+        const RdbPredicateOperator op, const std::string &field, const std::vector<std::string> &values)
     {
         operations_.push_back({ op, field, values });
     }
@@ -228,7 +227,7 @@ class DetailProgressObserver {
 public:
     virtual ~DetailProgressObserver() {};
 
-    virtual void ProgressNotification(const Details& details) = 0;
+    virtual void ProgressNotification(const Details &details) = 0;
 };
 
 enum SubscribeMode {
@@ -288,8 +287,7 @@ public:
     virtual void OnChange() {};
 };
 
-struct DropOption {
-};
+struct DropOption {};
 
 struct Field {
     static constexpr const char *CURSOR_FIELD = "#_cursor";

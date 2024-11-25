@@ -20,9 +20,12 @@ namespace OHOS {
 namespace AppDataFwk {
 class Ashmem {
 public:
-    int GetAshmemFd() { return 0; };
+    int GetAshmemFd()
+    {
+        return 0;
+    };
 };
-}
-}
+} // namespace AppDataFwk
+} // namespace OHOS
 
 #endif //RELATIONAL_STORE_MESSAGE_PARCEL_H
