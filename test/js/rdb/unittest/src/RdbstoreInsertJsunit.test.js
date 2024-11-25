@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
@@ -159,7 +159,7 @@ describe('rdbStoreInsertTest', function () {
                 "blobType": u8,
             }
             try {
-                let insertPromise = rdbStore.insert(null, valueBucket)            
+                let insertPromise = rdbStore.insert(null, valueBucket)
                 insertPromise.then(async (ret) => {
                     expect(1).assertEqual(ret)
                     console.log(TAG + "insert first done: " + ret)
@@ -168,7 +168,7 @@ describe('rdbStoreInsertTest', function () {
                     console.log(TAG + "insert with null table")
                     expect(null).assertFail()
                 })
-            } catch(err) {
+            } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
                 expect("401").assertEqual(err.code)
                 done()
@@ -341,13 +341,13 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStorebatchInsert001 end *************");
     })
 
-     /**
-         * @tc.name: rdb batchInsert test
-         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
-         * @tc.desc: rdb batchInsert test
-         * @tc.require: issueI5GZGX
-         */
-      it('testRdbStorebatchInsert002', 0, async function () {
+    /**
+     * @tc.name: rdb batchInsert test
+     * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0001
+     * @tc.desc: rdb batchInsert test
+     * @tc.require: issueI5GZGX
+     */
+    it('testRdbStorebatchInsert002', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert002 start *************");
 
         await rdbStore.executeSql("delete from test");
@@ -407,13 +407,13 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStorebatchInsert002 end *************");
     })
 
-     /**
-         * @tc.name: rdb batchInsert test
-         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0003
-         * @tc.desc: rdb batchInsert not exist column test
-         * @tc.require: issueIB3DGQ
-         */
-     it('testRdbStorebatchInsert003', 0, async function () {
+    /**
+     * @tc.name: rdb batchInsert test
+     * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0003
+     * @tc.desc: rdb batchInsert not exist column test
+     * @tc.require: issueIB3DGQ
+     */
+    it('testRdbStorebatchInsert003', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert003 start *************");
 
         await rdbStore.executeSql("delete from test");
@@ -439,13 +439,13 @@ describe('rdbStoreInsertTest', function () {
         console.log(TAG + "************* testRdbStorebatchInsert003 end *************");
     })
 
-     /**
-         * @tc.name: rdb batchInsert test
-         * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0004
-         * @tc.desc: Test with empty valueBucket in rdb batchInsert
-         * @tc.require: issueIB3DGQ
-         */
-     it('testRdbStorebatchInsert004', 0, async function () {
+    /**
+     * @tc.name: rdb batchInsert test
+     * @tc.number: SUB_DDM_AppDataFWK_JSRDB_batchInsert_0004
+     * @tc.desc: Test with empty valueBucket in rdb batchInsert
+     * @tc.require: issueIB3DGQ
+     */
+    it('testRdbStorebatchInsert004', 0, async function () {
         console.log(TAG + "************* testRdbStorebatchInsert004 start *************");
 
         await rdbStore.executeSql("delete from test");

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -75,10 +75,10 @@ describe('rdbStorePredicatesJoinBTest', function () {
         await rdbStore.executeSql(DEPT_TABLE);
 
         const depts = [
-            {id:10, dName:"JiaoYanBU", loc:"BeiJing"},
-            {id:20, dName:"XueGongBu", loc:"ShangHai"},
-            {id:30, dName:"XiaoShouBu", loc:"GuangZhou"},
-            {id:40, dName:"CaiWuBu", loc:"ShenZhen"},
+            { id: 10, dName: "JiaoYanBU", loc: "BeiJing" },
+            { id: 20, dName: "XueGongBu", loc: "ShangHai" },
+            { id: 30, dName: "XiaoShouBu", loc: "GuangZhou" },
+            { id: 40, dName: "CaiWuBu", loc: "ShenZhen" },
         ];
 
         await rdbStore.batchInsert("dept", depts);
@@ -90,10 +90,10 @@ describe('rdbStorePredicatesJoinBTest', function () {
         await rdbStore.executeSql(JOB_TABLE);
 
         var jobs = [
-            {id:1, jName:"Chairman", description:"ManageTheEntireCompany"},
-            {id:2, jName:"Manager", description:"ManageEmployeesOfTheDepartment"},
-            {id:3, jName:"Salesperson", description:"SellingProductsToCustomers"},
-            {id:4, jName:"Clerk", description:"UseOfficeSoftware"},
+            { id: 1, jName: "Chairman", description: "ManageTheEntireCompany" },
+            { id: 2, jName: "Manager", description: "ManageEmployeesOfTheDepartment" },
+            { id: 3, jName: "Salesperson", description: "SellingProductsToCustomers" },
+            { id: 4, jName: "Clerk", description: "UseOfficeSoftware" },
         ]
 
         await rdbStore.batchInsert("job", jobs);
@@ -105,20 +105,20 @@ describe('rdbStorePredicatesJoinBTest', function () {
         await rdbStore.executeSql(EMP_TABLE);
 
         var emps = [
-            {id:1001, eName:"SunWuKong", jobId:4, mgr:1004, joinDate:"2000-12-17", salary:8000.00, bonus:null, deptId:20},
-            {id:1002, eName:"LuJunYi", jobId:3, mgr:1006, joinDate:"2001-02-20", salary:16000.00, bonus:3000.00, deptId:30},
-            {id:1003, eName:"LinChong", jobId:3, mgr:1006, joinDate:"2001-02-22", salary:12500.00, bonus:5000.00, deptId:30},
-            {id:1004, eName:"TangCeng", jobId:2, mgr:1009, joinDate:"2001-04-02", salary:29750.00, bonus:null, deptId:20},
-            {id:1005, eName:"LiKui", jobId:4, mgr:1006, joinDate:"2001-09-28", salary:12500.00, bonus:14000.00, deptId:30},
-            {id:1006, eName:"SongJiang", jobId:2, mgr:1009, joinDate:"2001-05-01", salary:28500.00, bonus:null, deptId:30},
-            {id:1007, eName:"LiuBei", jobId:2, mgr:1009, joinDate:"2001-09-01", salary:24500.00, bonus:null, deptId:10},
-            {id:1008, eName:"ZhuBaJie", jobId:4, mgr:1004, joinDate:"2007-04-19", salary:30000.00, bonus:null, deptId:20},
-            {id:1009, eName:"LuoGuanZhong", jobId:1, mgr:null, joinDate:"2001-11-17", salary:50000.00, bonus:null, deptId:10},
-            {id:1010, eName:"WuYong", jobId:3, mgr:1006, joinDate:"2001-09-08", salary:15000.00, bonus:0.00, deptId:30},
-            {id:1011, eName:"ShaCeng", jobId:4, mgr:1004, joinDate:"2007-05-23", salary:11000.00, bonus:null, deptId:20},
-            {id:1012, eName:"LiKui", jobId:4, mgr:1006, joinDate:"2001-12-03", salary:9500.00, bonus:null, deptId:30},
-            {id:1013, eName:"XiaoBaiLong", jobId:4, mgr:1004, joinDate:"2001-12-03", salary:30000.00, bonus:null, deptId:20},
-            {id:1014, eName:"GuanYu", jobId:4, mgr:1007, joinDate:"2002-01-23", salary:13000.00, bonus:null, deptId:10},
+            { id: 1001, eName: "SunWuKong", jobId: 4, mgr: 1004, joinDate: "2000-12-17", salary: 8000.00, bonus: null, deptId: 20 },
+            { id: 1002, eName: "LuJunYi", jobId: 3, mgr: 1006, joinDate: "2001-02-20", salary: 16000.00, bonus: 3000.00, deptId: 30 },
+            { id: 1003, eName: "LinChong", jobId: 3, mgr: 1006, joinDate: "2001-02-22", salary: 12500.00, bonus: 5000.00, deptId: 30 },
+            { id: 1004, eName: "TangCeng", jobId: 2, mgr: 1009, joinDate: "2001-04-02", salary: 29750.00, bonus: null, deptId: 20 },
+            { id: 1005, eName: "LiKui", jobId: 4, mgr: 1006, joinDate: "2001-09-28", salary: 12500.00, bonus: 14000.00, deptId: 30 },
+            { id: 1006, eName: "SongJiang", jobId: 2, mgr: 1009, joinDate: "2001-05-01", salary: 28500.00, bonus: null, deptId: 30 },
+            { id: 1007, eName: "LiuBei", jobId: 2, mgr: 1009, joinDate: "2001-09-01", salary: 24500.00, bonus: null, deptId: 10 },
+            { id: 1008, eName: "ZhuBaJie", jobId: 4, mgr: 1004, joinDate: "2007-04-19", salary: 30000.00, bonus: null, deptId: 20 },
+            { id: 1009, eName: "LuoGuanZhong", jobId: 1, mgr: null, joinDate: "2001-11-17", salary: 50000.00, bonus: null, deptId: 10 },
+            { id: 1010, eName: "WuYong", jobId: 3, mgr: 1006, joinDate: "2001-09-08", salary: 15000.00, bonus: 0.00, deptId: 30 },
+            { id: 1011, eName: "ShaCeng", jobId: 4, mgr: 1004, joinDate: "2007-05-23", salary: 11000.00, bonus: null, deptId: 20 },
+            { id: 1012, eName: "LiKui", jobId: 4, mgr: 1006, joinDate: "2001-12-03", salary: 9500.00, bonus: null, deptId: 30 },
+            { id: 1013, eName: "XiaoBaiLong", jobId: 4, mgr: 1004, joinDate: "2001-12-03", salary: 30000.00, bonus: null, deptId: 20 },
+            { id: 1014, eName: "GuanYu", jobId: 4, mgr: 1007, joinDate: "2002-01-23", salary: 13000.00, bonus: null, deptId: 10 },
         ];
 
         await rdbStore.batchInsert("emp", emps);
@@ -131,11 +131,11 @@ describe('rdbStorePredicatesJoinBTest', function () {
         await rdbStore.executeSql(SALARYGRADE_TABLE);
 
         var salarygrades = [
-            {grade:1, loSalary:7000, hiSalary:12000},
-            {grade:2, loSalary:12010, hiSalary:14000},
-            {grade:3, loSalary:14010, hiSalary:20000},
-            {grade:4, loSalary:20010, hiSalary:30000},
-            {grade:5, loSalary:30010, hiSalary:99990},
+            { grade: 1, loSalary: 7000, hiSalary: 12000 },
+            { grade: 2, loSalary: 12010, hiSalary: 14000 },
+            { grade: 3, loSalary: 14010, hiSalary: 20000 },
+            { grade: 4, loSalary: 20010, hiSalary: 30000 },
+            { grade: 5, loSalary: 30010, hiSalary: 99990 },
         ];
 
         await rdbStore.batchInsert("salarygrade", salarygrades);

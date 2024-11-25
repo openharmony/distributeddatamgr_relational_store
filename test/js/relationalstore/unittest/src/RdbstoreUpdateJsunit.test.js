@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
@@ -470,7 +470,7 @@ describe('rdbStoreUpdateTest', function () {
             console.log(TAG + `failed, err: ${JSON.stringify(err)}`)
             expect().assertFail()
         }
-        
+
         await rdbStore.close().then(() => {
             console.info(`close succeeded`);
         }).catch((err) => {
@@ -494,7 +494,7 @@ describe('rdbStoreUpdateTest', function () {
             console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect("14800014").assertEqual(err.code)
         }
-        
+
         await data_relationalStore.deleteRdbStore(context, STORE_NAME);
         console.log(TAG + "************* testRdbStoreUpdate0009 end   *************");
     })

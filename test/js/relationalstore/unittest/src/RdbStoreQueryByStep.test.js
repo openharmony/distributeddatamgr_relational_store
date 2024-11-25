@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -90,7 +90,7 @@ describe('rdbStoreQueryByStepTest', function () {
     })
 
     async function InsertTest() {
-        console.info(TAG,  "insertTest data start");
+        console.info(TAG, "insertTest data start");
         let u8 = new Uint8Array([1, 2, 3]);
         const assets1 = [asset1, asset2];
         let valuesBucket1 = {
@@ -115,7 +115,7 @@ describe('rdbStoreQueryByStepTest', function () {
             "salary": 5503.3,
         }
         await rdbStore.insert("test", valuesBucket3);
-        console.info(TAG,  "insertTest data end");
+        console.info(TAG, "insertTest data end");
     }
 
     console.info(TAG + "*************Unit Test Begin*************");

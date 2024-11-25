@@ -14,7 +14,7 @@
  */
 
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData';
 
 describe('CloudConfigCallbackTest', function () {
@@ -252,7 +252,7 @@ describe('CloudConfigCallbackTest', function () {
     it('NotifyDataChangeInvalidArgsCallbackTest', 0, function (done) {
         console.info('NotifyDataChangeInvalidArgsCallbackTest');
         try {
-            cloudData.Config.notifyDataChange(null,  function(err) {
+            cloudData.Config.notifyDataChange(null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('NotifyDataChangeInvalidArgsCallbackTest notifyDataChange success');
@@ -336,7 +336,7 @@ describe('CloudConfigCallbackTest', function () {
         try {
             let account = "test_id";
             let bundleName1 = "test_bundleName1";
-            let appActions = {[bundleName1]: 3};
+            let appActions = { [bundleName1]: 3 };
             cloudData.Config.clear(account, appActions, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();

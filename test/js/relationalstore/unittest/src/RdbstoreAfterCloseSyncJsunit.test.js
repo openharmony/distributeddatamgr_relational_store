@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -138,7 +138,7 @@ describe('rdbStoreAfterCloseSyncTest', function () {
             console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
             expect("14800014").assertEqual(err.code)
         }
-        
+
         await relationalStore.deleteRdbStore(context, STORE_NAME);
         console.log(TAG + "************* testSyncRdbAfterClose0003 end *************");
     })

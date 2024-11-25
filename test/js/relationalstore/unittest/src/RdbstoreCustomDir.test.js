@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility';
 
@@ -108,7 +108,7 @@ describe('rdbStoreCustomTest', function () {
     })
 
     async function InsertTest() {
-        console.info(TAG,  "insertTest data start");
+        console.info(TAG, "insertTest data start");
         let u8 = new Uint8Array([1, 2, 3]);
         const assets1 = [asset1, asset2];
         let valuesBucket1 = {
@@ -128,11 +128,11 @@ describe('rdbStoreCustomTest', function () {
             "salary": 1503.3,
         }
         await store.insert("test", valuesBucket2);
-        console.info(TAG,  "insertTest data end");
+        console.info(TAG, "insertTest data end");
     }
 
     async function UpdateTest() {
-        console.info(TAG,  "updateTest data start");
+        console.info(TAG, "updateTest data start");
         let u8 = new Uint8Array([1, 2, 3]);
         const assets1 = [asset2];
         let valuesBucket = {
@@ -147,10 +147,10 @@ describe('rdbStoreCustomTest', function () {
         let predicates = new data_relationalStore.RdbPredicates("test")
         predicates.equalTo("id", "1")
         await store.update(valuesBucket, predicates);
-        console.info(TAG,  "updateTest data end");
+        console.info(TAG, "updateTest data end");
     }
 
-    console.info(TAG,  "*************Unit Test Begin*************");
+    console.info(TAG, "*************Unit Test Begin*************");
 
     /**
      * @tc.number testRdbStoreCustomDirTest0001
@@ -167,7 +167,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG3);
             expect(store != null).assertTrue();
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -191,7 +191,7 @@ describe('rdbStoreCustomTest', function () {
             let store1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
             expect(store1 != null).assertTrue();
             store1 = null;
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -200,7 +200,7 @@ describe('rdbStoreCustomTest', function () {
         try {
             await data_relationalStore.deleteRdbStore(context, STORE_CONFIG1);
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -226,7 +226,7 @@ describe('rdbStoreCustomTest', function () {
             let store1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
             expect(store1 != null).assertTrue();
             store1 = null;
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore1 failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -237,7 +237,7 @@ describe('rdbStoreCustomTest', function () {
             expect(store2 != null).assertTrue();
             store2 = null;
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore2 failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -262,7 +262,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
             expect(store != null).assertTrue();
             await store.executeSql(CREATE_TABLE_TEST,)
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore2 failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -270,7 +270,7 @@ describe('rdbStoreCustomTest', function () {
 
         try {
             await InsertTest();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Insert data failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -281,7 +281,7 @@ describe('rdbStoreCustomTest', function () {
             let resultSet = await store.query(predicates);
             expect(2).assertEqual(resultSet.rowCount);
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: query data failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -307,7 +307,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
             expect(store != null).assertTrue();
             await store.executeSql(CREATE_TABLE_TEST,)
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -316,7 +316,7 @@ describe('rdbStoreCustomTest', function () {
         try {
             await InsertTest();
             await UpdateTest();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Insert and update data failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -329,7 +329,7 @@ describe('rdbStoreCustomTest', function () {
             expect(true).assertEqual(resultSet.goToFirstRow());
             expect("tim").assertEqual(resultSet.getString(resultSet.getColumnIndex("name")));
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: query data failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -357,7 +357,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
             expect(store != null).assertTrue();
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -386,7 +386,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
             expect(store != null).assertTrue();
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();
@@ -414,7 +414,7 @@ describe('rdbStoreCustomTest', function () {
             store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
             expect(store != null).assertTrue();
             done();
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message);
             expect(false).assertTrue();
             done();

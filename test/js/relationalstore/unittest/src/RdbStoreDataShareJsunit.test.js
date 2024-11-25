@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import data_dataSharePredicates from '@ohos.data.dataSharePredicates'
@@ -135,7 +135,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         try {
             await rdbStore.update("test", valueBucket, predicates)
             expect(false).assertTrue()
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -173,7 +173,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
                 expect(false).assertTrue()
             })
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -203,7 +203,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         try {
             await rdbStore.query("test", predicates)
             expect(false).assertTrue()
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -232,10 +232,10 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         try {
             rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
                 function (err, resultSet) {
-                expect(false).assertTrue()
+                    expect(false).assertTrue()
 
                 })
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -264,7 +264,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         try {
             await rdbStore.delete("test", predicates)
             expect(false).assertTrue()
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }
@@ -294,7 +294,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             rdbStore.delete("test", predicates, async function (err, ret) {
                 expect(false).assertTrue()
             })
-        } catch(e) {
+        } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
             expect("202").assertEqual(e.code)
         }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -151,7 +151,7 @@ describe('rdbAssetResultSetTest', function () {
         try {
             await rdbStore.insert("test", valuesBucket)
             expect().assertFail();
-        } catch(e) {
+        } catch (e) {
             console.log("insert failed, err: code=" + e.code + " message=" + e.message)
             expect(e.code == 401).assertTrue();
         }
@@ -184,7 +184,7 @@ describe('rdbAssetResultSetTest', function () {
         try {
             await rdbStore.batchInsert("test", array)
             expect().assertFail();
-        } catch(e) {
+        } catch (e) {
             console.log("batchInsert failed, err: code=" + e.code + " message=" + e.message)
             expect(e.code == 401).assertTrue();
         }
@@ -207,7 +207,7 @@ describe('rdbAssetResultSetTest', function () {
         try {
             await rdbStore.executeSql("insert into test (data1, data2, data3) values (?,?,?)", array)
             expect().assertFail();
-        } catch(e) {
+        } catch (e) {
             console.log("executeSql failed, err: code=" + e.code + " message=" + e.message)
             expect(e.code == 401).assertTrue();
         }
@@ -692,7 +692,7 @@ describe('rdbAssetResultSetTest', function () {
         }
         let assets = [asset];
         let valuesBucket = {
-            "data3" : assets,
+            "data3": assets,
         }
         await rdbStore.insert("test", valuesBucket);
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -710,7 +710,7 @@ describe('rdbAssetResultSetTest', function () {
             expect(null).assertFail();
         }
         console.log(TAG + "************* testGetAssetsUpdate1 insert success *************");
-        const asset5 =  {
+        const asset5 = {
             name: "name4",
             uri: "uri5",
             createTime: "createTime5",
@@ -721,7 +721,7 @@ describe('rdbAssetResultSetTest', function () {
         }
         assets = [asset5];
         valuesBucket = {
-            "data3" : assets,
+            "data3": assets,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
@@ -767,7 +767,7 @@ describe('rdbAssetResultSetTest', function () {
         }
         let assets = [asset];
         let valuesBucket = {
-            "data3" : assets,
+            "data3": assets,
         }
         await rdbStore.insert("test", valuesBucket);
         let predicates = await new data_relationalStore.RdbPredicates("test")
@@ -785,7 +785,7 @@ describe('rdbAssetResultSetTest', function () {
             expect(null).assertFail();
         }
         console.log(TAG + "************* testGetAssetsUpdate2 insert success *************");
-        const asset5 =  {
+        const asset5 = {
             name: "name4",
             uri: "uri5",
             createTime: "createTime5",
@@ -796,7 +796,7 @@ describe('rdbAssetResultSetTest', function () {
         }
         assets = [asset5];
         valuesBucket = {
-            "data3" : assets,
+            "data3": assets,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
@@ -853,7 +853,7 @@ describe('rdbAssetResultSetTest', function () {
             console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
             expect(null).assertFail();
         }
-        const asset5 =  {
+        const asset5 = {
             name: "name5",
             uri: "uri5",
             createTime: "createTime5",
@@ -863,7 +863,7 @@ describe('rdbAssetResultSetTest', function () {
             status: data_relationalStore.AssetStatus.ASSET_UPDATE,
         }
         valuesBucket = {
-            "data1" : asset5,
+            "data1": asset5,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
@@ -917,7 +917,7 @@ describe('rdbAssetResultSetTest', function () {
             console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
             expect(null).assertFail();
         }
-        const asset5 =  {
+        const asset5 = {
             name: "name5",
             uri: "uri5",
             createTime: "createTime5",
@@ -927,7 +927,7 @@ describe('rdbAssetResultSetTest', function () {
             status: data_relationalStore.AssetStatus.ASSET_UPDATE,
         }
         valuesBucket = {
-            "data1" : asset5,
+            "data1": asset5,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
@@ -980,7 +980,7 @@ describe('rdbAssetResultSetTest', function () {
             console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
             expect(null).assertFail();
         }
-        const asset5 =  {
+        const asset5 = {
             name: "name1",
             uri: "uri5",
             createTime: "createTime5",
@@ -990,7 +990,7 @@ describe('rdbAssetResultSetTest', function () {
             status: data_relationalStore.AssetStatus.ASSET_DELETE,
         }
         valuesBucket = {
-            "data1" : asset5,
+            "data1": asset5,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);
@@ -1037,7 +1037,7 @@ describe('rdbAssetResultSetTest', function () {
             console.log(TAG + "insert throw error: " + e.code + ", message is " + e.message);
             expect(null).assertFail();
         }
-        const asset5 =  {
+        const asset5 = {
             name: "name1",
             uri: "uri5",
             createTime: "createTime5",
@@ -1047,7 +1047,7 @@ describe('rdbAssetResultSetTest', function () {
             status: data_relationalStore.AssetStatus.ASSET_NORMAL,
         }
         valuesBucket = {
-            "data1" : asset5,
+            "data1": asset5,
         }
         predicates.equalTo("id", id);
         await rdbStore.update(valuesBucket, predicates);

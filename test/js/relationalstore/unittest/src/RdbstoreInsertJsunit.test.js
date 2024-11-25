@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -175,7 +175,7 @@ describe('rdbStoreInsertTest', function () {
                     console.log(TAG + "insert with null table")
                     expect(null).assertFail()
                 })
-            } catch(err) {
+            } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
                 expect("401").assertEqual(err.code)
                 done()
@@ -468,9 +468,9 @@ describe('rdbStoreInsertTest', function () {
         await rdbStore1.executeSql(CREATE_TABLE_TEST, null);
         await rdbStore1.close().then(() => {
             console.info(`close succeeded`);
-          }).catch((err) => {
+        }).catch((err) => {
             console.error(`close failed, code is ${err.code},message is ${err.message}`);
-          })
+        })
 
         var u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
@@ -527,7 +527,7 @@ describe('rdbStoreInsertTest', function () {
                     console.log(TAG + "insert with wrong valuebucket and ConflictResolution is default")
                     done();
                 })
-            } catch(err) {
+            } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
                 expect("401").assertEqual(err.code)
                 expect(null).assertFail()
@@ -744,7 +744,7 @@ describe('rdbStoreInsertTest', function () {
             try {
                 rdbStore.insert("test", valueBucket, 6);
                 expect(null).assertFail()
-            } catch(err) {
+            } catch (err) {
                 console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
                 expect("401").assertEqual(err.code)
                 done()

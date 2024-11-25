@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -347,7 +347,7 @@ describe('RdbStoreDataChangeTest', function () {
     it('testRdbStoreDataChange0007', 0, async function (done) {
         console.info(TAG + "************* testRdbStoreDataChange0007 start *************");
         try {
-            rdbStore.on('', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, (ChangeInfos) => {})
+            rdbStore.on('', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, (ChangeInfos) => { })
             expect().assertFail();
         } catch (err) {
             console.error(TAG + `register fail, code:${err.code}, message: ${err.message}`);
@@ -375,7 +375,7 @@ describe('RdbStoreDataChangeTest', function () {
     it('testRdbStoreDataChange0008', 0, async function (done) {
         console.info(TAG + "************* testRdbStoreDataChange0008 start *************");
         try {
-            rdbStore.off('', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, (ChangeInfos) => {})
+            rdbStore.off('', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, (ChangeInfos) => { })
             expect().assertFail();
         } catch (err) {
             console.error(TAG + `register fail, code:${err.code}, message: ${err.message}`);
