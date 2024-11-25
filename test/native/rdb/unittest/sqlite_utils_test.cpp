@@ -251,9 +251,9 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0038, TestSize.Level1)
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0039, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS TEST (id INT PRIMARY KEY, name TEXT, extend BLOB, "
-                                    "code REAL, years UNLIMIT INT, ment ASSET, ments ASSETS)."),
+                                    "code REAL, years UNLIMITED INT, ment ASSET, ments ASSETS)."),
         "CREATE TABLE IF NOT EXISTS *EST (*d INT PRIMARY KEY, *ame TEXT, "
-        "***end BLOB, *ode REAL, **ars UNLIMIT INT, *ent ASSET, **nts ASSETS)");
+        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS).");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
@@ -261,7 +261,7 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0040, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE TEST (id INT PRIMARY KEY, name TEXT, "
                                     "extend BLOB, code REAL, years UNLIMITED INT, ment ASSET, ments ASSETS)."),
         "CREATE TABLE *EST (*d INT PRIMARY KEY, *ame TEXT, "
-        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS)");
+        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS).");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0041, TestSize.Level1)
@@ -300,10 +300,18 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0047, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::AnonySql("CREATE                        TABLE       TEST (id INT PRIMARY KEY, name TEXT,"
                                     " extend BLOB, code REAL, years UNLIMITED INT, ment ASSET, ments ASSETS)."),
         "CREATE TABLE *EST (*d INT PRIMARY KEY, *ame TEXT, "
-        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS)");
+        "***end BLOB, *ode REAL, **ars UNLIMITED INT, *ent ASSET, **nts ASSETS).");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0048, TestSize.Level1)
 {
-    EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE table DROP COLUMN column;"), "ALTER TABLE **ble DROP COLUMN ***umn;");
+    EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE test DROP COLUMN name;"), "ALTER TABLE *est DROP COLUMN *ame;");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0049, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS name AS SELECT order AS old, "
+                                    "order AS new UNION SELECT shot AS old, shot AS new ;"),
+        "CREATE TABLE IF NOT EXISTS *ame AS ***ECT **der AS *ld, "
+        "**der AS *ew UNION ***ECT *hot AS *ld, *hot AS *ew ;");
 }
