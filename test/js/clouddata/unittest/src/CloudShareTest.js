@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData'
 import data_relationalStore from '@ohos.data.relationalStore';
 import featureAbility from '@ohos.ability.featureAbility';

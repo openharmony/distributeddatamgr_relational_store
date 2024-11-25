@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import data_dataSharePredicates from '@ohos.data.dataSharePredicates'

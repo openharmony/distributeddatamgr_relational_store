@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
@@ -2260,7 +2260,7 @@ describe('rdbPredicatesTest', function () {
         expect(2).assertEqual(result.getLong(0));
         expect(true).assertEqual(result.goToNextRow())
         expect(1).assertEqual(result.getLong(0));
-        result.close() 
+        result.close()
         result = null
 
         done();

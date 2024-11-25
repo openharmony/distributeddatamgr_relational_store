@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert} from 'deccjsunit/index';
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Assert } from 'deccjsunit/index';
 import dataRdb from '@ohos.data.relationalStore';
 import featureAbility from '@ohos.ability.featureAbility';
 import deviceInfo from '@ohos.deviceInfo';

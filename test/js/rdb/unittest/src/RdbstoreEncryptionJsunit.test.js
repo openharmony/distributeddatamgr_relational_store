@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_rdb from '@ohos.data.rdb'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
 const TAG = "[RDB_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" +
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                          "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)"
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)"
 
 let context = null;
 const STORE_CONFIG_ENCRYPT = {
@@ -172,11 +172,11 @@ describe('rdbEncryptTest', function () {
         context = ability_featureAbility.getContext();
         await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         try {
-          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
-          expect(rdbStore !== null).assertTrue();
+            let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
+            expect(rdbStore !== null).assertTrue();
         } catch (err) {
-          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
-          expect().assertFail();
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
         }
         done();
         console.log(TAG + "************* RdbEncryptTest_0040 end *************");
@@ -195,11 +195,11 @@ describe('rdbEncryptTest', function () {
         context = ability_featureAbility.getContext();
         await CreateRdbStore(context, STORE_CONFIG_WRONG);
         try {
-          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
-          expect(rdbStore !== null).assertTrue();
+            let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+            expect(rdbStore !== null).assertTrue();
         } catch (err) {
-          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
-          expect().assertFail();
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
         }
         done();
         console.log(TAG + "************* RdbEncryptTest_0041 end *************");

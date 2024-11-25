@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 var context = ability_featureAbility.getContext()
@@ -316,37 +316,37 @@ describe('rdbStoreTest', function () {
             const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "blobType BLOB)";
-    
+
             rdbStore.executeSync(CREATE_TABLE_TEST);
-    
+
             const valueBuckets = Array(rowCount).fill(0).map(() => {
                 return {
                     blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
                 }
             })
-    
+
             rdbStore.batchInsertSync('test', valueBuckets);
-    
+
             const predicates = new data_relationalStore.RdbPredicates('test');
             const resultSet = rdbStore.querySync(predicates);
             expect(resultSet.rowCount).assertEqual(rowCount);
             resultSet.goToFirstRow()
-    
+
             const startTime = new Date().getTime();
             rdbStore.insertSync('test', {
                 blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
             })
             const middleTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime);
-    
+
             expect((middleTime - startTime) > 1000).assertTrue();
-    
+
             rdbStore.insertSync('test', {
                 blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
             })
             const endTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, endTime:" + endTime + " middleTime:" + middleTime);
-    
+
             expect((endTime - middleTime) < 1000).assertTrue();
             console.log(TAG + "************* testRdbStore0012 end *************");
             done();

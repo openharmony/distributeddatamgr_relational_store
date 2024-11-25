@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -113,7 +113,7 @@ describe('rdbStoreAfterCloseTest', function () {
         await relationalStore.deleteRdbStore(context, STORE_NAME);
         console.log(TAG + "************* testRdbAfterClose0002 end *************");
     })
-    
+
     /**
      * @tc.number testRdbAfterClose0003
      * @tc.name RDB Close test
@@ -223,10 +223,10 @@ describe('rdbStoreAfterCloseTest', function () {
         }
 
         await relationalStore.deleteRdbStore(context, STORE_NAME);
-        done(); 
+        done();
         console.log(TAG + "************* testRdbAfterClose0006 end *************");
     })
-    
+
 
     /**
      * @tc.number testRdbAfterClose0007
