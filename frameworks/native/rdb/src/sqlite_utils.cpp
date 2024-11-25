@@ -305,6 +305,9 @@ std::string ReplaceMultipleSpaces(const std::string &str)
 std::string AnonyWord(const std::string &word)
 {
     std::string anonyWord = word;
+    if (anonyWord.empty()) {
+        return anonyWord;
+    }
     if (word.size() == 1 && std::isdigit(word[0])) {
         anonyWord[0] = '*';
     } else if (word.size() >= MIN_ANONYMIZE_LENGTH && word.size() <= MAX_ANONYMIZE_LENGTH) {
@@ -320,6 +323,9 @@ std::string AnonyWord(const std::string &word)
 
 std::string AnonyString(const std::string &input)
 {
+    if(input.empty()){
+        return input;
+    }
     std::vector<std::string> words = SplitString(input);
     std::string result;
     for (const std::string &word : words) {
