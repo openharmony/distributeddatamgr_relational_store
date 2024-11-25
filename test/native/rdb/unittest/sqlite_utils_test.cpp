@@ -307,3 +307,11 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0048, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::AnonySql("ALTER TABLE test DROP COLUMN name;"), "ALTER TABLE *est DROP COLUMN *ame;");
 }
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0049, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS name AS SELECT order AS old, "
+                                    "order AS new UNION SELECT shot AS old, shot AS new ;"),
+        "CREATE TABLE IF NOT EXISTS *ame AS ***ECT **der AS *ld, "
+        "**der AS *ew UNION ***ECT *hot AS *ld, *hot AS *ew ;");
+}
