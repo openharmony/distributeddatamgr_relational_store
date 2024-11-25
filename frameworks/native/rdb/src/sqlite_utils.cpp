@@ -323,7 +323,7 @@ std::string AnonyWord(const std::string &word)
 
 std::string AnonyString(const std::string &input)
 {
-    if(input.empty()){
+    if (input.empty()) {
         return input;
     }
     std::vector<std::string> words = SplitString(input);
