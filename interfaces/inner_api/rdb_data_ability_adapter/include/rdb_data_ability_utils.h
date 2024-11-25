@@ -21,10 +21,10 @@
 #include <string>
 #include <vector>
 
-#include "result_set.h"
 #include "data_ability_predicates.h"
 #include "datashare_predicates.h"
 #include "datashare_values_bucket.h"
+#include "result_set.h"
 #include "values_bucket.h"
 
 namespace OHOS {
@@ -83,8 +83,7 @@ public:
     /**
      * @brief Convert NDataShare::ResultSet to NativeRdb::AbsSharedResultSet.
      */
-    API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(
-        std::shared_ptr<DSResultSet> resultSet);
+    API_EXPORT static std::shared_ptr<AbsSharedResultSet> ToAbsSharedResultSet(std::shared_ptr<DSResultSet> resultSet);
 
 private:
     RdbDataAbilityUtils();
@@ -93,4 +92,3 @@ private:
 } // namespace RdbDataAbilityAdapter
 } // namespace OHOS
 #endif // RDB_DATA_ABILITY_UTILS_H
-

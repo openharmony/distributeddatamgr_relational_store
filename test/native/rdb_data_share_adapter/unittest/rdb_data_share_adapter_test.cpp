@@ -110,15 +110,14 @@ void RdbDataShareAdapterTest::GenerateDefaultTable()
     std::vector<uint8_t> typeBlob;
     typeBlob.push_back(uValue);
     store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string("hello")), ValueObject((int)10),
-        ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob)
-    });
+                                     ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
 
     /* insert second entry data */
     typeBlob.clear();
     store->ExecuteSql(insertSql, std::vector<ValueObject>{
-        ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
-        ValueObject() // set double value 2.5
-    });
+                                     ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
+                                     ValueObject() // set double value 2.5
+                                 });
 
     /* insert third entry data */
     store->ExecuteSql(insertSql, std::vector<ValueObject>{

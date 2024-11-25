@@ -19,12 +19,12 @@
 #include <string>
 #include <vector>
 
-static bool SaveBufferToFile(const std::string& filePath, const std::vector<char>& content, bool truncated = true)
+static bool SaveBufferToFile(const std::string &filePath, const std::vector<char> &content, bool truncated = true)
 {
     return true;
 }
 
-static bool LoadBufferFromFile(const std::string& filePath, std::vector<char>& content)
+static bool LoadBufferFromFile(const std::string &filePath, std::vector<char> &content)
 {
     return true;
 }
@@ -43,5 +43,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif  /* MOCK_UTILS_BASE_FILE_EX_H */
-
+#endif /* MOCK_UTILS_BASE_FILE_EX_H */

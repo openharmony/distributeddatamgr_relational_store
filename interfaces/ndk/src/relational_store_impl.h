@@ -45,15 +45,15 @@ public:
 
     void OnChange(const std::vector<std::string> &devices) override;
 
-    void OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
-        ChangeInfo &&changeInfo) override;
+    void OnChange(
+        const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo) override;
 
     void OnChange() override;
     bool operator==(const Rdb_DataObserver *other);
 
 private:
-    void ConvertKeyInfoData(Rdb_KeyInfo::Rdb_KeyData *keyInfoData,
-        std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
+    void ConvertKeyInfoData(
+        Rdb_KeyInfo::Rdb_KeyData *keyInfoData, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     size_t GetKeyInfoSize(RdbStoreObserver::ChangeInfo &&changeInfo);
     int32_t GetKeyDataType(std::vector<RdbStoreObserver::PrimaryKey> &primaryKey);
     int mode_ = Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD;

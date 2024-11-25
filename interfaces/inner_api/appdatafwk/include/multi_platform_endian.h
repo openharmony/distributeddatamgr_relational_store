@@ -17,6 +17,7 @@
 #define MULTI_PLATFORM_EDIAN
 
 #include <cstdint>
+
 #include "rdb_visibility.h"
 namespace OHOS {
 class API_EXPORT Endian final {

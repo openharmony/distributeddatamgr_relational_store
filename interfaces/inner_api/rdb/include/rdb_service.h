@@ -19,10 +19,10 @@
 #include <memory>
 #include <string>
 
-#include "result_set.h"
-#include "rdb_types.h"
-#include "rdb_notifier.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "rdb_notifier.h"
+#include "rdb_types.h"
+#include "result_set.h"
 
 namespace OHOS {
 namespace DistributedRdb {
@@ -40,18 +40,17 @@ public:
 
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
 
-    virtual int32_t SetDistributedTables(
-        const RdbSyncerParam &param, const std::vector<std::string> &tables,
+    virtual int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
 
-    virtual int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
-        RdbStoreObserver *observer) = 0;
+    virtual int32_t Subscribe(
+        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
 
-    virtual int32_t UnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option,
-        RdbStoreObserver *observer) = 0;
+    virtual int32_t UnSubscribe(
+        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
 
     virtual int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;
@@ -77,7 +76,7 @@ public:
     virtual int32_t NotifyDataChange(
         const RdbSyncerParam &param, const RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) = 0;
 
-    virtual int32_t SetSearchable(const RdbSyncerParam& param, bool isSearchable) = 0;
+    virtual int32_t SetSearchable(const RdbSyncerParam &param, bool isSearchable) = 0;
 
     virtual int32_t Disable(const RdbSyncerParam &param) = 0;
 
@@ -93,6 +92,6 @@ public:
 
     virtual int32_t VerifyPromiseInfo(const RdbSyncerParam &param) = 0;
 };
-}
-} // namespace OHOS::DistributedRdb
+} // namespace DistributedRdb
+} // namespace OHOS
 #endif

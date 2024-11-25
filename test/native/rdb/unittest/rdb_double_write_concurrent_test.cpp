@@ -14,21 +14,21 @@
 */
 #define LOG_TAG "RdbDoubleWriteConcurrentTest"
 #include <gtest/gtest.h>
-
-#include <fstream>
-#include <string>
-#include "sys/types.h"
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "logger.h"
+#include <fstream>
+#include <string>
+
 #include "common.h"
-#include "sqlite_utils.h"
 #include "file_ex.h"
+#include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite_utils.h"
+#include "sys/types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -40,8 +40,8 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    void CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK,
-        const std::string &tableName = "test");
+    void CheckNumber(
+        std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK, const std::string &tableName = "test");
     void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
     void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
     void TryInterruptBackup();
@@ -59,10 +59,9 @@ protected:
         int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 
     protected:
-        const std::string CREATE_TABLE_TEST =
-            "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "name TEXT NOT NULL, age INTEGER, salary "
-            "REAL, blobType BLOB)";
+        const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "name TEXT NOT NULL, age INTEGER, salary "
+                                              "REAL, blobType BLOB)";
     };
 
     enum SlaveStatus : uint32_t {
@@ -133,7 +132,7 @@ void RdbDoubleWriteConcurrentTest::Insert(int64_t start, int count, bool isSlave
         } else {
             values.PutString("name", std::string("zhangsan"));
         }
-        values.PutInt("age", 18); // 18 is data
+        values.PutInt("age", 18);          // 18 is data
         values.PutDouble("salary", 100.5); // 100.5 is data
         values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
         if (isSlave) {
@@ -163,18 +162,17 @@ void RdbDoubleWriteConcurrentTest::TryInterruptBackup()
     int err = store->InterruptBackup();
     int tryTimes = 0;
     while (err != E_OK && (++tryTimes <= 1000)) { // 1000 is try time
-        usleep(10000); // 10000 delay
+        usleep(10000);                            // 10000 delay
         err = store->InterruptBackup();
     }
     EXPECT_EQ(err, E_OK);
     LOG_INFO("----------interrupt backup---------");
 }
 
-void RdbDoubleWriteConcurrentTest::CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode,
-    const std::string &tableName)
+void RdbDoubleWriteConcurrentTest::CheckNumber(
+    std::shared_ptr<RdbStore> &store, int num, int errCode, const std::string &tableName)
 {
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM " + tableName);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM " + tableName);
     ASSERT_NE(resultSet, nullptr);
     int countNum;
     int ret = resultSet->GetRowCount(countNum);

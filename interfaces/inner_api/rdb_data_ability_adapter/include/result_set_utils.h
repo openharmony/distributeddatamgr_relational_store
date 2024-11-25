@@ -17,12 +17,13 @@
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_DATA_ABILITY_ADAPTER_SRC_RESULT_SET_UTILS_H
 #include <memory>
 
-#include "basic/result_set.h"
 #include "abs_shared_result_set.h"
+#include "basic/result_set.h"
 
 namespace OHOS::RdbDataAbilityAdapter {
 class ResultSetUtils : public NativeRdb::AbsSharedResultSet {
     using DSResultSet = DataShare::ResultSet;
+
 public:
     ResultSetUtils(std::shared_ptr<DSResultSet> dbResultSet);
     int GetColumnCount(int &count) override;
@@ -47,5 +48,5 @@ protected:
 private:
     std::shared_ptr<DSResultSet> resultSet_;
 };
-}
+} // namespace OHOS::RdbDataAbilityAdapter
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_DATA_ABILITY_ADAPTER_SRC_RESULT_SET_UTILS_H

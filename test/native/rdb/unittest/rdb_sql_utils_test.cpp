@@ -30,8 +30,8 @@ class RdbSqlUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void){};
-    void TearDown(void){};
+    void SetUp(void) {};
+    void TearDown(void) {};
 };
 
 void RdbSqlUtilsTest::SetUpTestCase(void)

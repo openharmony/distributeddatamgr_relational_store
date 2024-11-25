@@ -49,5 +49,5 @@ using Asset = AssetValue;
 using Assets = std::vector<AssetValue>;
 using Value = std::variant<std::monostate, int64_t, double, std::string, bool, Bytes, Asset, Assets>;
 using ValuesBucket = std::map<std::string, Value>;
-}
+} // namespace OHOS::CommonType
 #endif // OHOS_COMMON_TYPES_H

@@ -29,7 +29,6 @@
  * @since 10
  */
 
-
 /**
  * @file relational_store_error_code.h
  *

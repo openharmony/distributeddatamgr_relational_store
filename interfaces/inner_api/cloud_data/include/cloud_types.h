@@ -16,10 +16,10 @@
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
 
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
-#include <map>
 
 namespace OHOS::CloudData {
 enum Role : int32_t {

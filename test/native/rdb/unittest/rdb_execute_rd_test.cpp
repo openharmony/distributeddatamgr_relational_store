@@ -121,8 +121,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_001, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    std::vector bindArgs =
-    std::vector{ ValueObject(std::string("18")), ValueObject(std ::string("20")) };
+    std::vector bindArgs = std::vector{ ValueObject(std::string("18")), ValueObject(std ::string("20")) };
 
     std::string sqlDelNoBind = "DELETE FROM test WHERE age = 19";
     std::string sqlSelect = "SELECT * FROM test WHERE age = ? OR age = ?";
@@ -354,8 +353,8 @@ constexpr uint16_t SELECT_RES_NUM = 3;
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_007, TestSize.Level1)
 {
     std::string sqlSelect = "SELECT * FROM test ORDER BY repr <-> '" +
-    GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "' LIMIT " +
-    std::to_string(SELECT_RES_NUM) + ";";
+                            GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "' LIMIT " +
+                            std::to_string(SELECT_RES_NUM) + ";";
     std::shared_ptr<ResultSet> resultSet = CreateIdxAndSelect(sqlSelect);
     int columnIndex = 0;
     size_t vectSize = 0;
@@ -457,7 +456,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_009, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
     std::string sqlCreateTable =
-    "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(LARGE_ANN_INDEX_DIM) + "));";
+        "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
     std::string sqlSelect = "SELECT * FROM test;";
 
@@ -471,7 +470,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_009, TestSize.Level1)
 
     for (uint16_t i = 0; i < EXPEC_INSERT_CNT_FOR; i++) {
         std::string sqlInsert = "INSERT INTO test VALUES(1000000" + std::to_string(i) + ", '" +
-        GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "');";
+                                GetRandVector(MAX_INT_PART, LARGE_ANN_INDEX_DIM) + "');";
         res = store->Execute(sqlInsert.c_str(), {}, trx.second);
         EXPECT_EQ(res.first, E_OK);
     }
@@ -543,7 +542,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
     std::string sqlCreateTable = "CREATE TABLE test(id int primary key, day int, repr floatvector(" +
-                                std::to_string(LARGE_ANN_INDEX_DIM) + "));";
+                                 std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
     std::string sqlSelect = "SELECT * FROM test;";
 
@@ -592,8 +591,8 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
         EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);
 
         EXPECT_EQ(
-            E_COLUMN_OUT_RANGE, resultSet->GetColumnType(100, colType));  // 100是一个不存在的col, 所以预期返回错误码
-        EXPECT_EQ(colType, ColumnType::TYPE_INTEGER); // 值不会被更新
+            E_COLUMN_OUT_RANGE, resultSet->GetColumnType(100, colType)); // 100是一个不存在的col, 所以预期返回错误码
+        EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);                    // 值不会被更新
 
         EXPECT_EQ(E_OK, resultSet->GetLong(columnIndex, intVal));
         EXPECT_EQ(1, intVal);
@@ -698,7 +697,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_014, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
 
     std::string sqlCreateTable = "CREATE TABLE test(id int primary key, age int, repr floatvector(" +
-                                std::to_string(LARGE_ANN_INDEX_DIM) + "));";
+                                 std::to_string(LARGE_ANN_INDEX_DIM) + "));";
     std::string sqlCreateIndex = "CREATE INDEX diskann_l2_idx ON test USING GSIVFFLAT(repr L2);";
     std::string sqlSelect = "SELECT * FROM test;";
 
@@ -798,7 +797,8 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
     res = store->Execute(sqlCreateIdx.c_str(), {});
     EXPECT_EQ(res.first, E_OK);
 
-    std::vector<std::vector<float>> vectorSamples = {{1.0, 2.0, 3.0, 4.0}, {10, 20, 30, 40}, {100, 200, 300, 400}};
+    std::vector<std::vector<float>> vectorSamples = { { 1.0, 2.0, 3.0, 4.0 }, { 10, 20, 30, 40 },
+        { 100, 200, 300, 400 } };
 
     for (uint32_t i = 0; i < vectorSamples.size(); i++) {
         std::pair<int32_t, int64_t> trx = {};
@@ -813,7 +813,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
             EXPECT_FLOAT_EQ(vectorSamples[i][j], vector[j]);
         }
 
-        res = store->Execute(sqlInsert.c_str(), {ValueObject(std::string("textVal")), floatObj}, trx.second);
+        res = store->Execute(sqlInsert.c_str(), { ValueObject(std::string("textVal")), floatObj }, trx.second);
         EXPECT_EQ(res.first, E_OK);
         EXPECT_EQ(E_OK, store->Commit(trx.second));
     }
@@ -826,9 +826,9 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
         std::string primaryStrVal = "";
         std::string textStrVal = "";
         ValueObject::FloatVector floatVector = {};
-        resultSet->GetString(0, primaryStrVal);      // 0 is the index of primary String column in select projection
-        resultSet->GetString(1, textStrVal);         // 1 is the index of TEXT column in select projection
-        resultSet->GetFloat32Array(2, floatVector);  // 2 is the index of vector column in select projection
+        resultSet->GetString(0, primaryStrVal);     // 0 is the index of primary String column in select projection
+        resultSet->GetString(1, textStrVal);        // 1 is the index of TEXT column in select projection
+        resultSet->GetFloat32Array(2, floatVector); // 2 is the index of vector column in select projection
         EXPECT_STREQ(std::to_string(resCnt).c_str(), primaryStrVal.c_str());
         EXPECT_STREQ("textVal", textStrVal.c_str());
         EXPECT_EQ(vectorSamples[resCnt].size(), floatVector.size());
@@ -837,7 +837,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
         }
         resCnt++;
     }
-    EXPECT_EQ(2, resCnt);  // Expect 2 result due to limit 2
+    EXPECT_EQ(2, resCnt); // Expect 2 result due to limit 2
 }
 
 /**
@@ -955,7 +955,7 @@ HWTEST_P(RdbExecuteRdTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
     EXPECT_EQ(res.first, E_OK);
     res = store->Execute(sqlInsert.c_str(), {});
     EXPECT_EQ(res.first, E_OK);
-    
+
     std::vector<uint8_t> encryptKey;
     if (GetParam()) {
         encryptKey = config.GetEncryptKey();
@@ -987,7 +987,7 @@ HWTEST_P(RdbExecuteRdTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, resultSet->Close());
     res = store->Execute("DROP TABLE test;");
     EXPECT_EQ(E_OK, res.first);
-    
+
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::restoreDatabaseName);
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::backupDatabaseName);
 }

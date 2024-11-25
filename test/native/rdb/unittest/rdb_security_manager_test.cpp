@@ -17,12 +17,13 @@
 
 #include <block_data.h>
 #include <gtest/gtest.h>
+
 #include <thread>
 
 #include "common.h"
+#include "file_ex.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
-#include "file_ex.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -141,7 +142,7 @@ HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
     std::vector<char> content = { 'a' };
     bool ret = OHOS::SaveBufferToFile(file, content);
     ASSERT_TRUE(ret);
-    
+
     std::vector<char> keyfile2;
     ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfile2));
     ASSERT_NE(keyfile1.size(), keyfile2.size());
@@ -156,4 +157,4 @@ HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
 
     RdbHelper::DeleteRdbStore(config);
 }
-}
+} // namespace Test

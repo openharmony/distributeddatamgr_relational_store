@@ -18,7 +18,6 @@
 
 #include "hks_type.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,8 +40,7 @@ static int32_t HksInitParamSet(struct HksParamSet **paramSet)
  * @param paramCnt numbers of params
  * @return error code, see hks_type.h
  */
-static int32_t HksAddParams(struct HksParamSet *paramSet,
-    const struct HksParam *params, uint32_t paramCnt)
+static int32_t HksAddParams(struct HksParamSet *paramSet, const struct HksParam *params, uint32_t paramCnt)
 {
     return HKS_SUCCESS;
 }
@@ -64,7 +62,7 @@ static int32_t HksBuildParamSet(struct HksParamSet **paramSet)
  */
 static void HksFreeParamSet(struct HksParamSet **paramSet)
 {
-    return ;
+    return;
 }
 
 #ifdef __cplusplus

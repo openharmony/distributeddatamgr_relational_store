@@ -18,9 +18,8 @@
 
 namespace OHOS {
 namespace AppDataFwk {
-class MessageParcel {
-};
-}
-}
+class MessageParcel {};
+} // namespace AppDataFwk
+} // namespace OHOS
 
 #endif //RELATIONAL_STORE_MESSAGE_PARCEL_H
