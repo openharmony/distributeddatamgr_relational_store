@@ -77,6 +77,6 @@ bool RawDataParser::Convert(T input, std::variant<Rest...> &output)
 {
     return Get<T, decltype(output), Rest...>(std::move(input), output);
 }
-}
+} // namespace OHOS::NativeRdb
 
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_PARSER_H

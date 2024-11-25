@@ -126,5 +126,5 @@ template<>
 API_EXPORT bool Marshalling(const DebugInfo &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(DebugInfo &output, MessageParcel &data);
-}
+} // namespace OHOS::ITypesUtil
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H

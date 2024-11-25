@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
+#include "common_types.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "common_types.h"
 
 namespace OHOS::CommonType {
-static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name,
-    int32_t value)
+static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name, int32_t value)
 {
     napi_value property = nullptr;
     napi_status status = napi_create_int32(env, value, &property);
@@ -43,7 +42,7 @@ static napi_value ExportAssetStatus(napi_env env)
     napi_object_freeze(env, assetStatus);
     return assetStatus;
 }
-}
+} // namespace OHOS::CommonType
 
 static napi_value CommonTypeExport(napi_env env, napi_value exports)
 {

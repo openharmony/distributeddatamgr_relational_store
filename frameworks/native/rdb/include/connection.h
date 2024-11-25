@@ -66,14 +66,14 @@ public:
     virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
     virtual int32_t ClearCache() = 0;
-    virtual int32_t Subscribe(const std::string &event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
-    virtual int32_t Unsubscribe(const std::string &event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
-    virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync, SlaveStatus &slaveStatus) = 0;
-    virtual int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    virtual int32_t Subscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
+    virtual int32_t Unsubscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
+    virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
         SlaveStatus &slaveStatus) = 0;
+    virtual int32_t Restore(
+        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus) = 0;
     virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
 
 private:

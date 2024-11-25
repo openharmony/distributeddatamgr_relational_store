@@ -34,8 +34,8 @@ public:
     static RdbStoreManager &GetInstance();
     RdbStoreManager();
     virtual ~RdbStoreManager();
-    std::shared_ptr<RdbStore> GetRdbStore(const RdbStoreConfig &config,
-        int &errCode, int version, RdbOpenCallback &openCallback);
+    std::shared_ptr<RdbStore> GetRdbStore(
+        const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback);
     void Clear();
     bool Remove(const std::string &path);
     bool Delete(const std::string &path);
@@ -44,8 +44,8 @@ public:
 private:
     using Param = DistributedRdb::RdbSyncerParam;
     using Info = DistributedRdb::RdbDebugInfo;
-    int ProcessOpenCallback(RdbStore &rdbStore,
-        const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
+    int ProcessOpenCallback(
+        RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     int32_t GetPromiseFromService(DistributedRdb::RdbSyncerParam &param);

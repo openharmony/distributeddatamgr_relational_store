@@ -35,7 +35,7 @@ public:
 
 class CloudDeath : public IRemoteObject::DeathRecipient {
 public:
-    explicit CloudDeath(std::function<void()> action) : action_(std::move(action)){};
+    explicit CloudDeath(std::function<void()> action) : action_(std::move(action)) {};
     void OnRemoteDied(const wptr<IRemoteObject> &object) override
     {
         if (action_) {

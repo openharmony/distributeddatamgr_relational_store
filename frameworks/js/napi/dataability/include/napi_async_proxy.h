@@ -28,7 +28,8 @@ constexpr int OK = 0;
 constexpr int ERR = -1;
 
 // T inherits AysncContext
-template<class T> class NapiAsyncProxy {
+template<class T>
+class NapiAsyncProxy {
 public:
     constexpr static int RESULT_COUNT = 2;
     using InputParser = void (*)(const napi_env &, const napi_value &, T *);

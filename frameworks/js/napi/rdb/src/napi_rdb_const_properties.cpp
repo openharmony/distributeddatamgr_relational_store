@@ -18,13 +18,13 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 
-using OHOS::DistributedRdb::SyncMode;
 using OHOS::DistributedRdb::SubscribeMode;
+using OHOS::DistributedRdb::SyncMode;
 #endif
 
 namespace OHOS::RdbJsKit {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::string& name, int32_t value)
+static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::string &name, int32_t value)
 {
     napi_value property = nullptr;
     napi_status status = napi_create_int32(env, value, &property);
@@ -63,10 +63,10 @@ static napi_value ExportSecurityLevel(napi_env env)
     napi_value securityLevel = nullptr;
     napi_create_object(env, &securityLevel);
 
-    (void) SetNamedProperty(env, securityLevel, "S1", (int32_t)NativeRdb::SecurityLevel::S1);
-    (void) SetNamedProperty(env, securityLevel, "S2", (int32_t)NativeRdb::SecurityLevel::S2);
-    (void) SetNamedProperty(env, securityLevel, "S3", (int32_t)NativeRdb::SecurityLevel::S3);
-    (void) SetNamedProperty(env, securityLevel, "S4", (int32_t)NativeRdb::SecurityLevel::S4);
+    (void)SetNamedProperty(env, securityLevel, "S1", (int32_t)NativeRdb::SecurityLevel::S1);
+    (void)SetNamedProperty(env, securityLevel, "S2", (int32_t)NativeRdb::SecurityLevel::S2);
+    (void)SetNamedProperty(env, securityLevel, "S3", (int32_t)NativeRdb::SecurityLevel::S3);
+    (void)SetNamedProperty(env, securityLevel, "S4", (int32_t)NativeRdb::SecurityLevel::S4);
     napi_object_freeze(env, securityLevel);
     return securityLevel;
 }

@@ -41,4 +41,4 @@ uint64_t Endian::HToLe(uint64_t value)
 {
     return value;
 }
-}
+} // namespace OHOS

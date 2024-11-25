@@ -21,30 +21,30 @@
 namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
 
-#define IPC_SEND(code, reply, ...)                                          \
-({                                                                          \
-    int32_t __status = SUCCESS;                                             \
-    do {                                                                    \
-        MessageParcel request;                                              \
-        if (!request.WriteInterfaceToken(GetDescriptor())) {                \
-            __status = IPC_PARCEL_ERROR;                                    \
-            break;                                                          \
-        }                                                                   \
-        if (!ITypesUtil::Marshal(request, ##__VA_ARGS__)) {                 \
-            __status = IPC_PARCEL_ERROR;                                    \
-            break;                                                          \
-        }                                                                   \
-        MessageOption option;                                               \
-        auto result = remote_->SendRequest((code), request, reply, option); \
-        if (result != 0) {                                                  \
-            __status = IPC_ERROR;                                           \
-            break;                                                          \
-        }                                                                   \
-                                                                            \
-        ITypesUtil::Unmarshal(reply, __status);                             \
-    } while (0);                                                            \
-    __status;                                                               \
-})
+#define IPC_SEND(code, reply, ...)                                              \
+    ({                                                                          \
+        int32_t __status = SUCCESS;                                             \
+        do {                                                                    \
+            MessageParcel request;                                              \
+            if (!request.WriteInterfaceToken(GetDescriptor())) {                \
+                __status = IPC_PARCEL_ERROR;                                    \
+                break;                                                          \
+            }                                                                   \
+            if (!ITypesUtil::Marshal(request, ##__VA_ARGS__)) {                 \
+                __status = IPC_PARCEL_ERROR;                                    \
+                break;                                                          \
+            }                                                                   \
+            MessageOption option;                                               \
+            auto result = remote_->SendRequest((code), request, reply, option); \
+            if (result != 0) {                                                  \
+                __status = IPC_ERROR;                                           \
+                break;                                                          \
+            }                                                                   \
+                                                                                \
+            ITypesUtil::Unmarshal(reply, __status);                             \
+        } while (0);                                                            \
+        __status;                                                               \
+    })
 
 CloudServiceProxy::CloudServiceProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<ICloudService>(object)
@@ -77,8 +77,8 @@ int32_t CloudServiceProxy::ChangeAppSwitch(const std::string &id, const std::str
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_APP_SWITCH, reply, id, bundleName, appSwitch);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d",
-            status, id.c_str(), bundleName.c_str(), appSwitch);
+        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d", status, id.c_str(),
+            bundleName.c_str(), appSwitch);
     }
     return static_cast<Status>(status);
 }
@@ -139,41 +139,39 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &eventId, const st
     return static_cast<Status>(status);
 }
 
-std::pair<int32_t, std::map<std::string, StatisticInfos>> CloudServiceProxy::QueryStatistics(const std::string &id,
-    const std::string &bundleName, const std::string &storeId)
+std::pair<int32_t, std::map<std::string, StatisticInfos>> CloudServiceProxy::QueryStatistics(
+    const std::string &id, const std::string &bundleName, const std::string &storeId)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_QUERY_STATISTICS, reply, id, bundleName, storeId);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x bundleName:%{public}.6s storeId:%{public}.6s", status, id.c_str(),
-            storeId.c_str());
+        LOG_ERROR(
+            "status:0x%{public}x bundleName:%{public}.6s storeId:%{public}.6s", status, id.c_str(), storeId.c_str());
     }
     std::map<std::string, StatisticInfos> infos;
     ITypesUtil::Unmarshal(reply, infos);
     return { status, infos };
 }
 
-int32_t CloudServiceProxy::Share(
-    const std::string &sharingRes, const Participants &participants, Results &results)
+int32_t CloudServiceProxy::Share(const std::string &sharingRes, const Participants &participants, Results &results)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_SHARE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
-            status, sharingRes.c_str(), participants.size());
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+            participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::Unshare(
-    const std::string &sharingRes, const Participants &participants, Results &results)
+int32_t CloudServiceProxy::Unshare(const std::string &sharingRes, const Participants &participants, Results &results)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_UNSHARE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
-            status, sharingRes.c_str(), participants.size());
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+            participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
     return static_cast<Status>(status);
@@ -196,8 +194,8 @@ int32_t CloudServiceProxy::ChangePrivilege(
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_PRIVILEGE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu",
-            status, sharingRes.c_str(), participants.size());
+        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+            participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
     return static_cast<Status>(status);
@@ -214,8 +212,7 @@ int32_t CloudServiceProxy::Query(const std::string &sharingRes, QueryResults &re
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::QueryByInvitation(
-    const std::string &invitation, QueryResults &results)
+int32_t CloudServiceProxy::QueryByInvitation(const std::string &invitation, QueryResults &results)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_QUERY_BY_INVITATION, reply, invitation);
@@ -226,8 +223,8 @@ int32_t CloudServiceProxy::QueryByInvitation(
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::ConfirmInvitation(const std::string &invitation,
-    int32_t confirmation, std::tuple<int32_t, std::string, std::string> &result)
+int32_t CloudServiceProxy::ConfirmInvitation(
+    const std::string &invitation, int32_t confirmation, std::tuple<int32_t, std::string, std::string> &result)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CONFIRM_INVITATION, reply, invitation, confirmation);
@@ -238,8 +235,8 @@ int32_t CloudServiceProxy::ConfirmInvitation(const std::string &invitation,
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::ChangeConfirmation(const std::string &sharingRes,
-    int32_t confirmation, std::pair<int32_t, std::string> &result)
+int32_t CloudServiceProxy::ChangeConfirmation(
+    const std::string &sharingRes, int32_t confirmation, std::pair<int32_t, std::string> &result)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_CONFIRMATION, reply, sharingRes, confirmation);

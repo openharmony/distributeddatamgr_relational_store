@@ -28,7 +28,7 @@ __attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_RdbJsKit_Values
 {
     napi_value ret = nullptr;
     NAPI_CALL(env, napi_create_object(env, &ret));
-    for (auto &[key, value]: valuesBucket.values_) {
+    for (auto &[key, value] : valuesBucket.values_) {
         napi_value jsValue = JSUtils::Convert2JSValue(env, value.value);
         NAPI_CALL(env, napi_set_named_property(env, ret, key.c_str(), jsValue));
     }

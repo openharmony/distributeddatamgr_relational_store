@@ -15,8 +15,8 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_EVENT_HANDLER_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_EVENT_HANDLER_H
 
-#include <memory>
 #include <functional>
+#include <memory>
 namespace OHOS {
 namespace AppExecFwk {
 using Callback = std::function<void()>;
@@ -32,6 +32,6 @@ public:
         return false;
     }
 };
-}
-} // namespace OHOS::AppDataMgrJsKit
+} // namespace AppExecFwk
+} // namespace OHOS
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_EVENT_HANDLER_H

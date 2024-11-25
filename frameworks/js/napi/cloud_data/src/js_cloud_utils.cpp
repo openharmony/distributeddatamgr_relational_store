@@ -14,10 +14,11 @@
  */
 #define LOG_TAG "JSCloudUtils"
 #include "js_cloud_utils.h"
+
 #include "js_proxy.h"
+#include "logger.h"
 #include "result_set.h"
 #include "result_set_bridge.h"
-#include "logger.h"
 
 #define NAPI_CALL_RETURN_ERR(call, ret)  \
     ASSERT_RETURN((call) == napi_ok, ret)
@@ -63,8 +64,7 @@ int32_t Convert2Value(napi_env env, napi_value input, Participant &output)
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "state", output.state, true), napi_invalid_arg);
-    if (output.state < CloudData::Confirmation::CFM_NIL ||
-        output.state >= CloudData::Confirmation::CFM_BUTT) {
+    if (output.state < CloudData::Confirmation::CFM_NIL || output.state >= CloudData::Confirmation::CFM_BUTT) {
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "privilege", output.privilege, true), napi_invalid_arg);

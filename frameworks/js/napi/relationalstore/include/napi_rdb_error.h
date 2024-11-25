@@ -18,6 +18,7 @@
 #include <map>
 #include <optional>
 #include <string>
+
 #include "logger.h"
 #include "rdb_errno.h"
 
@@ -43,50 +44,45 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
 #define RDB_REVT_NOTHING
 #define RDB_DO_NOTHING
 
-#define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                 \
-    do {                                                                                                    \
-        if (!(assertion)) {                                                                                 \
-            if ((error) == nullptr) {                                                                       \
-                LOG_ERROR("throw error: error message is empty");                                           \
-                napi_throw_error((env), nullptr, "error message is empty");                                 \
-                return retVal;                                                                              \
-            }                                                                                               \
-            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),            \
-                (error)->GetMessage().c_str());                                                               \
+#define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                     \
+    do {                                                                                                        \
+        if (!(assertion)) {                                                                                     \
+            if ((error) == nullptr) {                                                                           \
+                LOG_ERROR("throw error: error message is empty");                                               \
+                napi_throw_error((env), nullptr, "error message is empty");                                     \
+                return retVal;                                                                                  \
+            }                                                                                                   \
+            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),              \
+                (error)->GetMessage().c_str());                                                                 \
             napi_throw_error((env), std::to_string((error)->GetCode()).c_str(), (error)->GetMessage().c_str()); \
-            return retVal;                                                                                  \
-        }                                                                                                   \
+            return retVal;                                                                                      \
+        }                                                                                                       \
     } while (0)
 
-#define RDB_NAPI_ASSERT(env, assertion, error) \
-    RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
+#define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
 
-#define CHECK_RETURN_CORE(assertion, theCall, revt)      \
-    do {                                                 \
-        if (!(assertion)) {                              \
-            theCall;                                     \
-            return revt;                                 \
-        }                                                \
+#define CHECK_RETURN_CORE(assertion, theCall, revt) \
+    do {                                            \
+        if (!(assertion)) {                         \
+            theCall;                                \
+            return revt;                            \
+        }                                           \
     } while (0)
 
 #define CHECK_RETURN_SET_E(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, context->SetError(paramError), RDB_REVT_NOTHING)
 
-#define CHECK_RETURN_SET(assertion, paramError) \
-    CHECK_RETURN_CORE(assertion, context->SetError(paramError), ERR)
+#define CHECK_RETURN_SET(assertion, paramError) CHECK_RETURN_CORE(assertion, context->SetError(paramError), ERR)
 
-#define CHECK_RETURN_NULL(assertion) \
-    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, nullptr)
+#define CHECK_RETURN_NULL(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, nullptr)
 
-#define CHECK_RETURN_ERR(assertion) \
-    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
+#define CHECK_RETURN_ERR(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
 
-#define CHECK_RETURN(assertion) \
-    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, RDB_REVT_NOTHING)
+#define CHECK_RETURN(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, RDB_REVT_NOTHING)
 
 class Error {
 public:
-    virtual ~Error(){};
+    virtual ~Error() {};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
 };
@@ -121,6 +117,7 @@ public:
     {
         return code_;
     }
+
 private:
     int code_;
     std::string msg_;
@@ -169,7 +166,7 @@ public:
 
 class ParamNumError : public Error {
 public:
-    ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
+    ParamNumError(const std::string &wantNum) : wantNum(wantNum) {};
     std::string GetMessage() override
     {
         return "Parameter error. Need " + wantNum + " parameter(s)!";

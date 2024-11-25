@@ -16,8 +16,8 @@
 #ifndef NAPI_RDB_STORE_OBSERVER_H
 #define NAPI_RDB_STORE_OBSERVER_H
 
-#include "rdb_types.h"
 #include "napi_uv_queue.h"
+#include "rdb_types.h"
 
 namespace OHOS::RdbJsKit  {
 class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
@@ -25,7 +25,7 @@ public:
     explicit NapiRdbStoreObserver(napi_env env, napi_value callback);
     virtual ~NapiRdbStoreObserver() noexcept;
 
-    void OnChange(const std::vector<std::string>& devices) override;
+    void OnChange(const std::vector<std::string> &devices) override;
 };
-}
+} // namespace OHOS::RdbJsKit
 #endif
