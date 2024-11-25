@@ -55,7 +55,7 @@ constexpr const char *SELECT_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT"
 constexpr const char *INSERT_ARRAY[] = { "INSERT", "INTO", "VALUES" };
 constexpr const char *CREATE_ARRAY[] = { "CREATE", "TABLE", "DATABASE", "VIEW", "INDEX", "TRIGGER", "PROCEDURE", "IF",
     "NOT", "EXISTS", "INT", "PRIMARY", "KEY", "TEXT", "BLOB", "REAL", "ASSET", "ASSETS", "NULL", "INTEGER",
-    "UNLIMITED", "AS", "UNION"};
+    "UNLIMITED", "AS", "UNION" };
 constexpr const char *UPDATE_ARRAY[] = { "UPDATE", "SET", "WHERE", "AND", "OR" };
 constexpr const char *DELETE_ARRAY[] = { "DELETE", "FROM", "WHERE" };
 constexpr const char *DROP_ARRAY[] = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
@@ -305,9 +305,6 @@ std::string ReplaceMultipleSpaces(const std::string &str)
 std::string AnonyWord(const std::string &word)
 {
     std::string anonyWord = word;
-    if (anonyWord.empty()) {
-        return anonyWord;
-    }
     if (word.size() == 1 && std::isdigit(word[0])) {
         anonyWord[0] = '*';
     } else if (word.size() >= MIN_ANONYMIZE_LENGTH && word.size() <= MAX_ANONYMIZE_LENGTH) {
@@ -323,9 +320,6 @@ std::string AnonyWord(const std::string &word)
 
 std::string AnonyString(const std::string &input)
 {
-    if (input.empty()) {
-        return input;
-    }
     std::vector<std::string> words = SplitString(input);
     std::string result;
     for (const std::string &word : words) {
