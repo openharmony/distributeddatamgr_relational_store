@@ -391,7 +391,7 @@ std::string AnonyCreateSql(const std::string &sql)
 
 std::string AnonyDropSql(const std::string &sql)
 {
-    return AnonySqlString(sql, DROP_ARRAY,DROP_ARRAY_LENGTH);
+    return AnonySqlString(sql, DROP_ARRAY, DROP_ARRAY_LENGTH);
 }
 
 std::string AnonyPragmaSql(const std::string &sql)
