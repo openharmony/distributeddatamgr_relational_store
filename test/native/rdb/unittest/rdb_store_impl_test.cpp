@@ -20,6 +20,9 @@
 #include <map>
 #include <string>
 
+#include "types.h"
+#include "single_kvstore.h"
+#include "distributed_kv_data_manager.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -405,6 +408,59 @@ HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_001, TestSize.Level2)
     store = nullptr;
     RdbHelper::DeleteRdbStore(databasePath);
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupTest_009
+ * @tc.desc: Abnormal testCase for Backup
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_BackupTest_009, TestSize.Level2)
+{
+    OHOS::DistributedKv::AppId appId;
+    OHOS::DistributedKv::StoreId storeId64;
+    OHOS::DistributedKv::DistributedKvDataManager manager;
+    OHOS::DistributedKv::Options create;
+
+    std::shared_ptr<OHOS::ExecutorPool> executors;
+    manager.SetExecutors(executors);
+    appId.appId = "ohos.kvdatamanager.test";
+    storeId64.storeId = "a000000000b000000000c000000000d000000000e000000000f000000000g000";
+    create.createIfMissing = true;
+    create.encrypt = false;
+    create.securityLevel = OHOS::DistributedKv::SecurityLevel::S1;
+    create.autoSync = true;
+    create.kvStoreType = OHOS::DistributedKv::KvStoreType::SINGLE_VERSION;
+    create.area = OHOS::DistributedKv::Area::EL1;
+    create.baseDir = std::string("/data/service/el1/public/database/") + appId.appId;
+    mkdir(create.baseDir.c_str(), (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
+    std::shared_ptr<OHOS::DistributedKv::SingleKvStore> notExistKvStore;
+    int status = manager.GetSingleKvStore(create, appId, storeId64, notExistKvStore);
+    ASSERT_EQ(status, OHOS::DistributedKv::Status::SUCCESS);
+    EXPECT_NE(notExistKvStore, nullptr);
+
+    const std::string attachedName = "attached";
+    int errCode = E_OK;
+    RdbStoreConfig config1(RDB_TEST_PATH + "stepReSUltSet_lmpl_testA.db");
+    config1.SetSecurityLevel(SecurityLevel::S1);
+    config1.SetEncryptStatus(true);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config1, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig config2(RDB_TEST_PATH + "stepResultSet_lmpl_testB.db");
+    config2.SetSecurityLevel(SecurityLevel::S1);
+    config2.SetEncryptStatus(true);
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config2, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    std::pair<int32_t, int32_t> results = storeB->Attach(config1, attachedName, 2);
+    int32_t result1 = results.first;
+    ASSERT_EQ(result1, E_OK);
+    manager.CloseAllKvStore(appId);
+    manager.DeleteAllKvStore(appId, create.baseDir);
 }
 
 /* *
