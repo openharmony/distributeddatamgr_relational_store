@@ -14,7 +14,7 @@
  */
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
-#include <cstddef>
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <climits>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -248,17 +249,17 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
-bool IsSpecialChar(char c)
+bool SqliteUtils::IsSpecialChar(char c)
 {
     return (c == ' ' || c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == '(' || c == ')' || c == ';');
 }
 
-std::vector<std::string> SplitString(const std::string &input)
+std::vector<std::string> SqliteUtils::SplitString(const std::string &input)
 {
     std::vector<std::string> result;
     std::string word;
     for (char c : input) {
-        if (!IsSpecialChar(c)) {
+        if (!SqliteUtils::IsSpecialChar(c)) {
             word += c;
         } else {
             if (!word.empty()) {
@@ -274,7 +275,7 @@ std::vector<std::string> SplitString(const std::string &input)
     return result;
 }
 
-std::string ReplaceMultipleSpaces(const std::string &str)
+std::string SqliteUtils::ReplaceMultipleSpaces(const std::string &str)
 {
     std::string result = str;
     if (result.empty()) {
@@ -286,7 +287,7 @@ std::string ReplaceMultipleSpaces(const std::string &str)
     return std::regex_replace(result, std::regex(" +"), " ");
 }
 
-std::string AnonyWord(const std::string &word)
+std::string SqliteUtils::AnonyWord(const std::string &word)
 {
     std::string anonyWord = word;
     if (word.size() == 1 && std::isdigit(word[0])) {
@@ -302,7 +303,7 @@ std::string AnonyWord(const std::string &word)
     return anonyWord;
 }
 
-static bool Find(std::string word, const char *const array[], uint32_t length)
+bool SqliteUtils::Find(const std::string &word, const char *const array[], uint32_t length)
 {
     for (uint32_t i = 0; i < length; i++) {
         if (word == array[i]) {
@@ -312,16 +313,16 @@ static bool Find(std::string word, const char *const array[], uint32_t length)
     return false;
 }
 
-static std::string AnonySqlString(const std::string &input, const char *const array[], uint32_t length)
+std::string SqliteUtils::AnonySqlString(const std::string &input, const char *const array[], uint32_t length)
 {
-    std::vector<std::string> words = SplitString(input);
+    std::vector<std::string> words = SqliteUtils::SplitString(input);
     std::string result;
     for (const std::string &word : words) {
         std::string anonyWord = word;
         std::string upperWord = SqliteUtils::StrToUpper(word);
         bool found = Find(upperWord, array, length);
         if (!found) {
-            anonyWord = AnonyWord(anonyWord);
+            anonyWord = SqliteUtils::AnonyWord(anonyWord);
         }
         result += anonyWord;
     }
@@ -330,8 +331,8 @@ static std::string AnonySqlString(const std::string &input, const char *const ar
 
 std::string SqliteUtils::AnonySql(const std::string &sql)
 {
-    std::string replaceSql = ReplaceMultipleSpaces(sql);
-    return AnonySqlString(replaceSql, SQL_ARRAY, SQL_ARRAY_LENGTH);
+    std::string replaceSql = SqliteUtils::ReplaceMultipleSpaces(sql);
+    return SqliteUtils::AnonySqlString(replaceSql, SQL_ARRAY, SQL_ARRAY_LENGTH);
 }
 
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
