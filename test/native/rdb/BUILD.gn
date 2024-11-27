@@ -160,6 +160,7 @@ ohos_unittest("NativeRdbTest") {
     "hilog:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "samgr:samgr_proxy",
   ]
