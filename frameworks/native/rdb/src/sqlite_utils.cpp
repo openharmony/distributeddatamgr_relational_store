@@ -14,7 +14,7 @@
  */
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
-
+#include <cstddef>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -44,22 +44,43 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
-constexpr int32_t CREATE_DATABASE_SIZE = 15;
 constexpr int32_t SQL_TYPE_SIZE = 3;
 constexpr int32_t MIN_ANONYMIZE_LENGTH = 2;
 constexpr int32_t MAX_ANONYMIZE_LENGTH = 4;
 constexpr int32_t OTHER_SIZE = 6;
 constexpr int32_t START_SIZE = 0;
-const std::vector<std::string> SELECT_ARRAY = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT",
-    "FROM", "WHERE", "DISTRICT" };
-const std::vector<std::string> INSERT_ARRAY = { "INSERT", "INTO", "VALUES" };
-const std::vector<std::string> UPDATE_ARRAY = { "UPDATE", "SET", "WHERE", "AND", "OR" };
-const std::vector<std::string> DELETE_ARRAY = { "DELETE", "FROM", "WHERE" };
-const std::vector<std::string> DROP_ARRAY = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
-const std::vector<std::string> PRAGMA_ARRAY = { "PRAGMA" };
+
+constexpr const char *SELECT_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT", "FROM",
+    "WHERE", "DISTRICT" };
+constexpr const char *INSERT_ARRAY[] = { "INSERT", "INTO", "VALUES" };
+constexpr const char *CREATE_ARRAY[] = { "CREATE", "TABLE", "DATABASE", "VIEW", "INDEX", "TRIGGER", "PROCEDURE", "IF",
+    "NOT", "EXISTS", "INT", "PRIMARY", "KEY", "TEXT", "BLOB", "REAL", "ASSET", "ASSETS", "NULL", "INTEGER",
+    "UNLIMITED", "AS", "UNION" };
+constexpr const char *UPDATE_ARRAY[] = { "UPDATE", "SET", "WHERE", "AND", "OR" };
+constexpr const char *DELETE_ARRAY[] = { "DELETE", "FROM", "WHERE" };
+constexpr const char *DROP_ARRAY[] = { "DROP", "TABLE", "IF", "EXISTS", "DATABASE" };
+constexpr const char *PRAGMA_ARRAY[] = { "PRAGMA" };
+constexpr const char *ALTER_ARRAY[] = { "ALTER", "TABLE", "ADD", "COLUMN", "DROP", "INT", "TEXT", "BLOB", "REAL",
+    "ASSET", "ASSETS", "NULL", "INTEGER", "MODIFY" };
+
+constexpr const uint32_t SELECT_ARRAY_LENGTH = 11;
+constexpr const uint32_t INSERT_ARRAY_LENGTH = 3;
+constexpr const uint32_t CREATE_ARRAY_LENGTH = 23;
+constexpr const uint32_t UPDATE_ARRAY_LENGTH = 5;
+constexpr const uint32_t DELETE_ARRAY_LENGTH = 3;
+constexpr const uint32_t DROP_ARRAY_LENGTH = 5;
+constexpr const uint32_t PRAGMA_ARRAY_LENGTH = 2;
+constexpr const uint32_t ALTER_ARRAY_LENGTH = 14;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
+
+using AnonySqlFunction = std::string (*)(const std::string &sql);
+
+struct SqlTypeHandler {
+    const char *type;
+    std::variant<AnonySqlFunction> handler;
+};
 
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
@@ -317,14 +338,25 @@ std::string AnonyString(const std::string &input)
     return result;
 }
 
-std::string AnonySqlString(const std::string &input, const std::vector<std::string> &array)
+bool Find(std::string word, const char *const array[], uint32_t length)
+{
+    for (uint32_t i = 0; i < length; i++) {
+        if (word == array[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string AnonySqlString(const std::string &input, const char *const array[], uint32_t length)
 {
     std::vector<std::string> words = SplitString(input);
     std::string result;
     for (const std::string &word : words) {
         std::string anonyWord = word;
         std::string upperWord = SqliteUtils::StrToUpper(word);
-        if (std::find(array.begin(), array.end(), upperWord) == array.end()) {
+        bool found = Find(upperWord, array, length);
+        if (!found) {
             anonyWord = AnonyWord(anonyWord);
         }
         result += anonyWord;
@@ -332,171 +364,64 @@ std::string AnonySqlString(const std::string &input, const std::vector<std::stri
     return result;
 }
 
-std::string AnonyCreateTable(std::string &str)
+std::string AnonySelectSql(const std::string &sql)
 {
-    size_t lastSpacePos;
-    if (!str.empty() && str.back() == ' ') {
-        str = str.substr(0, str.length() - 1);
-    }
-    lastSpacePos = str.find_last_of(' ');
-    if (lastSpacePos != std::string::npos) {
-        str.replace(lastSpacePos + 1, str.length() - lastSpacePos,
-            AnonyString(str.substr(lastSpacePos + 1, str.length() - lastSpacePos)));
-    }
-    return str;
+    return AnonySqlString(sql, SELECT_ARRAY, SELECT_ARRAY_LENGTH);
 }
 
-std::string AnonyCreateColumn(std::string &str)
+std::string AnonyInsertSql(const std::string &sql)
 {
-    std::vector<std::string> tokens;
-    std::string delimiter = ",";
-    size_t pos = 0;
-
-    while ((pos = str.find(delimiter)) != std::string::npos) {
-        std::string token = str.substr(0, pos);
-        tokens.push_back(token);
-        str.erase(0, pos + delimiter.length());
-    }
-    tokens.push_back(str);
-    std::string result;
-    for (const auto &token : tokens) {
-        std::string repToken = ReplaceMultipleSpaces(token);
-        size_t spacePos = repToken.find(' ');
-        if (spacePos != std::string::npos) {
-            std::string replacedToken = AnonyString(repToken.substr(0, spacePos)) + repToken.substr(spacePos);
-            if (!result.empty()) {
-                result += ", ";
-            }
-            result += replacedToken;
-        }
-    }
-    return result;
+    return AnonySqlString(sql, INSERT_ARRAY, INSERT_ARRAY_LENGTH);
 }
 
-std::string MaskedCreateSql(const std::string &sql)
+std::string AnonyUpdateSql(const std::string &sql)
 {
-    auto pre = sql.find("(");
-    auto end = sql.rfind(")");
-    auto table = sql.substr(0, pre);
-    auto column = sql.substr(pre, end - pre);
-    table = AnonyCreateTable(table);
-    column = AnonyCreateColumn(column);
-    return table + " " + column + ")";
+    return AnonySqlString(sql, UPDATE_ARRAY, UPDATE_ARRAY_LENGTH);
 }
 
-std::string AnonyAlterDrop(const std::smatch &match, const std::string &sql)
+std::string AnonyDeleteSql(const std::string &sql)
 {
-    std::string columns = match[1].str();
-    std::string table = match[2].str();
-    std::string maskedSql = std::regex_replace(sql,
-        std::regex("ALTER\\s+TABLE\\s+(.*)\\s+DROP COLUMN\\s+([^\\s;]+)", std::regex_constants::icase),
-        "ALTER TABLE " + AnonyString(columns) + " DROP COLUMN " + AnonyString(table));
-    return maskedSql;
+    return AnonySqlString(sql, DELETE_ARRAY, DELETE_ARRAY_LENGTH);
 }
 
-std::string AnonyAlterAdd(const std::smatch &match, const std::string &sql)
+std::string AnonyCreateSql(const std::string &sql)
 {
-    std::string columns = match[1].str();
-    std::string table = match[2].str();
-    std::string maskedSql = std::regex_replace(sql,
-        std::regex("ALTER\\s+TABLE\\s+(.*)\\s+ADD COLUMN\\s+([^\\s;]+)", std::regex_constants::icase),
-        "ALTER TABLE " + AnonyString(columns) + " ADD COLUMN " + AnonyString(table));
-    return maskedSql;
+    return AnonySqlString(sql, CREATE_ARRAY, CREATE_ARRAY_LENGTH);
 }
 
-std::string AnonySelectSql(const std::string &sql, const std::string &array)
+std::string AnonyDropSql(const std::string &sql)
 {
-    return AnonySqlString(sql, SELECT_ARRAY);
+    return AnonySqlString(sql, DROP_ARRAY, DROP_ARRAY_LENGTH);
 }
 
-std::string AnonyInsertSql(const std::string &sql, const std::string &array)
+std::string AnonyPragmaSql(const std::string &sql)
 {
-    return AnonySqlString(sql, INSERT_ARRAY);
+    return AnonySqlString(sql, PRAGMA_ARRAY, PRAGMA_ARRAY_LENGTH);
 }
 
-std::string AnonyUpdateSql(const std::string &sql, const std::string &array)
+std::string AnonyAlterSql(const std::string &sql)
 {
-    return AnonySqlString(sql, UPDATE_ARRAY);
+    return AnonySqlString(sql, ALTER_ARRAY, ALTER_ARRAY_LENGTH);
 }
 
-std::string AnonyDeleteSql(const std::string &sql, const std::string &array)
-{
-    return AnonySqlString(sql, DELETE_ARRAY);
-}
-
-std::string AnonyCreateSql(const std::string &replaceSql)
-{
-    std::regex createDatabaseRegex("CREATE\\s+DATABASE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex createTableRegex("CREATE\\s+TABLE\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::smatch match;
-    if (std::regex_search(replaceSql, match, createDatabaseRegex)) {
-        std::string maskedSql =
-            replaceSql.substr(START_SIZE, CREATE_DATABASE_SIZE) + AnonyString(replaceSql.substr(CREATE_DATABASE_SIZE));
-        return maskedSql;
-    } else if (std::regex_search(replaceSql, match, createTableRegex)) {
-        std::string maskedSql = MaskedCreateSql(replaceSql);
-        return maskedSql;
-    }
-    return replaceSql;
-}
-
-std::string AnonyDropSql(const std::string &sql, const std::string &array)
-{
-    return AnonySqlString(sql, DROP_ARRAY);
-}
-
-std::string AnonyPragmaSql(const std::string &sql, const std::string &array)
-{
-    return AnonySqlString(sql, PRAGMA_ARRAY);
-}
-
-std::string AnonyAlterSql(const std::string &replaceSql)
-{
-    std::regex alterDropRegex("ALTER\\s+TABLE\\s+(.*)\\s+DROP COLUMN\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::regex alterAddRegex("ALTER\\s+TABLE\\s+(.*)\\s+ADD COLUMN\\s+([^\\s;]+)", std::regex_constants::icase);
-    std::smatch match;
-    if (std::regex_search(replaceSql, match, alterDropRegex)) {
-        return AnonyAlterDrop(match, replaceSql);
-    } else if (std::regex_search(replaceSql, match, alterAddRegex)) {
-        return AnonyAlterAdd(match, replaceSql);
-    }
-    return replaceSql;
-}
-
+constexpr SqlTypeHandler SQL_TYPE_HANDLERS[] = { { "SEL", AnonySelectSql }, { "INS", AnonyInsertSql },
+    { "UPD", AnonyUpdateSql }, { "DEL", AnonyDeleteSql }, { "CRE", AnonyCreateSql }, { "DRO", AnonyDropSql },
+    { "PRA", AnonyPragmaSql }, { "ALT", AnonyAlterSql } };
 
 std::string SqliteUtils::AnonySql(const std::string &sql)
 {
     std::string replaceSql = ReplaceMultipleSpaces(sql);
     std::string sqlType;
     if (replaceSql.size() > SQL_TYPE_SIZE) {
-        sqlType = StrToUpper(replaceSql.substr(START_SIZE, SQL_TYPE_SIZE));
+        sqlType = SqliteUtils::StrToUpper(replaceSql.substr(START_SIZE, SQL_TYPE_SIZE));
     } else {
         return replaceSql;
     }
-    std::smatch match;
-    if (sqlType == "SEL") {
-        return AnonySqlString(replaceSql, SELECT_ARRAY);
-    }
-    if (sqlType == "INS") {
-        return AnonySqlString(replaceSql, INSERT_ARRAY);
-    }
-    if (sqlType == "UPD") {
-        return AnonySqlString(replaceSql, UPDATE_ARRAY);
-    }
-    if (sqlType == "DEL") {
-        return AnonySqlString(replaceSql, DELETE_ARRAY);
-    }
-    if (sqlType == "CRE") {
-        return AnonyCreateSql(replaceSql);
-    }
-    if (sqlType == "DRO") {
-        return AnonySqlString(replaceSql, DROP_ARRAY);
-    }
-    if (sqlType == "PRA") {
-        return AnonySqlString(replaceSql, PRAGMA_ARRAY);
-    }
-    if (sqlType == "ALT") {
-        return AnonyAlterSql(replaceSql);
+
+    for (const auto &handler : SQL_TYPE_HANDLERS) {
+        if (handler.type == sqlType) {
+            return std::get<AnonySqlFunction>(handler.handler)(replaceSql);
+        }
     }
 
     if (replaceSql.length() > OTHER_SIZE) {
