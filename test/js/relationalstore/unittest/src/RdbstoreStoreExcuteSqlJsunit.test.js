@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 var context = ability_featureAbility.getContext()
@@ -213,7 +213,7 @@ describe('rdbStoreExecuteSqlTest', function () {
         {
             let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
             executeSqlPromise.then(async () => {
-                await console.log(TAG + "executeSql done." );
+                await console.log(TAG + "executeSql done.");
             }).catch((err) => {
                 expect(null).assertFail();
             })

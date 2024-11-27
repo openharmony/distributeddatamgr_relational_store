@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -72,11 +72,11 @@ describe('rdbStorePredicatesJoinTest', function () {
         await rdbStore.executeSql(USER_TABLE);
 
         const users = [
-            {userId:1, firstName:"Zhang", lastName:"San", age:29, balance:100.51},
-            {userId:2, firstName:"Li", lastName:"Si", age:30, balance:200.51},
-            {userId:3, firstName:"wang", lastName:"wu", age:30, balance:300.51},
-            {userId:4, firstName:"sun", lastName:"liu", age:30, balance:400.51},
-            {userId:5, firstName:"ma", lastName:"qi", age:32, balance:500.51},
+            { userId: 1, firstName: "Zhang", lastName: "San", age: 29, balance: 100.51 },
+            { userId: 2, firstName: "Li", lastName: "Si", age: 30, balance: 200.51 },
+            { userId: 3, firstName: "wang", lastName: "wu", age: 30, balance: 300.51 },
+            { userId: 4, firstName: "sun", lastName: "liu", age: 30, balance: 400.51 },
+            { userId: 5, firstName: "ma", lastName: "qi", age: 32, balance: 500.51 },
         ];
 
         var objects = new Array();
@@ -97,9 +97,9 @@ describe('rdbStorePredicatesJoinTest', function () {
         await rdbStore.executeSql(BOOK_TABLE);
 
         var books = [
-            {id:1, name:"SanGuo", userId:1},
-            {id:2, name:"XiYouJi", userId:2},
-            {id:3, name:"ShuiHuZhuan", userId:3},
+            { id: 1, name: "SanGuo", userId: 1 },
+            { id: 2, name: "XiYouJi", userId: 2 },
+            { id: 3, name: "ShuiHuZhuan", userId: 3 },
         ]
 
         var objects = new Array();

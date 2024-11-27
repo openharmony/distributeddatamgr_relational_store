@@ -14,7 +14,7 @@
  */
 
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import cloudData from '@ohos.data.cloudData';
 
 const TAG = "[CLOUD_CONFIG_JSKITS_TEST]"
@@ -294,7 +294,7 @@ describe('CloudConfigPromiseTest', function () {
         try {
             let account = "test_id";
             let bundleName1 = "test_bundleName1";
-            let appActions = {[bundleName1]: 3};
+            let appActions = { [bundleName1]: 3 };
             await cloudData.Config.clear(account, appActions).then(() => {
                 console.info('ClearInvalidArgsTest success');
                 expect(null).assertFail();

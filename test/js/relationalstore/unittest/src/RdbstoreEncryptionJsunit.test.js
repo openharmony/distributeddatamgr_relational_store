@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import factory from '@ohos.data.distributedKVStore'
@@ -246,11 +246,11 @@ describe('rdbEncryptTest', function () {
         context = ability_featureAbility.getContext();
         await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
         try {
-          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
-          expect(rdbStore !== null).assertTrue();
+            let rdbStore = await CreateRdbStore(context, STORE_CONFIG_WRONG);
+            expect(rdbStore !== null).assertTrue();
         } catch (err) {
-          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
-          expect().assertFail();
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
         }
         done();
         console.log(TAG + "************* RdbEncryptTest_0040 end *************");
@@ -269,11 +269,11 @@ describe('rdbEncryptTest', function () {
         context = ability_featureAbility.getContext();
         await CreateRdbStore(context, STORE_CONFIG_WRONG);
         try {
-          let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
-          expect(rdbStore !== null).assertTrue();
+            let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT);
+            expect(rdbStore !== null).assertTrue();
         } catch (err) {
-          console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
-          expect().assertFail();
+            console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
         }
         done();
         console.log(TAG + "************* RdbEncryptTest_0041 end *************");
@@ -430,7 +430,7 @@ describe('rdbEncryptTest', function () {
      * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0030
      * @tc.desc RDB decrypt function invalid key config test
      */
-     it('RdbDecryptTest_0030', 0, async function () {
+    it('RdbDecryptTest_0030', 0, async function () {
         console.info(TAG + "************* RdbDecryptTest_0030 start *************")
         let invalid_key_config = {
             name: "nondefault.db",
@@ -459,7 +459,7 @@ describe('rdbEncryptTest', function () {
      * @tc.number SUB_DDM_RDB_JS_RdbDecryptTest_0040
      * @tc.desc RDB decrypt function invalid iteration config test
      */
-     it('RdbDecryptTest_0040', 0, async function () {
+    it('RdbDecryptTest_0040', 0, async function () {
         console.info(TAG + "************* RdbDecryptTest_0040 start *************")
         let invalid_iter_config = {
             name: "nondefault.db",
@@ -611,7 +611,7 @@ describe('rdbEncryptTest', function () {
             resultSet.goToFirstRow()
             const x = resultSet.getLong(resultSet.getColumnIndex("x"))
             const y = resultSet.getLong(resultSet.getColumnIndex("y"))
-            valueBucket = {"x" : x, "y" : y}
+            valueBucket = { "x": x, "y": y }
             resultSet.close()
         } catch (err) {
             console.error(`Read data failed, error code: ${err.code}, err message: ${err.message}`);
@@ -633,7 +633,7 @@ describe('rdbEncryptTest', function () {
             console.error(`Insert and check data, error code: ${err.code}, err message: ${err.message}`);
             expect().assertFail()
         }
-        
+
         await store.close()
         console.log(TAG + "************* RdbDecryptTest_0070 end *************")
     })

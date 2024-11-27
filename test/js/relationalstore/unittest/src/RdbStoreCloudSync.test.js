@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -427,7 +427,7 @@ describe('rdbStoreCloudSyncTest', function () {
             done();
         }
         let predicates = new relationalStore.RdbPredicates("test")
-        predicates.in("id", ["id1","id2"]);
+        predicates.in("id", ["id1", "id2"]);
         try {
             await rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, predicates, Progress)
         } catch (err) {
@@ -451,7 +451,7 @@ describe('rdbStoreCloudSyncTest', function () {
                 console.log(TAG + `Progress:` + JSON.stringify(detail));
             }
             let predicates = new relationalStore.RdbPredicates("test")
-            predicates.in("id", ["id1","id2"]);
+            predicates.in("id", ["id1", "id2"]);
             rdbStore.cloudSync(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, predicates, Progress, () => {
                 done();
                 expect(false).assertTrue()

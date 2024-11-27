@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -55,7 +55,7 @@ describe('rdbStorePluginLibsTest', function () {
     it('testPluginLibs0001', 0, async function () {
         console.log(TAG + "************* testPluginLibs0001 start *************");
         try {
-            storeConfig.pluginLibs = [ "", "" ]
+            storeConfig.pluginLibs = ["", ""]
             rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
         } catch (e) {
             console.log("getRdbStore err: failed, err: code=" + e.code + " message=" + e.message)
@@ -72,7 +72,7 @@ describe('rdbStorePluginLibsTest', function () {
     it('testPluginLibs0002', 0, async function () {
         console.log(TAG + "************* testPluginLibs0002 start *************");
         try {
-            storeConfig.pluginLibs = [ "./" ]
+            storeConfig.pluginLibs = ["./"]
             rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
             expect().assertFail();
         } catch (e) {
@@ -90,7 +90,7 @@ describe('rdbStorePluginLibsTest', function () {
     it('testPluginLibs0003', 0, async function () {
         console.log(TAG + "************* testPluginLibs0003 start *************");
         try {
-            storeConfig.pluginLibs = [ "/data/errPath/err.so" ]
+            storeConfig.pluginLibs = ["/data/errPath/err.so"]
             rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
             expect().assertFail();
         } catch (e) {
@@ -108,7 +108,7 @@ describe('rdbStorePluginLibsTest', function () {
     it('testPluginLibs0004', 0, async function () {
         console.log(TAG + "************* testPluginLibs0004 start *************");
         try {
-            storeConfig.pluginLibs = [ "/data/app/el1/bundle/public/" ]
+            storeConfig.pluginLibs = ["/data/app/el1/bundle/public/"]
             rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
             expect().assertFail();
         } catch (e) {
@@ -127,7 +127,7 @@ describe('rdbStorePluginLibsTest', function () {
         console.log(TAG + "************* testPluginLibs0005 start *************");
         try {
             let path = await context.getFilesDir();
-            storeConfig.pluginLibs = [ String(path) ]
+            storeConfig.pluginLibs = [String(path)]
             rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
             expect().assertFail();
         } catch (e) {

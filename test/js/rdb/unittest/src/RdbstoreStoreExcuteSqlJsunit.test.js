@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST]"
@@ -203,7 +203,7 @@ describe('rdbStoreExcuteSqlTest', function () {
         {
             let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
             executeSqlPromise.then(async () => {
-                await console.log(TAG + "executeSql done." );
+                await console.log(TAG + "executeSql done.");
             }).catch((err) => {
                 expect(null).assertFail();
             })

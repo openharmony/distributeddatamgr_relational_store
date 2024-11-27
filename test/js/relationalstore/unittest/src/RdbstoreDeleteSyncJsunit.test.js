@@ -387,7 +387,7 @@ describe('rdbStoreDeleteSyncTest', function () {
             console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
             expect("14800014").assertEqual(err.code);
         }
-        
+
         await data_relationalStore.deleteRdbStore(context, STORE_NAME);
         done();
         console.log(TAG + "************* testSyncRdbStoreDelete0008 end *************");

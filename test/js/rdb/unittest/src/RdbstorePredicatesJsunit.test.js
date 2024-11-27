@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS _TEST]"
@@ -458,7 +458,7 @@ describe('rdbPredicatesTest', function () {
      * @tc.desc     1.predicates not equalTo normal test
      *              2.predicates not equalTo abnormal test
      */
-     it('testNotEqualTo0009', 0, async function (done) {
+    it('testNotEqualTo0009', 0, async function (done) {
         console.log(TAG + "************* testNotEqualTo0009 start *************");
 
         let predicates1 = new dataRdb.RdbPredicates("AllDataType");
@@ -776,7 +776,7 @@ describe('rdbPredicatesTest', function () {
      *              4.predicates greaterThan abnormal "Number.MIN_SAFE_INTEGER" test
      *              5.predicates greaterThan abnormal "Number.MAX_SAFE_INTEGER" test
      */
-     it('testGreaterThan0009', 0, async function (done) {
+    it('testGreaterThan0009', 0, async function (done) {
         console.log(TAG + "************* testGreaterThan0009 start *************");
 
         let predicates1 = new dataRdb.RdbPredicates("AllDataType");
@@ -1471,7 +1471,7 @@ describe('rdbPredicatesTest', function () {
      *              5.predicates between abnormal "Number.NEGATIVE_INFINITY" test
      *              6.predicates between abnormal "Number.POSITIVE_INFINITY" test
      */
-     it('testNotBetween0005', 0, async function (done) {
+    it('testNotBetween0005', 0, async function (done) {
         console.log(TAG + "************* testNotBetween0005 start *************");
 
         let predicates1 = new dataRdb.RdbPredicates("AllDataType");
@@ -1703,7 +1703,7 @@ describe('rdbPredicatesTest', function () {
      * @tc.desc     1.predicates contains abnormal "null" test
      *              2.predicates contains abnormal "undefined" test
      */
-     it('testContains0005', 0, async function (done) {
+    it('testContains0005', 0, async function (done) {
         console.log(TAG + "************* testContains0005 start *************");
 
         let predicates1 = new dataRdb.RdbPredicates("AllDataType");
@@ -1935,7 +1935,7 @@ describe('rdbPredicatesTest', function () {
      * @tc.desc     1.predicates like abnormal "null" test
      *              2.predicates like abnormal "undefined" test
      */
-     it('testLike0005', 0, async function (done) {
+    it('testLike0005', 0, async function (done) {
         console.log(TAG + "************* testLike0005 start *************");
 
         let predicates1 = new dataRdb.RdbPredicates("AllDataType");
@@ -2453,7 +2453,7 @@ describe('rdbPredicatesTest', function () {
         console.log(TAG + "************* testIn0004 end *************");
     })
 
-        /**
+    /**
      * @tc.name predicates in normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0194
      * @tc.desc predicates in normal test

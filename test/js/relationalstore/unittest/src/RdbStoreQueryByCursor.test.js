@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -215,7 +215,7 @@ describe('rdbStoreQueryByCursorTest', function () {
                 resultSet.close();
                 expect(true).assertEqual(resultSet.isClosed);
             })
-        } catch(err) {
+        } catch (err) {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
@@ -248,7 +248,7 @@ describe('rdbStoreQueryByCursorTest', function () {
                 resultSet.close();
                 expect(true).assertEqual(resultSet.isClosed);
             })
-        } catch(err) {
+        } catch (err) {
             console.log(TAG + `query cursor fail, errcode:${JSON.stringify(err)}.`);
             done();
             expect().assertFail();
@@ -341,7 +341,7 @@ describe('rdbStoreQueryByCursorTest', function () {
             rdbStore.cleanDirtyData("query_tb", cursor, (err) => {
                 if (err) {
                     console.error(TAG, "clean dirty data failed, err: code=" + err.code + " message=" + err.message);
-                    expect(false).assertTrue() ;
+                    expect(false).assertTrue();
                 }
                 done();
             })
