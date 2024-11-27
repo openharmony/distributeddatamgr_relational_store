@@ -99,6 +99,12 @@ private:
 
     static std::string GetAnonymousName(const std::string& fileName);
     static std::string AnonyDigits(const std::string& fileName);
+    static bool IsSpecialChar(char c);
+    static std::vector<std::string> SplitString(const std::string &input);
+    static std::string ReplaceMultipleSpaces(const std::string &str);
+    static std::string AnonyWord(const std::string &word);
+    static bool Find(const std::string &word, const char *const array[], uint32_t length);
+    static std::string AnonySqlString(const std::string &input, const char *const array[], uint32_t length);
 };
 
 } // namespace NativeRdb

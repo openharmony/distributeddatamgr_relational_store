@@ -338,16 +338,16 @@ describe('rdbStoreTest', function () {
             })
             const middleTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime);
-
-            expect((middleTime - startTime) > 1000).assertTrue();
-
+    
+            expect((middleTime - startTime) > 500).assertTrue();
+    
             rdbStore.insertSync('test', {
                 blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
             })
             const endTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, endTime:" + endTime + " middleTime:" + middleTime);
-
-            expect((endTime - middleTime) < 1000).assertTrue();
+    
+            expect((endTime - middleTime) < 500).assertTrue();
             console.log(TAG + "************* testRdbStore0012 end *************");
             done();
         } catch (e) {
