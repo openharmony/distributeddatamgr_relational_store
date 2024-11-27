@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
@@ -374,7 +374,7 @@ describe('rdbStoreDeleteTest', function () {
      */
     it('testRdbStoreDelete0008', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0008 start *************");
-        
+
         const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
         const STORE_NAME = "AfterCloseTest.db";
@@ -411,7 +411,7 @@ describe('rdbStoreDeleteTest', function () {
             console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
             expect("14800014").assertEqual(err.code);
         }
-        
+
         await data_relationalStore.deleteRdbStore(context, STORE_NAME);
         done();
         console.log(TAG + "************* testRdbStoreDelete0008 end *************");
@@ -426,7 +426,7 @@ describe('rdbStoreDeleteTest', function () {
      */
     it('testRdbStoreDelete0009', 0, async function (done) {
         console.log(TAG + "************* testRdbStoreDelete0009 start *************");
-                
+
         const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "name TEXT UNIQUE, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
         const STORE_NAME = "AfterCloseTest.db";
@@ -438,7 +438,7 @@ describe('rdbStoreDeleteTest', function () {
             }
         )
         await rdbStore.executeSql(CREATE_TABLE_TEST);
-        
+
         var u8 = new Uint8Array([1, 2, 3])
         const valueBucket = {
             "name": "zhangsan",
@@ -457,12 +457,12 @@ describe('rdbStoreDeleteTest', function () {
         let predicates = new data_relationalStore.RdbPredicates("test");
         predicates.equalTo("age", 18);
         try {
-            rdbStore.delete(predicates, () => {});
+            rdbStore.delete(predicates, () => { });
         } catch (err) {
             console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
             expect("14800014").assertEqual(err.code);
         }
-        
+
         await data_relationalStore.deleteRdbStore(context, STORE_NAME);
         done();
         console.log(TAG + "************* testRdbStoreDelete0009 end *************");

@@ -567,7 +567,7 @@ describe('RdbStoreStatisticsTest', function () {
         }).catch((err) => {
             console.error(`close failed, code is ${err.code},message is ${err.message}`);
         })
-        
+
         try {
             rdbStore.on('statistics', (SqlExeInfo) => {
             })

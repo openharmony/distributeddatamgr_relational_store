@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import relationalStore from '@ohos.data.relationalStore'
 import featureAbility from '@ohos.ability.featureAbility'
 
@@ -64,8 +64,8 @@ describe('ActsRdbStoreValueTypeTest', function () {
     it('testValueType0001', 0, async function (done) {
         console.log(TAG + "************* testValueType0001 start *************");
         let bucket = {
-            "value1":BigInt(158),
-            "value2":BigInt(-158)
+            "value1": BigInt(158),
+            "value2": BigInt(-158)
         };
         try {
             console.log(TAG + "insert(bigint_table," + bucket + ")");
@@ -103,8 +103,8 @@ describe('ActsRdbStoreValueTypeTest', function () {
     it('testValueType0002', 0, async function (done) {
         console.log(TAG + "************* testValueType0002 start *************");
         let bucket = {
-            "value1":BigInt("15822401018187971961171"),
-            "value2":BigInt("-15822401018187971961171")
+            "value1": BigInt("15822401018187971961171"),
+            "value2": BigInt("-15822401018187971961171")
         };
         try {
             console.log(TAG + "insert(bigint_table," + bucket + ")");

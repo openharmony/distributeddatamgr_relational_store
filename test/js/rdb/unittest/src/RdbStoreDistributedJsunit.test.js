@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import dataRdb from '@ohos.data.rdb';
 
 const TAG = "[RDB_JSKITS_TEST_Distributed]"
@@ -295,7 +295,7 @@ describe('rdbStoreDistributedTest', function () {
         predicates = predicates.inDevices(["12345678abcd"]);
         try {
             rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PUSH, predicates);
-            console.log(TAG + "sync push success"); 
+            console.log(TAG + "sync push success");
         } catch (err) {
             console.log(TAG + "sync push" + err);
             expect().assertFail();

@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore';
 import ability_featureAbility from '@ohos.ability.featureAbility';
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" +
-                          "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                          "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
+    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+    "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
 
 const STORE_CONFIG = {
     name: "RDBPromiseTest.db",
@@ -100,7 +100,7 @@ describe('rdbStorePromiseTest', function () {
                     })
                 })
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(null).assertFail()
             done()
@@ -117,14 +117,14 @@ describe('rdbStorePromiseTest', function () {
     it('testRdbStorePromiseTest0002', 0, async function (done) {
         console.info(TAG, "************* testRdbStorePromiseTest0002 start *************")
         try {
-            data_relationalStore.getRdbStore(context, {dbname: "RDBCallbackTest.db"}).then((rdbStore) => {
+            data_relationalStore.getRdbStore(context, { dbname: "RDBCallbackTest.db" }).then((rdbStore) => {
                 console.info(TAG, "Get RdbStore successfully.")
                 expect(false).assertTrue()
             }).catch((err) => {
                 console.error(TAG, "Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect("401").assertEqual(err.code)
             done()
@@ -150,7 +150,7 @@ describe('rdbStorePromiseTest', function () {
                 console.error(TAG, "Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
@@ -177,7 +177,7 @@ describe('rdbStorePromiseTest', function () {
                 console.error(TAG, "Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect("401").assertEqual(err.code)
             done()
@@ -204,7 +204,7 @@ describe('rdbStorePromiseTest', function () {
                 console.error(TAG, "Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }
@@ -264,7 +264,7 @@ describe('rdbStorePromiseTest', function () {
                 console.error(TAG, "Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
                 expect(false).assertTrue()
             })
-        } catch(err) {
+        } catch (err) {
             console.error(TAG, "catch err: Delete RdbStore failed, err: code=" + err.code + " message=" + err.message)
             expect(false).assertTrue()
         }

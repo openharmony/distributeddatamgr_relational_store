@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
@@ -375,40 +375,40 @@ describe('rdbStoreTransactionTest', function () {
      *          3.QuerySql
      */
     it('testExecute0002', 0, async function (done) {
-            console.log(TAG + "************* testExecute0002 start *************");
-            var transaction = await rdbStore.createTransaction()
-            var u8 = new Uint8Array([1, 2, 3])
-            try {
-                var valueBucket = {
-                    "name": "zhangsan",
-                    "age": 18,
-                    "salary": 100.5,
-                    "blobType": u8,
-                }
-                for (let i = 0; i < 3; i++) {
-                    valueBucket.age = valueBucket.age + 1;
-                    var row = await transaction.insert("test", valueBucket)
-                    console.log(TAG + "testExecute0002 insert row " + row)
-                }
-                await transaction.execute("DELETE FROM test WHERE age = ? OR age = ?", [21, 20])
-
-                let resultSet = await transaction.querySql("select * from test")
-                console.log(TAG + "testExecute0002 transaction.querySql result count " + resultSet.rowCount)
-                expect(1).assertEqual(resultSet.rowCount)
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const age = resultSet.getLong(resultSet.getColumnIndex("age"))
-                expect(19).assertEqual(age);
-                await resultSet.close()
-                await transaction.commit()
-            } catch (e) {
-                await transaction.rollback()
-                console.log(TAG + e);
-                expect(null).assertFail()
-                console.log(TAG + "testExecute0002 failed");
+        console.log(TAG + "************* testExecute0002 start *************");
+        var transaction = await rdbStore.createTransaction()
+        var u8 = new Uint8Array([1, 2, 3])
+        try {
+            var valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
             }
-            done();
-            console.log(TAG + "************* testExecute0002 end   *************");
+            for (let i = 0; i < 3; i++) {
+                valueBucket.age = valueBucket.age + 1;
+                var row = await transaction.insert("test", valueBucket)
+                console.log(TAG + "testExecute0002 insert row " + row)
+            }
+            await transaction.execute("DELETE FROM test WHERE age = ? OR age = ?", [21, 20])
+
+            let resultSet = await transaction.querySql("select * from test")
+            console.log(TAG + "testExecute0002 transaction.querySql result count " + resultSet.rowCount)
+            expect(1).assertEqual(resultSet.rowCount)
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const age = resultSet.getLong(resultSet.getColumnIndex("age"))
+            expect(19).assertEqual(age);
+            await resultSet.close()
+            await transaction.commit()
+        } catch (e) {
+            await transaction.rollback()
+            console.log(TAG + e);
+            expect(null).assertFail()
+            console.log(TAG + "testExecute0002 failed");
         }
+        done();
+        console.log(TAG + "************* testExecute0002 end   *************");
+    }
     )
 
     /**
