@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
+import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import fileio from '@ohos.file.fs'
@@ -97,201 +97,201 @@ async function RestoreTest(restoreName) {
 }
 
 describe('rdbStoreBackupRestoreWithFAContextTest', function () {
-        beforeAll(async function () {
-            console.info(TAG + 'beforeAll')
-        })
+    beforeAll(async function () {
+        console.info(TAG + 'beforeAll')
+    })
 
-        beforeEach(async function () {
-            console.info(TAG + 'beforeEach')
-            rdbStore = await CreatRdbStore(STORE_CONFIG)
-        })
+    beforeEach(async function () {
+        console.info(TAG + 'beforeEach')
+        rdbStore = await CreatRdbStore(STORE_CONFIG)
+    })
 
-        afterEach(async function () {
-            console.info(TAG + 'afterEach')
-            rdbStore = null
-            await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
-            await data_relationalStore.deleteRdbStore(context, DATABASE_BACKUP_NAME)
-        })
+    afterEach(async function () {
+        console.info(TAG + 'afterEach')
+        rdbStore = null
+        await data_relationalStore.deleteRdbStore(context, STORE_CONFIG.name)
+        await data_relationalStore.deleteRdbStore(context, DATABASE_BACKUP_NAME)
+    })
 
-        afterAll(async function () {
-            console.info(TAG + 'afterAll')
-        })
+    afterAll(async function () {
+        console.info(TAG + 'afterAll')
+    })
 
-        console.log(TAG + "*************Unit Test Begin*************")
+    console.log(TAG + "*************Unit Test Begin*************")
 
-        /**
-         * @tc.name RDB Backup Restore test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0010
-         * @tc.desc RDB backup and restore function test
-         */
-        it('RdbBackupRestoreTest_0010', 0, async function (done) {
-            await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
+    /**
+     * @tc.name RDB Backup Restore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0010
+     * @tc.desc RDB backup and restore function test
+     */
+    it('RdbBackupRestoreTest_0010', 0, async function (done) {
+        await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
 
-            try {
-                await rdbStore.backup(DATABASE_BACKUP_NAME)
-                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
-                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
-
-                await  rdbStore.restore(DATABASE_BACKUP_NAME)
-                // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
-            } catch (err) {
-                expect().assertFail()
-            }
-
-            // RDB after restored, data query test
-            let predicates = new data_relationalStore.RdbPredicates("test")
-            predicates.equalTo("name", "zhangsan")
-            let resultSet = await rdbStore.query(predicates)
-            try {
-                console.log(TAG + "After restore resultSet query done")
-                expect(true).assertEqual(resultSet.goToFirstRow())
-                const id = resultSet.getLong(resultSet.getColumnIndex("id"))
-                const name = resultSet.getString(resultSet.getColumnIndex("name"))
-                const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
-                expect(1).assertEqual(id)
-                expect("zhangsan").assertEqual(name)
-                expect(1).assertEqual(blobType[0])
-            } catch (err) {
-                expect(false).assertTrue()
-            }
-            resultSet.close()
-            resultSet = null
-            done()
-            await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
-        })
-
-        /**
-         * @tc.name RDB Backup test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0020
-         * @tc.desc RDB backup function test
-         */
-        it('RdbBackupRestoreTest_0020', 0, async function (done) {
-            await console.log(TAG + "************* RdbBackupRestoreTest_0020 start *************")
-            // RDB backup function test, backup file name empty
-            BackupTest("")
-
-            // RDB backup function test, backup file name already exists
-            BackupTest(STORE_CONFIG.name)
-
-            done()
-            await console.log(TAG + "************* RdbBackupRestoreTest_0020 end *************")
-        })
-
-        /**
-         * @tc.name RDB BackupRestore test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0030
-         * @tc.desc RDB restore function test
-         */
-        it('RdbBackupRestoreTest_0030', 0, async function (done) {
-            await console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
+        try {
             await rdbStore.backup(DATABASE_BACKUP_NAME)
+            // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + DATABASE_BACKUP_NAME))
+            // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
 
-            // RDB restore function test, backup file name empty
-            RestoreTest("")
+            await rdbStore.restore(DATABASE_BACKUP_NAME)
+            // expect(true).assertEqual(fileio.accessSync(DATABASE_DIR + STORE_CONFIG.name))
+        } catch (err) {
+            expect().assertFail()
+        }
 
-            // RDB restore function test, backup file is specified to database name
-            RestoreTest(STORE_CONFIG.name)
+        // RDB after restored, data query test
+        let predicates = new data_relationalStore.RdbPredicates("test")
+        predicates.equalTo("name", "zhangsan")
+        let resultSet = await rdbStore.query(predicates)
+        try {
+            console.log(TAG + "After restore resultSet query done")
+            expect(true).assertEqual(resultSet.goToFirstRow())
+            const id = resultSet.getLong(resultSet.getColumnIndex("id"))
+            const name = resultSet.getString(resultSet.getColumnIndex("name"))
+            const blobType = resultSet.getBlob(resultSet.getColumnIndex("blobType"))
+            expect(1).assertEqual(id)
+            expect("zhangsan").assertEqual(name)
+            expect(1).assertEqual(blobType[0])
+        } catch (err) {
+            expect(false).assertTrue()
+        }
+        resultSet.close()
+        resultSet = null
+        done()
+        await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
+    })
 
-            done()
-            await console.log(TAG + "************* RdbBackupRestoreTest_0030 end *************")
-        })
+    /**
+     * @tc.name RDB Backup test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0020
+     * @tc.desc RDB backup function test
+     */
+    it('RdbBackupRestoreTest_0020', 0, async function (done) {
+        await console.log(TAG + "************* RdbBackupRestoreTest_0020 start *************")
+        // RDB backup function test, backup file name empty
+        BackupTest("")
 
-        /**
-         * @tc.name RDB BackupRestore test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0040
-         * @tc.desc RDB restore function test
-         */
-        it('RdbBackupRestoreTest_0040', 0, async function (done) {
-            await console.log(TAG + "************* RdbBackupRestoreTest_0040 start *************")
-            let dbName = "notExistName.db"
+        // RDB backup function test, backup file name already exists
+        BackupTest(STORE_CONFIG.name)
 
-            // RDB restore function test, backup file does not exists
-            try {
-                expect(false).assertEqual(fileio.accessSync(DATABASE_DIR + dbName))
-            } catch (errCode) {
-                expect(13900002).assertEqual(errCode.code)
+        done()
+        await console.log(TAG + "************* RdbBackupRestoreTest_0020 end *************")
+    })
+
+    /**
+     * @tc.name RDB BackupRestore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0030
+     * @tc.desc RDB restore function test
+     */
+    it('RdbBackupRestoreTest_0030', 0, async function (done) {
+        await console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
+        await rdbStore.backup(DATABASE_BACKUP_NAME)
+
+        // RDB restore function test, backup file name empty
+        RestoreTest("")
+
+        // RDB restore function test, backup file is specified to database name
+        RestoreTest(STORE_CONFIG.name)
+
+        done()
+        await console.log(TAG + "************* RdbBackupRestoreTest_0030 end *************")
+    })
+
+    /**
+     * @tc.name RDB BackupRestore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0040
+     * @tc.desc RDB restore function test
+     */
+    it('RdbBackupRestoreTest_0040', 0, async function (done) {
+        await console.log(TAG + "************* RdbBackupRestoreTest_0040 start *************")
+        let dbName = "notExistName.db"
+
+        // RDB restore function test, backup file does not exists
+        try {
+            expect(false).assertEqual(fileio.accessSync(DATABASE_DIR + dbName))
+        } catch (errCode) {
+            expect(13900002).assertEqual(errCode.code)
+        }
+        RestoreTest(dbName)
+        done()
+        await console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
+    })
+
+    /**
+     * @tc.name RDB BackupRestore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0050
+     * @tc.desc RDB backup function test
+     */
+    it('RdbBackupRestoreBackupTest_0050', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0050 start *************")
+
+        const STORE_NAME = "AfterCloseTest.db";
+        const rdbStore = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S1
             }
-            RestoreTest(dbName)
-            done()
-            await console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
-        })
+        )
+        try {
+            await rdbStore.close();
+            console.info(`${TAG} close succeeded`);
+        } catch (err) {
+            expect(null).assertFail();
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        }
 
-        /**
-         * @tc.name RDB BackupRestore test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0050
-         * @tc.desc RDB backup function test
-         */
-        it('RdbBackupRestoreBackupTest_0050', 0, async function (done) {
-            console.log(TAG + "************* RdbBackupRestoreBackupTest_0050 start *************")
+        try {
+            let dbName = "QueryTest_bak.db"
+            await rdbStore.backup(dbName)
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
 
-            const STORE_NAME = "AfterCloseTest.db";
-            const rdbStore = await data_relationalStore.getRdbStore(
-                context,
-                {
-                    name: STORE_NAME,
-                    securityLevel: data_relationalStore.SecurityLevel.S1
-                }
-            )
-            try {
-                await rdbStore.close();
-                console.info(`${TAG} close succeeded`);
-            } catch (err) {
-                expect(null).assertFail();
-                console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        done();
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0050 end *************")
+    })
+    /**
+     * @tc.name RDB BackupRestore test
+     * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0060
+     * @tc.desc RDB restore function test
+     */
+    it('RdbBackupRestoreBackupTest_0060', 0, async function (done) {
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0060 start *************")
+
+        const STORE_NAME = "AfterCloseTest.db";
+        const rdbStore = await data_relationalStore.getRdbStore(
+            context,
+            {
+                name: STORE_NAME,
+                securityLevel: data_relationalStore.SecurityLevel.S1
             }
+        )
 
-            try {
-                let dbName = "QueryTest_bak.db"
-                await rdbStore.backup(dbName)
-            } catch (err) {
-                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect("14800014").assertEqual(err.code)
-            }
-            
-            await data_relationalStore.deleteRdbStore(context, STORE_NAME);
-            done();
-            console.log(TAG + "************* RdbBackupRestoreBackupTest_0050 end *************")
-        })
-        /**
-         * @tc.name RDB BackupRestore test
-         * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0060
-         * @tc.desc RDB restore function test
-         */
-        it('RdbBackupRestoreBackupTest_0060', 0, async function (done) {
-            console.log(TAG + "************* RdbBackupRestoreBackupTest_0060 start *************")
+        let dbName = "notExistName.db"
+        BackupTest(dbName);
 
-            const STORE_NAME = "AfterCloseTest.db";
-            const rdbStore = await data_relationalStore.getRdbStore(
-                context,
-                {
-                    name: STORE_NAME,
-                    securityLevel: data_relationalStore.SecurityLevel.S1
-                }
-            )
+        try {
+            await rdbStore.close();
+            console.info(`${TAG} close succeeded`);
+        } catch (err) {
+            expect(null).assertFail();
+            console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
+        }
 
-            let dbName = "notExistName.db"
-            BackupTest(dbName);
+        try {
+            await rdbStore.restore(dbName)
+        } catch (err) {
+            console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
+            expect("14800014").assertEqual(err.code)
+        }
 
-            try {
-                await rdbStore.close();
-                console.info(`${TAG} close succeeded`);
-            } catch (err) {
-                expect(null).assertFail();
-                console.error(`${TAG} close failed, code is ${err.code},message is ${err.message}`);
-            }
+        await data_relationalStore.deleteRdbStore(context, STORE_NAME);
+        done();
+        console.log(TAG + "************* RdbBackupRestoreBackupTest_0060 end *************")
+    })
 
-            try {
-                await rdbStore.restore(dbName)
-            } catch (err) {
-                console.log("catch err: failed, err: code=" + err.code + " message=" + err.message)
-                expect("14800014").assertEqual(err.code)
-            }
-
-            await data_relationalStore.deleteRdbStore(context, STORE_NAME);
-            done();
-            console.log(TAG + "************* RdbBackupRestoreBackupTest_0060 end *************")
-        })
-
-        console.log(TAG + "*************Unit Test End*************")
-    }
+    console.log(TAG + "*************Unit Test End*************")
+}
 )
