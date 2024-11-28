@@ -36,9 +36,9 @@
  *
  * @since 10
  */
+
 #include <cstdint>
 #include <stddef.h>
-
 #include "oh_value_object.h"
 
 #ifdef __cplusplus
