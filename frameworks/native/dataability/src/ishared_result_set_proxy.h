@@ -17,8 +17,8 @@
 #define DATAABILITY_I_SHARED_RESULT_SET_PROXY_H
 #include <abs_shared_result_set.h>
 
-#include "ishared_result_set.h"
 #include "iremote_proxy.h"
+#include "ishared_result_set.h"
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
@@ -38,5 +38,5 @@ private:
     static BrokerDelegator<ISharedResultSetProxy> delegator_;
     int32_t rowCount_ = -1;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif // DATAABILITY_I_SHARED_RESULT_SET_PROXY_H

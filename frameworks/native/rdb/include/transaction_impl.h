@@ -15,8 +15,8 @@
 #ifndef NATIVE_RDB_TRANSACTION_IMPL_H
 #define NATIVE_RDB_TRANSACTION_IMPL_H
 
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "connection.h"
@@ -36,12 +36,12 @@ public:
     std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where,
-                               const Values &args, Resolution resolution) override;
-    std::pair<int32_t, int32_t> Update(const Row &row, const AbsRdbPredicates &predicates,
-                                       Resolution resolution) override;
-    std::pair<int32_t, int32_t> Delete(const std::string &table, const std::string &whereClause,
-                                       const Values &args) override;
+    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
+        Resolution resolution) override;
+    std::pair<int32_t, int32_t> Update(
+        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution) override;
+    std::pair<int32_t, int32_t> Delete(
+        const std::string &table, const std::string &whereClause, const Values &args) override;
     std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns) override;
@@ -68,5 +68,5 @@ private:
     static constexpr char ROLLBACK_SQL[] = "ROLLBACK;";
     static constexpr const char *BEGIN_SQLS[] = { "BEGIN DEFERRED;", "BEGIN IMMEDIATE;", "BEGIN EXCLUSIVE;" };
 };
-}
+} // namespace OHOS::NativeRdb
 #endif

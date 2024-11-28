@@ -75,6 +75,6 @@ private:
         return true;
     }
 };
-}
-}
+} // namespace CloudData
+} // namespace OHOS
 #endif //CLOUD_DATA_JS_STRATEGY_CONTEXT_H

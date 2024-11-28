@@ -89,7 +89,7 @@ inline constexpr size_t variant_index_of_v = decltype(variant_index_test(std::de
 template<typename T, typename... Types>
 std::enable_if_t<same_in_v<T, Types...>, T *> get_if(std::variant<Types...> *input)
 {
-return std::get_if<T>(input);
+    return std::get_if<T>(input);
 }
 
 template<typename T, typename... Types>
@@ -101,16 +101,16 @@ std::enable_if_t<same_in_v<T, Types...>, const T *> get_if(const std::variant<Ty
 template<typename T, typename... Types,
 size_t NP = convertible_in_v<T, Types...> ? convertible_index_of_v<T, Types...> : 0>
 constexpr std::enable_if_t<!same_in_v<T, Types...> && convertible_in_v<T, Types...>,
-std::add_pointer_t<std::variant_alternative_t<NP, std::variant<Types...>>>>
+    std::add_pointer_t<std::variant_alternative_t<NP, std::variant<Types...>>>>
 get_if(std::variant<Types...> *input)
 {
-return std::get_if<NP>(input);
+    return std::get_if<NP>(input);
 }
 
 template<typename T, typename... Types,
 size_t NP = convertible_in_v<T, Types...> ? convertible_index_of_v<T, Types...> : 0>
 constexpr std::enable_if_t<!same_in_v<T, Types...> && convertible_in_v<T, Types...>,
-std::add_pointer_t<const std::variant_alternative_t<NP, std::variant<Types...>>>>
+    std::add_pointer_t<const std::variant_alternative_t<NP, std::variant<Types...>>>>
 get_if(const std::variant<Types...> *input)
 {
     return std::get_if<NP>(input);
@@ -119,8 +119,8 @@ get_if(const std::variant<Types...> *input)
 template<typename T, typename... Types>
 std::enable_if_t<!same_in_v<T, Types...> && !convertible_in_v<T, Types...>, T *> get_if(std::variant<Types...> *input)
 {
-(void)input;
-return nullptr;
+    (void)input;
+    return nullptr;
 }
 
 template<typename T, typename... Types>

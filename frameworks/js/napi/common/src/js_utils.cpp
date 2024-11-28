@@ -34,7 +34,7 @@ using namespace OHOS::Rdb;
 namespace OHOS {
 namespace AppDataMgrJsKit {
 namespace JSUtils {
-    static int32_t g_hapVersion = -1;  // the current apiVersion of hap
+static int32_t g_hapVersion = -1; // the current apiVersion of hap
 }
 
 static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {

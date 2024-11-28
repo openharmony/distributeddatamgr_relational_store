@@ -18,9 +18,9 @@
 
 #include <string>
 
+#include "distributeddata_relational_store_ipc_interface_code.h"
 #include "iremote_broker.h"
 #include "rdb_service.h"
-#include "distributeddata_relational_store_ipc_interface_code.h"
 
 namespace OHOS::DistributedRdb {
 class IRdbService : public RdbService, public IRemoteBroker {
@@ -36,4 +36,3 @@ public:
 };
 } // namespace OHOS::DistributedRdb
 #endif
-

@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#include "native_engine/native_engine.h"
-
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "native_engine/native_engine.h"
 
 extern const char _binary_cloud_extension_abc_start[];
 extern const char _binary_cloud_extension_abc_end[];
@@ -40,7 +39,7 @@ static __attribute__((constructor)) void CloudExtensionRegisterModule(void)
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_modname = "data.cloudExtension",
-        .nm_priv = ((void*)0),
+        .nm_priv = ((void *)0),
         .reserved = { 0 },
     };
     napi_module_register(&cloudExtensionModule);

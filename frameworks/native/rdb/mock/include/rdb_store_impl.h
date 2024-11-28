@@ -37,7 +37,7 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
-    std::pair<int, int64_t> BatchInsert(const std::string& table, const ValuesBuckets& values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &values) override;
     std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
         Resolution resolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
@@ -68,8 +68,8 @@ public:
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
-    std::pair<int32_t, int32_t> Attach(const RdbStoreConfig &config, const std::string &attachName,
-        int32_t waitTime) override;
+    std::pair<int32_t, int32_t> Attach(
+        const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
@@ -101,23 +101,23 @@ private:
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
-    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(std::shared_ptr<Statement> statement,
-        const std::string &sql, const ValueObject &object, int sqlType);
+    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(
+        std::shared_ptr<Statement> statement, const std::string &sql, const ValueObject &object, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
-    int InnerBackup(const std::string& databasePath,
-        const std::vector<uint8_t>& destEncryptKey = std::vector<uint8_t>());
+    int InnerBackup(
+        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
-    std::vector<ValueObject> CreateBackupBindArgs(const std::string &databasePath,
-        const std::vector<uint8_t> &destEncryptKey);
-    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, std::shared_ptr<Connection> conn) const;
-    std::pair<int32_t, Stmt> GetStatement(const std::string& sql, bool read = false) const;
+    std::vector<ValueObject> CreateBackupBindArgs(
+        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
+    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, std::shared_ptr<Connection> conn) const;
+    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, bool read = false) const;
     int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
         const std::vector<uint8_t> &key, int32_t waitTime);
-    int SetDefaultEncryptSql(const std::shared_ptr<Statement> &statement, std::string sql,
-        const RdbStoreConfig &config);
+    int SetDefaultEncryptSql(
+        const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config);
     int SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);

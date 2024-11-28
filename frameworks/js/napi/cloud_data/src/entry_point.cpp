@@ -14,10 +14,10 @@
 */
 #define LOG_TAG "RegisterCloudDataModule"
 #include "js_client.h"
+#include "js_cloud_share.h"
 #include "js_config.h"
 #include "js_const_properties.h"
 #include "logger.h"
-#include "js_cloud_share.h"
 
 using namespace OHOS::CloudData;
 using namespace OHOS::Rdb;

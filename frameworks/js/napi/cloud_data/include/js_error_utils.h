@@ -55,13 +55,13 @@ napi_value GenerateErrorMsg(napi_env env, JsErrorCode jsInfo);
         }                                                        \
     } while (0)
 
-#define ASSERT_PERMISSION_ERR(ctxt, assertion, errorCode, message)  \
-    do {                                                            \
-        if (!(assertion)) {                                         \
-            (ctxt)->isThrowError = true;                            \
-            ThrowNapiError((ctxt)->env, errorCode, message);        \
-            return;                                                 \
-        }                                                           \
+#define ASSERT_PERMISSION_ERR(ctxt, assertion, errorCode, message) \
+    do {                                                           \
+        if (!(assertion)) {                                        \
+            (ctxt)->isThrowError = true;                           \
+            ThrowNapiError((ctxt)->env, errorCode, message);       \
+            return;                                                \
+        }                                                          \
     } while (0)
 
 } // namespace CloudData

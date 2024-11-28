@@ -61,6 +61,7 @@ public:
     {
         return astartPos;
     }
+
 private:
     AppDataFwk::SharedBlock *sharedBlock_;
     sqlite3_stmt *statement_ = nullptr;

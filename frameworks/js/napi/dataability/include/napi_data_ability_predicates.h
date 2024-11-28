@@ -17,6 +17,7 @@
 #define DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H
 
 #include <memory>
+
 #include "data_ability_predicates.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -39,8 +40,7 @@ private:
     ~DataAbilityPredicatesProxy();
 
     static napi_value New(napi_env env, napi_callback_info info);
-    static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(napi_env env,
-        napi_callback_info info);
+    static std::shared_ptr<NativeRdb::DataAbilityPredicates> GetNativePredicates(napi_env env, napi_callback_info info);
     static napi_value EqualTo(napi_env env, napi_callback_info info);
     static napi_value NotEqualTo(napi_env env, napi_callback_info info);
     static napi_value BeginWrap(napi_env env, napi_callback_info info);
@@ -90,12 +90,10 @@ private:
 } // namespace OHOS
 
 EXTERN_C_START
-__attribute__((visibility("default")))
-    napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
-        OHOS::NativeRdb::DataAbilityPredicates *predicates);
+__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
+    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates);
 
 __attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
-NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(
-    const napi_env env, const napi_value arg);
+NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg);
 EXTERN_C_END
 #endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H

@@ -38,8 +38,8 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
         [](const JsErrorCode &jsErrorCode1, const JsErrorCode &jsErrorCode2) {
             return jsErrorCode1.status < jsErrorCode2.status;
         });
-    if (iter < JS_ERROR_CODE_MSGS + sizeof(JS_ERROR_CODE_MSGS) / sizeof(JS_ERROR_CODE_MSGS[0])
-        && iter->status == errorCode) {
+    if (iter < JS_ERROR_CODE_MSGS + sizeof(JS_ERROR_CODE_MSGS) / sizeof(JS_ERROR_CODE_MSGS[0]) &&
+        iter->status == errorCode) {
         return *iter;
     }
     return std::nullopt;

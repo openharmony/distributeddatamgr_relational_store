@@ -16,8 +16,8 @@
 #ifndef DISTRIBUTEDDATAMGR_RDB_RADAR_REPORTER_H
 #define DISTRIBUTEDDATAMGR_RDB_RADAR_REPORTER_H
 
-#include <string>
 #include <mutex>
+#include <string>
 namespace OHOS::NativeRdb {
 
 enum Scene : int {
@@ -52,7 +52,7 @@ public:
 private:
     int errCode_{ 0 };
     Scene scene_;
-    const char* funcName_;
+    const char *funcName_;
     std::string bundleName_;
 
     static std::string hostPkg_;

@@ -20,13 +20,13 @@
 
 #include "cloud_manager.h"
 #include "cloud_service.h"
-#include "js_error_utils.h"
-#include "js_utils.h"
 #include "js_cloud_utils.h"
+#include "js_df_manager.h"
+#include "js_error_utils.h"
 #include "js_strategy_context.h"
+#include "js_utils.h"
 #include "logger.h"
 #include "napi_queue.h"
-#include "js_df_manager.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
@@ -280,12 +280,12 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                 "The type of bundleName must be string and not empty.");
         } else {
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->extInfo);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && VerifyExtraData(ctxt->extInfo), Status::INVALID_ARGUMENT,
-                "The type of extInfo must be Extradata and not empty.");
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && VerifyExtraData(ctxt->extInfo),
+                Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata and not empty.");
             if (argc > 1) {
                 status = JSUtils::Convert2ValueExt(env, argv[1], ctxt->userId);
-                ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                    "The type of user must be number.");
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of user must be number.");
             }
             ctxt->notifyStatus = true;
         }
@@ -303,15 +303,15 @@ napi_value JsConfig::NotifyDataChange(napi_env env, napi_callback_info info)
                 ? napi_ok : napi_generic_failure;
             return;
         }
-        int32_t status ;
+        int32_t status;
         if (ctxt->notifyStatus == true) {
             status = proxy->NotifyDataChange(ctxt->extInfo.eventId, ctxt->extInfo.extraData, ctxt->userId);
         } else {
             status = proxy->NotifyDataChange(ctxt->accountId, ctxt->bundleName);
         }
         LOG_DEBUG("NotifyDataChange return %{public}d", status);
-        ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-            ? napi_ok : napi_generic_failure;
+        ctxt->status =
+            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
         if (status == Status::INVALID_ARGUMENT) {
             ctxt->error += "The parameter required is a valid value.";
         }
@@ -334,7 +334,7 @@ napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
         std::map<std::string, StatisticInfos> result;
     };
     auto ctxt = std::make_shared<QueryStatisticsContext>();
-    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value* argv) {
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // required 2 arguments :: <accountId> <bundleName>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument accountId
@@ -349,8 +349,8 @@ napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
         if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
             // 2 is the index of argument storeId
             status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                "The type of storeId must be string.");
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
         }
     });
 
@@ -372,9 +372,9 @@ napi_value JsConfig::QueryStatistics(napi_env env, napi_callback_info info)
             (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
         ctxt->result = std::move(result);
     };
-    auto output = [env, ctxt](napi_value& result) {
+    auto output = [env, ctxt](napi_value &result) {
         result = JSUtils::Convert2JSValue(env, ctxt->result);
-        ASSERT_VALUE(ctxt,  result != nullptr, napi_generic_failure, "output failed");
+        ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
@@ -387,9 +387,9 @@ napi_value JsConfig::SetGlobalCloudStrategy(napi_env env, napi_callback_info inf
         ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         int32_t strategy = -1;
         int status = JSUtils::Convert2ValueExt(env, argv[0], strategy);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && strategy >= 0 &&
-            strategy < static_cast<int32_t>(Strategy::STRATEGY_BUTT), Status::INVALID_ARGUMENT,
-            "The type of strategy must be StrategyType.");
+        ASSERT_BUSINESS_ERR(ctxt,
+            status == JSUtils::OK && strategy >= 0 && strategy < static_cast<int32_t>(Strategy::STRATEGY_BUTT),
+            Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
         ctxt->strategy = static_cast<Strategy>(strategy);
         // 'argv[1]' represents a vector<CommonType::Value> param or null
         if (argc == 1 || JSUtils::IsNull(env, argv[1])) {
@@ -480,8 +480,8 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
         if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
             // 2 is the index of argument storeId
             status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-                                "The type of storeId must be string.");
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
         }
     });
 

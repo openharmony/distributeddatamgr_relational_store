@@ -53,11 +53,11 @@ typedef int32_t (*DBSqlColInt)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef int64_t (*DBSqlColInt64)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef double (*DBSqlColDouble)(GRD_SqlStmt *stmt, uint32_t idx);
 typedef const float *(*DBSqlColumnFloatVector)(GRD_SqlStmt *stmt, uint32_t idx, uint32_t *dim);
-typedef int32_t (*DBBackup) (GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
-typedef int32_t (*DBRestore) (const char *dbFile, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
-typedef int32_t (*DBReKey) (const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
-typedef GRD_DbValueT (*DBGetConfig) (GRD_DB *db, GRD_ConfigTypeE type);
-typedef int32_t (*DBSetConfig) (GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
+typedef int32_t (*DBBackup)(GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
+typedef int32_t (*DBRestore)(const char *dbFile, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
+typedef int32_t (*DBReKey)(const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
+typedef GRD_DbValueT (*DBGetConfig)(GRD_DB *db, GRD_ConfigTypeE type);
+typedef int32_t (*DBSetConfig)(GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
 
 struct GRD_APIInfo {
     DBOpen DBOpenApi = nullptr;

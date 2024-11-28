@@ -17,8 +17,8 @@
 #define OHOS_DISTRIBUTED_DATA_CLOUD_ICLOUD_SERVICE_H
 
 #include "cloud_service.h"
-#include "iremote_broker.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "iremote_broker.h"
 
 namespace OHOS::CloudData {
 class ICloudService : public CloudService, public IRemoteBroker {

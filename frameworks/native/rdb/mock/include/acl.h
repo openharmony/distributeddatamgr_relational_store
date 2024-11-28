@@ -17,6 +17,7 @@
 #define OHOS_DISTRIBUTED_DATA_DATABASE_UTILS_ACL_H
 
 #include <stdint.h>
+
 #include <string>
 namespace OHOS {
 namespace DATABASE_UTILS {
@@ -40,7 +41,7 @@ public:
         return 0;
     }
 };
-} // DATABASE_UTILS
+} // namespace DATABASE_UTILS
 } // namespace OHOS
 
 #endif // OHOS_DISTRIBUTED_DATA_DATABASE_UTILS_ACL_H

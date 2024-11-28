@@ -36,8 +36,8 @@ void PredicatesUtils::SetWhereClauseAndArgs(
 /**
  * Set the param of whereClause and bindArgs of the specified Predicates.
  */
-void PredicatesUtils::SetWhereClauseAndArgs(AbsPredicates *predicates, const std::string &whereClause,
-    const std::vector<ValueObject> &bindArgs)
+void PredicatesUtils::SetWhereClauseAndArgs(
+    AbsPredicates *predicates, const std::string &whereClause, const std::vector<ValueObject> &bindArgs)
 {
     predicates->SetWhereClause(whereClause);
     predicates->SetBindArgs(bindArgs);

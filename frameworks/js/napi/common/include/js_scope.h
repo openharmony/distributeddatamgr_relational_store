@@ -23,9 +23,10 @@ class Scope {
 public:
     Scope(napi_env env);
     ~Scope();
+
 private:
     napi_env env_ = nullptr;
     napi_handle_scope scope_ = nullptr;
 };
-}
+} // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_SCOPE_H

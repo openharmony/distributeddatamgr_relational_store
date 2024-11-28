@@ -16,11 +16,12 @@
 #ifndef DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 #define DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
 
-#include <ctime>
 #include <fcntl.h>
-#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <ctime>
+#include <string>
 
 #include "connection.h"
 #include "rdb_store_config.h"

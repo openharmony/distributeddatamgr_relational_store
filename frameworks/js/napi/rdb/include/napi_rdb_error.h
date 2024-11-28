@@ -68,32 +68,31 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
         }                                       \
     } while (0)
 
-#define RDB_CHECK_RETURN_NULLPTR(assertion, message)    \
-    do {                                                \
-        if (!(assertion)) {                             \
-            LOG_ERROR("%{public}s", message);           \
-            return nullptr;                             \
-        }                                               \
+#define RDB_CHECK_RETURN_NULLPTR(assertion, message) \
+    do {                                             \
+        if (!(assertion)) {                          \
+            LOG_ERROR("%{public}s", message);        \
+            return nullptr;                          \
+        }                                            \
     } while (0)
 
-#define RDB_CHECK_RETURN_VOID(assertion, message)   \
+#define RDB_CHECK_RETURN_VOID(assertion, message) \
+    do {                                          \
+        if (!(assertion)) {                       \
+            LOG_ERROR("%{public}s", message);     \
+            return;                               \
+        }                                         \
+    } while (0)
+
+#define CHECK_RETURN_CORE(assertion, theCall, revt) \
     do {                                            \
         if (!(assertion)) {                         \
-            LOG_ERROR("%{public}s", message);       \
-            return;                                 \
+            theCall;                                \
+            return revt;                            \
         }                                           \
     } while (0)
 
-#define CHECK_RETURN_CORE(assertion, theCall, revt)      \
-    do {                                                 \
-        if (!(assertion)) {                              \
-            theCall;                                     \
-            return revt;                                 \
-        }                                                \
-    } while (0)
-
-#define CHECK_RETURN_ERR(assertion) \
-    CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
+#define CHECK_RETURN_ERR(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
 
 #define RDB_CHECK_RETURN_CALL_RESULT(assertion, theCall) \
     do {                                                 \
@@ -105,7 +104,7 @@ constexpr int E_RESULT_GOTO_ERROR = 14800012;
 
 class Error {
 public:
-    virtual ~Error(){};
+    virtual ~Error() {};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
 };
@@ -125,7 +124,7 @@ public:
 
 class ParamTypeError : public Error {
 public:
-    ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType){};
+    ParamTypeError(const std::string &name, const std::string &wantType) : name(name), wantType(wantType) {};
     std::string GetMessage() override
     {
         return "Parameter error. The type of '" + name + "' must be " + wantType;
@@ -142,7 +141,7 @@ private:
 
 class ParamNumError : public Error {
 public:
-    ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
+    ParamNumError(const std::string &wantNum) : wantNum(wantNum) {};
     std::string GetMessage() override
     {
         return "Parameter error. Need " + wantNum + " parameters!";

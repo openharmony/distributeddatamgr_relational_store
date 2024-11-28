@@ -45,7 +45,7 @@ bool NapiUvQueue::operator==(napi_value value)
 
 void NapiUvQueue::CallFunction(NapiArgsGenerator genArgs)
 {
-    uv_work_t* work = new (std::nothrow) uv_work_t;
+    uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }
