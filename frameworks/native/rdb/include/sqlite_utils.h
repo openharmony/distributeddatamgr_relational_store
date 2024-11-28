@@ -57,7 +57,7 @@ public:
     static bool RenameFile(const std::string &srcFile, const std::string &destFile);
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static std::string Anonymous(const std::string &srcFile);
-    static std::string AnonySql(const std::string &sql);
+
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
     static std::string GetSlavePath(const std::string &name);
@@ -99,12 +99,7 @@ private:
 
     static std::string GetAnonymousName(const std::string& fileName);
     static std::string AnonyDigits(const std::string& fileName);
-    static bool IsSpecialChar(char c);
-    static std::vector<std::string> SplitString(const std::string &input);
-    static std::string ReplaceMultipleSpaces(const std::string &str);
-    static std::string AnonyWord(const std::string &word);
-    static bool Find(const std::string &word, const char *const array[], uint32_t length);
-    static std::string AnonySqlString(const std::string &input, const char *const array[], uint32_t length);
+
 };
 
 } // namespace NativeRdb
