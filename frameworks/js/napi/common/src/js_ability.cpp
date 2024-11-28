@@ -14,9 +14,9 @@
  */
 #define LOG_TAG "JSAbility"
 #include "js_ability.h"
-#include "js_utils.h"
 
 #include "extension_context.h"
+#include "js_utils.h"
 #include "logger.h"
 
 #define API_VERSION_MOD 100

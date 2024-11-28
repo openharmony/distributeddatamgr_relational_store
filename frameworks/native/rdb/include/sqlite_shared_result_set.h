@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-
 #ifndef NATIVE_RDB_SQLITE_SHARED_RESULT_SET_H
 #define NATIVE_RDB_SQLITE_SHARED_RESULT_SET_H
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
-#include <chrono>
 
 #include "abs_shared_result_set.h"
 #include "connection.h"
@@ -53,7 +52,7 @@ private:
     int InitRowCount();
     std::pair<std::shared_ptr<Statement>, int> PrepareStep();
     int32_t FillBlock(int requiredPos);
-    int32_t ExecuteForSharedBlock(AppDataFwk::SharedBlock* block, int start, int required);
+    int32_t ExecuteForSharedBlock(AppDataFwk::SharedBlock *block, int start, int required);
 
 private:
     // The specified value is -1 when there is no data

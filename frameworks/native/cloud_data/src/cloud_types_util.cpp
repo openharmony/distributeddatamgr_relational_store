@@ -19,29 +19,26 @@ namespace OHOS::ITypesUtil {
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(
-        data, input.identity, input.role, input.state, input.privilege, input.attachInfo);
+    return ITypesUtil::Marshal(data, input.identity, input.role, input.state, input.privilege, input.attachInfo);
 }
 
 template<>
 bool Unmarshalling(Participant &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(
-        data, output.identity, output.role, output.state, output.privilege, output.attachInfo);
+    return ITypesUtil::Unmarshal(data, output.identity, output.role, output.state, output.privilege, output.attachInfo);
 }
 
 template<>
 bool Marshalling(const Privilege &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.writable, input.readable,
-        input.creatable, input.deletable, input.shareable);
+    return ITypesUtil::Marshal(data, input.writable, input.readable, input.creatable, input.deletable, input.shareable);
 }
 
 template<>
 bool Unmarshalling(Privilege &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(data, output.writable, output.readable,
-        output.creatable, output.deletable, output.shareable);
+    return ITypesUtil::Unmarshal(
+        data, output.writable, output.readable, output.creatable, output.deletable, output.shareable);
 }
 
 template<>
@@ -71,8 +68,7 @@ template<>
 bool Unmarshalling(Confirmation &output, MessageParcel &data)
 {
     int32_t result;
-    if (!data.ReadInt32(result) || result < Confirmation::CFM_NIL ||
-        result >= Confirmation::CFM_BUTT) {
+    if (!data.ReadInt32(result) || result < Confirmation::CFM_NIL || result >= Confirmation::CFM_BUTT) {
         return false;
     }
     output = static_cast<Confirmation>(result);
@@ -142,8 +138,8 @@ bool Marshalling(const Strategy &input, MessageParcel &data)
 template<>
 bool Marshalling(const CommonAsset &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.name, input.uri, input.path, input.createTime,
-        input.modifyTime, input.size, input.status, input.hash);
+    return ITypesUtil::Marshal(data, input.name, input.uri, input.path, input.createTime, input.modifyTime, input.size,
+        input.status, input.hash);
 }
 
 template<>

@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_async_call.h"
@@ -27,7 +28,6 @@
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
-#include "js_df_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "rdb_utils.h"
@@ -318,12 +318,13 @@ int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<Rd
 {
     LOG_DEBUG("ParsePredicates start.");
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates.");
-    if (CheckGlobalProperty(env, arg, "RdbPredicatesConstructor")
-        || CheckGlobalProperty(env, arg, "RdbPredicatesConstructorV9")) {
+    if (CheckGlobalProperty(env, arg, "RdbPredicatesConstructor") ||
+        CheckGlobalProperty(env, arg, "RdbPredicatesConstructorV9")) {
         LOG_DEBUG("Parse RDB Predicates.");
         napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
-        RDB_CHECK_RETURN_CALL_RESULT(context->predicatesProxy != nullptr &&
-            context->predicatesProxy->GetPredicates() != nullptr, context->SetError(paramError));
+        RDB_CHECK_RETURN_CALL_RESULT(
+            context->predicatesProxy != nullptr && context->predicatesProxy->GetPredicates() != nullptr,
+            context->SetError(paramError));
         context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
         context->rdbPredicates = context->predicatesProxy->GetPredicates();
         LOG_DEBUG("ParsePredicates end.");
@@ -443,8 +444,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
 {
     napi_value keys = nullptr;
     napi_get_all_property_names(env, arg, napi_key_own_only,
-        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols),
-        napi_key_numbers_to_strings, &keys);
+        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
     uint32_t arrLen = 0;
     napi_status status = napi_get_array_length(env, keys, &arrLen);
     std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>("values", "a ValuesBucket.");
@@ -474,8 +474,8 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
         if (ret == napi_ok) {
             context->valuesBucket.Put(keyStr, std::move(valueObject));
         } else if (ret != napi_generic_failure) {
-            std::shared_ptr<Error> paramError = std::make_shared<ParamTypeError>(
-                "The value type of " + keyStr, "valid.");
+            std::shared_ptr<Error> paramError =
+                std::make_shared<ParamTypeError>("The value type of " + keyStr, "valid.");
             RDB_CHECK_RETURN_CALL_RESULT(false, context->SetError(paramError));
         }
     }
@@ -586,8 +586,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_create_int64(env, context->insertNum, &result);
-        LOG_DEBUG("RdbStoreProxy::BatchInsert end. tableName is: %{public}s.",
-            context->tableName.c_str());
+        LOG_DEBUG("RdbStoreProxy::BatchInsert end. tableName is: %{public}s.", context->tableName.c_str());
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -716,8 +715,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? OK : ERR;
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        result = ResultSetProxy::NewInstance(
-            env, context->resultSet, context->apiversion);
+        result = ResultSetProxy::NewInstance(env, context->resultSet, context->apiversion);
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -761,8 +759,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 #endif
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
-        result = ResultSetProxy::NewInstance(
-            env, context->resultSet, context->apiversion);
+        result = ResultSetProxy::NewInstance(env, context->resultSet, context->apiversion);
         return (result != nullptr) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
@@ -848,8 +845,7 @@ napi_value RdbStoreProxy::Count(napi_env env, napi_callback_info info)
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         std::int64_t temp = 0;
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
-        CHECK_RETURN_ERR(context->predicatesProxy != nullptr &&
-            context->predicatesProxy->GetPredicates() != nullptr);
+        CHECK_RETURN_ERR(context->predicatesProxy != nullptr && context->predicatesProxy->GetPredicates() != nullptr);
         int errCode = obj->rdbStore_->Count(temp, *(context->predicatesProxy->GetPredicates()));
         context->rowId = temp;
         LOG_DEBUG("RdbStoreProxy::Count errCode is: %{public}d.", errCode);
@@ -936,8 +932,8 @@ napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info i
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr &&
-        rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(
+        env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsHoldingConnection();
     LOG_DEBUG("RdbStoreProxy::IsHoldingConnection out is : %{public}d.", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -948,8 +944,8 @@ napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr
-        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(
+        env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsReadOnly();
     LOG_DEBUG("RdbStoreProxy::IsReadOnly out is : %{public}d.", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -960,8 +956,8 @@ napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr
-        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(
+        env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsMemoryRdb();
     LOG_DEBUG("RdbStoreProxy::IsMemoryRdb out is : %{public}d.", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -972,8 +968,8 @@ napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr
-        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(
+        env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     std::string path = rdbStoreProxy->rdbStore_->GetPath();
     LOG_DEBUG("RdbStoreProxy::GetPath path is empty ? %{public}d.", path.empty());
     return JSUtils::Convert2JSValue(env, path);
@@ -984,8 +980,8 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     napi_value thisObj = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr));
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr
-        && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
+    NAPI_ASSERT(
+        env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy or rdbStore_ is nullptr");
     int errCode = rdbStoreProxy->rdbStore_->BeginTransaction();
     NAPI_ASSERT(env, errCode == E_OK, "call BeginTransaction failed");
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d.", errCode);

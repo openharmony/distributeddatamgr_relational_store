@@ -19,11 +19,11 @@
 #include <memory>
 #include <vector>
 
+#include "rdb_store_config.h"
 #include "share_block.h"
 #include "sqlite3sym.h"
 #include "statement.h"
 #include "value_object.h"
-#include "rdb_store_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -56,8 +56,8 @@ public:
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
     int32_t FillBlockInfo(SharedBlockInfo *info) const override;
-    int ModifyLockStatus(const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys,
-        bool isLock) override;
+    int ModifyLockStatus(
+        const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock) override;
 
 private:
     friend class SqliteConnection;

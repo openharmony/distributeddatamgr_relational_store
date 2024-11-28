@@ -21,8 +21,8 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSet::ReadFromParcel(MessageParc
     return consumerCreator_(parcel);
 }
 
-sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(std::shared_ptr<AbsSharedResultSet> resultSet,
-    MessageParcel &parcel)
+sptr<ISharedResultSet> ISharedResultSet::WriteToParcel(
+    std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel)
 {
     return providerCreator_(std::move(resultSet), parcel);
 }

@@ -26,7 +26,7 @@ namespace OHOS {
 template<typename _Key, typename _Tp>
 class ConcurrentMap;
 namespace DistributedRdb {
-class SqlStatistic  {
+class SqlStatistic {
 public:
     enum Step : int32_t {
         STEP_TOTAL,
@@ -55,6 +55,6 @@ private:
     std::chrono::steady_clock::time_point time_;
     std::shared_ptr<SqlExecInfo> execInfo_;
 };
-}
-}
+} // namespace DistributedRdb
+} // namespace OHOS
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_SQL_STATISTIC_H

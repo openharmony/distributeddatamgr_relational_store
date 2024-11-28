@@ -61,19 +61,19 @@ public:
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
     int32_t ClearCache() override;
-    int32_t Subscribe(const std::string &event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
-    int32_t Unsubscribe(const std::string &event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
-    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        bool isAsync, SlaveStatus &slaveStatus) override;
+    int32_t Subscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Unsubscribe(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
+        SlaveStatus &slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         SlaveStatus &slaveStatus) override;
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
 
 protected:
-    std::pair<int32_t, ValueObject> ExecuteForValue(const std::string &sql,
-        const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
+    std::pair<int32_t, ValueObject> ExecuteForValue(
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
 
 private:
@@ -107,44 +107,38 @@ private:
     int RegDefaultFunctions(sqlite3 *dbHandle);
     static void MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv);
     static void MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value **argv);
-    static void CompAssets(std::map<std::string, ValueObject::Asset> &oldAssets,
-        std::map<std::string, ValueObject::Asset> &newAssets);
+    static void CompAssets(
+        std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string, ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
 
     int SetCustomFunctions(const RdbStoreConfig &config);
     int SetCustomScalarFunction(const std::string &functionName, int argc, ScalarFunction *function);
-    int32_t UnsubscribeLocalDetail(const std::string &event,
-        const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
+    int32_t UnsubscribeLocalDetail(
+        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer);
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(const RdbStoreConfig &config,
-        SlaveOpenPolicy slaveOpenPolicy);
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
+        const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, SlaveStatus &status);
     int ExchangeVerify(bool isRestore);
     int SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus);
     int VeritySlaveIntegrity();
     bool IsDbVersionBelowSlave();
-    static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(const RdbStoreConfig &config,
-        bool isWrite);
+    static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
+        const RdbStoreConfig &config, bool isWrite);
     static int CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
-    static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = {
-        {"", "DB"},
-        {"-shm", "SHM"},
-        {"-wal", "WAL"},
-        {"-journal", "JOURNAL"},
-        {"-slaveFailure", nullptr},
-        {"-syncInterrupt", nullptr},
-        {".corruptedflg", nullptr}
-    };
+    static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
+        { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
+        { ".corruptedflg", nullptr } };
     static constexpr const char *MERGE_ASSETS_FUNC = "merge_assets";
     static constexpr const char *MERGE_ASSET_FUNC = "merge_asset";
     static constexpr int CHECKPOINT_TIME = 500;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
-    static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647; // 2147483647 = 2g - 1
+    static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647;       // 2147483647 = 2g - 1
     static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;

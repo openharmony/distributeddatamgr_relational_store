@@ -31,8 +31,8 @@
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
     uint8_t distributed = 0;
-    time_t timeValue {};
-    std::vector<uint8_t> secretKey {};
+    time_t timeValue{};
+    std::vector<uint8_t> secretKey{};
     RdbSecretKeyData() = default;
     ~RdbSecretKeyData()
     {
@@ -110,7 +110,7 @@ private:
     RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     bool IsKeyFileEmpty(const std::string &keyFile);
-    static bool IsKeyExpired(const time_t &createTime) ;
+    static bool IsKeyExpired(const time_t &createTime);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
     int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
@@ -134,7 +134,7 @@ private:
     static constexpr uint8_t UNDISTRIBUTED = 0;
     static constexpr uint8_t DISTRIBUTED = 1;
 
-    std::vector<uint8_t> rootKeyAlias_ {};
+    std::vector<uint8_t> rootKeyAlias_{};
     std::vector<uint8_t> nonce_;
     std::vector<uint8_t> aad_;
     std::mutex mutex_;

@@ -30,7 +30,7 @@
 namespace OHOS {
 namespace AppDataFwk {
 using namespace OHOS::Rdb;
-std::atomic<int64_t> identifier {0};
+std::atomic<int64_t> identifier{ 0 };
 
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
@@ -58,8 +58,8 @@ bool SharedBlock::Init()
     return true;
 }
 
-int SharedBlock::CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
-    SharedBlock *&outSharedBlock)
+int SharedBlock::CreateSharedBlock(
+    const std::string &name, size_t size, sptr<Ashmem> ashmem, SharedBlock *&outSharedBlock)
 {
     outSharedBlock = new SharedBlock(name, ashmem, size, false);
     if (outSharedBlock == nullptr) {
@@ -137,8 +137,8 @@ int SharedBlock::ReadMessageParcel(MessageParcel &parcel, SharedBlock *&block)
 
     LOG_DEBUG("Created SharedBlock from parcel: unusedOffset=%{private}" PRIu32 ", "
               "rowNums=%{private}" PRIu32 ", columnNums=%{private}" PRIu32 ", mSize=%{private}d",
-              block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
-              static_cast<int>(block->mSize));
+        block->mHeader->unusedOffset, block->mHeader->rowNums, block->mHeader->columnNums,
+        static_cast<int>(block->mSize));
 
     return SHARED_BLOCK_OK;
 }
@@ -198,8 +198,8 @@ int SharedBlock::AllocRow()
     uint32_t fieldDirOffset = Alloc(fieldDirSize);
     if (UNLIKELY(!fieldDirOffset)) {
         mHeader->rowNums--;
-        LOG_INFO("Alloc the row size %{public}u failed, roll back row number %{public}u", fieldDirOffset,
-            mHeader->rowNums);
+        LOG_INFO(
+            "Alloc the row size %{public}u failed, roll back row number %{public}u", fieldDirOffset, mHeader->rowNums);
         return SHARED_BLOCK_NO_MEMORY;
     }
 
@@ -223,7 +223,7 @@ uint32_t SharedBlock::Alloc(size_t size)
     uint32_t nextFreeOffset = offset + size;
     if (UNLIKELY(nextFreeOffset > mSize)) {
         LOG_ERROR("SharedBlock is full: requested allocation %{public}zu bytes,"
-            " free space %{public}zu bytes, block size %{public}zu bytes",
+                  " free space %{public}zu bytes, block size %{public}zu bytes",
             size, mSize - mHeader->unusedOffset, mSize);
         return 0;
     }
@@ -242,7 +242,7 @@ uint32_t *SharedBlock::AllocRowOffset()
         mHeader->groupOffset[groupPos] = Alloc(sizeof(RowGroupHeader));
         if (UNLIKELY(mHeader->groupOffset[groupPos] == 0)) {
             LOG_ERROR("SharedBlock::AllocRowOffset() Failed to alloc group->nextGroupOffset "
-                "when while loop.");
+                      "when while loop.");
             return nullptr;
         }
     }
@@ -260,7 +260,7 @@ SharedBlock::CellUnit *SharedBlock::GetCellUnit(uint32_t row, uint32_t column)
 {
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
-            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+                  " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
             row, column, mHeader->rowNums, mHeader->columnNums);
         return nullptr;
     }
@@ -291,12 +291,12 @@ int SharedBlock::PutAssets(uint32_t row, uint32_t column, const void *value, siz
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_ASSETS);
 }
 
-int SharedBlock::PutFloats(uint32_t row, uint32_t column, const void* value, size_t size)
+int SharedBlock::PutFloats(uint32_t row, uint32_t column, const void *value, size_t size)
 {
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_FLOATS);
 }
 
-int SharedBlock::PutBigInt(uint32_t row, uint32_t column, const void* value, size_t size)
+int SharedBlock::PutBigInt(uint32_t row, uint32_t column, const void *value, size_t size)
 {
     return PutBlobOrString(row, column, value, size, CELL_UNIT_TYPE_BIGINT);
 }
@@ -305,8 +305,8 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
 {
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
-            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
-                row, column, mHeader->rowNums, mHeader->columnNums);
+                  " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
     uint32_t groupPos = row / ROW_NUM_IN_A_GROUP;
@@ -337,8 +337,8 @@ int SharedBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
 {
     if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
-            " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
-                row, column, mHeader->rowNums, mHeader->columnNums);
+                  " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
+            row, column, mHeader->rowNums, mHeader->columnNums);
         return SHARED_BLOCK_BAD_VALUE;
     }
 
@@ -409,23 +409,23 @@ size_t SharedBlock::SetRawData(const void *rawData, size_t size)
 
 std::string SharedBlock::CellUnit::GetString(SharedBlock *block) const
 {
-    auto value = static_cast<char*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
+    auto value = static_cast<char *>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
     if (cell.stringOrBlobValue.size < 1 || value == nullptr) {
         return "";
     }
     return value;
 }
 
-std::vector<uint8_t> SharedBlock::CellUnit::GetBlob(SharedBlock* block) const
+std::vector<uint8_t> SharedBlock::CellUnit::GetBlob(SharedBlock *block) const
 {
-    auto value = reinterpret_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset,
-        cell.stringOrBlobValue.size));
+    auto value =
+        reinterpret_cast<uint8_t *>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
     return std::vector<uint8_t>(value, value + cell.stringOrBlobValue.size);
 }
 
-const uint8_t* SharedBlock::CellUnit::GetRawData(SharedBlock* block) const
+const uint8_t *SharedBlock::CellUnit::GetRawData(SharedBlock *block) const
 {
-    return static_cast<uint8_t*>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
+    return static_cast<uint8_t *>(block->OffsetToPtr(cell.stringOrBlobValue.offset, cell.stringOrBlobValue.size));
 }
 } // namespace AppDataFwk
 } // namespace OHOS

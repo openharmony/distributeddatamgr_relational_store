@@ -15,12 +15,12 @@
 #ifndef CLOUD_DATA_JS_CLOUD_UTILS_H
 #define CLOUD_DATA_JS_CLOUD_UTILS_H
 
-#include "js_utils.h"
 #include "cloud_types.h"
 #include "common_types.h"
+#include "js_config.h"
+#include "js_utils.h"
 #include "rdb_predicates.h"
 #include "result_set.h"
-#include "js_config.h"
 
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {

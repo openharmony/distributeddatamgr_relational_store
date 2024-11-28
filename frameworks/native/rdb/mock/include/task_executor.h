@@ -15,8 +15,8 @@
 #ifndef DISTRIBUTED_NATIVE_RDB_TASK_EXECUTOR_H
 #define DISTRIBUTED_NATIVE_RDB_TASK_EXECUTOR_H
 #include <chrono>
-#include <functional>
 #include <condition_variable>
+#include <functional>
 namespace OHOS::NativeRdb {
 class TaskExecutor {
 public:

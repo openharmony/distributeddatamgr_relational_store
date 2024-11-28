@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 #define LOG_TAG "UvQueue"
+#include "js_uv_queue.h"
+
 #include <memory>
 
 #include "js_scope.h"
-#include "js_uv_queue.h"
 #include "logger.h"
 namespace OHOS::AppDataMgrJsKit {
 using namespace OHOS::Rdb;

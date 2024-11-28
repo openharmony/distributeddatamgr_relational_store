@@ -17,9 +17,10 @@
 #define DATAABILITY_I_SHARED_RESULT_SET_STUB_H
 #include <functional>
 #include <future>
-#include "safe_block_queue.h"
-#include "ishared_result_set.h"
+
 #include "iremote_stub.h"
+#include "ishared_result_set.h"
+#include "safe_block_queue.h"
 namespace OHOS::NativeRdb {
 using ResultSetCode = OHOS::DistributedRdb::RelationalStore::IResultSetInterfaceCode;
 
@@ -39,9 +40,9 @@ protected:
     int HandleCloseRequest(MessageParcel &data, MessageParcel &reply);
 
 private:
-    using Handler = int(ISharedResultSetStub::*)(MessageParcel &request, MessageParcel &reply);
+    using Handler = int (ISharedResultSetStub::*)(MessageParcel &request, MessageParcel &reply);
     std::shared_ptr<AbsSharedResultSet> resultSet_;
-    static constexpr Handler handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)] {
+    static constexpr Handler handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)]{
         &ISharedResultSetStub::HandleGetRowCountRequest,
         &ISharedResultSetStub::HandleGetColumnNamesRequest,
         &ISharedResultSetStub::HandleOnGoRequest,

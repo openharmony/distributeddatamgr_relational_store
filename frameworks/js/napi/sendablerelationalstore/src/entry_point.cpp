@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "napi_rdb_store_convert_utils.h"
 #include "napi/native_api.h"
+#include "napi_rdb_store_convert_utils.h"
 
 using namespace OHOS::SendableRdb;
 

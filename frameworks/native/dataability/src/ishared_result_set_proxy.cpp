@@ -45,7 +45,7 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
         AppDataFwk::SharedBlock::ReadMessageParcel(parcel, block);
         result->SetBlock(block);
     }
-    return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result] (AbsSharedResultSet *) {});
+    return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result](AbsSharedResultSet *) {});
 }
 
 int ISharedResultSetProxy::GetRowCount(int &count)
@@ -59,8 +59,8 @@ int ISharedResultSetProxy::GetRowCount(int &count)
     request.WriteInterfaceToken(GetDescriptor());
     MessageParcel reply;
     MessageOption msgOption;
-    int errCode = Remote()->SendRequest(
-        static_cast<uint32_t>(ResultSetCode::FUNC_GET_ROW_COUNT), request, reply, msgOption);
+    int errCode =
+        Remote()->SendRequest(static_cast<uint32_t>(ResultSetCode::FUNC_GET_ROW_COUNT), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("GetRowCount IPC Error %{public}x", errCode);
         return -errCode;
@@ -119,17 +119,17 @@ std::pair<int, std::vector<std::string>> ISharedResultSetProxy::GetColumnNames()
         static_cast<uint32_t>(ResultSetCode::FUNC_GET_ALL_COLUMN_NAMES), request, reply, msgOption);
     if (errCode != 0) {
         LOG_ERROR("GetAllColumnNames IPC Error %{public}x", errCode);
-        return {-errCode, {}};
+        return { -errCode, {} };
     }
     errCode = reply.ReadInt32();
     if (errCode != E_OK) {
         LOG_ERROR("GetAllColumnNames Reply Error %{public}d", errCode);
-        return {errCode, {}};
+        return { errCode, {} };
     }
     std::vector<std::string> colNames;
     if (!reply.ReadStringVector(&colNames)) {
-        return {E_INVALID_PARCEL, {}};
+        return { E_INVALID_PARCEL, {} };
     }
-    return {errCode, std::move(colNames)};
+    return { errCode, std::move(colNames) };
 }
 } // namespace OHOS::NativeRdb

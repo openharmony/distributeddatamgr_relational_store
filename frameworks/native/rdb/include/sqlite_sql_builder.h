@@ -36,8 +36,8 @@ public:
         ConflictResolution conflictResolution);
     static int BuildQueryString(bool distinct, const std::string &table, const std::string &joinClause,
         const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
-        const std::string &indexName, const std::string &orderBy, const int &limit,
-        const int &offset, std::string &outSql);
+        const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset,
+        std::string &outSql);
     static std::string BuildSqlStringFromPredicates(const std::string &index, const std::string &joinClause,
         const std::string &whereClause, const std::string &group, const std::string &order, int limit, int offset);
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
@@ -51,11 +51,12 @@ public:
 
     static BatchRefSqls GenerateSqls(const std::string &table, const ValuesBuckets &buckets, int limit);
     static void UpdateAssetStatus(const ValueObject &value, int32_t status);
+
 private:
-    static BatchRefSqls MakeExecuteSqls(const std::string &sql, const std::vector<RefValue> &args, int fieldSize,
-        int limit);
-    static void AppendClause(std::string &builder, const std::string &name,
-        const std::string &clause, const std::string &table = "");
+    static BatchRefSqls MakeExecuteSqls(
+        const std::string &sql, const std::vector<RefValue> &args, int fieldSize, int limit);
+    static void AppendClause(
+        std::string &builder, const std::string &name, const std::string &clause, const std::string &table = "");
     static void AppendColumns(
         std::string &builder, const std::vector<std::string> &columns, const std::string &table = "");
 

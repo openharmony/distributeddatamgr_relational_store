@@ -14,6 +14,7 @@
  */
 
 #include "rdb_radar_reporter.h"
+
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
@@ -30,7 +31,7 @@ RdbRadar::~RdbRadar()
 {
 }
 
-RdbRadar& RdbRadar::operator=(int errCode)
+RdbRadar &RdbRadar::operator=(int errCode)
 {
     errCode_ = errCode;
     return *this;
@@ -41,7 +42,7 @@ RdbRadar::operator int() const
     return errCode_;
 }
 
-void RdbRadar::LocalReport(int bizSence, const char* funcName, int state, int errCode)
+void RdbRadar::LocalReport(int bizSence, const char *funcName, int state, int errCode)
 {
     (void)scene_;
     (void)funcName_;
@@ -51,4 +52,4 @@ std::string RdbRadar::GetHostPkgInfo()
 {
     return "";
 }
-}
+} // namespace OHOS::NativeRdb

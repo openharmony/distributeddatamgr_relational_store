@@ -253,7 +253,7 @@ struct HelperRdbContext : public BaseContext {
     HelperRdbContext() : config(""), version(0), iscontext(false), openCallback(), proxy(nullptr)
     {
     }
-    virtual ~HelperRdbContext(){};
+    virtual ~HelperRdbContext() {};
 };
 
 using ParseStoreConfigFunction = int (*)(
@@ -463,8 +463,8 @@ napi_value InnerGetRdbStore(napi_env env, napi_callback_info info, std::shared_p
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK,
-        "RdbJsKit::GetRdbStore end with err");
+    RDB_CHECK_RETURN_NULLPTR(
+        context->error == nullptr || context->error->GetCode() == OK, "RdbJsKit::GetRdbStore end with err");
     return AsyncCall::Call(env, context);
 }
 
@@ -517,8 +517,8 @@ napi_value InnerDeleteRdbStore(napi_env env, napi_callback_info info, std::share
     };
     context->SetAction(env, info, input, exec, output);
 
-    RDB_CHECK_RETURN_NULLPTR(context->error == nullptr || context->error->GetCode() == OK,
-        "RdbJsKit::DeleteRdbStore end with err");
+    RDB_CHECK_RETURN_NULLPTR(
+        context->error == nullptr || context->error->GetCode() == OK, "RdbJsKit::DeleteRdbStore end with err");
     return AsyncCall::Call(env, context);
 }
 

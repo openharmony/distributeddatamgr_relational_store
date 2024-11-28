@@ -23,12 +23,12 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 
-std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>,
-    MessageParcel &)> ISharedResultSet::providerCreator_ = ISharedResultSetStub::CreateStub;
+std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>, MessageParcel &)>
+    ISharedResultSet::providerCreator_ = ISharedResultSetStub::CreateStub;
 constexpr ISharedResultSetStub::Handler ISharedResultSetStub::handlers[static_cast<uint32_t>(ResultSetCode::FUNC_BUTT)];
 
-sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(std::shared_ptr<AbsSharedResultSet> result,
-    OHOS::MessageParcel &parcel)
+sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(
+    std::shared_ptr<AbsSharedResultSet> result, OHOS::MessageParcel &parcel)
 {
     sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
     if (stub == nullptr) {
@@ -55,8 +55,8 @@ ISharedResultSetStub::~ISharedResultSetStub()
 {
 }
 
-int ISharedResultSetStub::OnRemoteRequest(uint32_t code, OHOS::MessageParcel &data,
-    OHOS::MessageParcel &reply, OHOS::MessageOption &option)
+int ISharedResultSetStub::OnRemoteRequest(
+    uint32_t code, OHOS::MessageParcel &data, OHOS::MessageParcel &reply, OHOS::MessageOption &option)
 {
     if (GetDescriptor() != data.ReadInterfaceToken()) {
         LOG_ERROR("IPC descriptor is  not equal.");

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include <mutex>
+#include "js_df_manager.h"
 
 #include <unistd.h>
 
-#include "js_df_manager.h"
+#include <mutex>
 
 namespace OHOS::AppDataMgrJsKit {
 JSDFManager &JSDFManager::GetInstance()
@@ -52,4 +52,4 @@ int32_t JSDFManager::GetFreedTid(void *data)
     }
     return freedTid;
 }
-}
+} // namespace OHOS::AppDataMgrJsKit

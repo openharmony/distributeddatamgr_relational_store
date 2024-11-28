@@ -17,12 +17,12 @@
 
 #include <functional>
 
+#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
-#include "js_df_manager.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "abs_shared_result_set.h"
@@ -86,8 +86,7 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
 }
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(
-    napi_env const env, napi_value const arg)
+std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(napi_env const env, napi_value const arg)
 {
     if (arg == nullptr) {
         LOG_ERROR("ResultSetProxy GetNativeObject arg is null.");
@@ -243,7 +242,7 @@ ResultSetProxy *ResultSetProxy::GetInnerResultSet(napi_env env, napi_callback_in
 }
 
 ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
-    napi_env env, napi_callback_info info, int32_t &field, const std::string& name)
+    napi_env env, napi_callback_info info, int32_t &field, const std::string &name)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     napi_value self = nullptr;
@@ -254,8 +253,7 @@ ResultSetProxy *ResultSetProxy::ParseInt32FieldByName(
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
     RDB_NAPI_ASSERT_FROMV9(env, resultSetProxy && resultSetProxy->GetInstance(),
         std::make_shared<ParamTypeError>("resultSet", "not null"), resultSetProxy->apiversion);
-    RDB_NAPI_ASSERT_FROMV9(
-        env, argc == 1, std::make_shared<ParamNumError>("1"), resultSetProxy->apiversion);
+    RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), resultSetProxy->apiversion);
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
     RDB_NAPI_ASSERT_FROMV9(
@@ -272,8 +270,7 @@ ResultSetProxy *ResultSetProxy::ParseFieldByName(napi_env env, napi_callback_inf
     ResultSetProxy *resultSetProxy = nullptr;
     napi_unwrap(env, self, reinterpret_cast<void **>(&resultSetProxy));
     RDB_CHECK_RETURN_NULLPTR(resultSetProxy && resultSetProxy->GetInstance(), "Proxy or instance is nullptr");
-    RDB_NAPI_ASSERT_FROMV9(
-        env, argc == 1, std::make_shared<ParamNumError>("1"), resultSetProxy->apiversion);
+    RDB_NAPI_ASSERT_FROMV9(env, argc == 1, std::make_shared<ParamNumError>("1"), resultSetProxy->apiversion);
 
     field = JSUtils::Convert2String(env, args[0]);
     return resultSetProxy;
@@ -608,8 +605,7 @@ napi_value ResultSetProxy::GetSharedBlockName(napi_env env, napi_callback_info i
 
     ResultSetProxy *proxy;
     NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
-    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr,
-        "ResultSetProxy::GetSharedBlockName proxy is nullptr");
+    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr, "ResultSetProxy::GetSharedBlockName proxy is nullptr");
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockName_);
 }
@@ -621,8 +617,7 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 
     ResultSetProxy *proxy;
     NAPI_CALL(env, napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy)));
-    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr,
-        "ResultSetProxy::GetSharedBlockAshmemFd proxy is nullptr");
+    RDB_CHECK_RETURN_NULLPTR(proxy != nullptr, "ResultSetProxy::GetSharedBlockAshmemFd proxy is nullptr");
 
     return JSUtils::Convert2JSValue(env, proxy->sharedBlockAshmemFd_);
 }
@@ -631,15 +626,15 @@ napi_value ResultSetProxy::GetSharedBlockAshmemFd(napi_env env, napi_callback_in
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 
-__attribute__((visibility("default"))) napi_value NewCInstance(napi_env env,
-    napi_value arg) asm("NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance");
+__attribute__((visibility("default"))) napi_value NewCInstance(napi_env env, napi_value arg) asm(
+    "NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_NewInstance");
 napi_value NewCInstance(napi_env env, std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> resultSet)
 {
     return OHOS::RdbJsKit::ResultSetProxy::NewInstance(env, resultSet);
 }
 
-__attribute__((visibility("default"))) std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> GetCObject(napi_env env,
-    napi_value arg) asm("NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject");
+__attribute__((visibility("default"))) std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> GetCObject(
+    napi_env env, napi_value arg) asm("NAPI_OHOS_Data_RdbJsKit_ResultSetProxy_GetNativeObject");
 std::shared_ptr<OHOS::NativeRdb::AbsSharedResultSet> GetCObject(napi_env env, napi_value arg)
 {
     return OHOS::RdbJsKit::ResultSetProxy::GetNativeObject(env, arg);

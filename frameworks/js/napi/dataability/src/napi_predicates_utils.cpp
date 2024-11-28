@@ -50,9 +50,8 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     auto predicates = new NativeRdb::RdbPredicates(tableName);
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
         predicates, absPredicates->GetWhereClause(), absPredicates->GetBindArgs());
-    NativeRdb::PredicatesUtils::SetAttributes(predicates, absPredicates->IsDistinct(),
-        absPredicates->GetIndex(), absPredicates->GetGroup(), absPredicates->GetOrder(), absPredicates->GetLimit(),
-        absPredicates->GetOffset());
+    NativeRdb::PredicatesUtils::SetAttributes(predicates, absPredicates->IsDistinct(), absPredicates->GetIndex(),
+        absPredicates->GetGroup(), absPredicates->GetOrder(), absPredicates->GetLimit(), absPredicates->GetOffset());
 
     return RdbJsKit::RdbPredicatesProxy::NewInstance(env, std::shared_ptr<NativeRdb::RdbPredicates>(predicates));
 }
