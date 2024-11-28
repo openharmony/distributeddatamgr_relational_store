@@ -307,6 +307,10 @@ int RdbStoreImpl::SetDistributedTables(
     }
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
+    if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
+        int SYNC_DATA_INDEX = 500;
+        Reportor::Report(Reportor::Create(config_, SYNC_DATA_INDEX, "RdbDeviceToDeviceDataSync"));
+    }
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d", errorCode);
         return errorCode;
