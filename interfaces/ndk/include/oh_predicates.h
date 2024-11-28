@@ -36,10 +36,8 @@
  *
  * @since 10
  */
-
-#include <stddef.h>
-
 #include <cstdint>
+#include <stddef.h>
 
 #include "oh_value_object.h"
 
