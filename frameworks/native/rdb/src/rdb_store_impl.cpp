@@ -892,8 +892,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
     bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && !isReadOnly_) {
-        LOG_ERROR("database corrupt, %{public}s, %{public}s", SqliteUtils::Anonymous(name_).c_str(),
+    if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
+        !isReadOnly_) {
+        LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
+            SqliteUtils::Anonymous(name_).c_str(),
             Reportor::FormatBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         RdbParam param;
