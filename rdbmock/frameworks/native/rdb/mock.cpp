@@ -14,6 +14,7 @@
  */
 
 #include "mock.h"
+
 #include "relational_store_client.h"
 
 namespace OHOS {
@@ -62,8 +63,8 @@ __attribute__((visibility("default"))) bool ResetStatement(SharedBlockInfo *info
 #ifdef __cplusplus
 }
 #endif
-}
-}
+} // namespace NativeRdb
+} // namespace OHOS
 
 using namespace DistributedDB;
 __attribute__((visibility("default"))) DBStatus UnRegisterClientObserver(sqlite3 *db)
@@ -71,14 +72,14 @@ __attribute__((visibility("default"))) DBStatus UnRegisterClientObserver(sqlite3
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus RegisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<StoreObserver> &storeObserver)
+__attribute__((visibility("default"))) DBStatus RegisterStoreObserver(
+    sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
 {
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(sqlite3 *db,
-    const std::shared_ptr<StoreObserver> &storeObserver)
+__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(
+    sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
 {
     return DBStatus::OK;
 }
@@ -88,8 +89,8 @@ __attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(sqlite3 
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus Lock(const std::string &tableName,
-    const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+__attribute__((visibility("default"))) DBStatus Lock(
+    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
 {
     return DBStatus::OK;
 }
@@ -100,8 +101,8 @@ __attribute__((visibility("default"))) DBStatus UnLock(
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus DropLogicDeletedData(sqlite3 *db, const std::string &tableName,
-    uint64_t cursor)
+__attribute__((visibility("default"))) DBStatus DropLogicDeletedData(
+    sqlite3 *db, const std::string &tableName, uint64_t cursor)
 {
     (void)db;
     (void)tableName;

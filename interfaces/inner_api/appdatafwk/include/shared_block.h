@@ -16,14 +16,15 @@
 #ifndef SHARED_BLOCK_H
 #define SHARED_BLOCK_H
 
-#include <cinttypes>
-
-#include <string>
 #include <ashmem.h>
+
+#include <cinttypes>
+#include <string>
+
 #include "message_parcel.h"
 #include "parcel.h"
-#include "securec.h"
 #include "rdb_visibility.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace AppDataFwk {
@@ -374,10 +375,11 @@ private:
 
     inline int PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type);
 
-    static int CreateSharedBlock(const std::string &name, size_t size, sptr<Ashmem> ashmem,
-        SharedBlock *&outSharedBlock);
+    static int CreateSharedBlock(
+        const std::string &name, size_t size, sptr<Ashmem> ashmem, SharedBlock *&outSharedBlock);
 
-    inline void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0) {
+    inline void *OffsetToPtr(uint32_t offset, uint32_t bufferSize = 0)
+    {
         uint32_t safeOffset = offset;
         if (safeOffset + bufferSize > mSize) {
             return nullptr;

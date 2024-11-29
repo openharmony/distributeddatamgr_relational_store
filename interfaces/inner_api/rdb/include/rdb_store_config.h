@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+
 #include "rdb_types.h"
 #include "rdb_visibility.h"
 
@@ -198,7 +199,7 @@ using DistributedType = OHOS::DistributedRdb::RdbDistributedType;
 /**
  * @brief Use ScalarFunction replace std::function<std::string(const std::vector<std::string>&)>.
  */
-using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
+using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
 
 struct ScalarFunctionInfo {
     ScalarFunctionInfo(ScalarFunction function, int argc) : function_(function), argc_(argc) {}
@@ -236,7 +237,7 @@ public:
     /**
     * @brief The constant indicates the database default page size.
     */
-    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+    static constexpr int DB_PAGE_SIZE = 4096; /* default page size : 4k */
 
     /**
     * @brief The constant indicates the database default journal size.
@@ -415,7 +416,7 @@ public:
     /**
      * @brief Sets the module name for the object.
      */
-    API_EXPORT void SetModuleName(const std::string& moduleName);
+    API_EXPORT void SetModuleName(const std::string &moduleName);
 
     /**
      * @brief Obtains the module name in this {@code StoreConfig} object.
@@ -425,7 +426,7 @@ public:
     /**
      * @brief Sets the service name for the object.
      */
-    API_EXPORT void SetServiceName(const std::string& serviceName);
+    API_EXPORT void SetServiceName(const std::string &serviceName);
 
     /**
      * @brief Sets the area for the object.
@@ -671,9 +672,9 @@ public:
     PromiseInfo GetPromiseInfo() const;
 
     void SetPromiseInfo(PromiseInfo promiseInfo);
-     
+
     ssize_t GetCheckpointSize() const;
-    
+
     ssize_t GetStartCheckpointSize() const;
 
     ssize_t GetWalLimitSize() const;
@@ -681,7 +682,7 @@ public:
     void SetWalLimitSize(ssize_t size);
 
     int32_t GetHaMode() const;
- 
+
     void SetHaMode(int32_t haMode);
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
@@ -713,7 +714,7 @@ private:
     int32_t readConSize_ = 4;
     int32_t area_ = 0;
     int32_t writeTimeout_ = 2; // seconds
-    int32_t readTimeout_ = 1; // seconds
+    int32_t readTimeout_ = 1;  // seconds
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;

@@ -14,7 +14,9 @@
  */
 
 #include "common.h"
+
 #include <string>
+
 #include "rdb_errno.h"
 
 namespace OHOS {
@@ -90,5 +92,5 @@ const RowDatas UTUtils::gRowDatas[14] = {
     { 1012, "LiKui", 4, ValueObject(1006), "2001-12-03", 9500.00, ValueObject(), 30 },
     { 1013, "XiaoBaiLong", 4, ValueObject(1004), "2001-12-03", 30000.00, ValueObject(), 20 },
     { 1014, "GuanYu", 4, ValueObject(1007), "2002-01-23", 13000.00, ValueObject(), 10 } };
-}
-}
+} // namespace NativeRdb
+} // namespace OHOS

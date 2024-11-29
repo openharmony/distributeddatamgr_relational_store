@@ -16,16 +16,17 @@
 #ifndef OHOS_DISTRIBUTED_DATA_FRAMEWORKS_COMMON_LRU_BUCKET_H
 #define OHOS_DISTRIBUTED_DATA_FRAMEWORKS_COMMON_LRU_BUCKET_H
 
+#include <list>
 #include <map>
 #include <mutex>
-#include <list>
 
 namespace OHOS {
 template<typename _Key, typename _Tp>
 class LRUBucket {
 public:
-    LRUBucket(size_t capacity)
-        : size_(0), capacity_(capacity) {}
+    LRUBucket(size_t capacity) : size_(0), capacity_(capacity)
+    {
+    }
 
     LRUBucket(LRUBucket &&bucket) noexcept = delete;
     LRUBucket(const LRUBucket &bucket) = delete;
@@ -102,7 +103,7 @@ public:
             PopBack();
         }
 
-        auto *node = new(std::nothrow) Node(value);
+        auto *node = new (std::nothrow) Node(value);
         if (node == nullptr) {
             return false;
         }

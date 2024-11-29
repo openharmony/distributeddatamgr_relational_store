@@ -58,7 +58,6 @@ public:
      * @brief Clear Cache.
      */
     API_EXPORT static void ClearCache();
-
 };
 } // namespace NativeRdb
 } // namespace OHOS

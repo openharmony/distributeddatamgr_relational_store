@@ -15,8 +15,8 @@
 
 #ifndef RELATIONAL_MODIFY_TIME_CURSOR_H
 #define RELATIONAL_MODIFY_TIME_CURSOR_H
-#include "relational_cursor.h"
 #include "rdb_store.h"
+#include "relational_cursor.h"
 #include "result_set.h"
 namespace OHOS::RdbNdk {
 class ModifyTimeCursor : public RelationalCursor {

@@ -30,6 +30,7 @@ public:
     RelationalPredicatesObjects();
     static RelationalPredicatesObjects *GetSelf(OH_VObject *objects);
     std::vector<ValueObject> &Get();
+
 private:
     static int PutInt64(OH_VObject *objects, int64_t *value, uint32_t count);
     static int PutDouble(OH_VObject *objects, double *value, uint32_t count);

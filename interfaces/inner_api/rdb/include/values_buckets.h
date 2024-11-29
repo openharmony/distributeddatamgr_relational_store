@@ -17,8 +17,8 @@
 #define NATIVE_RDB_VALUES_BUCKETS_H
 
 #include <map>
-#include <set>
 #include <memory>
+#include <set>
 
 #include "value_object.h"
 #include "values_bucket.h"

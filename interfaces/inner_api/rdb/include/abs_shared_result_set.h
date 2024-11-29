@@ -140,6 +140,7 @@ protected:
 
     // The default position of the cursor
     static const int INIT_POS = -1;
+
 private:
     int GetCustomerValue(int index, ValueObject &value, AppDataFwk::SharedBlock *block);
     int UpdateBlockPos(int position, int rowCnt);

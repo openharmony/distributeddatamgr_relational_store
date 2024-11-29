@@ -15,11 +15,13 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_H
-#include <cstdint>
 #include <errors.h>
+
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
+
 #include "cloud_types.h"
 #include "common_types.h"
 #include "rdb_types.h"
@@ -100,9 +102,9 @@ public:
     virtual int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
     virtual int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
-    virtual std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(const std::string &id,
-        const std::string &bundleName, const std::string &storeId) = 0;
-    virtual int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
+    virtual std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(
+        const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
+    virtual int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
 
     virtual std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
         const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
@@ -116,10 +118,10 @@ public:
     virtual int32_t QueryByInvitation(const std::string &invitation, QueryResults &results) = 0;
     virtual int32_t ConfirmInvitation(const std::string &invitation, int32_t confirmation,
         std::tuple<int32_t, std::string, std::string> &result) = 0;
-    virtual int32_t ChangeConfirmation(const std::string &sharingRes,
-        int32_t confirmation, std::pair<int32_t, std::string> &result) = 0;
+    virtual int32_t ChangeConfirmation(
+        const std::string &sharingRes, int32_t confirmation, std::pair<int32_t, std::string> &result) = 0;
 
-    virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value>& values) = 0;
+    virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
     virtual std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
 

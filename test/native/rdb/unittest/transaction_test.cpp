@@ -46,7 +46,6 @@ public:
     };
 };
 
-
 int TransactionTest::TransactionTestOpenCallback::OnCreate(RdbStore &store)
 {
     auto [ret, value] = store.Execute(CREATE_TABLE_SQL);
@@ -193,7 +192,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    Transaction::Rows rows {
+    Transaction::Rows rows{
         UTUtils::SetRowData(UTUtils::g_rowData[0]),
         UTUtils::SetRowData(UTUtils::g_rowData[1]),
         UTUtils::SetRowData(UTUtils::g_rowData[2]),

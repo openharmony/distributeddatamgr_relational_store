@@ -14,21 +14,21 @@
  */
 #define LOG_TAG "RdbDoubleWriteTest"
 #include <gtest/gtest.h>
-
-#include <fstream>
-#include <string>
-#include "sys/types.h"
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "logger.h"
+#include <fstream>
+#include <string>
+
 #include "common.h"
-#include "sqlite_utils.h"
 #include "file_ex.h"
+#include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite_utils.h"
+#include "sys/types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -44,8 +44,8 @@ public:
     void CheckAge(std::shared_ptr<ResultSet> &resultSet);
     void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
-    void CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK,
-        const std::string &tableName = "test");
+    void CheckNumber(
+        std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK, const std::string &tableName = "test");
     void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
     void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
     void TryInterruptBackup();
@@ -72,7 +72,7 @@ std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
 const int BLOB_SIZE = 3;
-const uint8_t EXPECTED_BLOB_DATA[] {1, 2, 3};
+const uint8_t EXPECTED_BLOB_DATA[]{ 1, 2, 3 };
 const int CHECKAGE = 18;
 const double CHECKCOLUMN = 100.5;
 
@@ -220,7 +220,7 @@ void RdbDoubleWriteTest::TryInterruptBackup()
     int err = store->InterruptBackup();
     int tryTimes = 0;
     while (err != E_OK && (++tryTimes <= 1000)) { // 1000 is try time
-        usleep(10000); // 10000 delay
+        usleep(10000);                            // 10000 delay
         err = store->InterruptBackup();
     }
     EXPECT_EQ(err, E_OK);
@@ -329,11 +329,10 @@ void RdbDoubleWriteTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
     }
 }
 
-void RdbDoubleWriteTest::CheckNumber(std::shared_ptr<RdbStore> &store, int num, int errCode,
-    const std::string &tableName)
+void RdbDoubleWriteTest::CheckNumber(
+    std::shared_ptr<RdbStore> &store, int num, int errCode, const std::string &tableName)
 {
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM " + tableName);
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM " + tableName);
     ASSERT_NE(resultSet, nullptr);
     int countNum;
     int ret = resultSet->GetRowCount(countNum);
@@ -495,7 +494,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
@@ -555,7 +554,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
@@ -598,7 +597,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
@@ -755,14 +754,14 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
     LOG_INFO("RdbStore_DoubleWrite_015 corrupt db finish");
 
     int errCode = slaveStore->ExecuteSql("CREATE TABLE IF NOT EXISTS xx (id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+                                         "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
     EXPECT_EQ(errCode, E_OK);
     EXPECT_EQ(slaveStore->Insert(id, "xx", values), E_OK);
 
@@ -849,7 +848,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
     values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret3 = store->Insert(id2, "test", values2);
     EXPECT_EQ(E_OK, ret3);
-    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + +"-slaveFailure";
     bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
     ASSERT_TRUE(isFlagFileExists);
     ASSERT_TRUE(store->IsSlaveDiffFromMaster());
@@ -893,7 +892,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
     values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret3 = store->Insert(id2, "test", values2);
     EXPECT_EQ(E_OK, ret3);
-    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + +"-slaveFailure";
     bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
     ASSERT_TRUE(isFlagFileExists);
     ASSERT_TRUE(store->IsSlaveDiffFromMaster());
@@ -972,7 +971,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_027, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();
@@ -1045,7 +1044,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
     id = 666;
     Insert(id, 1);
 
-    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + + "-slaveFailure";
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + +"-slaveFailure";
     bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
     ASSERT_TRUE(isFlagFileExists);
 
@@ -1101,7 +1100,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
     ASSERT_TRUE(file.is_open() == true);
     file.seekp(30, std::ios::beg);
     ASSERT_TRUE(file.good() == true);
-    char bytes[2] = {0x6, 0x6};
+    char bytes[2] = { 0x6, 0x6 };
     file.write(bytes, 2);
     ASSERT_TRUE(file.good() == true);
     file.close();

@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 #define LOG_TAG "RelationalPredicatesObjects"
+#include "relational_predicates_objects.h"
+
 #include "logger.h"
 #include "oh_value_object.h"
 #include "relational_store_error_code.h"
-#include "relational_predicates_objects.h"
 
 namespace OHOS {
 namespace RdbNdk {

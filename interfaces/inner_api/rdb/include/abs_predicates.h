@@ -104,6 +104,7 @@ public:
     [[deprecated("Use NotIn(const std::string &, const std::vector<ValueObject> &) instead.")]]
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
+
 private:
     static constexpr const char *LOG_ORIGIN_FIELD = "#_flag";
 
@@ -128,8 +129,8 @@ private:
     }
     std::string RemoveQuotes(const std::string &source) const;
     void CheckIsNeedAnd();
-    void AppendWhereClauseWithInOrNotIn(const std::string &methodName, const std::string &field,
-        const std::vector<std::string> &replaceValues);
+    void AppendWhereClauseWithInOrNotIn(
+        const std::string &methodName, const std::string &field, const std::vector<std::string> &replaceValues);
 };
 } // namespace NativeRdb
 } // namespace OHOS

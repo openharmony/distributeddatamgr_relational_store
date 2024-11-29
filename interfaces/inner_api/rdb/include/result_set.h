@@ -16,12 +16,13 @@
 #ifndef NATIVE_RDB_RESULT_SET_H
 #define NATIVE_RDB_RESULT_SET_H
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
+
+#include "rdb_errno.h"
 #include "remote_result_set.h"
 #include "value_object.h"
-#include "rdb_errno.h"
 namespace OHOS {
 namespace NativeRdb {
 struct API_EXPORT RowEntity {

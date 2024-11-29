@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+
 #include <map>
 #include <string>
 
@@ -486,8 +487,8 @@ HWTEST_F(RdbTransDBTest, Update_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
     row.Put("name", "xiaohua");
-    row.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    row.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     std::tie(errCode, changed) = transDB_->Update(TABLE_NAME, row);
     ASSERT_EQ(errCode, E_OK);
     auto resultSet = transDB_->QueryByStep("select * from TEST");
@@ -522,8 +523,8 @@ HWTEST_F(RdbTransDBTest, Update_002, TestSize.Level1)
     ASSERT_EQ(changedNum, 20);
     auto updateRow = row_;
     updateRow.values_.erase("id");
-    updateRow.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    updateRow.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     int32_t updatedNum = -1;
     std::tie(errCode, updatedNum) = transDB_->Update(TABLE_NAME, updateRow, "id > ? and  id < ?", { 0, 10 });
     ASSERT_EQ(errCode, E_OK);
@@ -566,11 +567,11 @@ HWTEST_F(RdbTransDBTest, Update_003, TestSize.Level1)
     ASSERT_EQ(changedNum, 20);
     auto updateRow = row_;
     updateRow.values_.erase("id");
-    updateRow.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    updateRow.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     int32_t updatedNum = -1;
-    std::tie(errCode, updatedNum) = transDB_->Update(TABLE_NAME, updateRow, "id > ? and  id < ?", { 0, 10 },
-        ConflictResolution::ON_CONFLICT_ROLLBACK);
+    std::tie(errCode, updatedNum) = transDB_->Update(
+        TABLE_NAME, updateRow, "id > ? and  id < ?", { 0, 10 }, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(updatedNum, 9);
     auto resultSet = transDB_->QueryByStep("select * from TEST where id > ? and  id < ? order by id", { 0, 10 });
@@ -603,8 +604,8 @@ HWTEST_F(RdbTransDBTest, Update_004, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
     row.Put("name", "xiaohua");
-    row.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    row.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     errCode = transDB_->Update(changed, TABLE_NAME, row);
     ASSERT_EQ(errCode, E_OK);
     auto resultSet = transDB_->QueryByStep("select * from TEST");
@@ -639,8 +640,8 @@ HWTEST_F(RdbTransDBTest, Update_005, TestSize.Level1)
     ASSERT_EQ(changedNum, 20);
     auto updateRow = row_;
     updateRow.values_.erase("id");
-    updateRow.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    updateRow.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     int32_t updatedNum = -1;
     RdbPredicates rdbPredicates(TABLE_NAME);
     rdbPredicates.GreaterThan("id", 0);
@@ -687,8 +688,8 @@ HWTEST_F(RdbTransDBTest, UpdateWithConflictResolution_001, TestSize.Level1)
     ASSERT_EQ(changedNum, 20);
     auto updateRow = row_;
     updateRow.values_.erase("id");
-    updateRow.Put("attachment",
-        ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
+    updateRow.Put(
+        "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111", .path = "/data/test" }));
     int32_t updatedNum = -1;
     errCode =
         transDB_->UpdateWithConflictResolution(updatedNum, TABLE_NAME, updateRow, "id > ? and  id < ?", { 0, 10 });
@@ -977,8 +978,8 @@ HWTEST_F(RdbTransDBTest, Execute_Insert_002, TestSize.Level1)
     auto [errCode, value] = transDB_->Execute("INSERT INTO TEST(id, name) VALUES (?,?)", { 100, "xiaohong" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(value, ValueObject(1));
-    std::tie(errCode, value) = transDB_->Execute(
-        "INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)", { 100, "xiaoming" });
+    std::tie(errCode, value) =
+        transDB_->Execute("INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)", { 100, "xiaoming" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(value, ValueObject(-1));
     auto resultSet = transDB_->QueryByStep("select * from TEST where id == ?", RdbStore::Values{ 100 });
@@ -1145,8 +1146,8 @@ HWTEST_F(RdbTransDBTest, ExecuteForLastInsertRowId_001, TestSize.Level1)
         transDB_->ExecuteForLastInsertedRowId(rowId, "INSERT INTO TEST(id, name) VALUES (?,?)", { 100, "xiaohong" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, 1);
-    errCode = transDB_->ExecuteForLastInsertedRowId(rowId, "INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)",
-        { 100, "xiaoming" });
+    errCode = transDB_->ExecuteForLastInsertedRowId(
+        rowId, "INSERT OR IGNORE INTO TEST(id, name) VALUES (?,?)", { 100, "xiaoming" });
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(rowId, -1);
     auto resultSet = transDB_->QueryByStep("select * from TEST where id == ?", RdbStore::Values{ 100 });

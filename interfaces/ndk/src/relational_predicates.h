@@ -16,8 +16,8 @@
 #ifndef RELATIONAL_PREDICATES_IMPL_H
 #define RELATIONAL_PREDICATES_IMPL_H
 
-#include "rdb_predicates.h"
 #include "oh_predicates.h"
+#include "rdb_predicates.h"
 
 namespace OHOS {
 namespace RdbNdk {
@@ -27,6 +27,7 @@ public:
     explicit RelationalPredicate(const char *table);
     static RelationalPredicate *GetSelf(OH_Predicates *predicates);
     OHOS::NativeRdb::RdbPredicates &Get();
+
 private:
     static OH_Predicates *EqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *NotEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
@@ -41,10 +42,8 @@ private:
     static OH_Predicates *NotBetween(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *GreaterThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *LessThan(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
-    static OH_Predicates *GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field,
-        OH_VObject *valueObject);
-    static OH_Predicates *LessThanOrEqualTo(OH_Predicates *predicates, const char *field,
-        OH_VObject *valueObject);
+    static OH_Predicates *GreaterThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
+    static OH_Predicates *LessThanOrEqualTo(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *OrderBy(OH_Predicates *predicates, const char *field, OH_OrderType type);
     static OH_Predicates *Distinct(OH_Predicates *predicates);
     static OH_Predicates *Limit(OH_Predicates *predicates, unsigned int value);
@@ -54,8 +53,7 @@ private:
     static OH_Predicates *NotIn(OH_Predicates *predicates, const char *field, OH_VObject *valueObject);
     static OH_Predicates *Clear(OH_Predicates *predicates);
     static int Destroy(OH_Predicates *predicates);
-    static bool GetObjects(OH_Predicates *predicates, OH_VObject *valueObject,
-        std::vector<std::string> &values);
+    static bool GetObjects(OH_Predicates *predicates, OH_VObject *valueObject, std::vector<std::string> &values);
     OHOS::NativeRdb::RdbPredicates predicates_;
 };
 } // namespace RdbNdk

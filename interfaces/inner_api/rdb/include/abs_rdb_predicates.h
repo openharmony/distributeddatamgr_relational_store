@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #ifndef NATIVE_RDB_ABSRDBPREDICATES_H
 #define NATIVE_RDB_ABSRDBPREDICATES_H
 
@@ -74,7 +73,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates *InDevices(std::vector<std::string>& devices);
+    API_EXPORT AbsRdbPredicates *InDevices(std::vector<std::string> &devices);
 
     /**
      * @brief Specify all remote devices which connect to local device when syncing distributed database.
@@ -95,7 +94,7 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* EqualTo(const std::string &field, const ValueObject &value) override;
+    API_EXPORT AbsRdbPredicates *EqualTo(const std::string &field, const ValueObject &value) override;
 
     /**
      * @brief Restricts the value of the field to be not equal to the specified value to the remote AbsRdbPredicates.
@@ -107,21 +106,21 @@ public:
      *
      * @return Returns the self.
      */
-    API_EXPORT AbsRdbPredicates* NotEqualTo(const std::string &field, const ValueObject &value) override;
+    API_EXPORT AbsRdbPredicates *NotEqualTo(const std::string &field, const ValueObject &value) override;
 
     /**
      * @brief Adds an and condition to the remote AbsRdbPredicates.
      *
      * This method is similar to or of the SQL statement.
      */
-    API_EXPORT AbsRdbPredicates* And() override;
+    API_EXPORT AbsRdbPredicates *And() override;
 
     /**
      * @brief Adds an or condition to the remote AbsRdbPredicates.
      *
      * This method is similar to or of the SQL statement.
      */
-    API_EXPORT AbsRdbPredicates* Or() override;
+    API_EXPORT AbsRdbPredicates *Or() override;
 
     /**
      * @brief Adds an left bracket condition to the remote AbsRdbPredicates.
@@ -248,7 +247,7 @@ public:
      *
      * @param field Indicates the column name for sorting the return list.
      */
-    API_EXPORT AbsRdbPredicates* OrderByAsc(const std::string &field) override;
+    API_EXPORT AbsRdbPredicates *OrderByAsc(const std::string &field) override;
 
     /**
      * @brief Restricts the descending order of the return list. When there are several orders,
@@ -256,12 +255,12 @@ public:
      *
      * @param field Indicates the column name for sorting the return list.
      */
-    API_EXPORT AbsRdbPredicates* OrderByDesc(const std::string &field) override;
+    API_EXPORT AbsRdbPredicates *OrderByDesc(const std::string &field) override;
 
     /**
      * @brief Get predicates of remote device.
      */
-    API_EXPORT const DistributedRdb::PredicatesMemo & GetDistributedPredicates() const;
+    API_EXPORT const DistributedRdb::PredicatesMemo &GetDistributedPredicates() const;
 
     /**
      * @brief Initialize relevant parameters of the union table.
