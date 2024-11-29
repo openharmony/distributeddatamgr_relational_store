@@ -318,6 +318,9 @@ std::string SqliteUtils::AnonySqlString(const std::string &input, const char *co
     std::vector<std::string> words = SqliteUtils::SplitString(input);
     std::string result;
     for (const std::string &word : words) {
+        if (word.empty() || word.find_first_of("\r\n") != std::string::npos) {
+            continue;
+        }
         std::string anonyWord = word;
         std::string upperWord = SqliteUtils::StrToUpper(word);
         bool found = Find(upperWord, array, length);
