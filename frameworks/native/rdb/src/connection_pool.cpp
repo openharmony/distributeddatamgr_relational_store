@@ -304,7 +304,8 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse)
     }
 
     auto now = steady_clock::now();
-    auto timeout = now > (failedTime_.load() + minutes(CHECK_POINT_INTERVAL)) || now < failedTime_.load();
+    auto timeout = now > (failedTime_.load() + minutes(CHECK_POINT_INTERVAL)) || now < failedTime_.load() ||
+                   failedTime_.load() == steady_clock::time_point();
     auto transCount = transCount_ + isInTransaction_;
     auto remainCount = reuse ? transCount : transCount - 1;
     auto errCode = node->Unused(remainCount, timeout);
