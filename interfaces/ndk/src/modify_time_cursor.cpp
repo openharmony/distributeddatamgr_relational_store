@@ -14,6 +14,7 @@
  */
 #define LOG_TAG "ModifyTimeCursor"
 #include "modify_time_cursor.h"
+
 #include "logger.h"
 #include "relational_store_error_code.h"
 #include "securec.h"

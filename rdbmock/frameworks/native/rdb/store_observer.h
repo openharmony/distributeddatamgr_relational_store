@@ -40,6 +40,6 @@ public:
     using StoreChangedInfo = std::vector<ChangedData>;
     virtual void OnChange(StoreChangedInfo &&data) {};
 };
-}
+} // namespace DistributedDB
 
 #endif //RELATIONAL_STORE_OBSERVER_H

@@ -70,5 +70,5 @@ struct AssetValue {
         return path < ref.path;
     }
 };
-}
+} // namespace OHOS::NativeRdb
 #endif // OHOS_RELATIONAL_STORE_INNER_API_ASSET_VALUE_H

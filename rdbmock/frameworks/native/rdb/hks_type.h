@@ -95,7 +95,6 @@ enum HksTag {
 
 struct HksParamSet;
 
-
 #ifdef __cplusplus
 }
 #endif

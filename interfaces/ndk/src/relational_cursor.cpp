@@ -17,13 +17,13 @@
 
 #include <string>
 
+#include "convertor_error_code.h"
 #include "logger.h"
 #include "oh_cursor.h"
 #include "rdb_errno.h"
 #include "relational_asset.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
-#include "convertor_error_code.h"
 
 namespace OHOS {
 namespace RdbNdk {
@@ -152,7 +152,6 @@ int RelationalCursor::IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNul
     }
     return self->IsNull(columnIndex, isNull);
 }
-
 
 int RelationalCursor::GetAssetsCount(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count)
 {

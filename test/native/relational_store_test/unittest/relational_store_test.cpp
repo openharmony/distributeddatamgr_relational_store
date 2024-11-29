@@ -53,10 +53,10 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-std::string const DeleteTestOpenCallback::CREATE_TABLE_TEST = std::string("CREATE TABLE IF NOT EXISTS test ")
-                                                              + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                            "name TEXT NOT NULL, age INTEGER, salary "
-                                                                            "REAL, blobType BLOB)");
+std::string const DeleteTestOpenCallback::CREATE_TABLE_TEST =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
 
 int DeleteTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -574,8 +574,8 @@ HWTEST_F(RdbTest, RdbStore_Encrypt_06, TestSize.Level1)
         RdbSecurityManager::GetInstance().CheckKeyDataFileExists(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE);
     EXPECT_EQ(ret, false);
     std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(RdbSecurityManager::RDB_KEY_SIZE);
-    bool flag = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(
-        RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
+    bool flag =
+        RdbSecurityManager::GetInstance().SaveSecretKeyToFile(RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, key);
     EXPECT_EQ(flag, true);
 }
 
@@ -645,8 +645,8 @@ HWTEST_F(RdbTest, RdbStore_Encrypt_09, TestSize.Level1)
         RdbSecurityManager::KeyFileType::PUB_KEY_BAK_FILE, distributedStatus);
     EXPECT_EQ(ret, E_ERROR);
     EXPECT_EQ(distributedStatus, false);
-    ret = RdbSecurityManager::GetInstance().SetKeyDistributedStatus(
-        RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
+    ret =
+        RdbSecurityManager::GetInstance().SetKeyDistributedStatus(RdbSecurityManager::KeyFileType::PUB_KEY_FILE, true);
     EXPECT_EQ(ret, E_OK);
     ret = RdbSecurityManager::GetInstance().GetKeyDistributedStatus(
         RdbSecurityManager::KeyFileType::PUB_KEY_FILE, distributedStatus);
@@ -1316,14 +1316,14 @@ HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_006_007, TestSize.Level1
 HWTEST_F(RdbTest, RdbStore_BatchInsert_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbTest::store;
-    
+
     ValuesBucket values;
-    
+
     values.PutString("name", "zhangsan");
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    
+
     std::vector<ValuesBucket> valuesBuckets;
     for (int i = 0; i < 100; i++) {
         valuesBuckets.push_back(values);
@@ -1889,16 +1889,16 @@ HWTEST_F(RdbTest, RdbStore_UpdateWithConflictResolution_007, TestSize.Level1)
 
     values.PutInt("id", 2);
     values.PutInt("age", 19);
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
-        static_cast<ConflictResolution>(6));
+    ret = store->UpdateWithConflictResolution(
+        changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" }, static_cast<ConflictResolution>(6));
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, changedRows);
 
     values.Clear();
     values.PutInt("id", 2);
     values.PutInt("age", 19);
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" },
-        static_cast<ConflictResolution>(-1));
+    ret = store->UpdateWithConflictResolution(
+        changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" }, static_cast<ConflictResolution>(-1));
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, changedRows);
 }
@@ -1925,8 +1925,7 @@ HWTEST_F(RdbTest, RdbStore_UpdateSqlBuilder_001, TestSize.Level1)
     EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=?");
 }
 
-void RdbTest::ExpectValue(
-    const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, const RowData &expect)
+void RdbTest::ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, const RowData &expect)
 {
     EXPECT_NE(nullptr, resultSet);
     int columnIndex;

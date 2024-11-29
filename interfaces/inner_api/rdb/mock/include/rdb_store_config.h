@@ -16,10 +16,10 @@
 #ifndef NATIVE_RDB_RDB_STORE_CONFIG_H
 #define NATIVE_RDB_RDB_STORE_CONFIG_H
 
+#include <functional>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <functional>
 
 namespace OHOS::NativeRdb {
 enum class IntegrityCheck {
@@ -105,7 +105,7 @@ enum EncryptAlgo : int32_t {
 };
 
 
-using ScalarFunction = std::function<std::string(const std::vector<std::string>&)>;
+using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
 
 struct ScalarFunctionInfo {
     ScalarFunctionInfo(ScalarFunction function, int argc) : function_(function), argc_(argc) {}
@@ -133,7 +133,7 @@ public:
         ~CryptoParam();
         bool IsValid() const;
     };
-    static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
+    static constexpr int DB_PAGE_SIZE = 4096;           /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024; /* default file size : 1M */
     static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
     static constexpr EncryptAlgo DB_DEFAULT_ENCRYPT_ALGO = AES_256_GCM;
@@ -173,9 +173,9 @@ public:
     std::string GetBundleName() const;
     int SetDistributedType(DistributedType type);
     DistributedType GetDistributedType() const;
-    void SetModuleName(const std::string& moduleName);
+    void SetModuleName(const std::string &moduleName);
     std::string GetModuleName() const;
-    void SetServiceName(const std::string& serviceName);
+    void SetServiceName(const std::string &serviceName);
     void SetArea(int32_t area);
     int32_t GetArea() const;
     static std::string GetJournalModeValue(JournalMode journalMode);
@@ -284,7 +284,7 @@ private:
     int32_t readConSize_ = 4;
     int32_t area_ = 0;
     int32_t writeTimeout_ = 2; // seconds
-    int32_t readTimeout_ = 1; // seconds
+    int32_t readTimeout_ = 1;  // seconds
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;

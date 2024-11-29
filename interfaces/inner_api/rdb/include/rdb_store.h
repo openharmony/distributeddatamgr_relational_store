@@ -16,8 +16,9 @@
 #ifndef NATIVE_RDB_RDB_STORE_H
 #define NATIVE_RDB_RDB_STORE_H
 
-#include <memory>
 #include <stdint.h>
+
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -122,8 +123,8 @@ public:
     class API_EXPORT ModifyTime {
     public:
         ModifyTime() = default;
-        API_EXPORT ModifyTime(std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys,
-            bool isFromRowId);
+        API_EXPORT ModifyTime(
+            std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys, bool isFromRowId);
         API_EXPORT operator std::map<PRIKey, Date>();
         API_EXPORT operator std::shared_ptr<ResultSet>();
         API_EXPORT PRIKey GetOriginKey(const std::vector<uint8_t> &hash);
@@ -169,8 +170,8 @@ public:
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
     [[deprecated("Use Insert(const std::string &, const Row &, Resolution) instead.")]]
-    virtual int InsertWithConflictResolution(int64_t &outRowId, const std::string &table, const Row &row,
-        Resolution resolution = NO_ACTION);
+    virtual int InsertWithConflictResolution(
+        int64_t &outRowId, const std::string &table, const Row &row, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Replaces a row of data into the target table.
@@ -218,7 +219,7 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual int Update(int &changedRows, const std::string &table, const Row &row, const std::string &whereClause = "",
-                       const Values &args = {});
+        const Values &args = {});
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -239,8 +240,8 @@ public:
      * @param args Indicates the where arguments.
      */
     [[deprecated("Use Update(int &, const std::string &, const Row &, const std::string &, const Values &) instead.")]]
-    virtual int Update(int &changedRows, const std::string &table, const Row &row, const std::string &whereClause,
-        const Olds &args);
+    virtual int Update(
+        int &changedRows, const std::string &table, const Row &row, const std::string &whereClause, const Olds &args);
 
     /**
      * @brief Updates data in the database based on a a specified instance object of RdbPredicates.
@@ -278,8 +279,7 @@ public:
      * @param args Indicates the where arguments.
      */
     [[deprecated("Use Delete(int &, const std::string &, const std::string &, const Values &) instead.")]]
-    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause,
-        const Olds &args);
+    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Olds &args);
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
@@ -295,8 +295,8 @@ public:
      * @param whereClause Indicates the where clause.
      * @param args Indicates the where arguments.
      */
-    virtual int Delete(int &deletedRows, const std::string &table, const std::string &whereClause = "",
-        const Values &args = {}) = 0;
+    virtual int Delete(
+        int &deletedRows, const std::string &table, const std::string &whereClause = "", const Values &args = {}) = 0;
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -374,8 +374,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::shared_ptr<ResultSet> RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
-        const Fields &columns, int &errCode);
+    virtual std::shared_ptr<ResultSet> RemoteQuery(
+        const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode);
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -383,8 +383,8 @@ public:
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
      */
-    virtual std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const AbsRdbPredicates &predicates,
-        const Fields &columns);
+    virtual std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
+        const AbsRdbPredicates &predicates, const Fields &columns);
 
     /**
      * @brief Executes an SQL statement that contains specified parameters.
@@ -583,22 +583,22 @@ public:
     /**
      * @brief Subscribe to event changes.
      */
-    virtual int Subscribe(const SubscribeOption& option, RdbStoreObserver *observer);
+    virtual int Subscribe(const SubscribeOption &option, RdbStoreObserver *observer);
 
     /**
      * @brief UnSubscribe to event changes.
      */
-    virtual int UnSubscribe(const SubscribeOption& option, RdbStoreObserver *observer);
+    virtual int UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer);
 
     /**
      * @brief SubscribeObserver to event changes.
      */
-    virtual int SubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
+    virtual int SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
 
     /**
      * @brief UnsubscribeObserver to event changes.
      */
-    virtual int UnsubscribeObserver(const SubscribeOption& option, const std::shared_ptr<RdbStoreObserver> &observer);
+    virtual int UnsubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
 
     /**
      * @brief Register message for auto sync operation.

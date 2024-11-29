@@ -16,6 +16,7 @@
 #include "cache_result_set.h"
 
 #include <gtest/gtest.h>
+
 #include <map>
 #include <string>
 
@@ -35,13 +36,21 @@ public:
     void TearDown();
 };
 
-void CacheResultSetTest::SetUpTestCase(void) {}
+void CacheResultSetTest::SetUpTestCase(void)
+{
+}
 
-void CacheResultSetTest::TearDownTestCase(void) {}
+void CacheResultSetTest::TearDownTestCase(void)
+{
+}
 
-void CacheResultSetTest::SetUp() {}
+void CacheResultSetTest::SetUp()
+{
+}
 
-void CacheResultSetTest::TearDown() {}
+void CacheResultSetTest::TearDown()
+{
+}
 
 /* *
  * @tc.name: GetRowCountTest_001
@@ -74,7 +83,7 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "test");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -122,7 +131,7 @@ HWTEST_F(CacheResultSetTest, GetStringTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "test");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -145,7 +154,7 @@ HWTEST_F(CacheResultSetTest, GetIntTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, 111);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -168,7 +177,7 @@ HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, 11111111);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -191,7 +200,7 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, 1111.1111);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -264,7 +273,7 @@ HWTEST_F(CacheResultSetTest, GetTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, 10);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -315,7 +324,7 @@ HWTEST_F(CacheResultSetTest, GetRowTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "1");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -323,7 +332,7 @@ HWTEST_F(CacheResultSetTest, GetRowTest_001, TestSize.Level2)
 
     RowEntity rowEntity;
     EXPECT_EQ(E_OK, cacheResultSet.GetRow(rowEntity));
-    for (auto& columnName : columnNames) {
+    for (auto &columnName : columnNames) {
         auto value = rowEntity.Get(columnName);
         string res;
         EXPECT_EQ(E_OK, value.GetString(res));
@@ -341,7 +350,7 @@ HWTEST_F(CacheResultSetTest, GoToRowTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "1");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -363,7 +372,7 @@ HWTEST_F(CacheResultSetTest, GetColumnTypeTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "1");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -386,7 +395,7 @@ HWTEST_F(CacheResultSetTest, GetRowIndexTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "1");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -409,7 +418,7 @@ HWTEST_F(CacheResultSetTest, GoToTest_001, TestSize.Level2)
     for (int i = 0; i < 5; i++) {
         ValuesBucket valuesBucket;
         std::set<std::string> columnNames = { "id", "data", "field" };
-        for (auto& column : columnNames) {
+        for (auto &column : columnNames) {
             valuesBucket.Put(column, "test" + std::to_string(i));
         }
         valuesBuckets.push_back(std::move(valuesBucket));
@@ -442,7 +451,7 @@ HWTEST_F(CacheResultSetTest, GoToFirstRowTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "test");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -464,7 +473,7 @@ HWTEST_F(CacheResultSetTest, GoToLastRowTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "test");
     }
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -487,7 +496,7 @@ HWTEST_F(CacheResultSetTest, GoToNextRowTest_001, TestSize.Level2)
     for (int i = 0; i < 5; i++) {
         ValuesBucket valuesBucket;
         std::set<std::string> columnNames = { "id", "data", "field" };
-        for (auto& column : columnNames) {
+        for (auto &column : columnNames) {
             valuesBucket.Put(column, "test" + std::to_string(i));
         }
         valuesBuckets.push_back(std::move(valuesBucket));
@@ -668,7 +677,7 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
     std::vector<ValuesBucket> valuesBuckets;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto& column : columnNames) {
+    for (auto &column : columnNames) {
         valuesBucket.Put(column, "test");
     }
     valuesBuckets.push_back(std::move(valuesBucket));

@@ -15,10 +15,11 @@
 #define LOG_TAG "RelationalAsset"
 #include "relational_asset.h"
 
+#include <cstdlib>
+
 #include "logger.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
-#include <cstdlib>
 
 using namespace OHOS::RdbNdk;
 constexpr int ASSET_TRANSFORM_BASE = 10;

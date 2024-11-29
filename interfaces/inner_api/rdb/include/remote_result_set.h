@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+
 #include "rdb_visibility.h"
 
 namespace OHOS {

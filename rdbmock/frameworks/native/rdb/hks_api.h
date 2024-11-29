@@ -30,8 +30,8 @@ extern "C" {
  * @param token token
  * @return error code, see hks_type.h
  */
-static int32_t HksInit(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
-    struct HksBlob *handle, struct HksBlob *token)
+static int32_t HksInit(
+    const struct HksBlob *keyAlias, const struct HksParamSet *paramSet, struct HksBlob *handle, struct HksBlob *token)
 {
     return HKS_SUCCESS;
 }
@@ -71,8 +71,8 @@ static int32_t HksFinish(const struct HksBlob *handle, const struct HksParamSet 
  * @param paramSetOut output parameter set
  * @return error code, see hks_type.h
  */
-static int32_t HksGenerateKey(const struct HksBlob *keyAlias,
-    const struct HksParamSet *paramSetIn, struct HksParamSet *paramSetOut)
+static int32_t HksGenerateKey(
+    const struct HksBlob *keyAlias, const struct HksParamSet *paramSetIn, struct HksParamSet *paramSetOut)
 {
     return HKS_SUCCESS;
 }

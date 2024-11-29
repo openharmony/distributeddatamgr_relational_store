@@ -16,9 +16,10 @@
 #ifndef DATAABILITY_I_SHARED_RESULT_SET_H
 #define DATAABILITY_I_SHARED_RESULT_SET_H
 #include <memory>
-#include "iremote_broker.h"
+
 #include "abs_shared_result_set.h"
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "iremote_broker.h"
 namespace OHOS::NativeRdb {
 class API_EXPORT ISharedResultSet : public AbsSharedResultSet, public IRemoteBroker {
 public:
@@ -26,7 +27,7 @@ public:
     API_EXPORT static std::shared_ptr<AbsSharedResultSet> ReadFromParcel(MessageParcel &parcel);
     API_EXPORT static sptr<ISharedResultSet> WriteToParcel(
         std::shared_ptr<AbsSharedResultSet> resultSet, MessageParcel &parcel);
- 
+
 private:
     static std::function<std::shared_ptr<AbsSharedResultSet>(MessageParcel &parcel)> consumerCreator_;
     static std::function<sptr<ISharedResultSet>(std::shared_ptr<AbsSharedResultSet>, MessageParcel &)> providerCreator_;

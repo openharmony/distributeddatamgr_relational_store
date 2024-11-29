@@ -16,17 +16,17 @@
 #ifndef NATIVE_RDB_TRANSACTION_H
 #define NATIVE_RDB_TRANSACTION_H
 
+#include <functional>
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <functional>
 
 #include "abs_rdb_predicates.h"
-#include "result_set.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_types.h"
 #include "rdb_visibility.h"
+#include "result_set.h"
 #include "values_bucket.h"
 #include "values_buckets.h"
 
@@ -74,7 +74,7 @@ public:
     };
 
     using Creator = std::function<std::pair<int32_t, std::shared_ptr<Transaction>>(
-        int32_t type, std::shared_ptr<Connection> connection, const std::string&)>;
+        int32_t type, std::shared_ptr<Connection> connection, const std::string &)>;
 
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &name);
@@ -93,8 +93,8 @@ public:
      * @param row Indicates the row of data {@link ValuesBucket} to be inserted into the table.
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
-    virtual std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row,
-                                               Resolution resolution = NO_ACTION) = 0;
+    virtual std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, Resolution resolution = NO_ACTION) = 0;
 
     /**
      * @brief Inserts a batch of data into the target table.
@@ -122,7 +122,7 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where = "",
-                                       const Values &args = {}, Resolution resolution = NO_ACTION) = 0;
+        const Values &args = {}, Resolution resolution = NO_ACTION) = 0;
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -131,8 +131,8 @@ public:
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
-    virtual std::pair<int32_t, int32_t> Update(const Row &row, const AbsRdbPredicates &predicates,
-                                               Resolution resolution = NO_ACTION) = 0;
+    virtual std::pair<int32_t, int32_t> Update(
+        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION) = 0;
 
     /**
      * @brief Deletes data from the database based on specified conditions.
@@ -141,8 +141,8 @@ public:
      * @param whereClause Indicates the where clause.
      * @param args Indicates the where arguments.
      */
-    virtual std::pair<int32_t, int32_t> Delete(const std::string &table, const std::string &whereClause = "",
-                                               const Values &args = {}) = 0;
+    virtual std::pair<int32_t, int32_t> Delete(
+        const std::string &table, const std::string &whereClause = "", const Values &args = {}) = 0;
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
@@ -179,5 +179,5 @@ public:
 private:
     static inline Creator creator_;
 };
-}
+} // namespace OHOS::NativeRdb
 #endif
