@@ -651,7 +651,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config)
 {
     if (key.empty()) {
-        return E_INVALID_ARGS;
+        return E_INVALID_SECRET_KEY;
     }
 
     auto errCode = sqlite3_key(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
