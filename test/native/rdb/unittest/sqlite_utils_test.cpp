@@ -330,3 +330,24 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0051, TestSize.Level1)
         "CREATE TABLE IF NOT EXISTS *ame AS SELECT **der AS *ld, "
         "**der AS *ew UNION SELECT *hot AS *ld, *hot AS *ew ;");
 }
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0050, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS name AS SELECT order AS old \r, "
+                                    "order AS new UNION SELECT shot AS old, shot AS new ;"),
+        "CREATE TABLE IF NOT EXISTS *ame AS SELECT **der AS *ld , **der AS *ew UNION SELECT *hot AS *ld, *hot AS *ew ;");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0051, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS name AS SELECT order AS old \n, "
+                                    "order AS new UNION SELECT shot AS old, shot AS new ;"),
+        "CREATE TABLE IF NOT EXISTS *ame AS SELECT **der AS *ld , **der AS *ew UNION SELECT *hot AS *ld, *hot AS *ew ;");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0052, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::AnonySql("CREATE TABLE IF NOT EXISTS name AS SELECT order AS old \r\n, "
+                                    "order AS new UNION SELECT shot AS old, shot AS new ;"),
+        "CREATE TABLE IF NOT EXISTS *ame AS SELECT **der AS *ld , **der AS *ew UNION SELECT *hot AS *ld, *hot AS *ew ;");
+}
