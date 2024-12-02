@@ -196,7 +196,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
-        LOG_ERROR("Not support the sql:%{public}s", sql.c_str());
+        LOG_ERROR("Not support the sql:%{public}s", SqliteUtils::AnonySql(sql).c_str());
         return { E_INVALID_ARGS, object };
     }
 
@@ -207,7 +207,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
 
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed,sql:%{public}s, error:0x%{public}x.", sql.c_str(), errCode);
+        LOG_ERROR("failed,sql:%{public}s, error:0x%{public}x.", SqliteUtils::AnonySql(sql).c_str(), errCode);
         return { errCode, object };
     }
 
@@ -234,7 +234,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
         if (vSchema_ < static_cast<int64_t>(version)) {
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
                 SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version),
-                sql.c_str());
+                SqliteUtils::AnonySql(sql).c_str());
             vSchema_ = version;
         }
     }
