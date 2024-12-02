@@ -261,9 +261,9 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
 
     RdbStoreProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("RdbStoreProxy::NewInstance native instance is nullptr! code:%{public}d!", status);
-        return instance;
+        return nullptr;
     }
     proxy->queue_ = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
     proxy->dbType = value->GetDbType();
@@ -604,8 +604,8 @@ int ParseConflictResolution(const napi_env env, const napi_value arg, std::share
 {
     int32_t conflictResolution = 0;
     napi_get_value_int32(env, arg, &conflictResolution);
-    int min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    int max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    int32_t min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
+    int32_t max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
     bool checked = (conflictResolution >= min) && (conflictResolution <= max);
     CHECK_RETURN_SET(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
     context->conflictResolution = static_cast<NativeRdb::ConflictResolution>(conflictResolution);
