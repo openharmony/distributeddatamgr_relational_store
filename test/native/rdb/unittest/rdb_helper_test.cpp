@@ -243,6 +243,38 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
 
     RdbHelper::DeleteRdbStore(config);
 
+    // Ensure that the database returns OK when it is successfully opened
+    int errCode = E_ERROR;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    config.SetEncryptStatus(false);
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    // Ensure that the database can be opened after the encryption parameters are changed
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore2, nullptr);
+
+    // Ensure that two databases will not be opened after the encrypt parameters are changed
+    errCode = rdbStore1->BeginTransaction();
+    EXPECT_EQ(errCode, E_OK);
+    errCode = rdbStore2->BeginTransaction();
+    EXPECT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(RdbHelperTest, GetDatabase_004, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
+
+    RdbHelper::DeleteRdbStore(config);
+
     int errCode = E_OK;
 
     RdbHelperTestOpenCallback helper;
@@ -250,10 +282,9 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(rdbStore1, nullptr);
 
-    config.SetEncryptStatus(false);
+    config.SetVisitorDir(dbPath);
+    config.SetRoleType(RoleType::VISITOR_WRITE);
     std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(rdbStore2, nullptr);
-
-    EXPECT_NE(rdbStore1, rdbStore2);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore2, nullptr);
 }

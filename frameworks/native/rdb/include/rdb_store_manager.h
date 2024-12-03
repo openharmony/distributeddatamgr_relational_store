@@ -47,15 +47,14 @@ private:
     int ProcessOpenCallback(
         RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
+    bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
-    int32_t GetPromiseFromService(DistributedRdb::RdbSyncerParam &param);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
     std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;
-    std::string bundleName_;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
     LRUBucket<std::string, Param> configCache_;
