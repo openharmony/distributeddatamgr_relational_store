@@ -41,7 +41,10 @@ static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::st
 static napi_value ExportSyncMode(napi_env env)
 {
     napi_value syncMode = nullptr;
-    napi_create_object(env, &syncMode);
+    napi_status status = napi_create_object(env, &syncMode);
+    if (status != napi_ok) {
+        return nullptr;
+    }
     (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PUSH", (int32_t)SyncMode::PUSH);
     (void)SetNamedProperty(env, syncMode, "SYNC_MODE_PULL", (int32_t)SyncMode::PULL);
     napi_object_freeze(env, syncMode);
@@ -51,7 +54,10 @@ static napi_value ExportSyncMode(napi_env env)
 static napi_value ExportSubscribeType(napi_env env)
 {
     napi_value subscribeType = nullptr;
-    napi_create_object(env, &subscribeType);
+    napi_status status = napi_create_object(env, &subscribeType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     (void)SetNamedProperty(env, subscribeType, "SUBSCRIBE_TYPE_REMOTE", (int32_t)SubscribeMode::REMOTE);
     napi_object_freeze(env, subscribeType);
@@ -61,7 +67,10 @@ static napi_value ExportSubscribeType(napi_env env)
 static napi_value ExportSecurityLevel(napi_env env)
 {
     napi_value securityLevel = nullptr;
-    napi_create_object(env, &securityLevel);
+    napi_status status = napi_create_object(env, &securityLevel);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     (void)SetNamedProperty(env, securityLevel, "S1", (int32_t)NativeRdb::SecurityLevel::S1);
     (void)SetNamedProperty(env, securityLevel, "S2", (int32_t)NativeRdb::SecurityLevel::S2);
