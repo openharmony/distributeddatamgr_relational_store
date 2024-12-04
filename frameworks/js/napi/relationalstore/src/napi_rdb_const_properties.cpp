@@ -40,7 +40,10 @@ namespace OHOS::RelationalStoreJsKit {
 static napi_value ExportSyncMode(napi_env env)
 {
     napi_value syncMode = nullptr;
-    napi_create_object(env, &syncMode);
+    napi_status status = napi_create_object(env, &syncMode);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PUSH", int32_t(SyncMode::PUSH));
     SET_NAPI_PROPERTY(syncMode, "SYNC_MODE_PULL", int32_t(SyncMode::PULL));
@@ -54,7 +57,10 @@ static napi_value ExportSyncMode(napi_env env)
 static napi_value ExportSubscribeType(napi_env env)
 {
     napi_value subscribeType = nullptr;
-    napi_create_object(env, &subscribeType);
+    napi_status status = napi_create_object(env, &subscribeType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_REMOTE", int32_t(SubscribeMode::REMOTE));
     SET_NAPI_PROPERTY(subscribeType, "SUBSCRIBE_TYPE_CLOUD", int32_t(SubscribeMode::CLOUD));
@@ -67,7 +73,10 @@ static napi_value ExportSubscribeType(napi_env env)
 static napi_value ExportSecurityLevel(napi_env env)
 {
     napi_value securityLevel = nullptr;
-    napi_create_object(env, &securityLevel);
+    napi_status status = napi_create_object(env, &securityLevel);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(securityLevel, "S1", int32_t(SecurityLevel::S1));
     SET_NAPI_PROPERTY(securityLevel, "S2", int32_t(SecurityLevel::S2));
@@ -81,7 +90,10 @@ static napi_value ExportSecurityLevel(napi_env env)
 static napi_value ExportProgress(napi_env env)
 {
     napi_value progress = nullptr;
-    napi_create_object(env, &progress);
+    napi_status status = napi_create_object(env, &progress);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(progress, "SYNC_BEGIN", int32_t(DistributedRdb::Progress::SYNC_BEGIN));
     SET_NAPI_PROPERTY(progress, "SYNC_IN_PROGRESS", int32_t(DistributedRdb::Progress::SYNC_IN_PROGRESS));
@@ -93,7 +105,10 @@ static napi_value ExportProgress(napi_env env)
 static napi_value ExportProgressCode(napi_env env)
 {
     napi_value progressCode = nullptr;
-    napi_create_object(env, &progressCode);
+    napi_status status = napi_create_object(env, &progressCode);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(progressCode, "SUCCESS", int32_t(ProgressCode::SUCCESS));
     SET_NAPI_PROPERTY(progressCode, "UNKNOWN_ERROR", int32_t(ProgressCode::UNKNOWN_ERROR));
@@ -110,7 +125,10 @@ static napi_value ExportProgressCode(napi_env env)
 static napi_value ExportOrigin(napi_env env)
 {
     napi_value origin = nullptr;
-    napi_create_object(env, &origin);
+    napi_status status = napi_create_object(env, &origin);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(origin, "LOCAL", int32_t(NativeRdb::AbsPredicates::Origin::LOCAL));
     SET_NAPI_PROPERTY(origin, "CLOUD", int32_t(NativeRdb::AbsPredicates::Origin::CLOUD));
@@ -122,7 +140,10 @@ static napi_value ExportOrigin(napi_env env)
 static napi_value ExportField(napi_env env)
 {
     napi_value field = nullptr;
-    napi_create_object(env, &field);
+    napi_status status = napi_create_object(env, &field);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(field, "CURSOR_FIELD", std::string(DistributedRdb::Field::CURSOR_FIELD));
     SET_NAPI_PROPERTY(field, "ORIGIN_FIELD", std::string(DistributedRdb::Field::ORIGIN_FIELD));
@@ -138,7 +159,10 @@ static napi_value ExportField(napi_env env)
 static napi_value ExportDistributedType(napi_env env)
 {
     napi_value distributedType = nullptr;
-    napi_create_object(env, &distributedType);
+    napi_status status = napi_create_object(env, &distributedType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(distributedType, "DISTRIBUTED_DEVICE", int32_t(DistributedTableType::DISTRIBUTED_DEVICE));
     SET_NAPI_PROPERTY(distributedType, "DISTRIBUTED_CLOUD", int32_t(DistributedTableType::DISTRIBUTED_CLOUD));
@@ -149,7 +173,10 @@ static napi_value ExportDistributedType(napi_env env)
 static napi_value ExportChangeType(napi_env env)
 {
     napi_value changeType = nullptr;
-    napi_create_object(env, &changeType);
+    napi_status status = napi_create_object(env, &changeType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(changeType, "DATA_CHANGE", int32_t(DistributedRdb::Origin::BASIC_DATA));
     SET_NAPI_PROPERTY(changeType, "ASSET_CHANGE", int32_t(DistributedRdb::Origin::ASSET_DATA));
@@ -160,7 +187,10 @@ static napi_value ExportChangeType(napi_env env)
 static napi_value ExportAssetStatus(napi_env env)
 {
     napi_value assetStatus = nullptr;
-    napi_create_object(env, &assetStatus);
+    napi_status status = napi_create_object(env, &assetStatus);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(assetStatus, "ASSET_NORMAL", int32_t(NativeRdb::AssetValue::STATUS_NORMAL));
     SET_NAPI_PROPERTY(assetStatus, "ASSET_INSERT", int32_t(NativeRdb::AssetValue::STATUS_INSERT));
@@ -175,7 +205,10 @@ static napi_value ExportAssetStatus(napi_env env)
 static napi_value ExportConflictResolution(napi_env env)
 {
     napi_value conflictResolution = nullptr;
-    napi_create_object(env, &conflictResolution);
+    napi_status status = napi_create_object(env, &conflictResolution);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_NONE", int32_t(ConflictResolution::ON_CONFLICT_NONE));
     SET_NAPI_PROPERTY(conflictResolution, "ON_CONFLICT_ROLLBACK", int32_t(ConflictResolution::ON_CONFLICT_ROLLBACK));
@@ -191,7 +224,10 @@ static napi_value ExportConflictResolution(napi_env env)
 static napi_value ExportRebuiltType(napi_env env)
 {
     napi_value rebuiltType = nullptr;
-    napi_create_object(env, &rebuiltType);
+    napi_status status = napi_create_object(env, &rebuiltType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(rebuiltType, "NONE", int32_t(NativeRdb::RebuiltType::NONE));
     SET_NAPI_PROPERTY(rebuiltType, "REBUILT", int32_t(NativeRdb::RebuiltType::REBUILT));
@@ -204,7 +240,10 @@ static napi_value ExportRebuiltType(napi_env env)
 static napi_value ExportHAMode(napi_env env)
 {
     napi_value haMode = nullptr;
-    napi_create_object(env, &haMode);
+    napi_status status = napi_create_object(env, &haMode);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(haMode, "SINGLE", int32_t(NativeRdb::HAMode::SINGLE));
     SET_NAPI_PROPERTY(haMode, "MAIN_REPLICA", int32_t(NativeRdb::HAMode::MAIN_REPLICA));
@@ -215,7 +254,10 @@ static napi_value ExportHAMode(napi_env env)
 static napi_value ExportEncryptionAlgo(napi_env env)
 {
     napi_value encryptionAlgo = nullptr;
-    napi_create_object(env, &encryptionAlgo);
+    napi_status status = napi_create_object(env, &encryptionAlgo);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_GCM", int32_t(NativeRdb::EncryptAlgo::AES_256_GCM));
     SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_CBC", int32_t(NativeRdb::EncryptAlgo::AES_256_CBC));
@@ -226,7 +268,10 @@ static napi_value ExportEncryptionAlgo(napi_env env)
 static napi_value ExportHmacAlgo(napi_env env)
 {
     napi_value hmacAlgo = nullptr;
-    napi_create_object(env, &hmacAlgo);
+    napi_status status = napi_create_object(env, &hmacAlgo);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(hmacAlgo, "SHA1", int32_t(NativeRdb::HmacAlgo::SHA1));
     SET_NAPI_PROPERTY(hmacAlgo, "SHA256", int32_t(NativeRdb::HmacAlgo::SHA256));
@@ -238,7 +283,10 @@ static napi_value ExportHmacAlgo(napi_env env)
 static napi_value ExportKdfAlgo(napi_env env)
 {
     napi_value kdfAlgo = nullptr;
-    napi_create_object(env, &kdfAlgo);
+    napi_status status = napi_create_object(env, &kdfAlgo);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(kdfAlgo, "KDF_SHA1", int32_t(NativeRdb::KdfAlgo::KDF_SHA1));
     SET_NAPI_PROPERTY(kdfAlgo, "KDF_SHA256", int32_t(NativeRdb::KdfAlgo::KDF_SHA256));
@@ -250,7 +298,10 @@ static napi_value ExportKdfAlgo(napi_env env)
 static napi_value ExportTransactionType(napi_env env)
 {
     napi_value transactionType = nullptr;
-    napi_create_object(env, &transactionType);
+    napi_status status = napi_create_object(env, &transactionType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
 
     SET_NAPI_PROPERTY(transactionType, "DEFERRED", int32_t(NativeRdb::Transaction::DEFERRED));
     SET_NAPI_PROPERTY(transactionType, "IMMEDIATE", int32_t(NativeRdb::Transaction::IMMEDIATE));
