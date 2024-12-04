@@ -55,7 +55,7 @@ SqliteSharedResultSet::SqliteSharedResultSet(
     }
     statement_ = statement;
     auto countBegin = steady_clock::now();
-    rowCount_ = InitRowCount();
+    std::tie(lastErr_, rowCount_) = statement->Count();
     auto endTime = steady_clock::now();
     int64_t totalCost = duration_cast<milliseconds>(endTime - start).count();
     if (totalCost >= TIME_OUT) {
@@ -67,31 +67,6 @@ SqliteSharedResultSet::SqliteSharedResultSet(
             totalCost, acquireCost, prepareCost, countCost, rowCount_, qrySql_.c_str(),
             SqliteUtils::Anonymous(path).c_str());
     }
-}
-
-int SqliteSharedResultSet::InitRowCount()
-{
-    if (statement_ == nullptr) {
-        return NO_COUNT;
-    }
-    int32_t count = NO_COUNT;
-    int32_t status = E_OK;
-    int32_t retry = 0;
-    do {
-        status = statement_->Step();
-        if (status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) {
-            retry++;
-            usleep(RETRY_INTERVAL);
-            continue;
-        }
-        count++;
-    } while (status == E_OK || ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < MAX_RETRY_TIMES));
-    if (status != E_NO_MORE_ROWS) {
-        lastErr_ = status;
-        count = NO_COUNT;
-    }
-    statement_->Reset();
-    return count;
 }
 
 std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
