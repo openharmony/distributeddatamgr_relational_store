@@ -32,6 +32,7 @@ const int ERROR_STATUS = -1;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number
 const int RETRY_TIME = 50;
+const int PRINT_RETRY_TIMES = 10;
 
 int SeriAddRow(void *pCtx, int addedRows)
 {
@@ -99,20 +100,26 @@ int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
-    Sqlite3SharedBlockMethods sqliteBlock = { 1, &serializer, info->isCountAllRows, info->startPos, info->requiredPos,
-        SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob, SeriPutNull,
-        SeriPutOther };
+    Sqlite3SharedBlockMethods sqliteBlock =
+        (info->sharedBlock != nullptr)
+            ? Sqlite3SharedBlockMethods{ 1, &serializer, info->isCountAllRows, info->startPos, info->requiredPos,
+                  SeriAddRow, SeriReset, SeriFinish, SeriPutString, SeriPutLong, SeriPutDouble, SeriPutBlob,
+                  SeriPutNull, SeriPutOther }
+            : Sqlite3SharedBlockMethods{ 1, &serializer, true, 0, 0, DefAddRow, DefReset, DefFinish, DefPutString,
+                  DefPutLong, DefPutDouble, DefPutBlob, DefPutNull, DefPutOther };
+
     auto db = sqlite3_db_handle(stmt);
-    int err = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
-    if (err != SQLITE_OK) {
-        LOG_ERROR("set sqlite shared block methods error. err=%{public}d, errno=%{public}d", err, errno);
-        return SQLiteError::ErrNo(err);
+    int cfgErr = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, &sqliteBlock);
+    if (cfgErr != SQLITE_OK) {
+        LOG_ERROR("set sqlite shared block methods error. err=%{public}d, errno=%{public}d", cfgErr, errno);
+        return SQLiteError::ErrNo(cfgErr);
     }
     int retryCount = 0;
+    int errCode = SQLITE_OK;
     while (true) {
-        err = sqlite3_step(stmt);
-        if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
-            LOG_WARN("Database locked, retrying err=%{public}d, errno=%{public}d", err, errno);
+        errCode = sqlite3_step(stmt);
+        if (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
+            LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d", errCode, errno);
             if (retryCount <= RETRY_TIME) {
                 usleep(SLEEP_TIME);
                 retryCount++;
@@ -125,11 +132,15 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
 
-    err = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
-    if (err != SQLITE_OK) {
-        LOG_ERROR("clear sqlite shared block methods error. err=%{public}d, errno=%{public}d", err, errno);
+    if (errCode == SQLITE_DONE || errCode == SQLITE_ROW) {
+        errCode = SQLITE_OK;
     }
-    return SQLiteError::ErrNo(err);
+
+    cfgErr = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
+    if (cfgErr != SQLITE_OK || (errCode != SQLITE_OK) || retryCount > PRINT_RETRY_TIMES) {
+        LOG_ERROR("failed, cfgErr=%{public}d errCode=%{public}d retry=%{public}d", cfgErr, errCode, retryCount);
+    }
+    return SQLiteError::ErrNo(errCode);
 }
 
 int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
@@ -138,6 +149,7 @@ int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
     info->totalRows = info->addedRows = 0;
     bool isFull = false;
     bool hasException = false;
+    auto fillRow = info->sharedBlock == nullptr ? DefFillRow : FillRow;
     while (!hasException && (!isFull || info->isCountAllRows)) {
         int err = sqlite3_step(stmt);
         if (err == SQLITE_ROW) {
@@ -146,7 +158,7 @@ int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
             if (info->startPos >= info->totalRows || isFull) {
                 continue;
             }
-            FillRow(info, stmt);
+            fillRow(info, stmt);
             isFull = info->isFull;
             hasException = info->hasException;
         } else if (err == SQLITE_DONE) {
@@ -330,10 +342,62 @@ bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
         LOG_ERROR("startPos %{public}d > actual rows %{public}d", info->startPos, info->totalRows);
     }
 
-    if (info->totalRows > 0 && info->addedRows == 0) {
+    if ((info->totalRows > 0 && info->addedRows == 0) && info->sharedBlock != nullptr) {
+        LOG_WARN("over 2MB[%{public}d, %{public}d]", info->totalRows, info->addedRows);
         return false;
     }
     return true;
+}
+
+int DefAddRow(void *pCtx, int addedRows)
+{
+    return SQLITE_FULL;
+}
+
+int DefReset(void *pCtx, int startPos)
+{
+    return SQLITE_OK;
+}
+
+int DefFinish(void *pCtx, int addedRows, int totalRows)
+{
+    auto *serializer = static_cast<SharedBlockSerializerInfo *>(pCtx);
+    return serializer->Finish(addedRows, totalRows);
+}
+
+int DefPutString(void *pCtx, int addedRows, int column, const char *text, int size)
+{
+    return SQLITE_FULL;
+}
+
+int DefPutLong(void *pCtx, int addedRows, int column, sqlite3_int64 value)
+{
+    return SQLITE_FULL;
+}
+
+int DefPutDouble(void *pCtx, int addedRows, int column, double value)
+{
+    return SQLITE_FULL;
+}
+
+int DefPutBlob(void *pCtx, int addedRows, int column, const void *blob, int len)
+{
+    return SQLITE_FULL;
+}
+
+int DefPutNull(void *pCtx, int addedRows, int column)
+{
+    return SQLITE_FULL;
+}
+
+int DefPutOther(void *pCtx, int addedRows, int column)
+{
+    return SQLITE_FULL;
+}
+
+void DefFillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
+{
+    info->isFull = true;
 }
 } // namespace NativeRdb
 } // namespace OHOS

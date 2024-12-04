@@ -251,7 +251,7 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
     resultSets_.push_back(std::move(resultSet));
 }
 
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args)
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
     auto store = GetStore();
     if (store == nullptr) {
@@ -265,7 +265,8 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, 
     return resultSet;
 }
 
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns)
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const AbsRdbPredicates &predicates,
+    const Fields &columns, bool preCount)
 {
     auto store = GetStore();
     if (store == nullptr) {
