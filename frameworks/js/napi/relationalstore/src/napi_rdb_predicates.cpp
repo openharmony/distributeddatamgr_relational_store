@@ -149,9 +149,9 @@ napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeR
 
     RdbPredicatesProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (status != napi_ok) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("RdbPredicatesProxy::NewInstance native instance is nullptr! napi_status:%{public}d!", status);
-        return instance;
+        return nullptr;
     }
     proxy->GetInstance() = std::move(value);
     return instance;
