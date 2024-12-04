@@ -167,8 +167,8 @@ int32_t TransactionContext::ParseConflictResolution(
 {
     int32_t input = 0;
     auto status = napi_get_value_int32(env, arg, &input);
-    int min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    int max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    int32_t min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
+    int32_t max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
     bool checked = status == napi_ok && (input >= min) && (input <= max);
     ASSERT_RETURN_SET_ERROR(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
     conflictResolution = static_cast<NativeRdb::ConflictResolution>(input);
@@ -191,9 +191,9 @@ napi_value TransactionProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb
 
     TransactionProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
-        return instance;
+        return nullptr;
     }
     proxy->SetInstance(std::move(transaction));
     return instance;
