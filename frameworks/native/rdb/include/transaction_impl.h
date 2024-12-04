@@ -43,8 +43,9 @@ public:
     std::pair<int32_t, int32_t> Delete(
         const std::string &table, const std::string &whereClause, const Values &args) override;
     std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args) override;
-    std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
+    std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        bool preCount) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
 
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
