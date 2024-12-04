@@ -32,7 +32,10 @@ static napi_status SetNamedProperty(napi_env env, napi_value &obj, const std::st
 static napi_value ExportAssetStatus(napi_env env)
 {
     napi_value assetStatus = nullptr;
-    napi_create_object(env, &assetStatus);
+    napi_status status = napi_create_object(env, &assetStatus);
+    if (status != napi_ok) {
+        return nullptr;
+    }
     SetNamedProperty(env, assetStatus, "ASSET_NORMAL", AssetValue::STATUS_NORMAL);
     SetNamedProperty(env, assetStatus, "ASSET_INSERT", AssetValue::STATUS_INSERT);
     SetNamedProperty(env, assetStatus, "ASSET_UPDATE", AssetValue::STATUS_UPDATE);
