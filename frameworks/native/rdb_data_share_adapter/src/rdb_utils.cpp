@@ -90,6 +90,11 @@ void RdbUtils::NotEqualTo(const OperationItem &item, RdbPredicates &predicates)
 
 void RdbUtils::GreaterThan(const OperationItem &item, RdbPredicates &predicates)
 {
+    // 2 is the number of argument item.singleParams
+    if (item.singleParams.size() < 2) {
+        LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
+        return;
+    }
     predicates.GreaterThan(item.GetSingle(0), ToValueObject(item.singleParams[1]));
 }
 
