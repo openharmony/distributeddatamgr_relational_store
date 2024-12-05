@@ -1443,16 +1443,9 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     RdbSecurityManager::KeyFiles keyFiles(path_ + BACKUP_RESTORE);
     keyFiles.Lock();
 
-    auto deleteDirtyFiles = [&backupFilePath] {
-        auto res = SqliteUtils::DeleteFile(backupFilePath);
-        res = SqliteUtils::DeleteFile(backupFilePath + "-shm") && res;
-        res = SqliteUtils::DeleteFile(backupFilePath + "-wal") && res;
-        return res;
-    };
-
     auto walFile = backupFilePath + "-wal";
     if (access(walFile.c_str(), F_OK) == E_OK) {
-        if (!deleteDirtyFiles()) {
+        if (!SqliteUtils::DeleteDirtyFiles(backupFilePath)) {
             keyFiles.Unlock();
             return E_ERROR;
         }
@@ -1470,7 +1463,10 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     }
     ret = InnerBackup(backupFilePath, encryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
-        if (deleteDirtyFiles()) {
+        if (ret == E_DB_NOT_EXIST) {
+            Reportor::Report(Reportor::Create(config_, ret, "ErrorType: BackupFailed"));
+        }
+        if (SqliteUtils::DeleteDirtyFiles(backupFilePath)) {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
         }
     } else {
