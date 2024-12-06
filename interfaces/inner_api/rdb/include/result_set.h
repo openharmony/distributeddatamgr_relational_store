@@ -68,6 +68,22 @@ public:
      * @param columnIndex Indicates the zero-based index of the target column.
      */
     API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
+
+    /**
+     * @brief Gets the pair of errCode and rowEntity from the result set.
+     */
+    virtual std::pair<int, RowEntity> GetRow() {
+        RowEntity rowEntity;
+        return {E_OK, rowEntity};
+    }
+
+    /**
+     * @brief Gets the rows of data for the maxCount or remaining rows from the result set.
+     */
+    virtual std::pair<int, std::vector<RowEntity>> GetRows(uint32_t maxCount, uint32_t position) {
+        std::vector<RowEntity> rowEntities;
+        return {E_OK, rowEntities};
+    }
 };
 
 } // namespace NativeRdb

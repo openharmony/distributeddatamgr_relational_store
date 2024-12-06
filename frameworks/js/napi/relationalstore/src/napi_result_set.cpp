@@ -20,6 +20,7 @@
 #include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
+#include "napi_async_call.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_sendable_utils.h"
@@ -56,9 +57,9 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
 
     ResultSetProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (status != napi_ok || proxy == nullptr) {
+    if (proxy == nullptr) {
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
-        return nullptr;
+        return instance;
     }
     proxy->SetInstance(std::move(resultSet));
     return instance;
@@ -564,6 +565,42 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
 
+napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
+{
+    struct RowsContextBase : public ContextBase {
+    public:
+        uint32_t maxCount = 0;
+        uint32_t position = 0;
+        std::shared_ptr<ResultSet> resultSet = nullptr;
+        std::vector<RowEntity> rowEntities;
+    };
+    std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
+    ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
+    CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
+    context->resultSet = resultSetProxy->GetInstance();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == JSUtils::Convert2ValueExt(env, argv[0], context->maxCount));
+        if (context->maxCount == 0) {
+            LOG_ERROR("GetRows failed code:%{public}d", E_PARAM_ERROR);
+            return E_PARAM_ERROR;
+        }
+        if (argc == 2) {
+            CHECK_RETURN(OK == JSUtils::Convert2ValueExt(env, argv[1], context->position));
+        }
+    };
+    auto exec = [context]() -> int {
+        int errCode = E_OK;
+        std::tie(errCode, context->rowEntities) = context->resultSet->GetRows(context->maxCount, context->position);
+        return errCode;
+    };
+    auto output = [context](napi_env env, size_t argc, napi_value &result) {
+        result = JSUtils::Convert2JSValue(env, context->rowEntities);
+    };
+    context->SetAction(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
 napi_value ResultSetProxy::GetSendableRow(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -624,6 +661,7 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
             DECLARE_NAPI_FUNCTION("getValue", GetValue),
             DECLARE_NAPI_FUNCTION("getRow", GetRow),
+            DECLARE_NAPI_FUNCTION("getRows", GetRows),
             DECLARE_NAPI_FUNCTION("getSendableRow", GetSendableRow),
 
             DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
