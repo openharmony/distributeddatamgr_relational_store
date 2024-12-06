@@ -582,7 +582,6 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == JSUtils::Convert2ValueExt(env, argv[0], context->maxCount));
         if (context->maxCount == 0) {
             LOG_ERROR("GetRows failed code:%{public}d", E_PARAM_ERROR);
-            return E_PARAM_ERROR;
         }
         if (argc == 2) {
             CHECK_RETURN(OK == JSUtils::Convert2ValueExt(env, argv[1], context->position));
