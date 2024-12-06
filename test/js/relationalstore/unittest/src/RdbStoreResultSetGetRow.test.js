@@ -285,5 +285,231 @@ describe('rdbStoreResultSetGetRowTest', function () {
         expect(1).assertEqual(valueBucket_ret["1"]);
         console.log(TAG + "************* rdbStoreResultSetGetRowTest0009 end   *************");
     })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRows0001
+     * @tc.desc resultSet getRows(maxCount) test
+     */
+    it('rdbStoreResultSetGetRowsTest0001', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0001 start *************");
+        let valueBucket = {
+            data4: new Uint8Array([1,2,3,4]),
+            data6: 80,
+        };
+        for (let i = 1; i <= 23; i++) {
+            let rowId = await rdbStore.insert("test", valueBucket);
+            expect(i).assertEqual(rowId);
+        }
+        let valueBucket1 = {
+            data2: 10,
+            data3: 24.1,
+            data5: true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket1);
+        expect(24).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        try {
+            let maxCount = 10;
+            let rows;
+            let cnt = 0;
+            while ((rows = resultSet.getRows(maxCount)).length == maxCount) {
+                expect(null).assertEqual(rows[0].data2);
+                expect(3).assertEqual(rows[5].data4[2]);
+                expect(80).assertEqual(rows[9].data6);
+                cnt++;
+            }
+            expect(2).assertEqual(cnt);
+            expect(4).assertEqual(rows.length);
+            expect(null).assertEqual(rows[0].data3);
+            expect(24.1).assertEqual(rows[3].data3);
+        } catch (e) {
+            console.log(TAG + "### GetRows test1 failed, err: ${JSON.stringify(e)}");
+            expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0001 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRows0002
+     * @tc.desc abnormal resultSet getRows(maxCount) test: maxCount > resultSet.length
+     */
+    it('rdbStoreResultSetGetRowsTest0002', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0002 start *************");
+        let valueBucket = {
+            data4: new Uint8Array([1,2,3,4]),
+            data6: 80,
+        };
+        for (let i = 1; i <= 3; i++) {
+            let rowId = await rdbStore.insert("test", valueBucket);
+            expect(i).assertEqual(rowId);
+        }
+        let valueBucket1 = {
+            data2: 10,
+            data3: 24.1,
+            data5: true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket1);
+        expect(4).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        try {
+            let maxCount = 10;
+            let rows = resultSet.getRows(maxCount);
+            expect(4).assertEqual(rows.length);
+            expect(80).assertEqual(rows[0].data6);
+            expect(null).assertEqual(rows[0].data2);
+            expect(10).assertEqual(rows[3].data2);
+            expect(true).assertEqual(rows[3].data5);
+            expect(null).assertEqual(rows[3].data4);
+        } catch (e) {
+            console.log(TAG + "### GetRows test2 failed, err: ${JSON.stringify(e)}");
+            expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0002 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRows0003
+     * @tc.desc resultSet getRows(maxCount, position) test
+     */
+    it('rdbStoreResultSetGetRowsTest0003', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0003 start *************");
+        let valueBucket = {
+            data4: new Uint8Array([1,2,3,4]),
+            data6: 80,
+        };
+        for (let i = 1; i <= 23; i++) {
+            let rowId = await rdbStore.insert("test", valueBucket);
+            expect(i).assertEqual(rowId);
+        }
+        let valueBucket1 = {
+            data2: 10,
+            data3: 24.1,
+            data5: true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket1);
+        expect(24).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        try {
+            let maxCount = 10;
+            let position = 2;
+            let rows;
+            let cnt = 0;
+            while ((rows = resultSet.getRows(amxCount, position)).length == maxCount) {
+                expect(null).assertEqual(rows[0].data2);
+                expect(3).assertEqual(rows[5].data4[2]);
+                expect(80).assertEqual(rows[9].data6);
+                position += maxCount;
+                cnt++;
+            }
+            expect(2).assertEqual(cnt);
+            expect(2).assertEqual(rows.length);
+            expect(null).assertEqual(rows[0].data3);
+            expect(24.1).assertEqual(rows[1].data3);
+        } catch (e) {
+            console.log(TAG + "### GetRows test3 failed, err: ${JSON.stringify(e)}");
+            expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0003 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRows0004
+     * @tc.desc abnormal resultSet getRows(maxCount, position) test: position > resultSet.length
+     */
+    it('rdbStoreResultSetGetRowsTest0004', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0004 start *************");
+        let valueBucket = {
+            data4: new Uint8Array([1,2,3,4]),
+            data6: 80,
+        };
+        for (let i = 1; i <= 5; i++) {
+            let rowId = await rdbStore.insert("test", valueBucket);
+            expect(i).assertEqual(rowId);
+        }
+        let valueBucket1 = {
+            data2: 10,
+            data3: 24.1,
+            data5: true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket1);
+        expect(6).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        try {
+            let maxCount = 5;
+            let position = 11;
+            let rows = resultSet.getRows(maxCount, position);
+            expect(0).assertEqual(rows.length);
+        } catch (e) {
+            console.log(TAG + "### GetRows test4 failed, err: ${JSON.stringify(e)}");
+            expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0004 end   *************");
+    })
+
+    /**
+     * @tc.name rdb store resultSet getRow test
+     * @tc.number rdbStoreResultSetGetRows0005
+     * @tc.desc abnormal resultSet getRows test: getRows after resultSet closed
+     */
+    it('rdbStoreResultSetGetRowsTest0005', 0, async function (done) {
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0005 start *************");
+        let valueBucket = {
+            data4: new Uint8Array([1,2,3,4]),
+            data6: 80,
+        };
+        for (let i = 1; i <= 5; i++) {
+            let rowId = await rdbStore.insert("test", valueBucket);
+            expect(i).assertEqual(rowId);
+        }
+        let valueBucket1 = {
+            data2: 10,
+            data3: 24.1,
+            data5: true,
+        };
+        let rowId = await rdbStore.insert("test", valueBucket1);
+        expect(6).assertEqual(rowId);
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        expect(true).assertEqual(resultSet.goToFirstRow());
+
+        try {
+            resultSet.close();
+            let maxCount = 5;
+            let position = 0;
+            let rows = resultSet.getRows(maxCount, position);
+            expect(0).assertEqual(rows.length);
+        } catch (e) {
+            console.log(TAG + "### GetRows test4 failed, err: ${JSON.stringify(e)}");
+            expect().assertFail();
+        }
+        done();
+        console.log(TAG + "************* rdbStoreResultSetGetRowsTest0005 end   *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
 })

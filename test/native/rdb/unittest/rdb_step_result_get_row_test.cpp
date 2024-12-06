@@ -323,3 +323,204 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_006, TestSize
     RowEntity rowEntity;
     EXPECT_EQ(E_ALREADY_CLOSED, resultSet->GetRow(rowEntity));
 }
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRows_001
+ * @tc.desc: test StepResultSet GetRows(maxCount, position): maxCount < resultSet.length
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value;
+    value.PutInt("data2", 30);
+    value.PutDouble("data3", 0.6);
+    value.PutBool("data5", false);
+    for (int i = 1; i <= 17; i++) {
+        int64_t rowId;
+        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        EXPECT_EQ(E_OK, errCode);
+        EXPECT_EQ(i, rowId);
+    }
+    OHOS::NativeRdb::ValuesBucket value1;
+    value.PutString("data1", "ETO");
+    value.PutInt("data2", 6);
+    value.PutBlob("data4", {4, 3, 2, 1});
+    value.PutBool("data5", true);
+    int64_t rowId;
+    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(18, rowId);
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    uint32_t maxCount = 5;
+    uint32_t position = 0;
+    std::vector<RowEntity> rows;
+    std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(maxCount, rows.size());
+    EXPECT_EQ(5, position);
+    EXPECT_EQ(30, rows[0].Get("data2"));
+    EXPECT_EQ(false, rows[2].Get(5));
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[4].Get(1).GetType());
+
+    int cnt = 0;
+    position += maxCount;
+    while (rows.size() == maxCount) {
+        cnt++;
+        std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
+        position += rows.size();
+    }
+    EXPECT_EQ(3, cnt);
+    EXPECT_EQ(18, position);
+    EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
+    EXPECT_EQ(3, rows.size());
+    EXPECT_EQ(0.6, rows[0].Get(3));
+    EXPECT_EQ(30, rows[1].Get("data2"));
+    EXPECT_EQ("ETO", rows[2].Get(1));
+    EXPECT_EQ(6, rows[2].Get("data2"));
+    std::vector<uint8_t> data4ValueByIndex = rows[2].Get(4);
+    EXPECT_EQ(4, data4ValueByIndex[0]);
+    EXPECT_EQ(true, rows[2].Get(5));
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRows_002
+ * @tc.desc: test StepResultSet GetRows(maxCount, position): maxCount > resultSet.length
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_002, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value;
+    value.PutInt("data2", 30);
+    value.PutDouble("data3", 0.6);
+    value.PutBool("data5", false);
+    for (int i = 1; i <= 7; i++) {
+        int64_t rowId;
+        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        EXPECT_EQ(E_OK, errCode);
+        EXPECT_EQ(i, rowId);
+    }
+    OHOS::NativeRdb::ValuesBucket value1;
+    value.PutString("data1", "ETO");
+    value.PutInt("data2", 6);
+    value.PutBlob("data4", {4, 3, 2, 1});
+    value.PutBool("data5", true);
+    int64_t rowId;
+    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(8, rowId);
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    uint32_t maxCount = 10;
+    uint32_t position = 1;
+    std::vector<RowEntity> rows;
+    std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
+    EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
+    EXPECT_EQ(7, rows.size());
+    EXPECT_EQ(2, rows[0].Get("id"));
+    EXPECT_EQ(false, rows[2].Get(5));
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[4].Get(1).GetType());
+    EXPECT_EQ("ETO", rows[6].Get(1));
+    EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[6].Get(3).GetType());
+    EXPECT_EQ(6, rows[6].Get(2));
+    EXPECT_EQ(true, rows[6].Get(5));
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRows_003
+ * @tc.desc: test StepResultSet GetRows(maxCount, position): position > resultSet.length
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_003, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value;
+    value.PutInt("data2", 30);
+    value.PutDouble("data3", 0.6);
+    value.PutBool("data5", false);
+    for (int i = 1; i <= 7; i++) {
+        int64_t rowId;
+        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        EXPECT_EQ(E_OK, errCode);
+        EXPECT_EQ(i, rowId);
+    }
+    OHOS::NativeRdb::ValuesBucket value1;
+    value.PutString("data1", "ETO");
+    value.PutInt("data2", 6);
+    value.PutBlob("data4", {4, 3, 2, 1});
+    value.PutBool("data5", true);
+    int64_t rowId;
+    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(8, rowId);
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    uint32_t maxCount = 5;
+    uint32_t position = 10;
+    std::vector<RowEntity> rows;
+    std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
+    EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
+    EXPECT_EQ(0, rows.size());
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_GetRows_004
+ * @tc.desc: Abnormal testCase of GetRows for rowEntity, if close resultSet before GetRows
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_004, TestSize.Level1)
+{
+    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
+    OHOS::NativeRdb::ValuesBucket value;
+    value.PutInt("data2", 30);
+    value.PutDouble("data3", 0.6);
+    value.PutBool("data5", false);
+    for (int i = 1; i <= 7; i++) {
+        int64_t rowId;
+        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        EXPECT_EQ(E_OK, errCode);
+        EXPECT_EQ(i, rowId);
+    }
+    OHOS::NativeRdb::ValuesBucket value1;
+    value.PutString("data1", "ETO");
+    value.PutInt("data2", 6);
+    value.PutBlob("data4", {4, 3, 2, 1});
+    value.PutBool("data5", true);
+    int64_t rowId;
+    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(8, rowId);
+    std::shared_ptr<ResultSet> resultSet =
+        RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    
+    resultSet->Close();
+    uint32_t maxCount = 5;
+    uint32_t position = 1;
+    std::vector<RowEntity> rows;
+    std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
+    EXPECT_EQ(E_ALREADY_CLOSED, errCode);
+    EXPECT_EQ(0, rows.size());
+}
