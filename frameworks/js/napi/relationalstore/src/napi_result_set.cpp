@@ -57,9 +57,9 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
 
     ResultSetProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (proxy == nullptr) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("NewInstance native instance is nullptr! code:%{public}d!", status);
-        return instance;
+        return nullptr;
     }
     proxy->SetInstance(std::move(resultSet));
     return instance;
