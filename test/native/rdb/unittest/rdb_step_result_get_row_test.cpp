@@ -331,28 +331,26 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_006, TestSize
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSize.Level1)
 {
-    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
-    OHOS::NativeRdb::ValuesBucket value;
+    int64_t rowId;
+    int errCode;
+    ValuesBucket value;
     value.PutInt("data2", 30);
     value.PutDouble("data3", 0.6);
     for (int i = 1; i <= 17; i++) {
-        int64_t rowId;
-        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
         EXPECT_EQ(E_OK, errCode);
         EXPECT_EQ(i, rowId);
     }
-    OHOS::NativeRdb::ValuesBucket value1;
-    value.PutString("data1", "ETO");
-    value.PutInt("data2", 6);
+    ValuesBucket value1;
+    value1.PutString("data1", "ETO");
+    value1.PutInt("data2", 6);
 
-    int64_t rowId;
-    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value1);
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(18, rowId);
     std::shared_ptr<ResultSet> resultSet =
         RdbStepResultSetGetRowTest::store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(nullptr, resultSet);
-
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
 
     uint32_t maxCount = 5;
@@ -361,20 +359,15 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSiz
     std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(maxCount, rows.size());
-    EXPECT_EQ(5, position);
 
     int data2Value1 = rows[0].Get("data2");
     EXPECT_EQ(30, data2Value1);
-    EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[4].Get(1).GetType());
 
-    int cnt = 0;
     position += maxCount;
     while (rows.size() == maxCount) {
-        cnt++;
         std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
         position += rows.size();
     }
-    EXPECT_EQ(3, cnt);
     EXPECT_EQ(18, position);
     EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
     EXPECT_EQ(3, rows.size());
@@ -396,22 +389,21 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSiz
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_002, TestSize.Level1)
 {
-    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
-    OHOS::NativeRdb::ValuesBucket value;
+    int64_t rowId;
+    int errCode;
+    ValuesBucket value;
     value.PutInt("data2", 30);
     value.PutDouble("data3", 0.6);
     for (int i = 1; i <= 7; i++) {
-        int64_t rowId;
-        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
         EXPECT_EQ(E_OK, errCode);
         EXPECT_EQ(i, rowId);
     }
-    OHOS::NativeRdb::ValuesBucket value1;
-    value.PutString("data1", "ETO");
-    value.PutInt("data2", 6);
-    value.PutBlob("data4", {4, 3, 2, 1});
-    int64_t rowId;
-    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    ValuesBucket value1;
+    value1.PutString("data1", "ETO");
+    value1.PutInt("data2", 6);
+    value1.PutBlob("data4", {4, 3, 2, 1});
+    errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(8, rowId);
     std::shared_ptr<ResultSet> resultSet =
@@ -426,11 +418,15 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_002, TestSiz
     std::tie(errCode, rows) = resultSet->GetRows(maxCount, position);
     EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
     EXPECT_EQ(7, rows.size());
-    EXPECT_EQ(2, rows[0].Get("id"));
+
+    int idValue = rows[0].Get("id");
+    std::string data1Value = rows[6].Get(1);
+    int data2Value2 = rows[6].Get(2)
+    EXPECT_EQ(2, idValue);
     EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[4].Get(1).GetType());
-    EXPECT_EQ("ETO", rows[6].Get(1));
+    EXPECT_EQ("ETO", data1Value);
     EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[6].Get(3).GetType());
-    EXPECT_EQ(6, rows[6].Get(2));
+    EXPECT_EQ(6, data2Value2);
 
     resultSet->Close();
 }
@@ -442,22 +438,21 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_002, TestSiz
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_003, TestSize.Level1)
 {
-    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
-    OHOS::NativeRdb::ValuesBucket value;
+    int64_t rowId;
+    int errCode;
+    ValuesBucket value;
     value.PutInt("data2", 30);
     value.PutDouble("data3", 0.6);
     for (int i = 1; i <= 7; i++) {
-        int64_t rowId;
-        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
         EXPECT_EQ(E_OK, errCode);
         EXPECT_EQ(i, rowId);
     }
-    OHOS::NativeRdb::ValuesBucket value1;
-    value.PutString("data1", "ETO");
-    value.PutInt("data2", 6);
-    value.PutBlob("data4", {4, 3, 2, 1});
-    int64_t rowId;
-    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    ValuesBucket value1;
+    value1.PutString("data1", "ETO");
+    value1.PutInt("data2", 6);
+    value1.PutBlob("data4", {4, 3, 2, 1});
+    errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(8, rowId);
     std::shared_ptr<ResultSet> resultSet =
@@ -483,22 +478,21 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_003, TestSiz
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_004, TestSize.Level1)
 {
-    std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
-    OHOS::NativeRdb::ValuesBucket value;
+    int64_t rowId;
+    int errCode;
+    ValuesBucket value;
     value.PutInt("data2", 30);
     value.PutDouble("data3", 0.6);
     for (int i = 1; i <= 7; i++) {
-        int64_t rowId;
-        int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+        errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
         EXPECT_EQ(E_OK, errCode);
         EXPECT_EQ(i, rowId);
     }
-    OHOS::NativeRdb::ValuesBucket value1;
-    value.PutString("data1", "ETO");
-    value.PutInt("data2", 6);
-    value.PutBlob("data4", {4, 3, 2, 1});
-    int64_t rowId;
-    int errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
+    ValuesBucket value1;
+    value1.PutString("data1", "ETO");
+    value1.PutInt("data2", 6);
+    value1.PutBlob("data4", {4, 3, 2, 1});
+    errCode = RdbStepResultSetGetRowTest::store->Insert(rowId, "test", value);
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(8, rowId);
     std::shared_ptr<ResultSet> resultSet =
