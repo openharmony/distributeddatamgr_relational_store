@@ -362,7 +362,9 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSiz
     EXPECT_EQ(E_OK, errCode);
     EXPECT_EQ(maxCount, rows.size());
     EXPECT_EQ(5, position);
-    EXPECT_EQ(30, rows[0].Get("data2"));
+
+    int data2Value1 = rows[0].Get("data2");
+    EXPECT_EQ(30, data2Value1);
     EXPECT_EQ(ValueObjectType::TYPE_NULL, rows[4].Get(1).GetType());
 
     int cnt = 0;
@@ -376,10 +378,13 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRows_001, TestSiz
     EXPECT_EQ(18, position);
     EXPECT_EQ(E_ROW_OUT_RANGE, errCode);
     EXPECT_EQ(3, rows.size());
-    EXPECT_EQ(0.6, rows[0].Get(3));
-    EXPECT_EQ(30, rows[1].Get("data2"));
-    EXPECT_EQ("ETO", rows[2].Get(1));
-    EXPECT_EQ(6, rows[2].Get("data2"));
+
+    double data3Value = rows[0].Get(3);
+    std::string data1Value = rows[2].Get(1);
+    int data2Value2 = rows[2].Get("data2");
+    EXPECT_EQ(0.6, data3Value);
+    EXPECT_EQ("ETO", data1Value);
+    EXPECT_EQ(6, data2Value2);
 
     resultSet->Close();
 }

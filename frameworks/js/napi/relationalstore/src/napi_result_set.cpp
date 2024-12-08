@@ -578,7 +578,7 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
     ResultSetProxy *resultSetProxy = GetInnerResultSet(env, info);
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
     context->resultSet = resultSetProxy->GetInstance();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) int {
         CHECK_RETURN(OK == JSUtils::Convert2ValueExt(env, argv[0], context->maxCount));
         if (context->maxCount == 0) {
             LOG_ERROR("GetRows failed code:%{public}d", E_PARAM_ERROR);
