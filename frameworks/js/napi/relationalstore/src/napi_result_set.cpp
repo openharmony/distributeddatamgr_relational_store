@@ -592,7 +592,7 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
         std::tie(errCode, context->rowEntities) = context->resultSet->GetRows(context->maxCount, context->position);
         return errCode;
     };
-    auto output = [context](napi_env env, size_t argc, napi_value &result) {
+    auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, context->rowEntities);
     };
     context->SetAction(env, info, input, exec, output);
