@@ -280,7 +280,7 @@ std::pair<int, std::vector<RowEntity>> AbsResultSet::GetRows(uint32_t maxCount, 
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     int errCode = E_OK;
     if (maxCount == 0) {
-        errCode = E_PARAM_ERROR;
+        errCode = E_INVALID_ARGS;
         return {errCode, std::vector<RowEntity>()};
     }
     if (position != 0) {
