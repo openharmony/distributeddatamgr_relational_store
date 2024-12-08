@@ -20,6 +20,7 @@
 
 #include "asset_value.h"
 #include "js_proxy.h"
+#include "napi_async_call.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -29,6 +30,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using namespace OHOS::NativeRdb;
 class ResultSetProxy final : public JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> {
 public:
     ResultSetProxy() = default;
@@ -40,11 +42,7 @@ public:
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
 
 private:
-    static ResultSetProxy *GetInnerResultSet(napi_env env, napi_callback_info info);
-    static ResultSetProxy *ParseInt32FieldByName(
-        napi_env env, napi_callback_info info, int32_t &field, const std::string fieldName);
-    static ResultSetProxy *ParseFieldByName(
-        napi_env env, napi_callback_info info, std::string &field, const std::string fieldName);
+    static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
 
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);

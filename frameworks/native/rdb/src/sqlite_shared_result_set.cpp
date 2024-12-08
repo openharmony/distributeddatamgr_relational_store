@@ -71,6 +71,7 @@ SqliteSharedResultSet::SqliteSharedResultSet(
 
 std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 {
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     if (conn_ == nullptr) {
         LOG_ERROR("Already close.");
         lastErr_ = E_ALREADY_CLOSED;
@@ -158,10 +159,12 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
             "fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, qrySql_.c_str());
         return E_ALREADY_CLOSED;
     }
-    if (GetBlock() == nullptr) {
+    auto sharedBlock = GetBlock();
+    if (sharedBlock == nullptr) {
         return E_ERROR;
     }
-    if ((uint32_t)newPosition < GetBlock()->GetStartPos() || (uint32_t)newPosition >= GetBlock()->GetLastPos() ||
+
+    if ((uint32_t)newPosition < sharedBlock->GetStartPos() || (uint32_t)newPosition >= sharedBlock->GetLastPos() ||
         oldPosition == rowCount_) {
         return FillBlock(newPosition);
     }
@@ -246,6 +249,7 @@ int32_t SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk::SharedBlock *bl
         LOG_ERROR("SetColumnNum %{public}d.", code);
         return E_ERROR;
     }
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     errCode = statement->FillBlockInfo(&blockInfo);
     if (errCode != E_OK) {
         LOG_ERROR("Fill shared block failed, ret is %{public}d", errCode);
