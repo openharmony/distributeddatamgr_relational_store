@@ -295,17 +295,6 @@ public:
      * Calling this method on the result set will release all of its resources and makes it ineffective.
      */
     API_EXPORT int Close() override;
-
-    /**
-     * @brief Gets the pair of errCode and rowEntity from the result set.
-     */
-    API_EXPORT std::pair<int, RowEntity> GetRow() override;
-
-    /**
-     * @brief Gets the rows of data for the maxCount or remaining rows from the result set.
-     */
-    API_EXPORT std::pair<int, std::vector<RowEntity>> GetRows(uint32_t maxCount, uint32_t position) override;
-
 protected:
     /**
      * @brief Constructor.

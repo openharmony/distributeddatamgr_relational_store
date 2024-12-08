@@ -268,52 +268,6 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
     return E_OK;
 }
 
-std::pair<int, RowEntity> AbsResultSet::GetRow()
-{
-    RowEntity rowEntity;
-    int errCode = GetRow(rowEntity);
-    return {errCode, rowEntity};
-}
-
-std::pair<int, std::vector<RowEntity>> AbsResultSet::GetRows(uint32_t maxCount, uint32_t position)
-{
-    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
-    int errCode = E_OK;
-    if (maxCount == 0) {
-        errCode = E_INVALID_ARGS;
-        return {errCode, std::vector<RowEntity>()};
-    }
-    if (position != 0) {
-        errCode = GoToRow(position);
-    }
-    if (errCode == E_OK && rowPos_ == INIT_POS) {
-        errCode = GoToFirstRow();
-    }
-
-    if (errCode != E_OK) {
-        LOG_ERROR("GetRows failed code:%{public}d. [%{public}d, %{public}d, %{public}d, %{public}d]",
-            errCode, maxCount, position, rowPos_, rowCount_);
-        return {errCode, std::vector<RowEntity>()};
-    }
-    std::vector<RowEntity> rowEntities;
-    for (size_t i = 0; i < maxCount; ++i) {
-        RowEntity rowEntity;
-        std::tie(errCode, rowEntity) = GetRow();
-        if (errCode != E_OK) {
-            return {errCode, std::vector<RowEntity>()};
-        }
-        rowEntities.push_back(rowEntity);
-        errCode = GoToNextRow();
-        if (errCode == E_ROW_OUT_RANGE) {
-            break;
-        }
-        if (errCode != E_OK) {
-            return {errCode, std::vector<RowEntity>()};
-        }
-    }
-    return {E_OK, rowEntities};
-}
-
 int AbsResultSet::GoToRow(int position)
 {
     return E_OK;
@@ -555,6 +509,7 @@ int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
     value = valueObject;
     return E_OK;
 }
+
 std::pair<int, std::vector<std::string>> AbsResultSet::GetColumnNames()
 {
     return { E_NOT_SUPPORT, {} };

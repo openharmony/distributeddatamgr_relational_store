@@ -33,7 +33,8 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using SharedBlock = AppDataFwk::SharedBlock;
-AbsSharedResultSet::AbsSharedResultSet(std::string name) : sharedBlock_(nullptr), sharedBlockName_(std::move(name))
+AbsSharedResultSet::AbsSharedResultSet(std::string name)
+    : AbsResultSet(true), sharedBlock_(nullptr), sharedBlockName_(std::move(name))
 {
 }
 
@@ -287,7 +288,7 @@ int AbsSharedResultSet::GetCustomerValue(int index, ValueObject &value, SharedBl
             break;
         }
         default:
-            LOG_ERROR("invalid type is %{public}d, col is %{public}d!", cellUnit->type, index);
+            LOG_ERROR("Invalid type is %{public}d, col is %{public}d!", cellUnit->type, index);
             return E_INVALID_OBJECT_TYPE;
     }
     return E_OK;
@@ -302,7 +303,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
         return E_ALREADY_CLOSED;
     }
     if (GetBlock() == nullptr) {
-        LOG_ERROR("sharedBlock is null!");
+        LOG_ERROR("SharedBlock is null!");
         return E_ERROR;
     }
     int count = 0;
