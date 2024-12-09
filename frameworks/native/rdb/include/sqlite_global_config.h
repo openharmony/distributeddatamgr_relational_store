@@ -77,6 +77,8 @@ public:
     static int GetWalAutoCheckpoint();
     static std::string GetDefaultJournalMode();
     static int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
+    static void Corruption(void *arg, const void *msg);
+    static std::string GetLastCorruptionMsg();
 };
 
 } // namespace NativeRdb
