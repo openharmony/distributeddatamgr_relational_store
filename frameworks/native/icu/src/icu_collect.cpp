@@ -81,10 +81,8 @@ int32_t ICUCollect::Local(sqlite3 *dbHandle, const std::string &str)
         LOG_ERROR("Set attribute of collator failed.");
         return E_ERROR;
     }
-
     int err = sqlite3_create_collation_v2(dbHandle, "LOCALES", SQLITE_UTF8, collator, ICUCollect::Collate8Compare,
         (void (*)(void *))ICUCollect::LocalizedCollatorDestroy);
-    
     if (err != SQLITE_OK) {
         LOG_ERROR("SCreate collator in sqlite3 failed.");
         return err;

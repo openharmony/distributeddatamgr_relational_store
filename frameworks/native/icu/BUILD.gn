@@ -14,44 +14,37 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-
 ohos_shared_library("relational_store_icu") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-   boundary_sanitize = true
-   ubsan = true
-   cfi = true
-   cfi_cross_dso = true
-   debug = false
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
   }
-  
+
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
   cflags_cc = [ "-fvisibility=hidden" ]
-  
+
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/icu/include",
     "${relational_store_innerapi_path}/rdb/include",
   ]
-  
-  sources = [
-    "${relational_store_native_path}/icu/src/icu_collect.cpp",
-  ]
+
+  sources = [ "${relational_store_native_path}/icu/src/icu_collect.cpp" ]
 
   external_deps = [
+    "hilog:libhilog",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "sqlite:sqlite",
-    "hilog:libhilog",
   ]
   if (is_android) {
-   external_deps += [
-      "${plugins_path}/libs/icu:icu_android"
-   ]
-  } else if(is_ios) {
-   external_deps += [
-      "${plugins_path}/libs/icu:icu_ios"
-   ]
+    external_deps += [ "${plugins_path}/libs/icu:icu_android" ]
+  } else if (is_ios) {
+    external_deps += [ "${plugins_path}/libs/icu:icu_ios" ]
   }
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
