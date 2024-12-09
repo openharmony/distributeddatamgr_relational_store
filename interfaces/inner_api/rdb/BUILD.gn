@@ -73,14 +73,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RDB_TRACE_ON",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
 
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [
@@ -102,10 +94,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
 
   ohos_shared_library("native_rdb") {
     branch_protector_ret = "pac_ret"
@@ -122,7 +110,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
@@ -192,7 +180,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
@@ -269,14 +257,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
 
     defines += [
       "WINDOWS_PLATFORM",
@@ -301,10 +281,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
 
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
@@ -312,7 +288,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
@@ -337,7 +313,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
@@ -378,14 +354,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
 
     defines += [
       "MAC_PLATFORM",
@@ -408,10 +376,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
 
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
@@ -419,7 +383,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
@@ -442,7 +406,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
@@ -481,14 +445,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
   }
 
   config("native_rdb_public_config") {
@@ -506,7 +462,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [ "${plugins_path}/libs/icu:icu_android" ]
 
   ohos_source_set("native_rdb") {
     defines = [ "ANDROID_PLATFORM" ]
@@ -517,7 +472,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
@@ -555,14 +510,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
   }
 
   config("native_rdb_public_config") {
@@ -579,7 +526,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [ "${plugins_path}/libs/icu:icu_ios" ]
 
   ohos_source_set("native_rdb") {
     defines = [
@@ -592,7 +538,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
+    deps = []
 
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
