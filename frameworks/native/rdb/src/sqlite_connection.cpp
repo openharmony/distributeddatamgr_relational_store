@@ -26,6 +26,9 @@
 #include "sqlite3.h"
 #include "value_object.h"
 
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
 #include <unistd.h>
 
 #include "logger.h"
@@ -42,7 +45,6 @@
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #include "rdb_manager_impl.h"
-#include <dlfcn.h>
 #endif
 #include "task_executor.h"
 
@@ -891,6 +893,7 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
 
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
+#ifndef _WIN32
     auto handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
     if (handle == nullptr) {
         return E_ERROR;
@@ -900,6 +903,7 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
         return E_ERROR;
     }
     func(dbHandle_, localeStr);
+#endif
     return E_OK;
 }
 
