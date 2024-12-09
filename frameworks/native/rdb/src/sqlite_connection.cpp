@@ -26,8 +26,6 @@
 #include "sqlite3.h"
 #include "value_object.h"
 
-
-#include <unicode/ucol.h>
 #include <unistd.h>
 
 #include "logger.h"
