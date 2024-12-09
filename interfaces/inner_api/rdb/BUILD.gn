@@ -73,7 +73,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RDB_TRACE_ON",
     ]
 
-
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [
       "${kvstore_path}/common",
@@ -93,7 +92,6 @@ if (is_ohos && !build_ohos_sdk) {
       "../common_type/include",
     ]
   }
-
 
   ohos_shared_library("native_rdb") {
     branch_protector_ret = "pac_ret"
@@ -257,7 +255,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-
     defines += [
       "WINDOWS_PLATFORM",
       "CROSS_PLATFORM",
@@ -280,7 +277,6 @@ if (is_ohos && !build_ohos_sdk) {
       "../common_type/include",
     ]
   }
-
 
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
@@ -354,7 +350,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-
     defines += [
       "MAC_PLATFORM",
       "CROSS_PLATFORM",
@@ -375,7 +370,6 @@ if (is_ohos && !build_ohos_sdk) {
       "../common_type/include",
     ]
   }
-
 
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
@@ -444,7 +438,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
     ]
-
   }
 
   config("native_rdb_public_config") {
@@ -461,7 +454,6 @@ if (is_ohos && !build_ohos_sdk) {
       "//commonlibrary/c_utils/base/include",
     ]
   }
-
 
   ohos_source_set("native_rdb") {
     defines = [ "ANDROID_PLATFORM" ]
@@ -509,7 +501,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
     ]
-
   }
 
   config("native_rdb_public_config") {
@@ -525,7 +516,6 @@ if (is_ohos && !build_ohos_sdk) {
       "//commonlibrary/c_utils/base/include",
     ]
   }
-
 
   ohos_source_set("native_rdb") {
     defines = [
