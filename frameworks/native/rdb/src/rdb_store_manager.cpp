@@ -111,25 +111,25 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);  // retry with input config
     }
     if (errCode != E_OK) {
-        LOG_ERROR("GetRdbStore failed. path:%{public}s, rc=%{public}d",
-            SqliteUtils::Anonymous(path).c_str(), errCode);
+        LOG_ERROR("GetRdbStore failed. path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
         return nullptr;
     }
 
-    if (modifyConfig.GetRoleType() == OWNER && !modifyConfig.IsReadOnly()) {
-        errCode = SetSecurityLabel(modifyConfig);
+    if (rdbStore->GetConfig().GetRoleType() == OWNER && !rdbStore->GetConfig().IsReadOnly()) {
+        errCode = SetSecurityLabel(rdbStore->GetConfig());
         if (errCode != E_OK) {
             return nullptr;
         }
         (void)rdbStore->ExchangeSlaverToMaster();
-        errCode = ProcessOpenCallback(*rdbStore, modifyConfig, version, openCallback);
+        errCode = ProcessOpenCallback(*rdbStore, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                SqliteUtils::Anonymous(modifyConfig.GetName()).c_str(),
-                SqliteUtils::Anonymous(modifyConfig.GetPath()).c_str(), errCode);
+                SqliteUtils::Anonymous(rdbStore->GetConfig().GetName()).c_str(),
+                SqliteUtils::Anonymous(rdbStore->GetConfig().GetPath()).c_str(), errCode);
             return nullptr;
         }
     }
+    configCache_.Set(path, GetSyncParam(rdbStore->GetConfig()));
     storeCache_.insert_or_assign(std::move(path), rdbStore);
     return rdbStore;
 }
@@ -149,7 +149,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
     bool isEncryptInvalidChange = (config.IsEncrypt() != lastParam.isEncrypt_);
     bool isAreaInvalidChange = (config.GetArea() != lastParam.area_);
     if (isLevelInvalidChange || isEncryptInvalidChange || isAreaInvalidChange) {
-        LOG_WARN("Store config invalid change, storePath %{public}s, securitylevel: %{public}d -> %{public}d, "
+        LOG_WARN("Store config invalid change, storePath %{public}s, securityLevel: %{public}d -> %{public}d, "
                  "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
             SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()),
             lastParam.area_, config.GetArea(), lastParam.isEncrypt_, config.IsEncrypt());
@@ -244,8 +244,7 @@ bool RdbStoreManager::Remove(const std::string &path)
     return false;
 }
 
-int RdbStoreManager::ProcessOpenCallback(
-    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
+int RdbStoreManager::ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpenCallback &openCallback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errCode = E_OK;

@@ -44,8 +44,7 @@ public:
 private:
     using Param = DistributedRdb::RdbSyncerParam;
     using Info = DistributedRdb::RdbDebugInfo;
-    int ProcessOpenCallback(
-        RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback);
+    int ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
