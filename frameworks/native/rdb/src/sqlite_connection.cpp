@@ -26,7 +26,7 @@
 #include "sqlite3.h"
 #include "value_object.h"
 
-#include <dlfcn.h>
+
 #include <unicode/ucol.h>
 #include <unistd.h>
 
@@ -44,6 +44,7 @@
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #include "rdb_manager_impl.h"
+#include <dlfcn.h>
 #endif
 #include "task_executor.h"
 
