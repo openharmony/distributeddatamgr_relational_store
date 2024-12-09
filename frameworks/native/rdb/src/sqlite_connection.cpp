@@ -26,10 +26,8 @@
 #include "sqlite3.h"
 #include "value_object.h"
 
-#ifdef RDB_SUPPORT_ICU
+#include <dlfcn.h>
 #include <unicode/ucol.h>
-#endif
-
 #include <unistd.h>
 
 #include "logger.h"
@@ -892,63 +890,17 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
     }
 }
 
-#ifdef RDB_SUPPORT_ICU
-int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
-{
-    UCollator *coll = reinterpret_cast<UCollator *>(p);
-    UCharIterator i1;
-    UCharIterator i2;
-    UErrorCode status = U_ZERO_ERROR;
-
-    uiter_setUTF8(&i1, (const char *)v1, n1);
-    uiter_setUTF8(&i2, (const char *)v2, n2);
-
-    UCollationResult result = ucol_strcollIter(coll, &i1, &i2, &status);
-
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Ucol strcoll error.");
-    }
-
-    if (result == UCOL_LESS) {
-        return -1;
-    } else if (result == UCOL_GREATER) {
-        return 1;
-    }
-    return 0;
-}
-
-void LocalizedCollatorDestroy(UCollator *collator)
-{
-    ucol_close(collator);
-}
-#endif
-
-/**
- * The database locale.
- */
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-#ifdef RDB_SUPPORT_ICU
-    std::unique_lock<std::mutex> lock(mutex_);
-    UErrorCode status = U_ZERO_ERROR;
-    UCollator *collator = ucol_open(localeStr.c_str(), &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Can not open collator.");
+    auto handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
         return E_ERROR;
     }
-    ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Set attribute of collator failed.");
+    auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
+    if (func == nullptr) {
         return E_ERROR;
     }
-
-    int err = sqlite3_create_collation_v2(dbHandle_, "LOCALES", SQLITE_UTF8, collator, Collate8Compare,
-        (void (*)(void *))LocalizedCollatorDestroy);
-    if (err != SQLITE_OK) {
-        LOG_ERROR("SCreate collator in sqlite3 failed.");
-        return err;
-    }
-#endif
+    func(dbHandle_, localeStr);
     return E_OK;
 }
 
