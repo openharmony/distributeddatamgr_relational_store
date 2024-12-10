@@ -1348,10 +1348,10 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     auto beginResult = std::chrono::steady_clock::now();
     outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
     auto allEnd = std::chrono::steady_clock::now();
-    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(begin - allEnd).count();
+    int64_t totalCostTime = std::chrono::duration_cast<std::chrono::milliseconds>(allEnd - begin).count();
     if (totalCostTime >= TIME_OUT) {
         int64_t prepareCost = std::chrono::duration_cast<std::chrono::milliseconds>(beginExec - begin).count();
-        int64_t execCost = std::chrono::duration_cast<std::chrono::milliseconds>(beginExec - beginResult).count();
+        int64_t execCost = std::chrono::duration_cast<std::chrono::milliseconds>(beginResult - beginExec).count();
         int64_t resultCost = std::chrono::duration_cast<std::chrono::milliseconds>(allEnd - beginResult).count();
         LOG_WARN("total[%{public}" PRId64 "] stmt[%{public}" PRId64 "] exec[%{public}" PRId64
                  "] result[%{public}" PRId64 "] "

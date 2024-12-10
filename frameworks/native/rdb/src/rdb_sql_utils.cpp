@@ -66,6 +66,21 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     return E_OK;
 }
 
+std::pair<std::string, int> RdbSqlUtils::GetCustomDatabasePath(
+    const std::string &rootDir, const std::string &name, const std::string &customDir)
+{
+    std::string databasePath;
+    databasePath.append(rootDir).append("/").append(customDir).append("/").append(name);
+
+    struct stat fileStat;
+    if (stat(databasePath.c_str(), &fileStat) != 0) {
+        LOG_ERROR("File state error. path: %{public}s, errno: %{public}d",
+            SqliteUtils::Anonymous(databasePath).c_str(), errno);
+        return std::make_pair("", E_INVALID_FILE_PATH);
+    }
+    return std::make_pair(databasePath, E_OK);
+}
+
 /**
  * @brief get custom data base path.
  */

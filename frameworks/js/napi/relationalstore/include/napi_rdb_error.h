@@ -33,6 +33,7 @@ constexpr int E_PARAM_ERROR = 401;
 constexpr int E_INNER_ERROR = 14800000;
 constexpr int E_NOT_STAGE_MODE = 14801001;
 constexpr int E_DATA_GROUP_ID_INVALID = 14801002;
+constexpr int E_INVALID_FILE_PATH = 14800010;
 
 struct JsErrorCode {
     int32_t status;
@@ -178,6 +179,19 @@ public:
 
 private:
     std::string wantNum;
+};
+
+class PathError : public Error {
+public:
+    PathError(){};
+    std::string GetMessage() override
+    {
+        return "Invalid database path.";
+    };
+    int GetCode() override
+    {
+        return E_INVALID_FILE_PATH;
+    };
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
