@@ -85,9 +85,9 @@ private:
     int SetPageSize(const RdbStoreConfig &config);
     std::string GetSecManagerName(const RdbStoreConfig &config);
     int SetEncrypt(const RdbStoreConfig &config);
-    int SetEncryptKey(const std::vector<uint8_t> &key, int32_t iter);
+    int SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config);
     int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
-    int SetEncryptAgo(int32_t iter);
+    int SetEncryptAgo(const RdbStoreConfig &config);
     int SetJournalMode(const RdbStoreConfig &config);
     int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);

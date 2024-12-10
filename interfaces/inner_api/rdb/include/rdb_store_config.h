@@ -161,6 +161,31 @@ enum DBType : uint32_t {
     DB_BUTT
 };
 
+enum HmacAlgo : int32_t {
+    /** The HMAC_SHA1 algorithm. */
+    SHA1 = 0,
+    /** The HMAC_SHA256 algorithm. */
+    SHA256,
+    /** The HMAC_SHA512 algorithm. */
+    SHA512
+};
+
+enum KdfAlgo : int32_t {
+    /** The PBKDF2_HMAC_SHA1 algorithm. */
+    KDF_SHA1 = 0,
+    /** The PBKDF2_HMAC_SHA256 algorithm. */
+    KDF_SHA256,
+    /** The PBKDF2_HMAC_SHA512 algorithm. */
+    KDF_SHA512
+};
+
+enum EncryptAlgo : int32_t {
+    /** The AES_256_GCM encryption algorithm. */
+    AES_256_GCM = 0,
+    /** The AES_256_CBC encryption algorithm. */
+    AES_256_CBC
+};
+
 /**
  * @brief Use DistributedType replace OHOS::DistributedRdb::RdbDistributedType.
  */
@@ -182,6 +207,21 @@ struct ScalarFunctionInfo {
 class API_EXPORT RdbStoreConfig {
 public:
     /**
+    * @brief The struct indicates the database crypto parameters.
+    */
+    struct API_EXPORT CryptoParam {
+        mutable int32_t iterNum = 0;
+        int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
+        int32_t hmacAlgo = HmacAlgo::SHA256;
+        int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
+        uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
+        mutable std::vector<uint8_t> encryptKey_{};
+        API_EXPORT CryptoParam();
+        API_EXPORT ~CryptoParam();
+        API_EXPORT bool IsValid() const;
+    };
+
+    /**
     * @brief The constant indicates the database default page size.
     */
     static constexpr int DB_PAGE_SIZE = 4096;    /* default page size : 4k */
@@ -197,9 +237,19 @@ public:
     static constexpr char DB_DEFAULT_JOURNAL_MODE[] = "WAL";
 
     /**
-    * @brief The constant indicates the database default encrypt algorithm.
+     * @brief The constant indicates the database default encrypt algorithm.
+     */
+    static constexpr EncryptAlgo DB_DEFAULT_ENCRYPT_ALGO = AES_256_GCM;
+
+    /**
+    * @brief The constant indicates the database default crypto page size.
     */
-    static constexpr char DB_DEFAULT_ENCRYPT_ALGO[] = "sha256";
+    static constexpr uint32_t DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
+
+    /**
+    * @brief The constant indicates the bit mask of the invalid range of crypto page size.
+    */
+    static constexpr uint32_t DB_INVALID_CRYPTO_PAGE_SIZE_MASK = 0xFFFE03FF;
 
     /**
      * @brief Constructor.
@@ -218,14 +268,13 @@ public:
      * @param autoCheck Indicates whether the database is auto check.
      * @param journalSize Indicates the journal size of the database.
      * @param pageSize Indicates the page size of the database.
-     * @param encryptAlgo Indicates the encrypt algorithm of the database.
      */
     API_EXPORT RdbStoreConfig(const std::string &path, StorageMode storageMode = StorageMode::MODE_DISK,
         bool readOnly = false, const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>(),
         const std::string &journalMode = DB_DEFAULT_JOURNAL_MODE, const std::string &syncMode = "",
         const std::string &databaseFileType = "", SecurityLevel securityLevel = SecurityLevel::LAST,
         bool isCreateNecessary = true, bool autoCheck = false, int journalSize = DB_JOURNAL_SIZE,
-        int pageSize = DB_PAGE_SIZE, const std::string &encryptAlgo = DB_DEFAULT_ENCRYPT_ALGO);
+        int pageSize = DB_PAGE_SIZE);
     /**
      * @brief Destructor.
      */
@@ -424,12 +473,12 @@ public:
     /**
      * @brief Obtains the encrypt algorithm in this {@code StoreConfig} object.
      */
-    API_EXPORT const std::string GetEncryptAlgo() const;
+    API_EXPORT EncryptAlgo GetEncryptAlgo() const;
 
     /**
      * @brief Sets the encrypt algorithm for the object.
      */
-    API_EXPORT void SetEncryptAlgo(const std::string &encryptAlgo);
+    API_EXPORT void SetEncryptAlgo(EncryptAlgo encryptAlgo);
 
     /**
      * @brief Obtains the read connection size in this {@code StoreConfig} object.
@@ -545,12 +594,12 @@ public:
             }
         }
 
-        if (this->encryptKey_.size() != config.encryptKey_.size()) {
+        if (this->cryptoParam_.encryptKey_.size() != config.cryptoParam_.encryptKey_.size()) {
             return false;
         }
 
-        for (size_t i = 0; i < encryptKey_.size(); i++) {
-            if (this->encryptKey_[i] != config.encryptKey_[i]) {
+        for (size_t i = 0; i < cryptoParam_.encryptKey_.size(); i++) {
+            if (this->cryptoParam_.encryptKey_[i] != config.cryptoParam_.encryptKey_[i]) {
                 return false;
             }
         }
@@ -625,6 +674,10 @@ public:
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
+    void SetCryptoParam(CryptoParam cryptoParam);
+
+    CryptoParam GetCryptoParam() const;
+
     void SetJournalMode(const std::string &journalMode);
 
     void EnableRekey(bool enable);
@@ -643,7 +696,6 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    mutable int32_t iter_ = 0;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;
@@ -657,6 +709,7 @@ private:
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
+    CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
     std::string journalMode_;
@@ -666,10 +719,8 @@ private:
     std::string bundleName_;
     std::string moduleName_;
     std::string visitorDir_;
-    std::string encryptAlgo_;
     std::string dataGroupId_;
     std::string customDir_;
-    mutable std::vector<uint8_t> encryptKey_{};
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     std::vector<std::string> pluginLibs_{};
