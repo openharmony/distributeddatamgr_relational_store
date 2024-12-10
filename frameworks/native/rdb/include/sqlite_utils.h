@@ -60,6 +60,9 @@ public:
     static std::string GetSlavePath(const std::string& name);
     static bool TryAccessSlaveLock(const std::string &dbPath, bool isDelete, bool needCreate,
         bool isSlaveFailure = false);
+    static const char *HmacAlgoDescription(int32_t hmacAlgo);
+    static const char *KdfAlgoDescription(int32_t kdfAlgo);
+    static const char *EncryptAlgoDescription(int32_t encryptAlgo);
 
 private:
     struct SqlType {
