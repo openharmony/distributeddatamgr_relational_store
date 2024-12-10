@@ -379,8 +379,8 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
         if (ret == HKS_SUCCESS) {
             if (!HasRootKey()) {
                 hasRootKey_ = true;
-                rootKeyAlias_ = std::move(rootKeyAlias);
             }
+            rootKeyAlias_ = std::move(rootKeyAlias);
             break;
         }
         retryCount++;
