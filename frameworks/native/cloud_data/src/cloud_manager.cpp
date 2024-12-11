@@ -62,24 +62,24 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
 
     auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
-        LOG_ERROR("get system ability manager failed.");
+        LOG_ERROR("Get system ability manager failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
-        LOG_ERROR("get distributed data manager failed.");
+        LOG_ERROR("Get distributed data manager failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     sptr<DataMgrService> dataMgr = new (std::nothrow) DataMgrService(dataMgrObject);
     if (dataMgr == nullptr) {
-        LOG_ERROR("new CloudDataServiceProxy failed.");
+        LOG_ERROR("New CloudDataServiceProxy failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
-        LOG_ERROR("get cloud service failed.");
+        LOG_ERROR("Get cloud service failed.");
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
 
@@ -109,12 +109,12 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
     LOG_INFO("%s", name.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(DataMgrService::GetDescriptor())) {
-        LOG_ERROR("write descriptor failed.");
+        LOG_ERROR("Write descriptor failed.");
         return nullptr;
     }
 
     if (!ITypesUtil::Marshal(data, name)) {
-        LOG_ERROR("write descriptor failed.");
+        LOG_ERROR("Write descriptor failed.");
         return nullptr;
     }
 
@@ -129,7 +129,7 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
 
     sptr<IRemoteObject> remoteObject;
     if (!ITypesUtil::Unmarshal(reply, remoteObject)) {
-        LOG_ERROR("remote object is nullptr.");
+        LOG_ERROR("Remote object is nullptr.");
         return nullptr;
     }
     return remoteObject;

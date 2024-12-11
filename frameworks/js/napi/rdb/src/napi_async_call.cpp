@@ -34,7 +34,7 @@ void BaseContext::SetAction(
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[argc - 1], &valueType);
     if (valueType == napi_function) {
-        LOG_DEBUG("asyncCall set callback");
+        LOG_DEBUG("AsyncCall set callback");
         NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
         argc = argc - 1;
     }

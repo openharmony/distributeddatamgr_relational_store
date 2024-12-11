@@ -423,7 +423,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         LOG_WARN("isStageMode is false -> fa stage");
         return GetCurrentAbilityParam(env, jsValue, param);
     }
-    LOG_DEBUG("stage mode branch");
+    LOG_DEBUG("Stage mode branch");
     status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
     ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
     status = GetNamedProperty(env, jsValue, "area", param.area, true);
@@ -527,7 +527,7 @@ bool HasDuplicateAssets(const ValueObject &value)
     auto item = assets->begin();
     while (item != assets->end()) {
         if (!names.insert(item->name).second) {
-            LOG_ERROR("duplicate assets! name = %{public}.6s", item->name.c_str());
+            LOG_ERROR("Duplicate assets! name = %{public}.6s", item->name.c_str());
             return true;
         }
         item++;

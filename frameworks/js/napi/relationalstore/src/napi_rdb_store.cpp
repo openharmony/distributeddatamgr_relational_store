@@ -243,7 +243,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled)
 {
     if (value == nullptr) {
-        LOG_ERROR("value is nullptr ? %{public}d", (value == nullptr));
+        LOG_ERROR("Value is nullptr ? %{public}d", (value == nullptr));
         return nullptr;
     }
     napi_value cons = JSUtils::GetClass(env, "ohos.data.relationalStore", "RdbStore");
@@ -1597,7 +1597,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     bool result = std::any_of(observers_[mode].begin(), observers_[mode].end(),
         [argv](const auto &observer) { return *observer == argv[1]; });
     if (result) {
-        LOG_INFO("duplicate subscribe.");
+        LOG_INFO("Duplicate subscribe.");
         return nullptr;
     }
     SubscribeOption option;
@@ -1613,7 +1613,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
-    LOG_INFO("subscribe success.");
+    LOG_INFO("Subscribe success.");
     return nullptr;
 }
 
@@ -1625,7 +1625,7 @@ napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb:
     bool result =
         std::any_of(list.begin(), list.end(), [callback](const auto &observer) { return *observer == callback; });
     if (result) {
-        LOG_INFO("duplicate subscribe event: %{public}s", option.event.c_str());
+        LOG_INFO("Duplicate subscribe event: %{public}s", option.event.c_str());
         return nullptr;
     }
 
@@ -1634,7 +1634,7 @@ napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb:
     int errCode = GetInstance()->Subscribe(option, localObserver.get());
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers[option.event].push_back(localObserver);
-    LOG_INFO("subscribe success event: %{public}s", option.event.c_str());
+    LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
     return nullptr;
 }
 
@@ -1684,7 +1684,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         (*it)->Clear();
         it = observers_[mode].erase(it);
-        LOG_DEBUG("observer unsubscribe success");
+        LOG_DEBUG("Observer unsubscribe success");
     }
     return nullptr;
 }
@@ -1694,7 +1694,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
 {
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
-        LOG_INFO("observer not found, event: %{public}s", option.event.c_str());
+        LOG_INFO("Observer not found, event: %{public}s", option.event.c_str());
         return nullptr;
     }
 
@@ -1716,7 +1716,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         observers.erase(option.event);
     }
-    LOG_INFO("unsubscribe success, event: %{public}s", option.event.c_str());
+    LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
     return nullptr;
 }
 
@@ -1867,14 +1867,14 @@ napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_v
     bool result = std::any_of(
         syncObservers_.begin(), syncObservers_.end(), [argv](const auto &observer) { return *observer == argv[0]; });
     if (result) {
-        LOG_DEBUG("duplicate subscribe.");
+        LOG_DEBUG("Duplicate subscribe.");
         return nullptr;
     }
     auto observer = std::make_shared<SyncObserver>(env, argv[0], queue_);
     int errCode = GetInstance()->RegisterAutoSyncCallback(observer);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     syncObservers_.push_back(std::move(observer));
-    LOG_INFO("progress subscribe success.");
+    LOG_INFO("Progress subscribe success.");
     return nullptr;
 }
 
@@ -1901,7 +1901,7 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         (*it)->Clear();
         it = syncObservers_.erase(it);
-        LOG_DEBUG("observer unsubscribe success.");
+        LOG_DEBUG("Observer unsubscribe success.");
     }
     return nullptr;
 }
@@ -1914,14 +1914,14 @@ napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *ar
     bool result = std::any_of(statisticses_.begin(), statisticses_.end(),
         [argv](std::shared_ptr<NapiStatisticsObserver> obs) { return obs && *obs == argv[0]; });
     if (result) {
-        LOG_DEBUG("duplicate subscribe.");
+        LOG_DEBUG("Duplicate subscribe.");
         return nullptr;
     }
     auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
     int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     statisticses_.push_back(std::move(observer));
-    LOG_DEBUG("statistics subscribe success.");
+    LOG_DEBUG("Statistics subscribe success.");
     return nullptr;
 }
 
@@ -2034,7 +2034,7 @@ void RdbStoreProxy::SyncObserver::ProgressNotification(const Details &details)
 
 napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock)
 {
-    LOG_DEBUG("start.");
+    LOG_DEBUG("Start.");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc >= 1, std::make_shared<ParamNumError>("1"));
@@ -2050,7 +2050,7 @@ napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-        LOG_DEBUG("end.");
+        LOG_DEBUG("End.");
     };
     context->SetAction(env, info, input, exec, output);
 
