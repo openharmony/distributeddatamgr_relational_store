@@ -33,7 +33,7 @@ public:
     using Values = std::vector<ValueObject>;
     using Conn = std::shared_ptr<Connection>;
     using Time = std::chrono::steady_clock::time_point;
-    StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, bool preCount, bool safe = false);
+    StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, bool safe = false);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;

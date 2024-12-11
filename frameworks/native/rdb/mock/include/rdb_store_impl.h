@@ -42,7 +42,7 @@ public:
         Resolution resolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
