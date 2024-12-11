@@ -14,6 +14,12 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
+deps = []
+
+if (relational_store_rdb_support_icu) {
+  deps += [ "relational_store_icu" ]
+}
+
 ohos_shared_library("relational_store_icu") {
   branch_protector_ret = "pac_ret"
   sanitize = {
