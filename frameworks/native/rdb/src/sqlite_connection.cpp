@@ -26,9 +26,7 @@
 #include "sqlite3.h"
 #include "value_object.h"
 
-#ifndef _WIN32
 #include <dlfcn.h>
-#endif
 #include <unistd.h>
 
 #include "logger.h"
@@ -893,17 +891,17 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
 
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-#ifndef _WIN32
-    auto handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    static void *handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
     if (handle == nullptr) {
+        LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
         return E_ERROR;
     }
     auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
     if (func == nullptr) {
+         LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
         return E_ERROR;
     }
     func(dbHandle_, localeStr);
-#endif
     return E_OK;
 }
 

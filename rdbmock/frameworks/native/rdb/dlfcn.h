@@ -13,23 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ICU_COLLECT_H
-#define OHOS_ICU_COLLECT_H
-#include <string>
+#ifndef RELATIONAL_STORE_DLFCN_H
+#define RELATIONAL_STORE_DLFCN_H
 
-#include "sqlite3sym.h"
+namespace OHOS {
+namespace NativeRdb {
+void *dlopen(const char *pathname, int mode);
+void *dlsym(void *__restrict, const char *__restrict);
+} // namespace NativeRdb
+} // namespace OHOS
 
-namespace OHOS::NativeRdb {
-
-class ICUCollect {
-public:
-    static int32_t Local(sqlite3 *dbHandle, const std::string &str);
-
-private:
-    static int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2);
-    static void LocalizedCollatorDestroy(void *collator);
-};
-
-} // namespace OHOS::NativeRdb
-
-#endif // OHOS_ICU_COLLECT_H
+#endif //RELATIONAL_STORE_DLFCN_H

@@ -26,18 +26,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-API_EXPORT int32_t ConfigICULocal(sqlite3 *, const std::string &str);
+API_EXPORT int32_t ConfigICULocal(sqlite3 *, const std::string &str) asm("ConfigICULocal");
 int32_t ConfigICULocal(sqlite3 *handle, const std::string &str)
 {
-    return OHOS::Rdb::ICUCollect::Local(handle, str);
+    return OHOS::NativeRdb::ICUCollect::Local(handle, str);
 }
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-namespace OHOS {
-namespace Rdb {
-using namespace OHOS::NativeRdb;
+namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
 
 int ICUCollect::Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
 {
@@ -90,5 +89,5 @@ int32_t ICUCollect::Local(sqlite3 *dbHandle, const std::string &str)
     return E_OK;
 }
 
-} // namespace Rdb
-} // namespace OHOS
+
+} // namespace OHOS::NativeRdb
