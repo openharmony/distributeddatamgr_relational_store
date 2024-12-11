@@ -251,7 +251,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &self, nullptr));
     auto *proxy = new (std::nothrow) TransactionProxy();
     if (proxy == nullptr) {
-        LOG_ERROR("no memory, new TransactionProxy failed!");
+        LOG_ERROR("No memory, new TransactionProxy failed!");
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
@@ -260,7 +260,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data), uintptr_t(hint));
+            LOG_ERROR("Memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data), uintptr_t(hint));
             return;
         }
         TransactionProxy *proxy = reinterpret_cast<TransactionProxy *>(data);

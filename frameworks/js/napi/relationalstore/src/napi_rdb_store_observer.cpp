@@ -117,13 +117,13 @@ bool NapiRdbStoreObserver::operator==(napi_value value)
     napi_value callback = nullptr;
     napi_status status = napi_get_reference_value(uvQueue_->GetEnv(), callback_, &callback);
     if (status != napi_ok) {
-        LOG_ERROR("call napi_get_reference_value failed status[%{public}d].", status);
+        LOG_ERROR("Call napi_get_reference_value failed status[%{public}d].", status);
     }
 
     bool isEquals = false;
     status = napi_strict_equals(uvQueue_->GetEnv(), value, callback, &isEquals);
     if (status != napi_ok) {
-        LOG_ERROR("call napi_strict_equals failed status[%{public}d].", status);
+        LOG_ERROR("Call napi_strict_equals failed status[%{public}d].", status);
     }
     return isEquals;
 }

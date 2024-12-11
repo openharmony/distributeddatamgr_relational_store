@@ -84,7 +84,7 @@ int SharedBlock::Create(const std::string &name, size_t size, SharedBlock *&outS
 
     sptr<Ashmem> ashmem = Ashmem::CreateAshmem(ashmemName.c_str(), size);
     if (ashmem == nullptr) {
-        LOG_ERROR("failed to create ashmem errno %{public}d", errno);
+        LOG_ERROR("Failed to create ashmem errno %{public}d", errno);
         return SHARED_BLOCK_ASHMEM_ERROR;
     }
 
@@ -235,7 +235,7 @@ uint32_t *SharedBlock::AllocRowOffset()
 {
     uint32_t groupPos = mHeader->rowNums / ROW_NUM_IN_A_GROUP;
     if (UNLIKELY(groupPos >= GROUP_NUM)) {
-        LOG_ERROR("rows is full. row number %{public}u, groupPos %{public}u", mHeader->rowNums, groupPos);
+        LOG_ERROR("Rows is full. row number %{public}u, groupPos %{public}u", mHeader->rowNums, groupPos);
         return nullptr;
     }
     if (mHeader->groupOffset[groupPos] == 0) {
