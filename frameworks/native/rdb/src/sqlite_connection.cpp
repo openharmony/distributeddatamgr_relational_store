@@ -898,7 +898,7 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
     }
     auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
     if (func == nullptr) {
-         LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
+        LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
         return E_ERROR;
     }
     func(dbHandle_, localeStr);
