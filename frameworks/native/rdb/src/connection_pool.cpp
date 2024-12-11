@@ -92,7 +92,7 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     }
     pool = Create(storeConfig, errCode);
     if (errCode != E_OK) {
-        LOG_WARN("Failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d, errno",
+        LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d errno %{public}d",
             static_cast<uint32_t>(rebuiltType), SqliteUtils::Anonymous(storeConfig.GetName()).c_str(),
             storeConfig.IsEncrypt(), errCode, errno);
     } else {
