@@ -109,6 +109,7 @@ std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
     oss << " mode:0" << std::oct << (debugInfo.mode_ & permission) << " size:" << std::dec << debugInfo.size_
+        << " uid:" << std::dec << debugInfo.uid_ << " gid:" << std::dec << debugInfo.gid_
         << " atim:" << GetTimeWithMilliseconds(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
         << " mtim:" << GetTimeWithMilliseconds(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
         << " ctim:" << GetTimeWithMilliseconds(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
