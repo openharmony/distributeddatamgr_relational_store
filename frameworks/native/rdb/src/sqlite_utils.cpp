@@ -46,7 +46,7 @@ constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t MIN_ANONYMIZE_LENGTH = 2;
-constexpr int32_t NON_ANONYMIZE_LENGTH = 3;
+constexpr int32_t PLAINTEXT_LENGTH = 3;
 constexpr int32_t MAX_ANONYMIZE_LENGTH = 4;
 
 constexpr const char *SQL_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT", "FROM",
@@ -296,7 +296,7 @@ std::string SqliteUtils::AnonyWord(const std::string &word)
     } else if (word.size() >= MIN_ANONYMIZE_LENGTH && word.size() <= MAX_ANONYMIZE_LENGTH) {
         anonyWord[0] = '*';
     } else {
-        int length = anonyWord.length() - NON_ANONYMIZE_LENGTH;
+        int length = anonyWord.length() - PLAINTEXT_LENGTH;
         for (int i = 0; i < length; i++) {
             anonyWord[i] = '*';
         }
