@@ -25,8 +25,12 @@
 
 namespace OHOS {
 namespace NativeRdb {
-void *dlopen(const char *pathname, int mode);
-void *dlsym(void *__restrict, const char *__restrict);
+void *dlopen(const char *pathname, int mode){
+    return nullptr;
+};
+void *dlsym(void *__restrict, const char *__restrict){
+    return nullptr; 
+};
 } // namespace NativeRdb
 } // namespace OHOS
 
