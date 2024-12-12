@@ -641,6 +641,16 @@ RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const
     return cryptoParam_;
 }
 
+int RdbStoreConfig::GetNcandidates() const
+{
+    return ncandidates_;
+}
+
+void RdbStoreConfig::SetNcandidates(int ncandidates)
+{
+    ncandidates_ = ncandidates;
+}
+
 RdbStoreConfig::CryptoParam::CryptoParam() = default;
 
 RdbStoreConfig::CryptoParam::~CryptoParam()
