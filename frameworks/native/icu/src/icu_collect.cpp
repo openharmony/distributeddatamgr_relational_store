@@ -23,17 +23,11 @@
 #include "rdb_visibility.h"
 #include "sqlite3.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 API_EXPORT int32_t ConfigICULocal(sqlite3 *, const std::string &str) asm("ConfigICULocal");
 int32_t ConfigICULocal(sqlite3 *handle, const std::string &str)
 {
     return OHOS::NativeRdb::ICUCollect::Local(handle, str);
 }
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
