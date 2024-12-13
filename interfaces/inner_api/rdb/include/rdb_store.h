@@ -356,20 +356,16 @@ public:
      *
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the selection arguments.
-     * @param preCount IIndicates whether to calculate the count during query.
      */
-    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args = {},
-        bool preCount = true) = 0;
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args = {}) = 0;
 
     /**
      * @brief Queries data in the database based on specified conditions.
      *
      * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
      * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
-     * @param preCount IIndicates whether to calculate the count during query.
      */
-    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
-        bool preCount = true);
+    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {});
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
