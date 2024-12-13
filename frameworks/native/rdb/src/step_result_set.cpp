@@ -31,8 +31,8 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
-StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args,
-    bool preCount, bool safe) : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
+StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, bool safe)
+    : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
 {
     if (conn_ == nullptr) {
         isClosed_ = true;
@@ -50,11 +50,7 @@ StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, cons
     if (statement == nullptr) {
         return;
     }
-    if (preCount) {
-        std::tie(lastErr_, rowCount_) = statement->Count();
-    } else {
-        isSupportCountRow_ = false;
-    }
+    std::tie(lastErr_, rowCount_) = statement->Count();
     if (lastErr_ == E_NOT_SUPPORT && rowCount_ == Statement::INVALID_COUNT) {
         isSupportCountRow_ = false;
         lastErr_ = E_OK;
