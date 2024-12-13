@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ICU_COLLECT_H
-#define OHOS_ICU_COLLECT_H
+#ifndef OHOS_NATIVE_RDB_ICU_COLLECT_H
+#define OHOS_NATIVE_RDB_ICU_COLLECT_H
 #include <string>
 
 #include "sqlite3sym.h"
@@ -32,4 +32,4 @@ private:
 
 } // namespace OHOS::NativeRdb
 
-#endif // OHOS_ICU_COLLECT_H
+#endif // OHOS_NATIVE_RDB_ICU_COLLECT_H
