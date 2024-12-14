@@ -254,7 +254,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_006, TestSize.Level1)
     std::string dbPath = "/data/test/execute_test1.db";
     std::string configStr =
     "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
-    "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
+    "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"ignoreMetaDataCorruption\":1 }";
 
     GRD_DB *db2 = nullptr;
     GRD_DB *db4 = nullptr;
