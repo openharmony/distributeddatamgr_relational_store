@@ -12,24 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef MOCK_DLFCN_H
-#define MOCK_DLFCN_H
-
+#include "dlfcn.h"
+#include <iostream>
+#include <string>
 #include <windows.h>
-
-#define RTLD_LAZY 1
-#define RTLD_NOW 2
-#define RTLD_NOLOAD 4
-#define RTLD_NODELETE 4096
-#define RTLD_GLOBAL 256
-#define RTLD_LOCAL 0
 
 namespace OHOS {
 namespace NativeRdb {
-void *dlopen(const char *pathName, int mode);
-void *dlsym(void *handle, const char *funcName);
+constexpr int32_t LIB_SIZE = 3;
+constexpr int32_t LIBSO_SIZE = 8;
+void *dlopen(const char *pathName, int mode)
+{
+    std::string fileName(pathName);
+    std::string dllName = fileName.substr(LIB_SIZE, fileName.length - LIBSO_SIZE) + ".dll";
+    return (void *)LoadLibrary(TEXT(dllName));
+};
+void *dlsym(void *handle, const char *funcName)
+{
+    return (void *)GetProcAddress(handle, funcName);
+};
 } // namespace NativeRdb
 } // namespace OHOS
-
-#endif //MOCK_DLFCN_H
