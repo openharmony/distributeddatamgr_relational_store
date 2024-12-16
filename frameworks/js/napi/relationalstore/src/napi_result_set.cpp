@@ -333,6 +333,9 @@ napi_value ResultSetProxy::GoToRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoToRow(position);
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -344,6 +347,9 @@ napi_value ResultSetProxy::GoTo(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoTo(offset);
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -354,6 +360,9 @@ napi_value ResultSetProxy::GoToFirstRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoToFirstRow();
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -364,6 +373,9 @@ napi_value ResultSetProxy::GoToLastRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoToLastRow();
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -374,6 +386,9 @@ napi_value ResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoToNextRow();
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -384,6 +399,9 @@ napi_value ResultSetProxy::GoToPreviousRow(napi_env env, napi_callback_info info
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int errCode = resultSetProxy->GetInstance()->GoToPreviousRow();
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_ROW_OUT_RANGE || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -518,7 +536,9 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
     CHECK_RETURN_NULL(resultSetProxy && resultSetProxy->GetInstance());
 
     int32_t result = -1;
-    resultSetProxy->GetInstance()->GetColumnIndex(input, result);
+    int errCode = resultSetProxy->GetInstance()->GetColumnIndex(input, result);
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || errCode == E_OK, std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -534,7 +554,8 @@ napi_value ResultSetProxy::GetColumnName(napi_env env, napi_callback_info info)
     if (errCode != E_OK) {
         LOG_ERROR("IsAtLastRow failed code:%{public}d", errCode);
     }
-
+    // If the API version is less than 13, directly return.
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || errCode == E_OK, std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 
