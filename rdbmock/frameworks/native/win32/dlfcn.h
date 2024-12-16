@@ -16,8 +16,6 @@
 #ifndef MOCK_DLFCN_H
 #define MOCK_DLFCN_H
 
-#include <windows.h>
-
 #define RTLD_LAZY 1
 #define RTLD_NOW 2
 #define RTLD_NOLOAD 4
@@ -25,11 +23,7 @@
 #define RTLD_GLOBAL 256
 #define RTLD_LOCAL 0
 
-namespace OHOS {
-namespace NativeRdb {
 void *dlopen(const char *pathName, int mode);
 void *dlsym(void *handle, const char *funcName);
-} // namespace NativeRdb
-} // namespace OHOS
 
 #endif //MOCK_DLFCN_H
