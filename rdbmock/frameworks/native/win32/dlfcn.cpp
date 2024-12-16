@@ -13,35 +13,23 @@
  * limitations under the License.
  */
 
+#include <windows.h>
+
 #include <iostream>
 #include <string>
-
-#ifdef WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
 
 constexpr int32_t LIB_SIZE = 3;
 constexpr int32_t LIBSO_SIZE = 8;
 void *dlopen(const char *pathName, int mode)
 {
-#ifdef WIN32
     std::string fileName(pathName);
     if (fileName.length() > LIBSO_SIZE) {
         std::string dllName = fileName.substr(LIB_SIZE, fileName.length() - LIBSO_SIZE) + ".dll";
         return reinterpret_cast<void *>(LoadLibrary(dllName));
     }
-#else
-    return dlopen(pathName, mode);
-#endif
 };
 
 void *dlsym(void *handle, const char *funcName)
 {
-#ifdef WIN32
     return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
-#else
-    return dlsym(handle, funcName);
-#endif
 };
