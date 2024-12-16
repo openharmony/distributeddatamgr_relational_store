@@ -157,6 +157,167 @@ typedef struct {
 } OH_Rdb_Store;
 
 /**
+ * @brief Define OH_Rdb_ConfigV2 type.
+ *
+ * @since 14
+ */
+typedef struct OH_Rdb_ConfigV2 OH_Rdb_ConfigV2;
+
+/**
+ * @brief Define Rdb_DBType type.
+ *
+ * @since 14
+ */
+typedef enum Rdb_DBType {
+    /**
+     * @brief Means using SQLITE as the db kernal
+     */
+    RDB_SQLITE = 1,
+    /**
+     * @brief Means using CARLEY_DB as the db kernal
+     */
+    RDB_CAYLEY = 2,
+    /**
+     * @brief Means largest value for Rdb_DBType
+     */
+    DBTYPE_BUTT = 64,
+} Rdb_DBType;
+
+/**
+ * @brief Create OH_Rdb_ConfigV2 which is used to open store
+ *
+ * @return Returns the newly created OH_Rdb_ConfigV2 object. If NULL is returned, the creation fails.
+ * The possible cause is that the address space of the application is full, As a result, the space
+ * cannot be allocated.
+ * @see OH_Rdb_ConfigV2
+ * @since 14
+ */
+OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig();
+
+/**
+ * @brief Destroy OH_Rdb_ConfigV2 which is created by OH_Rdb_CreateConfig
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config);
+
+/**
+ * @brief Set property databaseDir into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param dataBaseDir Indicates the directory of the database.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *databaseDir);
+
+/**
+ * @brief Set property storeName into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param storeName Indicates the name of the database.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName);
+
+/**
+ * @brief Set property bundleName into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param bundleName Indicates the bundle name of the application
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName);
+
+/**
+ * @brief Set property moduleName into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param moduleName Indicates the module name of the application.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetModuleName(OH_Rdb_ConfigV2 *config, const char *moduleName);
+
+/**
+ * @brief Set property isEncrypted into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param isEncrypted Indicates whether the database is encrypted.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetEncrypted(OH_Rdb_ConfigV2 *config, bool isEncrypted);
+
+/**
+ * @brief Set property securityLevel into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param securityLevel Indicates the security level {@link OH_Rdb_SecurityLevel} of the database.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetSecurityLevel(OH_Rdb_ConfigV2 *config, int securityLevel);
+
+/**
+ * @brief Set property area into config
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store
+ * @param area Represents the security area of the database.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 14
+ */
+int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
+
+/**
+ * @brief Set property dbType into config
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * @param dbType Indicates the dbType {@link Rdb_DBType} of the database
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support db types.
+ * @since 14
+ */
+int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType);
+
+/**
+ * @brief Get support db type list
+ * @param typeCount The output parameter, which is used to recieve the length of the support db type array.
+ * @return Return Rdb_DBType array contains supported db type, array length is number of support type
+ * @since 14
+ */
+const int *OH_Rdb_GetSupportedDbType(int *typeCount);
+
+/**
  * @brief Creates an {@link OH_VObject} instance.
  *
  * @return If the creation is successful, a pointer to the instance of the @link OH_VObject} structure is returned,
@@ -206,6 +367,24 @@ OH_Predicates *OH_Rdb_CreatePredicates(const char *table);
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode);
 
 /**
+ * @brief Obtains an RDB store with OH_Rdb_ConfigV2.
+ *
+ * You can set parameters of the RDB store as required. In general,
+ * this method is recommended to obtain a rdb store.
+ *
+ * @param config Represents a pointer to an {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param errCode This parameter is the output parameter,
+ * and the execution status of a function is written to this variable.
+ * @return If the creation is successful, a pointer to the instance of the @link OH_Rdb_Store} structure is returned.
+ *         If the Config is empty, config.size does not match, or errCode is empty.
+ * Get database path failed.Get RDB Store fail. Nullptr is returned.
+ * @see OH_Rdb_ConfigV2, OH_Rdb_Store.
+ * @since 14
+ */
+OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode);
+
+/**
  * @brief Close the {@link OH_Rdb_Store} object and reclaim the memory occupied by the object.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
@@ -231,6 +410,20 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store);
  * @since 10
  */
 int OH_Rdb_DeleteStore(const OH_Rdb_Config *config);
+
+/**
+ * @brief Deletes the database with a specified path.
+ *
+ * @param config Represents a pointer to an {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * while failure returns a specific error code. Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_ErrCode.
+ * @since 14
+ */
+int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config);
 
 /**
  * @brief Inserts a row of data into the target table.
@@ -307,6 +500,21 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
 int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
 
 /**
+ * @brief Write operations are performed using the specified transaction represented by the transaction ID
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param trxId The transaction ID of the specified transaction, must be greater than 0
+ * @param sql Indicates the SQL statement to execute.
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ * @see OH_Rdb_Store.
+ * @since 14
+ */
+int OH_Rdb_ExecuteByTrxId(OH_Rdb_Store *store, int64_t trxId, const char *sql);
+
+/**
  * @brief Queries data in the database based on an SQL statement.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
@@ -353,6 +561,48 @@ int OH_Rdb_RollBack(OH_Rdb_Store *store);
  * @since 10
  */
 int OH_Rdb_Commit(OH_Rdb_Store *store);
+
+/**
+ * @brief Begin a transaction and the transaction ID corresponding to the transaction.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param trxId The output parameter, which is used to receive the transaction ID corresponding to the transaction
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ * @see OH_Rdb_Store.
+ * @since 14
+ */
+int OH_Rdb_BeginTransWithTrxId(OH_Rdb_Store *store, int64_t *trxId);
+
+/**
+ * @brief Roll back a transaction that is represented by a specified transaction ID
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param trxId The transaction ID of the specified transaction, must be greater than 0
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ * @see OH_Rdb_Store.
+ * @since 14
+ */
+int OH_Rdb_RollBackByTrxId(OH_Rdb_Store *store, int64_t trxId);
+
+/**
+ * @brief Commit a transaction that is represented by a specified transaction ID
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param trxId The transaction ID of the specified transaction, must be greater than 0
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ * @see OH_Rdb_Store.
+ * @since 14
+ */
+int OH_Rdb_CommitByTrxId(OH_Rdb_Store *store, int64_t trxId);
 
 /**
  * @brief Backs up a database on specified path.

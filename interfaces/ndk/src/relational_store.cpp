@@ -15,6 +15,8 @@
 #define LOG_TAG "RelationalStore"
 #include "relational_store.h"
 
+#include "convertor_error_code.h"
+#include "grd_api_manager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
 #include "raw_data_parser.h"
@@ -22,6 +24,7 @@
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
 #include "rdb_sql_utils.h"
+#include "rdb_store_config.h"
 #include "relational_cursor.h"
 #include "relational_predicates.h"
 #include "relational_predicates_objects.h"
@@ -31,13 +34,157 @@
 #include "relational_values_bucket.h"
 #include "securec.h"
 #include "sqlite_global_config.h"
-#include "convertor_error_code.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
 constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
+constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
+
+static int g_supportDbTypes[] = {RDB_SQLITE, RDB_CAYLEY};
+
+struct OH_Rdb_ConfigV2 {
+    int magicNum = RDB_CONFIG_V2_MAGIC_CODE;
+    std::string dataBaseDir = "";
+    std::string storeName = "";
+    std::string bundleName = "";
+    std::string moduleName = "";
+    bool isEncrypt = false;
+    int securityLevel = 0;
+    int area = 0;
+    int dbType = RDB_SQLITE;
+};
+
+OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
+{
+    return new (std::nothrow) OH_Rdb_ConfigV2();
+}
+
+int OH_Rdb_DestroyConfig(OH_Rdb_ConfigV2 *config)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when destroy.",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    delete config;
+    config = nullptr;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetDatabaseDir(OH_Rdb_ConfigV2 *config, const char *dataBaseDir)
+{
+    if (config == nullptr || dataBaseDir == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or dataBaseDir %{public}d magic num not valid %{public}x "
+            "when Set DataBaseDir.", (config == nullptr), (dataBaseDir == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->dataBaseDir = std::string(dataBaseDir);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetStoreName(OH_Rdb_ConfigV2 *config, const char *storeName)
+{
+    if (config == nullptr || storeName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or storeName %{public}d or magic num not ok"
+            "%{public}x When set storeName.", (config == nullptr), (storeName == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->storeName = std::string(storeName);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetBundleName(OH_Rdb_ConfigV2 *config, const char *bundleName)
+{
+    if (config == nullptr || bundleName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or bundleName %{public}d magic num no ok %{public}x when set bundleName.",
+            (config == nullptr), (bundleName == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->bundleName = std::string(bundleName);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetModuleName(OH_Rdb_ConfigV2 *config, const char *moduleName)
+{
+    if (config == nullptr || moduleName == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or moduleName %{public}d magic num no ok %{public}x when set moduleName.",
+            (config == nullptr), (moduleName == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->moduleName = std::string(moduleName);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetEncrypted(OH_Rdb_ConfigV2 *config, bool isEncrypted)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set encrypt.", (config == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->isEncrypt = isEncrypted;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetSecurityLevel(OH_Rdb_ConfigV2 *config, int securityLevel)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set security level.",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (securityLevel < S1 || securityLevel > S4) {
+        LOG_ERROR("securityLevel value is out of range %{public}d", securityLevel);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->securityLevel = securityLevel;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set area.", (config == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (area < RDB_SECURITY_AREA_EL1 || area > RDB_SECURITY_AREA_EL5) {
+        LOG_ERROR("area value is out of range %{public}d", area);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->area = area;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
+        (dbType < RDB_SQLITE || dbType > RDB_CAYLEY)) {
+        LOG_ERROR("config is null %{public}d or magicNum not valid %{public}d or dbType is out of range %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum), dbType);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (dbType == RDB_CAYLEY && !(OHOS::NativeRdb::IsUsingArkData())) {
+        return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
+    }
+    config->dbType = dbType;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+const int *OH_Rdb_GetSupportedDbType(int *numType)
+{
+    if (numType == nullptr) {
+        return nullptr;
+    }
+    // if use arkData, then numType will be 2 {RDB_SQLITE and RDB_CAYLEY}, otherwise only 1 {RDB_SQLITE}
+    *numType = OHOS::NativeRdb::IsUsingArkData() ? 2 : 1;
+    return g_supportDbTypes;
+}
+
 OH_VObject *OH_Rdb_CreateValueObject()
 {
     return new (std::nothrow) RelationalPredicatesObjects();
@@ -63,10 +210,9 @@ OHOS::RdbNdk::RelationalStore::RelationalStore(std::shared_ptr<OHOS::NativeRdb::
 
 int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback)
 {
-    std::lock_guard<decltype(mutex_)> lock(mutex_) ;
-    bool result = std::any_of(callbacks_.begin(), callbacks_.end(), [callback](const auto &observer) {
-        return *observer == callback;
-    });
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    bool result = std::any_of(
+        callbacks_.begin(), callbacks_.end(), [callback](const auto &observer) { return *observer == callback; });
     if (result) {
         LOG_INFO("duplicate subscribe.");
         return OH_Rdb_ErrCode::RDB_OK;
@@ -83,7 +229,7 @@ int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callb
 
 int RelationalStore::UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback)
 {
-    std::lock_guard<decltype(mutex_)> lock(mutex_) ;
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
     for (auto it = callbacks_.begin(); it != callbacks_.end();) {
         if (callback != nullptr && !(**it == callback)) {
             ++it;
@@ -164,6 +310,36 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
     return static_cast<RelationalStore *>(store);
 }
 
+static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *config, int *errCode)
+{
+    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE ||
+        (OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
+        OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
+        (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
+        (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY)) {
+        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
+            "dbType %{public}d ret %{public}d", config->magicNum, config->securityLevel, config->area, config->dbType,
+            *errCode);
+        return OHOS::NativeRdb::RdbStoreConfig("");
+    }
+    std::string realPath =
+        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
+    if (*errCode != 0) {
+        *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
+        LOG_ERROR("Get database path failed from new config, ret %{public}d ", *errCode);
+        return OHOS::NativeRdb::RdbStoreConfig("");
+    }
+    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
+    rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
+    rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
+    rdbStoreConfig.SetArea(config->area - 1);
+    rdbStoreConfig.SetIsVector(config->dbType == RDB_CAYLEY);
+    rdbStoreConfig.SetBundleName(config->bundleName);
+    rdbStoreConfig.SetName(config->storeName);
+    return rdbStoreConfig;
+}
+
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
     if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
@@ -184,7 +360,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
     if (config->selfSize > RDB_CONFIG_SIZE_V0) {
-        rdbStoreConfig.SetArea(config->area);
+        rdbStoreConfig.SetArea(config->area - 1);
     }
     if (config->bundleName != nullptr) {
         rdbStoreConfig.SetBundleName(config->bundleName);
@@ -197,6 +373,29 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
     *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
     if (store == nullptr) {
         LOG_ERROR("Get RDB Store fail %{public}s", realPath.c_str());
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalStore(store);
+}
+
+OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) || errCode == nullptr) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or"
+                  " errCode is NULL ? %{public}d ", (config == nullptr), (config == nullptr ? 0 : config->magicNum),
+                  (errCode == nullptr));
+        return nullptr;
+    }
+    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig = GetRdbStoreConfig(config, errCode);
+    if (*errCode != OH_Rdb_ErrCode::RDB_OK) {
+        return nullptr;
+    }
+    MainOpenCallback callback;
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> store =
+        OHOS::NativeRdb::RdbHelper::GetRdbStore(rdbStoreConfig, -1, callback, *errCode);
+    *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
+    if (store == nullptr) {
+        LOG_ERROR("Get RDB Store fail %{public}s", rdbStoreConfig.GetPath().c_str());
         return nullptr;
     }
     return new (std::nothrow) RelationalStore(store);
@@ -216,6 +415,22 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
 {
     if (config == nullptr || config->dataBaseDir == nullptr || config->storeName == nullptr) {
         LOG_ERROR("Parameters set error:path is NULL ? %{public}d", (config == nullptr));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    int errCode = OHOS::NativeRdb::E_OK;
+    std::string realPath =
+        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, errCode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        return ConvertorErrorCode::NativeToNdk(errCode);
+    }
+    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath));
+}
+
+int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is NULL ? %{public}d, config is invalid ? %{public}d", (config == nullptr),
+            (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int errCode = OHOS::NativeRdb::E_OK;
@@ -294,7 +509,9 @@ OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
         return nullptr;
     }
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
-        rdbStore->GetStore()->QuerySql(sql, std::vector<std::string>{});
+        rdbStore->GetStore()->GetDbType() == OHOS::NativeRdb::DB_VECTOR
+            ? rdbStore->GetStore()->QueryByStep(sql, std::vector<std::string>{})
+            : rdbStore->GetStore()->QuerySql(sql, std::vector<std::string>{});
     if (resultSet == nullptr) {
         return nullptr;
     }
@@ -309,6 +526,16 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql)
     }
     return ConvertorErrorCode::NativeToNdk(
         rdbStore->GetStore()->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>{}));
+}
+
+int OH_Rdb_ExecuteByTrxId(OH_Rdb_Store *store, int64_t trxId, const char *sql)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || sql == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return ConvertorErrorCode::NativeToNdk(
+        (rdbStore->GetStore()->Execute(sql, std::vector<OHOS::NativeRdb::ValueObject>{}, trxId)).first);
 }
 
 int OH_Rdb_BeginTransaction(OH_Rdb_Store *store)
@@ -336,6 +563,35 @@ int OH_Rdb_Commit(OH_Rdb_Store *store)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Commit());
+}
+
+int OH_Rdb_BeginTransWithTrxId(OH_Rdb_Store *store, int64_t *trxId)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || trxId == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::pair<int, int64_t> res = rdbStore->GetStore()->BeginTrans();
+    *trxId = res.second;
+    return ConvertorErrorCode::NativeToNdk(res.first);
+}
+
+int OH_Rdb_RollBackByTrxId(OH_Rdb_Store *store, int64_t trxId)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->RollBack(trxId));
+}
+
+int OH_Rdb_CommitByTrxId(OH_Rdb_Store *store, int64_t trxId)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->Commit(trxId));
 }
 
 int OH_Rdb_Backup(OH_Rdb_Store *store, const char *databasePath)
@@ -393,7 +649,7 @@ static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedCo
 }
 
 int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
-                                const Rdb_DistributedConfig *config)
+    const Rdb_DistributedConfig *config)
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD || (count > 0 && tables == nullptr)) {
@@ -412,8 +668,8 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
         }
         tableNames.emplace_back(tables[i]);
     }
-    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->SetDistributedTables(tableNames,
-        DistributedTableType::DISTRIBUTED_CLOUD, { cfg.isAutoSync }));
+    return ConvertorErrorCode::NativeToNdk(rdbStore->GetStore()->SetDistributedTables(
+        tableNames, DistributedTableType::DISTRIBUTED_CLOUD, { cfg.isAutoSync }));
 }
 
 OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, const char *columnName, OH_VObject *values)
@@ -610,8 +866,8 @@ Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t 
     return details->GetTableDetails(version);
 }
 
-int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count,
-                     const Rdb_ProgressObserver *observer)
+int OH_Rdb_CloudSync(
+    OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count, const Rdb_ProgressObserver *observer)
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || mode < RDB_SYNC_MODE_TIME_FIRST || mode > RDB_SYNC_MODE_CLOUD_FIRST ||
@@ -713,7 +969,7 @@ OH_Cursor *OH_Rdb_QueryLockedRow(
     return new OHOS::RdbNdk::RelationalCursor(std::move(resultSet));
 }
 
-NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback):callback_(callback)
+NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback) : callback_(callback)
 {
 }
 
@@ -732,7 +988,9 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
     return callback == callback_;
 }
 
-NDKStoreObserver::NDKStoreObserver(const Rdb_DataObserver *observer, int mode) : mode_(mode), observer_(observer) {}
+NDKStoreObserver::NDKStoreObserver(const Rdb_DataObserver *observer, int mode) : mode_(mode), observer_(observer)
+{
+}
 
 void NDKStoreObserver::OnChange(const std::vector<std::string> &devices)
 {
@@ -771,8 +1029,8 @@ int32_t NDKStoreObserver::GetKeyDataType(std::vector<RdbStoreObserver::PrimaryKe
     return OH_ColumnType::TYPE_NULL;
 }
 
-void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::PrimaryFields &fields,
-                                RdbStoreObserver::ChangeInfo &&changeInfo)
+void NDKStoreObserver::OnChange(
+    const Origin &origin, const RdbStoreObserver::PrimaryFields &fields, RdbStoreObserver::ChangeInfo &&changeInfo)
 {
     uint32_t count = changeInfo.size();
     if (count == 0) {
@@ -783,7 +1041,7 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
     if (mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_CLOUD_DETAILS ||
         mode_ == Rdb_SubscribeType::RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) {
         size_t size = count * (sizeof(Rdb_ChangeInfo *) + sizeof(Rdb_ChangeInfo)) +
-            GetKeyInfoSize(std::forward<RdbStoreObserver::ChangeInfo &&>(changeInfo));
+                      GetKeyInfoSize(std::forward<RdbStoreObserver::ChangeInfo &&>(changeInfo));
         std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(size);
         Rdb_ChangeInfo **infos = (Rdb_ChangeInfo **)(buffer.get());
         if (infos == nullptr) {
@@ -808,15 +1066,15 @@ void NDKStoreObserver::OnChange(const Origin &origin, const RdbStoreObserver::Pr
             infos[index]->deleted.type = GetKeyDataType(it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
             ConvertKeyInfoData(data, it->second[RdbStoreObserver::CHG_TYPE_INSERT]);
             infos[index]->inserted.data = data;
-            ConvertKeyInfoData(data+infos[index]->inserted.count, it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
-            infos[index]->updated.data = data+infos[index]->inserted.count;
-            ConvertKeyInfoData(data+infos[index]->inserted.count+infos[index]->updated.count,
+            ConvertKeyInfoData(data + infos[index]->inserted.count, it->second[RdbStoreObserver::CHG_TYPE_UPDATE]);
+            infos[index]->updated.data = data + infos[index]->inserted.count;
+            ConvertKeyInfoData(data + infos[index]->inserted.count + infos[index]->updated.count,
                 it->second[RdbStoreObserver::CHG_TYPE_DELETE]);
-            infos[index]->deleted.data = data+infos[index]->inserted.count+infos[index]->updated.count;
+            infos[index]->deleted.data = data + infos[index]->inserted.count + infos[index]->updated.count;
             index++;
         }
 
-        (*observer_->callback.detailsObserver)(observer_->context, const_cast<const Rdb_ChangeInfo**>(infos), count);
+        (*observer_->callback.detailsObserver)(observer_->context, const_cast<const Rdb_ChangeInfo **>(infos), count);
     }
 }
 
@@ -825,8 +1083,8 @@ void NDKStoreObserver::OnChange()
     RdbStoreObserver::OnChange();
 }
 
-void NDKStoreObserver::ConvertKeyInfoData(Rdb_KeyInfo::Rdb_KeyData *keyInfoData,
-    std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
+void NDKStoreObserver::ConvertKeyInfoData(
+    Rdb_KeyInfo::Rdb_KeyData *keyInfoData, std::vector<RdbStoreObserver::PrimaryKey> &primaryKey)
 {
     if (keyInfoData == nullptr || primaryKey.empty()) {
         LOG_WARN("no data, keyInfoData is nullptr:%{public}d", keyInfoData == nullptr);

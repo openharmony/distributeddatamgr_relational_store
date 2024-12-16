@@ -63,6 +63,18 @@ void GRD_DBApiInitEnhance(GRD_APIInfo &GRD_DBApiInfo)
 #endif
 }
 
+bool IsUsingArkData()
+{
+#ifndef _WIN32
+    if (g_library == nullptr) {
+        GetApiInfoInstance();
+    }
+    return g_library != nullptr;
+#else
+    return false;
+#endif
+}
+
 GRD_APIInfo GetApiInfoInstance()
 {
     GRD_APIInfo GRD_TempApiStruct;
