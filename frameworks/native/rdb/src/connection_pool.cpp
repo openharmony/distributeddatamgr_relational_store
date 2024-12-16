@@ -381,7 +381,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         CloseAllConnections();
         auto [retVal, conn] = Connection::Create(config_, false);
         if (retVal != E_OK) {
-            LOG_ERROR("create connection fail, errCode:%{public}d", retVal);
+            LOG_ERROR("Create connection fail, errCode:%{public}d", retVal);
             return retVal;
         }
 
@@ -394,7 +394,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         conn = nullptr;
         auto initRes = Init();
         if (initRes.first != E_OK) {
-            LOG_ERROR("init fail, errCode:%{public}d", initRes.first);
+            LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
             return initRes.first;
         }
         return retVal;
@@ -430,7 +430,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         CloseAllConnections();
         Connection::Delete(config_);
         std::tie(errCode, pool) = Init();
-        LOG_WARN("restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
+        LOG_WARN("Restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
             SqliteUtils::Anonymous(backupPath).c_str());
     }
     return ret == E_OK ? errCode : ret;
@@ -573,7 +573,7 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
     };
     if (cond_.wait_for(lock, interval, waiter)) {
         if (nodes_.empty()) {
-            LOG_ERROR("nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
+            LOG_ERROR("Nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
                 count_, max_, total_, left_, right_);
             count_ = 0;
             return nullptr;

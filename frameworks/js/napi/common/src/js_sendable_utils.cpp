@@ -175,7 +175,7 @@ napi_value JSUtils::ToSendableTypedArray(napi_env env, napi_value jsValue)
     ASSERT(status == napi_ok, "napi_get_typedarray_info failed", nullptr);
 
     if (type != napi_uint8_array && type != napi_float32_array) {
-        LOG_ERROR("type is invalid %{public}d", type);
+        LOG_ERROR("Type is invalid %{public}d", type);
         return nullptr;
     }
     napi_value sendableTypedArryay = nullptr;

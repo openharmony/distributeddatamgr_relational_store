@@ -141,7 +141,7 @@ napi_value Share(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->Share(ctxt->sharingRes, ctxt->participants, ctxt->results);
-        LOG_DEBUG("share result %{public}d", result);
+        LOG_DEBUG("Share result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -191,7 +191,7 @@ napi_value Unshare(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->Unshare(ctxt->sharingRes, ctxt->participants, ctxt->results);
-        LOG_DEBUG("unshare result %{public}d", result);
+        LOG_DEBUG("Unshare result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -235,7 +235,7 @@ napi_value Exit(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->Exit(ctxt->sharingRes, ctxt->result);
-        LOG_DEBUG("exit sharing result %{public}d", result);
+        LOG_DEBUG("Exit sharing result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -287,7 +287,7 @@ napi_value ChangePrivilege(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->ChangePrivilege(ctxt->sharingRes, ctxt->participants, ctxt->results);
-        LOG_DEBUG("change privilege result %{public}d", result);
+        LOG_DEBUG("Change privilege result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -331,7 +331,7 @@ napi_value Query(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->Query(ctxt->sharingRes, ctxt->results);
-        LOG_DEBUG("query participants result %{public}d", result);
+        LOG_DEBUG("Query participants result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -376,7 +376,7 @@ napi_value QueryByInvitation(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->QueryByInvitation(ctxt->invitationCode, ctxt->results);
-        LOG_DEBUG("query participants by invitation result %{public}d", result);
+        LOG_DEBUG("Query participants by invitation result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -428,7 +428,7 @@ napi_value ConfirmInvitation(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->ConfirmInvitation(ctxt->invitationCode, ctxt->confirmation, ctxt->result);
-        LOG_DEBUG("confirm invitation result %{public}d", result);
+        LOG_DEBUG("Confirm invitation result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
@@ -480,7 +480,7 @@ napi_value ChangeConfirmation(napi_env env, napi_callback_info info)
             return;
         }
         int32_t result = proxy->ChangeConfirmation(ctxt->sharingRes, ctxt->confirmation, ctxt->results);
-        LOG_DEBUG("change confirmation result %{public}d", result);
+        LOG_DEBUG("Change confirmation result %{public}d", result);
         ctxt->status =
             (GenerateNapiError(result, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };

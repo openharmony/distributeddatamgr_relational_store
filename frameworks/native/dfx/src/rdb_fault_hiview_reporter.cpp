@@ -52,7 +52,7 @@ void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
     if (IsReportCorruptedFault(eventInfo.path)) {
         RdbCorruptedEvent eventInfoAppend = eventInfo;
         eventInfoAppend.appendix += Format(eventInfoAppend.debugInfos, "");
-        LOG_WARN("corrupted %{public}s errCode:0x%{public}x [%{public}s]",
+        LOG_WARN("Corrupted %{public}s errCode:0x%{public}x [%{public}s]",
             SqliteUtils::Anonymous(eventInfoAppend.storeName).c_str(), eventInfoAppend.errorCode,
             eventInfoAppend.appendix.c_str());
         Report(eventInfoAppend);
@@ -67,7 +67,7 @@ void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, b
     }
     RdbCorruptedEvent eventInfoAppend = eventInfo;
     eventInfoAppend.appendix += Format(eventInfoAppend.debugInfos, "");
-    LOG_INFO("restored %{public}s errCode:0x%{public}x [%{public}s]",
+    LOG_INFO("Restored %{public}s errCode:0x%{public}x [%{public}s]",
         SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, eventInfoAppend.appendix.c_str());
     Report(eventInfoAppend);
     DeleteCorruptedFlag(eventInfo.path);
@@ -137,7 +137,7 @@ void RdbFaultHiViewReporter::CreateCorruptedFlag(const std::string &dbPath)
     std::string flagFilename = dbPath + DB_CORRUPTED_POSTFIX;
     int fd = creat(flagFilename.c_str(), S_IRWXU | S_IRWXG);
     if (fd == -1) {
-        LOG_WARN("creat corrupted flg fail, flgname=%{public}s, errno=%{public}d",
+        LOG_WARN("Creat corrupted flg fail, flgname=%{public}s, errno=%{public}d",
             SqliteUtils::Anonymous(flagFilename).c_str(), errno);
         return;
     }
@@ -152,7 +152,7 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     std::string flagFilename = dbPath + DB_CORRUPTED_POSTFIX;
     int result = remove(flagFilename.c_str());
     if (result != 0) {
-        LOG_WARN("remove corrupted flg fail, flgname=%{public}s, errno=%{public}d",
+        LOG_WARN("Remove corrupted flg fail, flgname=%{public}s, errno=%{public}d",
             SqliteUtils::Anonymous(flagFilename).c_str(), errno);
     }
 }
