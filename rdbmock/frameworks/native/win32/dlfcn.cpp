@@ -17,13 +17,9 @@
 #include <iostream>
 #include <string>
 
-constexpr int32_t LIB_SIZE = 3;
-constexpr int32_t LIBSO_SIZE = 8;
 void *Dlopen(const char *pathName, int mode)
 {
-    std::string fileName(pathName);
-    std::string dllName = fileName.substr(LIB_SIZE, fileName.length - LIBSO_SIZE) + ".dll";
-    return reinterpret_cast<void *>(LoadLibrary(TEXT(dllName)));
+    return reinterpret_cast<void *>(LoadLibrary(TEXT(pathName)));
 };
 void *Dlsym(void *handle, const char *funcName)
 {
