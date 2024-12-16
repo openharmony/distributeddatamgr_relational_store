@@ -50,14 +50,14 @@ public:
 };
 
 const std::string UpdateTestOpenCallback::CREATE_TABLE_TEST =
-    std::string("CREATE TABLE IF NOT EXISTS test (")
-    + std::string("id INTEGER PRIMARY KEY AUTOINCREMENT, ")
-    + std::string("name TEXT UNIQUE, ")
-    + std::string("age INTEGER, ")
-    + std::string("salary REAL, ")
-    + std::string("blobType BLOB, ")
-    + std::string("assetType ASSET, ")
-    + std::string("assetsType ASSETS)");
+    std::string("CREATE TABLE IF NOT EXISTS test (") +
+    std::string("id INTEGER PRIMARY KEY AUTOINCREMENT, ") +
+    std::string("name TEXT UNIQUE, ") +
+    std::string("age INTEGER, ") +
+    std::string("salary REAL, ") +
+    std::string("blobType BLOB, ") +
+    std::string("assetType ASSET, ") +
+    std::string("assetsType ASSETS)");
 
 int UpdateTestOpenCallback::OnCreate(RdbStore &store)
 {
