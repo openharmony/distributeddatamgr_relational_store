@@ -23,7 +23,7 @@
 #define RTLD_GLOBAL 256
 #define RTLD_LOCAL 0
 
-void *dlopen(const char *pathName, int mode);
-void *dlsym(void *handle, const char *funcName);
+void *Dlopen(const char *pathName, int mode);
+void *Dlsym(void *handle, const char *funcName);
 
 #endif //MOCK_DLFCN_H
