@@ -228,6 +228,8 @@ if (is_ohos && !build_ohos_sdk) {
     part_name = "relational_store"
   }
 } else if (is_mingw) {
+  base_sources +=
+      [ "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp" ]
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
@@ -244,8 +246,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
       "//third_party/libuv/src/win",
     ]
-    sources +=
-        [ "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp" ]
 
     cflags = [ "-includemock.h" ]
     defines = [
