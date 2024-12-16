@@ -108,7 +108,6 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
     sources += [
@@ -152,6 +151,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
+      "sqlite:sqlite",
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -176,7 +176,6 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
@@ -220,6 +219,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
+      "sqlite:sqlite",
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -228,8 +228,6 @@ if (is_ohos && !build_ohos_sdk) {
     part_name = "relational_store"
   }
 } else if (is_mingw) {
-  base_sources +=
-      [ "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp" ]
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
@@ -283,6 +281,7 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]

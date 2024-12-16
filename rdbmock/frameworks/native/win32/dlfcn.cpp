@@ -17,11 +17,12 @@
 #include <iostream>
 #include <string>
 
-void *Dlopen(const char *pathName, int mode)
+void *dlopen(const char *pathName, int mode)
 {
     return reinterpret_cast<void *>(LoadLibrary(TEXT(pathName)));
 };
-void *Dlsym(void *handle, const char *funcName)
+
+void *dlsym(void *handle, const char *funcName)
 {
     return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
 };
