@@ -979,11 +979,11 @@ int SqliteConnection::TryCheckPoint(bool timeout)
         return E_ERROR;
     }
 
-    if (size <= GlobalExpr::DB_WAL_SIZE_LIMIT_MIN) {
+    if (size <= config_.GetStartCheckpointSize()) {
         return E_OK;
     }
 
-    if (!timeout && size < GlobalExpr::DB_WAL_WARNING_SIZE) {
+    if (!timeout && size < config_.GetCheckpointSize()) {
         return E_INNER_WARNING;
     }
 
@@ -1004,7 +1004,7 @@ int SqliteConnection::LimitWalSize()
 
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
     ssize_t fileSize = SqliteUtils::GetFileSize(walName);
-    if (fileSize < 0 || fileSize > GlobalExpr::DB_WAL_SIZE_LIMIT_MAX) {
+    if (fileSize < 0 || fileSize > config_.GetWalLimitSize()) {
         LOG_ERROR("The WAL file size exceeds the limit, %{public}s size is %{public}zd",
             SqliteUtils::Anonymous(walName).c_str(), fileSize);
         return E_WAL_SIZE_OVER_LIMIT;
