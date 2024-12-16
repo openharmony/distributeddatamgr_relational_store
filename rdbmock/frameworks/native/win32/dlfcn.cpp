@@ -13,23 +13,19 @@
  * limitations under the License.
  */
 #include "dlfcn.h"
+
 #include <iostream>
 #include <string>
-#include <windows.h>
 
-namespace OHOS {
-namespace NativeRdb {
 constexpr int32_t LIB_SIZE = 3;
 constexpr int32_t LIBSO_SIZE = 8;
 void *dlopen(const char *pathName, int mode)
 {
     std::string fileName(pathName);
     std::string dllName = fileName.substr(LIB_SIZE, fileName.length - LIBSO_SIZE) + ".dll";
-    return (void *)LoadLibrary(TEXT(dllName));
+    return reinterpret_cast<void *>(LoadLibrary(TEXT(dllName)));
 };
 void *dlsym(void *handle, const char *funcName)
 {
-    return (void *)GetProcAddress(handle, funcName);
+    return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
 };
-} // namespace NativeRdb
-} // namespace OHOS
