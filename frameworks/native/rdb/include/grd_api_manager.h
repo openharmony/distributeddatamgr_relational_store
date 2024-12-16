@@ -17,6 +17,7 @@
 #define RDB_GRD_API_MANAGER_H
 
 #include "grd_type_export.h"
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -85,6 +86,8 @@ struct GRD_APIInfo {
     DBGetConfig DBGetConfigApi = nullptr;
     DBSetConfig DBSetConfigApi = nullptr;
 };
+
+API_EXPORT bool IsUsingArkData();
 
 GRD_APIInfo GetApiInfoInstance();
 
