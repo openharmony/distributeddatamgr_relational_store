@@ -77,14 +77,13 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> result;
     auto &[rebuiltType, pool] = result;
 
-    errCode = Connection::Repair(storeConfig);
-    if (errCode == E_OK) {
+    int repairErrCode = Connection::Repair(storeConfig);
+    if (repairErrCode == E_OK) {
         rebuiltType = RebuiltType::REPAIRED;
     } else if (storeConfig.GetAllowRebuild()) {
         Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
-    } else if (storeConfig.IsEncrypt() && storeConfig.GetEncryptKey().empty()) {
-        errCode = E_INVALID_SECRET_KEY;
+    } else if (storeConfig.IsEncrypt() && errCode == E_INVALID_SECRET_KEY) {
         return result;
     } else {
         errCode = E_SQLITE_CORRUPT;
