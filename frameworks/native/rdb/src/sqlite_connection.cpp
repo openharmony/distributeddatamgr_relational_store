@@ -894,7 +894,7 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
     static void *handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
     if (handle == nullptr) {
         LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
-        return E_ERROR;
+        return E_NOT_SUPPORT;
     }
     auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
     if (func == nullptr) {

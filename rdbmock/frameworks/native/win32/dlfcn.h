@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_STORE_DLFCN_H
-#define RELATIONAL_STORE_DLFCN_H
+#ifndef MOCK_DLFCN_H
+#define MOCK_DLFCN_H
+
+#include <windows.h>
 
 #define RTLD_LAZY 1
 #define RTLD_NOW 2
@@ -27,13 +29,13 @@ namespace OHOS {
 namespace NativeRdb {
 void *dlopen(const char *pathname, int mode)
 {
-    return nullptr;
+    return (void *)LoadLibrary(TEXT("relational_store_icu.dll"));
 };
-void *dlsym(void *__restrict, const char *__restrict)
+void *dlsym(void *handle, const char *funcName)
 {
-    return nullptr;
+    return (void *)GetProcAddress(handle, funcName);
 };
 } // namespace NativeRdb
 } // namespace OHOS
 
-#endif //RELATIONAL_STORE_DLFCN_H
+#endif //MOCK_DLFCN_H
