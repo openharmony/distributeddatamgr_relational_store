@@ -41,7 +41,7 @@ void ContextBase::SetAction(
         napi_valuetype valueType = napi_undefined;
         status = napi_typeof(env, argv[argc - 1], &valueType);
         if (status == napi_ok && valueType == napi_function) {
-            LOG_DEBUG("asyncCall set callback");
+            LOG_DEBUG("AsyncCall set callback");
             if (argc == 1) {
                 error = std::make_shared<ParamNumError>("1");
             } else {

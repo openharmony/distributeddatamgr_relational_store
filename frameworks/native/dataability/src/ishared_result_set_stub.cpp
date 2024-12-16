@@ -32,11 +32,11 @@ sptr<ISharedResultSet> ISharedResultSetStub::CreateStub(
 {
     sptr<ISharedResultSet> stub = new (std::nothrow) ISharedResultSetStub(result);
     if (stub == nullptr) {
-        LOG_ERROR("stub is nullptr.");
+        LOG_ERROR("Stub is nullptr.");
         return nullptr;
     }
     if (result == nullptr) {
-        LOG_ERROR("result is nullptr.");
+        LOG_ERROR("Result is nullptr.");
         return nullptr;
     }
     parcel.WriteRemoteObject(stub->AsObject());

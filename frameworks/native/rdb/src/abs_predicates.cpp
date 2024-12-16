@@ -425,7 +425,7 @@ AbsPredicates *AbsPredicates::Offset(const int offset)
 AbsPredicates *AbsPredicates::GroupBy(const std::vector<std::string> &fields)
 {
     if (fields.empty()) {
-        LOG_WARN("groupBy() fails because fields can't be null.");
+        LOG_WARN("GroupBy() fails because fields can't be null.");
         return this;
     }
     for (auto &field : fields) {

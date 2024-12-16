@@ -57,7 +57,7 @@ int32_t CloudServiceProxy::EnableCloud(const std::string &id, const std::map<std
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_ENABLE_CLOUD, reply, id, switches);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), switches.size());
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), switches.size());
     }
     return static_cast<Status>(status);
 }
@@ -67,7 +67,7 @@ int32_t CloudServiceProxy::DisableCloud(const std::string &id)
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_DISABLE_CLOUD, reply, id);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s", status, id.c_str());
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s", status, id.c_str());
     }
     return static_cast<Status>(status);
 }
@@ -77,7 +77,7 @@ int32_t CloudServiceProxy::ChangeAppSwitch(const std::string &id, const std::str
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_APP_SWITCH, reply, id, bundleName, appSwitch);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d", status, id.c_str(),
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d", status, id.c_str(),
             bundleName.c_str(), appSwitch);
     }
     return static_cast<Status>(status);
@@ -88,7 +88,7 @@ int32_t CloudServiceProxy::Clean(const std::string &id, const std::map<std::stri
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CLEAN, reply, id, actions);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), actions.size());
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), actions.size());
     }
     return static_cast<Status>(status);
 }
@@ -98,7 +98,7 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &id, const std::st
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_NOTIFY_DATA_CHANGE, reply, id, bundleName);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s", status, id.c_str(), bundleName.c_str());
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s bundleName:%{public}s", status, id.c_str(), bundleName.c_str());
     }
     return static_cast<Status>(status);
 }
@@ -108,7 +108,7 @@ int32_t CloudServiceProxy::SetGlobalCloudStrategy(Strategy strategy, const std::
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_SET_GLOBAL_CLOUD_STRATEGY, reply, strategy, values);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
+        LOG_ERROR("Status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
             static_cast<uint32_t>(strategy), values.size());
     }
     return static_cast<Status>(status);
@@ -121,7 +121,7 @@ std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> CloudServiceProxy::Allo
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_ALLOC_RESOURCE_AND_SHARE, reply, storeId, predicates, columns, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x storeName:%{public}.6s", status, storeId.c_str());
+        LOG_ERROR("Status:0x%{public}x storeName:%{public}.6s", status, storeId.c_str());
     }
     std::vector<NativeRdb::ValuesBucket> valueBuckets;
     ITypesUtil::Unmarshal(reply, valueBuckets);
@@ -133,7 +133,7 @@ int32_t CloudServiceProxy::NotifyDataChange(const std::string &eventId, const st
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_NOTIFY_DATA_CHANGE_EXT, reply, eventId, extraData, userId);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x eventId:%{public}.6s extraData:%{public}.6s", status, eventId.c_str(),
+        LOG_ERROR("Status:0x%{public}x eventId:%{public}.6s extraData:%{public}.6s", status, eventId.c_str(),
             extraData.c_str());
     }
     return static_cast<Status>(status);
@@ -146,7 +146,7 @@ std::pair<int32_t, std::map<std::string, StatisticInfos>> CloudServiceProxy::Que
     int32_t status = IPC_SEND(TRANS_QUERY_STATISTICS, reply, id, bundleName, storeId);
     if (status != SUCCESS) {
         LOG_ERROR(
-            "status:0x%{public}x bundleName:%{public}.6s storeId:%{public}.6s", status, id.c_str(), storeId.c_str());
+            "Status:0x%{public}x bundleName:%{public}.6s storeId:%{public}.6s", status, id.c_str(), storeId.c_str());
     }
     std::map<std::string, StatisticInfos> infos;
     ITypesUtil::Unmarshal(reply, infos);
@@ -158,7 +158,7 @@ int32_t CloudServiceProxy::Share(const std::string &sharingRes, const Participan
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_SHARE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
             participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
@@ -170,7 +170,7 @@ int32_t CloudServiceProxy::Unshare(const std::string &sharingRes, const Particip
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_UNSHARE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
             participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
@@ -182,7 +182,7 @@ int32_t CloudServiceProxy::Exit(const std::string &sharingRes, std::pair<int32_t
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_EXIT, reply, sharingRes);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
     }
     ITypesUtil::Unmarshal(reply, result);
     return static_cast<Status>(status);
@@ -194,7 +194,7 @@ int32_t CloudServiceProxy::ChangePrivilege(
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_PRIVILEGE, reply, sharingRes, participants);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s participants:%{public}zu", status, sharingRes.c_str(),
             participants.size());
     }
     ITypesUtil::Unmarshal(reply, results);
@@ -206,7 +206,7 @@ int32_t CloudServiceProxy::Query(const std::string &sharingRes, QueryResults &re
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_QUERY, reply, sharingRes);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
     }
     ITypesUtil::Unmarshal(reply, results);
     return static_cast<Status>(status);
@@ -217,7 +217,7 @@ int32_t CloudServiceProxy::QueryByInvitation(const std::string &invitation, Quer
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_QUERY_BY_INVITATION, reply, invitation);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
+        LOG_ERROR("Status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
     }
     ITypesUtil::Unmarshal(reply, results);
     return static_cast<Status>(status);
@@ -229,7 +229,7 @@ int32_t CloudServiceProxy::ConfirmInvitation(
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CONFIRM_INVITATION, reply, invitation, confirmation);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
+        LOG_ERROR("Status:0x%{public}x invitation:%{public}.6s", status, invitation.c_str());
     }
     ITypesUtil::Unmarshal(reply, result);
     return static_cast<Status>(status);
@@ -241,7 +241,7 @@ int32_t CloudServiceProxy::ChangeConfirmation(
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_CHANGE_CONFIRMATION, reply, sharingRes, confirmation);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
+        LOG_ERROR("Status:0x%{public}x sharingRes:%{public}.6s", status, sharingRes.c_str());
     }
     ITypesUtil::Unmarshal(reply, result);
     return static_cast<Status>(status);
@@ -252,7 +252,7 @@ int32_t CloudServiceProxy::SetCloudStrategy(Strategy strategy, const std::vector
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_SET_CLOUD_STRATEGY, reply, strategy, values);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
+        LOG_ERROR("Status:0x%{public}x strategy:%{public}d values size:%{public}zu", status,
             static_cast<uint32_t>(strategy), values.size());
     }
     return static_cast<Status>(status);
@@ -264,7 +264,7 @@ std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
     MessageParcel reply;
     int32_t status = IPC_SEND(TRANS_QUERY_LAST_SYNC_INFO, reply, id, bundleName, storeId);
     if (status != SUCCESS) {
-        LOG_ERROR("status:0x%{public}x id:%{public}.6s bundleName:%{public}s storeId:%{public}.3s", status, id.c_str(),
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s bundleName:%{public}s storeId:%{public}.3s", status, id.c_str(),
             bundleName.c_str(), storeId.c_str());
     }
     QueryLastResults results;

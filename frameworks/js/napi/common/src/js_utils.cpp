@@ -244,7 +244,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
     }
     std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffSize + 1);
     if (!buffer) {
-        LOG_ERROR("buffer data is nullptr.");
+        LOG_ERROR("Buffer data is nullptr.");
         return napi_invalid_arg;
     }
     status = napi_get_value_string_utf8(env, jsValue, buffer.get(), buffSize + 1, &buffSize);
@@ -290,7 +290,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::monostate 
         value = std::monostate();
         return napi_ok;
     }
-    LOG_DEBUG("jsValue is not null.");
+    LOG_DEBUG("JsValue is not null.");
     return napi_invalid_arg;
 }
 
@@ -547,7 +547,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
     if (hasProp) {
         napi_get_named_property(env, root, propName.c_str(), &constructor);
         if (constructor != nullptr) {
-            LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
+            LOG_DEBUG("Got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
             return constructor;
         }
         hasProp = false; // no constructor.
@@ -559,7 +559,7 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
 
     if (!hasProp) {
         napi_set_named_property(env, root, propName.c_str(), constructor);
-        LOG_DEBUG("save %{public}s to %{public}s", propName.c_str(), featureSpace->spaceName);
+        LOG_DEBUG("Save %{public}s to %{public}s", propName.c_str(), featureSpace->spaceName);
     }
     return constructor;
 }
@@ -589,7 +589,7 @@ napi_value JSUtils::GetClass(napi_env env, const std::string &spaceName, const s
     }
     napi_get_named_property(env, root, propName.c_str(), &constructor);
     if (constructor != nullptr) {
-        LOG_DEBUG("got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
+        LOG_DEBUG("Got %{public}s from %{public}s", propName.c_str(), featureSpace->spaceName);
         return constructor;
     }
     hasProp = false; // no constructor.
@@ -664,7 +664,7 @@ napi_value JSUtils::ToJsTypedArray(napi_env env, napi_value sendableValue)
     ASSERT(status == napi_ok, "napi_get_typedarray_info failed", nullptr);
 
     if (type != napi_uint8_array && type != napi_float32_array) {
-        LOG_ERROR("type is invalid %{public}d", type);
+        LOG_ERROR("Type is invalid %{public}d", type);
         return nullptr;
     }
     napi_value jsTypedArray = nullptr;

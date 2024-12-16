@@ -326,7 +326,7 @@ int32_t RdConnection::Restore(
 {
     auto ret = RdUtils::RdDbClose(dbHandle_, 0);
     if (ret != E_OK) {
-        LOG_ERROR("close db failed");
+        LOG_ERROR("Close db failed");
         return ret;
     }
 
@@ -339,14 +339,14 @@ int32_t RdConnection::Restore(
     }
 
     if (ret != E_OK) {
-        LOG_ERROR("restore failed, original datapath:%{public}s, restorepath:%{public}s, errcode:%{public}d",
+        LOG_ERROR("Restore failed, original datapath:%{public}s, restorepath:%{public}s, errcode:%{public}d",
             config_.GetPath().c_str(), databasePath.c_str(), ret);
         return ret;
     }
 
     ret = InnerOpen(config_);
     if (ret != E_OK) {
-        LOG_ERROR("reopen db failed:%{public}d", ret);
+        LOG_ERROR("Reopen db failed:%{public}d", ret);
         return ret;
     }
     return ret;

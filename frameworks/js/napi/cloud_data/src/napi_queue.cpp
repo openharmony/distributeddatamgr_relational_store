@@ -22,15 +22,15 @@ using namespace OHOS::Rdb;
 
 ContextBase::~ContextBase()
 {
-    LOG_DEBUG("no memory leak after callback or promise[resolved/rejected]");
+    LOG_DEBUG("No memory leak after callback or promise[resolved/rejected]");
     if (env != nullptr) {
         if (callbackRef != nullptr) {
             auto status = napi_delete_reference(env, callbackRef);
-            LOG_DEBUG("status:%{public}d", status);
+            LOG_DEBUG("Status:%{public}d", status);
         }
         if (selfRef != nullptr) {
             auto status = napi_delete_reference(env, selfRef);
-            LOG_DEBUG("status:%{public}d", status);
+            LOG_DEBUG("Status:%{public}d", status);
         }
         env = nullptr;
     }
@@ -60,9 +60,9 @@ void ContextBase::GetCbInfo(napi_env envi, napi_callback_info info, NapiCbInfoPa
             status = napi_create_reference(env, argv[index], 1, &callbackRef);
             ASSERT_STATUS(this, "ref callback failed!");
             argc = index;
-            LOG_DEBUG("async callback, no promise.");
+            LOG_DEBUG("Async callback, no promise.");
         } else {
-            LOG_DEBUG("no callback, async pormose.");
+            LOG_DEBUG("No callback, async pormose.");
         }
     }
 
@@ -76,7 +76,7 @@ void ContextBase::GetCbInfo(napi_env envi, napi_callback_info info, NapiCbInfoPa
 napi_value NapiQueue::AsyncWork(napi_env env, std::shared_ptr<ContextBase> ctxt, const std::string &name,
     NapiAsyncExecute execute, NapiAsyncComplete complete)
 {
-    LOG_DEBUG("name=%{public}s", name.c_str());
+    LOG_DEBUG("Name=%{public}s", name.c_str());
     AsyncContext *aCtx = new (std::nothrow) AsyncContext;
     if (aCtx == nullptr) {
         return nullptr;
@@ -88,7 +88,7 @@ napi_value NapiQueue::AsyncWork(napi_env env, std::shared_ptr<ContextBase> ctxt,
     napi_value promise = nullptr;
     if (aCtx->ctx->callbackRef == nullptr) {
         napi_create_promise(env, &aCtx->deferred, &promise);
-        LOG_DEBUG("create deferred promise.");
+        LOG_DEBUG("Create deferred promise.");
     } else {
         napi_get_undefined(env, &promise);
     }
@@ -156,17 +156,17 @@ void NapiQueue::GenerateOutput(AsyncContext &ctx, napi_value output)
     }
     if (ctx.deferred != nullptr) {
         if (ctx.ctx->status == napi_ok) {
-            LOG_DEBUG("deferred promise resolved.");
+            LOG_DEBUG("Deferred promise resolved.");
             napi_resolve_deferred(ctx.env, ctx.deferred, result[RESULT_DATA]);
         } else {
-            LOG_DEBUG("deferred promise rejected.");
+            LOG_DEBUG("Deferred promise rejected.");
             napi_reject_deferred(ctx.env, ctx.deferred, result[RESULT_ERROR]);
         }
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(ctx.env, ctx.ctx->callbackRef, &callback);
         napi_value callbackResult = nullptr;
-        LOG_DEBUG("call callback function.");
+        LOG_DEBUG("Call callback function.");
         napi_call_function(ctx.env, nullptr, callback, RESULT_ALL, result, &callbackResult);
     }
 }
