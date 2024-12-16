@@ -165,6 +165,18 @@
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_ability_adapter/include"
                     }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data:cloud_data_inner",
+                    "visibility": [ "datamgr_service" ],
+                    "header": {
+                        "header_files": [
+                            "cloud_manager.h",
+                            "cloud_service.h",
+                            "cloud_types.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data/include"
+                    }
                 }
             ],
             "test": [
