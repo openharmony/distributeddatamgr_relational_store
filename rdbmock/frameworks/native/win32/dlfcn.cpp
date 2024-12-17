@@ -13,19 +13,14 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <string>
-
-#ifdef WIN32
-#include <windows.h>
-#endif
+#include "dlfcn.h"
 
 void *dlopen(const char *pathName, int mode)
 {
-    return reinterpret_cast<void *>(LoadLibrary(pathName));
+    return nullptr;
 };
 
 void *dlsym(void *handle, const char *funcName)
 {
-    return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
-};
+    return nullptr;
+}
