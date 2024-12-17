@@ -45,6 +45,7 @@ public:
 
 private:
     int32_t area_ = 0;
+    int32_t invalidHapVersion_ = -1;
     std::string databaseDir_;
     std::string bundleName_;
     std::string moduleName_;
