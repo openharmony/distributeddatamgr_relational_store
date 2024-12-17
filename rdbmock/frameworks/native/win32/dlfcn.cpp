@@ -18,6 +18,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#endif
 
 void *dlopen(const char *pathName, int mode)
 {
@@ -28,4 +29,3 @@ void *dlsym(void *handle, const char *funcName)
 {
     return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
 };
-#endif

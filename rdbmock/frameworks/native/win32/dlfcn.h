@@ -23,12 +23,7 @@
 #define RTLD_GLOBAL 256
 #define RTLD_LOCAL 0
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 void *dlopen(const char *pathName, int mode);
 void *dlsym(void *handle, const char *funcName);
-#ifdef __cplusplus
-}
-#endif
+
 #endif //MOCK_DLFCN_H
