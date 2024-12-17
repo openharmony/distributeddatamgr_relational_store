@@ -16,22 +16,15 @@
 #define LOG_TAG "SqliteConnection"
 #include "sqlite_connection.h"
 
+#include <dlfcn.h>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include "sqlite3.h"
-#include "value_object.h"
-
-#ifdef RDB_SUPPORT_ICU
-#include <unicode/ucol.h>
-#endif
-
-#include <unistd.h>
 
 #include "logger.h"
 #include "raw_data_parser.h"
@@ -41,9 +34,11 @@
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
+#include "sqlite3.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "value_object.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_manager_impl.h"
 #include "relational/relational_store_sqlite_ext.h"
@@ -897,63 +892,19 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
     }
 }
 
-#ifdef RDB_SUPPORT_ICU
-int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
-{
-    UCollator *coll = reinterpret_cast<UCollator *>(p);
-    UCharIterator i1;
-    UCharIterator i2;
-    UErrorCode status = U_ZERO_ERROR;
-
-    uiter_setUTF8(&i1, (const char *)v1, n1);
-    uiter_setUTF8(&i2, (const char *)v2, n2);
-
-    UCollationResult result = ucol_strcollIter(coll, &i1, &i2, &status);
-
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Ucol strcoll error.");
-    }
-
-    if (result == UCOL_LESS) {
-        return -1;
-    } else if (result == UCOL_GREATER) {
-        return 1;
-    }
-    return 0;
-}
-
-void LocalizedCollatorDestroy(UCollator *collator)
-{
-    ucol_close(collator);
-}
-#endif
-
-/**
- * The database locale.
- */
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-#ifdef RDB_SUPPORT_ICU
-    std::unique_lock<std::mutex> lock(mutex_);
-    UErrorCode status = U_ZERO_ERROR;
-    UCollator *collator = ucol_open(localeStr.c_str(), &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Can not open collator.");
+    static void *handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
+    }
+    auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
         return E_ERROR;
     }
-    ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Set attribute of collator failed.");
-        return E_ERROR;
-    }
-
-    int err = sqlite3_create_collation_v2(
-        dbHandle_, "LOCALES", SQLITE_UTF8, collator, Collate8Compare, (void (*)(void *))LocalizedCollatorDestroy);
-    if (err != SQLITE_OK) {
-        LOG_ERROR("SCreate collator in sqlite3 failed.");
-        return err;
-    }
-#endif
+    func(dbHandle_, localeStr);
     return E_OK;
 }
 
