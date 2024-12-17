@@ -18,24 +18,14 @@
 
 #ifdef WIN32
 #include <windows.h>
-#endif
 
-constexpr int32_t LIB_SIZE = 3;
-constexpr int32_t LIBSO_SIZE = 8;
 void *dlopen(const char *pathName, int mode)
 {
-#ifdef WIN32
-    std::string fileName(pathName);
-    if (fileName.length() > LIBSO_SIZE) {
-        std::string dllName = fileName.substr(LIB_SIZE, fileName.length() - LIBSO_SIZE) + ".dll";
-        return reinterpret_cast<void *>(LoadLibrary(dllName));
-    }
-#endif
+    return reinterpret_cast<void *>(LoadLibrary(pathName));
 };
 
 void *dlsym(void *handle, const char *funcName)
 {
-#ifdef WIN32
     return reinterpret_cast<void *>(GetProcAddress(handle, funcName));
-#endif
 };
+#endif
