@@ -670,6 +670,14 @@ public:
  
     void SetHaMode(int32_t haMode);
 
+    ssize_t GetCheckpointSize() const;
+    
+    ssize_t GetStartCheckpointSize() const;
+
+    ssize_t GetWalLimitSize() const;
+
+    void SetWalLimitSize(ssize_t size);
+
     void SetNewEncryptKey(const std::vector<uint8_t> newEncryptKey);
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
@@ -715,6 +723,9 @@ private:
     std::string journalMode_;
     std::string syncMode_;
     std::string databaseFileType;
+    ssize_t walLimitSize_;
+    ssize_t checkpointSize_;
+    ssize_t startCheckpointSize_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
