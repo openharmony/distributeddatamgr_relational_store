@@ -16,6 +16,9 @@
 #ifndef MOCK_DLFCN_H
 #define MOCK_DLFCN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define RTLD_LAZY 1
 #define RTLD_NOW 2
 #define RTLD_NOLOAD 4
@@ -25,5 +28,7 @@
 
 void *dlopen(const char *pathName, int mode);
 void *dlsym(void *handle, const char *funcName);
-
+#ifdef __cplusplus
+}
+#endif
 #endif //MOCK_DLFCN_H
