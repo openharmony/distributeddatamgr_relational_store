@@ -179,7 +179,10 @@ if (is_ohos) {
       "-stdlib=libc++",
     ]
 
-    defines = [ "ANDROID_PLATFORM" ]
+    defines = [
+      "ANDROID_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     sources += [
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
