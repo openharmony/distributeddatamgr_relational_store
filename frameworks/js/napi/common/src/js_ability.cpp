@@ -172,14 +172,14 @@ int32_t JSAbility::GetHapVersion(napi_env env, napi_value value)
 {
     auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
     if (stageContext == nullptr) {
-        return invalidHapVersion_;
+        return INVALID_HAP_VERSION ;
     }
     auto appInfo = stageContext->GetApplicationInfo();
     if (appInfo != nullptr) {
         return appInfo->apiTargetVersion % API_VERSION_MOD;
     }
     LOG_WARN("GetApplicationInfo failed.");
-    return invalidHapVersion_;
+    return INVALID_HAP_VERSION ;
 }
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
