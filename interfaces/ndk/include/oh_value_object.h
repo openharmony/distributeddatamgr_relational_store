@@ -37,7 +37,7 @@
  * @since 10
  */
 
-#include <cstdint>
+#include <inttypes.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
