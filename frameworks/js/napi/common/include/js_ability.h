@@ -45,7 +45,6 @@ public:
 
 private:
     int32_t area_ = 0;
-    int32_t invalidHapVersion_ = -1;
     std::string databaseDir_;
     std::string bundleName_;
     std::string moduleName_;
@@ -65,6 +64,8 @@ public:
     static std::shared_ptr<Context> GetStageModeContext(napi_env env, napi_value value);
     static std::shared_ptr<Context> GetCurrentAbility(napi_env env, napi_value value);
     static int32_t GetHapVersion(napi_env env, napi_value value);
+
+    static constexpr int32_t INVALID_HAP_VERSION = -1;
 };
 } // namespace AppDataMgrJsKit
 } // namespace OHOS
