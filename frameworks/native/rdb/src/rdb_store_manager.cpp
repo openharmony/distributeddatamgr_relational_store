@@ -200,7 +200,7 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
 
 bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
         return false;
