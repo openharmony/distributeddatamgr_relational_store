@@ -15,8 +15,10 @@
 import {describe, beforeAll, beforeEach, afterEach, afterAll, it, expect} from 'deccjsunit/index'
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
+import factory from '@ohos.data.distributedKVStore'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
+const TEST_BUNDLE_NAME = "com.example.myapplication"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
     + "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)"
 
@@ -631,7 +633,7 @@ describe('rdbEncryptTest', function () {
             console.error(`Insert and check data, error code: ${err.code}, err message: ${err.message}`);
             expect().assertFail()
         }
-        
+
         await store.close()
         console.log(TAG + "************* RdbDecryptTest_0070 end *************")
     })
@@ -731,6 +733,5 @@ describe('rdbEncryptTest', function () {
 
         console.log(TAG + "************* RdbDecryptTest_0090 end *************")
     })
-
     console.log(TAG + "*************Unit Test End*************")
 })
