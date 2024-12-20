@@ -244,7 +244,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
-        TryCheckPoint(true);
         ValueObject checkResult{"ok"};
         auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
         if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
@@ -642,7 +641,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config)
 {
     if (key.empty()) {
-        return E_INVALID_ARGS;
+        return E_INVALID_SECRET_KEY;
     }
 
     auto errCode = sqlite3_key(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
@@ -987,7 +986,9 @@ int SqliteConnection::TryCheckPoint(bool timeout)
         return E_INNER_WARNING;
     }
 
+    (void)sqlite3_busy_timeout(dbHandle_, CHECKPOINT_TIME);
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+    (void)sqlite3_busy_timeout(dbHandle_, DEFAULT_BUSY_TIMEOUT_MS);
     if (errCode != SQLITE_OK) {
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
@@ -1465,6 +1466,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
         LOG_ERROR("reopen db failed, err:%{public}d", ret);
         return ret;
     }
+    connection->TryCheckPoint(true);
     SlaveStatus curStatus;
     ret = connection->ExchangeSlaverToMaster(true, curStatus);
     if (ret != E_OK) {

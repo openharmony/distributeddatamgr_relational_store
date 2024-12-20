@@ -298,6 +298,65 @@ describe('rdbStoreTest', function () {
         store = null
         console.log(TAG + "************* testRdbStore0011 end   *************");
     })
+        
+    /**
+     * @tc.name rdb store wal file overlimit test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0012
+     * @tc.desc Checkpoint failure delayed retry
+     */
+    it('testRdbStore0012', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0012 start *************");
+
+        try {
+            const rowCount = 18;
+            const rdbStore = await data_relationalStore.getRdbStore(context, {
+                name: "walTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                encrypt: true,
+            })
+            const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "blobType BLOB)";
+    
+            rdbStore.executeSync(CREATE_TABLE_TEST);
+    
+            const valueBuckets = Array(rowCount).fill(0).map(() => {
+                return {
+                    blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
+                }
+            })
+    
+            rdbStore.batchInsertSync('test', valueBuckets);
+    
+            const predicates = new data_relationalStore.RdbPredicates('test');
+            const resultSet = rdbStore.querySync(predicates);
+            expect(resultSet.rowCount).assertEqual(rowCount);
+            resultSet.goToFirstRow()
+    
+            const startTime = new Date().getTime();
+            rdbStore.insertSync('test', {
+                blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
+            })
+            const middleTime = new Date().getTime();
+            console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime);
+    
+            expect((middleTime - startTime) > 1000).assertTrue();
+    
+            rdbStore.insertSync('test', {
+                blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
+            })
+            const endTime = new Date().getTime();
+            console.log(TAG + "testRdbStore0012, endTime:" + endTime + " middleTime:" + middleTime);
+    
+            expect((endTime - middleTime) < 1000).assertTrue();
+            console.log(TAG + "************* testRdbStore0012 end *************");
+            done();
+        } catch (e) {
+            console.log(TAG + "testRdbStore0012 failed " + JSON.stringify(e));
+            done();
+            expect().assertFail();
+        }
+    })
 
     console.log(TAG + "*************Unit Test End*************");
 })
