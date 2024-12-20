@@ -415,6 +415,12 @@ static constexpr int E_INVALID_INTERRUPT = (E_BASE + 0x4a);
  */
 static constexpr int E_DB_RESTORE_NOT_ALLOWED = (E_BASE + 0x4b);
 
+
+/**
+ *  * @brief The secret key is corrupted or lost.
+ */
+static constexpr int E_INVALID_SECRET_KEY = (E_BASE + 0x4a);
+
 /**
  * @brief Do not use except relational_store
  */
