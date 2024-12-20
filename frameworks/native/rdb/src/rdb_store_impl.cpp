@@ -887,8 +887,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
     path_ = (config.GetRoleType() == VISITOR) ? config.GetVisitorDir() : config.GetPath();
     bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
-    if (connectionPool_ == nullptr && errCode == E_SQLITE_CORRUPT && config.GetAllowRebuild() && !isReadOnly_) {
-        LOG_ERROR("database corrupt, rebuild database %{public}s", SqliteUtils::Anonymous(name_).c_str());
+    if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
+        !isReadOnly_) {
+        LOG_ERROR("database corrupt, errCode:0x%{public}x, rebuild database %{public}s", errCode,
+            SqliteUtils::Anonymous(name_).c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         RdbParam param;
         param.bundleName_ = config_.GetBundleName();
@@ -899,6 +901,11 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         }
 #endif
         config_.SetIter(0);
+        if (config_.IsEncrypt()) {
+            auto key = config_.GetEncryptKey();
+            RdbSecurityManager::GetInstance().RestoreKeyFile(path_, key);
+            key.assign(key.size(), 0);
+        }
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
