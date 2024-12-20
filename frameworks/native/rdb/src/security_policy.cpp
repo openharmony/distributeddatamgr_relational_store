@@ -18,10 +18,12 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "security_label.h"
+#include "sqlite_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using namespace FileManagement::ModuleSecurityLabel;
 std::string SecurityPolicy::GetSecurityLevelValue(SecurityLevel securityLevel)
 {
     switch (securityLevel) {
@@ -40,19 +42,20 @@ std::string SecurityPolicy::GetSecurityLevelValue(SecurityLevel securityLevel)
 
 std::string SecurityPolicy::GetFileSecurityLevel(const std::string &filePath)
 {
-    return FileManagement::ModuleSecurityLabel::SecurityLabel::GetSecurityLabel(filePath);
+    return SecurityLabel::GetSecurityLabel(filePath);
 }
 
 int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
 {
     if (config.GetStorageMode() != StorageMode::MODE_MEMORY && config.GetSecurityLevel() != SecurityLevel::LAST) {
         auto toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
-        auto errCode = FileManagement::ModuleSecurityLabel::SecurityLabel::SetSecurityLabel(config.GetPath(),
-            toSetLevel) ? E_OK : E_CONFIG_INVALID_CHANGE;
+        auto errCode = SecurityLabel::SetSecurityLabel(config.GetPath(), toSetLevel) ? E_OK : E_CONFIG_INVALID_CHANGE;
         if (errCode != E_OK) {
             auto currentLevel = GetFileSecurityLevel(config.GetPath());
-            LOG_ERROR("Set security level from %{public}s to %{public}s, result:%{public}d, errno:%{public}d.",
-                currentLevel.c_str(), toSetLevel.c_str(), errCode, errno);
+            LOG_ERROR("storeName:%{public}s SetSecurityLabel failed. Set security level from %{public}s to %{public}s,"
+                      "result:%{public}d, errno:%{public}d.",
+                SqliteUtils::Anonymous(config.GetName()).c_str(), currentLevel.c_str(), toSetLevel.c_str(), errCode,
+                errno);
         }
         return errCode;
     }

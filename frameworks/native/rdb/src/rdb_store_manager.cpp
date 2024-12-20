@@ -69,7 +69,8 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
         storeCache_.erase(it);
         return nullptr;
     }
-    if (!(rdbStore->GetConfig() == config)) {
+    auto oldConfig = rdbStore->GetConfig();
+    if (oldConfig != config) {
         storeCache_.erase(it);
         LOG_INFO("app[%{public}s:%{public}s] path[%{public}s]"
                  " cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}s]"
@@ -86,85 +87,74 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    RdbStoreConfig modifyConfig = config;
     // TOD this lock should only work on storeCache_, add one more lock for connectionpool
+    errCode = E_OK;
     std::lock_guard<std::mutex> lock(mutex_);
-    auto path = modifyConfig.GetRoleType() != OWNER ? modifyConfig.GetVisitorDir() : modifyConfig.GetPath();
-    bundleName_ = modifyConfig.GetBundleName();
-    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(modifyConfig, path);
-    if (rdbStore != nullptr) {
-        return rdbStore;
+    if (config.GetRoleType() == VISITOR_WRITE && !IsPermitted(GetSyncParam(config))) {
+        errCode = E_ERROR;
+        return nullptr;
     }
+    RdbStoreConfig modifyConfig = config;
+    auto path = config.GetRoleType() != OWNER ? config.GetVisitorDir() : config.GetPath();
     if (modifyConfig.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
         errCode = E_CONFIG_INVALID_CHANGE;
         return nullptr;
     }
-    if (modifyConfig.GetRoleType() == VISITOR_WRITE) {
-        Param param = GetSyncParam(config);
-        int32_t status = GetPromiseFromService(param);
-        if (status != E_OK) {
-            LOG_ERROR("failed, storeName:%{public}s, status:%{public}d", config.GetName().c_str(), status);
-            return nullptr;
-        }
+    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(modifyConfig, path);
+    if (rdbStore != nullptr) {
+        return rdbStore;
     }
     rdbStore = std::make_shared<RdbStoreImpl>(modifyConfig, errCode);
+    if (errCode != E_OK && modifyConfig != config) {
+        LOG_WARN("Failed to GetRdbStore using modifyConfig. path:%{public}s, rc=%{public}d",
+            SqliteUtils::Anonymous(path).c_str(), errCode);
+        rdbStore = std::make_shared<RdbStoreImpl>(config, errCode);  // retry with input config
+    }
     if (errCode != E_OK) {
-        LOG_ERROR("GetRdbStore fail path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
+        LOG_ERROR("GetRdbStore failed. path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
         return nullptr;
     }
 
-    if (modifyConfig.GetRoleType() == OWNER && !modifyConfig.IsReadOnly()) {
-        errCode = SetSecurityLabel(modifyConfig);
+    if (rdbStore->GetConfig().GetRoleType() == OWNER && !rdbStore->GetConfig().IsReadOnly()) {
+        errCode = SetSecurityLabel(rdbStore->GetConfig());
         if (errCode != E_OK) {
-            LOG_ERROR("fail, storeName:%{public}s security %{public}d errCode:%{public}d",
-                SqliteUtils::Anonymous(modifyConfig.GetName()).c_str(), modifyConfig.GetSecurityLevel(), errCode);
             return nullptr;
         }
-        if (modifyConfig.IsVector()) {
-            storeCache_[path] = rdbStore;
-            return rdbStore;
-        }
         (void)rdbStore->ExchangeSlaverToMaster();
-        errCode = ProcessOpenCallback(*rdbStore, modifyConfig, version, openCallback);
+        errCode = ProcessOpenCallback(*rdbStore, version, openCallback);
         if (errCode != E_OK) {
             LOG_ERROR("fail, storeName:%{public}s path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                SqliteUtils::Anonymous(modifyConfig.GetName()).c_str(),
-                SqliteUtils::Anonymous(modifyConfig.GetPath()).c_str(), errCode);
+                SqliteUtils::Anonymous(rdbStore->GetConfig().GetName()).c_str(),
+                SqliteUtils::Anonymous(rdbStore->GetConfig().GetPath()).c_str(), errCode);
             return nullptr;
         }
     }
-
-    storeCache_[path] = rdbStore;
+    configCache_.Set(path, GetSyncParam(rdbStore->GetConfig()));
+    storeCache_.insert_or_assign(std::move(path), rdbStore);
     return rdbStore;
 }
 
 bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config)
 {
-    Param param = GetSyncParam(config);
-    Param tempParam;
     if (config.GetBundleName().empty()) {
         LOG_WARN("Config has no bundleName, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
-    if (!configCache_.Get(path, tempParam)) {
+    Param lastParam;
+    if (!configCache_.Get(path, lastParam) && GetParamFromService(lastParam) != E_OK) {
         LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
-        tempParam = param;
-        if (GetParamFromService(tempParam) == E_OK) {
-            configCache_.Set(path, tempParam);
-        } else {
-            return false;
-        };
+        return false;
     };
-    bool isLevelInvalidChange = (tempParam.level_ > param.level_);
-    bool isEncryptInvalidChange = (tempParam.isEncrypt_ != param.isEncrypt_);
-    bool isAreaInvalidChange = (tempParam.area_ != param.area_);
+    bool isLevelInvalidChange = (static_cast<int32_t>(config.GetSecurityLevel()) > lastParam.level_);
+    bool isEncryptInvalidChange = (config.IsEncrypt() != lastParam.isEncrypt_);
+    bool isAreaInvalidChange = (config.GetArea() != lastParam.area_);
     if (isLevelInvalidChange || isEncryptInvalidChange || isAreaInvalidChange) {
-        LOG_WARN("Store config invalid change, storePath %{public}s, securitylevel: %{public}d -> %{public}d, "
+        LOG_WARN("Store config invalid change, storePath %{public}s, securityLevel: %{public}d -> %{public}d, "
                  "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
-            SqliteUtils::Anonymous(path).c_str(), tempParam.level_, param.level_, tempParam.area_, param.area_,
-            tempParam.isEncrypt_, param.isEncrypt_);
+            SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()),
+            lastParam.area_, config.GetArea(), lastParam.isEncrypt_, config.IsEncrypt());
         if (isEncryptInvalidChange) {
-            config.SetEncryptStatus(tempParam.isEncrypt_);
+            config.SetEncryptStatus(lastParam.isEncrypt_);
         }
     }
     return false;
@@ -203,34 +193,30 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
         return E_ERROR;
     }
     err = service->BeforeOpen(param);
-    if (err != DistributedRdb::RDB_OK && err != DistributedRdb::RDB_NO_META) {
-        LOG_ERROR("BeforeOpen failed, err is %{public}d.", err);
-        return E_ERROR;
-    }
-    return E_OK;
+    return err != DistributedRdb::RDB_OK ? E_ERROR : E_OK;
 #endif
     return E_ERROR;
 }
 
-int32_t RdbStoreManager::GetPromiseFromService(DistributedRdb::RdbSyncerParam &param)
+bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
-        return E_ERROR;
+        return false;
     }
     if (err != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
-        return E_ERROR;
+        LOG_ERROR("GetRdbService failed, bundleName:%{public}s, err:%{public}d.", param.bundleName_.c_str(), err);
+        return false;
     }
     err = service->VerifyPromiseInfo(param);
-    if (err != DistributedRdb::RDB_OK) {
-        LOG_ERROR("failed, err is %{public}d.", err);
-        return E_ERROR;
+    if (err == DistributedRdb::RDB_OK) {
+        return true;
     }
-    return E_OK;
+    LOG_ERROR("failed, bundleName:%{public}s, store:%{public}s, err:%{public}d.", param.bundleName_.c_str(),
+        SqliteUtils::Anonymous(param.storeName_).c_str(), err);
 #endif
-    return E_ERROR;
+    return false;
 }
 
 void RdbStoreManager::Clear()
@@ -258,8 +244,7 @@ bool RdbStoreManager::Remove(const std::string &path)
     return false;
 }
 
-int RdbStoreManager::ProcessOpenCallback(
-    RdbStore &rdbStore, const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback)
+int RdbStoreManager::ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpenCallback &openCallback)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     int errCode = E_OK;
@@ -304,7 +289,6 @@ bool RdbStoreManager::Delete(const std::string &path)
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
         param.storeName_ = *tokens.rbegin();
-        param.bundleName_ = bundleName_;
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
