@@ -172,6 +172,7 @@ int32_t JSAbility::GetHapVersion(napi_env env, napi_value value)
 {
     auto stageContext = AbilityRuntime::GetStageModeContext(env, value);
     if (stageContext == nullptr) {
+        LOG_ERROR("GetStageModeContext failed.");
         return INVALID_HAP_VERSION ;
     }
     auto appInfo = stageContext->GetApplicationInfo();
