@@ -775,7 +775,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
     EXPECT_EQ(1, columnIndex);
 
     iRet = resultSet->GetColumnIndex("datax", columnIndex);
-    EXPECT_EQ(E_ERROR, iRet);
+    EXPECT_EQ(E_INVALID_ARGS, iRet);
     EXPECT_EQ(-1, columnIndex);
 }
 

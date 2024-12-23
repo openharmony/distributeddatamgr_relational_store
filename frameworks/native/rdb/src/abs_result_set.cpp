@@ -407,8 +407,9 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
             return E_OK;
         }
     }
-    LOG_ERROR("Failed, columnName is: %{public}s", SqliteUtils::Anonymous(columnName).c_str());
-    return E_ERROR;
+    LOG_ERROR("Failed, columnName : %{public}s, errCode : %{public}d",
+        SqliteUtils::Anonymous(columnName).c_str(), errCode);
+    return E_INVALID_ARGS;
 }
 
 int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
