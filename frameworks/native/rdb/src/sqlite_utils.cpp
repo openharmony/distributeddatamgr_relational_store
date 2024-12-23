@@ -46,7 +46,7 @@ constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t MIN_ANONYMIZE_LENGTH = 2;
-constexpr int32_t PLAINTEXT_LENGTH = 3;
+constexpr size_t PLAINTEXT_LENGTH = 3;
 constexpr int32_t MAX_ANONYMIZE_LENGTH = 4;
 
 constexpr const char *SQL_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT", "FROM",
