@@ -177,6 +177,16 @@ AbsRdbPredicates *AbsRdbPredicates::EqualTo(const std::string &field, const Valu
     if (auto pval = std::get_if<std::string>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, *pval);
     }
+    if (auto pval = std::get_if<ValueObject::Asset>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::RdbPredicateOperator::ASSETS_ONLY, field, (*pval).name);
+    }
+    if (auto pval = std::get_if<ValueObject::Assets>(&value.value)) {
+        std::vector<std::string> names;
+        for (const auto &asset : *pval) {
+            names.push_back(asset.name);
+        }
+        predicates_.AddOperation(DistributedRdb::RdbPredicateOperator::ASSETS_ONLY, field, names);
+    }
     return (AbsRdbPredicates *)AbsPredicates::EqualTo(field, value);
 }
 
