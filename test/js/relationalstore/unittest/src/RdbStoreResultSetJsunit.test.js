@@ -1782,6 +1782,7 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         expect(true).assertEqual(resultSet.goToFirstRow())
         expect(1).assertEqual(resultSet.getColumnIndex("data1"))
+        expect(-1).assertEqual(resultSet.getColumnIndex("data0"))
 
         resultSet.close()
         resultSet = null;
