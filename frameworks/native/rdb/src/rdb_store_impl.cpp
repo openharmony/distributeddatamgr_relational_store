@@ -1030,8 +1030,9 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
         if (statement == nullptr) {
-            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, sql:%{public}s",
-                errCode, bindArgs.size(), table.c_str(), SqliteUtils::AnonySql(sql).c_str());
+            LOG_ERROR(
+                "statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, app self can check the SQL",
+                errCode, bindArgs.size(), table.c_str());
             return { E_OK, -1 };
         }
         for (const auto &args : bindArgs) {
@@ -1041,8 +1042,8 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
                 return { errCode, -1 };
             }
             if (errCode != E_OK) {
-                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,sql:%{public}s", errCode,
-                    bindArgs.size(), table.c_str(), SqliteUtils::AnonySql(sql).c_str());
+                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
+                    errCode, bindArgs.size(), table.c_str());
                 return { E_OK, -1 };
             }
         }
@@ -1181,7 +1182,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed,error:0x%{public}x sql:%{public}s.", errCode, SqliteUtils::AnonySql(sql).c_str());
+        LOG_ERROR("failed,error:0x%{public}x app self can check the SQL.", errCode);
         if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
             connectionPool_->Dump(true, "EXECUTE");
         }
@@ -1194,9 +1195,9 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         auto [err, version] = statement->ExecuteForValue();
         statement = nullptr;
         if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version),
-                SqliteUtils::AnonySql(sql).c_str());
+            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
+                     "> app self can check the SQL.",
+                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
             vSchema_ = version;
             errCode = connectionPool_->RestartReaders();
         }
@@ -1218,7 +1219,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
-        LOG_ERROR("Not support the sqlType: %{public}d, sql: %{public}s", sqlType, SqliteUtils::AnonySql(sql).c_str());
+        LOG_ERROR("Not support the sqlType: %{public}d, app self can check the SQL", sqlType);
         return { E_NOT_SUPPORT_THE_SQL, object };
     }
 
@@ -1238,7 +1239,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed,error:0x%{public}x sql:%{public}s.", errCode, SqliteUtils::AnonySql(sql).c_str());
+        LOG_ERROR("failed,error:0x%{public}x app self can check the SQL.", errCode);
         if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
             connectionPool_->Dump(true, "EXECUTE");
         }
@@ -1272,7 +1273,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
         }
 
         if (statement->GetColumnCount() > 1) {
-            LOG_ERROR("Not support the sql:%{public}s, column count more than 1", SqliteUtils::AnonySql(sql).c_str());
+            LOG_ERROR("Not support the sql:app self can check the SQL, column count more than 1");
             return { E_NOT_SUPPORT_THE_SQL, object };
         }
     }
@@ -1282,9 +1283,9 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
         statement->Prepare("PRAGMA schema_version");
         auto [err, version] = statement->ExecuteForValue();
         if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version),
-                SqliteUtils::AnonySql(sql).c_str());
+            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
+                     "> app self can check the SQL.",
+                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
             vSchema_ = version;
             errCode = connectionPool_->RestartReaders();
         }
@@ -1303,7 +1304,7 @@ int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, c
     }
     auto [err, object] = statement->ExecuteForValue(args);
     if (err != E_OK) {
-        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", SqliteUtils::AnonySql(sql).c_str(), err);
+        LOG_ERROR("failed, app self can check the SQL,  ERROR is %{public}d.", err);
     }
     outValue = object;
     return err;
@@ -1321,7 +1322,7 @@ int RdbStoreImpl::ExecuteAndGetString(std::string &outValue, const std::string &
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed, sql %{public}s,  ERROR is %{public}d.", SqliteUtils::AnonySql(sql).c_str(), errCode);
+        LOG_ERROR("failed, app self can check the SQL,  ERROR is %{public}d.", errCode);
     }
     outValue = static_cast<std::string>(object);
     return errCode;
