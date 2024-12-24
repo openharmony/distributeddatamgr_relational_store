@@ -71,6 +71,9 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        if (!context->config.rootDir.empty()) {
+            context->config.isReadOnly = true;
+        }
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {
@@ -111,6 +114,9 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         }
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        if (!context->config.rootDir.empty()) {
+            context->config.isReadOnly = true;
+        }
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {

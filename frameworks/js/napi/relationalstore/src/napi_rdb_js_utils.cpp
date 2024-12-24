@@ -361,6 +361,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "customDir", rdbConfig.customDir, true);
     ASSERT(OK == status, "get customDir failed.", napi_invalid_arg);
 
+    status = GetNamedProperty(env, jsValue, "rootDir", rdbConfig.rootDir, true);
+    ASSERT(OK == status, "get rootDir failed.", napi_invalid_arg);
+
     GetNamedProperty(env, jsValue, "isSearchable", rdbConfig.isSearchable, true);
     ASSERT(OK == status, "get isSearchable failed.", napi_invalid_arg);
 
@@ -479,6 +482,18 @@ std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
         CHECK_RETURN_CORE(errCode == E_OK || !groupDir.empty(), RDB_DO_NOTHING,
             std::make_tuple(ERR, std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID)));
         baseDir = groupDir;
+    }
+
+    if (!rdbConfig.rootDir.empty()) {
+        // determine if the first character of rootDir is '/'
+        CHECK_RETURN_CORE(rdbConfig.rootDir.find_first_of(PATH_SPLIT) == 0, RDB_DO_NOTHING,
+            std::make_tuple(ERR, std::make_shared<PathError>()));
+        auto [realPath, errorCode] =
+            RdbSqlUtils::GetCustomDatabasePath(rdbConfig.rootDir, rdbConfig.name, rdbConfig.customDir);
+        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING,
+            std::make_tuple(ERR, std::make_shared<PathError>()));
+        rdbConfig.path = realPath;
+        return std::make_tuple(E_OK, nullptr);
     }
 
     auto [realPath, errorCode] = RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);

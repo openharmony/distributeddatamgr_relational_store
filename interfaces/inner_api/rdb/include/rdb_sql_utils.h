@@ -33,6 +33,12 @@ public:
         const std::string &baseDir, const std::string &name, const std::string &customDir = "");
 
     /**
+     * @brief get custom rootDir data base path.
+     */
+    static std::pair<std::string, int> GetCustomDatabasePath(const std::string &rootDir, const std::string &name,
+        const std::string &customDir);
+
+    /**
      * @brief get default data base path.
      */
     static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);

@@ -60,6 +60,7 @@ struct RdbConfig {
     std::string dataGroupId;
     std::string name;
     std::string customDir;
+    std::string rootDir;
     std::string path;
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;
