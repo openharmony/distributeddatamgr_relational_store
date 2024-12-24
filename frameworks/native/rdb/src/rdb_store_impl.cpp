@@ -1030,8 +1030,8 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, connection);
         if (statement == nullptr) {
-            LOG_ERROR(
-                "statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, app self can check the SQL",
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
+                      "app self can check the SQL",
                 errCode, bindArgs.size(), table.c_str());
             return { E_OK, -1 };
         }
