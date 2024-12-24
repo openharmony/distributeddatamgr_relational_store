@@ -80,6 +80,8 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
+constexpr int MAX_DOWNLOAD_ASSETS_COUNT = 50;
+constexpr int MAX_DOWNLOAD_TASK = 5;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -318,6 +320,7 @@ int RdbStoreImpl::SetDistributedTables(
     if (type != DistributedRdb::DISTRIBUTED_CLOUD) {
         return E_OK;
     }
+    DistributedDB::RuntimeConfig::SetAsyncDownloadAssetsConfig({ MAX_DOWNLOAD_TASK, MAX_DOWNLOAD_ASSETS_COUNT });
     auto conn = connectionPool_->AcquireConnection(false);
     if (conn != nullptr) {
         auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);

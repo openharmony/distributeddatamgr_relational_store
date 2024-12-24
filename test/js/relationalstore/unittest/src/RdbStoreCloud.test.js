@@ -403,6 +403,66 @@ describe('rdbStoreCloud', function () {
     })
 
     /**
+     * @tc.name set distributeded table cloud with promise
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0014
+     * @tc.desc set distributed table cloud with 'asyncDownloadAsset' is true
+     */
+    it('testRdbStoreCloud0014', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0014 start *************");
+        try {
+            let config = {
+                autoSync: false,
+                asyncDownloadAsset: true
+            }
+            await rdbStore.setDistributedTables(['employee'],
+                relationalStore.DistributedType.DISTRIBUTED_CLOUD, config).then(() => {
+                console.log(TAG + "set employee to be distributed cloud table success");
+                expect(true).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0014 end *************");
+                done();
+            }).catch((err) => {
+                console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
+                done()
+            });
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
+            done()
+        }
+    })
+
+    /**
+     * @tc.name set distributeded table cloud with promise
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0015
+     * @tc.desc set distributed table cloud with 'asyncDownloadAsset' is true
+     */
+    it('testRdbStoreCloud0015', 0, async function (done) {
+        console.log(TAG + "************* testRdbStoreCloud0015 start *************");
+        try {
+            let config = {
+                autoSync: false,
+                asyncDownloadAsset: false
+            }
+            await rdbStore.setDistributedTables(['employee'],
+                relationalStore.DistributedType.DISTRIBUTED_CLOUD, config).then(()=>{
+                console.log(TAG + "set employee to be distributed cloud table success");
+                expect(true).assertTrue();
+                console.log(TAG + "************* testRdbStoreCloud0015 end *************");
+                done();
+            }).catch((err)=>{
+                console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+                expect().assertFail();
+                done()
+            });
+        } catch (err) {
+            console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
+            expect().assertFail();
+            done()
+        }
+    })
+
+    /**
      * @tc.name test field enum value
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_CLOUD_0014
      * @tc.desc test the th field enum value,
