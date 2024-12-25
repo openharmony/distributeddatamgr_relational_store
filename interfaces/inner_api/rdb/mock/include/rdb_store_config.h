@@ -231,7 +231,8 @@ public:
                this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
                this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
                this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
-               this->pluginLibs_ == config.pluginLibs_ && this->haMode_ == config.haMode_;
+               this->pluginLibs_ == config.pluginLibs_ && this->haMode_ == config.haMode_ &&
+               this->readOnly_ == config.readOnly_;
     }
 
     bool IsSearchable() const;
