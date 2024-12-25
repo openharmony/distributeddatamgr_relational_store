@@ -613,7 +613,7 @@ public:
                this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
                this->pageSize_ == config.pageSize_ && this->dbType_ == config.dbType_ &&
                this->customDir_ == config.customDir_ && this->pluginLibs_ == config.pluginLibs_ &&
-               this->haMode_ == config.haMode_;
+               this->haMode_ == config.haMode_ && this->readOnly_ == config.readOnly_;
     }
 
     /**
