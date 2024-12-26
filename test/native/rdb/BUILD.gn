@@ -40,6 +40,7 @@ ohos_unittest("NativeRdbMultiThreadTest") {
   sources = [
     "unittest/common.cpp",
     "unittest/multiThread/rdb_connection_test.cpp",
+    "unittest/multiThread/rdb_store_multiprocess_createDB_test.cpp",
   ]
 
   configs = [ ":module_private_config" ]
