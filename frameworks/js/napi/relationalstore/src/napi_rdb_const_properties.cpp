@@ -310,6 +310,19 @@ static napi_value ExportTransactionType(napi_env env)
     return transactionType;
 }
 
+static napi_value ExportTokenizer(napi_env env)
+{
+    napi_value tokenizerType = nullptr;
+    napi_status status = napi_create_object(env, &tokenizerType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(tokenizerType, "ICU_ANALYZER", int32_t(NativeRdb::Tokenizer::ICU_ANALYZER));
+    napi_object_freeze(env, tokenizerType);
+    return tokenizerType;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -332,6 +345,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("HmacAlgo", ExportHmacAlgo(env)),
         DECLARE_NAPI_PROPERTY("KdfAlgo", ExportKdfAlgo(env)),
         DECLARE_NAPI_PROPERTY("TransactionType", ExportTransactionType(env)),
+        DECLARE_NAPI_PROPERTY("Tokenizer", ExportTokenizer(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);
