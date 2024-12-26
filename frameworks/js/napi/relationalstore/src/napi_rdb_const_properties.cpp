@@ -318,7 +318,7 @@ static napi_value ExportTokenizer(napi_env env)
         return nullptr;
     }
 
-    SET_NAPI_PROPERTY(tokenizerType, "ICU_ANALYZER", int32_t(NativeRdb::Tokenizer::ICU_ANALYZER));
+    SET_NAPI_PROPERTY(tokenizerType, "ICU_TOKENIZER", int32_t(NativeRdb::Tokenizer::ICU_TOKENIZER));
     napi_object_freeze(env, tokenizerType);
     return tokenizerType;
 }
