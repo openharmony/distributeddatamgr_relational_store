@@ -23,6 +23,11 @@
 #include "asset_value.h"
 #include "big_integer.h"
 #include "rdb_visibility.h"
+
+#ifdef Nil
+#undef Nil
+#endif
+
 namespace OHOS {
 namespace NativeRdb {
 /**
