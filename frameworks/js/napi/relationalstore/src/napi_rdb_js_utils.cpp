@@ -384,6 +384,14 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     status = GetNamedProperty(env, jsValue, "cryptoParam", rdbConfig.cryptoParam, true);
     ASSERT(OK == status, "get cryptoParam failed.", napi_invalid_arg);
+
+    int32_t tokenizer = static_cast<int32_t>(Tokenizer::NONE_ANALYZER);
+    status = GetNamedProperty(env, jsValue, "tokenizer", tokenizer, true);
+    ASSERT(OK == status, "get tokenizer failed.", napi_invalid_arg);
+    ASSERT((tokenizer >= static_cast<int32_t>(Tokenizer::NONE_ANALYZER) &&
+               tokenizer < static_cast<int32_t>(Tokenizer::TOKENIZER_END)),
+        "get tokenizer failed", napi_invalid_arg);
+    rdbConfig.tokenizer = static_cast<Tokenizer>(tokenizer);
     return napi_ok;
 }
 
@@ -519,6 +527,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
     rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
     rdbStoreConfig.SetIntegrityCheck(IntegrityCheck::NONE);
+    rdbStoreConfig.SetTokenizer(rdbConfig.tokenizer);
 
     if (!param.bundleName.empty()) {
         rdbStoreConfig.SetBundleName(param.bundleName);
