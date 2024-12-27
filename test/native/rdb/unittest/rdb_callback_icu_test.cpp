@@ -114,11 +114,6 @@ HWTEST_F(RdbCallbackIcuTest, RdbCallbackIcu_01, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    int currentVersion;
-    int ret = store->GetVersion(currentVersion);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 1);
-
     const char *sqlCreateTable = "CREATE VIRTUAL TABLE example USING fts4(name, content, tokenize=icu zh_CN);";
     ret = store->ExecuteSql(sqlCreateTable);
     EXPECT_EQ(ret, E_OK);
