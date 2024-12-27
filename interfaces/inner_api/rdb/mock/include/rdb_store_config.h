@@ -303,6 +303,7 @@ private:
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
     CryptoParam cryptoParam_;
+	Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     std::string name_;
     std::string path_;
     std::string journalMode_;
