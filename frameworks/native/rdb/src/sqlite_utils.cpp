@@ -365,5 +365,30 @@ bool SqliteUtils::DeleteDirtyFiles(const std::string &backupFilePath)
     res = DeleteFile(backupFilePath + "-wal") && res;
     return res;
 }
+
+std::pair<int32_t, DistributedRdb::RdbDebugInfo> SqliteUtils::Stat(const std::string &path)
+{
+    DistributedRdb::RdbDebugInfo info;
+    struct stat fileStat;
+    if (stat(path.c_str(), &fileStat) != 0) {
+        return std::pair{ E_ERROR, info };
+    }
+    info.inode_ = fileStat.st_ino;
+    info.oldInode_ = 0;
+    info.atime_.sec_ = fileStat.st_atime;
+    info.mtime_.sec_ = fileStat.st_mtime;
+    info.ctime_.sec_ = fileStat.st_ctime;
+#if !defined(CROSS_PLATFORM)
+    info.atime_.nsec_ = fileStat.st_atim.tv_nsec;
+    info.mtime_.nsec_ = fileStat.st_mtim.tv_nsec;
+    info.ctime_.nsec_ = fileStat.st_ctim.tv_nsec;
+#endif
+    info.size_ = fileStat.st_size;
+    info.dev_ = fileStat.st_dev;
+    info.mode_ = fileStat.st_mode;
+    info.uid_ = fileStat.st_uid;
+    info.gid_ = fileStat.st_gid;
+    return std::pair{ E_OK, info };
+}
 } // namespace NativeRdb
 } // namespace OHOS
