@@ -234,8 +234,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
         return errCode;
     }
 
-    SetTokenizer(config);
-
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
@@ -406,6 +404,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     if (errCode != E_OK) {
         return errCode;
     }
+    SetTokenizer(config);
     return LoadExtension(config, dbHandle_);
 }
 
