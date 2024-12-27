@@ -740,7 +740,7 @@ private:
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;
-    Tokenizer tokenizer_ = Tokenizer::NONE_ANALYZER;
+    Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     RoleType role_ = OWNER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
