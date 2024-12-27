@@ -388,9 +388,6 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     int32_t tokenizer = static_cast<int32_t>(Tokenizer::NONE_TOKENIZER);
     status = GetNamedProperty(env, jsValue, "tokenizer", tokenizer, true);
     ASSERT(OK == status, "get tokenizer failed.", napi_invalid_arg);
-    ASSERT((tokenizer >= static_cast<int32_t>(Tokenizer::NONE_TOKENIZER) &&
-               tokenizer < static_cast<int32_t>(Tokenizer::TOKENIZER_END)),
-        "get tokenizer failed", napi_invalid_arg);
     rdbConfig.tokenizer = static_cast<Tokenizer>(tokenizer);
     return napi_ok;
 }
