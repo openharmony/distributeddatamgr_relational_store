@@ -588,6 +588,7 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::Acquire(std::chrono::mi
 
 std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Create()
 {
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     if (creator_ == nullptr) {
         return { E_NOT_SUPPORT, nullptr };
     }
