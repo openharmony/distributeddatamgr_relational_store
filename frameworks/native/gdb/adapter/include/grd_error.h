@@ -1,0 +1,164 @@
+/*
+* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+#ifndef GDB_NATIVE_GRD_ERROR_H
+#define GDB_NATIVE_GRD_ERROR_H
+
+#include "grd_type_export.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+// Error category
+#define GRD_OK 0
+
+// Error category
+#define GRD_NOT_SUPPORT (-1000)
+#define GRD_OVER_LIMIT (-2000)
+#define GRD_INVALID_ARGS (-3000)
+#define GRD_SYSTEM_ERR (-4000)
+#define GRD_FAILED_FILE_OPERATION (-5000)
+#define GRD_INVALID_FILE_FORMAT (-6000)
+#define GRD_INSUFFICIENT_SPACE (-7000)
+#define GRD_INNER_ERR (-8000)
+#define GRD_RESOURCE_BUSY (-9000)
+
+#define GRD_NO_DATA (-11000)
+#define GRD_FAILED_MEMORY_ALLOCATE (-13000)
+#define GRD_FAILED_MEMORY_RELEASE (-14000)
+#define GRD_DATA_CONFLICT (-16000)
+#define GRD_DATATYPE_MISMATCH (-17000)
+#define GRD_NOT_AVAILABLE (-19000)
+#define GRD_ACTIVE_TRANSACTION (-20000)
+#define GRD_UNIQUE_VIOLATION (-21000)
+#define GRD_DUPLICATE_TABLE (-22000)
+#define GRD_UNDEFINED_TABLE (-23000)
+#define GRD_INVALID_BIND_VALUE (-36000)
+#define GRD_INVALID_FORMAT (-37000)
+#define GRD_REBUILD_DATABASE (-38000)
+#define GRD_TIME_OUT (-39000)
+#define GRD_DB_INSTANCE_ABNORMAL (-40000)
+#define GRD_DISK_SPACE_FULL (-41000)
+#define GRD_CRC_CHECK_DISABLED (-42000)
+#define GRD_PERMISSION_DENIED (-43000)
+#define GRD_SYNC_PREREQUISITES_ABNORMAL (-44000)
+#define GRD_DATA_CORRUPTED (-45000)
+#define GRD_DB_BUSY (-46000)
+#define GRD_CALC_MODE_SET_PERMISSION_DENIED (-47000)
+
+#define GRD_CIPHER_ERROR (-48000)
+#define GRD_PASSWORD_NEED_REKEY (-48001)
+#define GRD_PASSWORD_UNMATCHED (-48002)
+
+#define GRD_SCHEMA_CHANGED (-49000)
+// not support
+#define GRD_JSON_OPERATION_NOT_SUPPORT (-5001001)
+#define GRD_MODEL_NOT_SUPPORT (-5001002)
+#define GRD_FEATURE_NOT_SUPPORTED (-5001003)
+
+// Exceed limit
+#define GRD_JSON_LEN_LIMIT (-5002001)
+#define GRD_SUBSCRIPTION_EXCEEDED_LIMIT (-5002002)
+#define GRD_SYNC_EXCEED_TASK_QUEUE_LIMIT (-5002003)
+#define GRD_SHARED_OBJ_ENABLE_UNDO_EXCEED_LIMIT (-5002004)
+#define GRD_TABLE_LIMIT_EXCEEDED (-5002005)
+
+// Invalid parameter
+#define GRD_FIELD_TYPE_NOT_MATCH (-5003001)
+#define GRD_LARGE_JSON_NEST (-5003002)
+#define GRD_INVALID_JSON_TYPE (-5003003)
+#define GRD_INVALID_CONFIG_VALUE (-5003004)
+#define GRD_INVALID_OPERATOR (-5003005)
+#define GRD_INVALID_PROJECTION_FIELD (-5003006)
+#define GRD_INVALID_PROJECTION_VALUE (-5003007)
+#define GRD_COLLECTION_NOT_EXIST (-5003008)
+#define GRD_DB_NOT_EXIST (-5003009)
+#define GRD_INVALID_VALUE (-5003010)
+#define GRD_SHARED_OBJ_NOT_EXIST (-5003020)
+#define GRD_SUBSCRIBE_NOT_EXIST (-5003021)
+#define GRD_SHARED_OBJ_UNDO_MANAGER_NOT_EXIST (-5003022)
+#define GRD_SHARED_OBJ_INVALID_UNDO (-5003023)
+#define GRD_SHARED_OBJ_INVALID_REDO (-5003024)
+#define GRD_NAME_TOO_LONG (-5003025)
+#define GRD_INVALID_TABLE_DEFINITION (-5003026)
+#define GRD_WRONG_STMT_OBJECT (-5003027)
+#define GRD_SEMANTIC_ERROR (-5003028)
+#define GRD_SYNTAX_ERROR (-5003029)
+
+// System err
+#define GRD_JSON_LIB_HANDLE_FAILED (-5004001)
+#define GRD_DIRECTORY_OPERATE_FAILED (-5004002)
+#define GRD_FILE_OPERATE_FAILED (-5004003)
+#define GRD_LOAD_THIRD_PARTY_LIBRARY_FAILED (-5004004)
+#define GRD_THIRD_PARTY_FUNCTION_EXECUTE_FAILED (-5004005)
+#define GRD_INSUFFICIENT_RESOURCES (-5004006)
+
+// resource busy
+#define GRD_RESULTSET_BUSY (-5009001)
+
+// no data
+#define GRD_RECORD_NOT_FOUND (-5011001)
+#define GRD_FIELD_NOT_FOUND (-5011002)
+#define GRD_ARRAY_INDEX_NOT_FOUND (-5011003)
+
+// data conflicted
+#define GRD_KEY_CONFLICT (-5016001)
+#define GRD_FIELD_TYPE_CONFLICT (-5016002)
+#define GRD_SHARED_OBJ_CONFLICT (-5016003)
+#define GRD_SUBSCRIBE_CONFLICT (-5016004)
+#define GRD_EQUIP_ID_CONFLICT (-5016005)
+#define GRD_SHARED_OBJ_ENABLE_UNDO_CONFLICT (-5016006)
+
+// data exception
+#define GRD_DATA_EXCEPTION (-5017001)
+#define GRD_FIELD_OVERFLOW (-5017002)
+#define GRD_DIVISION_BY_ZERO (-5017003)
+
+// Cursor or ResultSet not available
+#define GRD_RESULT_SET_NOT_AVAILABLE (-5019001)
+#define GRD_SHARED_OBJ_UNDO_NOT_AVAILABLE (-5019002)
+#define GRD_SHARED_OBJ_REDO_NOT_AVAILABLE (-5019003)
+
+// Transaction
+#define GRD_TRANSACTION_ROLLBACK (-5020001)
+#define GRD_NO_ACTIVE_TRANSACTION (-5020002)
+
+// violation
+#define GRD_PRIMARY_KEY_VIOLATION (-5021001)
+#define GRD_RESTRICT_VIOLATION (-5021002)
+#define GRD_CONSTRAINT_CHECK_VIOLATION (-5021003)
+
+// duplicate
+#define GRD_DUPLICATE_COLUMN (-5022001)
+#define GRD_DUPLICATE_OBJECT (-5022002)
+
+// undefined
+#define GRD_UNDEFINE_COLUMN (-5023001)
+#define GRD_UNDEFINED_OBJECT (-5023002)
+
+// Invalid format
+#define GRD_INVALID_JSON_FORMAT (-5037001)
+#define GRD_INVALID_KEY_FORMAT (-5037002)
+#define GRD_INVALID_COLLECTION_NAME (-5037003)
+#define GRD_INVALID_EQUIP_ID (-5037004)
+
+// time out
+#define GRD_REQUEST_TIME_OUT (-5039001)
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+#endif // GDB_NATIVE_GRD_ERROR_H
