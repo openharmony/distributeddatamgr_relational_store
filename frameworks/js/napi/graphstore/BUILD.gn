@@ -55,7 +55,6 @@ ohos_shared_library("graphstore") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "kv_store:database_utils",
     "napi:ace_napi",
   ]
 

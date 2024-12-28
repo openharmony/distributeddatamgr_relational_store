@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_GDB_GRAPH_EDGE_H
-#define NATIVE_GDB_GRAPH_EDGE_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H
 
 #include <cstdint>
 #include <functional>
@@ -49,4 +49,4 @@ private:
 };
 
 }
-#endif //NATIVE_GDB_GRAPH_EDGE_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H

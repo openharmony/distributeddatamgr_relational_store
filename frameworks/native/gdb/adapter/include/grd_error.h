@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef GDB_NATIVE_GRD_ERROR_H
-#define GDB_NATIVE_GRD_ERROR_H
+#ifndef OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_ERROR_H
+#define OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_ERROR_H
 
 #include "grd_type_export.h"
 
@@ -161,4 +161,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-#endif // GDB_NATIVE_GRD_ERROR_H
+#endif // OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_ERROR_H

@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_GDB_GRAPH_PATH_SEGMENT_H
-#define NATIVE_GDB_GRAPH_PATH_SEGMENT_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -52,4 +52,4 @@ private:
     std::shared_ptr<Vertex> targetVertex_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //NATIVE_GDB_GRAPH_PATH_SEGMENT_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H

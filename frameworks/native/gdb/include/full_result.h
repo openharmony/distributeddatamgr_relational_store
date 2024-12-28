@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NATIVE_GDB_GRAPH_FULLRESULT_H
-#define NATIVE_GDB_GRAPH_FULLRESULT_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_FULLRESULT_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_FULLRESULT_H
 
 #include <cstdint>
 #include <functional>
@@ -44,4 +44,4 @@ private:
     std::shared_ptr<Statement> stmt_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //NATIVE_GDB_GRAPH_FULLRESULT_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_FULLRESULT_H

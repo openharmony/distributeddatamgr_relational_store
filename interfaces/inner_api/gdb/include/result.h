@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef INTERFACE_GDB_RESULT_H
-#define INTERFACE_GDB_RESULT_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_RESULT_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_RESULT_H
 
 #include <cstdint>
 #include <map>
@@ -37,4 +37,4 @@ public:
     API_EXPORT virtual std::vector<std::unordered_map<std::string, GraphValue>> GetAllData() const = 0;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //INTERFACE_GDB_RESULT_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_RESULT_H

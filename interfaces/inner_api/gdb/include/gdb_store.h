@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACE_GDB_DB_STORE_H
-#define INTERFACE_GDB_DB_STORE_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H
 #include "rdb_visibility.h"
 #include "result.h"
 
@@ -26,4 +26,4 @@ public:
     API_EXPORT virtual int32_t Close() = 0;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //INTERFACE_GDB_DB_STORE_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H

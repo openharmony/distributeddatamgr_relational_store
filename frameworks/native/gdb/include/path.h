@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_GDB_GRAPH_PATH_H
-#define NATIVE_GDB_GRAPH_PATH_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -58,4 +58,4 @@ private:
 };
 
 } // namespace OHOS::DistributedDataAip
-#endif //NATIVE_GDB_GRAPH_PATH_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H

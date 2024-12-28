@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_DB_STORE_IMPL_H
-#define NATIVE_GDB_DB_STORE_IMPL_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_IMPL_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_IMPL_H
 
 #include <variant>
 

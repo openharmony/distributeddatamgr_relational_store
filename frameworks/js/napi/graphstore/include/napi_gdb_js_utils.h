@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GDB_JS_NAPI_GDB_JS_UTILS_H
-#define GDB_JS_NAPI_GDB_JS_UTILS_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_JS_UTILS_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_JS_UTILS_H
 #include "full_result.h"
 #include "gdb_store_config.h"
 #include "js_sendable_utils.h"

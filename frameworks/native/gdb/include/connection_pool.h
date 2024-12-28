@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_CONNECTION_POOL_H
-#define NATIVE_GDB_CONNECTION_POOL_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_CONNECTION_POOL_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_CONNECTION_POOL_H
 
 #include <atomic>
 #include <condition_variable>

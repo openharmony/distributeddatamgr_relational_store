@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_STATEMENT_H
-#define NATIVE_GDB_STATEMENT_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_STATEMENT_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_STATEMENT_H
 #include <functional>
 #include <memory>
 #include <string>

@@ -12,8 +12,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef GDB_JS_NAPI_GDB_CONTEXT_H
-#define GDB_JS_NAPI_GDB_CONTEXT_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_CONTEXT_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_CONTEXT_H
 
 #include "full_result.h"
 #include "gdb_store.h"
