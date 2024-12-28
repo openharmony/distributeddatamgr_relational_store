@@ -39,22 +39,22 @@ public:
     void VerifyPersonInfo(const GraphValue &person, const std::string &name, const int32_t &age);
     void MatchAndVerifyPerson(const std::string &name, const int32_t &age);
 
-    static const std::string DATABASE_NAME;
-    static const std::string DATABASE_PATH;
+    static const std::string databaseName;
+    static const std::string databasePath;
     static std::shared_ptr<DBStore> store_;
-    static const std::string CREATE_GRAPH_TEST;
-    static const std::shared_ptr<StoreConfig> DATABASE_CONFIG;
-    static const std::string PATH_JSON_STR;
+    static const std::string createGraphGql;
+    static const std::shared_ptr<StoreConfig> databaseConfig;
+    static const std::string pathJsonString;
 };
 std::shared_ptr<DBStore> GdbExecuteTest::store_;
-const std::string GdbExecuteTest::DATABASE_NAME = "execute_test";
-const std::string GdbExecuteTest::DATABASE_PATH = "/data";
-const std::string GdbExecuteTest::CREATE_GRAPH_TEST = "CREATE GRAPH test { "
-                                                      "(person:Person {name STRING, age INT, sex BOOL DEFAULT false}), "
-                                                      "(dog:Dog {name STRING, age INT}), "
-                                                      "(person) -[:Friend]-> (person) "
-                                                      "};";
-const std::string GdbExecuteTest::PATH_JSON_STR = R"({
+const std::string GdbExecuteTest::databaseName = "execute_test";
+const std::string GdbExecuteTest::databasePath = "/data";
+const std::string GdbExecuteTest::createGraphGql = "CREATE GRAPH test { "
+                                                   "(person:Person {name STRING, age INT, sex BOOL DEFAULT false}),"
+                                                   "(dog:Dog {name STRING, age INT}), "
+                                                   "(person) -[:Friend]-> (person) "
+                                                   "};";
+const std::string GdbExecuteTest::pathJsonString = R"({
         "start": {
             "label": "PERSON",
             "identity": 1,
@@ -94,7 +94,7 @@ const std::string GdbExecuteTest::PATH_JSON_STR = R"({
 void GdbExecuteTest::SetUpTestCase()
 {
     int errCode = E_OK;
-    auto config = StoreConfig(DATABASE_NAME, DATABASE_PATH);
+    auto config = StoreConfig(databaseName, databasePath);
     GDBHelper::DeleteDBStore(config);
 
     GdbExecuteTest::store_ = GDBHelper::GetDBStore(config, errCode);
@@ -104,13 +104,13 @@ void GdbExecuteTest::SetUpTestCase()
 
 void GdbExecuteTest::TearDownTestCase()
 {
-    GDBHelper::DeleteDBStore(StoreConfig(DATABASE_NAME, DATABASE_PATH));
+    GDBHelper::DeleteDBStore(StoreConfig(databaseName, databasePath));
     store_ = nullptr;
 }
 
 void GdbExecuteTest::SetUp()
 {
-    auto result = store_->ExecuteGql(CREATE_GRAPH_TEST);
+    auto result = store_->ExecuteGql(createGraphGql);
     EXPECT_NE(store_, nullptr);
     EXPECT_EQ(result.first, E_OK);
 }
@@ -126,7 +126,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -138,7 +138,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreVector, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath, DBType::DB_VECTOR);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -150,7 +150,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreButt, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath, DBType::DB_BUTT);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -162,7 +162,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSize, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
     config.SetReadConSize(0);
 
@@ -175,7 +175,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSizeMax, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
     config.SetReadConSize(500);
 
@@ -188,7 +188,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_NameHasdbSuffix, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success.db";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -200,7 +200,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_NameHasDBSuffix, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "success.DB";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -212,7 +212,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_NameHasSpecialChar, TestSize.Level1
 {
     int errCode = E_OK;
     std::string dbName = "suc@!#$*(cess.";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -224,7 +224,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_PathOkEmptyName, TestSize.Level1)
 {
     int errCode = E_OK;
     std::string dbName = "";
-    std::string dbPath = DATABASE_PATH;
+    std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath);
 
     auto store = GDBHelper::GetDBStore(config, errCode);
@@ -259,7 +259,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_PathErrorEmptyName, TestSize.Level1
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_Empty_Path, TestSize.Level1)
 {
     int errCode = E_OK;
-    std::string dbName = DATABASE_NAME;
+    std::string dbName = databaseName;
     std::string dbPath = "";
     auto config = StoreConfig(dbName, dbPath);
 
@@ -558,7 +558,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterDrop, TestSize.Level1)
 
     result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
     EXPECT_EQ(result.first, E_GRD_UNDEFINED_TABLE);
-    result = store_->ExecuteGql(CREATE_GRAPH_TEST);
+    result = store_->ExecuteGql(createGraphGql);
     EXPECT_NE(result.second, nullptr);
     EXPECT_EQ(result.first, E_OK);
 }
@@ -694,10 +694,11 @@ void GdbExecuteTest::MatchAndVerifyPerson(const std::string &name, const int32_t
 
 void GdbExecuteTest::VerifyPersonInfo(const GraphValue &person, const std::string &name, const int32_t &age)
 {
+    auto expectSize = 3;
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
     EXPECT_EQ(personVertex->GetLabel(), "PERSON");
-    ASSERT_EQ(personVertex->GetProperties().size(), 3);
+    ASSERT_EQ(personVertex->GetProperties().size(), expectSize);
 
     auto nameDb = personVertex->GetProperties().find("NAME");
     ASSERT_NE(nameDb, personVertex->GetProperties().end());
@@ -734,11 +735,11 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata, TestSize.Level1)
     result = store_->ExecuteGql("INSERT (:Person {name: 'name_2', age: 22});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("name_2", 22);
-    // 鏇存柊鐐圭殑鎵€鏈夊睘鎬э紙寮簊chema涓嬪叾浠栨湭濉瓧娈典负null锛?+    result = store_->ExecuteGql("MATCH (p2:Person {name: 'name_2'}) SET p2 = {name: 'name_2_modify_all', age: 99};");
+    result = store_->ExecuteGql("MATCH (p2:Person {name: 'name_2'}) SET p2 = {name: 'name_2_modify_all', age: 99};");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("name_2_modify_all", 99);
 
-    // 鏇存柊涓嬩竴璺虫煡鎵惧埌鐨勭偣鐨勯儴鍒嗗睘鎬?+    result = store_->ExecuteGql("MATCH (p1:Person {name: 'name_1_modify2'}), (p2:Person {name: 'name_2_modify_all'}) "
+    result = store_->ExecuteGql("MATCH (p1:Person {name: 'name_1_modify2'}), (p2:Person {name: 'name_2_modify_all'}) "
                                 "INSERT (p1)-[:Friend]->(p2);");
     EXPECT_EQ(result.first, E_OK);
     result =
@@ -1101,39 +1102,40 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_ParseEdge, TestSize.Level1)
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // ok
-    jsonStr =
-        "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_OK);
     // start is AA
-    jsonStr =
-        "{\"start\" : \"AA\", \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : \"AA\", \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_OK);
     // end is B
-    jsonStr =
-        "{\"start\" : 1, \"end\" : \"B\", \"label\":\"COMPANY\",\"identity\":3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : 1, \"end\" : \"B\", \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity is C
-    jsonStr =
-        "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":\"C\",\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":\"C\","
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_OK);
     // label is 222
-    jsonStr =
-        "{\"start\" : 1, \"end\" : 2, \"label\":222,'identity':3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":222,'identity':3,\"properties\":{\"NAME\":\"myCompany3\","
+              "\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // key4 is null
     jsonStr =
         "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":2,"
-        "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, \"key4\": null}}";
+        "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, "
+        "\"key4\": null}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     Edge::Parse(json, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
@@ -1155,38 +1157,38 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment, TestSize.Level1)
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    jsonStr =
-        "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    jsonStr =
-        "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    jsonStr =
-        "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":\"C\",\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":\"C\","
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    jsonStr =
-        "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":222,\"identity\":2,\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":222,\"identity\":2,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    jsonStr =
-        "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":2,"
-        "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, \"key4\": null}}";
+    jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":2,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], "
+              "\"key3\":{}, \"key4\": null}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    json = nlohmann::json::parse(PATH_JSON_STR, nullptr, false);
+    json = nlohmann::json::parse(pathJsonString, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_OK);
 }
@@ -1195,7 +1197,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
 {
     EXPECT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(PATH_JSON_STR, nullptr, false);
+    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
     PathSegment::Parse(json, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity:A, E_OK
@@ -1211,12 +1213,13 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
 
     // label:2, E_PARSE_JSON_FAILED
-    jsonStr = "{\"start\":{\"label\":2,\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
-              "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
-              "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
-              "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-              "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
-              "\"PINYIN\":\"zhixiqinshu\"}}}";
+    jsonStr =
+        "{\"start\":{\"label\":2,\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
@@ -1250,7 +1253,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment03, TestSize.Level1)
 {
     EXPECT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(PATH_JSON_STR, nullptr, false);
+    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_OK);
     // end no label:PERSON and identity: A

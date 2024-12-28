@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2024 myCompany Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include <gtest/gtest.h>
 
@@ -37,17 +37,17 @@ public:
     void MatchAndVerifyCompany(const std::string &name, const int32_t &founded);
     void VerifyCompanyInfo(const GraphValue &company, const std::string &name, const int32_t &founded);
 
-    static const std::string DATABASE_NAME;
-    static const std::string DATABASE_PATH;
+    static const std::string databaseName;
+    static const std::string databasePath;
     static std::shared_ptr<DBStore> store_;
-    static const std::string CREATE_GRAPH_TEST;
-    static const std::string CREATE_GRAPH_TEST2;
-    static const std::shared_ptr<StoreConfig> DATABASE_CONFIG;
+    static const std::string createGraphGql;
+    static const std::string createGraphGql2;
+    static const std::shared_ptr<StoreConfig> databaseConfig;
 };
 std::shared_ptr<DBStore> GdbQueryTest::store_;
-const std::string GdbQueryTest::DATABASE_NAME = "test_gdb";
-const std::string GdbQueryTest::DATABASE_PATH = "/data";
-const std::string GdbQueryTest::CREATE_GRAPH_TEST = "CREATE GRAPH companyGraph { "
+const std::string GdbQueryTest::databaseName = "test_gdb";
+const std::string GdbQueryTest::databasePath = "/data";
+const std::string GdbQueryTest::createGraphGql = "CREATE GRAPH companyGraph { "
                                                     "(company:Company {name STRING, founded INT}), "
                                                     "(department:Department {name STRING}), "
                                                     "(employee:Employee {name STRING, position STRING}), "
@@ -57,12 +57,12 @@ const std::string GdbQueryTest::CREATE_GRAPH_TEST = "CREATE GRAPH companyGraph {
                                                     "(employee) -[:WORKS_ON]-> (project), "
                                                     "(department) -[:HAS_PROJECT]-> (project) "
                                                     "};";
-const std::string GdbQueryTest::CREATE_GRAPH_TEST2 = "CREATE GRAPH companyGraph2 {"
+const std::string GdbQueryTest::createGraphGql2 = "CREATE GRAPH companyGraph2 {"
                                                      "(company:Company {name STRING, founded INT}) };";
 void GdbQueryTest::SetUpTestCase()
 {
     int errCode = E_OK;
-    auto config = StoreConfig(DATABASE_NAME, DATABASE_PATH);
+    auto config = StoreConfig(databaseName, databasePath);
     GDBHelper::DeleteDBStore(config);
 
     GdbQueryTest::store_ = GDBHelper::GetDBStore(config, errCode);
@@ -72,13 +72,13 @@ void GdbQueryTest::SetUpTestCase()
 
 void GdbQueryTest::TearDownTestCase()
 {
-    GDBHelper::DeleteDBStore(StoreConfig(DATABASE_NAME, DATABASE_PATH));
+    GDBHelper::DeleteDBStore(StoreConfig(databaseName, databasePath));
     store_ = nullptr;
 }
 
 void GdbQueryTest::SetUp()
 {
-    auto result = store_->ExecuteGql(CREATE_GRAPH_TEST);
+    auto result = store_->ExecuteGql(createGraphGql);
     EXPECT_EQ(result.first, E_OK);
 }
 
@@ -103,7 +103,7 @@ HWTEST_F(GdbQueryTest, GdbStore_Test_CreateHaveRowId, TestSize.Level1)
 HWTEST_F(GdbQueryTest, GdbStore_Test_CreateLimitDb, TestSize.Level1)
 {
     // Too many graphs can be created for only one graph in a library. Failed to create too many graphs.
-    auto result = store_->ExecuteGql(CREATE_GRAPH_TEST2);
+    auto result = store_->ExecuteGql(createGraphGql2);
     EXPECT_EQ(result.first, E_GRD_OVER_LIMIT);
 }
 
@@ -212,10 +212,11 @@ void GdbQueryTest::MatchAndVerifyCompany(const std::string &name, const int32_t 
  */
 void GdbQueryTest::VerifyCompanyInfo(const GraphValue &company, const std::string &name, const int32_t &founded)
 {
+    auto expectSize = 2;
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(company));
     auto companyVertex = std::get<std::shared_ptr<Vertex>>(company);
     EXPECT_EQ(companyVertex->GetLabel(), "COMPANY");
-    ASSERT_EQ(companyVertex->GetProperties().size(), 2);
+    ASSERT_EQ(companyVertex->GetProperties().size(), expectSize);
 
     auto nameDb = companyVertex->GetProperties().find("NAME");
     ASSERT_NE(nameDb, companyVertex->GetProperties().end());

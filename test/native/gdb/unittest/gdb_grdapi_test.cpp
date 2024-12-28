@@ -183,9 +183,6 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_TransErr01, TestSize.Level1)
 
 HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
 {
-    if (g_library != nullptr) {
-        dlclose(g_library);
-    }
     std::string createGql = "CREATE GRAPH test {(person:Person {name STRING} )};";
     std::string dbPath = "/data/test.db";
     std::string backupPath = "/data/testBackup.db";
@@ -226,11 +223,18 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
     }
     ret = GrdAdapter::Rekey(dbPath.c_str(), "", std::vector<uint8_t>());
     EXPECT_EQ(ret, E_NOT_SUPPORT);
+}
 
+HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
+{
+    std::string createGql = "CREATE GRAPH test {(person:Person {name STRING} )};";
+    std::string dbPath = "/data/test.db";
+    std::string backupPath = "/data/testBackup.db";
+    GRD_DB *db = nullptr;
     if (g_library != nullptr) {
         dlclose(g_library);
     }
-    ret = GrdAdapter::Open(dbPath.c_str(), "", GRD_DB_OPEN_CREATE, &db);
+    auto ret = GrdAdapter::Open(dbPath.c_str(), "", GRD_DB_OPEN_CREATE, &db);
     EXPECT_EQ(ret, E_OK);
 
     if (g_library != nullptr) {
@@ -269,10 +273,8 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
     }
     auto value = GrdAdapter::ColumnValue(stmt, 0);
     EXPECT_EQ(value.type, GRD_DB_DATATYPE_NULL);
-
     ret = StoreManager::GetInstance().Delete(dbPath);
     EXPECT_EQ(ret, 1);
-
     ret = StoreManager::GetInstance().Delete(backupPath);
     EXPECT_EQ(ret, 1);
 }
