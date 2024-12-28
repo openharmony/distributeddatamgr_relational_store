@@ -43,6 +43,7 @@ static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.dataShare", "ZGF0YS5kYXRhU2hhcmU=", false },
     { "ohos.data.distributedDataObject", "ZGF0YS5kaXN0cmlidXRlZERhdGFPYmplY3Q=", false },
     { "ohos.data.distributedKVStore", "ZGF0YS5kaXN0cmlidXRlZEtWU3RvcmU=", false },
+    { "ohos.data.graphStore", "ZGF0YS5ncmFwaFN0b3Jl", true },
     { "ohos.data.rdb", "ZGF0YS5yZGI=", true },
     { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
@@ -100,6 +101,11 @@ std::string JSUtils::Convert2String(napi_env env, napi_value jsStr)
     std::string value = ""; // TD: need to check everywhere in use whether empty is work well.
     JSUtils::Convert2Value(env, jsStr, value);
     return value;
+}
+
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::nullptr_t &jsStr)
+{
+    return nullptr;
 }
 
 int32_t JSUtils::Convert2ValueExt(napi_env env, napi_value jsValue, uint32_t &output)
@@ -518,7 +524,7 @@ bool JSUtils::IsNull(napi_env env, napi_value value)
 }
 
 napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
-    const Descriptor &descriptor, napi_callback ctor)
+    const Descriptor &descriptor, napi_callback ctor, bool isSendable)
 {
     auto featureSpace = GetJsFeatureSpace(spaceName);
     if (!featureSpace.has_value() || !featureSpace->isComponent) {
@@ -553,8 +559,14 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
         hasProp = false; // no constructor.
     }
     auto properties = descriptor();
-    NAPI_CALL(env, napi_define_class(env, className.c_str(), className.size(), ctor, nullptr, properties.size(),
-                       properties.data(), &constructor));
+    if (isSendable) {
+        NAPI_CALL(env, napi_define_sendable_class(env, className.c_str(), className.size(), ctor, nullptr,
+                           properties.size(), properties.data(), nullptr, &constructor));
+    } else {
+        NAPI_CALL(env, napi_define_class(env, className.c_str(), className.size(), ctor, nullptr,
+                           properties.size(), properties.data(), &constructor));
+    }
+
     NAPI_ASSERT(env, constructor != nullptr, "napi_define_class failed!");
 
     if (!hasProp) {
