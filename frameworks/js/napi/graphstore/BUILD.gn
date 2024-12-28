@@ -23,7 +23,6 @@ ohos_shared_library("graphstore") {
     debug = false
   }
   include_dirs = [
-    "${kvstore_path}/common",
     "${relational_store_common_path}/include",
     "${relational_store_frameworks_path}/native/gdb/include",
     "${relational_store_frameworks_path}/common/include",
@@ -56,6 +55,7 @@ ohos_shared_library("graphstore") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "kv_store:database_utils",
     "napi:ace_napi",
   ]
 

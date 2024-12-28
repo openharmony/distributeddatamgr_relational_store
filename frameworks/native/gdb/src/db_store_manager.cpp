@@ -102,16 +102,17 @@ void StoreManager::Clear()
 bool StoreManager::Delete(const std::string &path)
 {
     LOG_DEBUG("Delete file, path=%{public}s", GdbUtils::Anonymous(path).c_str());
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (storeCache_.find(path) != storeCache_.end()) {
-        auto store = storeCache_[path].lock();
-        if (store) {
-            LOG_WARN("store in use by %{public}ld holders", store.use_count());
-            store->Close();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (storeCache_.find(path) != storeCache_.end()) {
+            if (auto store = storeCache_[path].lock()) {
+                LOG_WARN("store in use by %{public}ld holders", store.use_count());
+                store->Close();
+            }
+            storeCache_.erase(path); // clean invalid store ptr
         }
-        storeCache_.erase(path); // clean invalid store ptr
     }
-    // 鍒犲簱鍔ㄤ綔
+
     bool deleteResult = true;
     for (auto &suffix : GRD_POST_FIXES) {
         deleteResult = DeleteFile(path + suffix) && deleteResult;
