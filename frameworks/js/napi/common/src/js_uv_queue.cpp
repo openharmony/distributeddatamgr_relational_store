@@ -32,7 +32,7 @@ UvQueue::UvQueue(napi_env env) : env_(env)
 
 UvQueue::~UvQueue()
 {
-    LOG_DEBUG("no memory leak for queue-callback.");
+    LOG_DEBUG("No memory leak for queue-callback.");
     env_ = nullptr;
     handler_ = nullptr;
 }
@@ -45,13 +45,13 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t.");
+        LOG_ERROR("No memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for UvEntry.");
+        LOG_ERROR("No memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -81,7 +81,7 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
     }
     auto entry = std::make_shared<UvEntry>();
     if (entry == nullptr) {
-        LOG_ERROR("no memory for UvEntry.");
+        LOG_ERROR("No memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -101,13 +101,13 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t.");
+        LOG_ERROR("No memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) UvEntry();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for UvEntry.");
+        LOG_ERROR("No memory for UvEntry.");
         return;
     }
     entry->env_ = env_;
@@ -130,13 +130,13 @@ void UvQueue::Execute(UvQueue::Task task)
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
-        LOG_ERROR("no memory for uv_work_t.");
+        LOG_ERROR("No memory for uv_work_t.");
         return;
     }
     auto entry = new (std::nothrow) Task();
     if (entry == nullptr) {
         delete work;
-        LOG_ERROR("no memory for Task.");
+        LOG_ERROR("No memory for Task.");
         return;
     }
     *entry = task;
@@ -230,7 +230,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         napi_value method = entry->GetCallback();
         if (method == nullptr) {
             entry->DelReference();
-            LOG_ERROR("the callback is invalid, maybe is cleared!");
+            LOG_ERROR("The callback is invalid, maybe is cleared!");
             return;
         }
         napi_value argv[ARGC_MAX] = { nullptr };
@@ -240,7 +240,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         auto status = napi_call_function(entry->env_, object, method, argc, argv, &promise);
         entry->DelReference();
         if (status != napi_ok) {
-            LOG_ERROR("notify data change failed status:%{public}d.", status);
+            LOG_ERROR("Notify data change failed status:%{public}d.", status);
             return;
         }
         entry->BindPromise(promise);

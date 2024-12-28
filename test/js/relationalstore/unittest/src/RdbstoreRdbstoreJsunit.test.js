@@ -354,5 +354,419 @@ describe('rdbStoreTest', function () {
             expect().assertFail();
         }
     })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0013
+     * @tc.desc invalid rootDir path async
+     */
+    it('testRdbStore0013', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0013 start *************");
+        try {
+            await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "invalidPath",
+                customDir: "entry/rdb"
+            });
+            expect().assertFail();
+        } catch (e) {
+            expect("14800010").assertEqual(e.code);
+        }
+        console.log(TAG + "************* testRdbStore0013 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0014
+     * @tc.desc invalid rootDir path callback
+     */
+    it('testRdbStore0014', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0014 start *************");
+        try {
+            data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "invalidPath",
+                customDir: "entry/rdb"
+            }, () => {
+                expect().assertFail();
+            })
+        } catch (e) {
+            expect("14800010").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0014 end *************");
+            done();
+        };
+    })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0015
+     * @tc.desc db not exist test async
+     */
+    it('testRdbStore0015', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0015 start *************");
+        try {
+            await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database",
+                customDir: "entry/rdb"
+            });
+            expect().assertFail();
+        } catch (e) {
+            expect("14800010").assertEqual(e.code);
+        }
+        console.log(TAG + "************* testRdbStore0015 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0016
+     * @tc.desc db not exist test callback
+     */
+    it('testRdbStore0016', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0016 start *************");
+        try {
+            data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database",
+                customDir: "entry/rdb"
+            }, () => {
+                expect().assertFail();
+            })
+        } catch (e) {
+            expect("14800010").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0016 end *************");
+            done();
+        }
+    })
+    
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0017
+     * @tc.desc query test async
+     */
+    it('testRdbStore0017', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0017 start *************");
+        try {
+            const rowCount = 18;
+            const rdbStore = await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+            })
+
+            rdbStore.executeSync(CREATE_TABLE_TEST);
+
+            const valueBuckets = Array(rowCount).fill(0).map(() => {
+                return  {
+                    "name": "lisi",
+                    "age": 15,
+                    "salary": 153.3,
+                    "blobType": new Uint8Array([1, 2, 3]),
+                };
+            })
+            rdbStore.batchInsertSync('test', valueBuckets);
+            rdbStore.close();
+            
+            const rdbStore1 = await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database",
+                customDir: "entry/rdb"
+            })
+
+            const predicates = new data_relationalStore.RdbPredicates('test');
+            const resultSet = rdbStore1.querySync(predicates);
+            expect(resultSet.rowCount).assertEqual(rowCount);
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect().assertFail();
+        }
+        await data_relationalStore.deleteRdbStore(context, "rootDirTest");
+        console.log(TAG + "************* testRdbStore0017 end *************");
+        done();
+    })
+    
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0018
+     * @tc.desc query test callback
+     */
+    it('testRdbStore0018', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0018 start *************");
+        const rowCount = 18;
+        const rdbStore = await data_relationalStore.getRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+        })
+
+        rdbStore.executeSync(CREATE_TABLE_TEST);
+
+        const valueBuckets = Array(rowCount).fill(0).map(() => {
+            return  {
+                "name": "lisi",
+                "age": 15,
+                "salary": 153.3,
+                "blobType": new Uint8Array([1, 2, 3]),
+            };
+        })
+        rdbStore.batchInsertSync('test', valueBuckets);
+        rdbStore.close();
+
+        data_relationalStore.getRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+            rootDir: "/data/storage/el2/database",
+            customDir: "entry/rdb"
+        }, (e, rdbStore) => {
+            if (e) {
+                console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+                expect().assertFail();
+            } else {
+                const predicates = new data_relationalStore.RdbPredicates('test');
+                const resultSet = rdbStore.querySync(predicates);
+                expect(resultSet.rowCount).assertEqual(rowCount);
+                data_relationalStore.deleteRdbStore(context, "rootDirTest");
+                console.log(TAG + "************* testRdbStore0018 end *************");
+                done();
+            }
+        })
+    })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0019
+     * @tc.desc write test async
+     */
+    it('testRdbStore0019', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0019 start *************");
+        try {
+            const rdbStore = await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+            })
+
+            rdbStore.executeSync(CREATE_TABLE_TEST);
+            rdbStore.close();
+            
+            const rdbStore1 = await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database",
+                customDir: "entry/rdb"
+            })
+
+            rdbStore1.insertSync('test', {
+                "name": "lisi",
+                "age": 15,
+                "salary": 153.3,
+                "blobType": new Uint8Array([1, 2, 3]),
+            });
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect(801).assertEqual(e.code);
+        }
+        await data_relationalStore.deleteRdbStore(context, "rootDirTest");
+        console.log(TAG + "************* testRdbStore0019 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0020
+     * @tc.desc write test callback
+     */
+    it('testRdbStore0020', 0, async function (done) {
+        console.log(TAG + "************* testRdbStore0020 start *************");
+        const rdbStore = await data_relationalStore.getRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+        })
+
+        rdbStore.executeSync(CREATE_TABLE_TEST);
+        rdbStore.close();
+
+        data_relationalStore.getRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+            rootDir: "/data/storage/el2/database",
+            customDir: "entry/rdb"
+        }, (e, rdbStore) => {
+            try {
+                rdbStore.insertSync('test', {
+                    "name": "lisi",
+                    "age": 15,
+                    "salary": 153.3,
+                    "blobType": new Uint8Array([1, 2, 3]),
+                });
+                expect().assertFail();
+            } catch (e) {
+                console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+                expect(801).assertEqual(e.code);
+            }
+            data_relationalStore.deleteRdbStore(context, "rootDirTest");
+            console.log(TAG + "************* testRdbStore0020 end *************");
+            done();
+        })
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0021
+     * @tc.desc deleteRdb test async
+     */
+    it('testRdbStore0021', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0021 start *************");
+        try {
+            const rdbStore = await data_relationalStore.getRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+            })
+
+            rdbStore.executeSync(CREATE_TABLE_TEST);
+            rdbStore.close();
+            
+            await data_relationalStore.deleteRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database",
+                customDir: "entry/rdb"
+            })
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+            expect().assertFail();
+        }
+        console.log(TAG + "************* testRdbStore0021 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0022
+     * @tc.desc deleteRdb test callback
+     */
+    it('testRdbStore0022', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0022 start *************");
+        const rdbStore = await data_relationalStore.getRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+        })
+
+        rdbStore.executeSync(CREATE_TABLE_TEST);
+        rdbStore.close();
+
+        data_relationalStore.deleteRdbStore(context, {
+            name: "rootDirTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+            rootDir: "/data/storage/el2/database",
+            customDir: "entry/rdb"
+        }, (e) => {
+            if (e) {
+                console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
+                expect().assertFail();
+            } else {
+                console.log(TAG + "************* testRdbStore0022 end *************");
+                done();
+            }
+        })
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0023
+     * @tc.desc invalid rootDir test async
+     */
+    it('testRdbStore0023', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0023 start *************");
+        try {            
+            await data_relationalStore.deleteRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "invalidPath",
+                customDir: "entry/rdb"
+            })
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("14800010").assertEqual(e.code);
+        }
+        console.log(TAG + "************* testRdbStore0023 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0024
+     * @tc.desc invalid rootDir test callback
+     */
+    it('testRdbStore0024', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0024 start *************");
+        try {            
+            data_relationalStore.deleteRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "invalidPath",
+                customDir: "entry/rdb"
+            }, (e) => {
+                expect().assertFail();
+            })
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("14800010").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0024 end *************");
+            done();
+        }
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0025
+     * @tc.desc db not exist test async
+     */
+    it('testRdbStore0025', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0025 start *************");
+        try {            
+            await data_relationalStore.deleteRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database/entry/rdb",
+            })
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("14800010").assertEqual(e.code);
+        }
+        console.log(TAG + "************* testRdbStore0025 end *************");
+        done();
+    })
+
+    /**
+     * @tc.name rootDir support deleteRdb test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0026
+     * @tc.desc db not exist test async
+     */
+    it('testRdbStore0026', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0026 start *************");
+        try {            
+            data_relationalStore.deleteRdbStore(context, {
+                name: "rootDirTest",
+                securityLevel: data_relationalStore.SecurityLevel.S3,
+                rootDir: "/data/storage/el2/database/entry/rdb",
+            }, () => {
+                expect().assertFail();
+            })
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("14800010").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0026 end *************");
+            done();
+        }
+    })
+    
     console.log(TAG + "*************Unit Test End*************");
 })

@@ -491,3 +491,49 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
 
     ASSERT_NE(inodeNumber1, inodeNumber2);
 }
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_08
+* @tc.desc: test deleting the key file of the encrypted database
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    struct stat fileStat;
+    ino_t inodeNumber1 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber1 = fileStat.st_ino;
+    }
+    store = nullptr;
+
+    {
+        std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
+        fsDb.seekp(64);
+        fsDb.write("hello", 5);
+        fsDb.close();
+    }
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    ino_t inodeNumber2 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber2 = fileStat.st_ino;
+    }
+
+    ASSERT_EQ(inodeNumber1, inodeNumber2);
+}

@@ -99,7 +99,7 @@ int AbsResultSet::GetRowCount(int &count)
     }
 
     if (isClosed_) {
-        LOG_ERROR("fail, result set E_ALREADY_CLOSED.");
+        LOG_ERROR("Fail, result set E_ALREADY_CLOSED.");
         return E_ALREADY_CLOSED;
     }
 
@@ -134,7 +134,7 @@ int AbsResultSet::InitColumnNames()
 
     auto [errCode, names] = GetColumnNames();
     if (errCode != E_OK) {
-        LOG_DEBUG("ret is %{public}d", errCode);
+        LOG_DEBUG("Ret is %{public}d", errCode);
         return errCode;
     }
 
@@ -161,7 +161,7 @@ int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
     int type = object.GetType();
     if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
         type == ValueObject::TYPE_VECS) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        LOG_ERROR("Type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
     }
 
@@ -179,7 +179,7 @@ int AbsResultSet::GetString(int columnIndex, std::string &value)
     int type = object.GetType();
     if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
         type == ValueObject::TYPE_VECS) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        LOG_ERROR("Type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
     }
     return E_OK;
@@ -207,7 +207,7 @@ int AbsResultSet::GetLong(int columnIndex, int64_t &value)
     int type = object.GetType();
     if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
         type == ValueObject::TYPE_VECS) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        LOG_ERROR("Type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
     }
     return E_OK;
@@ -224,7 +224,7 @@ int AbsResultSet::GetDouble(int columnIndex, double &value)
     int type = object.GetType();
     if (type == ValueObject::TYPE_ASSETS || type == ValueObject::TYPE_ASSET || type == ValueObject::TYPE_BIGINT ||
         type == ValueObject::TYPE_VECS) {
-        LOG_ERROR("type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
+        LOG_ERROR("Type invalid col:%{public}d, type:%{public}d!", columnIndex, type);
         return E_INVALID_OBJECT_TYPE;
     }
     return E_OK;
@@ -238,7 +238,7 @@ int AbsResultSet::IsColumnNull(int columnIndex, bool &isNull)
     ColumnType columnType = ColumnType::TYPE_NULL;
     int errCode = GetColumnType(columnIndex, columnType);
     if (errCode != E_OK) {
-        LOG_ERROR("ret is %{public}d", errCode);
+        LOG_ERROR("Ret is %{public}d", errCode);
         return errCode;
     }
     isNull = (columnType == ColumnType::TYPE_NULL);
@@ -369,7 +369,7 @@ int AbsResultSet::GetColumnCount(int &count)
     }
     auto errCode = InitColumnNames();
     if (errCode != E_OK) {
-        LOG_DEBUG("ret is %{public}d", errCode);
+        LOG_DEBUG("Ret is %{public}d", errCode);
         return errCode;
     }
     count = columnCount_;
@@ -407,8 +407,9 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
             return E_OK;
         }
     }
-    LOG_ERROR("failed, columnName is: %{public}s", SqliteUtils::Anonymous(columnName).c_str());
-    return E_ERROR;
+    LOG_ERROR("Failed, columnName : %{public}s, errCode : %{public}d",
+        SqliteUtils::Anonymous(columnName).c_str(), errCode);
+    return E_INVALID_ARGS;
 }
 
 int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
@@ -421,7 +422,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
         return errCode;
     }
     if (columnCount_ <= columnIndex || columnIndex < 0) {
-        LOG_ERROR("invalid columnIndex %{public}d", columnIndex);
+        LOG_ERROR("Invalid columnIndex %{public}d", columnIndex);
         return E_COLUMN_OUT_RANGE;
     }
 
@@ -463,7 +464,7 @@ int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
     }
 
     if (valueObject.GetType() != ValueObject::TYPE_ASSET) {
-        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        LOG_ERROR("Failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
         return E_INVALID_OBJECT_TYPE;
     }
     value = valueObject;
@@ -483,7 +484,7 @@ int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
     }
 
     if (valueObject.GetType() != ValueObject::TYPE_ASSETS) {
-        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        LOG_ERROR("Failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
         return E_INVALID_OBJECT_TYPE;
     }
     value = valueObject;
@@ -503,7 +504,7 @@ int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
     }
 
     if (valueObject.GetType() != ValueObject::TYPE_VECS) {
-        LOG_ERROR("failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
+        LOG_ERROR("Failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
         return E_INVALID_OBJECT_TYPE;
     }
     value = valueObject;

@@ -191,6 +191,12 @@ enum EncryptAlgo : int32_t {
     AES_256_CBC
 };
 
+enum Tokenizer : int32_t {
+    NONE_TOKENIZER = 0,
+    ICU_TOKENIZER,
+    TOKENIZER_END
+};
+
 /**
  * @brief Use DistributedType replace OHOS::DistributedRdb::RdbDistributedType.
  */
@@ -342,6 +348,10 @@ public:
      * @brief Set encrypt status for the current database.
      */
     API_EXPORT void SetEncryptStatus(const bool status);
+
+    API_EXPORT Tokenizer GetTokenizer() const;
+
+    API_EXPORT void SetTokenizer(Tokenizer tokenizer);
 
     /**
      * @brief Checks whether the database is encrypt.
@@ -617,6 +627,14 @@ public:
     }
 
     /**
+     * @brief Overload the does not equal the number operator.
+     */
+    bool operator!=(const RdbStoreConfig &config) const
+    {
+        return !(*this == config);
+    }
+
+    /**
      * @brief Checks whether the database isSearchable necessary.
      */
     bool IsSearchable() const;
@@ -695,6 +713,10 @@ public:
 
     void EnableRekey(bool enable);
 
+    int GetNcandidates() const;
+
+    void SetNcandidates(int ncandidates);
+
     static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
 
 private:
@@ -719,6 +741,7 @@ private:
     int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;
     RoleType role_ = OWNER;
+    Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
@@ -741,6 +764,7 @@ private:
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     std::vector<std::string> pluginLibs_{};
+    int ncandidates_ = 128;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds

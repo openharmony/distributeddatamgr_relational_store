@@ -16,6 +16,7 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 import factory from '@ohos.data.distributedKVStore'
+import fs from '@ohos.file.fs'
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const TEST_BUNDLE_NAME = "com.example.myapplication"
@@ -732,6 +733,54 @@ describe('rdbEncryptTest', function () {
         }
 
         console.log(TAG + "************* RdbDecryptTest_0090 end *************")
+    })
+
+    /**
+     * @tc.number testConfigChange001
+     * @tc.name Abnormal test case of config change, but service not perceived
+     * @tc.desc 1.Get encrypt rdb1
+     *          2.Get decrypt rdb2
+     *          3.rename rdb2 to rdb1
+     *          4.Get rdb1 use decrypt
+     */
+    it('testConfigChange001', 0, async () => {
+        console.log(TAG + "************* testConfigChange001 start *************");
+        let rdbConfig = {
+            name: "testConfigChange001.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: true,
+        }
+        let otherRdbConfig = {
+            name: "other_testConfigChange001.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            encrypt: false,
+        }
+        try {
+            let rdbStore = await data_relationalStore.getRdbStore(context, rdbConfig);
+            rdbStore.close();
+            rdbStore = await data_relationalStore.getRdbStore(context, otherRdbConfig);
+            let databaseDir = "/data/storage/el2/database/entry/rdb/";
+            console.log(TAG + "testConfigChange001 dataBaseDir:" + databaseDir);
+            let filenames = fs.listFileSync(databaseDir);
+            console.log(TAG + "testConfigChange001 filenames:" + filenames);
+            for (let i = 0; i < filenames.length; i++) {
+                if (filenames[i].startsWith("testConfigChange001.db")) {
+                    fs.unlinkSync(databaseDir + filenames[i]);
+                    fs.renameSync(databaseDir + "other_" + filenames[i], databaseDir + filenames[i]);
+                    console.info("filename: " + filenames[i]);
+                }
+            }
+            rdbConfig.encrypt = false;
+            rdbStore = await data_relationalStore.getRdbStore(context, rdbConfig);
+            expect(true).assertTrue();
+            console.log(TAG + "testConfigChange001 success");
+        } catch (e) {
+            console.error(`testConfigChange001 failed, error code: ${e.code}, err message: ${e.message}`);
+            expect(null).assertFail();
+        }
+        await data_relationalStore.deleteRdbStore(context, rdbConfig);
+        await data_relationalStore.deleteRdbStore(context, otherRdbConfig);
+        console.log(TAG + "************* testConfigChange001 end *************");
     })
 
     /**

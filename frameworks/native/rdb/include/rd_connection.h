@@ -61,14 +61,18 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
 
 private:
+    static void CheckConfig(std::shared_ptr<Connection> conn, const RdbStoreConfig &config);
+    static void ExecuteSet(std::shared_ptr<Connection> conn, const std::string &paramName, int num);
+
     static constexpr int MAX_VARIABLE_NUM = 500;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
         "\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
-        "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500";
+        "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"ignoreMetaDataCorruption\":1";
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS[] = { NO_ITER, ITER_V1 };
     static constexpr uint32_t ITERS_COUNT = sizeof(ITERS) / sizeof(ITERS[0]);
+    static constexpr int NCANDIDATES_DEFAULT_NUM = 128;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;

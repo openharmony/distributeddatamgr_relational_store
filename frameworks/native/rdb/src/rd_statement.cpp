@@ -227,11 +227,11 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
 int RdStatement::IsValid(int index) const
 {
     if (stmtHandle_ == nullptr) {
-        LOG_ERROR("statement already close.");
+        LOG_ERROR("Statement already close.");
         return E_ALREADY_CLOSED;
     }
     if (index < 0 || index >= columnCount_) {
-        LOG_ERROR("index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
+        LOG_ERROR("Index (%{public}d) >= columnCount (%{public}d)", index, columnCount_);
         return E_COLUMN_OUT_RANGE;
     }
     return E_OK;
@@ -282,7 +282,7 @@ int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>
             }
         }
         if (ret != E_OK) {
-            LOG_ERROR("bind ret is %{public}d", ret);
+            LOG_ERROR("Bind ret is %{public}d", ret);
             return ret;
         }
         index++;
@@ -421,7 +421,7 @@ std::pair<int32_t, int32_t> RdStatement::GetColumnType(int32_t index) const
         case ColumnType::TYPE_FLOAT32_ARRAY:
             break;
         default:
-            LOG_ERROR("invalid type %{public}d.", type);
+            LOG_ERROR("Invalid type %{public}d.", type);
             return { E_ERROR, static_cast<int32_t>(ColumnType::TYPE_NULL) };
     }
     return { ret, static_cast<int32_t>(type) };
