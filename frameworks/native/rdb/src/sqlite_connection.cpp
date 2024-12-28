@@ -233,6 +233,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         return errCode;
     }
+    SetTokenizer(config);
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
@@ -354,11 +355,7 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
 
 int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPath)
 {
-    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        return E_OK;
-    }
-
-    if (config.GetRoleType() == VISITOR) {
+    if (config.GetStorageMode() == StorageMode::MODE_MEMORY || config.GetRoleType() == VISITOR) {
         return E_OK;
     }
 
@@ -408,6 +405,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     if (errCode != E_OK) {
         return errCode;
     }
+
     return LoadExtension(config, dbHandle_);
 }
 
@@ -795,6 +793,20 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
         LOG_ERROR("SqliteConnection SetAutoCheckpoint fail to set wal_autocheckpoint : %{public}d", errCode);
     }
     return errCode;
+}
+
+int SqliteConnection::SetTokenizer(const RdbStoreConfig &config)
+{
+    auto tokenizer = config.GetTokenizer();
+    if (tokenizer == NONE_TOKENIZER) {
+        return E_OK;
+    }
+    if (tokenizer == ICU_TOKENIZER) {
+        sqlite3_config(SQLITE_CONFIG_ENABLE_ICU, 1);
+        return E_OK;
+    }
+    LOG_ERROR("fail to set Tokenizer: %{public}d", tokenizer);
+    return E_INVALID_ARGS;
 }
 
 int SqliteConnection::SetWalFile(const RdbStoreConfig &config)

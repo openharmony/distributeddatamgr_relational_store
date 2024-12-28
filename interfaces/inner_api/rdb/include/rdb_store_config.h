@@ -191,6 +191,12 @@ enum EncryptAlgo : int32_t {
     AES_256_CBC
 };
 
+enum Tokenizer : int32_t {
+    NONE_TOKENIZER = 0,
+    ICU_TOKENIZER,
+    TOKENIZER_END
+};
+
 /**
  * @brief Use DistributedType replace OHOS::DistributedRdb::RdbDistributedType.
  */
@@ -342,6 +348,10 @@ public:
      * @brief Set encrypt status for the current database.
      */
     API_EXPORT void SetEncryptStatus(const bool status);
+
+    API_EXPORT Tokenizer GetTokenizer() const;
+
+    API_EXPORT void SetTokenizer(Tokenizer tokenizer);
 
     /**
      * @brief Checks whether the database is encrypt.
@@ -731,6 +741,7 @@ private:
     int32_t haMode_ = HAMode::SINGLE;
     SecurityLevel securityLevel_ = SecurityLevel::LAST;
     RoleType role_ = OWNER;
+    Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
