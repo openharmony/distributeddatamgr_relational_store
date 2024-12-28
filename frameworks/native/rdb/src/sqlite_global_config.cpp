@@ -22,6 +22,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstring>
+#include <mutex>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -32,6 +33,10 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+
+static std::string g_lastCorruptionMsg;
+static std::mutex g_corruptionMutex;
+
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {
     static SqliteGlobalConfig globalConfig;
@@ -45,6 +50,8 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
     sqlite3_config(SQLITE_CONFIG_LOG, &Log, GlobalExpr::CALLBACK_LOG_SWITCH ? reinterpret_cast<void *>(1) : NULL);
 
+    sqlite3_config(SQLITE_CONFIG_CORRUPTION, &Corruption, nullptr);
+
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
     sqlite3_initialize();
@@ -52,6 +59,12 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
 SqliteGlobalConfig::~SqliteGlobalConfig()
 {
+}
+
+void SqliteGlobalConfig::Corruption(void *arg, const void *msg)
+{
+    std::lock_guard<std::mutex> lockGuard(g_corruptionMutex);
+    g_lastCorruptionMsg = (const char *)msg;
 }
 
 void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
@@ -127,6 +140,14 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
         dbPath = path;
     }
     return E_OK;
+}
+
+std::string SqliteGlobalConfig::GetLastCorruptionMsg()
+{
+    std::lock_guard<std::mutex> lockGuard(g_corruptionMutex);
+    std::string msg = g_lastCorruptionMsg;
+    g_lastCorruptionMsg = "";
+    return msg;
 }
 } // namespace NativeRdb
 } // namespace OHOS
