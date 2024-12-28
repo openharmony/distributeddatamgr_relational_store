@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef GDB_NATIVE_GRD_TYPE_EXPORT_H
-#define GDB_NATIVE_GRD_TYPE_EXPORT_H
+#ifndef OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_TYPE_EXPORT_H
+#define OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_TYPE_EXPORT_H
 #include <cstdint>
 #ifdef __cplusplus
 extern "C" {
@@ -77,4 +77,4 @@ typedef struct GRD_CipherInfo {
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-#endif // GDB_NATIVE_GRD_TYPE_EXPORT_H
+#endif // OHOS_DISTRIBUTED_DATA_OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRD_TYPE_EXPORT_H

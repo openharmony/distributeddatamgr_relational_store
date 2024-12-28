@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GDB_JS_NAPI_DB_STORE_HELPER_H
-#define GDB_JS_NAPI_DB_STORE_HELPER_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_DB_STORE_HELPER_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_DB_STORE_HELPER_H
 
 #include <memory>
 #include <string>

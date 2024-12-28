@@ -12,8 +12,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef GDB_JS_NAPI_GDB_STORE_H
-#define GDB_JS_NAPI_GDB_STORE_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_STORE_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_STORE_H
 
 #include <functional>
 #include <list>
@@ -39,7 +39,7 @@ using namespace DistributedDataAip;
     } while (0)
 
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
-class GdbStoreProxy : public JSProxy::JSProxy<DBStore> {
+class GdbStoreProxy : public GraphStoreJsKit::JSProxy<DBStore> {
 public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<DBStore> value, bool isSystemAppCalled);

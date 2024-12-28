@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GDB_JS_NAPI_GDB_CONST_PROPERTIES_H
-#define GDB_JS_NAPI_GDB_CONST_PROPERTIES_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_CONST_PROPERTIES_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_CONST_PROPERTIES_H
 
 #include "napi/native_common.h"
 #include "napi/native_api.h"

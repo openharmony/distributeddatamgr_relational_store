@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACE_GDB_DB_HELPER_H
-#define INTERFACE_GDB_DB_HELPER_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_HELPER_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_HELPER_H
 #include <cstdint>
 
 #include "gdb_store_config.h"
@@ -28,4 +28,4 @@ public:
     API_EXPORT static int DeleteDBStore(const StoreConfig &config);
 };
 } // namespace OHOS::DistributedDataAip
-#endif //INTERFACE_GDB_DB_HELPER_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_HELPER_H

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_GRAPH_STATEMENT_H
-#define NATIVE_GDB_GRAPH_STATEMENT_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_STATEMENT_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_STATEMENT_H
 
 #ifndef JSON_NOEXCEPTION
 #define JSON_NOEXCEPTION
@@ -49,4 +49,4 @@ private:
     static GraphValue ParseJsonStr(const std::string &jsonStr, int32_t &errCode) ;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //NATIVE_GDB_GRAPH_STATEMENT_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_STATEMENT_H

@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_GDB_GRAPH_VERTEX_H
-#define NATIVE_GDB_GRAPH_VERTEX_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -54,4 +54,4 @@ protected:
     std::unordered_map<std::string, PropType> properties_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //NATIVE_GDB_GRAPH_VERTEX_H
+#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H

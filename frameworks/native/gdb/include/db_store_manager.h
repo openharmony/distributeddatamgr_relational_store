@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NATIVE_GDB_DB_STORE_MANAGER_H
-#define NATIVE_GDB_DB_STORE_MANAGER_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_MANAGER_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_MANAGER_H
 #include <map>
 #include <mutex>
 

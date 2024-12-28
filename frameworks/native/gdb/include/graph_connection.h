@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_GRAPH_CONNECTION_H
-#define NATIVE_GDB_GRAPH_CONNECTION_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_CONNECTION_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_CONNECTION_H
 
 #include <memory>
 #include <mutex>
@@ -50,4 +50,4 @@ private:
 
 } // namespace OHOS::DistributedDataAip
 
-#endif // NATIVE_GDB_GRAPH_CONNECTION_H
+#endif // OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_CONNECTION_H

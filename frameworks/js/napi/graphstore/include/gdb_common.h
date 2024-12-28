@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef GDB_JS_NAPI_GDB_COMMON_H
-#define GDB_JS_NAPI_GDB_COMMON_H
+#ifndef OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_COMMON_H
+#define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_COMMON_H
 #include <cstdint>
-
 
 namespace OHOS::GraphStoreJsKit {
 enum ColumnType : uint32_t {

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACE_GDB_STORE_CONFIG_H
-#define INTERFACE_GDB_STORE_CONFIG_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_STORE_CONFIG_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_STORE_CONFIG_H
 
 #include <cstdint>
 #include <string>
@@ -102,4 +102,4 @@ private:
     static constexpr int MIN_TIMEOUT = 1;   // seconds
 };
 } // namespace OHOS::DistributedDataAip
-#endif //INTERFACE_GDB_STORE_CONFIG_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_STORE_CONFIG_H

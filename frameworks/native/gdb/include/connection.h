@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_GDB_CONNECTION_H
-#define NATIVE_GDB_CONNECTION_H
+#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_CONNECTION_H
+#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_CONNECTION_H
 
 #include "gdb_store_config.h"
 #include "statement.h"
@@ -41,4 +41,4 @@ private:
     int32_t id_ = 0;
 };
 } // namespace OHOS::DistributedDataAip
-#endif // NATIVE_GDB_CONNECTION_H
+#endif // OHOS_DISTRIBUTED_DATA_NATIVE_GDB_CONNECTION_H
