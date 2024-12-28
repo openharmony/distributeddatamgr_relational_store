@@ -811,6 +811,28 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testGoToFirstRow0003 end *************");
     })
 
+        /**
+     * @tc.name resultSet goToFirstRow with no result test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0103
+     * @tc.desc resultSet goToFirstRow with no result test
+     */
+    it('testGoToFirstRow0004', 0, async function (done) {
+        console.log(TAG + "************* testGoToFirstRow0004 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.goToFirstRow()
+        } catch (e) {
+            expect(e.code).assertFail("14800014");
+        }
+
+        resultSet = null
+        done();
+        console.log(TAG + "************* testGoToFirstRow0004 end *************");
+    })
+
     /**
      * @tc.name resultSet goToLastRow test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0110
@@ -866,6 +888,27 @@ describe('rdbResultSetTest', function () {
         done();
         console.log(TAG + "************* testGoToLastRow0003 end *************");
 
+    })
+
+    /**
+     * @tc.name resultSet goToLastRow with no result test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0113
+     * @tc.desc resultSet goToLastRow with no result test
+     */
+    it('testGoToLastRow0004', 0, async function (done) {
+        console.log(TAG + "************* testGoToLastRow0004 start *************");
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.goToLastRow()
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToLastRow0004 end *************");
     })
 
     /**
@@ -954,6 +997,29 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
+     * @tc.name resultSet goToNextRow with no result test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0124
+     * @tc.desc resultSet goToNextRow with no result test
+     */
+    it('testGoToNextRow0005', 0, async function (done) {
+        console.log(TAG + "************* testGoToNextRow0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.goToNextRow()
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToNextRow0005 end *************");
+
+    })
+
+    /**
      * @tc.name resultSet goToPreviousRow test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0130
      * @tc.desc resultSet goToPreviousRow test
@@ -1034,6 +1100,28 @@ describe('rdbResultSetTest', function () {
         resultSet = null;
         done();
         console.log(TAG + "************* testGoToPreviousRow0004 end *************");
+
+    })
+
+    /**
+     * @tc.name resultSet goToPreviousRow with no result test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0134
+     * @tc.desc resultSet goToPreviousRow with no result test
+     */
+    it('testGoToPreviousRow0005', 0, async function (done) {
+        console.log(TAG + "************* testGoToPreviousRow0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.goToPreviousRow()
+        } catch (error) {
+            expect(error).assertEqual("14800014")
+        }
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToPreviousRow0005 end *************");
 
     })
 
@@ -1127,6 +1215,31 @@ describe('rdbResultSetTest', function () {
     })
 
     /**
+     * @tc.name resultSet goTo after last row test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0144
+     * @tc.desc resultSet goTo after last row test
+     */
+    it('testGoTo0005', 0, async function (done) {
+        console.log(TAG + "************* testGoTo0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+
+        try {
+            resultSet.goTo(1)
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoTo0005 end *************");
+
+    })
+
+    /**
      * @tc.name resultSet goToRow test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0150
      * @tc.desc resultSet goToRow test
@@ -1191,6 +1304,31 @@ describe('rdbResultSetTest', function () {
         resultSet = null;
         done();
         console.log(TAG + "************* testGoToRow0003 end *************");
+
+    })
+
+    /**
+     * @tc.name resultSet goToRow with no result test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0154
+     * @tc.desc resultSet goToRow with no result test
+     */
+    it('testGoToRow0005', 0, async function (done) {
+        console.log(TAG + "************* testGoToRow0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        predicates.equalTo("name", "wangwu");
+        let resultSet = await rdbStore.query(predicates)
+
+        resultSet.close()
+        try {
+            resultSet.goToRow(1)
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGoToRow0005 end *************");
 
     })
 
@@ -1644,6 +1782,7 @@ describe('rdbResultSetTest', function () {
         let resultSet = await rdbStore.query(predicates)
         expect(true).assertEqual(resultSet.goToFirstRow())
         expect(1).assertEqual(resultSet.getColumnIndex("data1"))
+        expect(-1).assertEqual(resultSet.getColumnIndex("data0"))
 
         resultSet.close()
         resultSet = null;
@@ -1710,6 +1849,28 @@ describe('rdbResultSetTest', function () {
         resultSet = null
         done()
         console.log(TAG + "************* testGetColumnIndex0004 end *************");
+
+    })
+
+    /**
+     * @tc.name resultSet getColumnIndex test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0204
+     * @tc.desc resultSet getColumnIndex test
+     */
+    it('testGetColumnIndex0005', 0, async function (done) {
+        console.log(TAG + "************* testGetColumnIndex0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.getColumnIndex("dataX")
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnIndex0005 end *************");
 
     })
 
@@ -1794,6 +1955,28 @@ describe('rdbResultSetTest', function () {
         resultSet = null;
         done();
         console.log(TAG + "************* testGetColumnName0004 end *************");
+
+    })
+
+    /**
+     * @tc.name resultSet getColumnName test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0214
+     * @tc.desc resultSet getColumnName test
+     */
+    it('testGetColumnName0005', 0, async function (done) {
+        console.log(TAG + "************* testGetColumnName0005 start *************");
+
+        let predicates = await new data_relationalStore.RdbPredicates("test")
+        let resultSet = await rdbStore.query(predicates)
+        resultSet.close()
+        try {
+            resultSet.getColumnName(10)
+        } catch (error) {
+            expect(error.code).assertEqual("14800014")
+        }
+        resultSet = null;
+        done();
+        console.log(TAG + "************* testGetColumnName0005 end *************");
 
     })
 

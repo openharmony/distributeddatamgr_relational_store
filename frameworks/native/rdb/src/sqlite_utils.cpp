@@ -45,15 +45,6 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
-constexpr int32_t MIN_ANONYMIZE_LENGTH = 2;
-constexpr int32_t MAX_ANONYMIZE_LENGTH = 4;
-
-constexpr const char *SQL_ARRAY[] = { "AS", "GROUPBY", "GROUP", "BY", "LIMIT", "COUNT", "AVERAGE", "SELECT", "FROM",
-    "WHERE", "DISTRICT", "INSERT", "INTO", "VALUES", "CREATE", "TABLE", "DATABASE", "VIEW", "INDEX", "TRIGGER",
-    "PROCEDURE", "IF", "NOT", "EXISTS", "INT", "PRIMARY", "KEY", "TEXT", "BLOB", "REAL", "ASSET", "ASSETS", "NULL",
-    "INTEGER", "UNLIMITED", "UNION", "UPDATE", "SET", "WHERE", "AND", "OR", "DELETE", "FROM", "DROP", "PRAGMA",
-    "ALTER", "ADD", "COLUMN", "MODIFY" };
-constexpr const uint32_t SQL_ARRAY_LENGTH = 49;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -247,95 +238,6 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     std::string fileName = srcFile.substr(end); // rdb file name
     fileName = GetAnonymousName(fileName);
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
-}
-
-bool SqliteUtils::IsSpecialChar(char c)
-{
-    return (c == ' ' || c == '.' || c == ',' || c == '!' || c == '?' || c == ':' || c == '(' || c == ')' || c == ';');
-}
-
-std::vector<std::string> SqliteUtils::SplitString(const std::string &input)
-{
-    std::vector<std::string> result;
-    std::string word;
-    for (char c : input) {
-        if (!SqliteUtils::IsSpecialChar(c)) {
-            word += c;
-        } else {
-            if (!word.empty()) {
-                result.push_back(word);
-                word.clear();
-            }
-            result.push_back(std::string(1, c));
-        }
-    }
-    if (!word.empty()) {
-        result.push_back(word);
-    }
-    return result;
-}
-
-std::string SqliteUtils::ReplaceMultipleSpaces(const std::string &str)
-{
-    std::string result = str;
-    if (result.empty()) {
-        return result;
-    }
-
-    result.erase(0, result.find_first_not_of(" "));
-    result.erase(result.find_last_not_of(" ") + 1);
-    return std::regex_replace(result, std::regex(" +"), " ");
-}
-
-std::string SqliteUtils::AnonyWord(const std::string &word)
-{
-    std::string anonyWord = word;
-    if (word.size() == 1 && std::isdigit(word[0])) {
-        anonyWord[0] = '*';
-    } else if (word.size() >= MIN_ANONYMIZE_LENGTH && word.size() <= MAX_ANONYMIZE_LENGTH) {
-        anonyWord[0] = '*';
-    } else {
-        int length = anonyWord.length() - 3;
-        for (int i = 0; i < length; i++) {
-            anonyWord[i] = '*';
-        }
-    }
-    return anonyWord;
-}
-
-bool SqliteUtils::Find(const std::string &word, const char *const array[], uint32_t length)
-{
-    for (uint32_t i = 0; i < length; i++) {
-        if (word == array[i]) {
-            return true;
-        }
-    }
-    return false;
-}
-
-std::string SqliteUtils::AnonySqlString(const std::string &input, const char *const array[], uint32_t length)
-{
-    std::vector<std::string> words = SqliteUtils::SplitString(input);
-    std::string result;
-    for (const std::string &word : words) {
-        if (word.empty() || word.find_first_of("\r\n") != std::string::npos) {
-            continue;
-        }
-        std::string anonyWord = word;
-        std::string upperWord = SqliteUtils::StrToUpper(word);
-        bool found = Find(upperWord, array, length);
-        if (!found) {
-            anonyWord = SqliteUtils::AnonyWord(anonyWord);
-        }
-        result += anonyWord;
-    }
-    return result;
-}
-
-std::string SqliteUtils::AnonySql(const std::string &sql)
-{
-    std::string replaceSql = SqliteUtils::ReplaceMultipleSpaces(sql);
-    return SqliteUtils::AnonySqlString(replaceSql, SQL_ARRAY, SQL_ARRAY_LENGTH);
 }
 
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)

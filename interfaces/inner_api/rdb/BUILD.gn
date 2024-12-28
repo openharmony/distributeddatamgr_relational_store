@@ -34,6 +34,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
   "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
@@ -73,15 +74,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RDB_TRACE_ON",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
-
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
     include_dirs += [
       "${kvstore_path}/common",
@@ -102,11 +94,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
-
   ohos_shared_library("native_rdb") {
     branch_protector_ret = "pac_ret"
     sanitize = {
@@ -122,9 +109,6 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
-    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
     cflags_cc = [ "-fvisibility=hidden" ]
     sources += [
@@ -168,6 +152,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
+      "sqlite:sqlite",
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -192,9 +177,6 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
-    deps += [ "//third_party/sqlite:sqlite" ]
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
@@ -238,6 +220,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
+      "sqlite:sqlite",
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -269,15 +252,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
-
     defines += [
       "WINDOWS_PLATFORM",
       "CROSS_PLATFORM",
@@ -301,25 +275,19 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
-
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
     sources = base_sources
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
-    deps += [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
@@ -337,14 +305,12 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 
-    deps += [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//third_party/sqlite:sqlite_sdk",
@@ -378,15 +344,6 @@ if (is_ohos && !build_ohos_sdk) {
       "SQLITE_HAS_CODEC",
     ]
 
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
-
     defines += [
       "MAC_PLATFORM",
       "CROSS_PLATFORM",
@@ -408,24 +365,18 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
-
   ohos_shared_library("native_rdb") {
     part_name = "relational_store"
     sources = base_sources
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
-    deps += [
+
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -442,13 +393,12 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
-    deps += [
+
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
@@ -480,15 +430,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
     ]
-
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
   }
 
   config("native_rdb_public_config") {
@@ -506,10 +447,11 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [ "${plugins_path}/libs/icu:icu_android" ]
-
   ohos_source_set("native_rdb") {
-    defines = [ "ANDROID_PLATFORM" ]
+    defines = [
+      "ANDROID_PLATFORM",
+      "CROSS_PLATFORM",
+    ]
 
     part_name = "relational_store"
 
@@ -517,14 +459,12 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
-    deps += [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//third_party/sqlite:sqlite_static",
@@ -554,15 +494,6 @@ if (is_ohos && !build_ohos_sdk) {
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
     ]
-
-    if (relational_store_rdb_support_icu) {
-      include_dirs += [
-        "//third_party/icu/icu4c/source",
-        "//third_party/icu/icu4c/source/i18n",
-        "//third_party/icu/icu4c/source/common",
-      ]
-      defines += [ "RDB_SUPPORT_ICU" ]
-    }
   }
 
   config("native_rdb_public_config") {
@@ -579,8 +510,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
   }
 
-  base_deps = [ "${plugins_path}/libs/icu:icu_ios" ]
-
   ohos_source_set("native_rdb") {
     defines = [
       "IOS_PLATFORM",
@@ -592,14 +521,12 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    deps = base_deps
-
     sources += [
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
     ]
-    deps += [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//third_party/sqlite:sqlite_static",

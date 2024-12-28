@@ -39,6 +39,7 @@ using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeI
 using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
 using Error = RelationalStoreJsKit::Error;
 using SecurityLevel = NativeRdb::SecurityLevel;
+using Tokenizer = NativeRdb::Tokenizer;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
@@ -57,9 +58,11 @@ struct RdbConfig {
     bool allowRebuild = false;
     bool isReadOnly = false;
     SecurityLevel securityLevel = SecurityLevel::LAST;
+    Tokenizer tokenizer = Tokenizer ::NONE_TOKENIZER;
     std::string dataGroupId;
     std::string name;
     std::string customDir;
+    std::string rootDir;
     std::string path;
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;

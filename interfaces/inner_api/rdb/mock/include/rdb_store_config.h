@@ -104,6 +104,12 @@ enum EncryptAlgo : int32_t {
     AES_256_CBC
 };
 
+enum Tokenizer : int32_t {
+    NONE_TOKENIZER = 0,
+    ICU_TOKENIZER,
+    TOKENIZER_END
+};
+
 
 using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
 
@@ -209,6 +215,8 @@ public:
 
     void SetCustomDir(const std::string &customDir);
     std::string GetCustomDir() const;
+    Tokenizer GetTokenizer() const;
+    void SetTokenizer(Tokenizer tokenizer);
     void SetVisitorDir(const std::string &visitorDir);
     std::string GetVisitorDir() const;
     bool operator==(const RdbStoreConfig &config) const
@@ -265,6 +273,8 @@ public:
     CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
     void EnableRekey(bool enable);
+    int GetNcandidates() const;
+    void SetNcandidates(int ncandidates);
     static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
 
 private:
@@ -292,6 +302,7 @@ private:
     DistributedType distributedType_ = DistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
+    Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
@@ -311,6 +322,7 @@ private:
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
     std::vector<std::string> pluginLibs_{};
+    int ncandidates_ = 128;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds

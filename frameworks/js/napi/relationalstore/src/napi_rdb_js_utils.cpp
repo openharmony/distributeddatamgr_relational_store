@@ -15,7 +15,9 @@
 #define LOG_TAG "NapiRdbJsUtils"
 #include "napi_rdb_js_utils.h"
 
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <tuple>
 
 #include "js_ability.h"
@@ -146,6 +148,15 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 template<>
 napi_value Convert2JSValue(napi_env env, const ValueObject &value)
 {
+    // When int64_t is converted to double and loses precision, it is returned as a string.
+    if (value.GetType() == ValueObjectType::TYPE_INT) {
+        int64_t valueInt64 = 0;
+        value.GetLong(valueInt64);
+        double valueDouble = static_cast<double>(valueInt64);
+        if (static_cast<int64_t>(valueDouble) != valueInt64) {
+            return Convert2JSValue(env, std::to_string(valueInt64));
+        }
+    }
     return Convert2JSValue(env, value.value);
 }
 
@@ -361,6 +372,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "customDir", rdbConfig.customDir, true);
     ASSERT(OK == status, "get customDir failed.", napi_invalid_arg);
 
+    status = GetNamedProperty(env, jsValue, "rootDir", rdbConfig.rootDir, true);
+    ASSERT(OK == status, "get rootDir failed.", napi_invalid_arg);
+
     GetNamedProperty(env, jsValue, "isSearchable", rdbConfig.isSearchable, true);
     ASSERT(OK == status, "get isSearchable failed.", napi_invalid_arg);
 
@@ -381,6 +395,11 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     status = GetNamedProperty(env, jsValue, "cryptoParam", rdbConfig.cryptoParam, true);
     ASSERT(OK == status, "get cryptoParam failed.", napi_invalid_arg);
+
+    int32_t tokenizer = static_cast<int32_t>(Tokenizer::NONE_TOKENIZER);
+    status = GetNamedProperty(env, jsValue, "tokenizer", tokenizer, true);
+    ASSERT(OK == status, "get tokenizer failed.", napi_invalid_arg);
+    rdbConfig.tokenizer = static_cast<Tokenizer>(tokenizer);
     return napi_ok;
 }
 
@@ -423,7 +442,7 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
         LOG_WARN("isStageMode is false -> fa stage");
         return GetCurrentAbilityParam(env, jsValue, param);
     }
-    LOG_DEBUG("stage mode branch");
+    LOG_DEBUG("Stage mode branch");
     status = GetNamedProperty(env, jsValue, "databaseDir", param.baseDir);
     ASSERT(status == napi_ok, "get databaseDir failed.", napi_invalid_arg);
     status = GetNamedProperty(env, jsValue, "area", param.area, true);
@@ -481,6 +500,18 @@ std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
         baseDir = groupDir;
     }
 
+    if (!rdbConfig.rootDir.empty()) {
+        // determine if the first character of rootDir is '/'
+        CHECK_RETURN_CORE(rdbConfig.rootDir.find_first_of(PATH_SPLIT) == 0, RDB_DO_NOTHING,
+            std::make_tuple(ERR, std::make_shared<PathError>()));
+        auto [realPath, errorCode] =
+            RdbSqlUtils::GetCustomDatabasePath(rdbConfig.rootDir, rdbConfig.name, rdbConfig.customDir);
+        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING,
+            std::make_tuple(ERR, std::make_shared<PathError>()));
+        rdbConfig.path = realPath;
+        return std::make_tuple(E_OK, nullptr);
+    }
+
     auto [realPath, errorCode] = RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);
     // realPath length is limited to 1024 bytes
     CHECK_RETURN_CORE(errorCode == E_OK && realPath.length() <= 1024, RDB_DO_NOTHING,
@@ -504,6 +535,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
     rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
     rdbStoreConfig.SetIntegrityCheck(IntegrityCheck::NONE);
+    rdbStoreConfig.SetTokenizer(rdbConfig.tokenizer);
 
     if (!param.bundleName.empty()) {
         rdbStoreConfig.SetBundleName(param.bundleName);
@@ -527,7 +559,7 @@ bool HasDuplicateAssets(const ValueObject &value)
     auto item = assets->begin();
     while (item != assets->end()) {
         if (!names.insert(item->name).second) {
-            LOG_ERROR("duplicate assets! name = %{public}.6s", item->name.c_str());
+            LOG_ERROR("Duplicate assets! name = %{public}.6s", item->name.c_str());
             return true;
         }
         item++;

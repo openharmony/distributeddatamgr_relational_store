@@ -100,6 +100,18 @@ bool RdbPassword::IsValid() const
     return size_ != 0;
 }
 
+std::vector<uint8_t> RdbSecurityManager::GetRootKeyAlias()
+{
+    std::lock_guard<std::mutex> lock(rootKeyMutex_);
+    return rootKeyAlias_;
+}
+
+void RdbSecurityManager::SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias)
+{
+    std::lock_guard<std::mutex> lock(rootKeyMutex_);
+    rootKeyAlias_ = std::move(rootKeyAlias);
+}
+
 int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
     const struct HksBlob *inData, struct HksBlob *outData)
 {
@@ -267,9 +279,10 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
 
 std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key)
 {
+    std::vector<uint8_t> rootKeyAlias = GetRootKeyAlias();
     struct HksBlob blobAad = { uint32_t(aad_.size()), aad_.data() };
     struct HksBlob blobNonce = { uint32_t(nonce_.size()), nonce_.data() };
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), rootKeyAlias_.data() };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), rootKeyAlias.data() };
     struct HksBlob plainKey = { uint32_t(key.size()), key.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
@@ -315,9 +328,10 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
 
 bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
 {
+    std::vector<uint8_t> rootKeyAlias = GetRootKeyAlias();
     struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
     struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias_.size()), &(rootKeyAlias_[0]) };
+    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), &(rootKeyAlias[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size() - AEAD_LEN), source.data() };
     struct HksBlob blobAead = { AEAD_LEN, source.data() + source.size() - AEAD_LEN };
     struct HksParamSet *params = nullptr;
@@ -379,8 +393,8 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
         if (ret == HKS_SUCCESS) {
             if (!HasRootKey()) {
                 hasRootKey_ = true;
-                rootKeyAlias_ = std::move(rootKeyAlias);
             }
+            SetRootKeyAlias(std::move(rootKeyAlias));
             break;
         }
         retryCount++;

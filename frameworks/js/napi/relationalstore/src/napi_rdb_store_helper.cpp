@@ -71,6 +71,9 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        if (!context->config.rootDir.empty()) {
+            context->config.isReadOnly = true;
+        }
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {
@@ -78,6 +81,10 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         DefaultOpenCallback callback;
         context->proxy =
             RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+        // If the API version is less than 14, throw E_INVALID_ARGS.
+        if (errCode == E_INVALID_SECRET_KEY && JSUtils::GetHapVersion() < 14) {
+            errCode = E_INVALID_ARGS;
+        }
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -111,6 +118,9 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         }
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        if (!context->config.rootDir.empty()) {
+            context->config.isReadOnly = true;
+        }
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {

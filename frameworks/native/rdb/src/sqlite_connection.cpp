@@ -16,22 +16,15 @@
 #define LOG_TAG "SqliteConnection"
 #include "sqlite_connection.h"
 
+#include <dlfcn.h>
 #include <sqlite3sym.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <cerrno>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include "sqlite3.h"
-#include "value_object.h"
-
-#ifdef RDB_SUPPORT_ICU
-#include <unicode/ucol.h>
-#endif
-
-#include <unistd.h>
 
 #include "logger.h"
 #include "raw_data_parser.h"
@@ -41,9 +34,12 @@
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
+#include "sqlite3.h"
 #include "sqlite_errno.h"
+#include "sqlite_default_function.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "value_object.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_manager_impl.h"
 #include "relational/relational_store_sqlite_ext.h"
@@ -58,8 +54,6 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 using Reportor = RdbFaultHiViewReporter;
 constexpr const char *INTEGRITIES[] = { nullptr, "PRAGMA quick_check", "PRAGMA integrity_check" };
 constexpr SqliteConnection::Suffix SqliteConnection::FILE_SUFFIXES[];
-constexpr const char *SqliteConnection::MERGE_ASSETS_FUNC;
-constexpr const char *SqliteConnection::MERGE_ASSET_FUNC;
 constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
 constexpr int SqliteConnection::BACKUP_PAGES_PRE_STEP; // 1024 * 4 * 12800 == 50m
 constexpr int SqliteConnection::BACKUP_PRE_WAIT_TIME;
@@ -239,6 +233,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         return errCode;
     }
+    SetTokenizer(config);
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
@@ -360,11 +355,7 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
 
 int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPath)
 {
-    if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        return E_OK;
-    }
-
-    if (config.GetRoleType() == VISITOR) {
+    if (config.GetStorageMode() == StorageMode::MODE_MEMORY || config.GetRoleType() == VISITOR) {
         return E_OK;
     }
 
@@ -414,6 +405,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     if (errCode != E_OK) {
         return errCode;
     }
+
     return LoadExtension(config, dbHandle_);
 }
 
@@ -460,8 +452,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
         slaveStmt->config_ = &slaveConnection_->config_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
-            LOG_WARN(
-                "prepare slave stmt failed:%{public}d, sql:%{public}s", errCode, SqliteUtils::AnonySql(sql).c_str());
+            LOG_WARN("prepare slave stmt failed:%{public}d, app self can check the SQL", errCode);
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
             return { E_OK, statement };
         }
@@ -701,21 +692,20 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
     if (dbHandle == nullptr) {
         return SQLITE_OK;
     }
-    // The number of parameters is 2
-    int errCode = sqlite3_create_function_v2(dbHandle, MERGE_ASSETS_FUNC, 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC,
-        nullptr, &MergeAssets, nullptr, nullptr, nullptr);
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("register function mergeAssets failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
-        return errCode;
+
+    auto [funcs, funcCount] = SqliteFunctionRegistry::GetFunctions();
+
+    for (size_t i = 0; i < funcCount; i++) {
+        const SqliteFunction& func = funcs[i];
+        int errCode = sqlite3_create_function_v2(dbHandle, func.name, func.numArgs,
+            SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, func.function, nullptr, nullptr, nullptr);
+        if (errCode != SQLITE_OK) {
+            LOG_ERROR("register function %{public}s failed, errCode=0x%{public}x, errno=%{public}d", func.name,
+                errCode, errno);
+            return SQLiteError::ErrNo(errCode);
+        }
     }
-    // The number of parameters is 2
-    errCode = sqlite3_create_function_v2(dbHandle, MERGE_ASSET_FUNC, 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
-        &MergeAsset, nullptr, nullptr, nullptr);
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("register function mergeAsset failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
-        return errCode;
-    }
-    return SQLITE_OK;
+    return E_OK;
 }
 
 int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
@@ -805,6 +795,20 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     return errCode;
 }
 
+int SqliteConnection::SetTokenizer(const RdbStoreConfig &config)
+{
+    auto tokenizer = config.GetTokenizer();
+    if (tokenizer == NONE_TOKENIZER) {
+        return E_OK;
+    }
+    if (tokenizer == ICU_TOKENIZER) {
+        sqlite3_config(SQLITE_CONFIG_ENABLE_ICU, 1);
+        return E_OK;
+    }
+    LOG_ERROR("fail to set Tokenizer: %{public}d", tokenizer);
+    return E_INVALID_ARGS;
+}
+
 int SqliteConnection::SetWalFile(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
@@ -862,8 +866,8 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(
     ValueObject object;
     std::tie(errCode, object) = statement->ExecuteForValue(bindArgs);
     if (errCode != E_OK) {
-        LOG_ERROR("execute sql failed, errCode:%{public}d, sql:%{public}s, args size:%{public}zu",
-            SQLiteError::ErrNo(errCode), SqliteUtils::AnonySql(sql).c_str(), bindArgs.size());
+        LOG_ERROR("execute sql failed, errCode:%{public}d, app self can check the SQL, args size:%{public}zu",
+            SQLiteError::ErrNo(errCode), bindArgs.size());
     }
     return { errCode, object };
 }
@@ -897,63 +901,19 @@ void SqliteConnection::LimitPermission(const std::string &dbPath) const
     }
 }
 
-#ifdef RDB_SUPPORT_ICU
-int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2)
-{
-    UCollator *coll = reinterpret_cast<UCollator *>(p);
-    UCharIterator i1;
-    UCharIterator i2;
-    UErrorCode status = U_ZERO_ERROR;
-
-    uiter_setUTF8(&i1, (const char *)v1, n1);
-    uiter_setUTF8(&i2, (const char *)v2, n2);
-
-    UCollationResult result = ucol_strcollIter(coll, &i1, &i2, &status);
-
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Ucol strcoll error.");
-    }
-
-    if (result == UCOL_LESS) {
-        return -1;
-    } else if (result == UCOL_GREATER) {
-        return 1;
-    }
-    return 0;
-}
-
-void LocalizedCollatorDestroy(UCollator *collator)
-{
-    ucol_close(collator);
-}
-#endif
-
-/**
- * The database locale.
- */
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-#ifdef RDB_SUPPORT_ICU
-    std::unique_lock<std::mutex> lock(mutex_);
-    UErrorCode status = U_ZERO_ERROR;
-    UCollator *collator = ucol_open(localeStr.c_str(), &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Can not open collator.");
+    static void *handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    if (handle == nullptr) {
+        LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
+    }
+    auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
         return E_ERROR;
     }
-    ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
-    if (U_FAILURE(status)) {
-        LOG_ERROR("Set attribute of collator failed.");
-        return E_ERROR;
-    }
-
-    int err = sqlite3_create_collation_v2(
-        dbHandle_, "LOCALES", SQLITE_UTF8, collator, Collate8Compare, (void (*)(void *))LocalizedCollatorDestroy);
-    if (err != SQLITE_OK) {
-        LOG_ERROR("SCreate collator in sqlite3 failed.");
-        return err;
-    }
-#endif
+    func(dbHandle_, localeStr);
     return E_OK;
 }
 
@@ -1021,128 +981,6 @@ int SqliteConnection::LimitWalSize()
         return E_WAL_SIZE_OVER_LIMIT;
     }
     return E_OK;
-}
-
-void SqliteConnection::MergeAssets(sqlite3_context *ctx, int argc, sqlite3_value **argv)
-{
-    // 2 is the number of parameters
-    if (ctx == nullptr || argc != 2 || argv == nullptr) {
-        LOG_ERROR("Parameter does not meet restrictions.");
-        return;
-    }
-    std::map<std::string, ValueObject::Asset> assets;
-    auto data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[0]));
-    if (data != nullptr) {
-        int len = sqlite3_value_bytes(argv[0]);
-        RawDataParser::ParserRawData(data, len, assets);
-    }
-    std::map<std::string, ValueObject::Asset> newAssets;
-    data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
-    if (data != nullptr) {
-        int len = sqlite3_value_bytes(argv[1]);
-        RawDataParser::ParserRawData(data, len, newAssets);
-    }
-    CompAssets(assets, newAssets);
-    auto blob = RawDataParser::PackageRawData(assets);
-    sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
-}
-
-void SqliteConnection::MergeAsset(sqlite3_context *ctx, int argc, sqlite3_value **argv)
-{
-    // 2 is the number of parameters
-    if (ctx == nullptr || argc != 2 || argv == nullptr) {
-        LOG_ERROR("Parameter does not meet restrictions.");
-        return;
-    }
-    ValueObject::Asset asset;
-    size_t size = 0;
-    auto data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[0]));
-    if (data != nullptr) {
-        int len = sqlite3_value_bytes(argv[0]);
-        size = RawDataParser::ParserRawData(data, len, asset);
-    }
-    ValueObject::Asset newAsset;
-    data = static_cast<const uint8_t *>(sqlite3_value_blob(argv[1]));
-    if (data != nullptr) {
-        int len = sqlite3_value_bytes(argv[1]);
-        RawDataParser::ParserRawData(data, len, newAsset);
-    }
-
-    if (size == 0) {
-        asset = std::move(newAsset);
-        if (asset.status != AssetValue::Status::STATUS_DELETE) {
-            asset.status = AssetValue::Status::STATUS_INSERT;
-        }
-    } else if (asset.name == newAsset.name) {
-        MergeAsset(asset, newAsset);
-    } else {
-        LOG_WARN("name change! old:%{public}s, new:%{public}s", SqliteUtils::Anonymous(asset.name).c_str(),
-            SqliteUtils::Anonymous(newAsset.name).c_str());
-    }
-    auto blob = RawDataParser::PackageRawData(asset);
-    sqlite3_result_blob(ctx, blob.data(), blob.size(), SQLITE_TRANSIENT);
-}
-
-void SqliteConnection::CompAssets(
-    std::map<std::string, ValueObject::Asset> &assets, std::map<std::string, ValueObject::Asset> &newAssets)
-{
-    auto oldIt = assets.begin();
-    auto newIt = newAssets.begin();
-    for (; oldIt != assets.end() && newIt != newAssets.end();) {
-        if (oldIt->first == newIt->first) {
-            MergeAsset(oldIt->second, newIt->second);
-            oldIt++;
-            newIt = newAssets.erase(newIt);
-            continue;
-        }
-        if (oldIt->first < newIt->first) {
-            ++oldIt;
-            continue;
-        }
-        newIt++;
-    }
-    for (auto &[key, value] : newAssets) {
-        value.status = ValueObject::Asset::Status::STATUS_INSERT;
-        assets.insert(std::pair{ key, std::move(value) });
-    }
-}
-
-void SqliteConnection::MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset)
-{
-    using Status = ValueObject::Asset::Status;
-    if (newAsset.status == Status::STATUS_DELETE) {
-        oldAsset.status = Status::STATUS_DELETE;
-        oldAsset.hash = "";
-        oldAsset.modifyTime = "";
-        oldAsset.size = "";
-        return;
-    }
-    auto status = static_cast<int32_t>(oldAsset.status);
-    switch (status) {
-        case Status::STATUS_UNKNOWN:  // fallthrough
-        case Status::STATUS_NORMAL:   // fallthrough
-        case Status::STATUS_ABNORMAL: // fallthrough
-        case Status::STATUS_INSERT:   // fallthrough
-        case Status::STATUS_UPDATE:   // fallthrough
-            if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
-                oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path) {
-                if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
-                    oldAsset.uri == newAsset.uri || oldAsset.path == newAsset.path) {
-                    oldAsset.expiresTime = newAsset.expiresTime;
-                    oldAsset.hash = newAsset.hash;
-                    oldAsset.status = Status::STATUS_UPDATE;
-                }
-                oldAsset.version = newAsset.version;
-                oldAsset.uri = newAsset.uri;
-                oldAsset.createTime = newAsset.createTime;
-                oldAsset.modifyTime = newAsset.modifyTime;
-                oldAsset.size = newAsset.size;
-                oldAsset.path = newAsset.path;
-            }
-            return;
-        default:
-            return;
-    }
 }
 
 int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)

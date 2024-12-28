@@ -596,6 +596,17 @@ void RdbStoreConfig::SetPromiseInfo(PromiseInfo promiseInfo)
     promiseInfo_ = promiseInfo;
 }
 
+
+Tokenizer RdbStoreConfig::GetTokenizer() const
+{
+    return tokenizer_;
+}
+
+void RdbStoreConfig::SetTokenizer(Tokenizer tokenizer)
+{
+    tokenizer_ = tokenizer;
+}
+
 ssize_t RdbStoreConfig::GetWalLimitSize() const
 {
     return walLimitSize_;
@@ -639,6 +650,16 @@ void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
 RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const
 {
     return cryptoParam_;
+}
+
+int RdbStoreConfig::GetNcandidates() const
+{
+    return ncandidates_;
+}
+
+void RdbStoreConfig::SetNcandidates(int ncandidates)
+{
+    ncandidates_ = ncandidates;
 }
 
 RdbStoreConfig::CryptoParam::CryptoParam() = default;
