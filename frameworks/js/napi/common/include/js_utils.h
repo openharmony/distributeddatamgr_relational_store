@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -98,7 +99,7 @@ using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
 const std::optional<JsFeatureSpace> GetJsFeatureSpace(const std::string &name);
 /* napi_define_class  wrapper */
 napi_value DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
-    const Descriptor &descriptor, napi_callback ctor);
+    const Descriptor &descriptor, napi_callback ctor, bool isSendable = false);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr);
 
@@ -116,6 +117,7 @@ napi_value Convert2JSValue(napi_env env, double value);
 napi_value Convert2JSValue(napi_env env, bool value);
 napi_value Convert2JSValue(napi_env env, const std::map<std::string, int> &value);
 napi_value Convert2JSValue(napi_env env, const std::monostate &value);
+napi_value Convert2JSValue(napi_env env, const std::nullptr_t &value);
 
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const T &value);
@@ -125,6 +127,9 @@ napi_value Convert2JSValue(napi_env env, const std::vector<T> &value);
 
 template<typename K, typename V>
 napi_value Convert2JSValue(napi_env env, const std::map<K, V> &value);
+
+template<typename K, typename V>
+napi_value Convert2JSValue(napi_env env, const std::unordered_map<K, V> &value);
 
 template<typename T>
 napi_value Convert2JSValue(napi_env env, const std::tuple<int32_t, std::string, T> &value);
@@ -286,6 +291,25 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
 
 template<typename K, typename V>
 napi_value JSUtils::Convert2JSValue(napi_env env, const std::map<K, V> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_object(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    for (const auto &[key, val] : value) {
+        const std::string &name = ConvertMapKey(key);
+        status = napi_set_named_property(env, jsValue, name.c_str(), Convert2JSValue(env, val));
+        if (status != napi_ok) {
+            return nullptr;
+        }
+    }
+    return jsValue;
+}
+
+template<typename K, typename V>
+napi_value JSUtils::Convert2JSValue(napi_env env, const std::unordered_map<K, V> &value)
 {
     napi_value jsValue;
     napi_status status = napi_create_object(env, &jsValue);
