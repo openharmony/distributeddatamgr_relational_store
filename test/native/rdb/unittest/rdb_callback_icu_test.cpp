@@ -106,7 +106,6 @@ int OpenCallbackIcu::OnOpen(RdbStore &store)
 HWTEST_F(RdbCallbackIcuTest, RdbCallbackIcu_01, TestSize.Level1)
 {
     RdbStoreConfig config(RdbCallbackIcuTest::databaseName);
-    config.SetTokenizer(ICU_TOKENIZER);
     OpenCallbackIcu helper;
 
     int errCode = E_OK;
