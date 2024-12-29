@@ -18,7 +18,6 @@
 
 #include <cstring>
 
-#include "js_native_api.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "securec.h"
@@ -113,6 +112,11 @@ int32_t JSUtils::Convert2Sendable(napi_env env, double value, napi_value &output
 }
 
 napi_value JSUtils::Convert2Sendable(napi_env env, const std::monostate &value)
+{
+    return Convert2JSValue(env, value);
+}
+
+napi_value JSUtils::Convert2Sendable(napi_env env, const std::nullptr_t &value)
 {
     return Convert2JSValue(env, value);
 }
