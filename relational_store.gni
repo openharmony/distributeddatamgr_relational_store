@@ -54,6 +54,10 @@ sdk_c_path = "//interface/sdk_c/distributeddatamgr"
 
 plugins_path = "//plugins"
 
+relational_store_frameworks_path = "${relational_store_base_path}/frameworks"
+
+plugins_path = "//plugins"
+
 foundation_systemabilitymgr_path = "//foundation/systemabilitymgr/"
 
 base_security_dataclassification_path = "//base/security/dataclassification"

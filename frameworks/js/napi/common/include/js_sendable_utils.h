@@ -18,6 +18,7 @@
 
 #include <cstdint>
 
+#include "js_native_api.h"
 #include "js_utils.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -41,12 +42,19 @@ napi_value Convert2Sendable(napi_env env, int64_t value);
 napi_value Convert2Sendable(napi_env env, double value);
 napi_value Convert2Sendable(napi_env env, bool value);
 napi_value Convert2Sendable(napi_env env, const std::monostate &value);
+napi_value Convert2Sendable(napi_env env, const std::nullptr_t &value);
 
 template<typename T>
 napi_value Convert2Sendable(napi_env env, const T &value);
 
 template<typename T>
 napi_value Convert2Sendable(napi_env env, const std::vector<T> &value);
+
+template<typename K, typename V>
+napi_value Convert2Sendable(napi_env env, const std::map<K, V> &value);
+
+template<typename K, typename V>
+napi_value Convert2Sendable(napi_env env, const std::unordered_map<K, V> &value);
 
 template<typename... Types>
 napi_value Convert2Sendable(napi_env env, const std::variant<Types...> &value);
@@ -84,6 +92,44 @@ napi_value JSUtils::Convert2Sendable(napi_env env, const std::vector<T> &value)
 
     for (size_t i = 0; i < value.size(); ++i) {
         napi_set_element(env, jsValue, i, Convert2Sendable(env, value[i]));
+    }
+    return jsValue;
+}
+
+template<typename K, typename V>
+napi_value JSUtils::Convert2Sendable(napi_env env, const std::map<K, V> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_sendable_map(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    for (const auto &[key, val] : value) {
+        napi_value jsKey = Convert2Sendable(env, key);
+        status = napi_map_set_property(env, jsValue, jsKey, Convert2Sendable(env, val));
+        if (status != napi_ok) {
+            return nullptr;
+        }
+    }
+    return jsValue;
+}
+
+template<typename K, typename V>
+napi_value JSUtils::Convert2Sendable(napi_env env, const std::unordered_map<K, V> &value)
+{
+    napi_value jsValue;
+    napi_status status = napi_create_sendable_map(env, &jsValue);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    for (const auto &[key, val] : value) {
+        napi_value jsKey = Convert2Sendable(env, key);
+        status = napi_map_set_property(env, jsValue, jsKey, Convert2Sendable(env, val));
+        if (status != napi_ok) {
+            return nullptr;
+        }
     }
     return jsValue;
 }
