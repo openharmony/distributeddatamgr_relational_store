@@ -15,17 +15,25 @@
 
 #ifndef NAPI_RDB_STORE_OBSERVER_H
 #define NAPI_RDB_STORE_OBSERVER_H
-
-#include "napi_uv_queue.h"
+#include "js_uv_queue.h"
 #include "rdb_types.h"
 
-namespace OHOS::RdbJsKit  {
-class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver, public NapiUvQueue {
+namespace OHOS::RdbJsKit {
+using namespace OHOS::AppDataMgrJsKit;
+class NapiRdbStoreObserver
+    : public DistributedRdb::RdbStoreObserver
+    , public std::enable_shared_from_this<NapiRdbStoreObserver> {
 public:
-    explicit NapiRdbStoreObserver(napi_env env, napi_value callback);
+    explicit NapiRdbStoreObserver(
+        napi_value callback, std::shared_ptr<UvQueue> uvQueue, int32_t mode = DistributedRdb::REMOTE);
     virtual ~NapiRdbStoreObserver() noexcept;
-
+    bool operator==(napi_value value);
     void OnChange(const std::vector<std::string> &devices) override;
+    void Clear();
+
+private:
+    std::shared_ptr<UvQueue> uvQueue_;
+    napi_ref callback_;
 };
 } // namespace OHOS::RdbJsKit
 #endif

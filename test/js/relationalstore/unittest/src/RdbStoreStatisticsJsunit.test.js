@@ -280,7 +280,7 @@ describe('RdbStoreStatisticsTest', function () {
         console.info(TAG + "************* testRdbStoreStatistics0006 start *************");
         try {
             rdbStore.on('statistics', (SqlExeInfo) => {
-                expect().assertFail();
+                expect('INSERT INTO test(age,blobType,salary) VALUES (?,?,?)').assertEqual(SqlExeInfo.sql[0]);
                 done();
             })
         } catch (err) {
@@ -300,7 +300,6 @@ describe('RdbStoreStatisticsTest', function () {
         } catch (error) {
             expect(14800032).assertEqual(error.code);
             console.error(TAG + `insert fail, code:${error.code}, message: ${error.message}`);
-            done();
         }
         console.info(TAG + "************* testRdbStoreStatistics0006 end *************");
     })

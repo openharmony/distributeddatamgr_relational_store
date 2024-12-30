@@ -38,7 +38,6 @@ sources = [
   "src/napi_rdb_store_helper.cpp",
   "src/napi_result_set.cpp",
   "src/napi_transaction.cpp",
-  "src/napi_uv_queue.cpp",
 ]
 
 if (is_ohos) {
