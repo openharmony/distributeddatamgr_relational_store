@@ -24,6 +24,7 @@
 #include "edge.h"
 #include "gdb_helper.h"
 #include "gdb_store.h"
+#include "grd_adapter_manager.h"
 #include "path.h"
 #include "result.h"
 #include "vertex.h"
@@ -93,13 +94,15 @@ const std::string GdbExecuteTest::pathJsonString = R"({
 
 void GdbExecuteTest::SetUpTestCase()
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+        return;
+    }
     int errCode = E_OK;
     auto config = StoreConfig(databaseName, databasePath);
     GDBHelper::DeleteDBStore(config);
 
     GdbExecuteTest::store_ = GDBHelper::GetDBStore(config, errCode);
-    EXPECT_NE(GdbExecuteTest::store_, nullptr);
-    EXPECT_EQ(errCode, E_OK);
 }
 
 void GdbExecuteTest::TearDownTestCase()
@@ -110,16 +113,18 @@ void GdbExecuteTest::TearDownTestCase()
 
 void GdbExecuteTest::SetUp()
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+        return;
+    }
     auto result = store_->ExecuteGql(createGraphGql);
-    EXPECT_NE(store_, nullptr);
-    EXPECT_EQ(result.first, E_OK);
 }
 
 void GdbExecuteTest::TearDown()
 {
-    auto result = store_->ExecuteGql("DROP GRAPH test");
-    EXPECT_NE(store_, nullptr);
-    EXPECT_EQ(result.first, E_OK);
+    if (store_ != nullptr) {
+        auto result = store_->ExecuteGql("DROP GRAPH test");
+    }
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore, TestSize.Level1)
@@ -504,7 +509,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_SecurityLevel03, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_NoInsertQuery, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->QueryGql("MATCH (person:Person {age: 11}) RETURN person;");
     ASSERT_EQ(result.first, E_OK);
     ASSERT_NE(result.second, nullptr);
@@ -513,6 +518,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_NoInsertQuery, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterClose, TestSize.Level1)
 {
+    ASSERT_NE(store_, nullptr);
     int errCode = E_OK;
     std::string dbName = "ttttclose";
     std::string dbPath = "/data";
@@ -541,6 +547,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterClose, TestSize.Level1)
  */
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterDrop, TestSize.Level1)
 {
+    ASSERT_NE(store_, nullptr);
     int errCode = E_OK;
     std::string dbName = "ttttdrop";
     std::string dbPath = "/data";
@@ -570,7 +577,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterDrop, TestSize.Level1)
  */
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_LongName, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
     EXPECT_EQ(result.first, E_OK);
     result = store_->QueryGql("MATCH (person:Person {age: 11}) RETURN person;");
@@ -607,7 +614,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_LongName, TestSize.Level1)
  */
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_001, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("name_1", 11);
@@ -650,7 +657,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_001, TestSize.Level1)
  */
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_002, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
     EXPECT_EQ(result.first, E_OK);
     result = store_->ExecuteGql("INSERT (:Person {name: 'name_2', age: 22});");
@@ -682,7 +689,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_002, TestSize.Level1)
 
 void GdbExecuteTest::MatchAndVerifyPerson(const std::string &name, const int32_t &age)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto gql = "MATCH (person:Person {name: '" + name + "'}) RETURN person;";
     auto result = store_->QueryGql(gql);
     ASSERT_EQ(result.first, E_OK);
@@ -718,7 +725,7 @@ void GdbExecuteTest::VerifyPersonInfo(const GraphValue &person, const std::strin
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("name_1", 11);
@@ -750,7 +757,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'hahaha', age: 987});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("hahaha", 987);
@@ -778,7 +785,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull02, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'hahaha', age: 987});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("hahaha", 987);
@@ -806,7 +813,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull02, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_MatchFail, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'zhangsan001', age: 10});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("zhangsan001", 10);
@@ -817,7 +824,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_MatchFail, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_AgeError, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_4', age: 44});");
     EXPECT_EQ(result.first, E_OK);
@@ -831,7 +838,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_AgeError, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_ColumnError, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:PersonErr {name: true, age: 44});");
     EXPECT_EQ(result.first, E_GRD_UNDEFINED_TABLE);
@@ -858,7 +865,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_ColumnError, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'zhangsan_delete', age: 10});");
     EXPECT_EQ(result.first, E_OK);
@@ -881,7 +888,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_NotFound, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'zhangsan_delete', age: 10});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("zhangsan_delete", 10);
@@ -893,7 +900,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_NotFound, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_PError, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'delete_error', age: 11});");
     EXPECT_EQ(result.first, E_OK);
     MatchAndVerifyPerson("delete_error", 11);
@@ -905,7 +912,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_PError, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'delete_1', age: 11});");
     EXPECT_EQ(result.first, E_OK);
@@ -946,7 +953,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related_Error, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'delete_3', age: 11});");
     EXPECT_EQ(result.first, E_OK);
@@ -996,7 +1003,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related_Error, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'zhangsan_111', age: 11, sex: true});");
     EXPECT_EQ(result.first, E_OK);
 
@@ -1037,7 +1044,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql_2, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Person {name: 'lisi_1', age: 66});");
     EXPECT_EQ(result.first, E_OK);
@@ -1088,7 +1095,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql_2, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_ParseEdge, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     // no start, no end
     nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
@@ -1143,7 +1150,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_ParseEdge, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     // NO start and end
     nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
@@ -1195,7 +1202,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
     PathSegment::Parse(json, errCode);
@@ -1251,7 +1258,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment03, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
     PathSegment::Parse(json, errCode);

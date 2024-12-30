@@ -61,6 +61,9 @@ ohos_shared_library("framework_graphstore") {
     "hitrace:hitrace_meter",
     "json:nlohmann_json_static",
   ]
+  if (arkdata_db_core_is_exists) {
+    defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+  }
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 }

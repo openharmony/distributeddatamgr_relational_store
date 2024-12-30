@@ -43,6 +43,15 @@ void GrdAdapterHolderInit(GrdAdapterHolder &adapterHolder)
     adapterHolder.ColumnText = (ColumnText)dlsym(g_library, "GRD_GqlColumnText");
 }
 
+bool IsSupportArkDataDb()
+{
+#ifdef ARKDATA_DB_CORE_IS_EXISTS
+    return true;
+#else
+    return false;
+#endif
+}
+
 GrdAdapterHolder GetAdapterHolder()
 {
     GrdAdapterHolder adapterHolder;
