@@ -1236,7 +1236,8 @@ void RdbStoreProxy::OnDataChangeEvent(napi_env env, size_t argc, napi_value *arg
     }
     SubscribeOption option;
     option.mode = static_cast<SubscribeMode>(mode);
-    auto observer = std::make_shared<NapiRdbStoreObserver>(env, argv[1]);
+    auto uvQueue = std::make_shared<UvQueue>(env);
+    auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
     int errCode = rdbStore_->Subscribe(option, observer.get());
     if (errCode != E_OK) {
         LOG_ERROR("RdbStoreProxy::OnDataChangeEvent: subscribe failed.");
@@ -1278,6 +1279,7 @@ void RdbStoreProxy::OffDataChangeEvent(napi_env env, size_t argc, napi_value *ar
                 return;
             }
             rdbStore_->UnSubscribe(option, it->get());
+            (*it)->Clear();
             observers_[mode].erase(it);
             LOG_INFO("RdbStoreProxy::OffDataChangeEvent: unsubscribe success.");
             return;
