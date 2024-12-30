@@ -287,6 +287,7 @@ describe('rdbStoreResultSetGetRowTest', function () {
     })
 
     /**
+     * @tc.name rdb store resultSet getRow test
      * @tc.number rdbStoreResultSetGetRowTest0010
      * @tc.desc Insert a string greater than number.MAX_SAFE_INTEGER is also obtained as a string by getRow
      */
