@@ -13,6 +13,12 @@
 
 declare_args() {
   relational_store_rdb_support_icu = true
+  if (!defined(global_parts_info) ||
+      defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
+    arkdata_db_core_is_exists = true
+  } else {
+    arkdata_db_core_is_exists = false
+  }
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"

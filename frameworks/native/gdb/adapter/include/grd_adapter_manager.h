@@ -67,6 +67,7 @@ struct GrdAdapterHolder {
     ReKey ReKey = nullptr;
 };
 
+bool IsSupportArkDataDb();
 GrdAdapterHolder GetAdapterHolder();
 
 static void *g_library = nullptr;

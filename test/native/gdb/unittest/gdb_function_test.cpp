@@ -21,6 +21,7 @@
 #include "aip_errors.h"
 #include "connection_pool.h"
 #include "gdb_helper.h"
+#include "grd_adapter_manager.h"
 #include "logger.h"
 
 using namespace testing::ext;
@@ -46,6 +47,9 @@ void GdbFuncTest::TearDownTestCase()
 void GdbFuncTest::SetUp()
 {
     LOG_INFO("SetUp");
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+    }
 }
 
 void GdbFuncTest::TearDown()
