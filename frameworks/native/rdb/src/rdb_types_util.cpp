@@ -196,12 +196,12 @@ bool Unmarshalling(RdbChangedData &output, MessageParcel &data)
 template<>
 bool Marshalling(const RdbProperties &input, MessageParcel &data)
 {
-    return Marshal(data, input.isTrackedDataChange);
+    return Marshal(data, input.isTrackedDataChange, input.isP2pSyncDataChange);
 }
 template<>
 bool Unmarshalling(RdbProperties &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.isTrackedDataChange);
+    return Unmarshal(data, output.isTrackedDataChange, output.isP2pSyncDataChange);
 }
 
 template<>

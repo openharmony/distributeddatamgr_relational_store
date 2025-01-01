@@ -748,19 +748,11 @@ void RdbStoreImpl::InitDelayNotifier()
 
 int RdbStoreImpl::RegisterDataChangeCallback()
 {
-    if (!config_.IsSearchable()) {
-        return E_OK;
-    }
-
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     InitDelayNotifier();
-    auto callBack = [delayNotifier = delayNotifier_](const std::set<std::string> &tables) {
-        DistributedRdb::RdbChangedData rdbChangedData;
-        for (const auto &table : tables) {
-            rdbChangedData.tableData[table].isTrackedDataChange = true;
-        }
+    auto callBack = [delayNotifier = delayNotifier_](const DistributedRdb::RdbChangedData &rdbChangedData) {
         if (delayNotifier != nullptr) {
             delayNotifier->UpdateNotify(rdbChangedData);
         }
