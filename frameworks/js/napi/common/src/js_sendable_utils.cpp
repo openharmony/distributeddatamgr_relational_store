@@ -116,11 +116,6 @@ napi_value JSUtils::Convert2Sendable(napi_env env, const std::monostate &value)
     return Convert2JSValue(env, value);
 }
 
-napi_value JSUtils::Convert2Sendable(napi_env env, const std::nullptr_t &value)
-{
-    return Convert2JSValue(env, value);
-}
-
 napi_value JSUtils::ToSendableObject(napi_env env, napi_value jsValue)
 {
     LOG_DEBUG("jsObject -> sendableObject");

@@ -73,7 +73,7 @@ Descriptor GdbStoreProxy::GetDescriptors()
 void GdbStoreProxy::Init(napi_env env, napi_value exports)
 {
     auto jsCtor = OHOS::AppDataMgrJsKit::JSUtils::DefineClass(
-        env, "ohos.data.graphStore", "GraphStore", GetDescriptors(), Initialize, true);
+        env, "ohos.data.graphStore", "GraphStore", GetDescriptors(), Initialize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, exports, "GraphStore", jsCtor));
 }
 
@@ -118,7 +118,7 @@ napi_value GdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     if (proxy == nullptr) {
         return nullptr;
     }
-    napi_status status = napi_wrap_sendable(env, self, proxy, finalize, proxy);
+    napi_status status = napi_wrap(env, self, proxy, finalize, proxy, nullptr);
     if (status != napi_ok) {
         LOG_ERROR("GdbStoreProxy napi_wrap failed! code:%{public}d!", status);
         finalize(env, proxy, proxy);
@@ -147,7 +147,7 @@ napi_value GdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<DBStore> val
     }
 
     GdbStoreProxy *proxy = nullptr;
-    status = napi_unwrap_sendable(env, instance, reinterpret_cast<void **>(&proxy));
+    status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
     if (proxy == nullptr) {
         LOG_ERROR("GdbStoreProxy::NewInstance native instance is nullptr! code:%{public}d!", status);
         return instance;
@@ -161,7 +161,7 @@ napi_value GdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<DBStore> val
 GdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
 {
     GdbStoreProxy *proxy = nullptr;
-    napi_status status = napi_unwrap_sendable(env, self, reinterpret_cast<void **>(&proxy));
+    napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
     if (proxy == nullptr) {
         LOG_ERROR("GdbStoreProxy native instance is nullptr! code:%{public}d!", status);
         return nullptr;
@@ -205,7 +205,7 @@ napi_value GdbStoreProxy::Read(napi_env env, napi_callback_info info)
         return OK;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = AppDataMgrJsKit::JSUtils::Convert2Sendable(env, context->result);
+        result = AppDataMgrJsKit::JSUtils::Convert2JSValue(env, context->result);
         CHECK_RETURN_SET_E(context->intOutput == OK, std::make_shared<InnerError>(context->intOutput));
     };
     context->SetAction(env, info, input, exec, output);
@@ -230,7 +230,7 @@ napi_value GdbStoreProxy::Write(napi_env env, napi_callback_info info)
         return OK;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = AppDataMgrJsKit::JSUtils::Convert2Sendable(env, context->result);
+        result = AppDataMgrJsKit::JSUtils::Convert2JSValue(env, context->result);
         CHECK_RETURN_SET_E(context->intOutput == OK, std::make_shared<InnerError>(context->intOutput));
     };
     context->SetAction(env, info, input, exec, output);
