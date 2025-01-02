@@ -474,13 +474,14 @@ int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier
     }
     hasClientObserver_ = true;
     int32_t status = RegisterClientObserver(dbHandle_, [notifier](const ClientChangedData &clientData) {
-        std::set<std::string> tables;
+        DistributedRdb::RdbChangedData rdbChangedData;
         for (auto &[key, val] : clientData.tableData) {
-            if (val.isTrackedDataChange) {
-                tables.insert(key);
+            if (val.isTrackedDataChange || val.isP2pSyncDataChange) {
+                rdbChangedData.tableData[key].isTrackedDataChange = val.isTrackedDataChange;
+                rdbChangedData.tableData[key].isP2pSyncDataChange = val.isP2pSyncDataChange;
             }
         }
-        notifier(tables);
+        notifier(rdbChangedData);
     });
     if (status != E_OK) {
         LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
