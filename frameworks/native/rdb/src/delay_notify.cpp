@@ -47,7 +47,7 @@ void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData
     {
         std::lock_guard<std::mutex> lock(mutex_);
         for (auto &[k, v] : changedData.tableData) {
-            if (!v.isTrackedDataChange) {
+            if (!v.isTrackedDataChange && !v.isP2pSyncDataChange) {
                 continue;
             }
             auto it = changedData_.tableData.find(k);

@@ -33,7 +33,7 @@ public:
     using Info = DistributedRdb::RdbDebugInfo;
     using SConn = std::shared_ptr<Connection>;
     using Stmt = std::shared_ptr<Statement>;
-    using Notifier = std::function<void(const std::set<std::string> &tables)>;
+    using Notifier = std::function<void(const DistributedRdb::RdbChangedData &rdbChangedData)>;
     using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
     using Repairer = int32_t (*)(const RdbStoreConfig &config);
     using Deleter = int32_t (*)(const RdbStoreConfig &config);
