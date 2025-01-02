@@ -58,7 +58,7 @@ struct RdbConfig {
     bool allowRebuild = false;
     bool isReadOnly = false;
     SecurityLevel securityLevel = SecurityLevel::LAST;
-    Tokenizer tokenizer = Tokenizer ::NONE_TOKENIZER;
+    Tokenizer tokenizer = Tokenizer::NONE_TOKENIZER;
     std::string dataGroupId;
     std::string name;
     std::string customDir;
