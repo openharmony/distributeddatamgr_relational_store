@@ -144,6 +144,9 @@ void GdbGrdApiTest::TearDownTestCase()
 void GdbGrdApiTest::SetUp()
 {
     LOG_INFO("SetUp");
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+    }
 }
 
 void GdbGrdApiTest::TearDown()
