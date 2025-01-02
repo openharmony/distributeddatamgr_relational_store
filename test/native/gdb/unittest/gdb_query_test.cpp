@@ -24,6 +24,7 @@
 #include "aip_errors.h"
 #include "gdb_helper.h"
 #include "gdb_store.h"
+#include "grd_adapter_manager.h"
 
 using namespace testing::ext;
 using namespace OHOS::DistributedDataAip;
@@ -61,6 +62,9 @@ const std::string GdbQueryTest::createGraphGql2 = "CREATE GRAPH companyGraph2 {"
                                                      "(company:Company {name STRING, founded INT}) };";
 void GdbQueryTest::SetUpTestCase()
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+    }
     int errCode = E_OK;
     auto config = StoreConfig(databaseName, databasePath);
     GDBHelper::DeleteDBStore(config);
@@ -78,17 +82,23 @@ void GdbQueryTest::TearDownTestCase()
 
 void GdbQueryTest::SetUp()
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+    }
     auto result = store_->ExecuteGql(createGraphGql);
     EXPECT_EQ(result.first, E_OK);
 }
 
 void GdbQueryTest::TearDown()
 {
-    auto result = store_->ExecuteGql("DROP GRAPH companyGraph");
+    if (store_ != nullptr) {
+        auto result = store_->ExecuteGql("DROP GRAPH companyGraph");
+    }
 }
 
 HWTEST_F(GdbQueryTest, GdbStore_Test_CreateHaveRowId, TestSize.Level1)
 {
+    ASSERT_NE(store_, nullptr);
     auto createGql = "CREATE GRAPH companyGraph3 {"
                      "(company:Company {rowid INT, name STRING, founded INT}) };";
     auto result = store_->ExecuteGql(createGql);
@@ -102,6 +112,7 @@ HWTEST_F(GdbQueryTest, GdbStore_Test_CreateHaveRowId, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_Test_CreateLimitDb, TestSize.Level1)
 {
+    ASSERT_NE(store_, nullptr);
     // Too many graphs can be created for only one graph in a library. Failed to create too many graphs.
     auto result = store_->ExecuteGql(createGraphGql2);
     EXPECT_EQ(result.first, E_GRD_OVER_LIMIT);
@@ -114,7 +125,7 @@ HWTEST_F(GdbQueryTest, GdbStore_Test_CreateLimitDb, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_001, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     // Insert Employee
     const std::string insertEmployeeQuery = "INSERT (:Employee {name: 'John Doe11', position: 'Software Engineer'});";
     auto result = store_->ExecuteGql(insertEmployeeQuery);
@@ -146,7 +157,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_001, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_002, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     // insert Employee
     auto result = store_->ExecuteGql("INSERT (:Employee {name: 'John Doe', position: 'Software Engineer'});");
     EXPECT_EQ(result.first, E_OK);
@@ -195,7 +206,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_002, TestSize.Level1)
  */
 void GdbQueryTest::MatchAndVerifyCompany(const std::string &name, const int32_t &founded)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto gql = "MATCH (company:Company {name: '" + name + "'}) RETURN company;";
     auto result = store_->QueryGql(gql);
     ASSERT_EQ(result.first, E_OK);
@@ -236,7 +247,7 @@ void GdbQueryTest::VerifyCompanyInfo(const GraphValue &company, const std::strin
  */
 void GdbQueryTest::InsertCompany(const std::string &name, const int32_t &founded)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     auto result =
         store_->ExecuteGql("INSERT (:Company {name: '" + name + "', founded: " + std::to_string(founded) + "});");
     EXPECT_EQ(result.first, E_OK);
@@ -250,6 +261,7 @@ void GdbQueryTest::InsertCompany(const std::string &name, const int32_t &founded
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereInMatch, TestSize.Level1)
 {
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
     InsertCompany("myCompany3", 2011);
@@ -271,7 +283,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereInMatch, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOutsideMatch, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
     InsertCompany("myCompany3", 2011);
@@ -293,7 +305,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOutsideMatch, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereAppendAnd, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -314,7 +326,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereAppendAnd, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOutsideAndInsideMatch, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -335,7 +347,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOutsideAndInsideMatch, TestSize.L
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereStartAnd, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -354,7 +366,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereStartAnd, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereByMatch, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -375,7 +387,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereByMatch, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOperators, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -402,7 +414,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_WhereOperators, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_PostLike, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -425,7 +437,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_PostLike, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_Like, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
@@ -451,7 +463,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_Like, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_BeferLike, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany2", 2001);
     InsertCompany("aimyCompany", 2011);
@@ -473,7 +485,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_BeferLike, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("amyCompany", 2001);
@@ -495,7 +507,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter02, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     InsertCompany("myCompany", 1991);
     InsertCompany("amyCompany", 2001);
@@ -517,7 +529,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter02, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter03, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompanya", 2001);
     InsertCompany("myCompanyab", 2002);
@@ -537,7 +549,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_MatchesCharacter03, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_In, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany1", 2001);
     InsertCompany("myCompany2", 2002);
@@ -559,7 +571,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_In, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_NotIn, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     InsertCompany("myCompany", 1991);
     InsertCompany("myCompany1", 2001);
     InsertCompany("myCompany2", 2002);
@@ -581,7 +593,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_NotIn, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_IsNull, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Employee {name: 'zhangsan', position: 'Software'});");
     EXPECT_EQ(result.first, E_OK);
@@ -616,7 +628,7 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_IsNull, TestSize.Level1)
  */
 HWTEST_F(GdbQueryTest, GdbStore_QuertTest_IsNotNull, TestSize.Level1)
 {
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:Company {founded: 1991});");
     EXPECT_EQ(result.first, E_OK);

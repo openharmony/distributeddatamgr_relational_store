@@ -251,7 +251,7 @@ std::pair<int32_t, std::shared_ptr<ConnectionPool::ConnNode>> ConnectionPool::Co
             if (errCode != E_OK) {
                 nodes_.clear();
                 details_.clear();
-                // count鍜宼otal鏄惁瑕佹竻闆?+                return { errCode, nullptr };
+                return { errCode, nullptr };
             }
         }
 
