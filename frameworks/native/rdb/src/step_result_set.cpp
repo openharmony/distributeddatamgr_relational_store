@@ -125,12 +125,9 @@ int StepResultSet::PrepareStep()
 
 std::pair<int, std::vector<std::string>> StepResultSet::GetColumnNames()
 {
-    int errCode = PrepareStep();
-    if (errCode != E_OK) {
-        LOG_ERROR("get all column names Step ret %{public}d", errCode);
-        return { errCode, {} };
+    if (lastErr_ != E_OK) {
+        return { lastErr_, {} };
     }
-
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("Statement is nullptr.");
@@ -183,6 +180,10 @@ int StepResultSet::GoToRow(int position)
         return E_ALREADY_CLOSED;
     }
 
+    if (lastErr_ != E_OK) {
+        return lastErr_;
+    }
+
     if (isSupportCountRow_ && position >= rowCount_) {
         rowPos_ = (position >= rowCount_ && rowCount_ != 0) ? rowCount_ : rowPos_;
         LOG_ERROR("position[%{public}d] rowCount[%{public}d] rowPos_[%{public}d]!", position, rowCount_, rowPos_);
@@ -217,11 +218,6 @@ int StepResultSet::GoToNextRow()
         return E_ALREADY_CLOSED;
     }
 
-    int errCode = PrepareStep();
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     auto statement = GetStatement();
     if (statement == nullptr) {
         LOG_ERROR("Statement is nullptr.");
@@ -229,7 +225,7 @@ int StepResultSet::GoToNextRow()
     }
 
     int retryCount = 0;
-    errCode = statement->Step();
+    auto errCode = statement->Step();
 
     while (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         // The table is locked, retry

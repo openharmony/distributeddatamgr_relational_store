@@ -295,7 +295,6 @@ public:
      * Calling this method on the result set will release all of its resources and makes it ineffective.
      */
     API_EXPORT int Close() override;
-
 protected:
     /**
      * @brief Constructor.
