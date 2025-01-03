@@ -236,9 +236,9 @@ bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
     auto it = storeCache_.find(path);
     if (it != storeCache_.end()) {
         auto rdbStore = it->second.lock();
+        LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
         if (rdbStore && shouldClose) {
             rdbStore->Close();
-            LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
         }
         storeCache_.erase(it); // clean invalid store ptr
         return true;

@@ -529,7 +529,7 @@ int32_t RdbStoreImpl::SubscribeLocalDetail(
 {
     auto [errCode, conn] = GetConn(false);
     if (errCode != E_OK) {
-        LOG_ERROR("The database is closed.");
+        LOG_ERROR("Get connection failed, errCode:%{public}d.", errCode);
         return errCode;
     }
 
@@ -664,7 +664,7 @@ int32_t RdbStoreImpl::UnsubscribeLocalDetail(
 {
     auto [errCode, conn] = GetConn(false);
     if (errCode != E_OK) {
-        LOG_ERROR("The database is closed.");
+        LOG_ERROR("Get connection failed, errCode:%{public}d.", errCode);
         return errCode;
     }
 
@@ -1658,7 +1658,7 @@ std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::
 
 bool RdbStoreImpl::IsHoldingConnection()
 {
-    return connectionPool_ != nullptr;
+    return GetPool() != nullptr;
 }
 
 int RdbStoreImpl::SetDefaultEncryptSql(
@@ -2291,8 +2291,9 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
         return E_NOT_SUPPORT;
     }
 
-    if (!isOpen_ || connectionPool_ == nullptr) {
-        LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, connectionPool_ == nullptr);
+    auto pool = GetPool();
+    if (pool == nullptr || !isOpen_) {
+        LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, pool == nullptr);
         return E_ALREADY_CLOSED;
     }
 
@@ -2314,10 +2315,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
-    auto pool = GetPool();
-    if (pool == nullptr) {
-        return E_ALREADY_CLOSED;
-    }
     int errCode = pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
     keyFiles.Unlock();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
