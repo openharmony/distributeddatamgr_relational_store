@@ -524,7 +524,7 @@ bool JSUtils::IsNull(napi_env env, napi_value value)
 }
 
 napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
-    const Descriptor &descriptor, napi_callback ctor, bool isSendable)
+    const Descriptor &descriptor, napi_callback ctor)
 {
     auto featureSpace = GetJsFeatureSpace(spaceName);
     if (!featureSpace.has_value() || !featureSpace->isComponent) {
@@ -559,13 +559,8 @@ napi_value JSUtils::DefineClass(napi_env env, const std::string &spaceName, cons
         hasProp = false; // no constructor.
     }
     auto properties = descriptor();
-    if (isSendable) {
-        NAPI_CALL(env, napi_define_sendable_class(env, className.c_str(), className.size(), ctor, nullptr,
-                           properties.size(), properties.data(), nullptr, &constructor));
-    } else {
-        NAPI_CALL(env, napi_define_class(env, className.c_str(), className.size(), ctor, nullptr,
-                           properties.size(), properties.data(), &constructor));
-    }
+    NAPI_CALL(env, napi_define_class(env, className.c_str(), className.size(), ctor, nullptr,
+        properties.size(), properties.data(), &constructor));
 
     NAPI_ASSERT(env, constructor != nullptr, "napi_define_class failed!");
 
