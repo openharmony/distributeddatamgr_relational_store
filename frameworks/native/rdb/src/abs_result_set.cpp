@@ -510,6 +510,7 @@ int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
     value = valueObject;
     return E_OK;
 }
+
 std::pair<int, std::vector<std::string>> AbsResultSet::GetColumnNames()
 {
     return { E_NOT_SUPPORT, {} };

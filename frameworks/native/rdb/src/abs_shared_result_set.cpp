@@ -33,7 +33,8 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using SharedBlock = AppDataFwk::SharedBlock;
-AbsSharedResultSet::AbsSharedResultSet(std::string name) : sharedBlock_(nullptr), sharedBlockName_(std::move(name))
+AbsSharedResultSet::AbsSharedResultSet(std::string name)
+    : AbsResultSet(true), sharedBlock_(nullptr), sharedBlockName_(std::move(name))
 {
 }
 

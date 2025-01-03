@@ -779,7 +779,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -811,7 +811,7 @@ napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -849,7 +849,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -1251,7 +1251,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -1849,7 +1849,7 @@ napi_value RdbStoreProxy::QuerySharingResource(napi_env env, napi_callback_info 
         return (status == E_OK && context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
         LOG_DEBUG("RdbStoreProxy::QuerySharingResource end.");
     };
@@ -2088,7 +2088,7 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
