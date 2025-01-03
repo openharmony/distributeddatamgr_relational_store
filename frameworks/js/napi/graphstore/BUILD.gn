@@ -34,7 +34,6 @@ ohos_shared_library("graphstore") {
   sources = [
     "${relational_store_frameworks_path}/js/napi/common/src/js_ability.cpp",
     "${relational_store_frameworks_path}/js/napi/common/src/js_scope.cpp",
-    "${relational_store_frameworks_path}/js/napi/common/src/js_sendable_utils.cpp",
     "${relational_store_frameworks_path}/js/napi/common/src/js_utils.cpp",
     "${relational_store_frameworks_path}/js/napi/common/src/js_uv_queue.cpp",
     "${relational_store_frameworks_path}/js/napi/graphstore/src/entry_point.cpp",

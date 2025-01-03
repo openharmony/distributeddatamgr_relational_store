@@ -99,7 +99,7 @@ using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
 const std::optional<JsFeatureSpace> GetJsFeatureSpace(const std::string &name);
 /* napi_define_class  wrapper */
 napi_value DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
-    const Descriptor &descriptor, napi_callback ctor, bool isSendable = false);
+    const Descriptor &descriptor, napi_callback ctor);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr);
 

@@ -17,7 +17,6 @@
 #define OHOS_DISTRIBUTED_DATA_GDB_JS_NAPI_GDB_JS_UTILS_H
 #include "full_result.h"
 #include "gdb_store_config.h"
-#include "js_sendable_utils.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_gdb_context.h"
@@ -61,19 +60,19 @@ template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, StoreConfig &config);
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Result> &result);
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Result> &result);
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Vertex> &value);
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Vertex> &value);
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Edge> &edge);
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Edge> &edge);
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<PathSegment> &pathSegment);
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<PathSegment> &pathSegment);
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Path> &path);
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Path> &path);
 
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(StoreConfig &config, ContextParam &param);
 } // namespace OHOS::AppDataMgrJsKit::JSUtils
