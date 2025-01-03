@@ -229,15 +229,18 @@ void RdbStoreManager::Clear()
     storeCache_.clear();
 }
 
-bool RdbStoreManager::Remove(const std::string &path)
+bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     configCache_.Delete(path);
-    if (storeCache_.find(path) != storeCache_.end()) {
-        if (storeCache_[path].lock()) {
+    auto it = storeCache_.find(path);
+    if (it != storeCache_.end()) {
+        auto rdbStore = it->second.lock();
+        if (rdbStore && shouldClose) {
+            rdbStore->Close();
             LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
         }
-        storeCache_.erase(path); // clean invalid store ptr
+        storeCache_.erase(it); // clean invalid store ptr
         return true;
     }
 
@@ -282,7 +285,7 @@ int RdbStoreManager::ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpe
     return openCallback.OnOpen(rdbStore);
 }
 
-bool RdbStoreManager::Delete(const std::string &path)
+bool RdbStoreManager::Delete(const std::string &path, bool shouldClose)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto tokens = StringUtils::Split(path, "/");
@@ -292,17 +295,17 @@ bool RdbStoreManager::Delete(const std::string &path)
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
-            return Remove(path);
+            return Remove(path, shouldClose);
         }
         err = service->Delete(param);
         if (err != E_OK) {
             LOG_ERROR("service delete store, storeName:%{public}s, err = %{public}d",
                 SqliteUtils::Anonymous(param.storeName_).c_str(), err);
-            return Remove(path);
+            return Remove(path, shouldClose);
         }
     }
 #endif
-    return Remove(path);
+    return Remove(path, shouldClose);
 }
 
 int RdbStoreManager::SetSecurityLabel(const RdbStoreConfig &config)
