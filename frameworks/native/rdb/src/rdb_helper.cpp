@@ -77,10 +77,10 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = shouldClose ? DeleteRdbStore(config) : DeleteRdbStore(config, shouldClose);
+    int errCodeSqlite = DeleteRdbStore(config, shouldClose);
 
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = shouldClose ? DeleteRdbStore(config) : DeleteRdbStore(config, shouldClose);
+    int errCodeVector = DeleteRdbStore(config, shouldClose);
     return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
 }
 
@@ -92,8 +92,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
-        shouldClose ? RdbStoreManager::GetInstance().Delete(dbFile, true)
-                    : RdbStoreManager::GetInstance().Delete(dbFile, false);
+        RdbStoreManager::GetInstance().Delete(dbFile, shouldClose);
     }
     Connection::Delete(config);
 
