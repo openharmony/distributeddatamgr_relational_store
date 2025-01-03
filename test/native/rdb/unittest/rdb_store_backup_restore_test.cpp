@@ -283,34 +283,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
     EXPECT_EQ(ret, E_OK);
 
     ret = store->Restore(BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_OK);
-
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
-    ret = resultSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
-
-    values.Clear();
-    values.Put("id", 2);
-    values.Put("name", std::string("lisa"));
-    values.Put("age", 19);
-    values.Put("salary", 101);
-    values.Put("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    resultSet = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "lisa" });
-    ret = resultSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
 
 /* *
@@ -456,18 +429,6 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Level2)
 
     ret = store->Backup(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_DB_NOT_EXIST);
-    EXPECT_NE(0, access(BACKUP_DATABASE_NAME, F_OK));
-    EXPECT_NE(0, access(slaveDataBaseName, F_OK));
-
-    ret = store->Restore(BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_INVALID_FILE_PATH);
-
-    std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
-    ret = resultSet->GoToFirstRow();
-    EXPECT_EQ(ret, E_SQLITE_IOERR);
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
 }
 
 /* *

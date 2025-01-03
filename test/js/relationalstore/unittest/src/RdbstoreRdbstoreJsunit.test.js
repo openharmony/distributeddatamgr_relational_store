@@ -26,6 +26,10 @@ const STORE_CONFIG = {
     name: "rdbstore.db",
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
+const STORE_CONFIG1 = {
+    name: "rdbstore1.db",
+    securityLevel: data_relationalStore.SecurityLevel.S1,
+}
 describe('rdbStoreTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
@@ -245,7 +249,7 @@ describe('rdbStoreTest', function () {
 
     /**
      * @tc.name rdb store getRdbStore with different securityLevel
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0100
      * @tc.desc rdb store getRdbStore with different securityLevel
      * @tc.require: I5PIL6
      */
@@ -277,7 +281,7 @@ describe('rdbStoreTest', function () {
 
     /**
      * @tc.name rdb store getRdbStore with invalid securityLevel
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0011
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0110
      * @tc.desc rdb store getRdbStore with invalid securityLevel
      */
     it('testRdbStore0011', 0, async function () {
@@ -300,7 +304,7 @@ describe('rdbStoreTest', function () {
 
     /**
      * @tc.name rdb store wal file overlimit test
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0012
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0120
      * @tc.desc Checkpoint failure delayed retry
      */
     it('testRdbStore0012', 0, async function (done) {
@@ -353,6 +357,631 @@ describe('rdbStoreTest', function () {
             done();
             expect().assertFail();
         }
+    })
+
+    /**
+     * @tc.name rdb store update after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0130
+     * @tc.desc rdb store update after deleteRdbStore
+     */
+    it('testRdbStore0013', 0, async function () {
+        console.log(TAG + "************* testRdbStore0013 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await store.insert("test", valueBucket)
+
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            const valueBucket1 = {
+                "name": "zhangsan",
+                "age": 19,
+                "salary": 200.5,
+                "blobType": u8,
+            }
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo("NAME", "zhangsan");
+            await store.update(valueBucket1, predicates)
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0013 end *************");
+    })
+
+    /**
+     * @tc.name rdb store insert after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0140
+     * @tc.desc rdb store insert after deleteRdbStore
+     */
+    it('testRdbStore0014', 0, async function () {
+        console.log(TAG + "************* testRdbStore0014 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            var u8 = new Uint8Array([1, 2, 3])
+            {
+                const valueBucket = {
+                    "name": "zhangsan",
+                    "age": 18,
+                    "salary": 100.5,
+                    "blobType": u8,
+                }
+                await store.insert("test", valueBucket)
+                expect().assertFail();
+            }
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0014 end *************");
+    })
+
+    /**
+     * @tc.name rdb store batchInsert after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0150
+     * @tc.desc rdb store batchInsert after deleteRdbStore
+     */
+    it('testRdbStore0015', 0, async function () {
+        console.log(TAG + "************* testRdbStore0015 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        let valueBucketArray = new Array();
+        for (let i = 0; i < 10; i++) {
+            valueBucketArray.push(valueBucket);
+        }
+
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.batchInsert("test", valueBucketArray)
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0015 end *************");
+    })
+
+    /**
+     * @tc.name rdb store delete after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0160
+     * @tc.desc rdb store delete after deleteRdbStore
+     */
+    it('testRdbStore0016', 0, async function () {
+        console.log(TAG + "************* testRdbStore0016 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await store.insert("test", valueBucket)
+        }
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            let predicates = await new data_relationalStore.RdbPredicates("test")
+            await store.delete(predicates)
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0016 end *************");
+    })
+
+    /**
+     * @tc.name rdb store query after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0170
+     * @tc.desc rdb store query after deleteRdbStore
+     */
+    it('testRdbStore0017', 0, async function () {
+        console.log(TAG + "************* testRdbStore0017 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await store.insert("test", valueBucket)
+        }
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            let predicates = await new data_relationalStore.RdbPredicates("test")
+            await store.query(predicates)
+        } catch (err) {
+            expect(14800000).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0017 end *************");
+    })
+
+    /**
+     * @tc.name rdb store querySql after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0180
+     * @tc.desc rdb store querySql after deleteRdbStore
+     */
+    it('testRdbStore0018', 0, async function () {
+        console.log(TAG + "************* testRdbStore0018 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        var u8 = new Uint8Array([1, 2, 3])
+        {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await store.insert("test", valueBucket)
+        }
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.querySql("SELECT * FROM test")
+        } catch (err) {
+            expect(14800000).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0018 end *************");
+    })
+
+    /**
+     * @tc.name rdb store backup after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0190
+     * @tc.desc rdb store backup after deleteRdbStore
+     */
+    it('testRdbStore0019', 0, async function () {
+        console.log(TAG + "************* testRdbStore0019 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.backup("backup.db");
+        } catch (err) {
+            expect().assertFail();
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0019 end *************");
+    })
+
+    /**
+     * @tc.name rdb store restore after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0200
+     * @tc.desc rdb store restore after deleteRdbStore
+     */
+    it('testRdbStore0020', 0, async function () {
+        console.log(TAG + "************* testRdbStore0020 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.backup("backup.db");
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.restore("backup.db");
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0020 end *************");
+    })
+
+    /**
+     * @tc.name rdb store cleanDirtyData after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0210
+     * @tc.desc rdb store cleanDirtyData after deleteRdbStore
+     */
+    it('testRdbStore0021', 0, async function () {
+        console.log(TAG + "************* testRdbStore0021 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.cleanDirtyData('test')
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0021 end *************");
+    })
+
+    /**
+     * @tc.name rdb store executeSql after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0220
+     * @tc.desc rdb store executeSql after deleteRdbStore
+     */
+    it('testRdbStore0022', 0, async function () {
+        console.log(TAG + "************* testRdbStore0022 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.executeSql(CREATE_TABLE_TEST)
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0022 end *************");
+    })
+
+    /**
+     * @tc.name rdb store execute after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0230
+     * @tc.desc rdb store execute after deleteRdbStore
+     */
+    it('testRdbStore0023', 0, async function () {
+        console.log(TAG + "************* testRdbStore0023 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.execute(CREATE_TABLE_TEST)
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0023 end *************");
+    })
+
+    /**
+     * @tc.name rdb store beginTransaction after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0240
+     * @tc.desc rdb store beginTransaction after deleteRdbStore
+     */
+    it('testRdbStore0024', 0, async function () {
+        console.log(TAG + "************* testRdbStore0024 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            store.beginTransaction();
+            expect().assertFail();
+        } catch (err) {
+            expect("14800014").assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0024 end *************");
+    })
+
+    /**
+     * @tc.name rdb store setDistributedTables after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0250
+     * @tc.desc rdb store setDistributedTables after deleteRdbStore
+     */
+    it('testRdbStore0025', 0, async function () {
+        console.log(TAG + "************* testRdbStore0025 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.setDistributedTables(['test'])
+            expect().assertFail();
+        } catch (err) {
+            expect(14800000).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0025 end *************");
+    })
+
+    /**
+     * @tc.name rdb store attach after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0260
+     * @tc.desc rdb store attach after deleteRdbStore
+     */
+    it('testRdbStore0026', 0, async function () {
+        console.log(TAG + "************* testRdbStore0026 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.attach(context, STORE_CONFIG1, "attachDB");
+            expect().assertFail();
+        } catch (err) {
+            expect(14800010).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0026 end *************");
+    })
+
+    /**
+     * @tc.name rdb store detach after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0270
+     * @tc.desc rdb store detach after deleteRdbStore
+     */
+    it('testRdbStore0027', 0, async function () {
+        console.log(TAG + "************* testRdbStore0027 start *************");
+
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await data_relationalStore.getRdbStore(context, STORE_CONFIG1);
+        await store.executeSql(CREATE_TABLE_TEST);
+
+        await store.attach(context, STORE_CONFIG1, "attachDB");
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+        try {
+            await store.detach("attachDB")
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0027 end *************");
+    })
+
+   /**
+   * @tc.name rdb store createTransaction after deleteRdbStore
+   * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0280
+   * @tc.desc rdb store createTransaction after deleteRdbStore
+   */
+  it('testRdbStore0028', 0, async function () {
+      console.log(TAG + "************* testRdbStore0028 start *************");
+      let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+      await store.executeSql(CREATE_TABLE_TEST);
+      await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+
+      try {
+        await store?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+          expect().assertFail();
+      } catch (err) {
+          expect(14800014).assertEqual(err.code);
+      }
+      store = null
+      console.log(TAG + "************* testRdbStore0028 end *************");
+  })
+
+  /**
+   * @tc.name rdb store beginTrans after deleteRdbStore
+   * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0290
+   * @tc.desc rdb store beginTrans after deleteRdbStore
+   */
+  it('testRdbStore0029', 0, async function () {
+      console.log(TAG + "************* testRdbStore0029 start *************");
+      let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+      await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+      try {
+          await store.beginTrans();
+          expect().assertFail();
+      } catch (err) {
+          expect(801).assertEqual(err.code);
+      }
+      store = null
+      console.log(TAG + "************* testRdbStore0029 end *************");
+  })
+
+  /**
+   * @tc.name rdb store commit after deleteRdbStore
+   * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0300
+   * @tc.desc rdb store commit after deleteRdbStore
+   */
+  it('testRdbStore0030', 0, async function () {
+      console.log(TAG + "************* testRdbStore0030 start *************");
+      let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+      await store.executeSql(CREATE_TABLE_TEST);
+
+      store.beginTransaction();
+      var u8 = new Uint8Array([1, 2, 3])
+      const valueBucket = {
+          "name": "lisi",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+      await store.insert("test", valueBucket)
+      await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+      try {
+          store.commit();
+          expect().assertFail();
+      } catch (err) {
+          expect("14800014").assertEqual(err.code);
+      }
+      store = null
+      console.log(TAG + "************* testRdbStore0030 end *************");
+  })
+
+  /**
+   * @tc.name rdb store getModifyTime after deleteRdbStore
+   * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0310
+   * @tc.desc rdb store getModifyTime after deleteRdbStore
+   */
+  it('testRdbStore0031', 0, async function () {
+      console.log(TAG + "************* testRdbStore0031 start *************");
+      let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+      await store.executeSql(CREATE_TABLE_TEST);
+      var u8 = new Uint8Array([1, 2, 3])
+      {
+          const valueBucket = {
+              "name": "zhangsan",
+              "age": 18,
+              "salary": 100.5,
+              "blobType": u8,
+          }
+          await store.insert("test", valueBucket)
+      }
+      await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+      try {
+          await store.getModifyTime('test', 'name', [1]);
+      } catch (err) {
+          expect(14800000).assertEqual(err.code);
+      }
+      store = null
+      console.log(TAG + "************* testRdbStore0031 end *************");
+  })
+
+  /**
+   * @tc.name rdb store rollBack after deleteRdbStore
+   * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0320
+   * @tc.desc rdb store rollBack after deleteRdbStore
+   */
+  it('testRdbStore0032', 0, async function () {
+      console.log(TAG + "************* testRdbStore0032 start *************");
+      let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+      await store.executeSql(CREATE_TABLE_TEST);
+
+      store.beginTransaction();
+      var u8 = new Uint8Array([1, 2, 3])
+      const valueBucket = {
+          "name": "lisi",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+      await store.insert("test", valueBucket)
+      await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+      try {
+          store.rollBack();
+          expect().assertFail();
+      } catch (err) {
+          expect("14800014").assertEqual(err.code);
+      }
+      store = null
+      console.log(TAG + "************* testRdbStore0032 end *************");
+  })
+
+  /**
+  * @tc.name rdb store queryLockedRow after deleteRdbStore
+  * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0330
+  * @tc.desc rdb store queryLockedRow after deleteRdbStore
+  */
+ it('testRdbStore0033', 0, async function () {
+     console.log(TAG + "************* testRdbStore0033 start *************");
+     let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+     await store.executeSql(CREATE_TABLE_TEST);
+
+     var u8 = new Uint8Array([1, 2, 3])
+     const valueBucket = {
+         "name": "lisi",
+         "age": 18,
+         "salary": 100.5,
+         "blobType": u8,
+     }
+     await store.insert("test", valueBucket)
+     await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+
+     try {
+         let predicates = new data_relationalStore.RdbPredicates("test");
+         predicates.equalTo('age', 18);
+         await store.queryLockedRow(predicates);
+         expect().assertFail();
+     } catch (err) {
+         expect(14800000).assertEqual(err.code);
+     }
+     store = null
+     console.log(TAG + "************* testRdbStore0033 end *************");
+ })
+
+    /**
+     * @tc.name rdb store lockRow after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0340
+     * @tc.desc rdb store lockRow after deleteRdbStore
+     */
+    it('testRdbStore0034', 0, async function () {
+        console.log(TAG + "************* testRdbStore0034 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "lisi",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await store.insert("test", valueBucket)
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo('age', 18);
+            await store.lockRow(predicates);
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0034 end *************");
+    })
+
+    /**
+     * @tc.name rdb store unlockRow after deleteRdbStore
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0350
+     * @tc.desc rdb store unlockRow after deleteRdbStore
+     */
+    it('testRdbStore0035', 0, async function () {
+        console.log(TAG + "************* testRdbStore0035 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+
+        var u8 = new Uint8Array([1, 2, 3])
+        const valueBucket = {
+            "name": "lisi",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+        }
+        await store.insert("test", valueBucket)
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+
+        try {
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo('age', 18);
+            await store.unlockRow(predicates);
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0035 end *************");
+    })
+
+    /**
+    * @tc.name rdb store transaction insert after deleteRdbStore
+    * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0360
+    * @tc.desc rdb store transaction insert after deleteRdbStore
+    */
+    it('testRdbStore0036', 0, async function () {
+        console.log(TAG + "************* testRdbStore0036 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        var transaction = await store?.createTransaction({
+            transactionType: data_relationalStore.TransactionType.DEFERRED
+        });
+        await data_relationalStore.deleteRdbStore(context, "rdbstore.db");
+
+        try {
+            var u8 = new Uint8Array([1, 2, 3])
+            const valueBucket = {
+                "name": "lisi",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket)
+            expect().assertFail();
+        } catch (err) {
+            expect(14800014).assertEqual(err.code);
+        }
+        store = null
+        console.log(TAG + "************* testRdbStore0036 end *************");
     })
 
     /**

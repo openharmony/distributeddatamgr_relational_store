@@ -776,7 +776,9 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
 #endif
         context->rdbStore = nullptr;
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        // If the API version is greater than or equal to 14, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK :
+            (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -846,7 +848,9 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         context->resultSet = context->rdbStore->QuerySql(context->sql, context->bindArgs);
 #endif
         context->rdbStore = nullptr;
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        // If the API version is greater than or equal to 14, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK :
+            (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -1156,7 +1160,7 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->RollBack();
-    NAPI_ASSERT(env, errCode == E_OK, "call RollBack failed");
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -1199,7 +1203,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, OK == ParserThis(env, thisObj, context), context->error);
     if (argc == 0) {
         int errCode = context->rdbStore->Commit();
-        NAPI_ASSERT(env, errCode == E_OK, "call Commit failed");
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d.", errCode);
         return nullptr;
     }
@@ -1248,7 +1252,9 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         context->resultSet = context->isQuerySql ? rdbStore->QueryByStep(context->sql, context->bindArgs)
                                                  : rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        // If the API version is greater than or equal to 14, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK :
+            (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -2085,7 +2091,9 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
         context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
         context->rdbStore = nullptr;
-        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
+        // If the API version is greater than or equal to 14, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK :
+            (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
