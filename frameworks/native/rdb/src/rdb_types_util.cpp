@@ -20,7 +20,8 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.bundleName_, input.hapName_, input.storeName_, input.area_, input.level_,
         input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_, input.isSearchable_,
-        input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_, input.permissionNames_);
+        input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_, input.permissionNames_,
+        input.asyncDownloadAsset_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
@@ -28,7 +29,7 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
     return ITypesUtil::Unmarshal(data, output.bundleName_, output.hapName_, output.storeName_, output.area_,
         output.level_, output.type_, output.isEncrypt_, output.password_, output.customDir_, output.isAutoClean_,
         output.isSearchable_, output.haMode_, output.infos_, output.tokenIds_, output.uids_, output.user_,
-        output.permissionNames_);
+        output.permissionNames_, output.asyncDownloadAsset_);
 }
 
 template<>

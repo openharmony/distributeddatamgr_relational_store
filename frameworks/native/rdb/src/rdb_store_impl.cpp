@@ -305,6 +305,7 @@ int RdbStoreImpl::SetDistributedTables(
     if (errCode != E_OK) {
         return errCode;
     }
+    syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
