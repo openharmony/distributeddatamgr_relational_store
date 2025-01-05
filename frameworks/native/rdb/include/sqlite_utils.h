@@ -20,6 +20,7 @@
 #include <string>
 
 #include "sqlite3sym.h"
+#include "rdb_types.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -69,6 +70,7 @@ public:
     static const char *KdfAlgoDescription(int32_t kdfAlgo);
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
+    static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
 
 private:
     struct SqlType {
