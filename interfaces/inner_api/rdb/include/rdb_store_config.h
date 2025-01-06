@@ -594,19 +594,9 @@ public:
             }
         }
 
-        if (this->cryptoParam_.encryptKey_.size() != config.cryptoParam_.encryptKey_.size()) {
-            return false;
-        }
-
-        for (size_t i = 0; i < cryptoParam_.encryptKey_.size(); i++) {
-            if (this->cryptoParam_.encryptKey_[i] != config.cryptoParam_.encryptKey_[i]) {
-                return false;
-            }
-        }
-
         return this->path_ == config.path_ && this->storageMode_ == config.storageMode_ &&
                this->journalMode_ == config.journalMode_ && this->syncMode_ == config.syncMode_ &&
-               this->databaseFileType == config.databaseFileType && this->isEncrypt_ == config.isEncrypt_ &&
+               this->databaseFileType == config.databaseFileType && IsEncrypt() == config.IsEncrypt() &&
                this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
                this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
                this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
