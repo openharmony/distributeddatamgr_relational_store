@@ -487,7 +487,7 @@ describe('rdbStoreCloud', function () {
             });
         } catch (err) {
             console.log(TAG + `set employee to be distributed table failed, errcode:${JSON.stringify(err)}.`);
-            expect(err.code).assertEqual(401);
+            expect(err.code == 401).assertTrue();
             expect(true).assertTrue(); // Parameter error must be catched here.
             done()
         }
