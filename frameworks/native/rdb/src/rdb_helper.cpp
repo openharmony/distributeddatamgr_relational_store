@@ -103,5 +103,14 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
         SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
 }
+
+bool RdbHelper::IsSupportArkDataDb()
+{
+#ifdef ARKDATA_DB_CORE_IS_EXISTS
+    return true;
+#else
+    return false;
+#endif
+}
 } // namespace NativeRdb
 } // namespace OHOS
