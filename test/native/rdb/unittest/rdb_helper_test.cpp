@@ -65,6 +65,13 @@ void RdbHelperTest::TearDown(void)
 {
 }
 
+class RdbHelperTestWrongSqlOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+    static const std::string WRONG_SQL_TEST;
+};
+
 class RdbHelperTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
@@ -72,14 +79,28 @@ public:
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABL IF NOT EXISTS test "
+const std::string RdbHelperTestWrongSqlOpenCallback::WRONG_SQL_TEST = "CREATE TABL IF NOT EXISTS test "
+                                                                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                      "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                                      "blobType BLOB)";
+const std::string RdbHelperTestOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
                                                                  "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                                                  "name TEXT NOT NULL, age INTEGER, salary REAL, "
                                                                  "blobType BLOB)";
 
+int RdbHelperTestWrongSqlOpenCallback::OnCreate(RdbStore &store)
+{
+    return store.ExecuteSql(WRONG_SQL_TEST);
+}
+
 int RdbHelperTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
+}
+
+int RdbHelperTestWrongSqlOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
+    return E_OK;
 }
 
 int RdbHelperTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
@@ -98,7 +119,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabaseCache_001, TestSize.Level1)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbHelperTest::rdbStorePath);
-    RdbHelperTestOpenCallback helper;
+    RdbHelperTestWrongSqlOpenCallback helper;
     std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(rdbStore, nullptr);
 }
@@ -110,8 +131,19 @@ HWTEST_F(RdbHelperTest, DeleteDatabaseCache_001, TestSize.Level1)
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_001, TestSize.Level1)
 {
-    int ret = RdbHelper::DeleteRdbStore("test");
-    EXPECT_EQ(ret, E_OK);
+    int errCode = E_OK;
+    RdbStoreConfig config1(RdbHelperTest::rdbStorePath);
+    RdbStoreConfig config2("test");
+    RdbStoreConfig config3("");
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config1, 1, helper, errCode);
+    EXPECT_NE(rdbStore, nullptr);
+    int ret1 = RdbHelper::DeleteRdbStore(config1);
+    EXPECT_EQ(ret1, E_OK);
+    int ret2 = RdbHelper::DeleteRdbStore(config2);
+    EXPECT_EQ(ret2, E_OK);
+    int ret3 = RdbHelper::DeleteRdbStore(config3);
+    EXPECT_EQ(ret3, E_INVALID_FILE_PATH);
 }
 
 /**
@@ -127,4 +159,55 @@ HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
+}
+
+HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
+
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore1, nullptr);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore2, nullptr);
+
+    EXPECT_EQ(rdbStore1, rdbStore2);
+}
+
+HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
+    RdbStoreConfig config(dbPath);
+    std::string bundleName = "com.ohos.config.GetDatabase";
+    config.SetBundleName(bundleName);
+    config.SetArea(1);
+    config.SetEncryptStatus(true);
+
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    config.SetEncryptStatus(false);
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore2, nullptr);
+
+    EXPECT_NE(rdbStore1, rdbStore2);
 }
