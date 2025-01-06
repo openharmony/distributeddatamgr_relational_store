@@ -58,6 +58,13 @@ public:
      * @brief Clear Cache.
      */
     API_EXPORT static void ClearCache();
+
+    /**
+     * @brief Checks whether the vector database is supported.
+     *
+     * @return Returns {@code true} if the vector database is supported; returns {@code false} otherwise.
+     */
+    API_EXPORT static bool IsSupportArkDataDb();
 };
 } // namespace NativeRdb
 } // namespace OHOS
