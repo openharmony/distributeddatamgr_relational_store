@@ -255,27 +255,15 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
 std::pair<int32_t, int32_t> SqliteStatement::Count()
 {
-    int32_t count = INVALID_COUNT;
-    int32_t status = E_OK;
-    int32_t retry = 0;
-    do {
-        status = Step();
-        if (status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) {
-            retry++;
-            usleep(RETRY_INTERVAL);
-            continue;
-        }
-        count++;
-    } while (status == E_OK || ((status == E_SQLITE_BUSY || status == E_SQLITE_LOCKED) && retry < MAX_RETRY_TIMES));
-    if (status != E_NO_MORE_ROWS) {
-        Reset();
-        return { status, INVALID_COUNT };
+    SharedBlockInfo info(nullptr);
+    info.isCountAllRows = true;
+    info.isFull = true;
+    info.totalRows = -1;
+    auto errCode = FillBlockInfo(&info);
+    if (errCode != E_OK) {
+        return { errCode, INVALID_COUNT };
     }
-    if (retry > 0) {
-        LOG_WARN("locked, retry=%{public}d, sql=%{public}s", retry, sql_.c_str());
-    }
-    Reset();
-    return { E_OK, count };
+    return { errCode, info.totalRows };
 }
 
 int SqliteStatement::Step()
@@ -582,7 +570,7 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     if (info == nullptr) {
-        return E_ERROR;
+        return E_INVALID_ARGS;
     }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
