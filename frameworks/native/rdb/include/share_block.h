@@ -56,6 +56,15 @@ struct SharedBlockInfo {
     }
 };
 
+int DefAddRow(void *pCtx, int addedRows);
+int DefReset(void *pCtx, int startPos);
+int DefFinish(void *pCtx, int addedRows, int totalRows);
+int DefPutString(void *pCtx, int addedRows, int column, const char *text, int size);
+int DefPutLong(void *pCtx, int addedRows, int column, sqlite3_int64 value);
+int DefPutDouble(void *pCtx, int addedRows, int column, double value);
+int DefPutBlob(void *pCtx, int addedRows, int column, const void *blob, int len);
+int DefPutNull(void *pCtx, int addedRows, int column);
+int DefPutOther(void *pCtx, int addedRows, int column);
 int SeriAddRow(void *pCtx, int addedRows);
 int SeriReset(void *pCtx, int startPos);
 int SeriFinish(void *pCtx, int addedRows, int totalRows);
@@ -81,9 +90,9 @@ FillOneRowResult FillOneRowOfNull(AppDataFwk::SharedBlock *sharedBlock, sqlite3_
 FillOneRowResult FillOneRow(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns,
     int startPos, int addedRows);
 void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
+void DefFillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
 int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt);
 bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt);
-int64_t GetCombinedData(int startPos, int totalRows);
 #ifdef __cplusplus
 }
 #endif

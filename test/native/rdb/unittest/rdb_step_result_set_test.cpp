@@ -1657,6 +1657,129 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep022, TestSize.Level1)
     resultSet->Close();
 }
 
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_023
+ * @tc.desc: normal testcase of StepResultSet
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep023, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test", {}, false);
+    EXPECT_NE(resultSet, nullptr);
+
+    int count = -1;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(3, count);
+
+    int position = INT_MIN;
+    int iRet = resultSet->GetRowIndex(position);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(-1, position);
+
+    bool bResultSet = true;
+    resultSet->IsAtFirstRow(bResultSet);
+    EXPECT_EQ(bResultSet, false);
+
+    EXPECT_EQ(E_OK, resultSet->GoToRow(2));
+
+    bResultSet = false;
+    iRet = resultSet->IsAtLastRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(true, bResultSet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToPreviousRow());
+
+    iRet = resultSet->GetRowIndex(position);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(1, position);
+
+    EXPECT_EQ(E_OK, resultSet->GoToLastRow());
+
+    bResultSet = false;
+    iRet = resultSet->IsAtLastRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(true, bResultSet);
+
+    bResultSet = false;
+    iRet = resultSet->IsStarted(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, true);
+
+    bResultSet = true;
+    iRet = resultSet->IsEnded(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, false);
+
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_024
+ * @tc.desc: normal testcase of StepResultSet for getInt
+ * @tc.type: FUNC
+ * @tc.require: AR000FKD4F
+ */
+HWTEST_F(RdbStepResultSetTest, testSqlStep024, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test", {}, false);
+    EXPECT_NE(resultSet, nullptr);
+
+    int iValue;
+    int iRet = resultSet->GetInt(0, iValue);
+    EXPECT_NE(E_OK, iRet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    iRet = resultSet->GetInt(0, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(0, iValue);
+
+    iRet = resultSet->GetInt(1, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(10, iValue);
+
+    iRet = resultSet->GetInt(2, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(1, iValue);
+
+    iRet = resultSet->GetInt(3, iValue);
+    EXPECT_EQ(E_OK, iRet);
+
+    int columnCount = 0;
+    iRet = resultSet->GetColumnCount(columnCount);
+    EXPECT_EQ(4, columnCount);
+    iRet = resultSet->GetInt(columnCount, iValue);
+    EXPECT_NE(E_OK, iRet);
+
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    iRet = resultSet->GetInt(0, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(2, iValue);
+
+    int64_t longValue;
+    iRet = resultSet->GetLong(0, longValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(2, longValue);
+
+    iRet = resultSet->GetInt(1, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(-5, iValue);
+
+    iRet = resultSet->GetLong(1, longValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(-5, longValue);
+
+    iRet = resultSet->GetInt(2, iValue);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(2, iValue);
+
+    resultSet->Close();
+}
+
 /**
  * @tc.name: ResultSetProxy001
  * @tc.desc: Abnormal testcase of distributed ResultSetProxy, if resultSet is Empty
