@@ -927,7 +927,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 
 int SqliteConnection::TryCheckPoint(bool timeout)
 {
-    if (!isWriter_) {
+    if (!isWriter_ || config_.IsMemoryRdb()) {
         return E_NOT_SUPPORT;
     }
 
@@ -964,7 +964,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
 
 int SqliteConnection::LimitWalSize()
 {
-    if (!isConfigured_ || !isWriter_) {
+    if (!isConfigured_ || !isWriter_ || config_.IsMemoryRdb()) {
         return E_OK;
     }
 
