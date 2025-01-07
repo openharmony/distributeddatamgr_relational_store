@@ -80,10 +80,9 @@ void RdbStoreProxy::UnregisterAll()
 {
     auto rdbStore = GetInstance();
     if (rdbStore == nullptr) {
-        LOG_ERROR("rdbStore is nullptr");
         return;
     }
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
