@@ -99,7 +99,7 @@ private:
     int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
-    int SetTokenizer(const RdbStoreConfig &config);
+    int SetICUTokenizer(const RdbStoreConfig &config);
     void LimitPermission(const std::string &dbPath) const;
 
     int SetPersistWal();
@@ -113,6 +113,7 @@ private:
     int32_t UnsubscribeLocalDetailAll(const std::string &event);
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
+    int LoadCustomTokenizer(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);

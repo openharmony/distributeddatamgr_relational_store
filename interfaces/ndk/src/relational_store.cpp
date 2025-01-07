@@ -54,6 +54,7 @@ struct OH_Rdb_ConfigV2 {
     int securityLevel = 0;
     int area = 0;
     int dbType = RDB_SQLITE;
+    int token = RDB_NONE_TOKENIZER;
 };
 
 OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
@@ -172,6 +173,22 @@ int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType)
         return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
     }
     config->dbType = dbType;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetTokenizer(OH_Rdb_ConfigV2 *config, Rdb_Tokenizer tokenizer)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
+        (tokenizer < RDB_NONE_TOKENIZER || tokenizer > RDB_CUSTOM_TOKENIZER)) {
+        LOG_ERROR("config is null %{public}d or magicNum not valid %{public}d or token is out of range %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum), tokenizer);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (config->dbType != Rdb_DBType::RDB_SQLITE) {
+        LOG_ERROR("ICU Tokenizer only support sqlite db type.");
+        return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
+    }
+    config->token = tokenizer;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -310,17 +327,30 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
     return static_cast<RelationalStore *>(store);
 }
 
+// caller must ensure token is valid
+static OHOS::NativeRdb::Tokenizer ConvertTokenizer2Native(Rdb_Tokenizer token)
+{
+    if (token == Rdb_Tokenizer::RDB_NONE_TOKENIZER) {
+        return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
+    }
+    if (token == Rdb_Tokenizer::RDB_ICU_TOKENIZER) {
+        return OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER;
+    }
+    return OHOS::NativeRdb::Tokenizer::TOKENIZER_END;
+}
+
 static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *config, int *errCode)
 {
     if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE ||
         (OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
             OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
         (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
-        (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY)) {
+        (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY) ||
+        (config->token < RDB_NONE_TOKENIZER || config->token > RDB_CUSTOM_TOKENIZER)) {
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
-                  "dbType %{public}d ret %{public}d",
-            config->magicNum, config->securityLevel, config->area, config->dbType, *errCode);
+                  "dbType %{public}d token %{public}d ret %{public}d",
+            config->magicNum, config->securityLevel, config->area, config->dbType, config->token, *errCode);
         return OHOS::NativeRdb::RdbStoreConfig("");
     }
     std::string realPath =
@@ -337,6 +367,7 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
     rdbStoreConfig.SetIsVector(config->dbType == RDB_CAYLEY);
     rdbStoreConfig.SetBundleName(config->bundleName);
     rdbStoreConfig.SetName(config->storeName);
+    rdbStoreConfig.SetTokenizer(ConvertTokenizer2Native(static_cast<Rdb_Tokenizer>(config->token)));
     return rdbStoreConfig;
 }
 
