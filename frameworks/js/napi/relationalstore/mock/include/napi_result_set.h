@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "js_proxy.h"
+#include "napi_async_call.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -26,6 +27,7 @@
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+using namespace OHOS::NativeRdb;
 class ResultSetProxy final : public JSProxy::JSProxy<NativeRdb::ResultSet> {
 public:
     ResultSetProxy() = default;
@@ -37,11 +39,7 @@ public:
     static napi_value GetConstructor(napi_env env);
 
 private:
-    static ResultSetProxy *GetInnerResultSet(napi_env env, napi_callback_info info);
-    static ResultSetProxy *ParseInt32FieldByName(
-        napi_env env, napi_callback_info info, int32_t &field, const std::string fieldName);
-    static ResultSetProxy *ParseFieldByName(
-        napi_env env, napi_callback_info info, std::string &field, const std::string fieldName);
+    static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
 
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
@@ -72,6 +70,7 @@ private:
     static napi_value GetDouble(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
+    static napi_value GetRows(napi_env env, napi_callback_info info);
     static napi_value GetSendableRow(napi_env env, napi_callback_info info);
     static napi_value GetValue(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);
