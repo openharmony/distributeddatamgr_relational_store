@@ -177,7 +177,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(const std::string &table, const
     sql.append(" where hash_key in (");
     sql.append(SqliteSqlBuilder::GetSqlArgs(hashKeys.size()));
     sql.append(")");
-    auto resultSet = QueryByStep(sql, hashKeys);
+    auto resultSet = QueryByStep(sql, hashKeys, true);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("get resultSet err.");
@@ -201,7 +201,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
     }
-    auto resultSet = QueryByStep(sql, args);
+    auto resultSet = QueryByStep(sql, args, true);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("get resultSet err.");
@@ -1138,11 +1138,15 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 #endif
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args)
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     auto start = std::chrono::steady_clock::now();
-    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, preCount);
+#else
+    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, false);
+#endif
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)

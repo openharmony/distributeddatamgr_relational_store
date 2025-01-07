@@ -255,7 +255,8 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const O
     return QueryByStep(sql, ToValues(args));
 }
 
-std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predicates, const RdbStore::Fields &columns)
+std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predicates, const RdbStore::Fields &columns,
+    bool preCount)
 {
     std::string sql;
     if (predicates.HasSpecificField()) {
@@ -265,7 +266,7 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
     } else {
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
     }
-    return QueryByStep(sql, predicates.GetBindArgs());
+    return QueryByStep(sql, predicates.GetBindArgs(), preCount);
 }
 
 std::shared_ptr<ResultSet> RdbStore::RemoteQuery(const std::string &device, const AbsRdbPredicates &predicates,
