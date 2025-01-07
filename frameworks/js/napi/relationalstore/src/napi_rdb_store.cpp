@@ -73,8 +73,14 @@ RdbStoreProxy::RdbStoreProxy()
 RdbStoreProxy::~RdbStoreProxy()
 {
     LOG_DEBUG("RdbStoreProxy destructor.");
+    UnregisterAll();
+}
+
+void RdbStoreProxy::UnregisterAll()
+{
     auto rdbStore = GetInstance();
     if (rdbStore == nullptr) {
+        LOG_ERROR("rdbStore is nullptr");
         return;
     }
 #if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -223,6 +229,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
             return;
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
+        proxy->UnregisterAll();
         proxy->SetInstance(nullptr);
         delete proxy;
     };
@@ -2158,6 +2165,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        obj->UnregisterAll();
         obj->SetInstance(nullptr);
     };
     auto exec = [context]() -> int {
