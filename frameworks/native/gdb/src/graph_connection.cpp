@@ -71,11 +71,24 @@ GraphConnection::~GraphConnection()
 int GraphConnection::InnerOpen(const StoreConfig &config)
 {
     std::string dbPath = config.GetFullPath();
-    std::string configJson = config.GetJson();
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::string configJson = GdbUtils::GetConfigStr(key, config.IsEncrypt());
     LOG_DEBUG(
         "GraphConnection::InnerOpen: dbPath=%{public}s, configJson=%{public}s",
         GdbUtils::Anonymous(dbPath).c_str(), configJson.c_str());
     int32_t errCode = GrdAdapter::Open(dbPath.c_str(), configJson.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    if (errCode == E_GRD_PASSWORD_NEED_REKEY) {
+        errCode = GrdAdapter::Rekey(dbPath.c_str(), configJson.c_str(), {});
+        if (errCode != E_OK) {
+            key.assign(key.size(), 0);
+            GdbUtils::ClearAndZeroString(configJson);
+            LOG_ERROR("Can not rekey caylay db %{public}d.", errCode);
+            return errCode;
+        }
+        errCode = GrdAdapter::Open(dbPath.c_str(), configJson.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
+    }
+    key.assign(key.size(), 0);
+    GdbUtils::ClearAndZeroString(configJson);
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db, name=%{public}s, errCode=%{public}d.",
             GdbUtils::Anonymous(config.GetName()).c_str(), errCode);

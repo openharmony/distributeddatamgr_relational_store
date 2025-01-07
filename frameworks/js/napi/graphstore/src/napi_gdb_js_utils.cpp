@@ -89,6 +89,11 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, StoreConfig &config)
     status = GetNamedProperty(env, jsValue, "securityLevel", securityLevel);
     ASSERT(OK == status, "get securityLevel failed.", napi_invalid_arg);
     config.SetSecurityLevel(securityLevel);
+
+    bool isEncrypt = false;
+    status = GetNamedProperty(env, jsValue, "encrypt", isEncrypt);
+    ASSERT(OK == status, "get encrypt failed.", napi_invalid_arg);
+    config.SetEncryptStatus(isEncrypt);
     return napi_ok;
 }
 
