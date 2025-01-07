@@ -35,6 +35,7 @@ napi_value GetStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
         auto [code, err] = AppDataMgrJsKit::JSUtils::GetRealPath(context->config, context->param);
         CHECK_RETURN_SET_E(OK == code, err);
+        context->config.SetBundleName(context->param.bundleName);
     };
     auto exec = [context]() -> int {
         context->gdbStore = GDBHelper::GetDBStore(context->config, context->intOutput);

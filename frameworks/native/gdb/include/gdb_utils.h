@@ -22,10 +22,16 @@ class GdbUtils {
 public:
     static int CreateDirectory(const std::string &databaseDir);
     static std::string Anonymous(const std::string &srcFile);
+    static void ClearAndZeroString(std::string &str);
+    static std::string GetConfigStr(const std::vector<uint8_t> &keys, bool isEncrypt);
 private:
     static constexpr int DIR_RWXRWS__X = 0771;
+    static constexpr const char *GRD_OPEN_CONFIG_STR =
+        "\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
+        "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"ignoreMetaDataCorruption\":1";
     static std::string GetAnonymousName(const std::string& fileName);
     static std::string AnonyDigits(const std::string& fileName);
+    static const char *GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize);
 };
 }
 

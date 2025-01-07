@@ -21,6 +21,7 @@
 
 #include "aip_errors.h"
 #include "logger.h"
+#include "rdb_store_config.h"
 
 namespace OHOS::DistributedDataAip {
 using namespace std::chrono;
@@ -52,7 +53,16 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnectionPool::Init(bool isAtta
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
-
+    if (config_.IsEncrypt()) {
+        auto rdbConfig = std::make_shared<NativeRdb::RdbStoreConfig>(config_.GetFullPath());
+        rdbConfig->SetBundleName(config_.GetBundleName());
+        rdbConfig->SetEncryptStatus(true);
+        errCode = rdbConfig->Initialize();
+        if (errCode != E_OK) {
+            return result;
+        }
+        config_.GenerateEncryptedKey(rdbConfig->GetEncryptKey());
+    }
     // write connect count is 1
     std::shared_ptr<ConnectionPool::ConnNode> node;
     std::tie(errCode, node) = writers_.Initialize(

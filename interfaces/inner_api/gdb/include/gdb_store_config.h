@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "rdb_store_config.h"
 #include "rdb_visibility.h"
 
 namespace OHOS::DistributedDataAip {
@@ -49,6 +50,22 @@ enum class DBType : int {
 
 class API_EXPORT StoreConfig {
 public:
+    struct API_EXPORT CryptoParam {
+        mutable int32_t iterNum = 0;
+        int32_t encryptAlgo = NativeRdb::EncryptAlgo::AES_256_GCM;
+        int32_t hmacAlgo = NativeRdb::HmacAlgo::SHA256;
+        int32_t kdfAlgo = NativeRdb::KdfAlgo::KDF_SHA256;
+        uint32_t cryptoPageSize = StoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
+        mutable std::vector<uint8_t> encryptKey_{};
+        API_EXPORT CryptoParam();
+        API_EXPORT ~CryptoParam();
+        API_EXPORT bool IsValid() const;
+    };
+        /**
+    * @brief The constant indicates the database default crypto page size.
+    */
+    static constexpr uint32_t DB_DEFAULT_CRYPTO_PAGE_SIZE = 1024;
+    
     API_EXPORT StoreConfig() = default;
     API_EXPORT StoreConfig(std::string name, std::string path, DBType dbType = DBType::DB_GRAPH, bool isEncrypt = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>());
@@ -72,10 +89,17 @@ public:
     API_EXPORT void SetReadTime(int timeout);
     API_EXPORT int GetReadConSize() const;
     API_EXPORT void SetReadConSize(int readConSize);
+    API_EXPORT std::vector<uint8_t> GetEncryptKey() const;
+    API_EXPORT void SetCryptoParam(CryptoParam cryptoParam);
+    API_EXPORT CryptoParam GetCryptoParam() const;
+    API_EXPORT int SetBundleName(const std::string &bundleName);
+    API_EXPORT std::string GetBundleName() const;
+    void GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey) const;
 
 private:
     std::string name_;
     std::string path_;
+    std::string bundleName_;
     DBType dbType_ = DBType::DB_GRAPH;
     bool isEncrypt_ = false;
     mutable std::vector<uint8_t> encryptKey_{};
@@ -85,6 +109,7 @@ private:
     int32_t readTimeout_ = 1;  // seconds
     int32_t readConSize_ = 4;
     int32_t securityLevel_ = SecurityLevel::S1;
+    CryptoParam cryptoParam_;
 
     [[maybe_unused]] int32_t redoFlushByTrx_ = 0;
     [[maybe_unused]] int32_t redoPubBufSize_ = 1024;
