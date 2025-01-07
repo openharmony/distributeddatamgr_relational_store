@@ -15,6 +15,11 @@
 #ifndef CONVERATOR_ERROR_CODE_H
 #define CONVERATOR_ERROR_CODE_H
 namespace OHOS::RdbNdk {
+
+struct NdkErrorCode {
+    int nativeCode;
+    int ndkCode;
+};
 class ConvertorErrorCode final {
 private:
     ConvertorErrorCode() = default;
@@ -22,6 +27,9 @@ private:
 
 public:
     static int NativeToNdk(int nativeErrCode);
+    static int GetInterfaceCode(int nativeErrCode);
+private:
+    static int ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode);
 };
 } // namespace OHOS::RdbNdk
 #endif // CONVERATOR_ERROR_CODE_H
