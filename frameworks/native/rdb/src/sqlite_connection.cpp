@@ -400,7 +400,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return errCode;
     }
 
-    LoadExtension(config, dbHandle_);
+    errCode = LoadExtension(config, dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
