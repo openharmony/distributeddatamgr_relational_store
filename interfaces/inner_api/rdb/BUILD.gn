@@ -75,6 +75,10 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    if (!defined(global_parts_info) ||
+      defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
+      defines += [ "ARKDATA_DATABASE_CORE_ENABLE" ]
+    }
     include_dirs += [
       "${kvstore_path}/common",
       "${kvstore_interface_path}",

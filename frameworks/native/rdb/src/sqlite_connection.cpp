@@ -227,7 +227,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         return errCode;
     }
-    SetTokenizer(config);
+    SetICUTokenizer(config);
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
@@ -400,7 +400,12 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return errCode;
     }
 
-    return LoadExtension(config, dbHandle_);
+    LoadExtension(config, dbHandle_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    return LoadCustomTokenizer(config, dbHandle_);
 }
 
 SqliteConnection::~SqliteConnection()
@@ -790,7 +795,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetTokenizer(const RdbStoreConfig &config)
+int SqliteConnection::SetICUTokenizer(const RdbStoreConfig &config)
 {
     auto tokenizer = config.GetTokenizer();
     if (tokenizer == NONE_TOKENIZER) {
@@ -798,6 +803,9 @@ int SqliteConnection::SetTokenizer(const RdbStoreConfig &config)
     }
     if (tokenizer == ICU_TOKENIZER) {
         sqlite3_config(SQLITE_CONFIG_ENABLE_ICU, 1);
+        return E_OK;
+    }
+    if (tokenizer == CUSTOM_TOKENIZER) {
         return E_OK;
     }
     LOG_ERROR("fail to set Tokenizer: %{public}d", tokenizer);
@@ -1147,6 +1155,21 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         LOG_ERROR("disable failed, err=%{public}d, errno=%{public}d", err, errno);
     }
     return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
+}
+
+int SqliteConnection::LoadCustomTokenizer(const RdbStoreConfig &config, sqlite3 *dbHandle)
+{
+    if (config.GetTokenizer() != CUSTOM_TOKENIZER) {
+        return E_OK;
+    }
+    int err = sqlite3_db_config(
+        dbHandle, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::ENABLE_LOAD_EXTENSION, nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
+        return SQLiteError::ErrNo(err);
+    }
+    sqlite3_load_extension(dbHandle, "libcustomtokenizer.z.so", NULL, NULL);
+    return E_OK;
 }
 
 int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCode)
