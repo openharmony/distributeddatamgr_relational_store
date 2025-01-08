@@ -94,11 +94,10 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(dbFile);
     }
+    auto info = Reportor::Create(config, E_OK, "RestoreType:Delete");
     Connection::Delete(config);
-
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
-
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
+    Reportor::ReportRestore(info);
     LOG_INFO("Delete rdb store, dbType:%{public}d, path %{public}s", config.GetDBType(),
         SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
