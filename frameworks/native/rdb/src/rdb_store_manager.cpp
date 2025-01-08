@@ -140,7 +140,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         LOG_WARN("Config has no bundleName, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     }
-    Param lastParam;
+    Param lastParam = GetSyncParam(config);
     if (!configCache_.Get(path, lastParam) && GetParamFromService(lastParam) != E_OK) {
         LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
