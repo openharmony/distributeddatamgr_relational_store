@@ -272,7 +272,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         }
         std::string key;
         int ret = Convert2Value(env, jsKey, key);
-        if (status != napi_ok) {
+        if (ret != napi_ok) {
             return napi_invalid_arg;
         }
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
@@ -281,7 +281,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         }
         T val;
         ret = Convert2Value(env, jsVal, val);
-        if (status != napi_ok) {
+        if (ret != napi_ok) {
             return napi_invalid_arg;
         }
         value.insert(std::pair<std::string, T>(key, val));
