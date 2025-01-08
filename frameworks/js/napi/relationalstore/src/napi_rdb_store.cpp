@@ -66,13 +66,10 @@ struct PredicatesProxy {
 constexpr int32_t KEY_INDEX = 0;
 constexpr int32_t VALUE_INDEX = 1;
 
-RdbStoreProxy::RdbStoreProxy()
-{
-}
+RdbStoreProxy::RdbStoreProxy() {}
 
 RdbStoreProxy::~RdbStoreProxy()
 {
-    LOG_DEBUG("RdbStoreProxy destructor.");
     UnregisterAll();
 }
 
@@ -1964,9 +1961,7 @@ RdbStoreProxy::NapiStatisticsObserver::NapiStatisticsObserver(
     napi_create_reference(env, callback, 1, &callback_);
 }
 
-RdbStoreProxy::NapiStatisticsObserver::~NapiStatisticsObserver()
-{
-}
+RdbStoreProxy::NapiStatisticsObserver::~NapiStatisticsObserver() {}
 
 void RdbStoreProxy::NapiStatisticsObserver::Clear()
 {
