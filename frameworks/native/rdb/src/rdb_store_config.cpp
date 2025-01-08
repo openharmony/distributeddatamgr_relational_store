@@ -606,11 +606,10 @@ void RdbStoreConfig::SetTokenizer(Tokenizer tokenizer)
 {
 #if !defined(ARKDATA_DATABASE_CORE_ENABLE)
     if (tokenizer == CUSTOM_TOKENIZER) {
-        tokenizer_ = ICU_TOKENIZER;
+        tokenizer = ICU_TOKENIZER;
     }
-#else
-    tokenizer_ = tokenizer;
 #endif
+    tokenizer_ = tokenizer;
 }
 
 ssize_t RdbStoreConfig::GetWalLimitSize() const
