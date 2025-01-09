@@ -142,18 +142,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     stmtHandle_ = tmpStmt;
     columnCount_ = RdUtils::RdSqlColCnt(tmpStmt);
     readOnly_ = SqliteUtils::GetSqlStatementType(newSql) == SqliteUtils::STATEMENT_SELECT;
-    if (readOnly_) {
-        isStepInPrepare_ = true;
-        ret = Step();
-        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
-            return ret;
-        }
-        GetProperties();
-        if (ret == E_NO_MORE_ROWS) {
-            Reset();
-        }
-    }
-    return E_OK;
+    return PreGetColCount();
 }
 
 int RdStatement::Finalize()
@@ -224,6 +213,23 @@ int RdStatement::InnerBindBlobTypeArgs(const ValueObject &arg, uint32_t index) c
     return ret;
 }
 
+int RdStatement::PreGetColCount()
+{
+    if (!isStepInPrepare_ && readOnly_) {
+        isStepInPrepare_ = true;
+        int ret = Step();
+        if (ret != E_OK && ret != E_NO_MORE_ROWS) {
+            isStepInPrepare_ = false;
+            return ret;
+        }
+        GetProperties();
+        if (ret == E_NO_MORE_ROWS) {
+            Reset();
+        }
+    }
+    return E_OK;
+}
+
 int RdStatement::IsValid(int index) const
 {
     if (stmtHandle_ == nullptr) {
@@ -287,7 +293,7 @@ int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>
         }
         index++;
     }
-    return E_OK;
+    return PreGetColCount();
 }
 
 std::pair<int32_t, int32_t> RdStatement::Count()
