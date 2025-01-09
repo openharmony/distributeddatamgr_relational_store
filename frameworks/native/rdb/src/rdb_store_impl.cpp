@@ -1146,7 +1146,11 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     auto start = std::chrono::steady_clock::now();
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, preCount);
+#else
+    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, false);
+#endif
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
