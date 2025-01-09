@@ -124,13 +124,6 @@ int32_t StoreConfig::GetSecurityLevel() const
     return securityLevel_;
 }
 
-StoreConfig::CryptoParam::CryptoParam() = default;
-
-StoreConfig::CryptoParam::~CryptoParam()
-{
-    encryptKey_.assign(encryptKey_.size(), 0);
-}
-
 int StoreConfig::SetBundleName(const std::string &bundleName)
 {
     if (bundleName.empty()) {
@@ -147,12 +140,12 @@ std::string StoreConfig::GetBundleName() const
 
 std::vector<uint8_t> StoreConfig::GetEncryptKey() const
 {
-    return cryptoParam_.encryptKey_;
+    return encryptKey_;
 }
 
 void StoreConfig::GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey) const
 {
-    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
-    cryptoParam_.encryptKey_ = encryptKey;
+    encryptKey_.assign(encryptKey_.size(), 0);
+    encryptKey_ = encryptKey;
 }
 } // namespace OHOS::DistributedDataAip

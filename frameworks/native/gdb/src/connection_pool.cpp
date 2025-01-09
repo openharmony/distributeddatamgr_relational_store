@@ -21,6 +21,7 @@
 
 #include "aip_errors.h"
 #include "logger.h"
+#include "gdb_utils.h"
 #include "rdb_store_config.h"
 
 namespace OHOS::DistributedDataAip {
@@ -55,10 +56,15 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnectionPool::Init(bool isAtta
     auto &[errCode, conn] = result;
     if (config_.IsEncrypt()) {
         auto rdbConfig = std::make_shared<NativeRdb::RdbStoreConfig>(config_.GetFullPath());
+        if (rdbConfig == nullptr) {
+            LOG_ERROR("rdbConfig is nullptr. path:%{public}s", GdbUtils::Anonymous(config_.GetFullPath()).c_str());
+        }
         rdbConfig->SetBundleName(config_.GetBundleName());
         rdbConfig->SetEncryptStatus(true);
         errCode = rdbConfig->Initialize();
         if (errCode != E_OK) {
+            LOG_ERROR("rdbConfig init encrypt failed. errCode:%{public}d, path:%{public}s",
+                errCode, GdbUtils::Anonymous(config_.GetFullPath()).c_str());
             return result;
         }
         config_.GenerateEncryptedKey(rdbConfig->GetEncryptKey());
