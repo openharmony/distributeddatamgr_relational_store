@@ -463,9 +463,9 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
     ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(ret, E_OK);
 
-    int BUSY_TIMEOUT = 2;
+    int busyTimeout = 2;
     std::string attachedName = "attached";
-    auto err = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    auto err = store->Attach(attachedConfig, attachedName, busyTimeout);
     EXPECT_EQ(err.first, E_ALREADY_CLOSED);
 
     RdbHelper::DeleteRdbStore(attachPath);
@@ -486,9 +486,9 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_017, TestSize.Level0)
     std::shared_ptr<RdbStore> attachedStore = RdbHelper::GetRdbStore(attachedConfig, 1, attachedHelper, ret);
     EXPECT_NE(attachedStore, nullptr);
 
-    int BUSY_TIMEOUT = 2;
+    int busyTimeout = 2;
     std::string attachedName = "attached";
-    auto err = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    auto err = store->Attach(attachedConfig, attachedName, busyTimeout);
     EXPECT_EQ(err.first, E_OK);
 
     ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
