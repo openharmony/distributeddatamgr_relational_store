@@ -1149,7 +1149,6 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
     return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
 }
 
-
 int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCode)
 {
     DistributedRdb::RdbSyncerParam param;
