@@ -78,7 +78,7 @@ int GraphConnection::InnerOpen(const StoreConfig &config)
         GdbUtils::Anonymous(dbPath).c_str(), configJson.c_str());
     int32_t errCode = GrdAdapter::Open(dbPath.c_str(), configJson.c_str(), GRD_DB_OPEN_CREATE, &dbHandle_);
     if (errCode == E_GRD_PASSWORD_NEED_REKEY) {
-        errCode = GrdAdapter::Rekey(dbPath.c_str(), configJson.c_str(), {});
+        errCode = GrdAdapter::Rekey(dbPath.c_str(), GdbUtils::GetConfigStr({}, false).c_str(), key);
         if (errCode != E_OK) {
             key.assign(key.size(), 0);
             GdbUtils::ClearAndZeroString(configJson);
