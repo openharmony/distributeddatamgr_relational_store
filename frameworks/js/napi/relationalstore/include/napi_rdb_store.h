@@ -95,6 +95,7 @@ private:
     static napi_value UnlockCloudContainer(napi_env env, napi_callback_info info);
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
+    void UnregisterAll();
 
     static constexpr int EVENT_HANDLE_NUM = 3;
     static constexpr int WAIT_TIME_DEFAULT = 2;
