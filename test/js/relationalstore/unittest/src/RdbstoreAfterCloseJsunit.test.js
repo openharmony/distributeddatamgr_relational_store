@@ -61,7 +61,7 @@ describe('rdbStoreAfterCloseTest', function () {
     /**
      * @tc.number testRdbAfterClose0001
      * @tc.name RDB Close test
-     * @tc.desc ececute after RDB closed
+     * @tc.desc execute after RDB closed
      */
     it('testRdbAfterClose0001', 0, async function () {
         console.log(TAG + "************* testRdbAfterClose0001 start *************");

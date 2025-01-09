@@ -124,7 +124,8 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {
-        return RdbHelper::DeleteRdbStore(context->config.path);
+        // If the API version is greater than or equal to 16, close the connection.
+        return RdbHelper::DeleteRdbStore(context->config.path, JSUtils::GetHapVersion() >= 16);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, OK, &result);
