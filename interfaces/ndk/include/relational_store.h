@@ -41,6 +41,7 @@
 #include "oh_predicates.h"
 #include "oh_value_object.h"
 #include "oh_values_bucket.h"
+#include "oh_rdb_transaction.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1244,6 +1245,33 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates);
  */
 OH_Cursor *OH_Rdb_QueryLockedRow(
     OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
+
+/**
+ * @brief Creates an OH_Rdb_Transaction instance object.
+ *
+ * @param store Represents a pointer to an instance of OH_Rdb_Store.
+ * @param options Represents a pointer to an instance of OH_RDB_TransOptions.
+ * @param trans Represents a pointer to OH_Rdb_Transaction instance when the execution is successful.
+ * Otherwise, nullptr is returned. The memory must be released through the OH_RdbTrans_Destroy
+ * interface after the use is complete.
+ * @return Returns the error code.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_ERROR} database common error.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
+ *         Returns {@link RDB_E_DATABASE_BUSY} database does not respond.
+ *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
+ *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
+ *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
+ *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
+ *         Returns {@link RDB_E_SQLITE_NOMEM} SQLite: The database is out of memory.
+ *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
+ *         Returns {@link RDB_E_SQLITE_CANT_OPEN} SQLite: Unable to open the database file.
+ * @see OH_RdbTrans_Destroy.
+ * @since 16
+ */
+int OH_Rdb_CreateTransaction(OH_Rdb_Store *store, const OH_RDB_TransOptions *options, OH_Rdb_Transaction **trans);
+
 #ifdef __cplusplus
 };
 #endif

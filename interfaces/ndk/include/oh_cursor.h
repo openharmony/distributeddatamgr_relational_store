@@ -37,55 +37,15 @@
  * @since 10
  */
 
-#include <stdbool.h>
+#include <inttypes.h>
 #include <stddef.h>
-
-#include <cstdint>
-
+#include <stdbool.h>
 #include "data_asset.h"
+#include "oh_data_value.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @brief Indicates the column type.
- *
- * @since 10
- */
-typedef enum OH_ColumnType {
-    /**
-     * Indicates the column type is NULL.
-     */
-    TYPE_NULL = 0,
-    /**
-     * Indicates the column type is INT64.
-     */
-    TYPE_INT64,
-    /**
-     * Indicates the column type is REAL.
-     */
-    TYPE_REAL,
-    /**
-     * Indicates the column type is TEXT.
-     */
-    TYPE_TEXT,
-    /**
-     * Indicates the column type is BLOB.
-     */
-    TYPE_BLOB,
-    /**
-     * Indicates the column type is {@link Data_Asset}.
-     *
-     * @since 11
-     */
-    TYPE_ASSET,
-    /**
-     * Indicates the column type is array of {@link Data_Asset}.
-     *
-     * @since 11
-     */
-    TYPE_ASSETS
-} OH_ColumnType;
 
 /**
  * @brief Define the OH_Cursor structure type.

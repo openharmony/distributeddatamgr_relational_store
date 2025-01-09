@@ -347,6 +347,7 @@ int RdbStoreImpl::SetDistributedTables(
     if (errCode != E_OK) {
         return errCode;
     }
+    syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
@@ -1216,7 +1217,11 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, preCount);
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, preCount);
+#else
+    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, false);
+#endif
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)

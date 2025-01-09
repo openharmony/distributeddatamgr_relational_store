@@ -34,6 +34,7 @@
 #include "relational_values_bucket.h"
 #include "securec.h"
 #include "sqlite_global_config.h"
+#include "oh_data_define.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -966,6 +967,24 @@ OH_Cursor *OH_Rdb_QueryLockedRow(
         return nullptr;
     }
     return new OHOS::RdbNdk::RelationalCursor(std::move(resultSet));
+}
+
+int OH_Rdb_CreateTransaction(OH_Rdb_Store *store, const OH_RDB_TransOptions *options, OH_Rdb_Transaction **trans)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || trans == nullptr || options == nullptr || !options->IsValid()) {
+        LOG_ERROR("params exist nullptr or invalid options.");
+        return RDB_E_INVALID_ARGS;
+    }
+    OH_Rdb_Transaction *transaction = new (std::nothrow) OH_Rdb_Transaction();
+    if (transaction == nullptr) {
+        LOG_ERROR("new OH_Rdb_Transaction failed.");
+        return RDB_E_ERROR;
+    }
+    auto [ret, tmpTrans] = rdbStore->GetStore()->CreateTransaction(static_cast<int>(options->type_));
+    transaction->trans_ = tmpTrans;
+    *trans = transaction;
+    return ConvertorErrorCode::NativeToNdk(ret);
 }
 
 NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback) : callback_(callback)

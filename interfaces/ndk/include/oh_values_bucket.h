@@ -169,6 +169,37 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value
  * @since 11
  */
 int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **value, uint32_t count);
+
+/**
+ * @brief Put the float vector to the OH_VBucket object.
+ *
+ * @param bucket Represents a pointer to an {@link OH_VBucket} instance.
+ * @param field Represents the name of the column.
+ * @param vec Represents a pointer to float array.
+ * @param len Represents the size of float array.
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @see OH_VBucket.
+ * @since 16
+ */
+int OH_VBucket_PutFloatVector(OH_VBucket *bucket, const char *field, const float *vec, size_t len);
+
+/**
+ * @brief Put the an integer of any length to the OH_VBucket object.
+ *
+ * @param bucket Represents a pointer to an {@link OH_VBucket} instance.
+ * @param field Represents the name of the column.
+ * @param sign Represents 0 is positive integer, 1 is negative integer.
+ * @param trueForm Represents a pointer to integer array.
+ * @param len Represents the size of integer array.
+ * @return Returns the status code of the execution.
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @see OH_VBucket.
+ * @since 16
+ */
+int OH_VBucket_PutUnlimitedInt(OH_VBucket *bucket, const char *field, int sign, const uint64_t *trueForm, size_t len);
 #ifdef __cplusplus
 };
 #endif

@@ -66,18 +66,20 @@ struct PredicatesProxy {
 constexpr int32_t KEY_INDEX = 0;
 constexpr int32_t VALUE_INDEX = 1;
 
-RdbStoreProxy::RdbStoreProxy()
-{
-}
+RdbStoreProxy::RdbStoreProxy() {}
 
 RdbStoreProxy::~RdbStoreProxy()
 {
-    LOG_DEBUG("RdbStoreProxy destructor.");
+    UnregisterAll();
+}
+
+void RdbStoreProxy::UnregisterAll()
+{
     auto rdbStore = GetInstance();
     if (rdbStore == nullptr) {
         return;
     }
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -223,6 +225,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
             return;
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
+        proxy->UnregisterAll();
         proxy->SetInstance(nullptr);
         delete proxy;
     };
@@ -1949,9 +1952,7 @@ RdbStoreProxy::NapiStatisticsObserver::NapiStatisticsObserver(
     napi_create_reference(env, callback, 1, &callback_);
 }
 
-RdbStoreProxy::NapiStatisticsObserver::~NapiStatisticsObserver()
-{
-}
+RdbStoreProxy::NapiStatisticsObserver::~NapiStatisticsObserver() {}
 
 void RdbStoreProxy::NapiStatisticsObserver::Clear()
 {
@@ -2150,6 +2151,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        obj->UnregisterAll();
         obj->SetInstance(nullptr);
     };
     auto exec = [context]() -> int {

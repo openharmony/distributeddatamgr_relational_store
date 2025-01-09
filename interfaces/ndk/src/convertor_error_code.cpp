@@ -22,11 +22,6 @@
 
 namespace OHOS::RdbNdk {
 
-struct NdkErrorCode {
-    int nativeCode;
-    int ndkCode;
-};
-
 static constexpr NdkErrorCode ERROR_CODE_MAP[] = {
     { OHOS::NativeRdb::E_OK, RDB_OK },
     { OHOS::NativeRdb::E_ERROR, RDB_E_ERROR },
@@ -80,17 +75,47 @@ static constexpr NdkErrorCode ERROR_CODE_MAP[] = {
     { OHOS::NativeRdb::E_NOT_SUPPORT, RDB_E_NOT_SUPPORTED },
 };
 
-int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
+static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
+    { OHOS::NativeRdb::E_OK, RDB_OK },
+    { OHOS::NativeRdb::E_ERROR, RDB_E_ERROR },
+    { OHOS::NativeRdb::E_INVALID_ARGS, RDB_E_INVALID_ARGS },
+    { OHOS::NativeRdb::E_ALREADY_CLOSED, RDB_E_ALREADY_CLOSED},
+    { OHOS::NativeRdb::E_DATABASE_BUSY, RDB_E_DATABASE_BUSY },
+    { OHOS::NativeRdb::E_WAL_SIZE_OVER_LIMIT, RDB_E_WAL_SIZE_OVER_LIMIT },
+    { OHOS::NativeRdb::E_SQLITE_FULL, RDB_E_SQLITE_FULL },
+    { OHOS::NativeRdb::E_SQLITE_CORRUPT, RDB_E_SQLITE_CORRUPT },
+    { OHOS::NativeRdb::E_SQLITE_PERM, RDB_E_SQLITE_PERM },
+    { OHOS::NativeRdb::E_SQLITE_BUSY, RDB_E_SQLITE_BUSY },
+    { OHOS::NativeRdb::E_SQLITE_LOCKED, RDB_E_SQLITE_LOCKED },
+    { OHOS::NativeRdb::E_SQLITE_NOMEM, RDB_E_SQLITE_NOMEM },
+    { OHOS::NativeRdb::E_SQLITE_READONLY, RDB_E_SQLITE_READONLY },
+    { OHOS::NativeRdb::E_SQLITE_IOERR, RDB_E_SQLITE_IOERR },
+    { OHOS::NativeRdb::E_SQLITE_CANTOPEN, RDB_E_SQLITE_CANT_OPEN },
+    { OHOS::NativeRdb::E_SQLITE_TOOBIG, RDB_E_SQLITE_TOO_BIG },
+    { OHOS::NativeRdb::E_SQLITE_MISMATCH, RDB_E_SQLITE_MISMATCH },
+};
+
+int ConvertorErrorCode::ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode)
 {
-    auto errorCode = NdkErrorCode{ nativeErrCode, -1 };
-    auto iter = std::lower_bound(ERROR_CODE_MAP, ERROR_CODE_MAP + sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]),
-        errorCode, [](const NdkErrorCode &errorCode1, const NdkErrorCode &errorCode2) {
+    auto errorCode = NdkErrorCode{ innerCode, -1 };
+    auto iter = std::lower_bound(codeMap, codeMap + count, errorCode,
+        [](const NdkErrorCode &errorCode1, const NdkErrorCode &errorCode2) {
             return errorCode1.nativeCode < errorCode2.nativeCode;
         });
-    if (iter < ERROR_CODE_MAP + sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]) &&
-        iter->nativeCode == nativeErrCode) {
+    if (iter < codeMap + count && iter->nativeCode == innerCode) {
         return iter->ndkCode;
     }
     return RDB_E_ERROR;
 }
-} // namespace OHOS::RdbNdk
+int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
+{
+    int count = static_cast<int>(sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]));
+    return ConvertCode(ERROR_CODE_MAP, count, nativeErrCode);
+}
+
+int ConvertorErrorCode::GetInterfaceCode(int nativeErrCode)
+{
+    int count = static_cast<int>(sizeof(INTERFACE_CODE_MAP) / sizeof(INTERFACE_CODE_MAP[0]));
+    return ConvertCode(INTERFACE_CODE_MAP, count, nativeErrCode);
+}
+}

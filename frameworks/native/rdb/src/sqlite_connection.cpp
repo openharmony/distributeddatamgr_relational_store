@@ -103,33 +103,27 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
 {
     std::map<std::string, Connection::Info> collection;
     std::string path;
-    Info info;
     SqliteGlobalConfig::GetDbPath(config, path);
     for (auto &suffix : FILE_SUFFIXES) {
         if (suffix.debug_ == nullptr) {
             continue;
         }
         auto file = path + suffix.suffix_;
-        struct stat fileStat;
-        if (stat(file.c_str(), &fileStat) != 0) {
-            continue;
+        std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(file);
+        if (fileInfo.first == E_OK) {
+            collection.insert(std::pair{ suffix.debug_, fileInfo.second });
         }
-        info.inode_ = fileStat.st_ino;
-        info.oldInode_ = 0;
-        info.atime_.sec_ = fileStat.st_atime;
-        info.mtime_.sec_ = fileStat.st_mtime;
-        info.ctime_.sec_ = fileStat.st_ctime;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        info.atime_.nsec_ = fileStat.st_atim.tv_nsec;
-        info.mtime_.nsec_ = fileStat.st_mtim.tv_nsec;
-        info.ctime_.nsec_ = fileStat.st_ctim.tv_nsec;
-#endif
-        info.size_ = fileStat.st_size;
-        info.dev_ = fileStat.st_dev;
-        info.mode_ = fileStat.st_mode;
-        info.uid_ = fileStat.st_uid;
-        info.gid_ = fileStat.st_gid;
-        collection.insert(std::pair{ suffix.debug_, info });
+    }
+    RdbSecurityManager::KeyFiles keyFiles(path);
+    std::string keyPath =  keyFiles.GetKeyFile(RdbSecurityManager::PUB_KEY_FILE);
+    std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(keyPath);
+    if (fileInfo.first == E_OK) {
+        collection.insert(std::pair{ "key", fileInfo.second });
+    }
+    std::string newKeyPath = keyFiles.GetKeyFile(RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
+    fileInfo = SqliteUtils::Stat(newKeyPath);
+    if (fileInfo.first == E_OK) {
+        collection.insert(std::pair{ "newKey", fileInfo.second });
     }
     return collection;
 }
@@ -933,7 +927,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 
 int SqliteConnection::TryCheckPoint(bool timeout)
 {
-    if (!isWriter_) {
+    if (!isWriter_ || config_.IsMemoryRdb()) {
         return E_NOT_SUPPORT;
     }
 
@@ -970,7 +964,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
 
 int SqliteConnection::LimitWalSize()
 {
-    if (!isConfigured_ || !isWriter_) {
+    if (!isConfigured_ || !isWriter_ || config_.IsMemoryRdb()) {
         return E_OK;
     }
 

@@ -93,78 +93,78 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, StoreConfig &config)
 }
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Result> &result)
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Result> &result)
 {
     std::vector<napi_property_descriptor> descriptors = {
-        DECLARE_SENDABLE_PROPERTY(env, "records", result->GetAllData()),
+        DECLARE_JS_PROPERTY(env, "records", result->GetAllData()),
     };
 
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(
-        napi_create_sendable_object_with_properties(env, descriptors.size(), descriptors.data(), &object), object);
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Vertex> &vertex)
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Vertex> &vertex)
 {
     std::vector<napi_property_descriptor> descriptors = {
-        DECLARE_SENDABLE_PROPERTY(env, "vid", vertex->GetId()),
-        DECLARE_SENDABLE_PROPERTY(env, "labels", vertex->GetLabels()),
-        DECLARE_SENDABLE_PROPERTY(env, "properties", vertex->GetProperties()),
+        DECLARE_JS_PROPERTY(env, "vid", vertex->GetId()),
+        DECLARE_JS_PROPERTY(env, "labels", vertex->GetLabels()),
+        DECLARE_JS_PROPERTY(env, "properties", vertex->GetProperties()),
     };
 
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(
-        napi_create_sendable_object_with_properties(env, descriptors.size(), descriptors.data(), &object), object);
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Edge> &edge)
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Edge> &edge)
 {
     std::vector<napi_property_descriptor> descriptors = {
-        DECLARE_SENDABLE_PROPERTY(env, "eid", edge->GetId()),
-        DECLARE_SENDABLE_PROPERTY(env, "edgeType", edge->GetLabel()),
-        DECLARE_SENDABLE_PROPERTY(env, "startVid", edge->GetSourceId()),
-        DECLARE_SENDABLE_PROPERTY(env, "endVid", edge->GetTargetId()),
-        DECLARE_SENDABLE_PROPERTY(env, "properties", edge->GetProperties()),
+        DECLARE_JS_PROPERTY(env, "eid", edge->GetId()),
+        DECLARE_JS_PROPERTY(env, "edgeType", edge->GetLabel()),
+        DECLARE_JS_PROPERTY(env, "startVid", edge->GetSourceId()),
+        DECLARE_JS_PROPERTY(env, "endVid", edge->GetTargetId()),
+        DECLARE_JS_PROPERTY(env, "properties", edge->GetProperties()),
     };
 
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(
-        napi_create_sendable_object_with_properties(env, descriptors.size(), descriptors.data(), &object), object);
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<PathSegment> &pathSegment)
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<PathSegment> &pathSegment)
 {
     std::vector<napi_property_descriptor> descriptors = {
-        DECLARE_SENDABLE_PROPERTY(env, "start", pathSegment->GetSourceVertex()),
-        DECLARE_SENDABLE_PROPERTY(env, "end", pathSegment->GetTargetVertex()),
-        DECLARE_SENDABLE_PROPERTY(env, "edge", pathSegment->GetEdge()),
+        DECLARE_JS_PROPERTY(env, "start", pathSegment->GetSourceVertex()),
+        DECLARE_JS_PROPERTY(env, "end", pathSegment->GetTargetVertex()),
+        DECLARE_JS_PROPERTY(env, "edge", pathSegment->GetEdge()),
     };
 
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(
-        napi_create_sendable_object_with_properties(env, descriptors.size(), descriptors.data(), &object), object);
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 
 template<>
-napi_value Convert2Sendable(napi_env env, const std::shared_ptr<Path> &path)
+napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Path> &path)
 {
     std::vector<napi_property_descriptor> descriptors = {
-        DECLARE_SENDABLE_PROPERTY(env, "start", path->GetStart()),
-        DECLARE_SENDABLE_PROPERTY(env, "end", path->GetEnd()),
-        DECLARE_SENDABLE_PROPERTY(env, "length", path->GetPathLength()),
-        DECLARE_SENDABLE_PROPERTY(env, "segments", path->GetSegments()),
+        DECLARE_JS_PROPERTY(env, "start", path->GetStart()),
+        DECLARE_JS_PROPERTY(env, "end", path->GetEnd()),
+        DECLARE_JS_PROPERTY(env, "length", path->GetPathLength()),
+        DECLARE_JS_PROPERTY(env, "segments", path->GetSegments()),
     };
 
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(
-        napi_create_sendable_object_with_properties(env, descriptors.size(), descriptors.data(), &object), object);
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
     return object;
 }
 

@@ -99,7 +99,7 @@ using Descriptor = std::function<std::vector<napi_property_descriptor>()>;
 const std::optional<JsFeatureSpace> GetJsFeatureSpace(const std::string &name);
 /* napi_define_class  wrapper */
 napi_value DefineClass(napi_env env, const std::string &spaceName, const std::string &className,
-    const Descriptor &descriptor, napi_callback ctor, bool isSendable = false);
+    const Descriptor &descriptor, napi_callback ctor);
 napi_value GetClass(napi_env env, const std::string &spaceName, const std::string &className);
 std::string Convert2String(napi_env env, napi_value jsStr);
 
@@ -272,7 +272,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         }
         std::string key;
         int ret = Convert2Value(env, jsKey, key);
-        if (status != napi_ok) {
+        if (ret != napi_ok) {
             return napi_invalid_arg;
         }
         status = napi_get_property(env, jsValue, jsKey, &jsVal);
@@ -281,7 +281,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         }
         T val;
         ret = Convert2Value(env, jsVal, val);
-        if (status != napi_ok) {
+        if (ret != napi_ok) {
             return napi_invalid_arg;
         }
         value.insert(std::pair<std::string, T>(key, val));
