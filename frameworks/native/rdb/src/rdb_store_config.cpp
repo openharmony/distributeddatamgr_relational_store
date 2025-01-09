@@ -604,11 +604,6 @@ Tokenizer RdbStoreConfig::GetTokenizer() const
 
 void RdbStoreConfig::SetTokenizer(Tokenizer tokenizer)
 {
-#if !defined(ARKDATA_DATABASE_CORE_ENABLE)
-    if (tokenizer == CUSTOM_TOKENIZER) {
-        tokenizer = ICU_TOKENIZER;
-    }
-#endif
     tokenizer_ = tokenizer;
 }
 

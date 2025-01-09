@@ -336,6 +336,9 @@ static OHOS::NativeRdb::Tokenizer ConvertTokenizer2Native(Rdb_Tokenizer token)
     if (token == Rdb_Tokenizer::RDB_ICU_TOKENIZER) {
         return OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER;
     }
+    if (token == Rdb_Tokenizer::RDB_CUSTOM_TOKENIZER) {
+        return OHOS::NativeRdb::Tokenizer::CUSTOM_TOKENIZER;
+    }
     return OHOS::NativeRdb::Tokenizer::TOKENIZER_END;
 }
 

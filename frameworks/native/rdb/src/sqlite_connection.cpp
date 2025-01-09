@@ -1114,6 +1114,9 @@ int32_t SqliteConnection::Restore(
 int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle)
 {
     auto pluginLibs = config.GetPluginLibs();
+    if (config.GetTokenizer() == CUSTOM_TOKENIZER) {
+        pluginLibs.push_back("libcustomtokenizer.z.so");
+    }
     if (pluginLibs.empty() || dbHandle == nullptr) {
         return E_OK;
     }
@@ -1127,16 +1130,9 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
         return SQLiteError::ErrNo(err);
     }
-    if (config.GetTokenizer() == CUSTOM_TOKENIZER) {
-        pluginLibs.push_back("libcustomtokenizer.z.so");
-    }
     for (auto &path : pluginLibs) {
         if (path.empty()) {
             continue;
-        }
-        if (access(path.c_str(), F_OK) != 0) {
-            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, SqliteUtils::Anonymous(path).c_str());
-            return E_INVALID_FILE_PATH;
         }
         err = sqlite3_load_extension(dbHandle, path.c_str(), nullptr, nullptr);
         if (err != SQLITE_OK) {
