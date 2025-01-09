@@ -207,7 +207,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_003, TestSize.Level1)
 
 /**
  * @tc.name: DeleteDatabase_004
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Update after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_004, TestSize.Level0)
@@ -241,7 +241,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_004, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_005
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Insert after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_005, TestSize.Level0)
@@ -264,7 +264,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_005, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_006
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: BatchInsert after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_006, TestSize.Level0)
@@ -292,7 +292,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_006, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_007
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Delete after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_007, TestSize.Level0)
@@ -319,7 +319,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_007, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_008
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: QuerySql after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_008, TestSize.Level0)
@@ -335,7 +335,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_008, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_009
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: QueryByStep after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_009, TestSize.Level0)
@@ -351,7 +351,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_009, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_010
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Restore after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_010, TestSize.Level0)
@@ -371,7 +371,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_010, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_011
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Backup after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_011, TestSize.Level0)
@@ -386,7 +386,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_011, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_012
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: CleanDirtyData after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_012, TestSize.Level0)
@@ -402,7 +402,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_012, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_013
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: ExecuteSql after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_013, TestSize.Level0)
@@ -417,7 +417,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_013, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_014
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Execute after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_014, TestSize.Level0)
@@ -432,7 +432,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_014, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_015
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: BeginTransaction after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_015, TestSize.Level0)
@@ -447,7 +447,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_015, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_016
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Attach after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
@@ -473,7 +473,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_017
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Detach after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_017, TestSize.Level0)
@@ -502,7 +502,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_017, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_018
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: CreateTransaction after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_018, TestSize.Level0)
@@ -518,7 +518,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_018, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_019
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: BeginTrans after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_019, TestSize.Level0)
@@ -533,7 +533,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_019, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_020
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Commit after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_020, TestSize.Level0)
@@ -551,7 +551,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_020, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_021
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: GetModifyTime after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_021, TestSize.Level0)
@@ -579,7 +579,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_021, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_022
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: RollBack after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_022, TestSize.Level0)
@@ -597,7 +597,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_022, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_023
- * @tc.desc: update after deleteRdbStore
+ * @tc.desc: Transaction insert after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
