@@ -44,9 +44,13 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    void InitDb();
+
     static const std::string rdbStorePath;
+    static std::shared_ptr<RdbStore> store;
 };
 const std::string RdbHelperTest::rdbStorePath = RDB_TEST_PATH + std::string("rdbhelper.db");
+std::shared_ptr<RdbStore> RdbHelperTest::store = nullptr;
 
 void RdbHelperTest::SetUpTestCase(void)
 {
@@ -63,6 +67,15 @@ void RdbHelperTest::SetUp(void)
 
 void RdbHelperTest::TearDown(void)
 {
+}
+
+void RdbHelperTest::InitDb()
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
+    RdbHelperTestOpenCallback helper;
+    RdbHelperTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
 }
 
 class RdbHelperTestWrongSqlOpenCallback : public RdbOpenCallback {
@@ -190,6 +203,402 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_003, TestSize.Level1)
     std::string walFileName = rdbStorePath + "-wal";
     EXPECT_NE(access(shmFileName.c_str(), F_OK), 0);
     EXPECT_NE(access(walFileName.c_str(), F_OK), 0);
+}
+
+/**
+ * @tc.name: DeleteDatabase_004
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_004, TestSize.Level0)
+{
+    InitDb();
+    int64_t id;
+    int changedRows;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_005
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_005, TestSize.Level0)
+{
+    InitDb();
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_006
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_006, TestSize.Level0)
+{
+    InitDb();
+    int64_t id;
+    ValuesBucket values;
+
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < 10; i++) {
+        valuesBuckets.push_back(values);
+    }
+    ret = store->BatchInsert(id, "test", valuesBuckets);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_007
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_007, TestSize.Level0)
+{
+    InitDb();
+    int64_t id;
+    int deletedRows;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Delete(deletedRows, "test", "id = 1");
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_008
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_008, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "1" });
+    EXPECT_EQ(resultSet, nullptr);
+}
+
+/**
+ * @tc.name: DeleteDatabase_009
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_009, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "1" });
+    EXPECT_EQ(resultSet, nullptr);
+}
+
+/**
+ * @tc.name: DeleteDatabase_010
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_010, TestSize.Level0)
+{
+    InitDb();
+    int ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Restore("backup.db");
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_011
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_011, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Backup("backup.db");
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_012
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_012, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    uint64_t cursor = UINT64_MAX;
+    ret = store->CleanDirtyData("test", cursor);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_013
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_013, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->ExecuteSql(CREATE_TABLE_TEST);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_014
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_014, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Execute(CREATE_TABLE_TEST);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_015
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_015, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_016
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
+{
+    InitDb();
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    int BUSY_TIMEOUT = 2;
+    std::string attachedName = "attached";
+    std::string attachPath = RDB_TEST_PATH + std::string("attached.db");
+    RdbStoreConfig attachedConfig(attachPath);
+
+    ret = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    EXPECT_EQ(ret.first, E_ALREADY_CLOSED);
+
+    RdbHelper::DeleteRdbStore(attachPath);
+}
+
+/**
+ * @tc.name: DeleteDatabase_017
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_017, TestSize.Level0)
+{
+    InitDb();
+    int BUSY_TIMEOUT = 2;
+    std::string attachedName = "attached";
+    std::string attachPath = RDB_TEST_PATH + std::string("attached.db");
+    RdbStoreConfig attachedConfig(attachPath);
+    int ret = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    EXPECT_EQ(ret.first, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Detach(attachedName);
+    EXPECT_EQ(ret.first, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_018
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_018, TestSize.Level0)
+{
+    InitDb();
+    int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(err, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_ALREADY_CLOSED);
+    ASSERT_EQ(transaction, nullptr);
+}
+
+/**
+ * @tc.name: DeleteDatabase_019
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_019, TestSize.Level0)
+{
+    InitDb();
+    int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(err, E_OK);
+
+    err = store->BeginTrans();
+    ASSERT_EQ(err, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_020
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_020, TestSize.Level0)
+{
+    InitDb();
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->Commit();
+    ASSERT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_021
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_021, TestSize.Level0)
+{
+    InitDb();
+    store->ExecuteSql("CREATE TABLE naturalbase_rdb_aux_rdbstoreimpltest_integer_log "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp INTEGER, data_key INTEGER, "
+                       "data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t rowId;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt("data_key", ValueObject(2));
+    int errorCode = store->Insert(rowId, "naturalbase_rdb_aux_rdbstoreimpltest_integer_log", valuesBucket);
+    EXPECT_EQ(E_OK, errorCode);
+    EXPECT_EQ(1, rowId);
+
+    errorCode = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(errorCode, E_OK);
+
+    std::vector<RdbStore::PRIKey> PKey = { 1 };
+    std::map<RdbStore::PRIKey, RdbStore::Date> result =
+        store->GetModifyTime("rdbstoreimpltest_integer", "ROWID", PKey);
+    int size = result.size();
+    EXPECT_EQ(0, size);
+}
+
+/**
+ * @tc.name: DeleteDatabase_022
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_022, TestSize.Level0)
+{
+    InitDb();
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    ret = store->RollBack();
+    ASSERT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: DeleteDatabase_023
+ * @tc.desc: update after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
+{
+    InitDb();
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(err, E_OK);
+
+    err = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(err.first, E_ALREADY_CLOSED);
 }
 
 /**

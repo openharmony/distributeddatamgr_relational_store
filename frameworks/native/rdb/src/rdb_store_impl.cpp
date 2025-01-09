@@ -2142,7 +2142,7 @@ bool RdbStoreImpl::IsInTransaction()
     }
     auto pool = GetPool();
     if (pool == nullptr) {
-        return E_ALREADY_CLOSED;
+        return false;
     }
     return pool->IsInTransaction();
 }
@@ -2251,7 +2251,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
 {
     if (!isOpen_) {
         LOG_ERROR("The connection pool has been closed.");
-        return E_ERROR;
+        return E_ALREADY_CLOSED;
     }
 
     auto pool = GetPool();
