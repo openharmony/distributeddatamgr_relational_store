@@ -155,6 +155,10 @@ if (is_ohos && !build_ohos_sdk) {
       "sqlite:sqlite",
     ]
 
+    if (arkdata_db_core_is_exists) {
+      defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+    }
+
     public_configs = [ ":native_rdb_public_config" ]
     innerapi_tags = [
       "platformsdk",

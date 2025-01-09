@@ -59,6 +59,7 @@ private:
     int32_t Bind(const std::vector<std::reference_wrapper<ValueObject>> &args);
     int InnerBindBlobTypeArgs(const ValueObject &bindArg, uint32_t index) const;
     int IsValid(int index) const;
+    int PreGetColCount();
 
     bool readOnly_ = false;
     bool isStepInPrepare_ = false;

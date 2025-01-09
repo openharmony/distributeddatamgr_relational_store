@@ -136,6 +136,12 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
+napi_value IsVectorSupported(napi_env env, napi_callback_info info)
+{
+    bool result = RdbHelper::IsSupportArkDataDb();
+    return JSUtils::Convert2JSValue(env, result);
+}
+
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
@@ -143,6 +149,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;
