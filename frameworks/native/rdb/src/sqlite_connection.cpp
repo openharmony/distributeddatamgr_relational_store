@@ -1113,15 +1113,11 @@ int32_t SqliteConnection::Restore(
 
 int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle)
 {
-    auto pluginLibs = config.GetPluginLibs();
-    if (config.GetTokenizer() == CUSTOM_TOKENIZER) {
-        pluginLibs.push_back("libcustomtokenizer.z.so");
-    }
-    if (pluginLibs.empty() || dbHandle == nullptr) {
+    if (config.GetPluginLibs().empty() || dbHandle == nullptr) {
         return E_OK;
     }
-    if (pluginLibs.size() > SqliteUtils::MAX_LOAD_EXTENSION_COUNT) {
-        LOG_ERROR("failed, size %{public}zu is too large", pluginLibs.size());
+    if (config.GetPluginLibs().size() > SqliteUtils::MAX_LOAD_EXTENSION_COUNT) {
+        LOG_ERROR("failed, size %{public}zu is too large", config.GetPluginLibs().size());
         return E_INVALID_ARGS;
     }
     int err = sqlite3_db_config(
@@ -1130,9 +1126,13 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
         return SQLiteError::ErrNo(err);
     }
-    for (auto &path : pluginLibs) {
+    for (auto &path : config.GetPluginLibs()) {
         if (path.empty()) {
             continue;
+        }
+        if (access(path.c_str(), F_OK) != 0) {
+            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, SqliteUtils::Anonymous(path).c_str());
+            return E_INVALID_FILE_PATH;
         }
         err = sqlite3_load_extension(dbHandle, path.c_str(), nullptr, nullptr);
         if (err != SQLITE_OK) {
@@ -1140,6 +1140,9 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
                 sqlite3_errmsg(dbHandle), SqliteUtils::Anonymous(path).c_str());
             break;
         }
+    }
+    if (config.GetTokenizer() == CUSTOM_TOKENIZER && err == SQLITE_OK) {
+        sqlite3_load_extension(dbHandle, "libcustomtokenizer.z.so", NULL, NULL);
     }
     int ret = sqlite3_db_config(
         dbHandle, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::DISABLE_LOAD_EXTENSION, nullptr);
