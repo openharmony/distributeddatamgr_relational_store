@@ -69,15 +69,6 @@ void RdbHelperTest::TearDown(void)
 {
 }
 
-void RdbHelperTest::InitDb()
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
-    RdbHelperTestOpenCallback helper;
-    RdbHelperTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-}
-
 class RdbHelperTestWrongSqlOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
@@ -91,6 +82,15 @@ public:
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
+
+void RdbHelperTest::InitDb()
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
+    RdbHelperTestOpenCallback helper;
+    RdbHelperTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+}
 
 const std::string RdbHelperTestWrongSqlOpenCallback::WRONG_SQL_TEST = "CREATE TABL IF NOT EXISTS test "
                                                                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -357,7 +357,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_009, TestSize.Level0)
 HWTEST_F(RdbHelperTest, DeleteDatabase_010, TestSize.Level0)
 {
     InitDb();
-    int ret = store->Backup(BACKUP_DATABASE_NAME);
+    int ret = store->Backup("backup.db");
     EXPECT_EQ(ret, E_OK);
 
     ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
@@ -365,6 +365,8 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_010, TestSize.Level0)
 
     ret = store->Restore("backup.db");
     EXPECT_EQ(ret, E_ALREADY_CLOSED);
+
+    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + std::string("backup.db"));
 }
 
 /**
@@ -379,7 +381,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_011, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
 
     ret = store->Backup("backup.db");
-    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+    EXPECT_EQ(ret, E_DB_NOT_EXIST);
 }
 
 /**
@@ -409,7 +411,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_013, TestSize.Level0)
     int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->ExecuteSql(CREATE_TABLE_TEST);
+    ret = store->ExecuteSql(RdbHelperTestOpenCallback::CREATE_TABLE_TEST);
     EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
 
@@ -421,11 +423,11 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_013, TestSize.Level0)
 HWTEST_F(RdbHelperTest, DeleteDatabase_014, TestSize.Level0)
 {
     InitDb();
-    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
-    EXPECT_EQ(ret, E_OK);
+    int ret1 = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret1, E_OK);
 
-    ret = store->Execute(CREATE_TABLE_TEST);
-    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+    auto [ret2, outValue] = store->Execute(RdbHelperTestOpenCallback::CREATE_TABLE_TEST);
+    EXPECT_EQ(ret2, E_ALREADY_CLOSED);
 }
 
 /**
@@ -451,16 +453,20 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_015, TestSize.Level0)
 HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
 {
     InitDb();
-    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    int ret = 0;
+    std::string attachPath = RDB_TEST_PATH + std::string("attached.db");
+    RdbStoreConfig attachedConfig(attachPath);
+    RdbHelperTestOpenCallback attachedHelper;
+    std::shared_ptr<RdbStore> attachedStore = RdbHelper::GetRdbStore(attachedConfig, 1, attachedHelper, ret);
+    EXPECT_NE(attachedStore, nullptr);
+
+    ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(ret, E_OK);
 
     int BUSY_TIMEOUT = 2;
     std::string attachedName = "attached";
-    std::string attachPath = RDB_TEST_PATH + std::string("attached.db");
-    RdbStoreConfig attachedConfig(attachPath);
-
-    ret = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(ret.first, E_ALREADY_CLOSED);
+    auto err = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    EXPECT_EQ(err.first, E_ALREADY_CLOSED);
 
     RdbHelper::DeleteRdbStore(attachPath);
 }
@@ -473,18 +479,25 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_016, TestSize.Level0)
 HWTEST_F(RdbHelperTest, DeleteDatabase_017, TestSize.Level0)
 {
     InitDb();
-    int BUSY_TIMEOUT = 2;
-    std::string attachedName = "attached";
+    int ret = 0;
     std::string attachPath = RDB_TEST_PATH + std::string("attached.db");
     RdbStoreConfig attachedConfig(attachPath);
-    int ret = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
-    EXPECT_EQ(ret.first, E_OK);
+    RdbHelperTestOpenCallback attachedHelper;
+    std::shared_ptr<RdbStore> attachedStore = RdbHelper::GetRdbStore(attachedConfig, 1, attachedHelper, ret);
+    EXPECT_NE(attachedStore, nullptr);
+
+    int BUSY_TIMEOUT = 2;
+    std::string attachedName = "attached";
+    auto err = store->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    EXPECT_EQ(err.first, E_OK);
 
     ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Detach(attachedName);
-    EXPECT_EQ(ret.first, E_ALREADY_CLOSED);
+    err = store->Detach(attachedName);
+    EXPECT_EQ(err.first, E_ALREADY_CLOSED);
+
+    RdbHelper::DeleteRdbStore(attachPath);
 }
 
 /**
@@ -514,8 +527,8 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_019, TestSize.Level0)
     int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(err, E_OK);
 
-    err = store->BeginTrans();
-    ASSERT_EQ(err, E_ALREADY_CLOSED);
+    auto ret = store->BeginTrans();
+    ASSERT_EQ(ret.first, E_NOT_SUPPORT);
 }
 
 /**
@@ -597,8 +610,8 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
     int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(err, E_OK);
 
-    err = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    ASSERT_EQ(err.first, E_ALREADY_CLOSED);
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 }
 
 /**
