@@ -50,9 +50,9 @@ public:
      *
      * @param path Indicates the database path.
      */
-    API_EXPORT static int DeleteRdbStore(const std::string &path);
+    API_EXPORT static int DeleteRdbStore(const std::string &path, bool shouldClose = true);
 
-    API_EXPORT static int DeleteRdbStore(const RdbStoreConfig &config);
+    API_EXPORT static int DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose = true);
 
     /**
      * @brief Clear Cache.

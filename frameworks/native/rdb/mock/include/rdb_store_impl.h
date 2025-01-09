@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 
 #include "abs_shared_result_set.h"
@@ -80,6 +81,7 @@ public:
     std::string GetName();
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
+    void Close();
 
 private:
     using Stmt = std::shared_ptr<Statement>;
@@ -107,8 +109,8 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
-    int InnerBackup(
-        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
+    int InnerBackup(const std::string& databasePath,
+        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
@@ -123,6 +125,10 @@ private:
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
     int GetDestPath(const std::string &backupPath, std::string &destPath);
+    std::shared_ptr<ConnectionPool> GetPool() const;
+    int HandleCloudSyncAfterSetDistributedTables(
+        const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
+    std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -143,6 +149,7 @@ private:
     std::string path_;
     std::string name_;
     std::string fileType_;
+    mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();

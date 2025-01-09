@@ -656,7 +656,7 @@ describe('rdbStoreInsertTest', function () {
      * @tc.desc 1.Insert data with ON_CONFLICT_REPLACE
      *          2.Query data ("name" is "zhangsan")
      *          3.Insert data with ON_CONFLICT_REPLACE (conflict "id")
-     *          4.Query data 
+     *          4.Query data
      */
     it('InsertWithConflictResolution0004', 0, async function (done) {
         console.log(TAG + "************* InsertWithConflictResolution0004 start *************");
