@@ -465,6 +465,6 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_013, TestSize.Level0)
     config.SetPluginLibs(paths);
     GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
     EXPECT_EQ(store, nullptr);
 }
