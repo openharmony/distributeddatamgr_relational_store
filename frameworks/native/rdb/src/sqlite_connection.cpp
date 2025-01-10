@@ -1165,7 +1165,11 @@ int SqliteConnection::LoadCustomTokenizer(const RdbStoreConfig &config, sqlite3 
         LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
         return SQLiteError::ErrNo(err);
     }
-    sqlite3_load_extension(dbHandle, "libcustomtokenizer.z.so", NULL, NULL);
+    err = sqlite3_load_extension(dbHandle, "libcustomtokenizer.z.so", nullptr, nullptr);
+    if (err != SQLITE_OK) {
+            LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s", err, errno,
+                sqlite3_errmsg(dbHandle));
+        }
     return E_OK;
 }
 
