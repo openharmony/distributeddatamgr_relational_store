@@ -95,7 +95,7 @@ describe('rdbStorePluginLibsTest', function () {
             expect().assertFail();
         } catch (e) {
             console.log("getRdbStore err: failed, err: code=" + e.code + " message=" + e.message)
-            expect(14800010).assertEqual(e.code);
+            expect(14800021).assertEqual(e.code);
         }
         console.log(TAG + "************* testPluginLibs0003 end   *************");
     })
@@ -113,7 +113,7 @@ describe('rdbStorePluginLibsTest', function () {
             expect().assertFail();
         } catch (e) {
             console.log("getRdbStore err: failed, err: code=" + e.code + " message=" + e.message)
-            expect(14800010).assertEqual(e.code);
+            expect(14800021).assertEqual(e.code);
         }
         console.log(TAG + "************* testPluginLibs0004 end   *************");
     })
