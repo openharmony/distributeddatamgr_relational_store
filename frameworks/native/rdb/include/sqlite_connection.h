@@ -100,6 +100,7 @@ private:
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int SetTokenizer(const RdbStoreConfig &config);
+    int LoadCustomTokenizer(const RdbStoreConfig &config, sqlite3 *dbHandle);
     void LimitPermission(const std::string &dbPath) const;
 
     int SetPersistWal();
