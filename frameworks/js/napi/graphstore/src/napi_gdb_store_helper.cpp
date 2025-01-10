@@ -15,6 +15,8 @@
 #define LOG_TAG "GdbStoreHelperProxy"
 #include "napi_gdb_store_helper.h"
 
+#include <regex>
+
 #include "gdb_helper.h"
 #include "logger.h"
 #include "napi_gdb_context.h"
@@ -23,6 +25,18 @@
 
 namespace OHOS::GraphStoreJsKit {
 using namespace OHOS::DistributedDataAip;
+
+static constexpr int MAX_GDB_DB_NAME_LENGTH = 128;
+
+bool IsValidDbName(const std::string &name)
+{
+    if (name.empty() || name.size() > MAX_GDB_DB_NAME_LENGTH) {
+        return false;
+    }
+    const std::regex pattern("^[a-zA-Z0-9_]+$");
+    return std::regex_match(name, pattern);
+}
+
 napi_value GetStore(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GdbStoreContext>();
@@ -33,6 +47,7 @@ napi_value GetStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(context->param.isSystemApp, std::make_shared<NonSystemError>());
         errCode = AppDataMgrJsKit::JSUtils::Convert2Value(env, argv[1], context->config);
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
+        CHECK_RETURN_SET_E(IsValidDbName(context->config.GetName()), std::make_shared<ParamError>("Illegal name."));
         auto [code, err] = AppDataMgrJsKit::JSUtils::GetRealPath(context->config, context->param);
         CHECK_RETURN_SET_E(OK == code, err);
     };
@@ -61,6 +76,7 @@ napi_value DeleteStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(context->param.isSystemApp, std::make_shared<NonSystemError>());
         errCode = AppDataMgrJsKit::JSUtils::Convert2Value(env, argv[1], context->config);
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
+        CHECK_RETURN_SET_E(IsValidDbName(context->config.GetName()), std::make_shared<ParamError>("Illegal name."));
         auto [code, err] = AppDataMgrJsKit::JSUtils::GetRealPath(context->config, context->param);
         CHECK_RETURN_SET_E(OK == code, err);
     };

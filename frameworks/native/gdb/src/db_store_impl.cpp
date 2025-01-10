@@ -52,7 +52,7 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
 {
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
-        return { E_GQL_LENGTH_OVER_LIMIT, nullptr };
+        return { E_INVALID_ARGS, nullptr };
     }
     if (connectionPool_ == nullptr) {
         LOG_ERROR("The connpool is nullptr.");
@@ -83,7 +83,7 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::ExecuteGql(const std::s
 {
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
-        return { E_GQL_LENGTH_OVER_LIMIT, std::make_shared<FullResult>() };
+        return { E_INVALID_ARGS, std::make_shared<FullResult>() };
     }
     if (connectionPool_ == nullptr) {
         LOG_ERROR("The connpool is nullptr.");
