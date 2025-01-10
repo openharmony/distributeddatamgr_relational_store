@@ -94,6 +94,9 @@ void StoreManager::Clear()
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
+        if (auto store = iter->second.lock()) {
+            store->Close();
+        }
         iter = storeCache_.erase(iter);
     }
     storeCache_.clear();
@@ -104,9 +107,9 @@ bool StoreManager::Delete(const std::string &path)
     LOG_DEBUG("Delete file, path=%{public}s", GdbUtils::Anonymous(path).c_str());
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (storeCache_.find(path) != storeCache_.end()) {
-            if (auto store = storeCache_[path].lock()) {
-                LOG_WARN("store in use by %{public}ld holders", store.use_count());
+        auto item = storeCache_.find(path);
+        if (item != storeCache_.end()) {
+            if (auto store = item->second.lock()) {
                 store->Close();
             }
             storeCache_.erase(path); // clean invalid store ptr
