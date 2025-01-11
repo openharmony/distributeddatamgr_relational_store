@@ -58,6 +58,7 @@ ohos_unittest("NativeGdbAdaptTest") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
+    "${relational_store_native_path}/rdb/include",
   ]
 
   sources = [ "unittest/gdb_adapt_test.cpp" ]
@@ -77,7 +78,10 @@ ohos_unittest("NativeGdbAdaptTest") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":NativeGdbTest" ]
+  deps = [
+    ":NativeGdbAdaptTest",
+    ":NativeGdbTest",
+  ]
 }
 
 ###############################################################################

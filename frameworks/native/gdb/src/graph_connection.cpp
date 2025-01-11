@@ -24,6 +24,7 @@
 #include "gdb_utils.h"
 #include "graph_statement.h"
 #include "logger.h"
+#include "rdb_security_manager.h"
 #include "securec.h"
 
 namespace OHOS::DistributedDataAip {
@@ -71,6 +72,15 @@ GraphConnection::~GraphConnection()
 int GraphConnection::InnerOpen(const StoreConfig &config)
 {
     std::string dbPath = config.GetFullPath();
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    if (!newKey.empty()) {
+        newKey.assign(newKey.size(), 0);
+        auto errCode = ReSetKey(config);
+        if (errCode != E_OK) {
+            LOG_ERROR("Can not reset key %{public}d.", errCode);
+            return errCode;
+        }
+    }
     std::vector<uint8_t> key = config.GetEncryptKey();
     std::string configJson = GdbUtils::GetConfigStr(key, config.IsEncrypt());
     LOG_DEBUG(
@@ -118,4 +128,26 @@ bool GraphConnection::IsWriter() const
     return isWriter_;
 }
 
+int32_t GraphConnection::ReSetKey(const StoreConfig &config)
+{
+    if (!IsWriter()) {
+        return E_OK;
+    }
+    std::string dbPath = config.GetFullPath();
+    std::vector<uint8_t> key = config.GetEncryptKey();
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    std::string configStr = GdbUtils::GetConfigStr(key, config.IsEncrypt());
+    auto errCode = GrdAdapter::Rekey(dbPath.c_str(), configStr.c_str(), newKey);
+    GdbUtils::ClearAndZeroString(configStr);
+    key.assign(key.size(), 0);
+    newKey.assign(newKey.size(), 0);
+    if (errCode != E_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
+        NativeRdb::RdbSecurityManager::GetInstance().DelKeyFile(
+            config.GetFullPath(), NativeRdb::RdbSecurityManager::KeyFileType::PUB_KEY_FILE_NEW_KEY);
+        return E_OK;
+    }
+    config.ChangeEncryptKey();
+    return E_OK;
+}
 } // namespace OHOS::DistributedDataAip

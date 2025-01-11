@@ -16,12 +16,18 @@
 
 #include "aip_errors.h"
 #include "gdb_store_config.h"
+#include "rdb_security_manager.h"
 
 namespace OHOS::DistributedDataAip {
 StoreConfig::StoreConfig(
     std::string name, std::string path, DBType dbType, bool status, const std::vector<uint8_t> &encryptKey)
     : name_(std::move(name)), path_(std::move(path)), dbType_(dbType), isEncrypt_(status), encryptKey_(encryptKey)
 {
+}
+
+StoreConfig::~StoreConfig()
+{
+    ClearEncryptKey();
 }
 
 void StoreConfig::SetName(std::string name)
@@ -143,9 +149,35 @@ std::vector<uint8_t> StoreConfig::GetEncryptKey() const
     return encryptKey_;
 }
 
-void StoreConfig::GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey) const
+std::vector<uint8_t> StoreConfig::GetNewEncryptKey() const
+{
+    return newEncryptKey_;
+}
+
+void StoreConfig::GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey,
+    const std::vector<uint8_t> &newEncryptKey) const
 {
     encryptKey_.assign(encryptKey_.size(), 0);
     encryptKey_ = encryptKey;
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
+    newEncryptKey_ = newEncryptKey;
+}
+
+void StoreConfig::ClearEncryptKey()
+{
+    encryptKey_.assign(encryptKey_.size(), 0);
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
+}
+
+void StoreConfig::ChangeEncryptKey() const
+{
+    NativeRdb::RdbSecurityManager::GetInstance().ChangeKeyFile(GetFullPath());
+    if (newEncryptKey_.empty()) {
+        return;
+    }
+    encryptKey_.assign(encryptKey_.size(), 0);
+    encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
+    newEncryptKey_.assign(newEncryptKey_.size(), 0);
+    newEncryptKey_.resize(0);
 }
 } // namespace OHOS::DistributedDataAip

@@ -1853,11 +1853,11 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_StatementTest, TestSize.Level1)
     EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
 
     auto pair1 = ret->GetColumnValue(0);
-    EXPECT_EQ(pair1.first, E_CREATE_FOLDER_FAIT);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
     pair1 = ret->GetColumnValue(3);
-    EXPECT_EQ(pair1.first, E_CREATE_FOLDER_FAIT);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
     pair1 = ret->GetColumnValue(100);
-    EXPECT_EQ(pair1.first, E_CREATE_FOLDER_FAIT);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
 
     errCode = ret->IsReady();
     EXPECT_EQ(errCode, E_OK);
@@ -1886,7 +1886,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_StatementTest02, TestSize.Level1)
     EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
 
     auto pair1 = ret->GetColumnValue(0);
-    EXPECT_EQ(pair1.first, E_CREATE_FOLDER_FAIT);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
 
     errCode = ret->IsReady();
     EXPECT_EQ(errCode, E_OK);
@@ -1971,8 +1971,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_DBStore01, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
     const std::string gql = "INSERT (:Person {name: 'name_1', age: 11});";
     auto [err, result] = store->QueryGql(gql);
-    EXPECT_EQ(err, E_GRD_UNDEFINED_TABLE);
+    EXPECT_EQ(err, E_GRD_UNDEFINED_PARAM);
     auto [err1, result1] = store->ExecuteGql(gql);
-    EXPECT_EQ(err1, E_GRD_UNDEFINED_TABLE);
+    EXPECT_EQ(err1, E_GRD_UNDEFINED_PARAM);
     GDBHelper::DeleteDBStore(config);
 }
