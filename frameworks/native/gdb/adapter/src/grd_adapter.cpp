@@ -18,8 +18,10 @@
 
 #include <cinttypes>
 #include <map>
+#include <securec.h>
 
 #include "aip_errors.h"
+#include "gdb_utils.h"
 #include "grd_adapter_manager.h"
 #include "grd_error.h"
 #include "logger.h"
@@ -225,7 +227,17 @@ int GrdAdapter::Rekey(const char *dbFile, const char *configStr, const std::vect
     if (g_adapterHolder.ReKey == nullptr) {
         return E_NOT_SUPPORT;
     }
-    return E_NOT_SUPPORT;
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
+    char key[keySize];
+    GRD_CipherInfoT info = { 0 };
+    info.hexPassword = (encryptedKey.size() > 0) ? GdbUtils::GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    auto ret = g_adapterHolder.ReKey(dbFile, configStr, &info);
+    errno_t err = memset_s(key, keySize, 0, keySize);
+    if (err != E_OK) {
+        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
+        return E_ERROR;
+    }
+    return TransErrno(ret);
 }
 
 int32_t GrdAdapter::Prepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_StmtT **stmt, const char **unusedStr)

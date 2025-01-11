@@ -23,6 +23,7 @@
 
 #include "aip_errors.h"
 #include "db_store_manager.h"
+#include "gdb_helper.h"
 #include "grd_adapter.h"
 #include "grd_adapter_manager.h"
 #include "grd_error.h"
@@ -226,7 +227,7 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
         dlclose(g_library);
     }
     ret = GrdAdapter::Rekey(dbPath.c_str(), "", std::vector<uint8_t>());
-    EXPECT_EQ(ret, E_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_GRD_INVALID_ARGS);
     GDBHelper::DeleteDBStore({"test", "/data"});
 }
 

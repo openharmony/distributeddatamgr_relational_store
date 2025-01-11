@@ -175,6 +175,7 @@ HWTEST_F(GdbEncryptTest, GdbEncrypt_UnencryptToEncrypt, TestSize.Level1)
     EXPECT_EQ(result.second->GetAllData().size(), 1);
     GraphValue person = result.second->GetAllData()[0]["person"];
     VerifyPersonInfo(person, "name_1", 11);
+    result.second = nullptr;
     store->Close();
     StoreManager::GetInstance().Clear();
     // Unencryptdb to encryptdb
@@ -248,6 +249,7 @@ HWTEST_F(GdbEncryptTest, GdbEncrypt_DefaultToEncrypt, TestSize.Level1)
     EXPECT_EQ(result.second->GetAllData().size(), 1);
     GraphValue person = result.second->GetAllData()[0]["person"];
     VerifyPersonInfo(person, "name_1", 11);
+    result.second = nullptr;
     store->Close();
     StoreManager::GetInstance().Clear();
     // Unencryptdb to encryptdb
@@ -411,4 +413,26 @@ void GdbEncryptTest::VerifyPersonInfo(const GraphValue &person, const std::strin
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(sex->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 0);
+}
+
+HWTEST_F(GdbEncryptTest, GdbEncrypt_Config, TestSize.Level1)
+{
+    std::string dbName = "UnencryptToEncrypt";
+    std::string dbPath = databasePath;
+    auto config = StoreConfig(dbName, dbPath, DBType::DB_GRAPH);
+    EXPECT_EQ(config.IsEncrypt(), false);
+    config.SetEncryptStatus(true);
+    EXPECT_EQ(config.IsEncrypt(), true);
+
+    config.SetBundleName("");
+    EXPECT_EQ(config.GetBundleName(), "");
+    config.SetBundleName("test_name");
+    EXPECT_EQ(config.GetBundleName(), "test_name");
+
+    config.GenerateEncryptedKey({1, 2, 3, 4, 5, 6, 7, 8}, {1, 2, 3});
+    EXPECT_EQ(config.GetEncryptKey().size(), 8);
+    EXPECT_EQ(config.GetNewEncryptKey().size(), 3);
+    config.ChangeEncryptKey();
+    config.GenerateEncryptedKey({1, 2, 3, 4, 5, 6, 7, 8}, {});
+    config.ChangeEncryptKey();
 }

@@ -90,6 +90,10 @@ const std::string GdbAdaptTest::databasePath = "/data";
 
 void GdbAdaptTest::SetUpTestCase(void)
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+        return;
+    }
     mockDlsym = new NiceMock<MockDlsym>();
 }
 
@@ -101,6 +105,10 @@ void GdbAdaptTest::TearDownTestCase(void)
 
 void GdbAdaptTest::SetUp()
 {
+    if (!IsSupportArkDataDb()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+        return;
+    }
 }
 
 void GdbAdaptTest::TearDown()

@@ -67,7 +67,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnectionPool::Init(bool isAtta
                 errCode, GdbUtils::Anonymous(config_.GetFullPath()).c_str());
             return result;
         }
-        config_.GenerateEncryptedKey(rdbConfig->GetEncryptKey());
+        config_.GenerateEncryptedKey(rdbConfig->GetEncryptKey(), rdbConfig->GetNewEncryptKey());
     }
     // write connect count is 1
     std::shared_ptr<ConnectionPool::ConnNode> node;
