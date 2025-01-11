@@ -1120,7 +1120,8 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
     if (pluginLibs.empty() || dbHandle == nullptr) {
         return E_OK;
     }
-    if (pluginLibs.size() > SqliteUtils::MAX_LOAD_EXTENSION_COUNT) {
+    if (pluginLibs.size() >
+        SqliteUtils::MAX_LOAD_EXTENSION_COUNT + (config.GetTokenizer() == CUSTOM_TOKENIZER ? 1 : 0)) {
         LOG_ERROR("failed, size %{public}zu is too large", pluginLibs.size());
         return E_INVALID_ARGS;
     }
@@ -1138,7 +1139,7 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         if (err != SQLITE_OK) {
             LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s", err, errno,
                 sqlite3_errmsg(dbHandle), SqliteUtils::Anonymous(path).c_str());
-            if (errno == ENOENT) {
+            if (access(path.c_str(), F_OK) != 0) {
                 return E_INVALID_FILE_PATH;
             }
             break;
