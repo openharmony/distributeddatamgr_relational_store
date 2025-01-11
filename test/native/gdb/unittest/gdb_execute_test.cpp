@@ -564,7 +564,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterDrop, TestSize.Level1)
     EXPECT_EQ(result.first, E_OK);
 
     result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_TABLE);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
     result = store_->ExecuteGql(createGraphGql);
     EXPECT_NE(result.second, nullptr);
     EXPECT_EQ(result.first, E_OK);
@@ -600,7 +600,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_LongName, TestSize.Level1)
         name2 += "A";
     }
     result = store_->ExecuteGql("INSERT (:Person {name: '" + name2 + "', age: 11});");
-    ASSERT_EQ(result.first, E_GQL_LENGTH_OVER_LIMIT);
+    ASSERT_EQ(result.first, E_INVALID_ARGS);
     result = store_->QueryGql("MATCH (person:Person {age: 11}) RETURN person;");
     ASSERT_EQ(result.first, E_OK);
     ASSERT_NE(result.second, nullptr);
@@ -841,7 +841,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Updata_ColumnError, TestSize.Level1)
     ASSERT_NE(store_, nullptr);
 
     auto result = store_->ExecuteGql("INSERT (:PersonErr {name: true, age: 44});");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_TABLE);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
 
     auto gql = "MATCH (person:Person) RETURN person;";
     result = store_->QueryGql(gql);
@@ -906,7 +906,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_PError, TestSize.Level1)
     MatchAndVerifyPerson("delete_error", 11);
 
     result = store_->ExecuteGql("MATCH (p:Person {name: 'delete_error'}) DETACH DELETE p_error;");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_OBJECT);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
     MatchAndVerifyPerson("delete_error", 11);
 }
 
@@ -982,15 +982,15 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related_Error, TestSize.Level1)
     // No Friend_Error, delete Eror
     result =
         store_->ExecuteGql("MATCH (p:Person)-[:Friend_Error]->(relatedPerson:Person) DETACH DELETE p, relatedPerson;");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_TABLE);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
     // p:Person, but delete p_error
     result =
         store_->ExecuteGql("MATCH (p:Person)-[:Friend]->(relatedPerson:Person) DETACH DELETE p_error, relatedPerson;");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_OBJECT);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
     //relatedPerson:Person, but delete relatedPerson_error
     result =
         store_->ExecuteGql("MATCH (p:Person)-[:Friend]->(relatedPerson:Person) DETACH DELETE p, relatedPerson_error;");
-    EXPECT_EQ(result.first, E_GRD_UNDEFINED_OBJECT);
+    EXPECT_EQ(result.first, E_GRD_UNDEFINED_PARAM);
 
     result = store_->ExecuteGql("MATCH (p:Person)-[:Friend]->(relatedPerson:Person) DETACH DELETE relatedPerson, p;");
     EXPECT_EQ(result.first, E_OK);
