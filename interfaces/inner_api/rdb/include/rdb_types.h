@@ -190,6 +190,7 @@ enum RdbPredicateOperator {
     INDEXED_BY,
     NOT_CONTAINS,
     NOT_LIKE,
+    ASSETS_ONLY,
     OPERATOR_MAX
 };
 
