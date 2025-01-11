@@ -194,6 +194,7 @@ enum EncryptAlgo : int32_t {
 enum Tokenizer : int32_t {
     NONE_TOKENIZER = 0,
     ICU_TOKENIZER,
+    CUSTOM_TOKENIZER,
     TOKENIZER_END
 };
 

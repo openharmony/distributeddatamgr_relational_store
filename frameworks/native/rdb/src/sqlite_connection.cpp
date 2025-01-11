@@ -793,7 +793,7 @@ int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 int SqliteConnection::SetTokenizer(const RdbStoreConfig &config)
 {
     auto tokenizer = config.GetTokenizer();
-    if (tokenizer == NONE_TOKENIZER) {
+    if (tokenizer == NONE_TOKENIZER || tokenizer == CUSTOM_TOKENIZER) {
         return E_OK;
     }
     if (tokenizer == ICU_TOKENIZER) {
@@ -1113,11 +1113,16 @@ int32_t SqliteConnection::Restore(
 
 int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle)
 {
-    if (config.GetPluginLibs().empty() || dbHandle == nullptr) {
+    auto pluginLibs = config.GetPluginLibs();
+    if (config.GetTokenizer() == CUSTOM_TOKENIZER) {
+        pluginLibs.push_back("libcustomtokenizer.z.so");
+    }
+    if (pluginLibs.empty() || dbHandle == nullptr) {
         return E_OK;
     }
-    if (config.GetPluginLibs().size() > SqliteUtils::MAX_LOAD_EXTENSION_COUNT) {
-        LOG_ERROR("failed, size %{public}zu is too large", config.GetPluginLibs().size());
+    if (pluginLibs.size() >
+        SqliteUtils::MAX_LOAD_EXTENSION_COUNT + (config.GetTokenizer() == CUSTOM_TOKENIZER ? 1 : 0)) {
+        LOG_ERROR("failed, size %{public}zu is too large", pluginLibs.size());
         return E_INVALID_ARGS;
     }
     int err = sqlite3_db_config(
@@ -1126,18 +1131,17 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
         return SQLiteError::ErrNo(err);
     }
-    for (auto &path : config.GetPluginLibs()) {
+    for (auto &path : pluginLibs) {
         if (path.empty()) {
             continue;
-        }
-        if (access(path.c_str(), F_OK) != 0) {
-            LOG_ERROR("no file, errno:%{public}d %{public}s", errno, SqliteUtils::Anonymous(path).c_str());
-            return E_INVALID_FILE_PATH;
         }
         err = sqlite3_load_extension(dbHandle, path.c_str(), nullptr, nullptr);
         if (err != SQLITE_OK) {
             LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s", err, errno,
                 sqlite3_errmsg(dbHandle), SqliteUtils::Anonymous(path).c_str());
+            if (access(path.c_str(), F_OK) != 0) {
+                return E_INVALID_FILE_PATH;
+            }
             break;
         }
     }
