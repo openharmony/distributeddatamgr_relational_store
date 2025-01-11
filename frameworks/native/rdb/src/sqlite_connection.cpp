@@ -1138,7 +1138,7 @@ int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHan
         if (err != SQLITE_OK) {
             LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s, lib=%{public}s", err, errno,
                 sqlite3_errmsg(dbHandle), SqliteUtils::Anonymous(path).c_str());
-            if(err == SQLITE_ERROR){
+            if (access(path.c_str(), F_OK) != 0) {
                 return E_INVALID_FILE_PATH;
             }
             break;
