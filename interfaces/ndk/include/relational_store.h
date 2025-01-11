@@ -185,6 +185,26 @@ typedef enum Rdb_DBType {
 } Rdb_DBType;
 
 /**
+ * @brief Define Rdb_Tokenizer type.
+ *
+ * @since 16
+ */
+typedef enum Rdb_Tokenizer {
+    /**
+     * @brief Means not using tokenizer.
+     */
+    RDB_NONE_TOKENIZER = 1,
+    /**
+     * @brief Means using native icu tokenizer.
+     */
+    RDB_ICU_TOKENIZER = 2,
+    /**
+     * @brief Means using self-developed enhance tokenizer.
+     */
+    RDB_CUSTOM_TOKENIZER = 3,
+} Rdb_Tokenizer;
+
+/**
  * @brief Create OH_Rdb_ConfigV2 which is used to open store
  *
  * @return Returns the newly created OH_Rdb_ConfigV2 object. If NULL is returned, the creation fails.
@@ -309,6 +329,30 @@ int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
  * @since 14
  */
 int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType);
+
+/**
+ * @brief Set property tokenizer into config
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * @param tokenizer Indicates the tokenizer {@link Rdb_Tokenizer} of the database
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support tokenizer.
+ * @since 16
+ */
+int OH_Rdb_SetTokenizer(OH_Rdb_ConfigV2 *config, Rdb_Tokenizer tokenizer);
+/**
+ * @brief Check if a tokenizer is supported or not.
+ *
+ * @param tokenizer the tokenizer type of {@Link Rdb_Tokenizer}.
+ * @param isSupported Pointer to the Boolean value obtained.
+ * @return Returns the status code of the execution.
+ *         {@link RDB_OK} indicates the operation is successful.
+ *         {@link RDB_E_INVALID_ARGS} indicates invalid args are passed in.
+ * @since 16
+ */
+int OH_Rdb_IsTokenizerSupported(Rdb_Tokenizer tokenizer, bool *isSupported);
+
 
 /**
  * @brief Get support db type list
