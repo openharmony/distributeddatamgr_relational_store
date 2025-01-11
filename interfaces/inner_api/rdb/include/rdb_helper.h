@@ -65,6 +65,13 @@ public:
      * @return Returns {@code true} if the vector database is supported; returns {@code false} otherwise.
      */
     API_EXPORT static bool IsSupportArkDataDb();
+	
+	/**
+     * @brief Checks whether the custom tokenizer is supported.
+     *
+     * @return Returns {@code true} if the custom tokenizer is supported; returns {@code false} otherwise.
+     */
+    API_EXPORT static bool IsSupportedTokenizer(Tokenizer tokenizer);
 };
 } // namespace NativeRdb
 } // namespace OHOS

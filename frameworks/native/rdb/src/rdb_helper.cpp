@@ -111,5 +111,21 @@ bool RdbHelper::IsSupportArkDataDb()
     return false;
 #endif
 }
+
+bool RdbHelper::IsSupportedTokenizer(Tokenizer tokenizer)
+{
+    if (tokenizer >= TOKENIZER_END) {
+        return false;
+    }
+    if (tokenizer == CUSTOM_TOKENIZER) {
+#if !defined(CROSS_PLATFORM) && defined(ARKDATA_DATABASE_CORE_ENABLE)
+        return true;
+#else
+        LOG_WARN("CUSTOM_TOKENIZER not support this platform.");
+        return false;
+#endif
+    }
+    return true;
+}
 } // namespace NativeRdb
 } // namespace OHOS
