@@ -70,6 +70,10 @@ public:
 
     static int RdDbGetVersion(GRD_DB *db, GRD_ConfigTypeE type, int &version);
     static int RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version);
+
+    static int RdSqlRegistryThreadPool(GRD_DB *db);
+private:
+    static GRD_ThreadPoolT threadPool_;
 };
 
 } // namespace NativeRdb

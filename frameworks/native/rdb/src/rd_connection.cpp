@@ -190,6 +190,11 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
         return errCode;
     }
+    errCode = RdUtils::RdSqlRegistryThreadPool(dbHandle_);
+    if (errCode != E_OK) {
+        LOG_ERROR("Can not registry ThreadPool rd db %{public}d.", errCode);
+        return errCode;
+    }
     return errCode;
 }
 

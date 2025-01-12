@@ -29,6 +29,11 @@ extern "C" {
 typedef struct GRD_DB GRD_DB;
 typedef struct GRD_SqlStmt GRD_SqlStmt;
 
+typedef void (*GRD_ScheduleFunc)(void *func, void *param);
+typedef struct GRD_ThreadPool {
+    GRD_ScheduleFunc schedule;
+} GRD_ThreadPoolT;
+
 /**
  * @brief Open database config
  */
