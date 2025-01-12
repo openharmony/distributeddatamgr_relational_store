@@ -64,6 +64,10 @@ ohos_unittest("NativeRdbMultiThreadTest") {
 ohos_unittest("NativeRdbTest") {
   module_out_path = module_output_path
 
+  cflags = [
+    "-fno-access-control",  # Ignore Private Member Access Control
+  ]
+
   sources = [
     "unittest/big_integer_test.cpp",
     "unittest/cache_result_set_test.cpp",
