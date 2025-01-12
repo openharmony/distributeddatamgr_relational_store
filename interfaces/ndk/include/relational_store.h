@@ -329,6 +329,18 @@ int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
  * @since 14
  */
 int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType);
+/**
+ * @brief Check if a tokenizer is supported or not.
+ *
+ * @param tokenizer the tokenizer type of {@Link Rdb_Tokenizer}.
+ * @param isSupported Pointer to the Boolean value obtained.
+ * @return Returns the status code of the execution.
+ *         {@link RDB_OK} indicates the operation is successful.
+ *         {@link RDB_E_INVALID_ARGS} indicates invalid args are passed in.
+ * @since 16
+ */
+int OH_Rdb_IsTokenizerSupported(Rdb_Tokenizer tokenizer, bool *isSupported);
+
 
 /**
  * @brief Set property tokenizer into config

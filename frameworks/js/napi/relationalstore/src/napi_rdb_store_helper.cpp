@@ -69,6 +69,8 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
+        CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+            std::make_shared<ParamError>("Illegal tokenizer."));
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
         if (!context->config.rootDir.empty()) {
@@ -143,6 +145,21 @@ napi_value IsVectorSupported(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, result);
 }
 
+napi_value IsTokenizerSupported(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value argv[1]{};
+    napi_value self = nullptr;
+    int32_t status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+    int32_t tokenizer = static_cast<int32_t>(Tokenizer::NONE_TOKENIZER);
+    status = Convert2ValueExt(env, argv[0], tokenizer);
+    RDB_NAPI_ASSERT(env, status == napi_ok && tokenizer >= NONE_TOKENIZER && tokenizer < TOKENIZER_END,
+        std::make_shared<ParamError>("tokenizer", "a TOKENIZER."));
+    bool result = RdbHelper::IsSupportedTokenizer(static_cast<Tokenizer>(tokenizer));
+    return JSUtils::Convert2JSValue(env, result);
+}
+
 napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
@@ -151,6 +168,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("isTokenizerSupported", IsTokenizerSupported, SYNC),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;

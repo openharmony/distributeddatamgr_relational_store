@@ -1384,6 +1384,77 @@ describe('rdbStoreTest', function () {
             done();
         }
     })
+    
+    /**
+     * @tc.name tokenizer supported test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0051
+     * @tc.desc invalid tokenizer test callback
+     */
+    it('testRdbStore0051', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0051 start *************");
+        try {
+            data_relationalStore.isTokenizerSupported(112321);
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("401").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0051 end *************");
+            done();
+        }
+    })
 
+    /**
+     * @tc.name tokenizer supported test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0052
+     * @tc.desc invalid tokenizer test callback
+     */
+    it('testRdbStore0052', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0052 start *************");
+        try {
+            data_relationalStore.isTokenizerSupported("abc");
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("401").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0052 end *************");
+            done();
+        }
+    })
+
+    /**
+     * @tc.name tokenizer supported test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0053
+     * @tc.desc invalid tokenizer test callback
+     */
+    it('testRdbStore0053', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0053 start *************");
+        try {
+            data_relationalStore.isTokenizerSupported(undefined);
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("401").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0053 end *************");
+            done();
+        }
+    })
+
+    /**
+     * @tc.name tokenizer supported test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0054
+     * @tc.desc invalid tokenizer test callback
+     */
+    it('testRdbStore0054', 0, (done) => {
+        console.log(TAG + "************* testRdbStore0054 start *************");
+        try {
+            data_relationalStore.isTokenizerSupported();
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("401").assertEqual(e.code);
+            console.log(TAG + "************* testRdbStore0054 end *************");
+            done();
+        }
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
