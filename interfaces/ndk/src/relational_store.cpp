@@ -188,6 +188,23 @@ int OH_Rdb_IsTokenizerSupported(Rdb_Tokenizer tokenizer, bool *isSupported)
     *isSupported = OHOS::NativeRdb::RdbHelper::IsSupportedTokenizer(static_cast<OHOS::NativeRdb::Tokenizer>(tokenizer));
     return OH_Rdb_ErrCode::RDB_OK;
 }
+
+int OH_Rdb_SetTokenizer(OH_Rdb_ConfigV2 *config, Rdb_Tokenizer tokenizer)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
+        (tokenizer < RDB_NONE_TOKENIZER || tokenizer > RDB_CUSTOM_TOKENIZER)) {
+        LOG_ERROR("config is null %{public}d or magicNum not valid %{public}d or token is out of range %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum), tokenizer);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (config->dbType != Rdb_DBType::RDB_SQLITE) {
+        LOG_ERROR("ICU Tokenizer only support sqlite db type.");
+        return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
+    }
+    config->token = tokenizer;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 const int *OH_Rdb_GetSupportedDbType(int *numType)
 {
     if (numType == nullptr) {
