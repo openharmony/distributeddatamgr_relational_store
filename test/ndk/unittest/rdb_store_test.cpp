@@ -1491,3 +1491,24 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
         OH_Rdb_Unsubscribe(nullptr, static_cast<Rdb_SubscribeType>(RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS + 1), &observer1);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_034
+ * @tc.desc: abNormal testCase for OH_Rdb_Subscribe.
+ *           1.prams is valid or invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
+{
+    bool isSupported = true;
+    int errCode = OH_Rdb_IsTokenizerSupported(RDB_NONE_TOKENIZER, &isSupported);
+    EXPECT_EQ(RDB_OK, errCode);
+    errCode = OH_Rdb_IsTokenizerSupported(RDB_ICU_TOKENIZER, &isSupported);
+    EXPECT_EQ(RDB_OK, errCode);
+    errCode = OH_Rdb_IsTokenizerSupported(RDB_CUSTOM_TOKENIZER, &isSupported);
+    EXPECT_EQ(RDB_OK, errCode);
+    errCode = OH_Rdb_IsTokenizerSupported(static_cast<Rdb_Tokenizer>(RDB_NONE_TOKENIZER - 1), &isSupported);
+    EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
+    errCode = OH_Rdb_IsTokenizerSupported(static_cast<Rdb_Tokenizer>(RDB_CUSTOM_TOKENIZER + 1), &isSupported);
+    EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
+}

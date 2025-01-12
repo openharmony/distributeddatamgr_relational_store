@@ -177,6 +177,19 @@ int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
+int OH_Rdb_IsTokenizerSupported(Rdb_Tokenizer tokenizer, bool *isSupported)
+{
+    if (tokenizer < RDB_NONE_TOKENIZER || tokenizer > RDB_CUSTOM_TOKENIZER) {
+        LOG_ERROR("token is out of range %{public}d", tokenizer);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (isSupported == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    *isSupported = OHOS::NativeRdb::RdbHelper::IsSupportedTokenizer(static_cast<OHOS::NativeRdb::Tokenizer>(tokenizer));
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 int OH_Rdb_SetTokenizer(OH_Rdb_ConfigV2 *config, Rdb_Tokenizer tokenizer)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
