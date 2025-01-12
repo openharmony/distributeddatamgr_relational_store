@@ -168,7 +168,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),
-		DECLARE_NAPI_FUNCTION_WITH_DATA("isTokenizerSupported", IsTokenizerSupported, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("isTokenizerSupported", IsTokenizerSupported, SYNC),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;

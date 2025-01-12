@@ -1495,9 +1495,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_033, TestSize.Level1)
 /**
  * @tc.name: RDB_Native_store_test_034
  * @tc.desc: abNormal testCase for OH_Rdb_Subscribe.
- *           1.subscribe type is invalid
- *           2.observer is invalid
- *           2.register observer for local database
+ *           1.prams is valid or invalid
  * @tc.type: FUNC
  */
 HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
