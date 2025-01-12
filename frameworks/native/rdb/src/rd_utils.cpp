@@ -27,12 +27,15 @@
 #include "grd_error.h"
 #include "logger.h"
 #include "remote_result_set.h"
+#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 static GRD_APIInfo GRD_KVApiInfo;
+
+GRD_ThreadPoolT RdUtils::threadPool_ = { 0 };
 
 struct GrdErrnoPair {
     int32_t grdCode;
@@ -561,6 +564,32 @@ int RdUtils::RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version)
     value.type = GRD_DB_DATATYPE_INTEGER;
     value.value.longValue = version;
     return TransferGrdErrno(GRD_KVApiInfo.DBSetConfigApi(db, type, value));
+}
+
+static void Schedule(void *func, void *param)
+{
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    if (pool == nullptr) {
+        LOG_ERROR("pool is nullptr");
+        return;
+    }
+    pool->Execute([func, param]() {
+        void (*funcPtr)(void *) = reinterpret_cast<void (*)(void *)>(func);
+        funcPtr(param);
+    });
+}
+
+int RdUtils::RdSqlRegistryThreadPool(GRD_DB *db)
+{
+    if (GRD_KVApiInfo.DBSqlRegistryThreadPool == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBSqlRegistryThreadPool == nullptr) {
+        LOG_ERROR("registry threadPool ptr is nullptr");
+        return E_NOT_SUPPORT;
+    }
+    RdUtils::threadPool_.schedule = reinterpret_cast<GRD_ScheduleFunc>(Schedule);
+    return TransferGrdErrno(GRD_KVApiInfo.DBSqlRegistryThreadPool(db, &threadPool_));
 }
 
 } // namespace NativeRdb

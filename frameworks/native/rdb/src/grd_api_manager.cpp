@@ -62,6 +62,7 @@ void GRD_DBApiInitEnhance(GRD_APIInfo &GRD_DBApiInfo)
     GRD_DBApiInfo.DBReKeyApi = (DBReKey)dlsym(g_library, "GRD_DBRekey");
     GRD_DBApiInfo.DBGetConfigApi = (DBGetConfig)dlsym(g_library, "GRD_GetConfig");
     GRD_DBApiInfo.DBSetConfigApi = (DBSetConfig)dlsym(g_library, "GRD_SetConfig");
+    GRD_DBApiInfo.DBSqlRegistryThreadPool = (DBSqlRegistryThreadPool)dlsym(g_library, "GRD_SqlRegistryThreadPool");
 #endif
 }
 
