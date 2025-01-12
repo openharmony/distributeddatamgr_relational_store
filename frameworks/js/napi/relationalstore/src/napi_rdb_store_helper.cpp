@@ -69,7 +69,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
-		CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+        CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
             std::make_shared<ParamError>("Illegal tokenizer."));
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
