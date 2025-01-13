@@ -79,6 +79,7 @@ static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
     { OHOS::NativeRdb::E_OK, RDB_OK },
     { OHOS::NativeRdb::E_ERROR, RDB_E_ERROR },
     { OHOS::NativeRdb::E_INVALID_ARGS, RDB_E_INVALID_ARGS },
+    { OHOS::NativeRdb::E_INVALID_OBJECT_TYPE, RDB_E_INVALID_ARGS },
     { OHOS::NativeRdb::E_ALREADY_CLOSED, RDB_E_ALREADY_CLOSED},
     { OHOS::NativeRdb::E_DATABASE_BUSY, RDB_E_DATABASE_BUSY },
     { OHOS::NativeRdb::E_WAL_SIZE_OVER_LIMIT, RDB_E_WAL_SIZE_OVER_LIMIT },
