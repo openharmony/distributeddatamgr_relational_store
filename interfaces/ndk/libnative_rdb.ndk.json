@@ -44,5 +44,9 @@
 	{"name":"OH_Data_Asset_DestroyMultiple"},
 	{"name":"OH_Rdb_LockRow"},
 	{"name":"OH_Rdb_UnlockRow"},
-	{"name":"OH_Rdb_QueryLockedRow"}
+	{"name":"OH_Rdb_QueryLockedRow"},
+	{"name":"OH_Rdb_ExecuteV2"},
+	{"name":"OH_Rdb_ExecuteQueryV2"},
+	{"name":"OH_Cursor_GetFloatVectorCount"},
+	{"name":"OH_Cursor_GetFloatVector"}
 ]
