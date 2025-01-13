@@ -202,7 +202,9 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
                 "//foundation/distributeddatamgr/relational_store/test/native/gdb:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest"
+                "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest",
+                "//foundation/distributeddatamgr/relational_store/test/js/gdb:performancetest",
+                "//foundation/distributeddatamgr/relational_store/test/js/gdb:unittest"
             ]
         }
     }
