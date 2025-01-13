@@ -1500,6 +1500,12 @@ int SqliteConnection::CopyDb(const RdbStoreConfig &config, const std::string &sr
         return E_SQLITE_CORRUPT;
     }
     conn = nullptr;
+
+    auto walFile = srcPath + "-wal";
+    if (SqliteUtils::GetFileSize(walFile) != 0) {
+        LOG_ERROR("Wal file exist.");
+        return E_SQLITE_CORRUPT;
+    }
     SqliteUtils::DeleteFile(srcPath + "-shm");
     SqliteUtils::DeleteFile(srcPath + "-wal");
     Connection::Delete(config);
