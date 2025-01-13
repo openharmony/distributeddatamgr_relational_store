@@ -57,22 +57,6 @@ static std::vector<std::string> rdPostFixes = {
     ".map",
 };
 
-int DeleteRdFiles(const std::string &dbFileName)
-{
-    int errCode = E_OK;
-    for (std::string &postFix : rdPostFixes) {
-        std::string shmFileName = dbFileName + postFix;
-        if (access(shmFileName.c_str(), F_OK) == 0) {
-            int result = remove(shmFileName.c_str());
-            if (result < 0) {
-                LOG_ERROR("RdbHelper DeleteRdbStore failed to delete the shm file err = %{public}d", errno);
-                errCode = E_REMOVE_FILE;
-            }
-        }
-    }
-    return errCode;
-}
-
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
