@@ -2099,11 +2099,6 @@ int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPa
     std::string tempPath = destPath + ".tmp";
     if (access(tempPath.c_str(), F_OK) == E_OK) {
         destPath = tempPath;
-    } else {
-        auto walFile = destPath + "-wal";
-        if (access(walFile.c_str(), F_OK) == E_OK) {
-            return E_ERROR;
-        }
     }
 
     if (access(destPath.c_str(), F_OK) != E_OK) {
