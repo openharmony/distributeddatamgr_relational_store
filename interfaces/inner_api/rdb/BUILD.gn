@@ -157,6 +157,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
+      "sqlite:sqliteicu",
     ]
 
     if (arkdata_db_core_is_exists) {
@@ -229,6 +230,7 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:distributeddb",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
+      "sqlite:sqliteicu",
     ]
 
     public_configs = [ ":native_rdb_public_config" ]
