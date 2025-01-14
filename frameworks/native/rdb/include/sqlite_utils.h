@@ -21,10 +21,12 @@
 
 #include "sqlite3sym.h"
 #include "rdb_types.h"
+#include "rdb_store_config.h"
 
 namespace OHOS {
 namespace NativeRdb {
 
+using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 class SqliteUtils {
 public:
     static constexpr int STATEMENT_SELECT = 1;
@@ -71,6 +73,11 @@ public:
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
+    static std::string FomatConfigChg(const std::string &path, const RdbStoreConfig &config,
+        const DistributedRdb::RdbSyncerParam &lastParam);
+    static std::string ReadFileHeader(const std::string &filePath);
+    static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
+    static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
 
 private:
     struct SqlType {
@@ -101,6 +108,7 @@ private:
 
     static std::string GetAnonymousName(const std::string& fileName);
     static std::string AnonyDigits(const std::string& fileName);
+    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
 };
 
 } // namespace NativeRdb

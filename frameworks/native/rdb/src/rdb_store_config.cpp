@@ -22,6 +22,7 @@
 #include "rdb_security_manager.h"
 #include "string_utils.h"
 #include "sqlite_global_config.h"
+#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -392,6 +393,8 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
     using KeyFileType = RdbSecurityManager::KeyFileType;
     auto errCode = RdbSecurityManager::GetInstance().Init(name);
     if (errCode != E_OK) {
+        RdbFaultHiViewReporter::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_ROOT_KEY_FAULT, *this,
+            "gen root key fail ret=" + std::to_string(errCode)));
         LOG_ERROR("generate root encrypt key failed, bundleName_:%{public}s", bundleName_.c_str());
         return errCode;
     }
