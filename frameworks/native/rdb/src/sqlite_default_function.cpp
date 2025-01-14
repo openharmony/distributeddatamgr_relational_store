@@ -163,13 +163,18 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
     }
 }
 
+void SqliteFunctionRegistry::SqliteResultError(sqlite3_context *ctx, const int &errCode, const std::string &errMsg)
+{
+    sqlite3_result_error(ctx, errMsg.c_str(), -1);
+    sqlite3_result_error_code(ctx, errCode);
+}
+
 void SqliteFunctionRegistry::ImportDB(sqlite3_context *ctx, int argc, sqlite3_value **argv)
 {
     if (ctx == nullptr || argc != 1 || argv == nullptr) {
         LOG_ERROR("Parameter does not meet restrictions. ctx: %{public}d, argc: %{public}d, argv: %{public}d",
             ctx == nullptr, argc, argv == nullptr);
-        sqlite3_result_error(ctx, "invalid param", -1);
-        sqlite3_result_error_code(ctx, SQLITE_ERROR);
+        SqliteResultError(ctx, SQLITE_ERROR, "invalid param");
         return;
     }
     std::string path;
@@ -184,28 +189,34 @@ void SqliteFunctionRegistry::ImportDB(sqlite3_context *ctx, int argc, sqlite3_va
             LOG_ERROR(
                 "File stat error. path: %{public}s, error: %{public}d", SqliteUtils::Anonymous(path).c_str(), errno);
         }
-        sqlite3_result_error(ctx, "backup failed", -1);
-        sqlite3_result_error_code(ctx, SQLITE_CANTOPEN);
+        SqliteResultError(ctx, SQLITE_CANTOPEN, "backup failed");
         return;
     }
 
     sqlite3 *sourceDbHandle = nullptr;
     int32_t errCode =
         sqlite3_open_v2(path.c_str(), &sourceDbHandle, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nullptr);
+
+    auto source = std::shared_ptr<sqlite3>(sourceDbHandle, [&ctx, &errCode, &path](auto *handle) {
+        sqlite3_close(handle);
+        if (errCode == SQLITE_OK || errCode == SQLITE_DONE) {
+            return;
+        }
+        LOG_ERROR("Error during backup. path: %{public}s, errCode: %{public}d, errno: %{public}d",
+            SqliteUtils::Anonymous(path).c_str(), errCode, errno);
+        SqliteResultError(ctx, errCode, "backup failed");
+    });
     if (errCode != SQLITE_OK) {
-        LOG_ERROR(
-            "Open db failed. path: %{public}s, error: %{public}d.", SqliteUtils::Anonymous(path).c_str(), errCode);
-    }
-    if (errCode != SQLITE_OK || (errCode = IntegrityCheck(sourceDbHandle)) != SQLITE_OK ||
-        (errCode = BackUpDB(sourceDbHandle, sqlite3_context_db_handle(ctx))) != SQLITE_DONE) {
-        LOG_ERROR("Error during backup. path: %{public}s, error: %{public}d", path.c_str(), errCode);
-        sqlite3_close(sourceDbHandle);
-        sqlite3_result_error(ctx, "backup failed", -1);
-        sqlite3_result_error_code(ctx, errCode);
         return;
     }
-
-    sqlite3_close(sourceDbHandle);
+    errCode = IntegrityCheck(sourceDbHandle);
+    if (errCode != SQLITE_OK) {
+        return;
+    }
+    errCode = BackUpDB(sourceDbHandle, sqlite3_context_db_handle(ctx));
+    if (errCode != SQLITE_DONE) {
+        return;
+    }
     sqlite3_result_null(ctx);
 }
 

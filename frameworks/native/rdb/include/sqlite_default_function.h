@@ -38,6 +38,7 @@ private:
         std::map<std::string, ValueObject::Asset> &oldAssets, std::map<std::string, ValueObject::Asset> &newAssets);
     static void MergeAsset(ValueObject::Asset &oldAsset, ValueObject::Asset &newAsset);
     static void ImportDB(sqlite3_context *ctx, int argc, sqlite3_value **argv);
+    static void SqliteResultError(sqlite3_context *ctx, const int &errCode, const std::string &msg);
     static int32_t IntegrityCheck(sqlite3 *dbHandle);
     static int32_t BackUpDB(sqlite3 *source, sqlite3 *dest);
     static constexpr SqliteFunction FUNCTIONS[] = {
