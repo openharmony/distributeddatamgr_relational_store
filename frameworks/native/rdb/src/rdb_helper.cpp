@@ -47,16 +47,6 @@ void RdbHelper::ClearCache()
     RdbStoreManager::GetInstance().Clear();
 }
 
-static std::vector<std::string> rdPostFixes = {
-    "",
-    ".redo",
-    ".undo",
-    ".ctrl",
-    ".ctrl.dwr",
-    ".safe",
-    ".map",
-};
-
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
