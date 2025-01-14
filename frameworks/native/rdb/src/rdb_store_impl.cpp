@@ -352,7 +352,7 @@ int RdbStoreImpl::SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
         int SYNC_DATA_INDEX = 500;
-        Reportor::Report(Reportor::Create(config_, SYNC_DATA_INDEX, "RdbDeviceToDeviceDataSync"));
+        Reportor::ReportCorrupted(Reportor::Create(config_, SYNC_DATA_INDEX, "RdbDeviceToDeviceDataSync"));
     }
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d.", errorCode);
@@ -950,7 +950,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         !isReadOnly_) {
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
             SqliteUtils::Anonymous(name_).c_str(),
-            Reportor::FormatBrief(Connection::Collect(config_), "master").c_str());
+            SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         RdbParam param;
         param.bundleName_ = config_.GetBundleName();
@@ -1552,7 +1552,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     ret = InnerBackup(backupFilePath, encryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
         if (ret == E_DB_NOT_EXIST) {
-            Reportor::Report(Reportor::Create(config_, ret, "ErrorType: BackupFailed"));
+            Reportor::ReportCorrupted(Reportor::Create(config_, ret, "ErrorType: BackupFailed"));
         }
         if (SqliteUtils::DeleteDirtyFiles(backupFilePath)) {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
@@ -2007,7 +2007,7 @@ int RdbStoreImpl::RollBack()
     auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
         if (errCode == E_DATABASE_BUSY) {
-            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
         }
         // size + 1 means the number of transactions in process
         LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1,
@@ -2017,7 +2017,7 @@ int RdbStoreImpl::RollBack()
     errCode = statement->Execute();
     if (errCode != E_OK) {
         if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
-            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
         }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
             SqliteUtils::Anonymous(name_).c_str(), errCode);
@@ -2109,7 +2109,7 @@ int RdbStoreImpl::Commit()
     auto [errCode, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
         if (errCode == E_DATABASE_BUSY) {
-            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
         }
         LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
             SqliteUtils::Anonymous(name_).c_str());
@@ -2118,7 +2118,7 @@ int RdbStoreImpl::Commit()
     errCode = statement->Execute();
     if (errCode != E_OK) {
         if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
-            Reportor::Report(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
         }
         LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
             SqliteUtils::Anonymous(name_).c_str(), errCode);

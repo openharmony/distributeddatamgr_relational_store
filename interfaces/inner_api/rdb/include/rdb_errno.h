@@ -414,6 +414,56 @@ static constexpr int E_INVALID_SECRET_KEY = (E_BASE + 0x4a);
  * @brief Do not use except relational_store
  */
 static constexpr int E_INNER_WARNING = (E_BASE + 0x4c);
+
+/**
+ * @brief This is not a database file.
+ */
+static constexpr int E_SQLITE_NOT_DB = (E_BASE + 0x4d);
+
+/**
+ * @brief The root key of the encrypted database is faulty.
+ */
+static constexpr int E_ROOT_KEY_FAULT = (E_BASE + 0x4e);
+
+/**
+ * @brief The root key of the encrypted database cannot be loaded.
+ */
+static constexpr int E_ROOT_KEY_NOT_LOAD = (E_BASE + 0x4f);
+
+/**
+ * @brief The working key of the encrypted database is faulty.
+ */
+static constexpr int E_WORK_KEY_FAIL = (E_BASE + 0x50);
+
+/**
+ * @brief Failed to encrypt the working key.
+ */
+static constexpr int E_WORK_KEY_ENCRYPT_FAIL = (E_BASE + 0x51);
+
+/**
+ * @brief Failed to decrypt the working key.
+ */
+static constexpr int E_WORK_KEY_DECRYPT_FAIL = (E_BASE + 0x52);
+
+/**
+ * @brief Failed to open the sqlite database using the working key.
+ */
+static constexpr int E_SET_ENCRYPT_FAIL = (E_BASE + 0x53);
+
+/**
+ * @brief Failed to open the sqlite database using the working new key.
+ */
+static constexpr int E_SET_NEW_ENCRYPT_FAIL = (E_BASE + 0x54);
+
+/**
+ * @brief Failed to open the sqlite database using the working service key.
+ */
+static constexpr int E_SET_SERVICE_ENCRYPT_FAIL = (E_BASE + 0x55);
+
+/**
+ * @brief Database WAL file check point failed.
+ */
+static constexpr int E_CHECK_POINT_FAIL = (E_BASE + 0x56);
 } // namespace NativeRdb
 } // namespace OHOS
 

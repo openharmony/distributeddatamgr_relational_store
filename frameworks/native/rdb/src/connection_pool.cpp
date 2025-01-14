@@ -67,7 +67,8 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &er
         errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),
         SqliteUtils::Anonymous(dbPath).c_str(), config.GetDBType(), config.GetHaMode(), config.IsEncrypt(),
         config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(),
-        Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
+        SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config),
+            SqliteUtils::Anonymous(config.GetName())).c_str());
     return errCode == E_OK ? pool : nullptr;
 }
 

@@ -33,10 +33,12 @@
 #include "rdb_sql_utils.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 
 RdbPassword::RdbPassword() = default;
 
@@ -112,6 +114,21 @@ void RdbSecurityManager::SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias)
     rootKeyAlias_ = std::move(rootKeyAlias);
 }
 
+std::string RdbSecurityManager::GetBundleNameByAlias()
+{
+    auto rootKeyAlias = GetRootKeyAlias();
+    return GetBundleNameByAlias(rootKeyAlias);
+}
+
+std::string RdbSecurityManager::GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias)
+{
+    auto prefixLen = strlen(RDB_ROOT_KEY_ALIAS_PREFIX);
+    if (rootKeyAlias.size() > prefixLen) {
+        return std::string(rootKeyAlias.begin() + prefixLen, rootKeyAlias.end());
+    }
+    return "";
+}
+
 int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
     const struct HksBlob *inData, struct HksBlob *outData)
 {
@@ -128,8 +145,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             input.size = end - input.data + 1;
             break;
         }
-
-        if (HksUpdate(handle, paramSet, &input, &output) != HKS_SUCCESS) {
+        auto result = HksUpdate(handle, paramSet, &input, &output);
+        if (result != HKS_SUCCESS) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
+                "HksUpdate ret=" + std::to_string(result)));
             LOG_ERROR("HksUpdate Failed.");
             return HKS_FAILURE;
         }
@@ -139,7 +158,10 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
         input.data += MAX_UPDATE_SIZE;
     }
     output.size = input.size * TIMES;
-    if (HksFinish(handle, paramSet, &input, &output) != HKS_SUCCESS) {
+    auto result = HksFinish(handle, paramSet, &input, &output);
+    if (result != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
+            "HksFinish ret=" + std::to_string(result)));
         LOG_ERROR("HksFinish Failed.");
         return HKS_FAILURE;
     }
@@ -154,6 +176,8 @@ int32_t RdbSecurityManager::HksEncryptThreeStage(const struct HksBlob *keyAlias,
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
+            GetBundleNameByAlias(), "HksInit ret=" + std::to_string(result)));
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
@@ -167,6 +191,8 @@ int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias,
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            "HksInit ret=" + std::to_string(result)));
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
@@ -194,6 +220,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 {
     LOG_INFO("begin keyFile%{public}s.", SqliteUtils::Anonymous(keyFile).c_str());
     if (!HasRootKey()) {
+        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_ROOT_KEY_NOT_LOAD, GetBundleNameByAlias(), "not root key"));
         LOG_ERROR("Root key not exists!");
         return false;
     }
@@ -204,6 +231,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     keyData.secretKey = EncryptWorkKey(key);
 
     if (keyData.secretKey.empty()) {
+        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
         key.assign(key.size(), 0);
         return false;
@@ -230,6 +258,10 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
         std::lock_guard<std::mutex> lock(mutex_);
         ret = SaveBufferToFile(keyPath, secretKeyInChar);
     }
+    if (!ret) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
+            "save fail errno=" + std::to_string(errno)));
+    }
     return ret;
 }
 
@@ -241,6 +273,8 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
+            "generator root key, HksInitParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksInitParamSet()-client failed with error %{public}d", ret);
         return ret;
     }
@@ -257,6 +291,8 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
+            "HksAddParams ret=" + std::to_string(ret)));
         LOG_ERROR("HksAddParams-client failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return ret;
@@ -264,6 +300,8 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
+            "HksBuildParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksBuildParamSet-client failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return ret;
@@ -272,6 +310,8 @@ int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias
     ret = HksGenerateKey(&rootKeyName, params, nullptr);
     HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
+            "HksGenerateKey ret=" + std::to_string(ret)));
         LOG_ERROR("HksGenerateKey-client failed with error %{public}d", ret);
     }
     return ret;
@@ -287,21 +327,24 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksInitParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
     }
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+    struct HksParam hksParam[] = {{ .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
         { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT },
         { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
         { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_NONCE, .blob = blobNonce },
         { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
-    };
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }};
+
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksAddParams ret=" + std::to_string(ret)));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -309,6 +352,8 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksBuildParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -337,6 +382,8 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksInitParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return false;
     }
@@ -353,6 +400,8 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
     };
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksAddParams ret=" + std::to_string(ret)));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return false;
@@ -360,6 +409,8 @@ bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vecto
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
+            "HksBuildParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return false;
@@ -451,7 +502,12 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
         return true;
     }
     umask(DEFAULT_UMASK);
-    if (MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
+    auto ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
+    if (ret != 0 && errno != EEXIST) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
+            RdbSecurityManager::GetInstance().GetBundleNameByAlias(),
+            "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
+            ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
         LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(fileDir).c_str());
         return false;
     }
@@ -460,19 +516,27 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
 
 RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile)
 {
-    if (access(keyFile.c_str(), F_OK) != 0) {
-        LOG_ERROR("Not exists. errno:%{public}d, file:%{public}s", errno, SqliteUtils::Anonymous(keyFile).c_str());
+    auto ret = access(keyFile.c_str(), F_OK);
+    if (ret != 0) {
+        auto anonymousFile = SqliteUtils::Anonymous(keyFile);
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            "access " + anonymousFile + " fail, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno)));
+        LOG_ERROR("Not exists. errno:%{public}d, file:%{public}s", errno, anonymousFile.c_str());
         return {};
     }
 
     RdbSecretKeyData keyData;
     if (!LoadSecretKeyFromDisk(keyFile, keyData)) {
+        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            "LoadSecretKeyFromDisk fail,errno=" + std::to_string(errno)));
         LOG_ERROR("Load key failed.");
         return {};
     }
 
     std::vector<uint8_t> key;
     if (!DecryptWorkKey(keyData.secretKey, key)) {
+        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            "DecryptWorkKey fail,errno=" + std::to_string(errno)));
         LOG_ERROR("Decrypt key failed!");
         return {};
     }
@@ -491,6 +555,8 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed!");
             return false;
         }

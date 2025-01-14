@@ -53,6 +53,7 @@ if (!is_ohos) {
   base_sources += [
     "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
+    "${relational_store_native_path}/rdb/mock/src/rdb_time_utils.cpp",
   ]
 }
 
@@ -127,6 +128,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
       "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
@@ -199,6 +201,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
       "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
       "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
