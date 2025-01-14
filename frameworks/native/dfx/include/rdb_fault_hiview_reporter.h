@@ -45,25 +45,93 @@ struct RdbCorruptedEvent {
     std::map<std::string, DebugInfo> debugInfos;
 };
 
+struct RdbFaultCounter {
+    uint8_t full{ 0 };
+    uint8_t corrupt{ 0 };
+    uint8_t perm{ 0 };
+    uint8_t busy{ 0 };
+    uint8_t noMem{ 0 };
+    uint8_t ioErr{ 0 };
+    uint8_t cantOpen{ 0 };
+    uint8_t constraint{ 0 };
+    uint8_t notDb{ 0 };
+    uint8_t rootKeyFault{ 0 };
+    uint8_t rootKeyNotLoad{ 0 };
+    uint8_t workKeyFault{ 0 };
+    uint8_t workkeyEencrypt{ 0 };
+    uint8_t workKeyDcrypt{ 0 };
+    uint8_t setEncrypt{ 0 };
+    uint8_t setNewEncrypt{ 0 };
+    uint8_t setServiceEncrypt{ 0 };
+    uint8_t checkPoint{ 0 };
+};
+
+// Fault Type Define
+static constexpr const char *FT_OPEN = "OPEN_DB";
+static constexpr const char *FT_CURD = "CURD_DB";
+static constexpr const char *FT_EX_FILE = "EX_FILE";
+static constexpr const char *FT_EX_HUKS = "EX_HUKS";
+static constexpr const char *FT_CP = "CHECK_POINT";
+
+class RdbFaultEvent {
+public:
+    RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
+        const std::string &custLog);
+
+public:
+    std::string GetBundleName() { return bundleName_; };
+    std::string GetFaultType() { return faultType_; }
+    int32_t GetErrCode() { return errorCode_; }
+    virtual std::string GetLogInfo() { return custLog_; };
+    virtual std::string GetModuleName() { return ""; }
+    virtual std::string GetStoreName() { return ""; }
+    virtual std::string GetBusinessType() { return ""; }
+
+protected:
+    void SetBundleName(const std::string &name) { bundleName_ = name; };
+
+private:
+    std::string bundleName_;
+    std::string faultType_;
+    std::string custLog_;
+    int32_t errorCode_;
+};
+
+class RdbFaultDbFileEvent : public RdbFaultEvent {
+public:
+    RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
+        const std::string &custLog = "", bool printDbInfo = false);
+
+public:
+    std::string GetLogInfo() override;
+    std::string GetModuleName() override;
+    std::string GetStoreName() override;
+    std::string GetBusinessType() override;
+
+private:
+    std::string GetConfigLog();
+    const RdbStoreConfig &config_;
+    bool printDbInfo_;
+};
 class RdbFaultHiViewReporter {
 public:
     static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "");
     static bool RegCollector(Connection::Collector collector);
-    static void Report(const RdbCorruptedEvent &eventInfo);
-    static void ReportFault(const RdbCorruptedEvent &eventInfo);
+    static void ReportCorrupted(const RdbCorruptedEvent &eventInfo);
+    static void ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo);
+    static void ReportFault(const RdbFaultEvent &faultEvent);
     static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
-    static std::string Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
-    static std::string FormatBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static bool IsReportCorruptedFault(const std::string &dbPath);
+    static std::string GetBundleName(const std::string &bundleName, const std::string &storeName);
 
 private:
-    static void Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos);
-    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
+    static void Update(std::map<std::string, DebugInfo> &localInfos, const std::map<std::string, DebugInfo> &infos);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
-    static std::string GetTimeWithMilliseconds(time_t sec, int64_t nsec);
-    static std::string GetBundleName(const RdbCorruptedEvent &eventInfo);
+    static bool IsReportFault(const std::string &bundleName, int32_t errCode);
+    static uint8_t *GetFaultCounter(RdbFaultCounter &counter, int32_t errCode);
     static Connection::Collector collector_;
+    static RdbFaultCounter faultCounter_;
 };
 } // namespace OHOS::NativeRdb
-#endif //DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H
+#endif // DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H

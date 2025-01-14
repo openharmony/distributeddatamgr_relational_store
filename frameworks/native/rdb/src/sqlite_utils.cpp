@@ -29,11 +29,14 @@
 #include <fstream>
 #include <regex>
 #include <string>
+#include <sstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store_config.h"
 #include "string_utils.h"
+#include "rdb_time_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -45,6 +48,7 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
+constexpr int32_t DISPLAY_BYTE = 2;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -389,6 +393,75 @@ std::pair<int32_t, DistributedRdb::RdbDebugInfo> SqliteUtils::Stat(const std::st
     info.uid_ = fileStat.st_uid;
     info.gid_ = fileStat.st_gid;
     return std::pair{ E_OK, info };
+}
+
+std::string SqliteUtils::FomatConfigChg(const std::string &path, const RdbStoreConfig &config,
+    const DistributedRdb::RdbSyncerParam &lastParam)
+{
+    std::stringstream ss;
+    ss << "CFG_CHG:Store config invalid change, storePath=" << SqliteUtils::Anonymous(path).c_str()
+        << ",securityLevel:" << lastParam.level_ << "->" << static_cast<int32_t>(config.GetSecurityLevel())
+        << ",area:" << lastParam.area_ << "->" << config.GetArea()
+        << ",isEncrypt:" << lastParam.isEncrypt_ << "->" << config.IsEncrypt();
+    return ss.str();
+}
+
+std::string SqliteUtils::ReadFileHeader(const std::string &filePath)
+{
+    constexpr int MAX_SIZE = 98;
+    std::ifstream file(filePath, std::ios::binary);
+    uint8_t data[MAX_SIZE] = {0};
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char *>(data), MAX_SIZE);
+        file.close();
+    }
+    std::stringstream ss;
+    for (int i = 0; i < MAX_SIZE; i++) {
+        ss << std::hex << std::setw(DISPLAY_BYTE) << std::setfill('0') << static_cast<int>(data[i]);
+    }
+    return "DB_HEAD:" + ss.str();
+}
+
+std::string SqliteUtils::GetFileStatInfo(const DebugInfo &debugInfo)
+{
+    std::stringstream oss;
+    const uint32_t permission = 0777;
+    oss << " dev:0x" << std::hex << debugInfo.dev_ << " ino:0x" << std::hex << debugInfo.inode_;
+    if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
+        oss << "<>0x" << std::hex << debugInfo.oldInode_;
+    }
+    oss << " mode:0" << std::oct << (debugInfo.mode_ & permission) << " size:" << std::dec << debugInfo.size_
+        << " uid:" << std::dec << debugInfo.uid_ << " gid:" << std::dec << debugInfo.gid_
+        << " atim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+        << " mtim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
+        << " ctim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
+    return oss.str();
+}
+
+std::string SqliteUtils::FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::string appendix = header;
+    for (auto &[name, debugInfo] : debugs) {
+        appendix += "\n" + name + " :" + GetFileStatInfo(debugInfo);
+    }
+    return appendix;
+}
+
+std::string SqliteUtils::FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs,
+    const std::string &header)
+{
+    if (debugs.empty()) {
+        return "";
+    }
+    std::stringstream oss;
+    oss << header << ":";
+    for (auto &[name, debugInfo] : debugs) {
+        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ">";
+    }
+    return oss.str();
 }
 } // namespace NativeRdb
 } // namespace OHOS

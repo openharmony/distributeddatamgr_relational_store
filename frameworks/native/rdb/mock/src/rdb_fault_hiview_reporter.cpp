@@ -17,7 +17,7 @@
 #include "connection.h"
 namespace OHOS::NativeRdb {
 
-void RdbFaultHiViewReporter::ReportFault(const RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo)
 {
     (void)eventInfo;
 }
@@ -27,15 +27,9 @@ void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, b
     (void)eventInfo;
 }
 
-void RdbFaultHiViewReporter::Report(const RdbCorruptedEvent &eventInfo)
+void RdbFaultHiViewReporter::ReportCorrupted(const RdbCorruptedEvent &eventInfo)
 {
     (void)eventInfo;
-}
-
-std::string RdbFaultHiViewReporter::GetFileStatInfo(const DebugInfo &debugInfo)
-{
-    (void)debugInfo;
-    return "";
 }
 
 bool RdbFaultHiViewReporter::IsReportCorruptedFault(const std::string &dbPath)
@@ -53,12 +47,6 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     (void)dbPath;
 }
 
-std::string RdbFaultHiViewReporter::GetTimeWithMilliseconds(time_t sec, int64_t nsec)
-{
-    (void)sec;
-    (void)nsec;
-    return "";
-}
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     const RdbStoreConfig &config, int32_t errCode, const std::string &appendix)
 {
@@ -71,30 +59,56 @@ bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
     (void)collector;
     return true;
 }
-void RdbFaultHiViewReporter::Update(RdbCorruptedEvent &eventInfo, const std::map<std::string, DebugInfo> &infos)
+void RdbFaultHiViewReporter::Update(std::map<std::string, DebugInfo> &localInfos,
+    const std::map<std::string, DebugInfo> &infos)
 {
-    (void)eventInfo;
+    (void)localInfos;
     (void)infos;
 }
 
-std::string RdbFaultHiViewReporter::GetBundleName(const RdbCorruptedEvent &eventInfo)
+std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName, const std::string &storeName)
 {
-    (void)eventInfo;
+    (void)bundleName;
+    (void)storeName;
     return "";
 }
 
-std::string RdbFaultHiViewReporter::Format(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
 {
-    (void)debugs;
-    (void)header;
+    (void)faultEvent;
+}
+
+RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode,
+    const std::string &bundleName, const std::string &custLog)
+{
+    (void)faultType;
+    (void)errorCode;
+    (void)bundleName;
+    (void)custLog;
+}
+
+RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
+    const std::string &custLog, bool printDbInfo) : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
+{
+    (void)printDbInfo;
+}
+
+std::string RdbFaultDbFileEvent::GetLogInfo()
+{
     return "";
 }
 
-std::string RdbFaultHiViewReporter::FormatBrief(
-    const std::map<std::string, DebugInfo> &debugs, const std::string &header)
+std::string RdbFaultDbFileEvent::GetModuleName()
 {
-    (void)debugs;
-    (void)header;
+    return "";
+}
+std::string RdbFaultDbFileEvent::GetStoreName()
+{
+    return "";
+}
+
+std::string RdbFaultDbFileEvent::GetBusinessType()
+{
     return "";
 }
 } // namespace OHOS::NativeRdb
