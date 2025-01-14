@@ -112,6 +112,8 @@ private:
     bool IsKeyFileEmpty(const std::string &keyFile);
     static bool IsKeyExpired(const time_t &createTime);
     std::vector<uint8_t> GetRootKeyAlias();
+    std::string GetBundleNameByAlias();
+    std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
     void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);

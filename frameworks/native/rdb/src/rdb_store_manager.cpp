@@ -78,7 +78,8 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const RdbStoreC
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
             config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
             config.GetRoleType(), config.IsReadOnly(), config.GetCustomDir().c_str(),
-            Reportor::FormatBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())).c_str());
+            SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config),
+                SqliteUtils::Anonymous(config.GetName())).c_str());
         return nullptr;
     }
     return rdbStore;
@@ -149,10 +150,9 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
     bool isEncryptInvalidChange = (config.IsEncrypt() != lastParam.isEncrypt_);
     bool isAreaInvalidChange = (config.GetArea() != lastParam.area_);
     if (isLevelInvalidChange || isEncryptInvalidChange || isAreaInvalidChange) {
-        LOG_WARN("Store config invalid change, storePath %{public}s, securityLevel: %{public}d -> %{public}d, "
-                 "area: %{public}d -> %{public}d, isEncrypt: %{public}d -> %{public}d",
-            SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()),
-            lastParam.area_, config.GetArea(), lastParam.isEncrypt_, config.IsEncrypt());
+        auto log = SqliteUtils::FomatConfigChg(path, config, lastParam);
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
+        LOG_WARN("%{public}s", log.c_str());
         if (isEncryptInvalidChange) {
             config.SetEncryptStatus(lastParam.isEncrypt_);
         }

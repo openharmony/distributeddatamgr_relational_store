@@ -150,14 +150,14 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
              "%{public}s,[%{public}d,%{public}d,%{public}d,%{public}d]",
         config.GetDBType(), config.GetHaMode(), config.IsEncrypt(), config.GetArea(), config.GetSecurityLevel(),
         config.GetRoleType(), config.IsReadOnly(),
-        Reportor::FormatBrief(bugInfo, SqliteUtils::Anonymous(config.GetName())).c_str(),
-        Reportor::FormatBrief(Connection::Collect(config_), "master").c_str(), isSlaveExist, isSlaveLockExist,
-        hasFailure, walOverLimit);
+        SqliteUtils::FormatDebugInfoBrief(bugInfo, SqliteUtils::Anonymous(config.GetName())).c_str(),
+        SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str(), isSlaveExist,
+        isSlaveLockExist, hasFailure, walOverLimit);
     if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && (slaveOpenPolicy == SlaveOpenPolicy::OPEN_IF_DB_VALID &&
         (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
-            Reportor::Report(Reportor::Create(config, E_SQLITE_ERROR, "ErrorType: slaveWalOverLimit"));
+            Reportor::ReportCorrupted(Reportor::Create(config, E_SQLITE_ERROR, "ErrorType: slaveWalOverLimit"));
         }
         return result;
     }
@@ -232,6 +232,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_EX_FILE, E_DB_NOT_EXIST, config, "db not exist"));
         LOG_ERROR("db not exist errno is %{public}d", errno);
         return E_DB_NOT_EXIST;
     }
@@ -241,6 +242,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     errCode = OpenDatabase(dbPath, openFileFlags);
     if (errCode != E_OK) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
         return errCode;
     }
 
@@ -264,7 +266,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
                     SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
                     sql);
-                Reportor::ReportFault(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
+                Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
             }
         }
     }
@@ -289,6 +291,9 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
             }
         }
 #endif
+        if (errCode == SQLITE_NOTADB) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_NOT_DB, config_, "", true));
+        }
         return SQLiteError::ErrNo(errCode);
     }
     return E_OK;
@@ -611,16 +616,29 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     auto errCode = SetEncryptKey(key, config);
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_ENCRYPT_FAIL, config, "LOG:SetEncryptKey errcode=" +
+            std::to_string(errCode) + ",iter=" + std::to_string(config.GetIter()), true));
         if (!newKey.empty()) {
             LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
                 errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
             errCode = SetEncryptKey(newKey, config);
+            if (errCode != E_OK) {
+                Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
+                    "LOG:new key SetEncryptKey errcode= "+ std::to_string(errCode) +
+                    ",iter=" + std::to_string(config.GetIter())));
+            }
         }
         newKey.assign(newKey.size(), 0);
         if (errCode != E_OK) {
             errCode = SetServiceKey(config, errCode);
             LOG_ERROR("fail, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
                 errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
+            if (errCode != E_OK) {
+                bool sameKey = (key == config.GetEncryptKey()) || (newKey == config.GetEncryptKey());
+                Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
+                    "LOG:service key SetEncryptKey errcode=" + std::to_string(errCode) +
+                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey)));
+            }
             return errCode;
         }
         config.ChangeEncryptKey();
@@ -955,6 +973,8 @@ int SqliteConnection::TryCheckPoint(bool timeout)
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
     (void)sqlite3_busy_timeout(dbHandle_, DEFAULT_BUSY_TIMEOUT_MS);
     if (errCode != SQLITE_OK) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CP, E_CHECK_POINT_FAIL, config_,
+            "LOG:cp fail, errcode=" + std::to_string(errCode), true));
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
         return SQLiteError::ErrNo(errCode);
@@ -971,8 +991,12 @@ int SqliteConnection::LimitWalSize()
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
     ssize_t fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize < 0 || fileSize > config_.GetWalLimitSize()) {
-        LOG_ERROR("The WAL file size exceeds the limit, %{public}s size is %{public}zd",
-            SqliteUtils::Anonymous(walName).c_str(), fileSize);
+        std::stringstream ss;
+        ss << "The WAL file size exceeds the limit,name=" << SqliteUtils::Anonymous(walName).c_str()
+            << ",file size=" << fileSize
+            << ",limit size=" << config_.GetWalLimitSize();
+        LOG_ERROR("%{public}s", ss.str().c_str());
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_WAL_SIZE_OVER_LIMIT, config_, ss.str()));
         return E_WAL_SIZE_OVER_LIMIT;
     }
     return E_OK;
@@ -1233,7 +1257,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus)
                 (void)SqliteConnection::Delete(slaveConfig.GetPath());
             }
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
-            Reportor::Report(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveBackupInterrupt"));
+            Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveBackup"));
         }
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
@@ -1396,7 +1420,8 @@ int SqliteConnection::VeritySlaveIntegrity()
 
     RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
     std::map<std::string, DebugInfo> bugInfo = Connection::Collect(slaveCfg);
-    LOG_INFO("%{public}s", Reportor::FormatBrief(bugInfo, SqliteUtils::Anonymous(slaveCfg.GetName())).c_str());
+    LOG_INFO("%{public}s", SqliteUtils::FormatDebugInfoBrief(bugInfo,
+        SqliteUtils::Anonymous(slaveCfg.GetName())).c_str());
 
     if (SqliteUtils::IsSlaveInterrupted(config_.GetPath())) {
         return E_SQLITE_CORRUPT;
