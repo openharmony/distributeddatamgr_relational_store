@@ -70,11 +70,7 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
         flagVal = FLAG[static_cast<int>(location)];
         valObj = ValueObject(flagVal);
     }
-    if (isNeedAnd) {
-        whereClause += "AND ";
-    } else {
-        isNeedAnd = true;
-    }
+    CheckIsNeedAnd();
     if (flagVal.empty()) {
         whereClause += newField + " = ? ";
         bindArgs.push_back(std::move(valObj));
