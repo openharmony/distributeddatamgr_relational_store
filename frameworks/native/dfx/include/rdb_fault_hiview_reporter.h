@@ -78,14 +78,11 @@ public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
 
-public:
-    std::string GetBundleName() { return bundleName_; };
-    std::string GetFaultType() { return faultType_; }
-    int32_t GetErrCode() { return errorCode_; }
-    virtual std::string GetLogInfo() { return custLog_; };
-    virtual std::string GetModuleName() { return ""; }
-    virtual std::string GetStoreName() { return ""; }
-    virtual std::string GetBusinessType() { return ""; }
+    std::string GetBundleName() const { return bundleName_; };
+    std::string GetFaultType() const { return faultType_; }
+    int32_t GetErrCode() const { return errorCode_; }
+    std::string GetLogInfo() const { return custLog_; };
+    virtual void Report() const;
 
 protected:
     void SetBundleName(const std::string &name) { bundleName_ = name; };
@@ -102,14 +99,12 @@ public:
     RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
         const std::string &custLog = "", bool printDbInfo = false);
 
-public:
-    std::string GetLogInfo() override;
-    std::string GetModuleName() override;
-    std::string GetStoreName() override;
-    std::string GetBusinessType() override;
+    virtual void Report() const override;
 
 private:
-    std::string GetConfigLog();
+    std::string BuildLogInfo() const;
+    std::string BuildConfigLog() const;
+
     const RdbStoreConfig &config_;
     bool printDbInfo_;
 };

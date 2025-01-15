@@ -87,28 +87,17 @@ RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode,
     (void)custLog;
 }
 
+void RdbFaultEvent::Report() const
+{
+}
+
 RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
     const std::string &custLog, bool printDbInfo) : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
 {
     (void)printDbInfo;
 }
 
-std::string RdbFaultDbFileEvent::GetLogInfo()
+void RdbFaultDbFileEvent::Report() const
 {
-    return "";
-}
-
-std::string RdbFaultDbFileEvent::GetModuleName()
-{
-    return "";
-}
-std::string RdbFaultDbFileEvent::GetStoreName()
-{
-    return "";
-}
-
-std::string RdbFaultDbFileEvent::GetBusinessType()
-{
-    return "";
 }
 } // namespace OHOS::NativeRdb
