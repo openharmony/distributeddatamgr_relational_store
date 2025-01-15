@@ -125,7 +125,7 @@ napi_value Convert2JSValue(napi_env env, const std::shared_ptr<Edge> &edge)
 {
     std::vector<napi_property_descriptor> descriptors = {
         DECLARE_JS_PROPERTY(env, "eid", edge->GetId()),
-        DECLARE_JS_PROPERTY(env, "edgeType", edge->GetLabel()),
+        DECLARE_JS_PROPERTY(env, "type", edge->GetLabel()),
         DECLARE_JS_PROPERTY(env, "startVid", edge->GetSourceId()),
         DECLARE_JS_PROPERTY(env, "endVid", edge->GetTargetId()),
         DECLARE_JS_PROPERTY(env, "properties", edge->GetProperties()),

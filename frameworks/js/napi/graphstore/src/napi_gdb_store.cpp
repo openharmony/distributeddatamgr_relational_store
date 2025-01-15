@@ -256,7 +256,6 @@ napi_value GdbStoreProxy::Close(napi_env env, napi_callback_info info)
         return OK;
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->gdbStore != nullptr);
         context->gdbStore = nullptr;
         return OK;
     };
