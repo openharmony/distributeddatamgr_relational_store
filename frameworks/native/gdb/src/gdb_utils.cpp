@@ -16,11 +16,10 @@
 #define LOG_TAG "RdbGqlUtils"
 #include "gdb_utils.h"
 
+#include <algorithm>
+#include <securec.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <securec.h>
-
-#include <algorithm>
 
 #include "aip_errors.h"
 
@@ -147,12 +146,12 @@ std::string GdbUtils::GetConfigStr(const std::vector<uint8_t> &keys, bool isEncr
     std::string config = "{";
     if (isEncrypt) {
         const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
-        char keyBuff[keyBuffSize];
+        std::vector<char> keyBuff(keyBuffSize);
         config += "\"isEncrypted\":1,";
         config += "\"hexPassword\":\"";
-        config += GetEncryptKey(keys, keyBuff, keyBuffSize);
+        config += GetEncryptKey(keys, keyBuff.data(), keyBuffSize);
         config += "\",";
-        (void)memset_s(keyBuff, keyBuffSize, 0, keyBuffSize);
+        keyBuff.assign(keyBuffSize, 0);
     }
     config += GRD_OPEN_CONFIG_STR;
     config += "}";
@@ -162,7 +161,8 @@ std::string GdbUtils::GetConfigStr(const std::vector<uint8_t> &keys, bool isEncr
 const char *GdbUtils::GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize)
 {
     char *buffer = nullptr;
-    for (size_t i = 0; i < encryptedKey.size(); i++) {
+    auto keySize = encryptedKey.size();
+    for (size_t i = 0; i < keySize; i++) {
         buffer = (char *)(outBuff + i * 2); // each uint8_t will convert to 2 hex char
         // each uint8_t will convert to 2 hex char
         errno_t err = snprintf_s(buffer, outBufSize - i * 2, outBufSize - i * 2, "%02x", encryptedKey[i]);

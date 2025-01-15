@@ -421,18 +421,25 @@ HWTEST_F(GdbEncryptTest, GdbEncrypt_Config, TestSize.Level1)
     std::string dbPath = databasePath;
     auto config = StoreConfig(dbName, dbPath, DBType::DB_GRAPH);
     EXPECT_EQ(config.IsEncrypt(), false);
-    config.SetEncryptStatus(true);
-    EXPECT_EQ(config.IsEncrypt(), true);
+    config.GenerateEncryptedKey();
+    EXPECT_EQ(config.GetEncryptKey().size(), 0);
+    EXPECT_EQ(config.GetNewEncryptKey().size(), 0);
 
     config.SetBundleName("");
     EXPECT_EQ(config.GetBundleName(), "");
+    config.SetEncryptStatus(true);
+    EXPECT_EQ(config.IsEncrypt(), true);
     config.SetBundleName("test_name");
     EXPECT_EQ(config.GetBundleName(), "test_name");
+    // empty return E_ERROR
+    EXPECT_EQ(config.SetBundleName(""), E_ERROR);
+    EXPECT_EQ(config.GetBundleName(), "test_name");
 
-    config.GenerateEncryptedKey({1, 2, 3, 4, 5, 6, 7, 8}, {1, 2, 3});
-    EXPECT_EQ(config.GetEncryptKey().size(), 8);
-    EXPECT_EQ(config.GetNewEncryptKey().size(), 3);
+    config.GenerateEncryptedKey();
+    // not exists bundleName, failed
+    EXPECT_EQ(config.GetEncryptKey().size(), 0);
+    EXPECT_EQ(config.GetNewEncryptKey().size(), 0);
     config.ChangeEncryptKey();
-    config.GenerateEncryptedKey({1, 2, 3, 4, 5, 6, 7, 8}, {});
+    config.GenerateEncryptedKey();
     config.ChangeEncryptKey();
 }
