@@ -196,3 +196,111 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_004, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_DestroyConfig(nullptr));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DestroyConfig(config));
 }
+
+void VdbTest003(const OH_Rdb_ConfigV2 *config)
+{
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+    auto store = OH_Rdb_CreateOrOpen(config, &errCode);
+    EXPECT_NE(store, nullptr);
+
+    char createTableSql[] = "CREATE TABLE t1(id INT PRIMARY KEY, repr floatvector(4));";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, createTableSql));
+
+    char createIndexSql[] = "CREATE INDEX diskann_idx ON t1 USING GSDISKANN(repr L2);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, createIndexSql));
+
+    int64_t trxId = 0;
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_BeginTransWithTrxId(store, &trxId));
+    char insertSql[] = "INSERT INTO t1 VALUES(1, '[1, 2, 3, 4]');";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, trxId, insertSql));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CommitByTrxId(store, trxId));
+
+    char insertSql2[] = "INSERT INTO t1 VALUES(2, '[2, 2, 3, 4]');";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, insertSql2));
+
+    char deleteSql[] = "DELETE FROM t1 WHERE id = 1;";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, deleteSql));
+
+    char dropSql[] = "DROP TABLE IF EXISTS t1;";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, dropSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config));
+}
+
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_005, TestSize.Level1)
+{
+    auto config = InitRdbConfig();
+    int errCode = OH_Rdb_SetDbType(config, RDB_CAYLEY);
+    EXPECT_TRUE(((!OHOS::NativeRdb::IsUsingArkData()) && errCode == OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED) ||
+                (OHOS::NativeRdb::IsUsingArkData() && errCode == OH_Rdb_ErrCode::RDB_OK));
+    if (OHOS::NativeRdb::IsUsingArkData()) {
+        VdbTest003(config);
+    }
+    OH_Rdb_DestroyConfig(config);
+}
+
+string GetRandVector(uint32_t maxElementNum, uint16_t dim)
+{
+    auto now = std::chrono::high_resolution_clock::now();
+    auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    unsigned int randomNumberSeed = static_cast<unsigned int>(ns);
+    std::string res = "[";
+    for (uint16_t i = 0; i < dim; i++) {
+        uint32_t intPart = maxElementNum == 0 ? 0 : (rand_r(&randomNumberSeed) % maxElementNum);
+        intPart += 1;
+        // 10 is used to limit the number after the decimal point to a maximum of 10.
+        uint32_t tenths = (rand_r(&randomNumberSeed) % 10);
+        res += std::to_string(intPart);
+        res += ".000";
+        res += std::to_string(tenths);
+        res += ", ";
+    }
+    res.pop_back();
+    res.pop_back();
+    res += "]";
+    return res;
+}
+
+void VdbTest004(const OH_Rdb_ConfigV2 *config)
+{
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+    auto store = OH_Rdb_CreateOrOpen(config, &errCode);
+    EXPECT_NE(store, nullptr);
+
+    char createTableSql[] = "CREATE TABLE t1(id INT PRIMARY KEY, repr floatvector(4));";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, createTableSql));
+
+    char createIndexSql[] = "CREATE INDEX diskann_idx ON t1 USING GSDISKANN(repr L2);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, createIndexSql));
+
+    uint32_t maxIntPart = 100;
+    uint32_t numSamples = 100;
+    uint32_t dim = 4;
+
+    for (uint16_t i = 0; i < numSamples; i++) {
+        std::string sqlInsert =
+            "INSERT INTO t1 VALUES(" + std::to_string(i) + ", '" + GetRandVector(maxIntPart, dim) + "');";
+        EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, sqlInsert.data()));
+    }
+    for (uint16_t i = 0; i < numSamples; i++) {
+        std::string sqlDelete = "DELETE FROM t1 WHERE id = " + std::to_string(i) + ";";
+        EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, sqlDelete.data()));
+    }
+
+    char dropSql[] = "DROP TABLE IF EXISTS t1;";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store, 0, dropSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config));
+}
+
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_006, TestSize.Level1)
+{
+    auto config = InitRdbConfig();
+    int errCode = OH_Rdb_SetDbType(config, RDB_CAYLEY);
+    EXPECT_TRUE(((!OHOS::NativeRdb::IsUsingArkData()) && errCode == OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED) ||
+                (OHOS::NativeRdb::IsUsingArkData() && errCode == OH_Rdb_ErrCode::RDB_OK));
+    if (OHOS::NativeRdb::IsUsingArkData()) {
+        VdbTest004(config);
+    }
+    OH_Rdb_DestroyConfig(config);
+}
