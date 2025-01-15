@@ -83,7 +83,8 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
                 (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "")));
         }
         if (config_ != nullptr) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_));
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD,
+                (errCode == SQLITE_NOTADB ? E_SQLITE_NOT_DB : ret), *config_, "", true));
         }
         PrintInfoForDbError(ret, newSql);
         return ret;
@@ -292,6 +293,9 @@ int SqliteStatement::InnerStep()
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "")));
+    }
+    if (config_ != nullptr && errCode != SQLITE_OK) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_, "", true));
     }
     PrintInfoForDbError(ret, sql_);
     return ret;
