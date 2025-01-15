@@ -155,7 +155,7 @@ HWTEST_F(GdbAdaptTest, GdbAdaptTest_Dlopen01, TestSize.Level2)
     EXPECT_EQ(holder.ColumnText, nullptr);
     EXPECT_EQ(holder.Backup, nullptr);
     EXPECT_EQ(holder.Restore, nullptr);
-    EXPECT_EQ(holder.ReKey, nullptr);
+    EXPECT_EQ(holder.Rekey, nullptr);
     GrdAdapter::Open(databaseName.c_str(), databasePath.c_str(), 1, nullptr);
     GrdAdapter::Close(nullptr, 1);
     GrdAdapter::Repair(databasePath.c_str(), {});
@@ -206,5 +206,5 @@ HWTEST_F(GdbAdaptTest, GdbAdaptTest_Dlopen02, TestSize.Level2)
     EXPECT_NE(holder.ColumnText, nullptr);
     EXPECT_NE(holder.Backup, nullptr);
     EXPECT_NE(holder.Restore, nullptr);
-    EXPECT_NE(holder.ReKey, nullptr);
+    EXPECT_NE(holder.Rekey, nullptr);
 }

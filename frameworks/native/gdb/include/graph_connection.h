@@ -43,7 +43,7 @@ private:
     static const int32_t regCreator_;
 
     int InnerOpen(const StoreConfig &config);
-    int32_t ReSetKey(const StoreConfig &config);
+    int32_t ResetKey(const StoreConfig &config);
     GRD_DB *dbHandle_ = nullptr;
     const StoreConfig config_;
     bool isWriter_ = false;

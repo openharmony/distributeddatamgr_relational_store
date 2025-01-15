@@ -54,6 +54,7 @@ ohos_shared_library("framework_graphstore") {
     "${relational_store_native_path}/gdb/src/vertex.cpp",
     "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
     "${relational_store_native_path}/rdb/src/string_utils.cpp",
   ]

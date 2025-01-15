@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "GdbStoreConfig"
 #include <utility>
 
 #include "aip_errors.h"
 #include "gdb_store_config.h"
+#include "gdb_utils.h"
+#include "logger.h"
 #include "rdb_security_manager.h"
 
 namespace OHOS::DistributedDataAip {
@@ -154,13 +157,28 @@ std::vector<uint8_t> StoreConfig::GetNewEncryptKey() const
     return newEncryptKey_;
 }
 
-void StoreConfig::GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey,
-    const std::vector<uint8_t> &newEncryptKey) const
+void StoreConfig::GenerateEncryptedKey() const
 {
+    if (!IsEncrypt()) {
+        return;
+    }
+    auto rdbConfig = std::make_shared<NativeRdb::RdbStoreConfig>(GetFullPath());
+    if (rdbConfig == nullptr) {
+        LOG_ERROR("rdbConfig is nullptr. path:%{public}s", GdbUtils::Anonymous(GetFullPath()).c_str());
+        return;
+    }
+    rdbConfig->SetBundleName(bundleName_);
+    rdbConfig->SetEncryptStatus(true);
+    auto errCode = rdbConfig->Initialize();
+    if (errCode != E_OK) {
+        LOG_ERROR("rdbConfig init encrypt failed. errCode:%{public}d, path:%{public}s",
+            errCode, GdbUtils::Anonymous(GetFullPath()).c_str());
+        return;
+    }
     encryptKey_.assign(encryptKey_.size(), 0);
-    encryptKey_ = encryptKey;
+    encryptKey_ = rdbConfig->GetEncryptKey();
     newEncryptKey_.assign(newEncryptKey_.size(), 0);
-    newEncryptKey_ = newEncryptKey;
+    newEncryptKey_ = rdbConfig->GetNewEncryptKey();
 }
 
 void StoreConfig::ClearEncryptKey()
@@ -176,7 +194,7 @@ void StoreConfig::ChangeEncryptKey() const
         return;
     }
     encryptKey_.assign(encryptKey_.size(), 0);
-    encryptKey_.assign(newEncryptKey_.data(), newEncryptKey_.data() + newEncryptKey_.size());
+    encryptKey_ = newEncryptKey_;
     newEncryptKey_.assign(newEncryptKey_.size(), 0);
     newEncryptKey_.resize(0);
 }

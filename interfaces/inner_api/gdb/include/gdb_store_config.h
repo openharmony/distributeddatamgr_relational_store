@@ -77,8 +77,7 @@ public:
     API_EXPORT std::vector<uint8_t> GetEncryptKey() const;
     API_EXPORT int SetBundleName(const std::string &bundleName);
     API_EXPORT std::string GetBundleName() const;
-    void GenerateEncryptedKey(const std::vector<uint8_t> &encryptKey,
-        const std::vector<uint8_t> &newEncryptKey) const;
+    void GenerateEncryptedKey() const;
     std::vector<uint8_t> GetNewEncryptKey() const;
     void ChangeEncryptKey() const;
 

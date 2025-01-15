@@ -18,7 +18,6 @@
 
 #include <cinttypes>
 #include <map>
-#include <securec.h>
 
 #include "aip_errors.h"
 #include "gdb_utils.h"
@@ -221,22 +220,22 @@ int GrdAdapter::Restore(const char *dbFile, const char *backupDbFile, const std:
 
 int GrdAdapter::Rekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey)
 {
-    if (g_adapterHolder.ReKey == nullptr) {
+    if (g_adapterHolder.Rekey == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
-    if (g_adapterHolder.ReKey == nullptr) {
+    if (g_adapterHolder.Rekey == nullptr) {
         return E_NOT_SUPPORT;
     }
-    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
-    char key[keySize];
-    GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GdbUtils::GetEncryptKey(encryptedKey, key, keySize) : nullptr;
-    auto ret = g_adapterHolder.ReKey(dbFile, configStr, &info);
-    errno_t err = memset_s(key, keySize, 0, keySize);
-    if (err != E_OK) {
-        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
-        return E_ERROR;
+    if (encryptedKey.empty()) {
+        return E_GRD_INVALID_ARGS;
     }
+    int32_t ret = E_OK;
+    GRD_CipherInfoT info = { 0 };
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
+    std::vector<char> key(keySize);
+    info.hexPassword = GdbUtils::GetEncryptKey(encryptedKey, key.data(), keySize);
+    ret = g_adapterHolder.Rekey(dbFile, configStr, &info);
+    key.assign(keySize, 0);
     return TransErrno(ret);
 }
 
