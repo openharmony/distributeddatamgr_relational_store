@@ -38,7 +38,6 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { E_GRD_DATA_CONFLICT, 31300013, "A conflicting constraint already exists." },
     { E_DBPATH_ACCESS_FAILED, 31300014, "Invalid database path." },
     { E_CONFIG_INVALID_CHANGE, 31300015, "Config changed." },
-    { E_GRD_NOT_SUPPORT, 801, "Capability not support." },
 };
 
 std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
