@@ -1193,23 +1193,28 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.isSearchable_ = config.IsSearchable();
     param.haMode_ = config.GetHaMode();
     param.password_ = {};
-    std::vector<uint8_t> key;
+    std::vector<std::vector<uint8_t>> keys;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [svcErr, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
     if (svcErr != E_OK) {
         return errCode;
     }
-    svcErr = service->GetPassword(param, key);
+    svcErr = service->GetPassword(param, keys);
     if (svcErr != RDB_OK) {
         return errCode;
     }
 #endif
 
-    errCode = SetEncryptKey(key, config);
-    if (errCode == E_OK) {
-        config.RestoreEncryptKey(key);
+    for (auto &key : keys) {
+        errCode = SetEncryptKey(key, config);
+        if (errCode == E_OK) {
+            config.RestoreEncryptKey(key);
+            break;
+        }
     }
-    key.assign(key.size(), 0);
+    for (auto key : keys) {
+        key.assign(key.size(), 0);
+    }
     return errCode;
 }
 

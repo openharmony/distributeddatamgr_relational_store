@@ -544,7 +544,7 @@ int32_t RdbServiceProxy::Enable(const RdbSyncerParam &param)
     return status;
 }
 
-int32_t RdbServiceProxy::GetPassword(const RdbSyncerParam &param, std::vector<uint8_t> &key)
+int32_t RdbServiceProxy::GetPassword(const RdbSyncerParam &param, std::vector<std::vector<uint8_t>> &key)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_PASSWORD), reply, param);
