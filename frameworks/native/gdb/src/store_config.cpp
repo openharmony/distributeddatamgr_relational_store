@@ -60,7 +60,8 @@ bool StoreConfig::IsEncrypt() const
 
 std::string StoreConfig::GetJson() const
 {
-    return "{\"pageSize\":" + std::to_string(pageSize_) + "}";
+    return "{\"pageSize\":" + std::to_string(pageSize_) +
+        ", \"defaultIsolationLevel\":" + std::to_string(defaultIsolationLevel_) + "}";
 }
 
 std::string StoreConfig::GetFullPath() const

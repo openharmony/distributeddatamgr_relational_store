@@ -24,6 +24,12 @@ namespace OHOS {
 namespace GraphStoreJsKit {
 using namespace OHOS::DistributedDataAip;
 struct GdbStoreContextBase : public ContextBase {
+    std::shared_ptr<DBStore> StealGdbStore()
+    {
+        auto gdb = std::move(gdbStore);
+        gdbStore = nullptr;
+        return gdb;
+    }
     std::shared_ptr<DBStore> gdbStore = nullptr;
 };
 
@@ -64,6 +70,10 @@ struct GdbStoreContext : public GdbStoreContextBase {
     virtual ~GdbStoreContext()
     {
     }
+};
+
+struct CreateTransactionContext : public GdbStoreContextBase {
+    std::shared_ptr<Transaction> transaction;
 };
 } // namespace GraphStoreJsKit
 } // namespace OHOS

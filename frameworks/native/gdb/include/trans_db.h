@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,38 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_IMPL_H
-#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_DB_STORE_IMPL_H
-
-#include <mutex>
-#include <variant>
+#ifndef ARKDATA_INTELLIGENCE_PLATFORM_TRANS_DB_H
+#define ARKDATA_INTELLIGENCE_PLATFORM_TRANS_DB_H
+#include <memory>
 
 #include "connection.h"
-#include "connection_pool.h"
 #include "gdb_store.h"
-#include "gdb_store_config.h"
-#include "transaction.h"
-
+#include "graph_statement.h"
 namespace OHOS::DistributedDataAip {
-class DBStoreImpl final : public DBStore {
+class TransDB : public DBStore {
 public:
-    explicit DBStoreImpl(StoreConfig config);
-    ~DBStoreImpl();
+    TransDB(std::shared_ptr<Connection> connection);
     std::pair<int32_t, std::shared_ptr<Result>> QueryGql(const std::string &gql) override;
     std::pair<int32_t, std::shared_ptr<Result>> ExecuteGql(const std::string &gql) override;
+
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction() override;
     int32_t Close() override;
-    int32_t InitConn();
 
 private:
-    std::shared_ptr<ConnectionPool> GetConnectionPool();
-    void SetConnectionPool(std::shared_ptr<ConnectionPool> connectionPool);
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &gql) const;
 
-    std::mutex mutex_;
-    std::mutex transMutex_;
-    StoreConfig config_;
-    std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
-    std::list<std::weak_ptr<Transaction>> transactions_;
+    std::weak_ptr<Connection> conn_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif
+#endif // ARKDATA_INTELLIGENCE_PLATFORM_TRANS_DB_H

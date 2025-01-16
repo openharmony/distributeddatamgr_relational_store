@@ -1896,13 +1896,13 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_FullResult, TestSize.Level1)
 {
     auto fullResult = std::make_shared<FullResult>();
     EXPECT_NE(fullResult, nullptr);
-    auto errCode = fullResult->InitData();
+    auto errCode = fullResult->InitData(nullptr);
     EXPECT_EQ(errCode, E_STATEMENT_EMPTY);
-    auto statement = std::make_shared<GraphStatement>(nullptr, "", nullptr, errCode);
-    fullResult = std::make_shared<FullResult>(statement);
+    fullResult = std::make_shared<FullResult>();
     EXPECT_NE(fullResult, nullptr);
-    errCode = fullResult->InitData();
-    EXPECT_EQ(errCode, E_OK);
+    auto statement = std::make_shared<GraphStatement>(nullptr, "", nullptr, errCode);
+    errCode = fullResult->InitData(statement);
+    EXPECT_EQ(errCode, E_STEP_CHECK_FAILED);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_EdgeTest, TestSize.Level1)
