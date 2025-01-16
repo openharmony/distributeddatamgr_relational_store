@@ -711,8 +711,9 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
-        return errCode;
+        LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
+        // errno: 28 No space left on device
+        return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
 
     if (config.GetJournalMode().compare(static_cast<std::string>(object)) == 0) {
