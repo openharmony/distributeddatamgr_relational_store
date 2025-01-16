@@ -1034,6 +1034,70 @@ int OH_Rdb_CreateTransaction(OH_Rdb_Store *store, const OH_RDB_TransOptions *opt
     return ConvertorErrorCode::NativeToNdk(ret);
 }
 
+int OH_Rdb_ExecuteV2(OH_Rdb_Store *store, const char *sql, const OH_Data_Values *args, OH_Data_Value **result)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || sql == nullptr || (args != nullptr && !args->IsValid())) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<ValueObject> datas;
+    if (args != nullptr) {
+        for (auto arg : args->values_) {
+            if (!arg.IsValid()) {
+                return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+            }
+            datas.push_back(arg.value_);
+        }
+    }
+    auto innerStore = rdbStore->GetStore();
+    if (innerStore == nullptr) {
+        LOG_ERROR("store is nullptr");
+        return OH_Rdb_ErrCode::RDB_E_ALREADY_CLOSED;
+    }
+    auto [errCode, valueObj] = innerStore->Execute(sql, datas);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("execute fail, errCode=%{public}d", errCode);
+        return ConvertorErrorCode::GetInterfaceCode(errCode);
+    }
+    if (result != nullptr) {
+        OH_Data_Value *value = OH_Value_Create();
+        if (value == nullptr) {
+            return RDB_E_ERROR;
+        }
+        value->value_ = valueObj;
+        *result = value;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+OH_Cursor *OH_Rdb_ExecuteQueryV2(OH_Rdb_Store *store, const char *sql, const OH_Data_Values *args)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || sql == nullptr || (args != nullptr && !args->IsValid())) {
+        return nullptr;
+    }
+    std::vector<ValueObject> datas;
+    if (args != nullptr) {
+        for (auto arg : args->values_) {
+            if (!arg.IsValid()) {
+                LOG_ERROR("args is invalid");
+                return nullptr;
+            }
+            datas.push_back(arg.value_);
+        }
+    }
+    auto innerStore = rdbStore->GetStore();
+    if (innerStore == nullptr) {
+        LOG_ERROR("store is nullptr");
+        return nullptr;
+    }
+    auto resultSet = innerStore->QueryByStep(sql, datas);
+    if (resultSet == nullptr) {
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalCursor(std::move(resultSet));
+}
+
 NDKDetailProgressObserver::NDKDetailProgressObserver(const Rdb_ProgressObserver *callback) : callback_(callback)
 {
 }
