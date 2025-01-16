@@ -1397,13 +1397,13 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         return result;
     }
 
-    RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         return result;
     }
     conn = connection;
     if (isWrite && config.GetHaMode() != HAMode::SINGLE) {
+        RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
         auto [err, slaveConn] = connection->CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
         if (err == E_OK) {
             conn->slaveConnection_ = slaveConn;
