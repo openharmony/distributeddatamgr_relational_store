@@ -16,10 +16,10 @@
 #define LOG_TAG "RdbGqlUtils"
 #include "gdb_utils.h"
 
+#include <algorithm>
+#include <securec.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#include <algorithm>
 
 #include "aip_errors.h"
 
@@ -133,5 +133,43 @@ std::string GdbUtils::AnonyDigits(const std::string &fileName)
     }
 
     return "***" + last;
+}
+
+void GdbUtils::ClearAndZeroString(std::string &str)
+{
+    str.clear();
+    std::fill(str.begin(), str.end(), char(0));
+}
+
+std::string GdbUtils::GetConfigStr(const std::vector<uint8_t> &keys, bool isEncrypt)
+{
+    std::string config = "{";
+    if (isEncrypt) {
+        const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
+        std::vector<char> keyBuff(keyBuffSize);
+        config += "\"isEncrypted\":1,";
+        config += "\"hexPassword\":\"";
+        config += GetEncryptKey(keys, keyBuff.data(), keyBuffSize);
+        config += "\",";
+        keyBuff.assign(keyBuffSize, 0);
+    }
+    config += GRD_OPEN_CONFIG_STR;
+    config += "}";
+    return config;
+}
+
+const char *GdbUtils::GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize)
+{
+    char *buffer = nullptr;
+    auto keySize = encryptedKey.size();
+    for (size_t i = 0; i < keySize; i++) {
+        buffer = (char *)(outBuff + i * 2); // each uint8_t will convert to 2 hex char
+        // each uint8_t will convert to 2 hex char
+        errno_t err = snprintf_s(buffer, outBufSize - i * 2, outBufSize - i * 2, "%02x", encryptedKey[i]);
+        if (err < 0) {
+            return nullptr;
+        }
+    }
+    return outBuff;
 }
 } // namespace OHOS::DistributedDataAip

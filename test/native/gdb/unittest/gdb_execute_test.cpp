@@ -18,13 +18,19 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 
 #include "aip_errors.h"
+#include "db_store_impl.h"
 #include "edge.h"
+#include "grd_adapter.h"
+#include "grd_adapter_manager.h"
 #include "gdb_helper.h"
 #include "gdb_store.h"
-#include "grd_adapter_manager.h"
+#include "gdb_utils.h"
+#include "graph_statement.h"
+#include "graph_connection.h"
 #include "path.h"
 #include "result.h"
 #include "vertex.h"
@@ -137,6 +143,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreVector, TestSize.Level1)
@@ -149,6 +156,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreVector, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreButt, TestSize.Level1)
@@ -161,6 +169,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreButt, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSize, TestSize.Level1)
@@ -174,6 +183,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSize, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSizeMax, TestSize.Level1)
@@ -187,6 +197,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStoreReadConSizeMax, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_EQ(store, nullptr);
     EXPECT_EQ(errCode, E_ARGS_READ_CON_OVERLOAD);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_NameHasdbSuffix, TestSize.Level1)
@@ -295,6 +306,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_OK, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_OK_PathRepeat, TestSize.Level1)
@@ -307,6 +319,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_OK_PathRepeat, TestSize.Level1)
     auto store = GDBHelper::GetDBStore(config, errCode);
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(config);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_LongName, TestSize.Level1)
@@ -538,6 +551,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterClose, TestSize.Level1)
     ASSERT_EQ(result.first, E_OK);
     ASSERT_NE(result.second, nullptr);
     EXPECT_EQ(result.second->GetAllData().size(), 1);
+    GDBHelper::DeleteDBStore(config);
 }
 
 /**
@@ -568,6 +582,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_GetDBStore_AfterDrop, TestSize.Level1)
     result = store_->ExecuteGql(createGraphGql);
     EXPECT_NE(result.second, nullptr);
     EXPECT_EQ(result.first, E_OK);
+    GDBHelper::DeleteDBStore(config);
 }
 
 /**
@@ -1213,7 +1228,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
         "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
@@ -1225,7 +1240,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
         "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
@@ -1237,7 +1252,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
         "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":\"B\",\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":\"B\",\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
@@ -1249,7 +1264,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
         "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
@@ -1269,9 +1284,695 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment03, TestSize.Level1)
         "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
         "\"end\":{\"identity\":\"A\",\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
-        "\"relationship\":{\"label\":\"鐩寸郴浜插睘\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
     json = nlohmann::json::parse(jsonStr, nullptr, false);
     PathSegment::Parse(json, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+    
+    jsonStr = "{\"start\" : 1, \"end\" : {}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    jsonStr = "{\"start\" : {}, \"relationship\" : 1}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    jsonStr = "{\"start\" : {}, \"relationship\" : {}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    jsonStr = "{\"start\" : {}, \"relationship\" : {}, \"end\" : 1}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    jsonStr = "{\"start\" : {}, \"relationship\" : {}, \"end\" : {}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment04, TestSize.Level1)
+{
+    int errCode = E_ERROR;
+    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    // identity:A, E_OK
+    std::string jsonStr =
+        "{\"start\":{\"label\":\"PERSON\",\"identity\":{},\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    std::shared_ptr<Vertex> sourceVertex;
+    std::shared_ptr<Vertex> targetVertex;
+    std::shared_ptr<Edge> edge;
+    auto paths = std::make_shared<PathSegment>(sourceVertex, targetVertex, edge);
+    EXPECT_NE(paths, nullptr);
+    EXPECT_EQ(sourceVertex, paths->GetSourceVertex());
+    EXPECT_EQ(edge, paths->GetEdge());
+    EXPECT_EQ(targetVertex, paths->GetTargetVertex());
+    jsonStr =
+        "{\"start\":{\"label\":\"PERSON\",\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    PathSegment::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path01, TestSize.Level1)
+{
+    std::shared_ptr<Vertex> start = std::make_shared<Vertex>();
+    std::shared_ptr<Vertex> end = std::make_shared<Vertex>();
+    auto path = std::make_shared<Path>();
+    path = std::make_shared<Path>(start, end);
+    EXPECT_NE(path, nullptr);
+    path->SetPathLength(1);
+    EXPECT_EQ(1, path->GetPathLength());
+    path->SetStart(std::make_shared<Vertex>("1", "HAHA"));
+    EXPECT_EQ("1", path->GetStart()->GetId());
+    EXPECT_EQ("HAHA", path->GetStart()->GetLabel());
+    auto labels = path->GetStart()->GetLabels();
+    EXPECT_EQ(1, labels.size());
+
+    path->SetEnd(std::make_shared<Vertex>("2", "HAHA2"));
+    EXPECT_EQ("2", path->GetEnd()->GetId());
+    EXPECT_EQ("HAHA2", path->GetEnd()->GetLabel());
+    auto segment = path->GetSegments();
+    EXPECT_EQ(segment.size(), 0);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path02, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    int errCode = E_ERROR;
+    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
+    Path::Parse(json, errCode);
+    // no length
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    // identity:A, E_OK
+    std::string jsonStr =
+        "{\"length\": 1,\"start\":{\"label\":\"PERSON\",\"identity\":3,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\"}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{\"start\":{\"label\":\"PERSON\","
+        "\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}}}]}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Path::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+
+    // label:2, E_PARSE_JSON_FAILED
+    jsonStr =
+        "{\"length\": 1,\"start\":{\"label\":2,\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{}]}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Path::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path03, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    int errCode = E_ERROR;
+    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
+    Path::Parse(json, errCode);
+    // no length
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    // relationship->start:B, E_OK
+    auto jsonStr =
+        "{\"length\": 1,\"start\":{\"label\":\"PERSON\",\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":\"B\",\"end\":2,\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{}]}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Path::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    // relationship->end:C, E_OK
+    jsonStr =
+        "{\"length\": 1,\"start\":{\"label\":\"PERSON\",\"identity\":1,\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{\"start\":{\"label\":\"PERSON\",\"identity\":1,"
+        "\"properties\":{\"AGE\":32,\"SALARY\":75.35,"
+        "\"NAME\":\"Alice\",\"GENDER\":\"Female\",\"PHONENUMBERS\":false,\"EMAILS\":null}},"
+        "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
+        "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
+        "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
+        "\"PINYIN\":\"zhixiqinshu\"}}}]}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Path::Parse(json, errCode);
+    ASSERT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Vertex, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    int errCode = E_ERROR;
+    // no start, no end
+    nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
+    ASSERT_FALSE(json.is_discarded());
+    ASSERT_FALSE(json.is_null());
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    // no identity
+    std::string jsonStr = "{\"start\" : 1, \"end\" : 2}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    // ok
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    // start is AA
+    jsonStr = "{\"start\" : \"AA\", \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    // end is B
+    jsonStr = "{\"start\" : 1, \"end\" : \"B\", \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    // identity is C
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":\"C\","
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    // label is 222
+    jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":222,'identity':3,\"properties\":{\"NAME\":\"myCompany3\","
+              "\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+    // key4 is null
+    jsonStr =
+        "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":2,"
+        "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, "
+        "\"key4\": null}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Vertex::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Vertex02, TestSize.Level1)
+{
+    Vertex vertex;
+    Vertex vertex2("1", "PERSON");
+    ASSERT_EQ(vertex2.GetLabel(), "PERSON");
+    vertex2.SetLabel("PERSON1");
+    ASSERT_EQ(vertex2.GetLabel(), "PERSON1");
+    std::unordered_map<std::string, PropType> properties;
+    Vertex vertex3("1", "PERSON2", properties);
+    ASSERT_EQ(vertex3.GetLabel(), "PERSON2");
+    vertex3.SetLabel("PERSON3");
+    ASSERT_EQ(vertex3.GetLabel(), "PERSON3");
+}
+
+/**
+ * @tc.name: GdbStore_Execute_PathChange
+ * @tc.desc: test Path Change
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathChange, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
+    MatchAndVerifyPerson("name_1", 11);
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_2', age: 22});");
+    MatchAndVerifyPerson("name_2", 22);
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_3', age: 33});");
+    MatchAndVerifyPerson("name_3", 33);
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_4', age: 44});");
+    MatchAndVerifyPerson("name_4", 44);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_1'}), (p2:Person {name: 'name_2'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_1'}), (p2:Person {name: 'name_3'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_1'}), (p2:Person {name: 'name_4'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_2'}), (p2:Person {name: 'name_3'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_2'}), (p2:Person {name: 'name_4'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_3'}), (p2:Person {name: 'name_4'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+
+    result =
+        store_->QueryGql("MATCH path=(a:Person {name: 'name_1'})-[]->{0, 3}(b:Person) RETURN path;");
+    ASSERT_EQ(result.first, E_OK);
+    EXPECT_EQ(result.second->GetAllData().size(), 8);
+
+    GraphValue path = result.second->GetAllData()[0]["path"];
+    ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Path>>(path));
+}
+
+/**
+ * @tc.name: GdbStore_Execute_PathChangeRing
+ * @tc.desc: Querying a Trail with a Ring
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathChangeRing, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
+    MatchAndVerifyPerson("name_1", 11);
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_2', age: 22});");
+    MatchAndVerifyPerson("name_2", 22);
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_3', age: 33});");
+    MatchAndVerifyPerson("name_3", 33);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_1'}), (p2:Person {name: 'name_2'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_2'}), (p2:Person {name: 'name_3'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_3'}), (p2:Person {name: 'name_1'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+
+    result =
+        store_->QueryGql("MATCH path=(a:Person {name: 'name_1'})-[]->{0, 3}(b:Person) RETURN path;");
+    ASSERT_EQ(result.first, E_OK);
+    EXPECT_EQ(result.second->GetAllData().size(), 4);
+
+    GraphValue path = result.second->GetAllData()[0]["path"];
+    ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Path>>(path));
+}
+
+/**
+ * @tc.name: GdbStore_Execute_AllGraph
+ * @tc.desc: test All Graph
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_AllGraph, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    std::string name = "zhangsanfeng";
+    for (int32_t i = 0; i < 50; i++) {
+        auto nameInner = name + "_" + std::to_string(i);
+        auto result = store_->ExecuteGql("INSERT (:Person {name: '" + nameInner + "', age: 11});");
+        MatchAndVerifyPerson(nameInner, 11);
+        for (int32_t j = 0; j < 100; j++) {
+            auto nameOut = nameInner + "_" + std::to_string(j);
+            result = store_->ExecuteGql("INSERT (:Person {name: '" + nameOut + "', age: 22});");
+            MatchAndVerifyPerson(nameOut, 22);
+            result = store_->ExecuteGql(
+                "MATCH (p1:Person {name: '" + nameInner + "'}), (p2:Person {name: '" + nameOut + "'}) "
+                    "INSERT (p1)-[:Friend]->(p2);");
+            EXPECT_EQ(result.first, E_OK);
+        }
+    }
+    auto result =
+        store_->QueryGql("MATCH path=(a:Person)-[]->{0, 3}(b:Person) RETURN path;");
+    ASSERT_EQ(result.first, E_OK);
+    EXPECT_EQ(result.second->GetAllData().size(), 10050);
+    GraphValue path = result.second->GetAllData()[0]["path"];
+    ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Path>>(path));
+
+    auto gql = "MATCH (person:Person) RETURN person;";
+    result = store_->QueryGql(gql);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_NE(result.second, nullptr);
+    EXPECT_EQ(result.second->GetAllData().size(), 5050);
+}
+
+/**
+ * @tc.name: GdbStore_Execute_SelfPath
+ * @tc.desc: test Self Path
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_SelfPath, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_111', age: 11});");
+    MatchAndVerifyPerson("name_111", 11);
+
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_111'}), (p2:Person {name: 'name_111'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+
+    result = store_->QueryGql("MATCH path=(a:Person {name: 'name_111'})-[]->{0, 3}(b:Person) RETURN path;");
+    ASSERT_EQ(result.first, E_OK);
+    EXPECT_EQ(result.second->GetAllData().size(), 2);
+
+    GraphValue path = result.second->GetAllData()[0]["path"];
+    ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Path>>(path));
+}
+
+/**
+ * @tc.name: GdbStore_Execute_SelfPath
+ * @tc.desc: test Self Path
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_SelfPath02, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("INSERT (:Person {name: 'name_test_001', age: 11});");
+    MatchAndVerifyPerson("name_test_001", 11);
+
+    result = store_->ExecuteGql("INSERT (:Person {name: 'name_test_001', age: 11});");
+
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_test_001'}), (p2:Person {name: 'name_test_001'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+
+    result = store_->ExecuteGql(
+        "MATCH (p1:Person {name: 'name_test_001'}), (p2:Person {name: 'name_test_001'}) INSERT (p1)-[:Friend]->(p2);");
+    EXPECT_EQ(result.first, E_OK);
+
+    result =
+        store_->QueryGql("MATCH path=(a:Person {name: 'name_test_001'})-[]->{0, 3}(b:Person) RETURN path;");
+    ASSERT_EQ(result.first, E_OK);
+    EXPECT_EQ(result.second->GetAllData().size(), 126);
+
+    GraphValue path = result.second->GetAllData()[0]["path"];
+    ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Path>>(path));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetName, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = databasePath;
+    auto config = StoreConfig(dbName, dbPath);
+    config.SetName("success01_update");
+    EXPECT_EQ("success01_update", config.GetName());
+
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(StoreConfig("success01_update", databasePath));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetPath, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = "/test/test";
+    auto config = StoreConfig(dbName, dbPath);
+    config.SetPath(databasePath);
+    EXPECT_EQ(databasePath, config.GetPath());
+
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(StoreConfig(dbName, databasePath));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetDbType, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = databasePath;
+    auto config = StoreConfig(dbName, dbPath);
+    config.SetDbType(DBType::DB_GRAPH);
+    EXPECT_EQ(config.GetDbType(), DBType::DB_GRAPH);
+
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(StoreConfig(dbName, databasePath));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetEncryptStatus, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = databasePath;
+    auto config = StoreConfig(dbName, dbPath);
+    config.SetEncryptStatus(true);
+    ASSERT_TRUE(config.IsEncrypt());
+    config.SetEncryptStatus(false);
+    ASSERT_TRUE(!config.IsEncrypt());
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(StoreConfig(dbName, databasePath));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetReadTime, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = databasePath;
+    std::vector<uint8_t> encryptKey = std::vector<uint8_t>();
+    auto config = StoreConfig(dbName, dbPath, DBType::DB_GRAPH, true, encryptKey);
+    config = StoreConfig(dbName, dbPath, DBType::DB_GRAPH, false, encryptKey);
+    config.SetReadTime(3);
+    EXPECT_EQ(config.GetReadTime(), 3);
+
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(StoreConfig(dbName, databasePath));
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsTest, TestSize.Level1)
+{
+    int errCode = E_OK;
+    errCode = GdbUtils::CreateDirectory("");
+    EXPECT_EQ(errCode, E_OK);
+    errCode = GdbUtils::CreateDirectory("dir1");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+    GdbUtils::CreateDirectory("dir1/dir2");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+    GdbUtils::CreateDirectory("dir1/dir2/dir3");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+    GdbUtils::CreateDirectory("/dir1/dir2/dir3");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+    GdbUtils::CreateDirectory("/data/");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+    GdbUtils::CreateDirectory("/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2"
+    "/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2/data/dir1/dir2");
+    EXPECT_EQ(errCode, E_CREATE_FOLDER_FAIT);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsAnonymousTest, TestSize.Level1)
+{
+    GdbUtils::Anonymous("fileName");
+    GdbUtils::Anonymous("dir1/shortPath");
+    GdbUtils::Anonymous("dir1/el1/longPath");
+    GdbUtils::Anonymous("el1/l");
+    GdbUtils::Anonymous(
+        "dir1/el1/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath");
+    GdbUtils::Anonymous("/data/dir1/dir2/dir3");
+    GdbUtils::Anonymous("/data/el1/dir2");
+    GdbUtils::Anonymous("/data/app/el1/0/base/com.my.hmos.arkwebcore");
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsErrorTest, TestSize.Level1)
+{
+    auto errCode = GrdAdapter::TransErrno(100);
+    EXPECT_EQ(errCode, 100);
+    errCode = GrdAdapter::TransErrno(E_PARSE_JSON_FAILED);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    errCode = GrdAdapter::TransErrno(E_PARSE_JSON_FAILED);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    errCode = GrdAdapter::TransErrno(E_OK);
+    EXPECT_EQ(errCode, E_OK);
+
+    errCode = GrdAdapter::TransErrno(-100);
+    EXPECT_EQ(errCode, E_GRD_INNER_ERR);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StatementTest, TestSize.Level1)
+{
+    auto errCode = E_OK;
+    std::string gql = "INSERT (:Person {name: 'name_test_001', age: 11});";
+    GraphStatement statement(nullptr, "", nullptr, errCode);
+    EXPECT_EQ(errCode, E_PREPARE_CHECK_FAILED);
+
+    GRD_DB *dbHandle;
+    auto ret = std::make_shared<GraphStatement>(dbHandle, gql, nullptr, errCode);
+    EXPECT_NE(ret, nullptr);
+    errCode = ret->Prepare();
+    EXPECT_EQ(errCode, E_PREPARE_CHECK_FAILED);
+
+    errCode = ret->Step();
+    EXPECT_EQ(errCode, E_STEP_CHECK_FAILED);
+
+    errCode = ret->Finalize();
+    EXPECT_EQ(errCode, E_OK);
+
+    errCode = ret->GetColumnCount();
+    EXPECT_EQ(errCode, E_STATEMENT_EMPTY);
+
+    auto pair = ret->GetColumnName(0);
+    EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
+    pair = ret->GetColumnName(0);
+    EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
+    pair = ret->GetColumnName(3);
+    EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
+    pair = ret->GetColumnName(9);
+    EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
+
+    auto pair1 = ret->GetColumnValue(0);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
+    pair1 = ret->GetColumnValue(3);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
+    pair1 = ret->GetColumnValue(100);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
+
+    errCode = ret->IsReady();
+    EXPECT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StatementTest02, TestSize.Level1)
+{
+    auto errCode = E_OK;
+    std::string gql = "INSERT (:Person {name: 'name_test_001', age: 11});";
+
+    auto ret = std::make_shared<GraphStatement>(nullptr, gql, nullptr, errCode);
+    EXPECT_NE(ret, nullptr);
+    errCode = ret->Prepare();
+    EXPECT_EQ(errCode, E_PREPARE_CHECK_FAILED);
+
+    errCode = ret->Step();
+    EXPECT_EQ(errCode, E_STEP_CHECK_FAILED);
+
+    errCode = ret->Finalize();
+    EXPECT_EQ(errCode, E_OK);
+
+    errCode = ret->GetColumnCount();
+    EXPECT_EQ(errCode, E_STATEMENT_EMPTY);
+
+    auto pair = ret->GetColumnName(0);
+    EXPECT_EQ(pair.first, E_STATEMENT_EMPTY);
+
+    auto pair1 = ret->GetColumnValue(0);
+    EXPECT_EQ(pair1.first, E_STATEMENT_EMPTY);
+
+    errCode = ret->IsReady();
+    EXPECT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_FullResult, TestSize.Level1)
+{
+    auto fullResult = std::make_shared<FullResult>();
+    EXPECT_NE(fullResult, nullptr);
+    auto errCode = fullResult->InitData();
+    EXPECT_EQ(errCode, E_STATEMENT_EMPTY);
+    auto statement = std::make_shared<GraphStatement>(nullptr, "", nullptr, errCode);
+    fullResult = std::make_shared<FullResult>(statement);
+    EXPECT_NE(fullResult, nullptr);
+    errCode = fullResult->InitData();
+    EXPECT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_EdgeTest, TestSize.Level1)
+{
+    auto errCode = E_ERROR;
+    auto edge = std::make_shared<Edge>();
+    EXPECT_NE(edge, nullptr);
+    edge = std::make_shared<Edge>(std::make_shared<Vertex>(), "2", "3");
+    EXPECT_NE(edge, nullptr);
+    edge = std::make_shared<Edge>(nullptr, "2", "3");
+    EXPECT_NE(edge, nullptr);
+    edge = std::make_shared<Edge>("1", "PERSON", "2", "3");
+    EXPECT_NE(edge, nullptr);
+    edge->SetSourceId("22");
+    EXPECT_EQ("22", edge->GetSourceId());
+    edge->SetTargetId("33");
+    EXPECT_EQ("33", edge->GetTargetId());
+    
+    auto jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    nlohmann::json json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Edge::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_OK);
+
+    jsonStr = "{\"start\" : {}, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Edge::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+
+    jsonStr = "{\"start\" : 1, \"end\" : {}, \"label\":\"COMPANY\",\"identity\":3,"
+              "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
+    json = nlohmann::json::parse(jsonStr, nullptr, false);
+    Edge::Parse(json, errCode);
+    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_Connect, TestSize.Level1)
+{
+    auto errCode = E_ERROR;
+    errCode = Connection::RegisterCreator(DBType::DB_BUTT, nullptr);
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    errCode = Connection::RegisterCreator(static_cast<DBType>(-1), nullptr);
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    auto func = [](const StoreConfig& config, bool isWriter) {
+        std::pair<int32_t, std::shared_ptr<Connection>> ret = std::make_pair(
+            static_cast<int32_t>(DBType::DB_GRAPH), nullptr);
+        return ret;
+    };
+    errCode = Connection::RegisterCreator(DBType::DB_GRAPH, func);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_DBStore01, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "execute_test_ok_2";
+    std::string dbPath = "/data";
+    auto config = StoreConfig(dbName, dbPath);
+
+    auto store = std::make_shared<DBStoreImpl>(config);
+    EXPECT_NE(store, nullptr);
+    errCode = store->InitConn();
+    EXPECT_EQ(errCode, E_OK);
+    errCode = store->InitConn();
+    EXPECT_EQ(errCode, E_OK);
+    const std::string gql = "INSERT (:Person {name: 'name_1', age: 11});";
+    auto [err, result] = store->QueryGql(gql);
+    EXPECT_EQ(err, E_GRD_UNDEFINED_PARAM);
+    auto [err1, result1] = store->ExecuteGql(gql);
+    EXPECT_EQ(err1, E_GRD_UNDEFINED_PARAM);
+    GDBHelper::DeleteDBStore(config);
 }
