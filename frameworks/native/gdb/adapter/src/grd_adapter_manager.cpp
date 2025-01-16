@@ -26,7 +26,7 @@ void GrdAdapterHolderInit(GrdAdapterHolder &adapterHolder)
     adapterHolder.Repair = (Repair)dlsym(g_library, "GRD_DBRepair");
     adapterHolder.Backup = (Backup)dlsym(g_library, "GRD_DBBackup");
     adapterHolder.Restore = (Restore)dlsym(g_library, "GRD_DBRestore");
-    adapterHolder.ReKey = (ReKey)dlsym(g_library, "GRD_DBRekey");
+    adapterHolder.Rekey = (Rekey)dlsym(g_library, "GRD_DBRekey");
 
     adapterHolder.Prepare = (Prepare)dlsym(g_library, "GRD_GqlPrepare");
     adapterHolder.Reset = (Reset)dlsym(g_library, "GRD_GqlReset");

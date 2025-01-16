@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "rdb_store_config.h"
 #include "rdb_visibility.h"
 
 namespace OHOS::DistributedDataAip {
@@ -50,6 +51,7 @@ enum class DBType : int {
 class API_EXPORT StoreConfig {
 public:
     API_EXPORT StoreConfig() = default;
+    API_EXPORT ~StoreConfig();
     API_EXPORT StoreConfig(std::string name, std::string path, DBType dbType = DBType::DB_GRAPH, bool isEncrypt = false,
         const std::vector<uint8_t> &encryptKey = std::vector<uint8_t>());
     API_EXPORT void SetName(std::string name);
@@ -72,13 +74,21 @@ public:
     API_EXPORT void SetReadTime(int timeout);
     API_EXPORT int GetReadConSize() const;
     API_EXPORT void SetReadConSize(int readConSize);
+    API_EXPORT std::vector<uint8_t> GetEncryptKey() const;
+    API_EXPORT int SetBundleName(const std::string &bundleName);
+    API_EXPORT std::string GetBundleName() const;
+    void GenerateEncryptedKey() const;
+    std::vector<uint8_t> GetNewEncryptKey() const;
+    void ChangeEncryptKey() const;
 
 private:
     std::string name_;
     std::string path_;
+    std::string bundleName_;
     DBType dbType_ = DBType::DB_GRAPH;
     bool isEncrypt_ = false;
     mutable std::vector<uint8_t> encryptKey_{};
+    mutable std::vector<uint8_t> newEncryptKey_{};
     int32_t pageSize_ = 4;
     mutable int32_t iter_ = 0;
     int32_t writeTimeout_ = 2; // seconds
@@ -100,6 +110,7 @@ private:
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
+    void ClearEncryptKey();
 };
 } // namespace OHOS::DistributedDataAip
 #endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_STORE_CONFIG_H

@@ -16,11 +16,12 @@
 #include "connection_pool.h"
 
 #include <unistd.h>
-
 #include <utility>
 
 #include "aip_errors.h"
+#include "gdb_utils.h"
 #include "logger.h"
+#include "rdb_store_config.h"
 
 namespace OHOS::DistributedDataAip {
 using namespace std::chrono;
@@ -52,7 +53,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnectionPool::Init(bool isAtta
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result;
     auto &[errCode, conn] = result;
-
+    config_.GenerateEncryptedKey();
     // write connect count is 1
     std::shared_ptr<ConnectionPool::ConnNode> node;
     std::tie(errCode, node) = writers_.Initialize(
