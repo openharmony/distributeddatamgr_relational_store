@@ -411,6 +411,11 @@ static constexpr int E_CANCEL = (E_BASE + 0x49);
 static constexpr int E_INVALID_SECRET_KEY = (E_BASE + 0x4a);
 
 /**
+ * @brief No space left on device
+ */
+static constexpr int E_SQLITE_IOERR_FULL = (E_BASE + 0x4b);
+
+/**
  * @brief Do not use except relational_store
  */
 static constexpr int E_INNER_WARNING = (E_BASE + 0x4c);
