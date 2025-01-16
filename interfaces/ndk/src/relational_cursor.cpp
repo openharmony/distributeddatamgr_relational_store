@@ -403,5 +403,62 @@ int RelationalCursor::GetAssetsCount(int32_t columnIndex, uint32_t *count)
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
+int RelationalCursor::GetFloatVectorCount(int32_t columnIndex, size_t *length)
+{
+    if (length == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<float> result = {};
+    auto errCode = resultSet_->GetFloat32Array(columnIndex, result);
+    if (errCode != NativeRdb::E_OK) {
+        return ConvertorErrorCode::GetInterfaceCode(errCode);
+    }
+    *length = result.size();
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int RelationalCursor::GetFloatVector(int32_t columnIndex, float *val, size_t inLen, size_t *outLen)
+{
+    if (val == nullptr || inLen == 0 || outLen == nullptr || resultSet_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::vector<float> result = {};
+    auto errCode = resultSet_->GetFloat32Array(columnIndex, result);
+    if (errCode != NativeRdb::E_OK) {
+        return ConvertorErrorCode::GetInterfaceCode(errCode);
+    }
+    if (inLen < result.size()) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    *outLen = result.size();
+    errCode = memcpy_s(val, inLen * sizeof(float), result.data(), (*outLen) * sizeof(float));
+    if (errCode != EOK) {
+        LOG_ERROR("memcpy_s failed, errCode is %{public}d", errCode);
+        *outLen = 0;
+        return OH_Rdb_ErrCode::RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 } // namespace RdbNdk
 } // namespace OHOS
+
+using namespace OHOS::RdbNdk;
+using namespace OHOS::NativeRdb;
+int OH_Cursor_GetFloatVectorCount(OH_Cursor *cursor, int32_t columnIndex, size_t *length)
+{
+    auto self = RelationalCursor::GetSelf(cursor);
+    if (self == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return self->GetFloatVectorCount(columnIndex, length);
+}
+
+int OH_Cursor_GetFloatVector(OH_Cursor *cursor, int32_t columnIndex, float *val, size_t inLen, size_t *outLen)
+{
+    auto self = RelationalCursor::GetSelf(cursor);
+    if (self == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    return self->GetFloatVector(columnIndex, val, inLen, outLen);
+}
