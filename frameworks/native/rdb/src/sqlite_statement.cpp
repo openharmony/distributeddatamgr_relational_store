@@ -371,7 +371,9 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
     errCode = InnerStep();
     if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode, sql_.c_str(), errno);
-        return errCode;
+        auto db = sqlite3_db_handle(stmt_);
+        // errno: 28 No space left on device
+        return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
 
     if (slave_) {
