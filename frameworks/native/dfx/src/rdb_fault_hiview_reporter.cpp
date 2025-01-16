@@ -148,7 +148,7 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     eventInfo.bundleName = config.GetBundleName();
     eventInfo.moduleName = config.GetModuleName();
     eventInfo.storeType = config.GetDBType() == DB_SQLITE ? "RDB" : "VECTOR DB";
-    eventInfo.storeName = config.GetName();
+    eventInfo.storeName = SqliteUtils::Anonymous(config.GetName());
     eventInfo.securityLevel = static_cast<uint32_t>(config.GetSecurityLevel());
     eventInfo.pathArea = static_cast<uint32_t>(config.GetArea());
     eventInfo.encryptStatus = static_cast<uint32_t>(config.IsEncrypt());
@@ -159,7 +159,7 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     eventInfo.errorOccurTime = time(nullptr);
     eventInfo.debugInfos = Connection::Collect(config);
     SqliteGlobalConfig::GetDbPath(config, eventInfo.path);
-    if (collector_ != nullptr) {
+    if (collector_ != nullptr && !IsReportCorruptedFault(eventInfo.path)) {
         Update(eventInfo.debugInfos, collector_(config));
     }
     return eventInfo;

@@ -104,6 +104,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     struct DeleteContext : public ContextBase {
         ContextParam param;
         RdbConfig config;
+        bool onlyPath = false;
     };
     auto context = std::make_shared<DeleteContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
@@ -112,6 +113,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal context."));
 
         if (IsNapiString(env, argv[1])) {
+            context->onlyPath = true;
             errCode = Convert2Value(env, argv[1], context->config.name);
             CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal path."));
         } else {
@@ -127,7 +129,15 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         // If the API version is greater than or equal to 16, close the connection.
-        return RdbHelper::DeleteRdbStore(context->config.path, JSUtils::GetHapVersion() >= 16);
+        RdbStoreConfig storeConfig = GetRdbStoreConfig(context->config, context->param);
+        if (context->onlyPath) {
+            storeConfig.SetDBType(DB_SQLITE);
+            int errCodeSqlite = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
+            storeConfig.SetDBType(DB_VECTOR);
+            int errCodeVector = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
+            return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
+        }
+        return RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, OK, &result);
