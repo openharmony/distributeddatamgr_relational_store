@@ -34,14 +34,12 @@ class Statement;
 class FullResult final : public Result {
 public:
     FullResult() = default;
-    explicit FullResult(std::shared_ptr<Statement> statement);
     std::vector<std::unordered_map<std::string, GraphValue>> GetAllData() const override;
-    int32_t InitData();
+    int32_t InitData(std::shared_ptr<Statement> stmt);
 
 private:
-    std::pair<int32_t, std::unordered_map<std::string, GraphValue>> FetchOne();
+    std::pair<int32_t, std::unordered_map<std::string, GraphValue>> GetRow(std::shared_ptr<Statement> stmt);
     std::vector<std::unordered_map<std::string, GraphValue>> data_;
-    std::shared_ptr<Statement> stmt_;
 };
 } // namespace OHOS::DistributedDataAip
 #endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_FULLRESULT_H

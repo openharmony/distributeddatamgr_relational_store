@@ -16,6 +16,7 @@
 #include "napi_gdb_const_properties.h"
 #include "napi_gdb_store.h"
 #include "napi_gdb_store_helper.h"
+#include "napi_gdb_transaction.h"
 
 using namespace OHOS::GraphStoreJsKit;
 
@@ -27,6 +28,7 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     InitGdbHelper(env, exports);
     GdbStoreProxy::Init(env, exports);
+    GdbTransactionProxy::Init(env, exports);
     InitConstProperties(env, exports);
     return exports;
 }

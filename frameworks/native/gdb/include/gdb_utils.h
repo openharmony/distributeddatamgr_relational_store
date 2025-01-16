@@ -20,6 +20,7 @@
 namespace OHOS::DistributedDataAip {
 class GdbUtils {
 public:
+    static bool IsTransactionGql(const std::string &gql);
     static int CreateDirectory(const std::string &databaseDir);
     static std::string Anonymous(const std::string &srcFile);
     static void ClearAndZeroString(std::string &str);

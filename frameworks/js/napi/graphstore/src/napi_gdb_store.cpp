@@ -25,6 +25,7 @@
 #include "napi_gdb_context.h"
 #include "napi_gdb_error.h"
 #include "napi_gdb_js_utils.h"
+#include "napi_gdb_transaction.h"
 
 namespace OHOS::GraphStoreJsKit {
 
@@ -64,6 +65,7 @@ Descriptor GdbStoreProxy::GetDescriptors()
         std::vector<napi_property_descriptor> properties = {
             DECLARE_NAPI_FUNCTION("read", Read),
             DECLARE_NAPI_FUNCTION("write", Write),
+            DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
             DECLARE_NAPI_FUNCTION("close", Close),
         };
         return properties;
@@ -169,7 +171,7 @@ GdbStoreProxy *GetNativeInstance(napi_env env, napi_value self)
     return proxy;
 }
 
-int ParseThis(const napi_env &env, const napi_value &self, const std::shared_ptr<GdbStoreContext> &context)
+int ParseThis(const napi_env &env, const napi_value &self, const std::shared_ptr<GdbStoreContextBase> &context)
 {
     GdbStoreProxy *obj = GetNativeInstance(env, self);
     CHECK_RETURN_SET(obj != nullptr, std::make_shared<ParamError>("GdbStore", "not nullptr."));
@@ -198,8 +200,7 @@ napi_value GdbStoreProxy::Read(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->gdbStore != nullptr);
-        auto gdbStore = std::move(context->gdbStore);
-        auto queryResult = gdbStore->QueryGql(context->gql);
+        auto queryResult = context->StealGdbStore()->QueryGql(context->gql);
         context->result = queryResult.second;
         context->intOutput = queryResult.first;
         return OK;
@@ -223,8 +224,7 @@ napi_value GdbStoreProxy::Write(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->gdbStore != nullptr);
-        auto gdbStore = std::move(context->gdbStore);
-        auto executeResult = gdbStore->ExecuteGql(context->gql);
+        auto executeResult = context->StealGdbStore()->ExecuteGql(context->gql);
         context->result = executeResult.second;
         context->intOutput = executeResult.first;
         return OK;
@@ -232,6 +232,32 @@ napi_value GdbStoreProxy::Write(napi_env env, napi_callback_info info)
     auto output = [context](napi_env env, napi_value &result) {
         result = AppDataMgrJsKit::JSUtils::Convert2JSValue(env, context->result);
         CHECK_RETURN_SET_E(context->intOutput == OK, std::make_shared<InnerError>(context->intOutput));
+    };
+    context->SetAction(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value GdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<CreateTransactionContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 0, std::make_shared<ParamNumError>(" 0 "));
+        CHECK_RETURN(OK == ParseThis(env, self, context));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->gdbStore != nullptr);
+        int32_t code = E_ERROR;
+        std::tie(code, context->transaction) = context->StealGdbStore()->CreateTransaction();
+        if (code != E_OK) {
+            context->transaction = nullptr;
+            return code;
+        }
+        return context->transaction != nullptr ? OK : E_ERROR;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = GdbTransactionProxy::NewInstance(env, context->transaction);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_INNER_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);

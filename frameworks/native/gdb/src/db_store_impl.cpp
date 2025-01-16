@@ -20,8 +20,14 @@
 #include "aip_errors.h"
 #include "connection.h"
 #include "logger.h"
+#include "gdb_utils.h"
+#include "transaction.h"
+#include "transaction_impl.h"
 
 namespace OHOS::DistributedDataAip {
+
+constexpr int32_t MAX_GQL_LEN = 1024 * 1024;
+
 DBStoreImpl::DBStoreImpl(StoreConfig config) : config_(std::move(config))
 {
 }
@@ -32,19 +38,31 @@ DBStoreImpl::~DBStoreImpl()
     Close();
 }
 
+std::shared_ptr<ConnectionPool> DBStoreImpl::GetConnectionPool()
+{
+    std::lock_guard lock(mutex_);
+    return connectionPool_;
+}
+
+void DBStoreImpl::SetConnectionPool(std::shared_ptr<ConnectionPool> connectionPool)
+{
+    std::lock_guard lock(mutex_);
+    connectionPool_ = connectionPool;
+}
+
 int32_t DBStoreImpl::InitConn()
 {
-    if (connectionPool_ != nullptr) {
-        LOG_ERROR("DBStoreImpl::InitConn connectionPool_ is not nullptr");
+    if (GetConnectionPool() != nullptr) {
+        LOG_INFO("connectionPool_ is not nullptr");
         return E_OK;
     }
     int errCode;
-    connectionPool_ = ConnectionPool::Create(config_, errCode);
-    if (errCode != E_OK || connectionPool_ == nullptr) {
-        connectionPool_ = nullptr;
+    auto connectionPool = ConnectionPool::Create(config_, errCode);
+    if (errCode != E_OK || connectionPool == nullptr) {
         LOG_ERROR("Create conn failed, ret=%{public}d", errCode);
         return errCode;
     }
+    SetConnectionPool(connectionPool);
     return E_OK;
 }
 
@@ -54,26 +72,31 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, nullptr };
     }
-    if (connectionPool_ == nullptr) {
+    if (GdbUtils::IsTransactionGql(gql)) {
+        LOG_ERROR("Transaction related statements are not supported.");
+        return { E_INVALID_ARGS, nullptr };
+    }
+    auto connectionPool = GetConnectionPool();
+    if (connectionPool == nullptr) {
         LOG_ERROR("The connpool is nullptr.");
         return { E_STORE_HAS_CLOSED, std::make_shared<FullResult>() };
     }
-    auto conn = connectionPool_->AcquireRef(true);
+    auto conn = connectionPool->AcquireRef(true);
     if (conn == nullptr) {
         LOG_ERROR("Get conn failed");
         return { E_ACQUIRE_CONN_FAILED, std::make_shared<FullResult>() };
     }
-    auto [ret2, stmt] = conn->CreateStatement(gql, conn);
-    if (ret2 != E_OK || stmt == nullptr) {
-        LOG_ERROR("Create stmt failed, ret=%{public}d", ret2);
-        return { ret2, std::make_shared<FullResult>() };
+    auto [ret, stmt] = conn->CreateStatement(gql, conn);
+    if (ret != E_OK || stmt == nullptr) {
+        LOG_ERROR("Create stmt failed, ret=%{public}d", ret);
+        return { ret, std::make_shared<FullResult>() };
     }
 
-    auto result = std::make_shared<FullResult>(stmt);
-    auto ret3 = result->InitData();
-    if (ret3 != E_OK) {
-        LOG_ERROR("Get FullResult failed, ret=%{public}d", ret3);
-        return { ret3, std::make_shared<FullResult>() };
+    auto result = std::make_shared<FullResult>();
+    ret = result->InitData(stmt);
+    if (ret != E_OK) {
+        LOG_ERROR("Get FullResult failed, ret=%{public}d", ret);
+        return { ret, std::make_shared<FullResult>() };
     }
 
     return { E_OK, result };
@@ -85,11 +108,16 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::ExecuteGql(const std::s
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, std::make_shared<FullResult>() };
     }
-    if (connectionPool_ == nullptr) {
+    if (GdbUtils::IsTransactionGql(gql)) {
+        LOG_ERROR("Transaction related statements are not supported.");
+        return { E_INVALID_ARGS, std::make_shared<FullResult>() };
+    }
+    auto connectionPool = GetConnectionPool();
+    if (connectionPool == nullptr) {
         LOG_ERROR("The connpool is nullptr.");
         return { E_STORE_HAS_CLOSED, std::make_shared<FullResult>() };
     }
-    auto conn = connectionPool_->AcquireRef(false);
+    auto conn = connectionPool->AcquireRef(false);
     if (conn == nullptr) {
         LOG_ERROR("Get conn failed");
         return { E_ACQUIRE_CONN_FAILED, std::make_shared<FullResult>() };
@@ -99,16 +127,56 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::ExecuteGql(const std::s
         LOG_ERROR("Create stmt failed, ret=%{public}d", ret);
         return { ret, std::make_shared<FullResult>() };
     }
-    auto ret1 = stmt->Step();
-    if (ret1 != E_OK) {
-        LOG_ERROR("Step stmt failed, ret=%{public}d", ret1);
+    ret = stmt->Step();
+    if (ret != E_OK) {
+        LOG_ERROR("Step stmt failed, ret=%{public}d", ret);
     }
-    return { ret1, std::make_shared<FullResult>() };
+    return { ret, std::make_shared<FullResult>() };
+}
+
+std::pair<int32_t, std::shared_ptr<Transaction>> DBStoreImpl::CreateTransaction()
+{
+    auto connectionPool = GetConnectionPool();
+    if (connectionPool == nullptr) {
+        LOG_ERROR("The connpool is nullptr.");
+        return { E_STORE_HAS_CLOSED, nullptr };
+    }
+    auto [ret, conn] = connectionPool->CreateTransConn();
+    if (ret != E_OK || conn == nullptr) {
+        LOG_ERROR("Get conn failed");
+        return { ret, nullptr };
+    }
+    std::shared_ptr<Transaction> trans;
+    std::tie(ret, trans) = TransactionImpl::Create(conn);
+    if (ret != E_OK || trans == nullptr) {
+        LOG_ERROR("Create trans failed, ret=%{public}d", ret);
+        return { ret, nullptr };
+    }
+
+    std::lock_guard lock(transMutex_);
+    for (auto it = transactions_.begin(); it != transactions_.end();) {
+        if (it->expired()) {
+            it = transactions_.erase(it);
+        } else {
+            it++;
+        }
+    }
+    transactions_.push_back(trans);
+    return { ret, trans };
 }
 
 int32_t DBStoreImpl::Close()
 {
-    connectionPool_ = nullptr;
+    SetConnectionPool(nullptr);
+
+    std::lock_guard lock(transMutex_);
+    for (auto &trans : transactions_) {
+        auto realTrans = trans.lock();
+        if (realTrans) {
+            (void)realTrans->Close();
+        }
+    }
+    transactions_ = {};
     return E_OK;
 }
 } // namespace OHOS::DistributedDataAip
