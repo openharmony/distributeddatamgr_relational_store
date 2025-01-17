@@ -45,6 +45,7 @@ typedef struct GRD_ThreadPool {
 // check data in database when open database, if data is corrupted, rebuild the database.
 #define GRD_DB_OPEN_CHECK 0x04
 #define GRD_DB_OPEN_SHARED_READ_ONLY 0x08
+#define GRD_DB_OPEN_IGNORE_DATA_CORRPUPTION 0X10 // open database for ignore the meta data corruption
 
 /**
  * @brief Close database config
