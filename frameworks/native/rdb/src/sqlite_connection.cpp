@@ -625,7 +625,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
             if (errCode != E_OK) {
                 Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
                     "LOG:new key SetEncryptKey errcode= "+ std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter())));
+                    ",iter=" + std::to_string(config.GetIter()), true));
             }
         }
         newKey.assign(newKey.size(), 0);
@@ -637,7 +637,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
                 bool sameKey = (key == config.GetEncryptKey()) || (newKey == config.GetEncryptKey());
                 Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
                     "LOG:service key SetEncryptKey errcode=" + std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey)));
+                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey), true));
             }
             return errCode;
         }
