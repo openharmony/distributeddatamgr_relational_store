@@ -23,6 +23,7 @@
 
 #include "aip_errors.h"
 #include "db_store_manager.h"
+#include "gdb_helper.h"
 #include "grd_adapter.h"
 #include "grd_adapter_manager.h"
 #include "grd_error.h"
@@ -88,6 +89,7 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
     std::string createGql = "CREATE GRAPH test {(person:Person {name STRING} )};";
     std::string dbPath = "/data/test.db";
     std::string backupPath = "/data/testBackup.db";
+    GDBHelper::DeleteDBStore({"test", "/data"});
     if (g_library != nullptr) {
         dlclose(g_library);
     }
@@ -124,7 +126,8 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
         dlclose(g_library);
     }
     ret = GrdAdapter::Rekey(dbPath.c_str(), "", std::vector<uint8_t>());
-    EXPECT_EQ(ret, E_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_GRD_INVALID_ARGS);
+    GDBHelper::DeleteDBStore({"test", "/data"});
 }
 
 HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
@@ -132,6 +135,7 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
     std::string createGql = "CREATE GRAPH test {(person:Person {name STRING} )};";
     std::string dbPath = "/data/test.db";
     std::string backupPath = "/data/testBackup.db";
+    GDBHelper::DeleteDBStore({"test", "/data"});
     GRD_DB *db = nullptr;
     if (g_library != nullptr) {
         dlclose(g_library);
@@ -179,4 +183,5 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
     EXPECT_EQ(ret, 1);
     ret = StoreManager::GetInstance().Delete(backupPath);
     EXPECT_EQ(ret, 1);
+    GDBHelper::DeleteDBStore({"test", "/data"});
 }

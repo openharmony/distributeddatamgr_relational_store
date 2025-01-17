@@ -31,6 +31,7 @@ ohos_shared_library("framework_graphstore") {
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/gdb/include",
+    "${relational_store_native_path}/rdb/include",
     "${relational_store_innerapi_path}/gdb/include",
     "${relational_store_innerapi_path}/rdb/include",
   ]
@@ -51,6 +52,11 @@ ohos_shared_library("framework_graphstore") {
     "${relational_store_native_path}/gdb/src/path_segment.cpp",
     "${relational_store_native_path}/gdb/src/store_config.cpp",
     "${relational_store_native_path}/gdb/src/vertex.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
   ]
   deps = []
   external_deps = [
@@ -59,6 +65,7 @@ ohos_shared_library("framework_graphstore") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "huks:libhukssdk",
     "json:nlohmann_json_static",
   ]
   if (arkdata_db_core_is_exists) {

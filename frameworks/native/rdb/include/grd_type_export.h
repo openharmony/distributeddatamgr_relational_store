@@ -28,6 +28,12 @@ extern "C" {
 
 typedef struct GRD_DB GRD_DB;
 typedef struct GRD_SqlStmt GRD_SqlStmt;
+typedef struct GRD_Stmt GRD_StmtT;
+
+typedef void (*GRD_ScheduleFunc)(void *func, void *param);
+typedef struct GRD_ThreadPool {
+    GRD_ScheduleFunc schedule;
+} GRD_ThreadPoolT;
 
 /**
  * @brief Open database config
@@ -53,6 +59,7 @@ typedef enum {
     GRD_DB_DATATYPE_TEXT,
     GRD_DB_DATATYPE_BLOB,
     GRD_DB_DATATYPE_FLOATVECTOR,
+    GRD_DB_DATATYPE_JSONSTR,
     GRD_DB_DATATYPE_NULL,
 } GRD_DbDataTypeE;
 

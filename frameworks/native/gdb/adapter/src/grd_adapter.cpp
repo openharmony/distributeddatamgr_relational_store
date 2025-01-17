@@ -20,6 +20,7 @@
 #include <map>
 
 #include "aip_errors.h"
+#include "gdb_utils.h"
 #include "grd_adapter_manager.h"
 #include "grd_error.h"
 #include "logger.h"
@@ -219,13 +220,23 @@ int GrdAdapter::Restore(const char *dbFile, const char *backupDbFile, const std:
 
 int GrdAdapter::Rekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey)
 {
-    if (g_adapterHolder.ReKey == nullptr) {
+    if (g_adapterHolder.Rekey == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
-    if (g_adapterHolder.ReKey == nullptr) {
+    if (g_adapterHolder.Rekey == nullptr) {
         return E_NOT_SUPPORT;
     }
-    return E_NOT_SUPPORT;
+    if (encryptedKey.empty()) {
+        return E_GRD_INVALID_ARGS;
+    }
+    int32_t ret = E_OK;
+    GRD_CipherInfoT info = { 0 };
+    const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
+    std::vector<char> key(keySize);
+    info.hexPassword = GdbUtils::GetEncryptKey(encryptedKey, key.data(), keySize);
+    ret = g_adapterHolder.Rekey(dbFile, configStr, &info);
+    key.assign(keySize, 0);
+    return TransErrno(ret);
 }
 
 int32_t GrdAdapter::Prepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_StmtT **stmt, const char **unusedStr)

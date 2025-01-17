@@ -26,17 +26,46 @@ ohos_unittest("NativeGdbTest") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
+    "${relational_store_native_path}/rdb/include",
   ]
 
   sources = [
+    "unittest/gdb_encrypt_test.cpp",
     "unittest/gdb_execute_test.cpp",
     "unittest/gdb_function_test.cpp",
     "unittest/gdb_grdapi_test.cpp",
+    "unittest/gdb_multi_thread_test.cpp",
     "unittest/gdb_query_test.cpp",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+    "kv_store:distributeddata_inner",
+  ]
+
+  deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
+}
+
+ohos_unittest("NativeGdbAdaptTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_innerapi_path}/gdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/gdb/include",
+    "${relational_store_native_path}/gdb/adapter/include",
+    "${relational_store_native_path}/rdb/include",
+  ]
+
+  sources = [ "unittest/gdb_adapt_test.cpp" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
     "json:nlohmann_json_static",
@@ -49,7 +78,10 @@ ohos_unittest("NativeGdbTest") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":NativeGdbTest" ]
+  deps = [
+    ":NativeGdbAdaptTest",
+    ":NativeGdbTest",
+  ]
 }
 
 ###############################################################################

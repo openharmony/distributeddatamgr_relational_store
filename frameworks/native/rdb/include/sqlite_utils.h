@@ -19,7 +19,6 @@
 #include <map>
 #include <string>
 
-#include "sqlite3sym.h"
 #include "rdb_types.h"
 #include "rdb_store_config.h"
 

@@ -41,7 +41,7 @@ typedef const char *(*ColumnText)(GRD_StmtT *stmt, uint32_t idx);
 
 typedef int32_t (*Backup)(GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
 typedef int32_t (*Restore)(const char *dbFile, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
-typedef int32_t (*ReKey)(const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
+typedef int32_t (*Rekey)(const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
 
 struct GrdAdapterHolder {
     Open Open = nullptr;
@@ -64,7 +64,7 @@ struct GrdAdapterHolder {
 
     Backup Backup = nullptr;
     Restore Restore = nullptr;
-    ReKey ReKey = nullptr;
+    Rekey Rekey = nullptr;
 };
 
 bool IsSupportArkDataDb();
