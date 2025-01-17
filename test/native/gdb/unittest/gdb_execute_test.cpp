@@ -1976,3 +1976,47 @@ HWTEST_F(GdbExecuteTest, GdbStore_DBStore01, TestSize.Level1)
     EXPECT_EQ(err1, E_GRD_UNDEFINED_PARAM);
     GDBHelper::DeleteDBStore(config);
 }
+
+HWTEST_F(GdbExecuteTest, GdbStore_NameErre01, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("DROP GRAPH test");
+    EXPECT_EQ(result.first, E_OK);
+
+    std::string createGql = "CREATE GRAPH test {(person:";
+    for (int i = 0; i < 129; ++i) {
+        createGql += "i";
+    }
+    createGql += " {name STRING, age INT}), (person) -[:FRIEND]-> (person)};";
+    result = store_->ExecuteGql(createGql);
+    EXPECT_EQ(result.first, E_GRD_INVALID_NAME);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_NameErre02, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("DROP GRAPH test");
+    EXPECT_EQ(result.first, E_OK);
+
+    std::string createGql =
+        "CREATE GRAPH test {(anon_person: Person {name STRING, age INT}), (person) -[:Friend]-> (person)};";
+    result = store_->ExecuteGql(createGql);
+    EXPECT_EQ(result.first, E_GRD_SEMANTIC_ERROR);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Conflict01, TestSize.Level1)
+{
+    ASSERT_NE(store_, nullptr);
+    auto result = store_->ExecuteGql("DROP GRAPH test");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql(
+        "CREATE GRAPH test {(person: Person {id INT, name STRING}),(person) -[:Friend]-> (person)};");
+    EXPECT_EQ(result.first, E_OK);
+
+    result = store_->ExecuteGql("CREATE UNIQUE INDEX index_person_id ON person(id);");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql("INSERT (:Person {id: 1, name: 'name_1'});");
+    EXPECT_EQ(result.first, E_OK);
+    result = store_->ExecuteGql("INSERT (:Person {id: 1, name: 'name_2'});");
+    EXPECT_EQ(result.first, E_GRD_DATA_CONFLICT);
+}
