@@ -40,6 +40,7 @@ ohos_unittest("NativeRdbNdkTest") {
     "unittest/rdb_store_configv2_test.cpp",
     "unittest/rdb_store_test.cpp",
     "unittest/rdb_transaction_capi_test.cpp",
+    "unittest/rdb_vector_test.cpp",
   ]
 
   configs = [ ":module_private_config" ]

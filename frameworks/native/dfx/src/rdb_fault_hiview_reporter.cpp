@@ -148,7 +148,7 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     eventInfo.bundleName = config.GetBundleName();
     eventInfo.moduleName = config.GetModuleName();
     eventInfo.storeType = config.GetDBType() == DB_SQLITE ? "RDB" : "VECTOR DB";
-    eventInfo.storeName = config.GetName();
+    eventInfo.storeName = SqliteUtils::Anonymous(config.GetName());
     eventInfo.securityLevel = static_cast<uint32_t>(config.GetSecurityLevel());
     eventInfo.pathArea = static_cast<uint32_t>(config.GetArea());
     eventInfo.encryptStatus = static_cast<uint32_t>(config.IsEncrypt());
@@ -159,7 +159,7 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     eventInfo.errorOccurTime = time(nullptr);
     eventInfo.debugInfos = Connection::Collect(config);
     SqliteGlobalConfig::GetDbPath(config, eventInfo.path);
-    if (collector_ != nullptr) {
+    if (collector_ != nullptr && !IsReportCorruptedFault(eventInfo.path)) {
         Update(eventInfo.debugInfos, collector_(config));
     }
     return eventInfo;
@@ -274,30 +274,10 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
 
 void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
 {
-    RdbFaultEvent event = faultEvent;
-    std::string bundleName = event.GetBundleName();
-    if (!IsReportFault(bundleName, event.GetErrCode())) {
+    if (!IsReportFault(faultEvent.GetBundleName(), faultEvent.GetErrCode())) {
         return;
     }
-    std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
-    std::string faultType = event.GetFaultType();
-    std::string moduleName = event.GetModuleName();
-    std::string storeName = event.GetStoreName();
-    std::string businessType = event.GetBusinessType();
-    std::string appendInfo = event.GetLogInfo();
-
-    HiSysEventParam params[] = {
-        { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
-        { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
-        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
-        { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName.data() }, .arraySize = 0 },
-        { .name = "STORE_NAME", .t = HISYSEVENT_STRING, .v = { .s = storeName.data() }, .arraySize = 0 },
-        { .name = "BUSINESS_TYPE", .t = HISYSEVENT_STRING, .v = { .s = businessType.data() }, .arraySize = 0 },
-        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = event.GetErrCode()}, .arraySize = 0 },
-        { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
-    };
-    auto size = sizeof(params) / sizeof(params[0]);
-    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
+    faultEvent.Report();
 }
 
 RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
@@ -309,15 +289,55 @@ RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode, co
     custLog_ = custLog;
 }
 
-RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
-    const std::string &custLog, bool printDbInfo)
-    : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
+void RdbFaultEvent::Report() const
 {
-    printDbInfo_ = printDbInfo;
-    SetBundleName(RdbFaultHiViewReporter::GetBundleName(config_.GetBundleName(), GetStoreName()));
+    std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string bundleName = GetBundleName();
+    std::string faultType = GetFaultType();
+    std::string appendInfo = GetLogInfo();
+    HiSysEventParam params[] = {
+        { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
+        { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = errorCode_ }, .arraySize = 0 },
+        { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
+    };
+    auto size = sizeof(params) / sizeof(params[0]);
+    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
 }
 
-std::string RdbFaultDbFileEvent::GetConfigLog()
+RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
+    const std::string &custLog, bool printDbInfo)
+    : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config), printDbInfo_(printDbInfo)
+{
+    SetBundleName(RdbFaultHiViewReporter::GetBundleName(config_.GetBundleName(), config_.GetName()));
+}
+
+void RdbFaultDbFileEvent::Report() const
+{
+    std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string bundleName = GetBundleName();
+    std::string faultType = GetFaultType();
+    std::string moduleName = config_.GetModuleName();
+    std::string storeName = config_.GetName();
+    std::string businessType = config_.GetDBType() == DB_SQLITE ? "SQLITE" : "VECTOR";
+    std::string appendInfo = BuildLogInfo();
+
+    HiSysEventParam params[] = {
+        { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
+        { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
+        { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName.data() }, .arraySize = 0 },
+        { .name = "STORE_NAME", .t = HISYSEVENT_STRING, .v = { .s = storeName.data() }, .arraySize = 0 },
+        { .name = "BUSINESS_TYPE", .t = HISYSEVENT_STRING, .v = { .s = businessType.data() }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = GetErrCode()}, .arraySize = 0 },
+        { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
+    };
+    auto size = sizeof(params) / sizeof(params[0]);
+    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
+}
+
+std::string RdbFaultDbFileEvent::BuildConfigLog() const
 {
     std::string errNoStr = std::to_string(static_cast<uint32_t>(errno));
     std::string dbPath;
@@ -340,9 +360,9 @@ std::string RdbFaultDbFileEvent::GetConfigLog()
     return oss.str();
 }
 
-std::string RdbFaultDbFileEvent::GetLogInfo()
+std::string RdbFaultDbFileEvent::BuildLogInfo() const
 {
-    std::string appendInfo = RdbFaultEvent::GetLogInfo();
+    std::string appendInfo = GetLogInfo();
     std::string dbFileInfo = SqliteUtils::FormatDebugInfo(
         RdbFaultHiViewReporter::Create(config_, GetErrCode()).debugInfos, "");
 
@@ -352,22 +372,8 @@ std::string RdbFaultDbFileEvent::GetLogInfo()
         appendInfo += SqliteUtils::ReadFileHeader(dbPath);
     }
     if (printDbInfo_) {
-        appendInfo += ("\n" + GetConfigLog() + "\n" + dbFileInfo);
+        appendInfo += ("\n" + BuildConfigLog() + "\n" + dbFileInfo);
     }
     return appendInfo;
-}
-
-std::string RdbFaultDbFileEvent::GetModuleName()
-{
-    return config_.GetModuleName();
-}
-std::string RdbFaultDbFileEvent::GetStoreName()
-{
-    return config_.GetName();
-}
-
-std::string RdbFaultDbFileEvent::GetBusinessType()
-{
-    return config_.GetDBType() == DB_SQLITE ? "SQLITE" : "VECTOR";
 }
 } // namespace OHOS::NativeRdb

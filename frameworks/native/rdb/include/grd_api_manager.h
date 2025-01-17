@@ -58,6 +58,7 @@ typedef int32_t (*DBRestore)(const char *dbFile, const char *backupDbFile, GRD_C
 typedef int32_t (*DBReKey)(const char *dbFile, const char *configStr, GRD_CipherInfoT *cipherInfo);
 typedef GRD_DbValueT (*DBGetConfig)(GRD_DB *db, GRD_ConfigTypeE type);
 typedef int32_t (*DBSetConfig)(GRD_DB *db, GRD_ConfigTypeE type, GRD_DbValueT value);
+typedef int32_t (*DBSqlRegistryThreadPool)(GRD_DB *db, GRD_ThreadPool *threadPool);
 
 struct GRD_APIInfo {
     DBOpen DBOpenApi = nullptr;
@@ -90,6 +91,7 @@ struct GRD_APIInfo {
     DBReKey DBReKeyApi = nullptr;
     DBGetConfig DBGetConfigApi = nullptr;
     DBSetConfig DBSetConfigApi = nullptr;
+    DBSqlRegistryThreadPool DBSqlRegistryThreadPool = nullptr;
 };
 
 API_EXPORT bool IsUsingArkData();

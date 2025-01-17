@@ -79,6 +79,7 @@ static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
     { OHOS::NativeRdb::E_OK, RDB_OK },
     { OHOS::NativeRdb::E_ERROR, RDB_E_ERROR },
     { OHOS::NativeRdb::E_INVALID_ARGS, RDB_E_INVALID_ARGS },
+    { OHOS::NativeRdb::E_INVALID_OBJECT_TYPE, RDB_E_INVALID_ARGS },
     { OHOS::NativeRdb::E_ALREADY_CLOSED, RDB_E_ALREADY_CLOSED},
     { OHOS::NativeRdb::E_DATABASE_BUSY, RDB_E_DATABASE_BUSY },
     { OHOS::NativeRdb::E_WAL_SIZE_OVER_LIMIT, RDB_E_WAL_SIZE_OVER_LIMIT },
@@ -93,6 +94,7 @@ static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
     { OHOS::NativeRdb::E_SQLITE_CANTOPEN, RDB_E_SQLITE_CANT_OPEN },
     { OHOS::NativeRdb::E_SQLITE_TOOBIG, RDB_E_SQLITE_TOO_BIG },
     { OHOS::NativeRdb::E_SQLITE_MISMATCH, RDB_E_SQLITE_MISMATCH },
+    { OHOS::NativeRdb::E_SQLITE_IOERR_FULL, RDB_E_SQLITE_IOERR },
 };
 
 int ConvertorErrorCode::ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode)

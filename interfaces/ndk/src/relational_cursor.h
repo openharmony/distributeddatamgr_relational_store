@@ -29,6 +29,10 @@ public:
     explicit RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
     virtual ~RelationalCursor() = default;
 
+    virtual int GetFloatVectorCount(int32_t columnIndex, size_t *length);
+    virtual int GetFloatVector(int32_t columnIndex, float *val, size_t inLen, size_t *outLen);
+    static RelationalCursor *GetSelf(OH_Cursor *cursor);
+
 protected:
     virtual int GetColumnCount(int *count);
     virtual int GetColumnType(int32_t columnIndex, OH_ColumnType *columnType);
@@ -64,7 +68,6 @@ private:
     static int IsNull(OH_Cursor *cursor, int32_t columnIndex, bool *isNull);
     static int GetAssetsCount(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count);
     static int Destroy(OH_Cursor *cursor);
-    static RelationalCursor *GetSelf(OH_Cursor *cursor);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
 };
 } // namespace RdbNdk

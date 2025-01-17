@@ -544,7 +544,8 @@ napi_value ResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info info)
         errCode = resultSet->GetColumnIndex(input, result);
     }
     // If the API version is less than 13, directly return.
-    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, JSUtils::GetHapVersion() < 13 || (errCode == E_INVALID_ARGS || errCode == E_OK),
+        std::make_shared<InnerError>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 

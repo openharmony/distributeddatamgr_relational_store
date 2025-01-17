@@ -625,7 +625,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
             if (errCode != E_OK) {
                 Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
                     "LOG:new key SetEncryptKey errcode= "+ std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter())));
+                    ",iter=" + std::to_string(config.GetIter()), true));
             }
         }
         newKey.assign(newKey.size(), 0);
@@ -637,7 +637,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
                 bool sameKey = (key == config.GetEncryptKey()) || (newKey == config.GetEncryptKey());
                 Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
                     "LOG:service key SetEncryptKey errcode=" + std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey)));
+                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey), true));
             }
             return errCode;
         }
@@ -729,8 +729,9 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalMode fail to get journal mode : %{public}d", errCode);
-        return errCode;
+        LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
+        // errno: 28 No space left on device
+        return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
 
     if (config.GetJournalMode().compare(static_cast<std::string>(object)) == 0) {
@@ -1397,13 +1398,13 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         return result;
     }
 
-    RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         return result;
     }
     conn = connection;
     if (isWrite && config.GetHaMode() != HAMode::SINGLE) {
+        RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
         auto [err, slaveConn] = connection->CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
         if (err == E_OK) {
             conn->slaveConnection_ = slaveConn;
@@ -1500,6 +1501,12 @@ int SqliteConnection::CopyDb(const RdbStoreConfig &config, const std::string &sr
         return E_SQLITE_CORRUPT;
     }
     conn = nullptr;
+
+    auto walFile = srcPath + "-wal";
+    if (SqliteUtils::GetFileSize(walFile) != 0) {
+        LOG_ERROR("Wal file exist.");
+        return E_SQLITE_CORRUPT;
+    }
     SqliteUtils::DeleteFile(srcPath + "-shm");
     SqliteUtils::DeleteFile(srcPath + "-wal");
     Connection::Delete(config);
