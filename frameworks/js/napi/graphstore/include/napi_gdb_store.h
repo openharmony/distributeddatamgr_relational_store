@@ -54,6 +54,7 @@ private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value Read(napi_env env, napi_callback_info info);
     static napi_value Write(napi_env env, napi_callback_info info);
+    static napi_value CreateTransaction(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
 
     static Descriptor GetDescriptors();
