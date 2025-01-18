@@ -43,6 +43,7 @@ ohos_shared_library("graphstore") {
     "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_js_utils.cpp",
     "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_store.cpp",
     "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_store_helper.cpp",
+    "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_transaction.cpp",
   ]
   deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
   external_deps = [

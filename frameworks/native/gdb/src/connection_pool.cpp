@@ -120,6 +120,16 @@ void ConnectionPool::CloseAllConnections()
     readers_.Clear();
 }
 
+std::pair<int32_t, std::shared_ptr<Connection>> ConnectionPool::CreateTransConn()
+{
+    if (transCount_ >= MAX_TRANS) {
+        writers_.Dump("NO TRANS", transCount_ + isInTransaction_);
+        return { E_DATABASE_BUSY, nullptr };
+    }
+    auto [errCode, node] = writers_.Create();
+    return { errCode, Convert2AutoConn(node, true) };
+}
+
 std::shared_ptr<Connection> ConnectionPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
 {
     Container *container = (isReadOnly && maxReader_ != 0) ? &readers_ : &writers_;
@@ -298,6 +308,29 @@ std::shared_ptr<ConnectionPool::ConnNode> ConnectionPool::Container::Acquire(std
         return node;
     }
     return nullptr;
+}
+
+std::pair<int32_t, std::shared_ptr<ConnectionPool::ConnNode>> ConnectionPool::Container::Create()
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (creator_ == nullptr) {
+        return { E_NOT_SUPPORT, nullptr };
+    }
+
+    auto [errCode, conn] = creator_();
+    if (conn == nullptr) {
+        return { errCode, nullptr };
+    }
+
+    auto node = std::make_shared<ConnNode>(conn);
+    if (node == nullptr) {
+        return { E_ERROR, nullptr };
+    }
+    node->id_ = MIN_TRANS_ID + trans_;
+    conn->SetId(node->id_);
+    details_.push_back(node);
+    trans_++;
+    return { E_OK, node };
 }
 
 int32_t ConnectionPool::Container::ExtendNode()

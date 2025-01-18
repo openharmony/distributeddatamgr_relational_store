@@ -17,13 +17,17 @@
 #define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H
 #include "rdb_visibility.h"
 #include "result.h"
+#include "transaction.h"
 
 namespace OHOS::DistributedDataAip {
 class API_EXPORT DBStore {
 public:
     API_EXPORT virtual std::pair<int32_t, std::shared_ptr<Result>> QueryGql(const std::string &gql) = 0;
     API_EXPORT virtual std::pair<int32_t, std::shared_ptr<Result>> ExecuteGql(const std::string &gql) = 0;
+    API_EXPORT virtual std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction() = 0;
     API_EXPORT virtual int32_t Close() = 0;
+
+    virtual ~DBStore() = default;
 };
 } // namespace OHOS::DistributedDataAip
 #endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H

@@ -90,6 +90,7 @@ private:
     mutable std::vector<uint8_t> encryptKey_{};
     mutable std::vector<uint8_t> newEncryptKey_{};
     int32_t pageSize_ = 4;
+    int32_t defaultIsolationLevel_ = 3;  // serialization
     mutable int32_t iter_ = 0;
     int32_t writeTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1;  // seconds
@@ -106,7 +107,6 @@ private:
     [[maybe_unused]] int32_t sharedModeEnable_ = 0;
     [[maybe_unused]] int32_t MetaInfoBak_ = 0;
     [[maybe_unused]] int32_t dbFileSize_ = 128 * 1024 * 1024;
-    [[maybe_unused]] int32_t defaultIsolationLevel_ = 1;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds

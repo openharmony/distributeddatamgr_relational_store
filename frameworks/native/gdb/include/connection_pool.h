@@ -37,6 +37,7 @@ public:
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
     static std::shared_ptr<ConnectionPool> Create(const StoreConfig &config, int &errCode);
     ~ConnectionPool();
+    std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn();
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     // this interface is only provided for resultSet
     SharedConn AcquireRef(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
@@ -81,6 +82,7 @@ private:
         std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
             Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire = false);
         std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
+        std::pair<int32_t, std::shared_ptr<ConnNode>> Create();
 
         void Disable();
         void Enable();

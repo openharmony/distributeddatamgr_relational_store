@@ -29,6 +29,17 @@ constexpr int32_t FILE_PATH_MINI_SIZE = 6;
 constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
+constexpr int32_t PREFIX_POS = 0;
+constexpr int32_t PREFIX_LEN = 3;
+
+bool GdbUtils::IsTransactionGql(const std::string &gql)
+{
+    auto prefix = gql.substr(PREFIX_POS, PREFIX_LEN);
+    if (prefix == "STA" || prefix == "COM" || prefix == "ROL") {
+        return true;
+    }
+    return false;
+}
 
 int GdbUtils::CreateDirectory(const std::string &databaseDir)
 {
