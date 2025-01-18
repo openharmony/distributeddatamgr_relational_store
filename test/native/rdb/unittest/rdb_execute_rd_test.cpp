@@ -262,12 +262,14 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_006, TestSize.Level1)
     std::string dbPath = "/data/test/execute_test1.db";
     std::string configStr =
     "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
-    "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"ignoreMetaDataCorruption\":1 }";
+    "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500 }";
 
     GRD_DB *db2 = nullptr;
     GRD_DB *db4 = nullptr;
-    EXPECT_EQ(RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &db2), E_OK);
-    EXPECT_EQ(RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &db4), E_OK);
+    EXPECT_EQ(RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(),
+        GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUPTION, &db2), E_OK);
+    EXPECT_EQ(RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(),
+        GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUPTION, &db4), E_OK);
 
     GRD_SqlStmt *stmt = nullptr;
     EXPECT_EQ(RdUtils::RdSqlPrepare(db2, sqlCreateTable.c_str(), sqlCreateTable.size(), &stmt, nullptr), E_OK);
