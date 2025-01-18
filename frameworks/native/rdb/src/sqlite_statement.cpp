@@ -294,8 +294,8 @@ int SqliteStatement::InnerStep()
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "")));
     }
-    if (config_ != nullptr && errCode != SQLITE_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_, "", true));
+    if (config_ != nullptr && ret != E_OK && !config_->GetBundleName().empty()) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, ret, *config_, "", true));
     }
     PrintInfoForDbError(ret, sql_);
     return ret;
