@@ -16,6 +16,7 @@
 #include "trans_db.h"
 
 #include "aip_errors.h"
+#include "db_trace.h"
 #include "gdb_utils.h"
 #include "logger.h"
 
@@ -29,6 +30,7 @@ TransDB::TransDB(std::shared_ptr<Connection> connection) : conn_(connection)
 
 std::pair<int32_t, std::shared_ptr<Result>> TransDB::QueryGql(const std::string &gql)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, std::make_shared<FullResult>() };
@@ -55,6 +57,7 @@ std::pair<int32_t, std::shared_ptr<Result>> TransDB::QueryGql(const std::string 
 
 std::pair<int32_t, std::shared_ptr<Result>> TransDB::ExecuteGql(const std::string &gql)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, std::make_shared<FullResult>() };

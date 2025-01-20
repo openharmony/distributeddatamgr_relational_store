@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "db_trace.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_gdb_context.h"
@@ -156,6 +157,7 @@ struct ReadWriteContext : public TransactionContext {
 
 napi_value GdbTransactionProxy::Read(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<ReadWriteContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
@@ -177,6 +179,7 @@ napi_value GdbTransactionProxy::Read(napi_env env, napi_callback_info info)
 
 napi_value GdbTransactionProxy::Write(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<ReadWriteContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
@@ -207,6 +210,7 @@ struct CommitRollbackContext : public TransactionContext {
 
 napi_value GdbTransactionProxy::Commit(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<CommitRollbackContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
@@ -227,6 +231,7 @@ napi_value GdbTransactionProxy::Commit(napi_env env, napi_callback_info info)
 
 napi_value GdbTransactionProxy::Rollback(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<CommitRollbackContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
