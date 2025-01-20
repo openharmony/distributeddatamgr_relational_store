@@ -1041,3 +1041,13 @@ HWTEST_P(RdbExecuteRdTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::restoreDatabaseName);
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::backupDatabaseName);
 }
+
+/* *
+ * @tc.name: Rdb_IsUsingArkDataTest_001
+ * @tc.desc: IsUsingArkData function test
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, Rdb_IsUsingArkDataTest_001, TestSize.Level2)
+{
+    EXPECT_EQ(OHOS::NativeRdb::RdbHelper::IsSupportArkDataDb(), true);
+}
