@@ -16,17 +16,20 @@
 
 #include "aip_errors.h"
 #include "db_store_manager.h"
+#include "db_trace.h"
 #include "gdb_helper.h"
 
 namespace OHOS::DistributedDataAip {
 
 std::shared_ptr<DBStore> GDBHelper::GetDBStore(const StoreConfig &config, int &errCode)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return StoreManager::GetInstance().GetDBStore(config, errCode);
 }
 
 int GDBHelper::DeleteDBStore(const StoreConfig &config)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     return StoreManager::GetInstance().Delete(config.GetFullPath()) ? E_OK : E_ERROR;
 }
 } // namespace OHOS::DistributedDataAip

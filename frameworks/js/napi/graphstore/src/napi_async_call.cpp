@@ -15,9 +15,9 @@
 #define LOG_TAG "GdbAsyncCall"
 #include "napi_async_call.h"
 
+#include "db_trace.h"
 #include "js_native_api_types.h"
 #include "logger.h"
-#include "napi_db_trace.h"
 
 namespace OHOS::GraphStoreJsKit {
 bool g_async = true; // do not reset the value, used in DECLARE_NAPI_FUNCTION_WITH_DATA only

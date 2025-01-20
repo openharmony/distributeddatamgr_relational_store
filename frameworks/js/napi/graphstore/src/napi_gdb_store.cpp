@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "db_trace.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_gdb_context.h"
@@ -192,6 +193,7 @@ int ParseGql(const napi_env env, const napi_value arg, const std::shared_ptr<Gdb
 
 napi_value GdbStoreProxy::Read(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<GdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>(" 1 "));
@@ -216,6 +218,7 @@ napi_value GdbStoreProxy::Read(napi_env env, napi_callback_info info)
 
 napi_value GdbStoreProxy::Write(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<GdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>(" 1 "));
@@ -240,6 +243,7 @@ napi_value GdbStoreProxy::Write(napi_env env, napi_callback_info info)
 
 napi_value GdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<CreateTransactionContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 0, std::make_shared<ParamNumError>(" 0 "));
@@ -266,6 +270,7 @@ napi_value GdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
 
 napi_value GdbStoreProxy::Close(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<GdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         GdbStoreProxy *proxy = GetNativeInstance(env, self);
