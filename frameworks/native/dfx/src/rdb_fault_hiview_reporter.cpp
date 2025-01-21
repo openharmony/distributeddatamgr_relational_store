@@ -316,11 +316,11 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
 }
 
 RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
-: RdbFaultEvent(FT_CURD, E_EMPTY_BLOB, "", "empty blob")
+    : RdbFaultEvent(FT_CURD, E_EMPTY_BLOB, "", "empty blob")
 {
     std::string bundleName_ = bundleName;
 }
- 
+
 void RdbEmptyBlobEvent::Report() const
 {
     std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
