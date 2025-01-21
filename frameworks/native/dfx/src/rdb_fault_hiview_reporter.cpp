@@ -252,6 +252,8 @@ uint8_t *RdbFaultHiViewReporter::GetFaultCounter(RdbFaultCounter &counter, int32
             return &counter.setServiceEncrypt;
         case E_CHECK_POINT_FAIL:
             return &counter.checkPoint;
+        case E_EMPTY_BLOB:
+            return &counter.emptyBlob;
         default:
             return nullptr;
     };
@@ -311,6 +313,29 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
     : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config), printDbInfo_(printDbInfo)
 {
     SetBundleName(RdbFaultHiViewReporter::GetBundleName(config_.GetBundleName(), config_.GetName()));
+}
+
+RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
+: RdbFaultEvent(FT_CURD, E_EMPTY_BLOB, "", "empty blob")
+{
+    std::string bundleName_ = bundleName;
+}
+ 
+void RdbEmptyBlobEvent::Report() const
+{
+    std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string bundleName = GetBundleName();
+    std::string faultType = GetFaultType();
+    std::string appendInfo = GetLogInfo();
+    HiSysEventParam params[] = {
+        { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
+        { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_EMPTY_BLOB }, .arraySize = 0 },
+        { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
+    };
+    auto size = sizeof(params) / sizeof(params[0]);
+    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
 }
 
 void RdbFaultDbFileEvent::Report() const
