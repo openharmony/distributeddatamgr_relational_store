@@ -245,7 +245,8 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled, const std::string &bundleName)
+napi_value RdbStoreProxy::NewInstance(
+    napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled, const std::string &bundleName)
 {
     if (value == nullptr) {
         LOG_ERROR("Value is nullptr ? %{public}d", (value == nullptr));
@@ -573,7 +574,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
                 auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                if(proxy!= nullptr){
+                if (proxy != nullptr) {
                     Reportor::ReportFault(RdbEmptyBlobEvent(proxy->bundleName_));
                 }
                 valueObject = ValueObject();
