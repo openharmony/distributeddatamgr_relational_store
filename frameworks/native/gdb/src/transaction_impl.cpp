@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "aip_errors.h"
+#include "db_trace.h"
 #include "logger.h"
 #include "trans_db.h"
  
@@ -90,6 +91,7 @@ int32_t TransactionImpl::Start()
  
 int32_t TransactionImpl::Commit()
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard lock(mutex_);
     if (connection_ == nullptr) {
         LOG_ERROR("connection already closed");
@@ -114,6 +116,7 @@ int32_t TransactionImpl::Commit()
  
 int32_t TransactionImpl::Rollback()
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard lock(mutex_);
     if (connection_ == nullptr) {
         LOG_ERROR("connection already closed");
