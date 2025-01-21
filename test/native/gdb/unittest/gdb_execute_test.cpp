@@ -1793,15 +1793,23 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsTest, TestSize.Level1)
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsAnonymousTest, TestSize.Level1)
 {
-    GdbUtils::Anonymous("fileName");
-    GdbUtils::Anonymous("dir1/shortPath");
-    GdbUtils::Anonymous("dir1/el1/longPath");
-    GdbUtils::Anonymous("el1/l");
-    GdbUtils::Anonymous(
+    auto ret = GdbUtils::Anonymous("fileName");
+    EXPECT_EQ(ret, "fileName");
+    ret = GdbUtils::Anonymous("dir1/shortPath");
+    EXPECT_EQ(ret, "dir1/shortPa");
+    ret = GdbUtils::Anonymous("dir1/el1/longPath");
+    EXPECT_EQ(ret, "dir1/el1/longPa");
+    ret = GdbUtils::Anonymous("el1/l");
+    EXPECT_EQ(ret, "el1");
+    ret = GdbUtils::Anonymous(
         "dir1/el1/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath/longPath");
-    GdbUtils::Anonymous("/data/dir1/dir2/dir3");
-    GdbUtils::Anonymous("/data/el1/dir2");
-    GdbUtils::Anonymous("/data/app/el1/0/base/com.my.hmos.arkwebcore");
+    EXPECT_EQ(ret, "dir1/***/el1/***/longPa");
+    ret = GdbUtils::Anonymous("/data/dir1/dir2/dir3");
+    EXPECT_EQ(ret, "/***/dir3");
+    ret = GdbUtils::Anonymous("/data/el1/dir2");
+    EXPECT_EQ(ret, "/***/el1/dir2");
+    ret = GdbUtils::Anonymous("/data/app/el1/0/base/com.my.hmos.arkwebcore");
+    EXPECT_EQ(ret, "/***/el1/***/com.my.hmos.arkwebcore");
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsErrorTest, TestSize.Level1)
@@ -2019,4 +2027,30 @@ HWTEST_F(GdbExecuteTest, GdbStore_Conflict01, TestSize.Level1)
     EXPECT_EQ(result.first, E_OK);
     result = store_->ExecuteGql("INSERT (:Person {id: 1, name: 'name_2'});");
     EXPECT_EQ(result.first, E_GRD_DATA_CONFLICT);
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsStringTest, TestSize.Level1)
+{
+    std::string str = "abcd";
+    GdbUtils::ClearAndZeroString(str);
+    EXPECT_EQ(str, "");
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsConfigTest, TestSize.Level1)
+{
+    std::vector<uint8_t> keys = {1, 2, 3, 4, 5, 6, 7, 8};
+    auto ret = GdbUtils::GetConfigStr(keys, false);
+    EXPECT_EQ(ret, "{\"pageSize\":4, \"crcCheckEnable\":0}");
+    ret = GdbUtils::GetConfigStr(keys, true);
+    EXPECT_EQ(ret, "{\"isEncrypted\":1,\"hexPassword\":\"0102030405060708\",\"pageSize\":4, \"crcCheckEnable\":0}");
+}
+
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsKeyTest, TestSize.Level1)
+{
+    std::vector<uint8_t> keys = {1, 2, 3, 4, 5, 6, 7, 8};
+    const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '\0'
+    std::vector<char> keyBuff(keyBuffSize);
+    auto ret = GdbUtils::GetEncryptKey(keys, keyBuff.data(), keyBuffSize);
+    std::string hexString(ret, ret + keyBuffSize - 1);
+    EXPECT_EQ(hexString, "0102030405060708");
 }
