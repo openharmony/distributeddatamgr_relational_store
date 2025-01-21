@@ -17,6 +17,7 @@
 
 #include <regex>
 
+#include "db_trace.h"
 #include "gdb_helper.h"
 #include "logger.h"
 #include "napi_gdb_context.h"
@@ -39,6 +40,7 @@ bool IsValidDbName(const std::string &name)
 
 napi_value GetStore(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<GdbStoreContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>(" 2 "));
@@ -69,6 +71,7 @@ napi_value GetStore(napi_env env, napi_callback_info info)
 
 napi_value DeleteStore(napi_env env, napi_callback_info info)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<GdbStoreContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>(" 2 "));

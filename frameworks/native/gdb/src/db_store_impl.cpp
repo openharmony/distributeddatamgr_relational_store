@@ -19,6 +19,7 @@
 
 #include "aip_errors.h"
 #include "connection.h"
+#include "db_trace.h"
 #include "logger.h"
 #include "gdb_utils.h"
 #include "transaction.h"
@@ -68,6 +69,7 @@ int32_t DBStoreImpl::InitConn()
 
 std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::string &gql)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, nullptr };
@@ -104,6 +106,7 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
 
 std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::ExecuteGql(const std::string &gql)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
         return { E_INVALID_ARGS, std::make_shared<FullResult>() };
@@ -136,6 +139,7 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::ExecuteGql(const std::s
 
 std::pair<int32_t, std::shared_ptr<Transaction>> DBStoreImpl::CreateTransaction()
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto connectionPool = GetConnectionPool();
     if (connectionPool == nullptr) {
         LOG_ERROR("The connpool is nullptr.");
@@ -167,6 +171,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> DBStoreImpl::CreateTransaction(
 
 int32_t DBStoreImpl::Close()
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SetConnectionPool(nullptr);
 
     std::lock_guard lock(transMutex_);
