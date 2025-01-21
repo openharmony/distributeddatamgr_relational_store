@@ -64,6 +64,7 @@ struct RdbFaultCounter {
     uint8_t setNewEncrypt{ 0 };
     uint8_t setServiceEncrypt{ 0 };
     uint8_t checkPoint{ 0 };
+    uint8_t emptyBlob{ 0 };
 };
 
 // Fault Type Define
@@ -73,7 +74,8 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 
-class RdbFaultEvent {
+static constexpr int E_EMPTY_BLOB = 111;
+class API_EXPORT RdbFaultEvent {
 public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
@@ -94,7 +96,7 @@ private:
     int32_t errorCode_;
 };
 
-class RdbFaultDbFileEvent : public RdbFaultEvent {
+class API_EXPORT RdbFaultDbFileEvent : public RdbFaultEvent {
 public:
     RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
         const std::string &custLog = "", bool printDbInfo = false);
@@ -108,7 +110,14 @@ private:
     const RdbStoreConfig &config_;
     bool printDbInfo_;
 };
-class RdbFaultHiViewReporter {
+
+class API_EXPORT RdbEmptyBlobEvent : public RdbFaultEvent {
+public:
+    RdbEmptyBlobEvent(const std::string &bundleName);
+    virtual void Report() const override;
+};
+
+class API_EXPORT RdbFaultHiViewReporter {
 public:
     static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "");
     static bool RegCollector(Connection::Collector collector);

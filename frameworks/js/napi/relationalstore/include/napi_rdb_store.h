@@ -37,12 +37,13 @@ using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled, const std::string &bundleName);
     RdbStoreProxy();
     ~RdbStoreProxy();
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
+    std::string bundleName_;
 
 private:
     static napi_value Initialize(napi_env env, napi_callback_info info);

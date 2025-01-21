@@ -35,6 +35,7 @@
 #include "napi_transaction.h"
 #include "rdb_errno.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -63,6 +64,7 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
+using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t KEY_INDEX = 0;
 constexpr int32_t VALUE_INDEX = 1;
 
@@ -243,7 +245,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled)
+napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled, const std::string &bundleName)
 {
     if (value == nullptr) {
         LOG_ERROR("Value is nullptr ? %{public}d", (value == nullptr));
@@ -272,6 +274,7 @@ napi_value RdbStoreProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::R
     proxy->dbType = value->GetDbType();
     proxy->SetInstance(std::move(value));
     proxy->isSystemAppCalled_ = isSystemAppCalled;
+    proxy->bundleName_ = bundleName;
     return instance;
 }
 
@@ -569,6 +572,10 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
+                auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+                if(proxy!= nullptr){
+                    Reportor::ReportFault(RdbEmptyBlobEvent(proxy->bundleName_));
+                }
                 valueObject = ValueObject();
             }
         }
