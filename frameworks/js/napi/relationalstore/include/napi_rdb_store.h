@@ -44,7 +44,7 @@ public:
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
-    std::string bundleName_;
+    std::string GetBundleName();
 
 private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
@@ -172,6 +172,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::list<std::shared_ptr<SyncObserver>> syncObservers_;
     std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
+    std::string bundleName_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

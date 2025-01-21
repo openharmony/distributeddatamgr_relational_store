@@ -134,6 +134,11 @@ bool RdbStoreProxy::IsSystemAppCalled()
     return isSystemAppCalled_;
 }
 
+std::string RdbStoreProxy::GetBundleName()
+{
+    return bundleName_;
+}
+
 bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
 {
     if (arg >= argc) {
@@ -575,7 +580,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
             if (tmpValue.empty()) {
                 auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
                 if (proxy != nullptr) {
-                    Reportor::ReportFault(RdbEmptyBlobEvent(proxy->bundleName_));
+                    Reportor::ReportFault(RdbEmptyBlobEvent(proxy->GetBundleName()));
                 }
                 valueObject = ValueObject();
             }
