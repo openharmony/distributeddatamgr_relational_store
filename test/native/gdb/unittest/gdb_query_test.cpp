@@ -139,13 +139,13 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_001, TestSize.Level1)
     GraphValue employee = result.second->GetAllData()[0]["e"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(employee));
     auto employeeVertex = std::get<std::shared_ptr<Vertex>>(employee);
-    EXPECT_EQ(employeeVertex->GetLabel(), "EMPLOYEE");
+    EXPECT_EQ(employeeVertex->GetLabel(), "Employee");
 
-    auto name = employeeVertex->GetProperties().find("NAME");
+    auto name = employeeVertex->GetProperties().find("name");
     ASSERT_NE(name, employeeVertex->GetProperties().end());
     EXPECT_EQ(std::get<std::string>(name->second), "John Doe11");
 
-    auto position = employeeVertex->GetProperties().find("POSITION");
+    auto position = employeeVertex->GetProperties().find("position");
     ASSERT_NE(position, employeeVertex->GetProperties().end());
     EXPECT_EQ(std::get<std::string>(position->second), "Software Engineer");
 }
@@ -183,13 +183,13 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_002, TestSize.Level1)
     GraphValue employee = result.second->GetAllData()[0]["e"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(employee));
     auto employeeVertex = std::get<std::shared_ptr<Vertex>>(employee);
-    EXPECT_EQ(employeeVertex->GetLabel(), "EMPLOYEE");
+    EXPECT_EQ(employeeVertex->GetLabel(), "Employee");
 
     // Verifying Project Vertex
     GraphValue project = result.second->GetAllData()[0]["p"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(project));
     auto projectVertex = std::get<std::shared_ptr<Vertex>>(project);
-    EXPECT_EQ(projectVertex->GetLabel(), "PROJECT");
+    EXPECT_EQ(projectVertex->GetLabel(), "Project");
 
     // Validate Relationships
     GraphValue relation = result.second->GetAllData()[0]["r"];
@@ -226,15 +226,15 @@ void GdbQueryTest::VerifyCompanyInfo(const GraphValue &company, const std::strin
     auto expectSize = 2;
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(company));
     auto companyVertex = std::get<std::shared_ptr<Vertex>>(company);
-    EXPECT_EQ(companyVertex->GetLabel(), "COMPANY");
+    EXPECT_EQ(companyVertex->GetLabel(), "Company");
     ASSERT_EQ(companyVertex->GetProperties().size(), expectSize);
 
-    auto nameDb = companyVertex->GetProperties().find("NAME");
+    auto nameDb = companyVertex->GetProperties().find("name");
     ASSERT_NE(nameDb, companyVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(nameDb->second));
     EXPECT_EQ(std::get<std::string>(nameDb->second), name);
 
-    auto foundedDb = companyVertex->GetProperties().find("FOUNDED");
+    auto foundedDb = companyVertex->GetProperties().find("founded");
     ASSERT_NE(foundedDb, companyVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(foundedDb->second));
     EXPECT_EQ(std::get<int64_t>(foundedDb->second), founded);
@@ -609,13 +609,13 @@ HWTEST_F(GdbQueryTest, GdbStore_QuertTest_IsNull, TestSize.Level1)
     GraphValue company = result.second->GetAllData()[0]["e"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(company));
     auto companyVertex = std::get<std::shared_ptr<Vertex>>(company);
-    EXPECT_EQ(companyVertex->GetLabel(), "EMPLOYEE");
+    EXPECT_EQ(companyVertex->GetLabel(), "Employee");
     ASSERT_EQ(companyVertex->GetProperties().size(), 1);
 
-    auto nameDb = companyVertex->GetProperties().find("NAME");
+    auto nameDb = companyVertex->GetProperties().find("name");
     EXPECT_EQ(nameDb, companyVertex->GetProperties().end());
 
-    auto foundedDb = companyVertex->GetProperties().find("POSITION");
+    auto foundedDb = companyVertex->GetProperties().find("position");
     ASSERT_NE(foundedDb, companyVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(foundedDb->second));
     EXPECT_EQ(std::get<std::string>(foundedDb->second), "SoftwareNew");
