@@ -581,7 +581,7 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
                 valueObject = ValueObject();
             }
             auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            if (tmpValue.empty() && proxy != nullptr) {
+            if (tmpValue.empty() && (proxy != nullptr)) {
                 Reportor::ReportFault(RdbEmptyBlobEvent(proxy->GetBundleName()));
             }
         }
