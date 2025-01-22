@@ -699,7 +699,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_002, TestSize.Level1)
     GraphValue relation = result.second->GetAllData()[0]["relation"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Edge>>(relation));
     auto relationGraphEdge = std::get<std::shared_ptr<Edge>>(relation);
-    EXPECT_EQ(relationGraphEdge->GetLabel(), "FRIEND");
+    EXPECT_EQ(relationGraphEdge->GetLabel(), "Friend");
 }
 
 void GdbExecuteTest::MatchAndVerifyPerson(const std::string &name, const int32_t &age)
@@ -719,20 +719,20 @@ void GdbExecuteTest::VerifyPersonInfo(const GraphValue &person, const std::strin
     auto expectSize = 3;
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), expectSize);
 
-    auto nameDb = personVertex->GetProperties().find("NAME");
+    auto nameDb = personVertex->GetProperties().find("name");
     ASSERT_NE(nameDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(nameDb->second));
     EXPECT_EQ(std::get<std::string>(nameDb->second), name);
 
-    auto ageDb = personVertex->GetProperties().find("AGE");
+    auto ageDb = personVertex->GetProperties().find("age");
     ASSERT_NE(ageDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(ageDb->second));
     EXPECT_EQ(std::get<int64_t>(ageDb->second), age);
 
-    auto sex = personVertex->GetProperties().find("SEX");
+    auto sex = personVertex->GetProperties().find("sex");
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(sex->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 0);
@@ -786,13 +786,13 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull, TestSize.Level1)
     GraphValue person = result.second->GetAllData()[0]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 2);
 
-    auto nameDb = personVertex->GetProperties().find("NAME");
+    auto nameDb = personVertex->GetProperties().find("name");
     ASSERT_EQ(nameDb, personVertex->GetProperties().end());
 
-    auto ageDb = personVertex->GetProperties().find("AGE");
+    auto ageDb = personVertex->GetProperties().find("age");
     ASSERT_NE(ageDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(ageDb->second));
     EXPECT_EQ(std::get<int64_t>(ageDb->second), 666);
@@ -814,13 +814,13 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UpdataNull02, TestSize.Level1)
     GraphValue person = result.second->GetAllData()[0]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 2);
 
-    auto nameDb = personVertex->GetProperties().find("NAME");
+    auto nameDb = personVertex->GetProperties().find("name");
     ASSERT_EQ(nameDb, personVertex->GetProperties().end());
 
-    auto ageDb = personVertex->GetProperties().find("AGE");
+    auto ageDb = personVertex->GetProperties().find("age");
     ASSERT_NE(ageDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(ageDb->second));
     EXPECT_EQ(std::get<int64_t>(ageDb->second), 666);
@@ -946,14 +946,14 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related, TestSize.Level1)
     GraphValue person = result.second->GetAllData()[0]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 3);
-    auto name = personVertex->GetProperties().find("NAME");
+    auto name = personVertex->GetProperties().find("name");
     ASSERT_NE(name, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(name->second));
     EXPECT_EQ(std::get<std::string>(name->second), "delete_1");
 
-    auto age = personVertex->GetProperties().find("AGE");
+    auto age = personVertex->GetProperties().find("age");
     ASSERT_NE(age, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(age->second), 11);
@@ -987,9 +987,9 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Delete_Related_Error, TestSize.Level1)
     GraphValue person = result.second->GetAllData()[0]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 3);
-    auto name = personVertex->GetProperties().find("NAME");
+    auto name = personVertex->GetProperties().find("name");
     ASSERT_NE(name, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(name->second));
     EXPECT_EQ(std::get<std::string>(name->second), "delete_3");
@@ -1034,21 +1034,21 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql, TestSize.Level1)
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
     ASSERT_NE(personVertex->GetLabel(), "error_label");
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     // size = 4 {name, age, sex, identity}
     ASSERT_EQ(personVertex->GetProperties().size(), 3);
 
-    auto name = personVertex->GetProperties().find("NAME");
+    auto name = personVertex->GetProperties().find("name");
     ASSERT_NE(name, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(name->second));
     EXPECT_EQ(std::get<std::string>(name->second), "zhangsan_111");
 
-    auto age = personVertex->GetProperties().find("AGE");
+    auto age = personVertex->GetProperties().find("age");
     ASSERT_NE(age, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(age->second), 11);
 
-    auto sex = personVertex->GetProperties().find("SEX");
+    auto sex = personVertex->GetProperties().find("sex");
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(sex->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 1);
@@ -1074,17 +1074,17 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql_2, TestSize.Level1)
     GraphValue person = result.second->GetAllData()[0]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 3);
-    auto name = personVertex->GetProperties().find("NAME");
+    auto name = personVertex->GetProperties().find("name");
     ASSERT_NE(name, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(name->second));
     EXPECT_EQ(std::get<std::string>(name->second), "lisi_1");
-    auto age = personVertex->GetProperties().find("AGE");
+    auto age = personVertex->GetProperties().find("age");
     ASSERT_NE(age, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(age->second), 66);
-    auto sex = personVertex->GetProperties().find("SEX");
+    auto sex = personVertex->GetProperties().find("sex");
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 0);
@@ -1092,17 +1092,17 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_QueryGql_2, TestSize.Level1)
     person = result.second->GetAllData()[1]["person"];
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), 3);
-    name = personVertex->GetProperties().find("NAME");
+    name = personVertex->GetProperties().find("name");
     ASSERT_NE(name, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(name->second));
     EXPECT_EQ(std::get<std::string>(name->second), "lisi_2");
-    age = personVertex->GetProperties().find("AGE");
+    age = personVertex->GetProperties().find("age");
     ASSERT_NE(age, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(age->second), 66);
-    sex = personVertex->GetProperties().find("SEX");
+    sex = personVertex->GetProperties().find("sex");
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(age->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 1);

@@ -150,20 +150,20 @@ void GdbTransactionTest::VerifyPersonInfo(const GraphValue &person, const std::s
     auto expectSize = 3;
     ASSERT_TRUE(std::holds_alternative<std::shared_ptr<Vertex>>(person));
     auto personVertex = std::get<std::shared_ptr<Vertex>>(person);
-    EXPECT_EQ(personVertex->GetLabel(), "PERSON");
+    EXPECT_EQ(personVertex->GetLabel(), "Person");
     ASSERT_EQ(personVertex->GetProperties().size(), expectSize);
 
-    auto nameDb = personVertex->GetProperties().find("NAME");
+    auto nameDb = personVertex->GetProperties().find("name");
     ASSERT_NE(nameDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<std::string>(nameDb->second));
     EXPECT_EQ(std::get<std::string>(nameDb->second), name);
 
-    auto ageDb = personVertex->GetProperties().find("AGE");
+    auto ageDb = personVertex->GetProperties().find("age");
     ASSERT_NE(ageDb, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(ageDb->second));
     EXPECT_EQ(std::get<int64_t>(ageDb->second), age);
 
-    auto sex = personVertex->GetProperties().find("SEX");
+    auto sex = personVertex->GetProperties().find("sex");
     ASSERT_NE(sex, personVertex->GetProperties().end());
     ASSERT_TRUE(std::holds_alternative<int64_t>(sex->second));
     EXPECT_EQ(std::get<int64_t>(sex->second), 0);
