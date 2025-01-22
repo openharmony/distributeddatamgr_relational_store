@@ -319,6 +319,7 @@ RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
     : RdbFaultEvent(FT_CURD, E_EMPTY_BLOB, "", "empty blob")
 {
     std::string bundleName_ = bundleName;
+    SetBundleName(bundleName_);
 }
 
 void RdbEmptyBlobEvent::Report() const

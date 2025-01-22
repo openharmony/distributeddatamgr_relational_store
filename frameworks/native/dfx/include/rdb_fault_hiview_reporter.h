@@ -96,7 +96,7 @@ private:
     int32_t errorCode_;
 };
 
-class API_EXPORT RdbFaultDbFileEvent : public RdbFaultEvent {
+class RdbFaultDbFileEvent : public RdbFaultEvent {
 public:
     RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
         const std::string &custLog = "", bool printDbInfo = false);
