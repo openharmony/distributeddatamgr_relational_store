@@ -578,11 +578,11 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
             std::vector<uint8_t> tmpValue;
             valueObject.GetBlob(tmpValue);
             if (tmpValue.empty()) {
-                auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                if (proxy != nullptr) {
-                    Reportor::ReportFault(RdbEmptyBlobEvent(proxy->GetBundleName()));
-                }
                 valueObject = ValueObject();
+            }
+            auto proxy = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            if (tmpValue.empty() && proxy != nullptr) {
+                Reportor::ReportFault(RdbEmptyBlobEvent(proxy->GetBundleName()));
             }
         }
         if (ret == napi_ok) {
