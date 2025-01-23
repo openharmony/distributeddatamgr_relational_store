@@ -252,8 +252,6 @@ uint8_t *RdbFaultHiViewReporter::GetFaultCounter(RdbFaultCounter &counter, int32
             return &counter.setServiceEncrypt;
         case E_CHECK_POINT_FAIL:
             return &counter.checkPoint;
-        case E_EMPTY_BLOB:
-            return &counter.emptyBlob;
         default:
             return nullptr;
     };
@@ -316,7 +314,7 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
 }
 
 RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
-    : RdbFaultEvent(FT_CURD, E_EMPTY_BLOB, "", "empty blob")
+    : RdbFaultEvent(FT_CURD, E_SQLITE_FULL, "", "The input blob is empty")
 {
     std::string bundleName_ = bundleName;
     SetBundleName(bundleName_);
@@ -332,7 +330,7 @@ void RdbEmptyBlobEvent::Report() const
         { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
         { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
         { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
-        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_EMPTY_BLOB }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_SQLITE_FULL }, .arraySize = 0 },
         { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
     };
     auto size = sizeof(params) / sizeof(params[0]);
