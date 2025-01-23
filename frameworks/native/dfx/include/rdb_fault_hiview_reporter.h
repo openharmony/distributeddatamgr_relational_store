@@ -64,7 +64,6 @@ struct RdbFaultCounter {
     uint8_t setNewEncrypt{ 0 };
     uint8_t setServiceEncrypt{ 0 };
     uint8_t checkPoint{ 0 };
-    uint8_t emptyBlob{ 0 };
 };
 
 // Fault Type Define
@@ -74,7 +73,6 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 
-static constexpr int E_EMPTY_BLOB = 111;
 class API_EXPORT RdbFaultEvent {
 public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
