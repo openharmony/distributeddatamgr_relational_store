@@ -62,16 +62,16 @@ public:
     std::function<void()> *GetCallBack();
 
 private:
-    std::function<void()> *m_callback;
-    std::function<void()> m_callbackRef;
+    std::function<void()> *m_callback = nullptr;
+    std::function<void()> m_callbackRef = nullptr;
     int32_t mode_ = DistributedRdb::REMOTE;
-    int64_t callbackId;
-    FuncType funcType;
-    std::function<void()> func;
-    std::function<void(const std::vector<std::string> &devices)> carrStrFunc;
+    int64_t callbackId = 0;
+    FuncType funcType = NoParam;
+    std::function<void()> func = nullptr;
+    std::function<void(const std::vector<std::string> &devices)> carrStrFunc = nullptr;
     std::function<void(const DistributedRdb::Origin &origin, const PrimaryFields &fields,
         DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)>
-        changeInfoFunc;
+        changeInfoFunc = nullptr;
 };
 
 class SyncObserverImpl : public DistributedRdb::DetailProgressObserver {

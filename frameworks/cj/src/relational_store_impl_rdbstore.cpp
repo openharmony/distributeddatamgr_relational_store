@@ -712,6 +712,10 @@ namespace Relational {
     int64_t GetRdbStore(OHOS::AbilityRuntime::Context* context, StoreConfig config,
         int32_t *errCode)
     {
+        if (context == nullptr) {
+            *errCode = -1;
+            return -1;
+        }
         auto abilitycontext = std::make_shared<AppDataMgrJsKit::Context>(context->shared_from_this());
         AppDataMgrJsKit::JSUtils::ContextParam param;
         initContextParam(param, abilitycontext);
@@ -740,6 +744,10 @@ namespace Relational {
     void DeleteRdbStore(OHOS::AbilityRuntime::Context* context, const char* name,
         int32_t *errCode)
     {
+        if (context == nullptr) {
+            *errCode = -1;
+            return;
+        }
         auto abilitycontext = std::make_shared<AppDataMgrJsKit::Context>(context->shared_from_this());
         AppDataMgrJsKit::JSUtils::ContextParam param;
         initContextParam(param, abilitycontext);
@@ -757,6 +765,10 @@ namespace Relational {
     void DeleteRdbStoreConfig(OHOS::AbilityRuntime::Context* context, StoreConfig config,
         int32_t *errCode)
     {
+        if (context == nullptr) {
+            *errCode = -1;
+            return;
+        }
         auto abilitycontext = std::make_shared<AppDataMgrJsKit::Context>(context->shared_from_this());
         AppDataMgrJsKit::JSUtils::ContextParam param;
         initContextParam(param, abilitycontext);
