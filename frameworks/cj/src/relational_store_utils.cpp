@@ -222,7 +222,7 @@ namespace Relational {
         for (size_t i = 0; i < devices.size(); i++) {
             cArrStr.head[i] = MallocCString(devices[i]);
         }
-        cArrStr.size = devices.size();
+        cArrStr.size = static_cast<int64_t>(devices.size());
         return cArrStr;
     }
 
@@ -281,7 +281,7 @@ namespace Relational {
     ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode)
     {
         ModifyTime modifyTime{0};
-        modifyTime.size = map.size();
+        modifyTime.size = static_cast<int64_t>(map.size());
         modifyTime.key = static_cast<RetPRIKeyType*>(malloc(sizeof(RetPRIKeyType) * modifyTime.size));
         modifyTime.value = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * modifyTime.size));
         if (modifyTime.key == nullptr || modifyTime.value == nullptr) {
@@ -293,7 +293,7 @@ namespace Relational {
         int64_t index = 0;
         for (auto it = map.begin(); it != map.end(); ++it) {
             modifyTime.key[index] = VariantToRetPRIKeyType(it->first);
-            modifyTime.value[index] = (it->second).date;
+            modifyTime.value[index] = static_cast<uint64_t>((it->second).date);
             index++;
         }
         return modifyTime;
@@ -312,7 +312,7 @@ namespace Relational {
         for (size_t i = 0; i < arr.size(); i++) {
             types.head[i] = VariantToRetPRIKeyType(arr[i]);
         }
-        types.size = arr.size();
+        types.size = static_cast<int64_t>(arr.size());
         return types;
     }
 
@@ -348,7 +348,7 @@ namespace Relational {
             infos.head[index] = ToRetChangeInfo(origin, it);
             index++;
         }
-        infos.size = changeInfo.size();
+        infos.size = static_cast<int64_t>(changeInfo.size());
         return infos;
     }
 
