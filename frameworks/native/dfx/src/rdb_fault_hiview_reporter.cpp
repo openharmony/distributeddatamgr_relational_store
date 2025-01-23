@@ -333,6 +333,7 @@ void RdbEmptyBlobEvent::Report() const
         { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_SQLITE_FULL }, .arraySize = 0 },
         { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
     };
+
     auto size = sizeof(params) / sizeof(params[0]);
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
 }
