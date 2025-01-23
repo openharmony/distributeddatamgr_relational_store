@@ -316,8 +316,7 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
 RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
     : RdbFaultEvent(FT_CURD, E_SQLITE_FULL, "", "The input blob is empty")
 {
-    std::string bundleName_ = bundleName;
-    SetBundleName(bundleName_);
+    SetBundleName(bundleName);
 }
 
 void RdbEmptyBlobEvent::Report() const
@@ -333,7 +332,6 @@ void RdbEmptyBlobEvent::Report() const
         { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_SQLITE_FULL }, .arraySize = 0 },
         { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
     };
-
     auto size = sizeof(params) / sizeof(params[0]);
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
 }
