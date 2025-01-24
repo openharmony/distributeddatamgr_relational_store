@@ -73,7 +73,7 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 
-class RdbFaultEvent {
+class API_EXPORT RdbFaultEvent {
 public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
@@ -108,7 +108,14 @@ private:
     const RdbStoreConfig &config_;
     bool printDbInfo_;
 };
-class RdbFaultHiViewReporter {
+
+class API_EXPORT RdbEmptyBlobEvent : public RdbFaultEvent {
+public:
+    RdbEmptyBlobEvent(const std::string &bundleName);
+    virtual void Report() const override;
+};
+
+class API_EXPORT RdbFaultHiViewReporter {
 public:
     static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "");
     static bool RegCollector(Connection::Collector collector);
