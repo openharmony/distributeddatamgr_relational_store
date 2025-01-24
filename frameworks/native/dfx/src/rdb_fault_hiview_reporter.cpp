@@ -313,6 +313,29 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
     SetBundleName(RdbFaultHiViewReporter::GetBundleName(config_.GetBundleName(), config_.GetName()));
 }
 
+RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
+    : RdbFaultEvent(FT_CURD, E_SQLITE_FULL, "", "The input blob is empty")
+{
+    SetBundleName(bundleName);
+}
+
+void RdbEmptyBlobEvent::Report() const
+{
+    std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string bundleName = GetBundleName();
+    std::string faultType = GetFaultType();
+    std::string appendInfo = GetLogInfo();
+    HiSysEventParam params[] = {
+        { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
+        { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = E_SQLITE_FULL }, .arraySize = 0 },
+        { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
+    };
+    auto size = sizeof(params) / sizeof(params[0]);
+    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, FAULT_EVENT, HISYSEVENT_FAULT, params, size);
+}
+
 void RdbFaultDbFileEvent::Report() const
 {
     std::string occurTime = RdbTimeUtils::GetCurSysTimeWithMs();

@@ -34,12 +34,14 @@ using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
-    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled);
+    static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::RdbStore> value, bool isSystemAppCalled,
+        const std::string &bundleName);
     RdbStoreProxy();
     ~RdbStoreProxy();
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
+    std::string GetBundleName();
 
 private:
     static Descriptor GetDescriptors();
@@ -80,6 +82,7 @@ private:
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
+    std::string bundleName_;
     
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
