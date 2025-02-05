@@ -469,6 +469,11 @@ static constexpr int E_SET_SERVICE_ENCRYPT_FAIL = (E_BASE + 0x55);
  * @brief Database WAL file check point failed.
  */
 static constexpr int E_CHECK_POINT_FAIL = (E_BASE + 0x56);
+
+/**
+ * @brief Database db meta recovered success.
+ */
+static constexpr int E_SQLITE_META_RECOVERED = (E_BASE + 0x57);
 } // namespace NativeRdb
 } // namespace OHOS
 

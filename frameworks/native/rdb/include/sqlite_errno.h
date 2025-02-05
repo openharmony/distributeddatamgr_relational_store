@@ -22,6 +22,9 @@
 
 #include "rdb_errno.h"
 
+#ifndef SQLITE_META_RECOVERED
+#define SQLITE_META_RECOVERED 66
+#endif
 namespace OHOS {
 namespace NativeRdb {
 const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
@@ -44,6 +47,7 @@ const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_NOTADB, E_SQLITE_CORRUPT },
     { SQLITE_DONE, E_NO_MORE_ROWS },
     { SQLITE_ROW, E_OK },
+    { SQLITE_META_RECOVERED, E_SQLITE_META_RECOVERED },
 };
 class SQLiteError {
 public:
