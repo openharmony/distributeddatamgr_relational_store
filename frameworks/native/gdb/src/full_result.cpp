@@ -54,7 +54,7 @@ std::pair<int32_t, std::unordered_map<std::string, GraphValue>> FullResult::GetR
         return { E_NO_DATA, res };
     }
 
-    for (int i = 0; i < columnCount; i++) {
+    for (uint32_t i = 0; i < columnCount; i++) {
         auto [ret, key] = stmt->GetColumnName(i);
         if (ret != E_OK) {
             LOG_ERROR("GetKeys failed ret=%{public}d.", ret);
