@@ -31,12 +31,10 @@ const int32_t TransactionImpl::regCreator_ = Transaction::RegisterCreator(Transa
 TransactionImpl::TransactionImpl(std::shared_ptr<Connection> connection, const std::string &name)
     : name_(name), connection_(std::move(connection))
 {
-    LOG_INFO("constructor name=%{public}s", name_.c_str());
 }
 
 TransactionImpl::~TransactionImpl()
 {
-    LOG_INFO("destructor name=%{public}s", name_.c_str());
     CloseInner();
 }
 
@@ -66,7 +64,6 @@ std::string TransactionImpl::GetBeginSql(int32_t type)
 
 int32_t TransactionImpl::Begin(int32_t type)
 {
-    LOG_INFO("type=%{public}d", static_cast<int32_t>(type));
     std::lock_guard lock(mutex_);
     store_ = std::make_shared<TransDB>(connection_, name_);
     if (store_ == nullptr) {
