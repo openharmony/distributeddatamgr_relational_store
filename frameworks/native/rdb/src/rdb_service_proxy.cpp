@@ -296,7 +296,13 @@ std::pair<int32_t, std::shared_ptr<RdbServiceProxy::ResultSet>> RdbServiceProxy:
         LOG_ERROR("read remote object is null.");
         return { RDB_ERROR, nullptr };
     }
-    sptr<NativeRdb::ResultSetProxy> instance = new NativeRdb::ResultSetProxy(remote);
+    sptr<NativeRdb::ResultSetProxy> instance = new(std::nothrow) NativeRdb::ResultSetProxy(remote);
+    if (instance == nullptr) {
+        LOG_ERROR("instance object is null.bundleName:%{public}s, storeName:%{public}s, device:%{public}.6s",
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(),
+            SqliteUtils::Anonymous(device).c_str());
+        return { RDB_ERROR, nullptr };
+    }
     return { RDB_OK, std::shared_ptr<ResultSet>(instance.GetRefPtr(), [holder = instance](const auto *) {}) };
 }
 
@@ -371,7 +377,12 @@ std::pair<int32_t, std::shared_ptr<RdbServiceProxy::ResultSet>> RdbServiceProxy:
             remote != nullptr ? "not" : "");
         return { RDB_ERROR, {} };
     }
-    sptr<NativeRdb::ResultSetProxy> instance = new NativeRdb::ResultSetProxy(remote);
+    sptr<NativeRdb::ResultSetProxy> instance = new(std::nothrow) NativeRdb::ResultSetProxy(remote);
+    if (instance == nullptr) {
+        LOG_ERROR("instance object is null.bundleName:%{public}s, storeName:%{public}s",
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+        return { RDB_ERROR, nullptr };
+    }
     return { RDB_OK, std::shared_ptr<ResultSet>(instance.GetRefPtr(), [instance](const auto *) {}) };
 }
 
