@@ -319,3 +319,95 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
 }
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_015
+ * @tc.desc: restore wal file exist test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_015, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+    
+    int ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    backupConfig.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback backupHelper;
+    auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(backupStore, nullptr);
+    backupStore = nullptr;
+
+    struct stat fileStat;
+    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
+    EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
+
+    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+    ret = stat(walFilePath.c_str(), &fileStat);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(errno, 2);
+
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_016
+ * @tc.desc: restore wal file not empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    config.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(store, nullptr);
+    
+    int ret = store->Backup(BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_OK);
+
+    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    backupConfig.SetEncryptStatus(false);
+    RdbStoreBackupRestoreTestOpenCallback backupHelper;
+    auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(backupStore, nullptr);
+    
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = backupStore->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    struct stat fileStat;
+    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
+    EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
+    EXPECT_NE(fileStat.st_size, 0);
+
+    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    EXPECT_EQ(ret, E_SQLITE_CORRUPT);
+
+    backupStore = nullptr;
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+}
