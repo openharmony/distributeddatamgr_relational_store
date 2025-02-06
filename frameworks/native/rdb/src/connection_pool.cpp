@@ -418,6 +418,12 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
         return E_SQLITE_CORRUPT;
     }
+    auto walFile = backupPath + "-wal";
+    if (SqliteUtils::GetFileSize(walFile) != 0) {
+        LOG_ERROR("Wal file exist.");
+        return E_SQLITE_CORRUPT;
+    }
+
     SqliteUtils::DeleteFile(backupPath + "-shm");
     SqliteUtils::DeleteFile(backupPath + "-wal");
 
