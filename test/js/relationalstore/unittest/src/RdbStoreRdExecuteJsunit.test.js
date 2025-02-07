@@ -436,7 +436,7 @@ describe('rdbStoreRdExecuteTest', function () {
             await store?.execute(insert);
         } catch (e) {
             console.error(TAG + `testVectorSubSelectFailed0004 failed. err: ${JSON.stringify(e)}`);
-            expect(e.code).assertEqual(14800000);
+            expect(e.code).assertEqual(14800021);
         }
         console.log(TAG + "************* testVectorSubSelectFailed0004 end   *************");
     });
@@ -496,7 +496,7 @@ describe('rdbStoreRdExecuteTest', function () {
             await store?.execute(deleteSql);
         } catch (e) {
             console.error(TAG + `testVectorSubSelectFailed0005 failed. err: ${JSON.stringify(e)}`);
-            expect(e.code).assertEqual(14800000);
+            expect(e.code).assertEqual(14800021);
         }
         console.log(TAG + "************* testVectorSubSelectFailed0005 end   *************");
     });
