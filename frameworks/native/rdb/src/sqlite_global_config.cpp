@@ -55,6 +55,8 @@ SqliteGlobalConfig::SqliteGlobalConfig()
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
     sqlite3_initialize();
+
+    sqlite3_register_cksumvfs(0);
 }
 
 SqliteGlobalConfig::~SqliteGlobalConfig()

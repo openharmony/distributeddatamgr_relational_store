@@ -63,6 +63,7 @@ constexpr uint32_t SqliteConnection::NO_ITER;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
 constexpr uint32_t SqliteConnection::ITER_V1;
+constexpr uint32_t SqliteConnection::SQLITE_CKSUMVFS_RESERVE_BYTES;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -358,7 +359,12 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return E_OK;
     }
 
-    auto errCode = RegDefaultFunctions(dbHandle_);
+    auto errCode = SetCrcCheck(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = RegDefaultFunctions(dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -367,14 +373,8 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
     LimitPermission(dbPath);
 
-    if (!config.IsEncrypt()) {
-        errCode = ExecuteSql("pragma meta_double_write=enabled");
-        if (errCode == E_SQLITE_META_RECOVERED) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
-        } else if (errCode != E_OK) {
-            LOG_ERROR("meta double failed %{public}d", errCode);
-        }
-    }
+    SetDwrEnable(config);
+
     errCode = SetPersistWal();
     if (errCode != E_OK) {
         return errCode;
@@ -611,6 +611,37 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
     }
     config.ChangeEncryptKey();
     return E_OK;
+}
+
+int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
+{
+    if (config.IsEncrypt()) {
+        return E_OK;
+    }
+    int n = -1;
+    auto errCode = SQLiteError::ErrNo(sqlite3_file_control(dbHandle_, 0, SQLITE_FCNTL_RESERVE_BYTES, &n));
+    if (errCode != E_OK) {
+        LOG_ERROR("failed to set sqlite reserved bytes(SQLITE_FCNTL_RESERVE_BYTES), errCode=%{public}d", errCode);
+        return errCode;
+    }
+    if (n == 0) {
+        n = SQLITE_CKSUMVFS_RESERVE_BYTES;
+        (void)sqlite3_file_control(dbHandle_, 0, SQLITE_FCNTL_RESERVE_BYTES, &n);
+    }
+    return E_OK;
+}
+
+void SqliteConnection::SetDwrEnable(const RdbStoreConfig &config)
+{
+    if (config.IsEncrypt()) {
+        return;
+    }
+    auto errCode = ExecuteSql(GlobalExpr::PRAGMA_META_DOUBLE_WRITE);
+    if (errCode == E_SQLITE_META_RECOVERED) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
+    } else if (errCode != E_OK) {
+        LOG_ERROR("meta double failed %{public}d", errCode);
+    }
 }
 
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
