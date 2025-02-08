@@ -45,25 +45,9 @@ struct RdbCorruptedEvent {
     std::map<std::string, DebugInfo> debugInfos;
 };
 
-struct RdbFaultCounter {
-    uint8_t full{ 0 };
-    uint8_t corrupt{ 0 };
-    uint8_t perm{ 0 };
-    uint8_t busy{ 0 };
-    uint8_t noMem{ 0 };
-    uint8_t ioErr{ 0 };
-    uint8_t cantOpen{ 0 };
-    uint8_t constraint{ 0 };
-    uint8_t notDb{ 0 };
-    uint8_t rootKeyFault{ 0 };
-    uint8_t rootKeyNotLoad{ 0 };
-    uint8_t workKeyFault{ 0 };
-    uint8_t workkeyEencrypt{ 0 };
-    uint8_t workKeyDcrypt{ 0 };
-    uint8_t setEncrypt{ 0 };
-    uint8_t setNewEncrypt{ 0 };
-    uint8_t setServiceEncrypt{ 0 };
-    uint8_t checkPoint{ 0 };
+struct RdbFaultCode {
+    int nativeCode;
+    uint8_t faultCounter;
 };
 
 // Fault Type Define
@@ -131,9 +115,9 @@ private:
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static bool IsReportFault(const std::string &bundleName, int32_t errCode);
-    static uint8_t *GetFaultCounter(RdbFaultCounter &counter, int32_t errCode);
+    static uint8_t *GetFaultCounter(int32_t errCode);
     static Connection::Collector collector_;
-    static RdbFaultCounter faultCounter_;
+    static RdbFaultCode faultCounters_[];
 };
 } // namespace OHOS::NativeRdb
 #endif // DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H

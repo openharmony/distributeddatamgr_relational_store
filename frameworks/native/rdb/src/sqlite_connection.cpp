@@ -367,6 +367,14 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
     LimitPermission(dbPath);
 
+    if (!config.IsEncrypt()) {
+        errCode = ExecuteSql("pragma meta_double_write=enabled");
+        if (errCode == E_SQLITE_META_RECOVERED) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
+        } else if (errCode != E_OK) {
+            LOG_ERROR("meta double failed %{public}d", errCode);
+        }
+    }
     errCode = SetPersistWal();
     if (errCode != E_OK) {
         return errCode;
