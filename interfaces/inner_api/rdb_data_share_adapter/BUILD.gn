@@ -15,6 +15,8 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 config("rdb_data_share_adapter_config") {
   visibility = [ ":*" ]
+
+  cflags = [ "-Wno-c99-designator" ]
   if (!is_mingw && !is_mac) {
     cflags_cc = [ "-fvisibility=hidden" ]
   }
