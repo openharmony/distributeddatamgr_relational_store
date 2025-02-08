@@ -45,7 +45,27 @@ static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
 static constexpr int MAX_FAULT_TIMES = 1;
 Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
-RdbFaultCounter RdbFaultHiViewReporter::faultCounter_ = { 0 };
+RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
+    { E_SQLITE_FULL, 0 },
+    { E_SQLITE_CORRUPT, 0 },
+    { E_SQLITE_PERM, 0 },
+    { E_SQLITE_BUSY, 0 },
+    { E_SQLITE_NOMEM, 0 },
+    { E_SQLITE_IOERR, 0 },
+    { E_SQLITE_CANTOPEN, 0 },
+    { E_SQLITE_CONSTRAINT, 0 },
+    { E_SQLITE_NOT_DB, 0 },
+    { E_ROOT_KEY_FAULT, 0 },
+    { E_ROOT_KEY_NOT_LOAD, 0 },
+    { E_WORK_KEY_FAIL, 0 },
+    { E_WORK_KEY_ENCRYPT_FAIL, 0 },
+    { E_WORK_KEY_DECRYPT_FAIL, 0 },
+    { E_SET_ENCRYPT_FAIL, 0 },
+    { E_SET_NEW_ENCRYPT_FAIL, 0 },
+    { E_SET_SERVICE_ENCRYPT_FAIL, 0 },
+    { E_CHECK_POINT_FAIL, 0 },
+    { E_SQLITE_META_RECOVERED, 0 },
+};
 
 void RdbFaultHiViewReporter::ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo)
 {
@@ -213,48 +233,16 @@ std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName,
     return SqliteUtils::Anonymous(storeName);
 }
 
-uint8_t *RdbFaultHiViewReporter::GetFaultCounter(RdbFaultCounter &counter, int32_t errCode)
+uint8_t *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
 {
-    switch (errCode) {
-        case E_SQLITE_FULL:
-            return &counter.full;
-        case E_SQLITE_CORRUPT:
-            return &counter.corrupt;
-        case E_SQLITE_PERM:
-            return &counter.perm;
-        case E_SQLITE_BUSY:
-            return &counter.busy;
-        case E_SQLITE_NOMEM:
-            return &counter.noMem;
-        case E_SQLITE_IOERR:
-            return &counter.ioErr;
-        case E_SQLITE_CANTOPEN:
-            return &counter.cantOpen;
-        case E_SQLITE_CONSTRAINT:
-            return &counter.constraint;
-        case E_SQLITE_NOT_DB:
-            return &counter.notDb;
-        case E_ROOT_KEY_FAULT:
-            return &counter.rootKeyFault;
-        case E_ROOT_KEY_NOT_LOAD:
-            return &counter.rootKeyNotLoad;
-        case E_WORK_KEY_FAIL:
-            return &counter.workKeyFault;
-        case E_WORK_KEY_ENCRYPT_FAIL:
-            return &counter.workkeyEencrypt;
-        case E_WORK_KEY_DECRYPT_FAIL:
-            return &counter.workKeyDcrypt;
-        case E_SET_ENCRYPT_FAIL:
-            return &counter.setEncrypt;
-        case E_SET_NEW_ENCRYPT_FAIL:
-            return &counter.setNewEncrypt;
-        case E_SET_SERVICE_ENCRYPT_FAIL:
-            return &counter.setServiceEncrypt;
-        case E_CHECK_POINT_FAIL:
-            return &counter.checkPoint;
-        default:
-            return nullptr;
-    };
+    auto it = std::lower_bound(faultCounters_, faultCounters_ + sizeof(faultCounters_) / sizeof(RdbFaultCode), errCode,
+        [](const RdbFaultCode& faultCode, int32_t code) {
+            return faultCode.nativeCode < code;
+        });
+    if (it != faultCounters_ + sizeof(faultCounters_) / sizeof(RdbFaultCode) && it->nativeCode == errCode) {
+        return &it->faultCounter;
+    }
+    return nullptr;
 }
 
 bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_t errCode)
@@ -262,7 +250,7 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
     if (bundleName.empty()) {
         return false;
     }
-    uint8_t *counter = GetFaultCounter(faultCounter_, errCode);
+    uint8_t *counter = GetFaultCounter(errCode);
     if (counter == nullptr) {
         return false;
     }
@@ -308,9 +296,8 @@ void RdbFaultEvent::Report() const
 
 RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
     const std::string &custLog, bool printDbInfo)
-    : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config), printDbInfo_(printDbInfo)
+    : RdbFaultEvent(faultType, errorCode, config.GetBundleName(), custLog), config_(config), printDbInfo_(printDbInfo)
 {
-    SetBundleName(RdbFaultHiViewReporter::GetBundleName(config_.GetBundleName(), config_.GetName()));
 }
 
 RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
