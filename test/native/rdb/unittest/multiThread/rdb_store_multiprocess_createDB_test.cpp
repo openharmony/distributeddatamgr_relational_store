@@ -215,10 +215,24 @@ void RdbMultiProcessCreateDBTest::Create()
  */
 HWTEST_F(RdbMultiProcessCreateDBTest, Rdb_ConcurrentCreate_001, TestSize.Level1)
 {
-    int pid = fork();
+    Create();
+}
+
+int32_t main(int32_t argc, char *argv[])
+{
+    testing::GTEST_FLAG(output) = "xml:./";
+    testing::InitGoogleTest(&argc, argv);
+    pid_t pid = fork();
     if (pid == 0) {
-        Create();
-    } else {
-        Create();
+        RdbMultiProcessCreateDBTest::Create();
+        exit(0);
+    } else if (pid < 0) {
+        return 1;
     }
+    int res = RUN_ALL_TESTS();
+    if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+    }
+    return res;
 }
