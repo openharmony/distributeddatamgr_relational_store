@@ -1205,14 +1205,14 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     }
 #endif
 
-    for (auto &key : keys) {
+    for (const auto &key : keys) {
         errCode = SetEncryptKey(key, config);
         if (errCode == E_OK) {
             config.RestoreEncryptKey(key);
             break;
         }
     }
-    for (auto key : keys) {
+    for (auto &key : keys) {
         key.assign(key.size(), 0);
     }
     return errCode;
