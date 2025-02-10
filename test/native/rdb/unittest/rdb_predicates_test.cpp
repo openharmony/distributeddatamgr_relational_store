@@ -620,7 +620,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_002, TestSize.Level1)
  * @tc.name: RdbStore_EqualTo_001
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
 {
@@ -635,7 +634,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
  * @tc.name: RdbStore_EqualTo_002
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
 {
@@ -763,7 +761,6 @@ int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
  * @tc.name: RdbStore_NotEqualTo_001
  * @tc.desc: Abnormal testCase of RdbPredicates for NotEqualTo, if field is ""
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_001, TestSize.Level1)
 {
@@ -779,7 +776,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_001, TestSize.Level1)
  * @tc.name: RdbStore_NotEqualTo_002
  * @tc.desc: Normal testCase of RdbPredicates for NotEqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
 {
@@ -794,7 +790,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
  * @tc.name: RdbStore_NotEqualTo_003
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_003, TestSize.Level1)
 {
@@ -907,7 +902,6 @@ void RdbStorePredicateTest::BasicDataTypeTest002(RdbPredicates predicates1)
  * @tc.name: RdbStore_IsNull_003
  * @tc.desc: Normal testCase of RdbPredicates for IsNull
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_003, TestSize.Level1)
 {
@@ -922,7 +916,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_003, TestSize.Level1)
  * @tc.name: RdbStore_NotNull_004
  * @tc.desc: Normal testCase of RdbPredicates for NotNull
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotNull_003, TestSize.Level1)
 {
@@ -937,7 +930,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotNull_003, TestSize.Level1)
  * @tc.name: RdbStore_GreaterThan_005
  * @tc.desc: Normal testCase of RdbPredicates for GreaterThan
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
 {
@@ -985,7 +977,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
  * @tc.name: RdbStore_GreaterThanOrEqualTo_006
  * @tc.desc: Normal testCase of RdbPredicates for GreaterThanOrEqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Level1)
 {
@@ -1039,7 +1030,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
  * @tc.name: RdbStore_lessThan_007
  * @tc.desc: Normal testCase of RdbPredicates for LessThan
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
 {
@@ -1087,7 +1077,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
  * @tc.name: RdbStore_LessThanOrEqualTo_008
  * @tc.desc: Normal testCase of RdbPredicates for LessThanOrEqualTo
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
 {
@@ -1135,7 +1124,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
  * @tc.name: RdbStore_Between_009
  * @tc.desc: Normal testCase of RdbPredicates for Between
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
 {
@@ -1188,7 +1176,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
  * @tc.name: RdbStore_Contain_010
  * @tc.desc: Normal testCase of RdbPredicates for Contain
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_010, TestSize.Level1)
 {
@@ -1204,7 +1191,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_010, TestSize.Level1)
  * @tc.name: RdbStore_BeginsWith_011
  * @tc.desc: Normal testCase of RdbPredicates for BeginsWith
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_011, TestSize.Level1)
 {
@@ -1220,7 +1206,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_011, TestSize.Level1)
  * @tc.name: RdbStore_EndsWith_012
  * @tc.desc: Normal testCase of RdbPredicates for EndsWith
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_012, TestSize.Level1)
 {
@@ -1236,7 +1221,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_012, TestSize.Level1)
  * @tc.name: RdbStore_Like_013
  * @tc.desc: Normal testCase of RdbPredicates for Like
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Like_013, TestSize.Level1)
 {
@@ -1252,7 +1236,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Like_013, TestSize.Level1)
  * @tc.name: RdbStore_BeginEndWrap_014
  * @tc.desc: Normal testCase of RdbPredicates for BeginEndWrap
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
 {
@@ -1278,7 +1261,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
  * @tc.name: RdbStore_AndOR_015
  * @tc.desc: Normal testCase of RdbPredicates for AndOR
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
 {
@@ -1305,7 +1287,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
  * @tc.name: RdbStore_Order_016
  * @tc.desc: Normal testCase of RdbPredicates for Order
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
 {
@@ -1343,7 +1324,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
  * @tc.name: RdbStore_Limit_017
  * @tc.desc: Normal testCase of RdbPredicates for Limit
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_017, TestSize.Level1)
 {
@@ -1359,7 +1339,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_017, TestSize.Level1)
  * @tc.name: RdbStore_JoinTypes_018
  * @tc.desc: Normal testCase of RdbPredicates for JoinTypes
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_JoinTypes_018, TestSize.Level1)
 {
@@ -1388,7 +1367,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_JoinTypes_018, TestSize.Level1)
  * @tc.name: RdbStore_Glob_019
  * @tc.desc: Normal testCase of RdbPredicates for Glob
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_019, TestSize.Level1)
 {
@@ -1429,7 +1407,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_019, TestSize.Level1)
  * @tc.name: RdbStore_NotBetween_020
  * @tc.desc: Normal testCase of RdbPredicates for NotBetween
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
 {
@@ -1482,7 +1459,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
  * @tc.name: RdbStore_ComplexPredicate_021
  * @tc.desc: Normal testCase of RdbPredicates for complex combine sql
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
 {
@@ -1509,7 +1485,6 @@ void RdbStorePredicateTest::SetJionList(RdbPredicates &predicates1)
  * @tc.name: RdbStore_ClearMethod_022
  * @tc.desc: Normal testCase of RdbPredicates for Clear Method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
 {
@@ -1573,7 +1548,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
  * @tc.name: RdbStore_InMethod_023
  * @tc.desc: Normal testCase of RdbPredicates for in method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
 {
@@ -1620,7 +1594,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
  * @tc.name: RdbStore_NotInMethod_023
  * @tc.desc: Normal testCase of RdbPredicates for notIn method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
 {
@@ -1668,7 +1641,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
  * @tc.name: RdbStore_KeywordMethod_024
  * @tc.desc: Normal testCase of RdbPredicates for clear method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 {
@@ -1733,7 +1705,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
  * @tc.name: RdbStore_ToString_025
  * @tc.desc: Normal testCase of RdbPredicates for clear method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
 {
@@ -1757,7 +1728,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
  * @tc.name: RdbStore_InDevices_InAllDevices_026
  * @tc.desc: Normal testCase of RdbPredicates for InDevices and InAllDevices method
  * @tc.type: FUNC
- * @tc.require: AR
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Level1)
 {
@@ -1794,7 +1764,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.
  * @tc.name: RdbStore_NotInMethod_028
  * @tc.desc: Abnormal testCase of RdbPredicates for notIn method
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
 {
@@ -2416,7 +2385,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.
  * @tc.name: RdbStore_GetString_001
  * @tc.desc: Normal testCase of RdbPredicates for GetString
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
 {
@@ -2456,7 +2424,6 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
  * @tc.name: RdbStore_GetString_002
  * @tc.desc: Normal testCase of RdbPredicates for GetString
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
 {

@@ -44,7 +44,6 @@ void DataAbilityPredicatesTest::TearDownTestCase(void)
  * @tc.name: DataAbilityPredicates_001
  * @tc.desc: test DataAbilityPredicates()
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_001, TestSize.Level1)
 {
@@ -56,7 +55,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_001, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_002
  * @tc.desc: test DataAbilityPredicates()
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_002, TestSize.Level1)
 {
@@ -94,7 +92,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_002, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_003
  * @tc.desc: test DataAbilityPredicates
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_003, TestSize.Level1)
 {
@@ -127,7 +124,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_003, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_004
  * @tc.desc: test DataAbilityPredicates(std::string rawSelection);
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_004, TestSize.Level1)
 {
@@ -141,7 +137,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_004, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_005
  * @tc.desc: test DataAbilityPredicates(std::string rawSelection);
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_005, TestSize.Level1)
 {
@@ -155,7 +150,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_005, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_006
  * @tc.desc: test DataAbilityPredicates(std::string rawSelection);
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_006, TestSize.Level1)
 {
@@ -169,7 +163,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_006, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_007
  * @tc.desc: test DataAbilityPredicates(OHOS::Parcel *source)
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_007, TestSize.Level1)
 {
@@ -181,7 +174,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_007, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_008
  * @tc.desc: test DataAbilityPredicates(OHOS::Parcel *source)
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_008, TestSize.Level1)
 {
@@ -200,7 +192,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_008, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_009
  * @tc.desc: test DataAbilityPredicates(OHOS::Parcel *source)
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_009, TestSize.Level1)
 {
@@ -227,7 +218,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_009, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_010
  * @tc.desc: test DataAbilityPredicates Marshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_010, TestSize.Level1)
 {
@@ -273,7 +263,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_010, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_011
  * @tc.desc: test DataAbilityPredicates Marshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_011, TestSize.Level1)
 {
@@ -313,7 +302,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_011, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_012
  * @tc.desc: test DataAbilityPredicates Marshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_012, TestSize.Level1)
 {
@@ -353,7 +341,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_012, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_013
  * @tc.desc: test DataAbilityPredicates Unmarshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_013, TestSize.Level1)
 {
@@ -370,7 +357,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_013, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_014
  * @tc.desc: test DataAbilityPredicates Unmarshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_014, TestSize.Level1)
 {
@@ -390,7 +376,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_014, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_015
  * @tc.desc: test DataAbilityPredicates Unmarshalling
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_015, TestSize.Level1)
 {
@@ -407,7 +392,6 @@ HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_015, TestSize.Level1)
  * @tc.name: DataAbilityPredicates_016
  * @tc.desc: test SetAttributes
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(DataAbilityPredicatesTest, DataAbilityPredicates_016, TestSize.Level1)
 {
