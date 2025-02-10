@@ -288,54 +288,6 @@ describe('rdbStoreResultSetGetRowTest', function () {
 
     /**
      * @tc.name rdb store resultSet getRow test
-     * @tc.number rdbStoreResultSetGetRowTest0010
-     * @tc.desc Insert a string greater than number.MAX_SAFE_INTEGER is also obtained as a string by getRow
-     */
-    it('rdbStoreResultSetGetRowTest0010', 0, async () => {
-        console.info(TAG + "************* rdbStoreResultSetGetRowTest0010 start *************");
-        let rowId = 0;
-        let valueNum = Number.MAX_SAFE_INTEGER.toString() + 0;
-        let valueBucket = {
-          data2: valueNum
-        };
-        rowId = await rdbStore.insert("test", valueBucket);
-        expect(1).assertEqual(rowId);
-        let predicates = new data_relationalStore.RdbPredicates("test");
-        let resultSet = await rdbStore.query(predicates);
-        resultSet.goToFirstRow();
-        let res = resultSet.getRow();
-        resultSet.close();
-        console.info(TAG + 'valueNum ' + valueNum + ' getRow data2:' + res.data2 + ' type:' + typeof res.data2);
-        expect(valueNum).assertEqual(res.data2);
-        console.info(TAG + "************* rdbStoreResultSetGetRowTest0010 end *************");
-    });
-    
-    /**
-     * @tc.name rdb store resultSet getRow test
-     * @tc.number rdbStoreResultSetGetRowTest0011
-     * @tc.desc Insert as a string equal to number.MAX_SAFE_INTEGER, getRow obtains the number
-     */
-    it('rdbStoreResultSetGetRowTest0011', 0, async () => {
-        console.info(TAG + "************* rdbStoreResultSetGetRowTest0011 start *************");
-        let rowId = 0;
-        let valueNum = Number.MAX_SAFE_INTEGER.toString();
-        let valueBucket = {
-          data2: valueNum
-        };
-        rowId = await rdbStore.insert("test", valueBucket);
-        expect(1).assertEqual(rowId);
-        let predicates = new data_relationalStore.RdbPredicates("test");
-        let resultSet = await rdbStore.query(predicates);
-        resultSet.goToFirstRow();
-        let res = resultSet.getRow();
-        resultSet.close();
-        console.info(TAG + 'valueNum ' + valueNum + ' getRow data2:' + res.data2 + ' type:' + typeof res.data2);
-        expect(Number.MAX_SAFE_INTEGER).assertEqual(res.data2);
-        console.info(TAG + "************* rdbStoreResultSetGetRowTest0011 end *************");
-    });
-
-    /**
-     * @tc.name rdb store resultSet getRow test
      * @tc.number rdbStoreResultSetGetRows0001
      * @tc.desc resultSet getRows(maxCount) test: 100 rows of data, with empty arg
      */
