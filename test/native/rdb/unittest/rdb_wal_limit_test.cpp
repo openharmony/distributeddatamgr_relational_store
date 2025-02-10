@@ -200,7 +200,6 @@ ValuesBucket RdbWalLimitTest::MakeValueBucket(const int &id)
  * @tc.desc: Without reading data or conducting transactions, if data is continuously written,
  * the WAL size will not exceed the default limit.
  * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
  */
 HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_001, TestSize.Level1)
 {
@@ -227,7 +226,6 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_001, TestSize.Level1)
  * @tc.name: RdbStore_WalOverLimit_002
  * @tc.desc: Before the wal file exceeds the limit, both read and write can be executed normally.
  * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
  */
 HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_002, TestSize.Level1)
 {
@@ -250,7 +248,6 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_002, TestSize.Level1)
  * @tc.name: RdbStore_WalOverLimit_003
  * @tc.desc: During transactions, the size of the wal file may exceed the limit.
  * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
  */
 HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_003, TestSize.Level3)
 {
@@ -267,7 +264,6 @@ HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_003, TestSize.Level3)
  * @tc.name: RdbStore_WalOverLimit_003
  * @tc.desc: During transactions, the size of the wal file may exceed the limit.
  * @tc.type: FUNC
- * @tc.acquire: AR000HR0G5
  */
 HWTEST_F(RdbWalLimitTest, RdbStore_WalOverLimit_004, TestSize.Level3)
 {

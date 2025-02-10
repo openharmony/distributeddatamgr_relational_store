@@ -44,6 +44,8 @@ public:
 
     void GenerateDefaultEmptyTable();
 
+    int ResultSize(std::shared_ptr<ResultSet> resultSet);
+
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
     static const std::string RDB_ADAPTER_TEST_PATH;
@@ -137,6 +139,18 @@ void RdbDataShareAdapterTest::GenerateDefaultEmptyTable()
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
+}
+
+int RdbDataShareAdapterTest::ResultSize(std::shared_ptr<ResultSet> resultSet)
+{
+    if (resultSet->GoToFirstRow() != OHOS::NativeRdb::E_OK) {
+        return 0;
+    }
+    int count = 1;
+    while (resultSet->GoToNextRow() == OHOS::NativeRdb::E_OK) {
+        count++;
+    }
+    return count;
 }
 
 /* *
@@ -453,4 +467,58 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_008, TestSize.Level1)
     int ok = allDataTypes->GetRowCount(rowCount);
     EXPECT_EQ(ok, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(1, rowCount);
+}
+
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_009
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_009, TestSize.Level1)
+{
+    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT,") +
+                                 std::string("age INTEGER, salary REAL);");
+    store->ExecuteSql(createTableSql);
+
+    DataShareValuesBucket values;
+    int64_t id;
+    values.Put("name", std::string("zhangsan"));
+    values.Put("age", INT64_MIN);
+    values.Put("salary", DBL_MIN);
+    int ret1 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret1, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.Put("name", std::string("lisi"));
+    values.Put("age", INT64_MAX);
+    values.Put("salary", DBL_MAX);
+    int ret2 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
+    EXPECT_EQ(ret2, OHOS::NativeRdb::E_OK);
+    EXPECT_EQ(2, id);
+
+    std::string table = "test";
+    OHOS::DataShare::OperationItem item;
+    item.singleParams = {};
+    RdbPredicates predicates("test");
+    RdbUtils::EqualTo(item, predicates);
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allPerson = store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbUtils::GreaterThan(item, predicates);
+    allPerson = store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbUtils::Limit(item, predicates);
+    allPerson = store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbUtils::NotEqualTo(item, predicates);
+    allPerson = store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
+
+    RdbUtils::LessThan(item, predicates);
+    allPerson = store->Query(predicates, columns);
+    EXPECT_EQ(2, ResultSize(allPerson));
 }

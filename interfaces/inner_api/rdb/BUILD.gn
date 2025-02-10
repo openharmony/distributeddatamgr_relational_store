@@ -428,7 +428,6 @@ if (is_ohos && !build_ohos_sdk) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
-    cflags = [ "-Wno-c99-designator" ]
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${distributedfile_path}/mod_securitylabel",
