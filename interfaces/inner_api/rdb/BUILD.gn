@@ -440,7 +440,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/dfx/include",
     ]
 
-    cflags = [ "-includemock.h" ]
+    cflags += [ "-includemock.h" ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
