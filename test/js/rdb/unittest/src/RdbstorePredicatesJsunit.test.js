@@ -298,7 +298,6 @@ describe('rdbPredicatesTest', function () {
         console.log(TAG + "************* testEqualTo0009 end   *************");
     })
 
-
     /**
      * @tc.name predicates notEqualTo normal test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_Predicates_0020
