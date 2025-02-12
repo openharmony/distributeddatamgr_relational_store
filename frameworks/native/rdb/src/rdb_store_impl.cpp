@@ -348,6 +348,7 @@ int RdbStoreImpl::SetDistributedTables(
         return errCode;
     }
     syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
+    syncerParam_.enableCloud_ = distributedConfig.enableCloud;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
@@ -381,7 +382,7 @@ int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
     }
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        if (distributedConfig.autoSync) {
+        if (distributedConfig.enableCloud && distributedConfig.autoSync) {
             cloudInfo_->AddTables(tables);
         } else {
             cloudInfo_->RmvTables(tables);

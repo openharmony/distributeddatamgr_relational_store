@@ -73,6 +73,7 @@ struct RdbSyncerParam {
     std::string user_;
     std::vector<std::string> permissionNames_ = {};
     bool asyncDownloadAsset_ = false;
+    bool enableCloud_ = true;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -115,6 +116,7 @@ struct DistributedConfig {
     std::vector<Reference> references = {};
     bool isRebuild = false;
     bool asyncDownloadAsset = false;
+    bool enableCloud = true;
 };
 
 enum Progress {
