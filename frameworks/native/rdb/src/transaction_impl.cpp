@@ -47,7 +47,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
     }
     auto errorCode = trans->Begin(type);
     if (errorCode != E_OK) {
-        LOG_ERROR("transaction begin failed, errorCode=%{public}d", errorCode);
+        LOG_ERROR("Transaction begin failed, errorCode=%{public}d", errorCode);
         return { errorCode, nullptr };
     }
     return { E_OK, trans };
