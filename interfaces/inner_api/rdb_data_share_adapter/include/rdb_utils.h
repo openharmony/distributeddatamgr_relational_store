@@ -30,6 +30,7 @@
 #include "result_set_bridge.h"
 #include "value_object.h"
 #include "values_bucket.h"
+#include "cache_result_set.h"
 
 namespace OHOS {
 namespace RdbDataShareAdapter {
@@ -137,6 +138,8 @@ private:
     ~RdbUtils();
     static OHOS::NativeRdb::ValueObject ToValueObject(const DataSharePredicatesObject &predicatesObject);
     using OperateHandler = void (*)(const OperationItem &, RdbPredicates &);
+RDB_UTILS_PUSH_WARNING
+RDB_UTILS_DISABLE_WARNING("-Wc99-designator")
     static constexpr OperateHandler HANDLERS[DataShare::LAST_TYPE] = {
         [DataShare::INVALID_OPERATION] = &RdbUtils::NoSupport,
         [DataShare::EQUAL_TO] = &RdbUtils::EqualTo,
@@ -176,6 +179,7 @@ private:
         [DataShare::USING] = &RdbUtils::Using,
         [DataShare::ON] = &RdbUtils::On,
     };
+RDB_UTILS_POP_WARNING
 };
 } // namespace RdbDataShareAdapter
 } // namespace OHOS

@@ -343,7 +343,8 @@ const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL =
 
 const std::string CREATE_TABLE_PERSON_SQL =
     "CREATE TABLE IF NOT EXISTS person "
-    "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT , age INTEGER , REAL INTEGER);";
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT , age INTEGER , REAL INTEGER, attachments ASSETS,"
+    "attachment ASSET);";
 
 const std::string ALL_DATA_TYPE_INSERT_SQL =
     "INSERT INTO AllDataType (id, integerValue, longValue, "
@@ -669,6 +670,67 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
     RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 3;");
 }
 
+/* *
+ * @tc.name: RdbStore_EqualTo_003
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_003, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    std::vector<OHOS::NativeRdb::AssetValue> assets;
+    OHOS::NativeRdb::AssetValue asset{ .name = "asset" };
+    assets.push_back(std::move(asset));
+    ValueObject object(assets);
+    values.Put("attachments", object);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbPredicates predicates("person");
+    predicates.EqualTo("attachments", object);
+
+    if (predicates.predicates_.operations_.size() != 0) {
+        EXPECT_EQ(
+            predicates.predicates_.operations_[0].operator_, OHOS::DistributedRdb::RdbPredicateOperator::ASSETS_ONLY);
+    } else {
+        EXPECT_TRUE(false);
+    }
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 2;");
+}
+
+/* *
+ * @tc.name: RdbStore_EqualTo_004
+ * @tc.desc: Normal testCase of RdbPredicates for EqualTo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_004, TestSize.Level1)
+{
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);;
+    OHOS::NativeRdb::AssetValue asset{ .name = "asset" };
+    ValueObject object(asset);
+    values.Put("attachment", object);
+    int ret = store->Insert(id, "person", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbPredicates predicates("person");
+    predicates.EqualTo("attachment", object);
+    if (predicates.predicates_.operations_.size() != 0) {
+        EXPECT_EQ(
+            predicates.predicates_.operations_[0].operator_, OHOS::DistributedRdb::RdbPredicateOperator::ASSETS_ONLY);
+    } else {
+        EXPECT_TRUE(false);
+    }
+    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 2;");
+}
+
 void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
@@ -684,6 +746,7 @@ void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
     allDataTypes9->GetInt(0, valueInt);
     EXPECT_EQ(2, valueInt);
 }
+
 void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
