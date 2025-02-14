@@ -204,7 +204,6 @@ void RdbStepResultSetTest::CheckResultSetData(
  * @tc.name: RdbStore_StepResultSet_001
  * @tc.desc: test StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 {
@@ -252,7 +251,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_002
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
 {
@@ -308,7 +306,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_003
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 {
@@ -340,7 +337,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_004
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
 {
@@ -365,7 +361,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_005
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 {
@@ -398,7 +393,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_006
  * @tc.desc: normal testcase of StepResultSet for moveFirstWithoutEntry
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 {
@@ -428,7 +422,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_007
  * @tc.desc: normal testcase of StepResultSet for goToNextRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
 {
@@ -465,7 +458,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_008
  * @tc.desc: normal testcase of StepResultSet for moveNextWithoutEntry
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 {
@@ -499,7 +491,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_009
  * @tc.desc: normal testcase of StepResultSet for getInt
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
 {
@@ -560,7 +551,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_010
  * @tc.desc: normal testcase of StepResultSet for getString
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
 {
@@ -609,7 +599,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_011
  * @tc.desc: normal testcase of StepResultSet for GetDouble
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
 {
@@ -657,7 +646,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_012
  * @tc.desc: normal testcase of StepResultSet for getBlob
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
 {
@@ -711,7 +699,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_013
  * @tc.desc: normal testcase of StepResultSet for getBlob
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
 {
@@ -745,7 +732,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_014
  * @tc.desc: normal testcase of StepResultSet for getColumnIndexForName
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
 {
@@ -783,7 +769,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_015
  * @tc.desc: normal testcase of StepResultSet for getColumnNameForIndex
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
 {
@@ -823,7 +808,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_016
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 {
@@ -857,7 +841,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_017
  * @tc.desc: Abnormal testcase of StepResultSet, arguments of GetAsset and GetAssets are invalid
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
 {
@@ -877,7 +860,6 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
  * @tc.name: testGetRowCount003
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
 {
@@ -928,7 +910,6 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
  * @tc.name: testGetRowCount004
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
 {
@@ -978,7 +959,6 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
  * @tc.name: testGoToRow005
  * @tc.desc: normal testcase of StepResultSet for goToRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
 {
@@ -1023,7 +1003,6 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
  * @tc.name: testGo006
  * @tc.desc: normal testcase of StepResultSet for goToRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
 {
@@ -1063,7 +1042,6 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
  * @tc.name: testGoToPrevious007
  * @tc.desc: normal testcase of StepResultSet for go
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 {
@@ -1121,7 +1099,6 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
  * @tc.name: testSqlStep008
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
 {
@@ -1169,7 +1146,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
  * @tc.name: testSqlStep009
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
 {
@@ -1232,7 +1208,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
  * @tc.name: testSqlStep010
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
 {
@@ -1663,7 +1638,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep022, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_023
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep023, TestSize.Level1)
 {
@@ -1721,7 +1695,6 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep023, TestSize.Level1)
  * @tc.name: RdbStore_StepResultSet_024
  * @tc.desc: normal testcase of StepResultSet for getInt
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetTest, testSqlStep024, TestSize.Level1)
 {

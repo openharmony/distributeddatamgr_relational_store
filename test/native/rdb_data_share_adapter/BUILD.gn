@@ -34,6 +34,10 @@ config("module_private_config") {
     "//commonlibrary/c_utils/base/include",
   ]
 
+  cflags = [
+    "-fno-access-control",  #Ignore Private Member Access Control
+  ]
+
   if (relational_store_rdb_support_icu) {
     include_dirs += [
       "//third_party/icu/icu4c/source/i18n",

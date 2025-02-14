@@ -138,7 +138,6 @@ void RdbTest::TearDown(void)
  * @tc.name: RdbStore_Attach_001
  * @tc.desc: test attach, attach is not supported in wal mode
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Attach_001, TestSize.Level1)
@@ -160,7 +159,6 @@ HWTEST_F(RdbTest, RdbStore_Attach_001, TestSize.Level1)
  * @tc.name: RdbStore_Attach_002
  * @tc.desc: test RdbStore attach
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Attach_002, TestSize.Level1)
@@ -269,7 +267,6 @@ void RdbTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
  * @tc.name: RdbStore_Delete_001
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Delete_001, TestSize.Level1)
@@ -344,7 +341,6 @@ HWTEST_F(RdbTest, RdbStore_Delete_001, TestSize.Level1)
  * @tc.name: RdbStore_Delete_002
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Delete_002, TestSize.Level1)
@@ -661,7 +657,6 @@ HWTEST_F(RdbTest, RdbStore_Encrypt_09, TestSize.Level1)
  * @tc.name: RdbStore_Execute_001
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Execute_001, TestSize.Level1)
@@ -725,7 +720,6 @@ HWTEST_F(RdbTest, RdbStore_Execute_001, TestSize.Level1)
  * @tc.name: RdbStore_Execute_002
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Execute_002, TestSize.Level1)
@@ -794,7 +788,6 @@ HWTEST_F(RdbTest, RdbStore_Execute_002, TestSize.Level1)
  * @tc.name: RdbStore_Execute_003
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Execute_003, TestSize.Level1)
@@ -816,7 +809,6 @@ HWTEST_F(RdbTest, RdbStore_Execute_003, TestSize.Level1)
  * @tc.name: RdbStore_Insert_001
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Insert_001, TestSize.Level1)
@@ -964,7 +956,6 @@ void RdbTest::CheckBlob(std::unique_ptr<ResultSet> &resultSet)
  * @tc.name: RdbStore_Replace_001
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Replace_001, TestSize.Level1)
@@ -1039,7 +1030,6 @@ HWTEST_F(RdbTest, RdbStore_Replace_001, TestSize.Level1)
  * @tc.name: RdbStore_Replace_002
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_Replace_002, TestSize.Level1)
@@ -1124,7 +1114,6 @@ HWTEST_F(RdbTest, RdbStore_Replace_002, TestSize.Level1)
  * @tc.name: RdbStore_InsertWithConflictResolution_001_002
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_001_002, TestSize.Level1)
@@ -1159,7 +1148,6 @@ HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_001_002, TestSize.Level1
  * @tc.name: RdbStore_InsertWithConflictResolution_003_004
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_003_004, TestSize.Level1)
@@ -1192,7 +1180,6 @@ HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_003_004, TestSize.Level1
  * @tc.name: RdbStore_InsertWithConflictResolution_005
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_005, TestSize.Level1)
@@ -1226,7 +1213,6 @@ HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_005, TestSize.Level1)
  * @tc.name: RdbStore_InsertWithConflictResolution_006_007
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, RdbStore_InsertWithConflictResolution_006_007, TestSize.Level1)
@@ -1342,7 +1328,6 @@ HWTEST_F(RdbTest, RdbStore_BatchInsert_001, TestSize.Level1)
  * @tc.name: ValueObject_TEST_001
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_001, TestSize.Level1)
@@ -1356,7 +1341,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_001, TestSize.Level1)
  * @tc.name: ValueObject_TEST_002
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_002, TestSize.Level1)
@@ -1375,7 +1359,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_002, TestSize.Level1)
  * @tc.name: ValueObject_TEST_003
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_003, TestSize.Level1)
@@ -1394,7 +1377,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_003, TestSize.Level1)
  * @tc.name: ValueObject_TEST_004
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_004, TestSize.Level1)
@@ -1413,7 +1395,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_004, TestSize.Level1)
  * @tc.name: ValueObject_TEST_005
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_005, TestSize.Level1)
@@ -1437,7 +1418,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_005, TestSize.Level1)
  * @tc.name: ValueObject_TEST_006
  * @tc.desc: test ValueObject
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValueObject_TEST_006, TestSize.Level1)
@@ -1454,7 +1434,6 @@ HWTEST_F(RdbTest, ValueObject_TEST_006, TestSize.Level1)
  * @tc.name: ValuesBucket_001
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValuesBucket_001, TestSize.Level1)
@@ -1496,7 +1475,6 @@ HWTEST_F(RdbTest, ValuesBucket_001, TestSize.Level1)
  * @tc.name: ValuesBucket_002
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValuesBucket_002, TestSize.Level1)
@@ -1545,7 +1523,6 @@ HWTEST_F(RdbTest, ValuesBucket_002, TestSize.Level1)
  * @tc.name: ValuesBucket_003
  * @tc.desc: test ValuesBucket
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: 
  */
 HWTEST_F(RdbTest, ValuesBucket_003, TestSize.Level1)
