@@ -87,7 +87,6 @@ void RdbStepResultSetGetRowTest::TearDown(void)
  * @tc.name: RdbStore_StepResultSet_GetRow_001
  * @tc.desc: test StepResultSet GetRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize.Level1)
 {
@@ -135,7 +134,6 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_001, TestSize
  * @tc.name: RdbStore_StepResultSet_GetRow_002
  * @tc.desc: test StepResultSet GetRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_002, TestSize.Level1)
 {
@@ -173,7 +171,6 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_002, TestSize
  * @tc.name: RdbStore_StepResultSet_GetRow_003
  * @tc.desc: test StepResultSet GetRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize.Level1)
 {
@@ -231,7 +228,6 @@ HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_003, TestSize
  * @tc.name: RdbStore_StepResultSet_GetRow_004
  * @tc.desc: test StepResultSet GetRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbStepResultSetGetRowTest, RdbStore_StepResultSet_GetRow_004, TestSize.Level1)
 {

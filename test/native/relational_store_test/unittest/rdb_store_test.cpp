@@ -857,7 +857,6 @@ HWTEST_F(RdbTest, SetSearchableTest, TestSize.Level2)
  * @tc.name: RdbStore_Delete_001
  * @tc.desc: normal testcase of SqliteSharedResultSet for move
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_001, TestSize.Level1)
 {
@@ -955,7 +954,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_001, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_002
  * @tc.desc: normal testcase of SqliteSharedResultSet for goToNextRow
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_002, TestSize.Level1)
 {
@@ -1040,7 +1038,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_002, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_003
  * @tc.desc: normal testcase of SqliteSharedResultSet for moveFirst
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_003, TestSize.Level1)
 {
@@ -1092,7 +1089,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_003, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_004
  * @tc.desc: normal testcase of SqliteSharedResultSet for getInt
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_004, TestSize.Level1)
 {
@@ -1134,7 +1130,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_004, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_005
  * @tc.desc: normal testcase of SqliteSharedResultSet for getString
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_005, TestSize.Level1)
@@ -1188,7 +1183,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_005, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_006
  * @tc.desc: normal testcase of SqliteSharedResultSet for getDouble
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_006, TestSize.Level1)
 {
@@ -1240,7 +1234,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_006, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_007
  * @tc.desc: normal testcase of SqliteSharedResultSet for getBlob
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_007, TestSize.Level1)
 {
@@ -1278,7 +1271,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_007, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_008
  * @tc.desc: normal testcase of SqliteSharedResultSet for getColumnTypeForIndex
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_008, TestSize.Level1)
@@ -1329,7 +1321,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_008, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_009
  * @tc.desc:  normal testcase of SqliteSharedResultSet for getColumnIndexForName
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_009, TestSize.Level1)
 {
@@ -1363,7 +1354,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_009, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_010
  * @tc.desc:  normal testcase of SqliteSharedResultSet for getColumnNameForIndex
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_010, TestSize.Level1)
 {
@@ -1403,7 +1393,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_010, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_011
  * @tc.desc:  normal testcase of SqliteSharedResultSet
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_011, TestSize.Level1)
 {
@@ -1436,7 +1425,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_011, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_012
  * @tc.desc: normal testcase of SqliteSharedResultSet for getLong
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_012, TestSize.Level1)
 {
@@ -1485,7 +1473,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_012, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_013
  * @tc.desc: normal testcase of SqliteSharedResultSet for fillBlock
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_013, TestSize.Level1)
 {
@@ -1506,7 +1493,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_013, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_014
  * @tc.desc: normal testcase of SqliteSharedResultSet for getBlock
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_014, TestSize.Level1)
 {
@@ -1538,7 +1524,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_014, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_015
  * @tc.desc: normal testcase of SqliteSharedResultSet for setBlock
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_015, TestSize.Level1)
 {
@@ -1570,7 +1555,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_015, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_016
  * @tc.desc: normal testcase of SqliteSharedResultSet for setFillWindowForwardOnly
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_016, TestSize.Level1)
 {
@@ -1610,7 +1594,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_016, TestSize.Level1)
  * @tc.name: Sqlite_Shared_Result_Set_017
  * @tc.desc: normal testcase of SqliteSharedResultSet for setExtensions and getExtensions
  * @tc.type: FUNC
- * @tc.require: AR000FKD4F
  */
 HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_017, TestSize.Level1)
 {
@@ -1630,7 +1613,6 @@ HWTEST_F(RdbTest, Sqlite_Shared_Result_Set_017, TestSize.Level1)
  * @tc.name: RdbStore_Transaction_001
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: chenxi
  */
 HWTEST_F(RdbTest, RdbStore_Transaction_001, TestSize.Level1)
@@ -1690,7 +1672,6 @@ HWTEST_F(RdbTest, RdbStore_Transaction_001, TestSize.Level1)
  * @tc.name: RdbStore_Transaction_002
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: chenxi
  */
 HWTEST_F(RdbTest, RdbStore_Transaction_002, TestSize.Level1)
@@ -1757,7 +1738,6 @@ HWTEST_F(RdbTest, RdbStore_Transaction_002, TestSize.Level1)
  * @tc.name: RdbStore_NestedTransaction_001
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: chenxi
  */
 HWTEST_F(RdbTest, RdbStore_NestedTransaction_001, TestSize.Level1)
@@ -1828,7 +1808,6 @@ HWTEST_F(RdbTest, RdbStore_NestedTransaction_001, TestSize.Level1)
  * @tc.name: RdbStore_NestedTransaction_002
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: chenxi
  */
 HWTEST_F(RdbTest, RdbStore_NestedTransaction_002, TestSize.Level1)
@@ -1898,7 +1877,6 @@ HWTEST_F(RdbTest, RdbStore_NestedTransaction_002, TestSize.Level1)
  * @tc.name: RdbStore_NestedTransaction_003
  * @tc.desc: test RdbStore BaseTransaction
  * @tc.type: FUNC
- * @tc.require: AR000CU2BO
  * @tc.author: chenxi
  */
 HWTEST_F(RdbTest, RdbStore_NestedTransaction_003, TestSize.Level1)
