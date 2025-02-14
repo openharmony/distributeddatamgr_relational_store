@@ -26,6 +26,13 @@
 #include "value_object.h"
 #include "values_bucket.h"
 
+#define RDB_UTILS_PUSH_WARNING _Pragma("GCC diagnostic push")
+#define RDB_UTILS_POP_WARNING _Pragma("GCC diagnostic pop")
+#define RDB_UTILS_DISABLE_WARNING_INTERNAL2(warningName) #warningName
+#define RDB_UTILS_DISABLE_WARNING(warningName) \
+    _Pragma(                                     \
+        RDB_UTILS_DISABLE_WARNING_INTERNAL2(GCC diagnostic ignored warningName))
+
 namespace OHOS {
 namespace NativeRdb {
 /**
@@ -310,6 +317,8 @@ public:
     int GetSize(int columnIndex, size_t &size) override;
 
 private:
+RDB_UTILS_PUSH_WARNING
+RDB_UTILS_DISABLE_WARNING("-Wc99-designator")
     static constexpr ColumnType COLUMNTYPES[ValueObject::TYPE_MAX] = {
         [ValueObject::TYPE_NULL] = ColumnType::TYPE_NULL,
         [ValueObject::TYPE_INT] = ColumnType::TYPE_INTEGER,
@@ -320,6 +329,7 @@ private:
         [ValueObject::TYPE_ASSET] = ColumnType::TYPE_BLOB,
         [ValueObject::TYPE_ASSETS] = ColumnType::TYPE_BLOB,
     };
+RDB_UTILS_POP_WARNING
     int32_t row_;
     mutable std::shared_mutex rwMutex_;
     int32_t maxRow_;

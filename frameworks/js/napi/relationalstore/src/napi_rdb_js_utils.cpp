@@ -150,15 +150,6 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
 template<>
 napi_value Convert2JSValue(napi_env env, const ValueObject &value)
 {
-    // When int64_t is converted to double and loses precision, it is returned as a string.
-    if (value.GetType() == ValueObjectType::TYPE_INT) {
-        int64_t valueInt64 = 0;
-        value.GetLong(valueInt64);
-        double valueDouble = static_cast<double>(valueInt64);
-        if (static_cast<int64_t>(valueDouble) != valueInt64) {
-            return Convert2JSValue(env, std::to_string(valueInt64));
-        }
-    }
     return Convert2JSValue(env, value.value);
 }
 
