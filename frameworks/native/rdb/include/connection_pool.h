@@ -32,6 +32,7 @@
 #include "rdb_common.h"
 #include "rdb_store_config.h"
 namespace OHOS {
+class ExecutorPool;
 namespace NativeRdb {
 class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
@@ -52,7 +53,7 @@ public:
     int32_t EnableWal();
     int32_t Dump(bool isWriter, const char *header);
 
-    int RestartReaders();
+    int RestartConns();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus);
@@ -77,6 +78,7 @@ private:
         int64_t GetUsingTime() const;
         bool IsWriter() const;
         int32_t Unused(int32_t count, bool timeout);
+        bool IsRecyclable();
     };
 
     struct Container {
@@ -87,7 +89,6 @@ private:
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;
-        int trans_ = 0;
         int32_t left_ = 0;
         int32_t right_ = 0;
         std::chrono::seconds timeout_;
@@ -99,17 +100,20 @@ private:
         std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
             Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire = false);
         int32_t ConfigLocale(const std::string &locale);
-        std::shared_ptr<ConnNode> Acquire(std::chrono::milliseconds milliS);
-        std::list<std::shared_ptr<ConnNode>> AcquireAll(std::chrono::milliseconds milliS);
+        std::pair<int, std::shared_ptr<ConnNode>> Acquire(std::chrono::milliseconds milliS);
+        std::pair<bool, std::list<std::shared_ptr<ConnNode>>> AcquireAll(std::chrono::milliseconds milliS);
         std::pair<int32_t, std::shared_ptr<ConnNode>> Create();
+        void InitMembers(Creator creator, int32_t max, int32_t timeout, bool disable);
 
         void Disable();
         void Enable();
         int32_t Release(std::shared_ptr<ConnNode> node);
-        int32_t Drop(std::shared_ptr<ConnNode> node);
+        int32_t ReleaseTrans(std::shared_ptr<ConnNode> node);
         int32_t Clear();
         bool IsFull();
+        bool Empty();
         int32_t Dump(const char *header, int32_t count);
+        int32_t ClearUnusedTrans(std::shared_ptr<ConnectionPool> pool);
 
     private:
         int32_t ExtendNode();
@@ -123,16 +127,19 @@ private:
     void ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse = true);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
     bool CheckIntegrity(const std::string &dbPath);
+    void DelayClearTrans();
 
     static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
     static constexpr int LIMITATION = 1024;
     static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t ITERS_COUNT = 2;
     static constexpr uint32_t MAX_TRANS = 4;
+    static constexpr std::chrono::steady_clock::duration TRANS_CLEAR_INTERVAL = std::chrono::seconds(150);
     const RdbStoreConfig &config_;
     RdbStoreConfig attachConfig_;
     Container writers_;
     Container readers_;
+    Container trans_;
     int32_t maxReader_ = 0;
 
     std::stack<BaseTransaction> transactionStack_;
@@ -140,6 +147,7 @@ private:
     std::condition_variable transCondition_;
     std::mutex transMutex_;
     bool transactionUsed_;
+    bool isAttach_ = false;
     std::atomic<bool> isInTransaction_ = false;
     std::atomic<uint32_t> transCount_ = 0;
     std::atomic<std::chrono::steady_clock::time_point> failedTime_;
