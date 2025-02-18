@@ -1458,7 +1458,7 @@ describe('rdbStoreTest', function () {
     })
 
     /**
-     * @tc.name tokenizer supported  test
+     * @tc.name tokenizer supported test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0055
      * @tc.desc invalid tokenizer test callback
      */
