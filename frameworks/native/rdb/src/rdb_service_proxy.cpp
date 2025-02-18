@@ -311,6 +311,11 @@ RdbServiceProxy::Observers RdbServiceProxy::ExportObservers()
     return observers_;
 }
 
+RdbServiceProxy::SyncObservers RdbServiceProxy::ExportSyncObservers()
+{
+    return syncObservers_;
+}
+
 void RdbServiceProxy::ImportObservers(Observers &observers)
 {
     observers.ForEach([this](const std::string &key, const std::list<ObserverParam> &value) {
@@ -319,6 +324,19 @@ void RdbServiceProxy::ImportObservers(Observers &observers)
             syncerParam.bundleName_ = param.bundleName;
             syncerParam.storeName_ = key;
             Subscribe(syncerParam, param.subscribeOption, param.observer);
+        }
+        return false;
+    });
+}
+
+void RdbServiceProxy::ImportSyncObservers(SyncObservers &syncObservers)
+{
+    syncObservers.ForEach([this](const std::string &key, const std::list<SyncObserverParam> &value) {
+        RdbSyncerParam syncerParam;
+        for (const auto &param : value) {
+            syncerParam.bundleName_ = param.bundleName;
+            syncerParam.storeName_ = key;
+            RegisterAutoSyncCallback(syncerParam, param.syncObserver);
         }
         return false;
     });
@@ -398,14 +416,14 @@ int32_t RdbServiceProxy::RegisterAutoSyncCallback(
     auto name = RemoveSuffix(param.storeName_);
     syncObservers_.Compute(name, [this, &param, &status, observer](const auto &store, auto &observers) {
         for (const auto &element : observers) {
-            if (element.get() == observer.get()) {
+            if (element.syncObserver.get() == observer.get()) {
                 LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(store).c_str());
                 return true;
             }
         }
         status = DoRegister(param);
         if (status == RDB_OK) {
-            observers.push_back(observer);
+            observers.push_back({ observer, param.bundleName_ });
         }
         return !observers.empty();
     });
@@ -436,7 +454,7 @@ int32_t RdbServiceProxy::UnregisterAutoSyncCallback(
     auto name = RemoveSuffix(param.storeName_);
     syncObservers_.ComputeIfPresent(name, [this, &param, &status, observer](const auto &storeName, auto &observers) {
         for (auto it = observers.begin(); it != observers.end();) {
-            if (it->get() != observer.get()) {
+            if (it->syncObserver.get() != observer.get()) {
                 ++it;
                 continue;
             }
@@ -497,9 +515,9 @@ void RdbServiceProxy::OnSyncComplete(const std::string &storeName, Details &&res
     syncObservers_.ComputeIfPresent(storeName, [&result](const auto &key, const auto &observers) {
         LOG_DEBUG("Sync complete, storeName%{public}s, result size:%{public}zu", SqliteUtils::Anonymous(key).c_str(),
             result.size());
-        for (const auto &observer : observers) {
-            if (observer != nullptr) {
-                observer->ProgressNotification(result);
+        for (const auto &it : observers) {
+            if (it.syncObserver != nullptr) {
+                it.syncObserver->ProgressNotification(result);
             }
         }
         return true;
