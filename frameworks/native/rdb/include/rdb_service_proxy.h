@@ -34,6 +34,11 @@ public:
         SubscribeOption subscribeOption{ SubscribeMode::REMOTE };
     };
     using Observers = ConcurrentMap<std::string, std::list<ObserverParam>>;
+    struct SyncObserverParam {
+        std::shared_ptr<DetailProgressObserver> syncObserver = nullptr;
+        std::string bundleName;
+    };
+    using SyncObservers = ConcurrentMap<std::string, std::list<SyncObserverParam>>;
     explicit RdbServiceProxy(const sptr<IRemoteObject> &object);
 
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table) override;
@@ -90,12 +95,13 @@ public:
     int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) override;
 
     int32_t VerifyPromiseInfo(const RdbSyncerParam &param) override;
+    SyncObservers ExportSyncObservers();
+    void ImportSyncObservers(SyncObservers &SyncObservers);
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
     using PrimaryFields = RdbStoreObserver::PrimaryFields;
     using SyncCallbacks = ConcurrentMap<uint32_t, AsyncDetail>;
-    using SyncObservers = ConcurrentMap<std::string, std::list<std::shared_ptr<DetailProgressObserver>>>;
     std::pair<int32_t, Details> DoSync(
         const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates);
 

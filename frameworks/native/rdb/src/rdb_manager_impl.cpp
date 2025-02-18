@@ -145,6 +145,7 @@ void RdbManagerImpl::OnRemoteDied()
     }
     auto proxy = std::static_pointer_cast<RdbServiceProxy>(rdbService_);
     auto observers = proxy->ExportObservers();
+    auto syncObservers = proxy->ExportSyncObservers();
     ResetServiceHandle();
 
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
@@ -157,6 +158,7 @@ void RdbManagerImpl::OnRemoteDied()
         return;
     }
     proxy->ImportObservers(observers);
+    proxy->ImportSyncObservers(syncObservers);
 }
 
 void RdbManagerImpl::ResetServiceHandle()
