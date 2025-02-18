@@ -1470,11 +1470,13 @@ describe('rdbStoreTest', function () {
             tokenizer: data_relationalStore.Tokenizer.CUSTOM_TOKENIZER,
         }
         try {
-            await data_relationalStore.getRdbStore(context, storeConfig)
+            await data_relationalStore.getRdbStore(context, storeConfig);
+            expect().assertFail();
         } catch (e) {
-            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
-            expect("801").assertEqual(e.code)
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect("801").assertEqual(e.code);
             console.info(TAG + "************* testRdbStore0055 end   *************");
+            done();
         }
     })
     console.log(TAG + "*************Unit Test End*************");
