@@ -71,6 +71,8 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
         CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
             std::make_shared<ParamError>("Illegal tokenizer."));
+        CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
+            std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
 
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
         if (!context->config.rootDir.empty()) {
