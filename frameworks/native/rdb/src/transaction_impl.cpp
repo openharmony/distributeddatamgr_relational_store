@@ -35,7 +35,13 @@ TransactionImpl::TransactionImpl(std::shared_ptr<Connection> connection, const s
 
 TransactionImpl::~TransactionImpl()
 {
-    CloseInner();
+    // If the user does not commit the transaction, the next time using this connection to create the transaction will
+    // fail. Here, we attempt to roll back during the transaction object decomposition to prevent this situation
+    // from happening.
+    if (connection_ == nullptr) {
+        return;
+    }
+    Rollback();
 }
 
 std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
@@ -100,16 +106,17 @@ int32_t TransactionImpl::Commit()
     auto [errorCode, statement] = connection_->CreateStatement(COMMIT_SQL, connection_);
     if (errorCode != E_OK) {
         LOG_ERROR("create statement failed, errorCode=%{public}d", errorCode);
-        CloseInner();
+        CloseInner(false);
         return errorCode;
     }
 
     errorCode = statement->Execute();
-    CloseInner();
     if (errorCode != E_OK) {
+        CloseInner(false);
         LOG_ERROR("statement execute failed, errorCode=%{public}d", errorCode);
         return errorCode;
     }
+    CloseInner();
     return E_OK;
 }
 
@@ -124,23 +131,27 @@ int32_t TransactionImpl::Rollback()
     auto [errorCode, statement] = connection_->CreateStatement(ROLLBACK_SQL, connection_);
     if (errorCode != E_OK) {
         LOG_ERROR("create statement failed, errorCode=%{public}d", errorCode);
-        CloseInner();
+        CloseInner(false);
         return errorCode;
     }
 
     errorCode = statement->Execute();
-    CloseInner();
     if (errorCode != E_OK) {
+        CloseInner(false);
         LOG_ERROR("statement execute failed, errorCode=%{public}d", errorCode);
         return errorCode;
     }
+    CloseInner();
     return E_OK;
 }
 
-int32_t TransactionImpl::CloseInner()
+int32_t TransactionImpl::CloseInner(bool connRecycle)
 {
     std::lock_guard lock(mutex_);
     store_ = nullptr;
+    if (connection_ != nullptr) {
+        connection_->SetIsRecyclable(connRecycle);
+    }
     connection_ = nullptr;
     for (auto &resultSet : resultSets_) {
         auto sp = resultSet.lock();
@@ -262,8 +273,8 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, 
     return resultSet;
 }
 
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const AbsRdbPredicates &predicates,
-    const Fields &columns, bool preCount)
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
 {
     auto store = GetStore();
     if (store == nullptr) {

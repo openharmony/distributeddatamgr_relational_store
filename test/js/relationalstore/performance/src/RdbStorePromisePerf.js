@@ -33,6 +33,7 @@ const BASE_COUNT = 1000; // loop times
 const BASE_LINE_TABLE = 1800; // callback tablet base line
 const BASE_LINE_PHONE = 3000; // callback phone base line
 const BASE_LINE = (deviceInfo.deviceType == "tablet") ? BASE_LINE_TABLE : BASE_LINE_PHONE;
+const BASE_LINE_TRANS = 1500;
 
 describe('rdbStorePromisePerf', function () {
   beforeAll(async function () {
@@ -84,4 +85,21 @@ describe('rdbStorePromisePerf', function () {
     console.info(TAG + "*************Unit Test End*************");
     done();
   })
+
+  it('SUB_DDM_PERF_RDB_createTransaction_Promise_001', 0, async function (done) {
+    console.info(TAG + "SUB_DDM_PERF_RDB_createTransaction_Promise_001 start");
+    let totalTime = 0;
+    for (let i = 0; i < BASE_COUNT; i++) {
+      let startTime = new Date().getTime();
+      let trans = await rdbStore?.createTransaction();
+      let endTime = new Date().getTime();
+      totalTime += endTime - startTime;
+      await trans?.commit();
+    }
+    let averageTime = (totalTime * 1000) / BASE_COUNT;
+    console.info(TAG + " the SUB_DDM_PERF_RDB_createTransaction_Promise_001 average time is: " + averageTime + " μs");
+    expect(averageTime < BASE_LINE_TRANS).assertTrue();
+    console.info(TAG + "SUB_DDM_PERF_RDB_createTransaction_Promise_001 end");
+    done();
+  });
 })

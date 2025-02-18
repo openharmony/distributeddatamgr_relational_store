@@ -1271,7 +1271,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
                      "> app self can check the SQL.",
                 SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
             vSchema_ = version;
-            errCode = pool->RestartReaders();
+            errCode = pool->RestartConns();
         }
     }
     statement = nullptr;
@@ -1368,7 +1368,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
                      "> app self can check the SQL.",
                 SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
             vSchema_ = version;
-            errCode = pool->RestartReaders();
+            errCode = pool->RestartConns();
         }
     }
     return { errCode, object };
