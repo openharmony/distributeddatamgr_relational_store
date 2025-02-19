@@ -1474,7 +1474,7 @@ describe('rdbStoreTest', function () {
             expect().assertFail();
         } catch (e) {
             console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
-            expect("801").assertEqual(e.code);
+            expect(String(e.code)).assertEqual(String(801));
             console.info(TAG + "************* testRdbStore0055 end   *************");
             done();
         }
