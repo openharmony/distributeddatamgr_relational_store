@@ -1456,5 +1456,28 @@ describe('rdbStoreTest', function () {
             done();
         }
     })
+
+    /**
+     * @tc.name tokenizer supported test
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0055
+     * @tc.desc invalid tokenizer test callback
+     */
+    it('testRdbStore0055', 0, async (done) => {
+        console.log(TAG + "************* testRdbStore0055 start *************");
+        let storeConfig = {
+            name: "testSupportTokenizer.db",
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+            tokenizer: data_relationalStore.Tokenizer.CUSTOM_TOKENIZER,
+        }
+        try {
+            await data_relationalStore.getRdbStore(context, storeConfig);
+            expect().assertFail();
+        } catch (e) {
+            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+            expect(String(e.code)).assertEqual(String(801));
+            console.info(TAG + "************* testRdbStore0055 end   *************");
+            done();
+        }
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
