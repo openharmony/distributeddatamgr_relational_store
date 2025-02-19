@@ -165,12 +165,9 @@ int32_t GraphConnection::ResetKey(const StoreConfig &config)
 
 bool GraphConnection::IsEncryptInvalidChanged(const StoreConfig &config)
 {
-    if (config.GetFullPath().empty()) {
-        LOG_WARN("Config has no path, path: %{public}s", GdbUtils::Anonymous(config.GetFullPath()).c_str());
-        return false;
-    }
-    if (config.IsEncrypt()) {
-        LOG_WARN("Config is encrypt");
+    if (config.GetFullPath().empty() || config.IsEncrypt()) {
+        LOG_WARN("Config has no path or config is encrypted, path: %{public}s, isEncrypt: %{public}d",
+            GdbUtils::Anonymous(config.GetFullPath()).c_str(), config.IsEncrypt());
         return false;
     }
     return NativeRdb::RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetFullPath(),
