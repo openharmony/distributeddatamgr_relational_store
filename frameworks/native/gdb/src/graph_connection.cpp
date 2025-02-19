@@ -49,6 +49,16 @@ std::pair<int32_t, std::shared_ptr<Connection>> GraphConnection::Create(const St
             conn = connection;
             break;
         }
+        if (errCode == E_GRD_INVALID_ARGS && connection->IsEncryptInvalidChanged(config)) {
+            auto configTemp = config;
+            configTemp.SetEncryptStatus(true);
+            configTemp.GenerateEncryptedKey();
+            errCode = connection->InnerOpen(configTemp);
+            if (errCode == E_OK) {
+                conn = connection;
+                break;
+            }
+        }
     }
     return result;
 }
@@ -151,5 +161,16 @@ int32_t GraphConnection::ResetKey(const StoreConfig &config)
     }
     config.ChangeEncryptKey();
     return E_OK;
+}
+
+bool GraphConnection::IsEncryptInvalidChanged(const StoreConfig &config)
+{
+    if (config.GetFullPath().empty() || config.IsEncrypt()) {
+        LOG_WARN("Config has no path or config is encrypted, path: %{public}s, isEncrypt: %{public}d",
+            GdbUtils::Anonymous(config.GetFullPath()).c_str(), config.IsEncrypt());
+        return false;
+    }
+    return NativeRdb::RdbSecurityManager::GetInstance().IsKeyFileExists(config.GetFullPath(),
+        NativeRdb::RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
 }
 } // namespace OHOS::DistributedDataAip
