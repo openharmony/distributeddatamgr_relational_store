@@ -66,7 +66,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
-        RdbStoreManager::GetInstance().Delete(dbFile, shouldClose);
+        RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
     Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete"));
     Connection::Delete(config);
