@@ -198,6 +198,16 @@ public:
     virtual std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows);
 
     /**
+     * @brief Inserts a batch of data into the target table with conflict resolution.
+     *
+     * @param table Indicates the target table.
+     * @param values Indicates the rows of data {@link ValuesBuckets} to be inserted into the table.
+     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
+     */
+    virtual std::pair<int, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const RefRows &rows, Resolution resolution);
+
+    /**
      * @brief Updates data in the database based on specified conditions.
      *
      * @param table Indicates the target table.

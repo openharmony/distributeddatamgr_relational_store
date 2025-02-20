@@ -95,6 +95,16 @@ int32_t TransactionImpl::Begin(int32_t type)
     return E_OK;
 }
 
+bool TransactionImpl::IsInTransaction()
+{
+    std::lock_guard lock(mutex_);
+    if (connection_ == nullptr) {
+        LOG_ERROR("connection already closed");
+        return false;
+    }
+    return connection_->IsInTrans();
+}
+
 int32_t TransactionImpl::Commit()
 {
     std::lock_guard lock(mutex_);
@@ -180,7 +190,12 @@ std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const 
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Insert(table, row, resolution);
+    auto [errCode, rows] = store->Insert(table, row, resolution);
+    if (resolution == Resolution::ON_CONFLICT_ROLLBACK && errCode == E_SQLITE_CONSTRAINT && !IsInTransaction()) {
+        LOG_WARN("transaction already rollback, start close!");
+        CloseInner();
+    }
+    return { errCode, rows };
 }
 
 std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(const std::string &table, const Rows &rows)
@@ -205,6 +220,22 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
+std::pair<int32_t, int64_t> TransactionImpl::BatchInsertWithConflictResolution(
+    const std::string &table, const RefRows &rows, Resolution resolution)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    auto [errCode, changes] = store->BatchInsertWithConflictResolution(table, rows, resolution);
+    if (resolution == Resolution::ON_CONFLICT_ROLLBACK && errCode == E_SQLITE_CONSTRAINT && !IsInTransaction()) {
+        LOG_WARN("transaction already rollback, start close!");
+        CloseInner();
+    }
+    return { errCode, changes };
+}
+
 std::pair<int, int> TransactionImpl::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
@@ -213,7 +244,12 @@ std::pair<int, int> TransactionImpl::Update(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(table, row, where, args, resolution);
+    auto [errCode, rows] = store->Update(table, row, where, args, resolution);
+    if (resolution == Resolution::ON_CONFLICT_ROLLBACK && errCode == E_SQLITE_CONSTRAINT && !IsInTransaction()) {
+        LOG_WARN("transaction already rollback, start close!");
+        CloseInner();
+    }
+    return { errCode, rows };
 }
 
 std::pair<int32_t, int32_t> TransactionImpl::Update(
@@ -224,8 +260,13 @@ std::pair<int32_t, int32_t> TransactionImpl::Update(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(
+    auto [errCode, rows] = store->Update(
         predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs(), resolution);
+    if (resolution == Resolution::ON_CONFLICT_ROLLBACK && errCode == E_SQLITE_CONSTRAINT && !IsInTransaction()) {
+        LOG_WARN("transaction already rollback, start close!");
+        CloseInner();
+    }
+    return { errCode, rows };
 }
 
 std::pair<int32_t, int32_t> TransactionImpl::Delete(

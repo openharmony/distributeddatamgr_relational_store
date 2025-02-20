@@ -30,6 +30,7 @@ public:
     static void TearDownTestCase(void);
 
     static bool InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
+    static bool BatchInsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
@@ -107,8 +108,47 @@ bool RdbInsertFuzz(const uint8_t *data, size_t size)
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
 
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
-    if (errCode != E_OK) {
+    if (!RdbStoreFuzzTest::InsertData(store, data, size)) {
+        result = false;
+    }
+
+    store->ExecuteSql("DELETE FROM test");
+    return result;
+}
+
+bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    ValuesBuckets rows;
+    std::string tableName(data, data + size);
+    std::string valName(data, data + size);
+    int valAge = static_cast<int>(size);
+    double valSalary = static_cast<double>(size);
+    ValuesBucket value;
+    value.PutString("name", valName);
+    value.PutInt("age", valAge);
+    value.PutDouble("salary", valSalary);
+    value.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
+    for (auto i = 0; i < static_cast<uint32_t>(data[0]); i++) {
+        rows.Put(value);
+    }
+    auto [code, num] = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    return code == E_OK;
+}
+
+bool RdbBatchInsertFuzz(const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+    bool result = true;
+
+    if (!RdbStoreFuzzTest::BatchInsertData(store, data, size)) {
         result = false;
     }
 

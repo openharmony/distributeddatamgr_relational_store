@@ -32,13 +32,16 @@
 #include "sqlite_statement.h"
 
 namespace OHOS::NativeRdb {
+class DelayNotify;
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
-    std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
+    std::pair<int, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
     std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
         Resolution resolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
@@ -152,6 +155,7 @@ private:
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
+    std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};

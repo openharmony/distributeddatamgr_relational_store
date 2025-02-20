@@ -104,6 +104,37 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
+std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
+    const std::string &table, const ValuesBuckets &rows, Resolution resolution)
+{
+    if (rows.RowSize() == 0) {
+        return { E_OK, 0 };
+    }
+
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_, resolution);
+    if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
+        auto [fields, values] = rows.GetFieldsAndValues();
+        LOG_ERROR("invalid args, table=%{public}s, rows:%{public}zu, fields:%{public}zu, max:%{public}d.",
+            table.c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, maxArgs_);
+        return { E_INVALID_ARGS, -1 };
+    }
+    auto &[sql, bindArgs] = sqlArgs.front();
+    auto [errCode, statement] = GetStatement(sql);
+    if (statement == nullptr) {
+        LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s.", errCode,
+            bindArgs.size(), table.c_str());
+        return { errCode, -1 };
+    }
+    auto args = std::ref(bindArgs.front());
+    errCode = statement->Execute(args);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
+            table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
+        return { errCode, errCode == E_SQLITE_CONSTRAINT ? int64_t(statement->Changes()) : -1 };
+    }
+    return { E_OK, int64_t(statement->Changes()) };
+}
+
 std::pair<int, int> TransDB::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {

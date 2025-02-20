@@ -100,7 +100,7 @@ public:
      * @brief Inserts a batch of data into the target table.
      *
      * @param table Indicates the target table.
-     * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
+     * @param rows Indicates the rows of data {@link Rows} to be inserted into the table.
      */
     virtual std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) = 0;
 
@@ -108,9 +108,19 @@ public:
      * @brief Inserts a batch of data into the target table.
      *
      * @param table Indicates the target table.
-     * @param values Indicates the rows of data {@link ValuesBuckets} to be inserted into the table.
+     * @param rows Indicates the rows of data {@link RefRows} to be inserted into the table.
      */
     virtual std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) = 0;
+
+    /**
+     * @brief Inserts a batch of data into the target table.
+     *
+     * @param table Indicates the target table.
+     * @param rows Indicates the rows of data {@link RefRows} to be inserted into the table.
+     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
+     */
+    virtual std::pair<int32_t, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const RefRows &rows, Resolution resolution) = 0;
 
     /**
      * @brief Updates data in the database based on specified conditions.
