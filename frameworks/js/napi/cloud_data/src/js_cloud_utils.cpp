@@ -266,6 +266,7 @@ napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value)
     napi_set_named_property(env, jsValue, "startTime", startTime);
     napi_set_named_property(env, jsValue, "finishTime", finishTime);
     napi_set_named_property(env, jsValue, "code", Convert2JSValue(env, value.code));
+    napi_set_named_property(env, jsValue, "syncStatus", Convert2JSValue(env, value.syncStatus));
     return jsValue;
 }
 }; // namespace JSUtils
