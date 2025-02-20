@@ -511,6 +511,35 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0022, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_ReadOnly_0023
+ * @tc.desc: test BatchInsertWithConflictResolution
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0023, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+    ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+    ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+    ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+    ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+    ret = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(E_NOT_SUPPORT, ret.first);
+}
+
+/**
  * @tc.name: RdbStore_CreateTransaction_001
  * @tc.desc: test Create Transaction
  * @tc.type: FUNC

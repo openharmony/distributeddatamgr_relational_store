@@ -28,6 +28,7 @@
 
 #include "cache_result_set.h"
 #include "connection_pool.h"
+#include "delay_notify.h"
 #include "directory_ex.h"
 #include "logger.h"
 #include "rdb_common.h"
@@ -49,8 +50,7 @@
 #include "traits.h"
 #include "transaction.h"
 #include "values_buckets.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "delay_notify.h"
+#if !defined(CROSS_PLATFORM)
 #include "raw_data_parser.h"
 #include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
@@ -1078,9 +1078,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
             conn->GetMaxVariable());
         return { E_INVALID_ARGS, -1 };
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-#endif
     for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, conn);
         if (statement == nullptr) {
@@ -1105,6 +1103,59 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     conn = nullptr;
     DoCloudSync(table);
     return { E_OK, int64_t(rows.RowSize()) };
+}
+
+std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
+    const std::string &table, const ValuesBuckets &rows, Resolution resolution)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        return { E_NOT_SUPPORT, -1 };
+    }
+
+    if (rows.RowSize() == 0) {
+        return { E_OK, 0 };
+    }
+
+    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    auto conn = pool->AcquireConnection(false);
+    if (conn == nullptr) {
+        return { E_DATABASE_BUSY, -1 };
+    }
+
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
+    // To ensure atomicity, execute SQL only once
+    if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
+        auto [fields, values] = rows.GetFieldsAndValues();
+        LOG_ERROR("invalid args, table=%{public}s, rows:%{public}zu, fields:%{public}zu, max:%{public}d.",
+            table.c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
+        return { E_INVALID_ARGS, -1 };
+    }
+    auto &[sql, bindArgs] = sqlArgs.front();
+    auto [errCode, statement] = GetStatement(sql, conn);
+    if (statement == nullptr) {
+        LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
+                  "app self can check the SQL", errCode, bindArgs.size(), table.c_str());
+        return { errCode, -1 };
+    }
+    PauseDelayNotify pauseDelayNotify(delayNotifier_);
+    auto args = std::ref(bindArgs.front());
+    errCode = statement->Execute(args);
+    if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+        pool->Dump(true, "BATCH");
+        return { errCode, -1 };
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
+            table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
+        return { errCode, errCode == E_SQLITE_CONSTRAINT ? int64_t(statement->Changes()) : -1 };
+    }
+    conn = nullptr;
+    DoCloudSync(table);
+    return { E_OK, int64_t(statement->Changes()) };
 }
 
 std::pair<int, int> RdbStoreImpl::Update(

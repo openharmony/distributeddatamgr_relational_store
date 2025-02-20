@@ -31,12 +31,12 @@ TaskExecutor &TaskExecutor::GetInstance()
     return instance;
 }
 
-std::shared_ptr<TaskExecutor::ExecutorPool> TaskExecutor::GetExecutor()
+std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
     return pool_;
 }
 
-void TaskExecutor::SetExecutor(std::shared_ptr<TaskExecutor::ExecutorPool> executor)
+void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
     pool_ = executor;
 };

@@ -52,6 +52,7 @@ struct TransactionContext : public ContextBase {
     int32_t ParseSendableValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
     int32_t ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
     int32_t ParseValuesBuckets(napi_env env, napi_value arg, std::vector<ValuesBucket> &valuesBuckets);
+    int32_t ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets);
     int32_t ParseConflictResolution(napi_env env, napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
     std::shared_ptr<NativeRdb::Transaction> transaction_ = nullptr;
     static constexpr int32_t KEY_INDEX = 0;
@@ -162,6 +163,28 @@ int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, std
     return OK;
 }
 
+int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
+{
+    bool isArray = false;
+    auto status = napi_is_array(env, arg, &isArray);
+    ASSERT_RETURN_SET_ERROR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
+
+    uint32_t arrLen = 0;
+    status = napi_get_array_length(env, arg, &arrLen);
+    ASSERT_RETURN_SET_ERROR(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid."));
+
+    for (uint32_t i = 0; i < arrLen; ++i) {
+        napi_value obj = nullptr;
+        status = napi_get_element(env, arg, i, &obj);
+        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
+        ValuesBucket valuesBucket;
+        ASSERT_RETURN_SET_ERROR(
+            ParseValuesBucket(env, obj, valuesBucket) == OK, std::make_shared<ParamError>("ValuesBucket is invalid."));
+        valuesBuckets.Put(std::move(valuesBucket));
+    }
+    return OK;
+}
+
 int32_t TransactionContext::ParseConflictResolution(
     const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution)
 {
@@ -209,6 +232,8 @@ void TransactionProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION_WITH_DATA("update", Update, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("insert", Insert, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsert", BatchInsert, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA(
+                "batchInsertWithConflictResolution", BatchInsertWithConflictResolution, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
@@ -228,6 +253,8 @@ void TransactionProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &p
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithConflictResolutionSync",
+        BatchInsertWithConflictResolution, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", Query, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySql, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
@@ -494,6 +521,8 @@ struct BatchInsertContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
+        ASSERT_RETURN_SET_ERROR(!JSUtils::HasDuplicateAssets(valuesBuckets),
+            std::make_shared<ParamError>("Duplicate assets are not allowed"));
         return OK;
     }
     std::string tableName;
@@ -516,6 +545,59 @@ napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         auto [code, insertRows] = context->StealTransaction()->BatchInsert(context->tableName, context->valuesBuckets);
+        context->insertRows = insertRows;
+        return code;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_create_int64(env, context->insertRows, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct BatchInsertWithConflictResolutionContext : public TransactionContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc == 3, std::make_shared<ParamNumError>("3"));
+        GetInstance(self);
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
+        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
+        ASSERT_RETURN_SET_ERROR(!JSUtils::HasDuplicateAssets(valuesBuckets),
+            std::make_shared<ParamError>("Duplicate assets are not allowed"));
+        // 'argv[2]' represents a ConflictResolution
+        ASSERT_RETURN_SET_ERROR(!JSUtils::IsNull(env, argv[2]), std::make_shared<ParamError>("conflict", "not null"));
+        // 'argv[2]' represents a ConflictResolution
+        CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution) == OK);
+        return OK;
+    }
+    std::string tableName;
+    ValuesBuckets valuesBuckets;
+    ConflictResolution conflictResolution;
+
+    int64_t insertRows = -1;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      batchInsertWithConflictResolution(table: string, values: Array<ValuesBucket>, conflict: ConflictResolution):
+ *      Promise<number>;
+ */
+napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<BatchInsertWithConflictResolutionContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        auto [code, insertRows] = context->StealTransaction()->BatchInsertWithConflictResolution(
+            context->tableName, context->valuesBuckets, context->conflictResolution);
         context->insertRows = insertRows;
         return code;
     };

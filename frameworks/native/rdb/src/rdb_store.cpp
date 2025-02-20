@@ -156,6 +156,12 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
     return { E_NOT_SUPPORT, -1 };
 }
 
+std::pair<int, int64_t> RdbStore::BatchInsertWithConflictResolution(
+    const std::string &table, const RdbStore::RefRows &rows, RdbStore::Resolution resolution)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
+
 std::pair<int, int> RdbStore::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
