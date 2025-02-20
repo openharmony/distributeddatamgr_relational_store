@@ -34,6 +34,7 @@ sources = [
   "src/napi_rdb_js_utils.cpp",
   "src/napi_rdb_predicates.cpp",
   "src/napi_rdb_sendable_utils.cpp",
+  "src/napi_rdb_statistics_observer.cpp",
   "src/napi_rdb_store.cpp",
   "src/napi_rdb_store_helper.cpp",
   "src/napi_result_set.cpp",

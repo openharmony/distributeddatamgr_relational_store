@@ -363,5 +363,10 @@ ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &statu
 {
     return ExchangeStrategy::NOT_HANDLE;
 }
+
+bool RdConnection::IsInTrans() const
+{
+    return false;
+}
 } // namespace NativeRdb
 } // namespace OHOS

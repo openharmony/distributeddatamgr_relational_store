@@ -20,11 +20,14 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
-#include "executor_pool.h"
 #include "rdb_types.h"
-namespace OHOS::NativeRdb {
+
+namespace OHOS {
+class ExecutorPool;
+namespace NativeRdb {
 class DelayNotify {
 public:
     using Task = std::function<int(const DistributedRdb::RdbChangedData &, const DistributedRdb::RdbNotifyConfig &)>;
@@ -46,7 +49,7 @@ private:
     bool isFull_ = false;
     Time lastTimePoint_;
     std::atomic_int32_t pauseCount_;
-    ExecutorPool::TaskId delaySyncTaskId_ = ExecutorPool::INVALID_TASK_ID;
+    uint64_t delaySyncTaskId_ = 0;
     Task task_;
     std::shared_ptr<ExecutorPool> pool_;
     std::mutex mutex_;
@@ -68,5 +71,6 @@ private:
     static constexpr uint32_t AUTO_SYNC_MAX_INTERVAL = 3000;
     std::shared_ptr<DelayNotify> delayNotifier_;
 };
-} // namespace OHOS::NativeRdb
+} // namespace NativeRdb
+} // namespace OHOS
 #endif // NATIVE_RDB_DELAY_NOTIFY_H

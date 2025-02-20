@@ -16,6 +16,7 @@
 #include "delay_notify.h"
 
 #include "logger.h"
+#include "task_executor.h"
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 DelayNotify::DelayNotify() : pauseCount_(0), task_(nullptr), pool_(nullptr)
@@ -27,7 +28,7 @@ DelayNotify::~DelayNotify()
     if (pool_ == nullptr) {
         return;
     }
-    if (delaySyncTaskId_ != Executor::INVALID_TASK_ID) {
+    if (delaySyncTaskId_ != TaskExecutor::INVALID_TASK_ID) {
         pool_->Remove(delaySyncTaskId_);
     }
     if (task_ != nullptr && changedData_.tableData.size() > 0) {
@@ -86,7 +87,7 @@ void DelayNotify::StartTimer()
             return;
         }
 
-        if (delaySyncTaskId_ == Executor::INVALID_TASK_ID) {
+        if (delaySyncTaskId_ == TaskExecutor::INVALID_TASK_ID) {
             delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
                 [this]() { ExecuteTask(); });
         } else {
@@ -125,7 +126,7 @@ void DelayNotify::StopTimer()
     if (pool_ != nullptr) {
         pool_->Remove(delaySyncTaskId_);
     }
-    delaySyncTaskId_ = Executor::INVALID_TASK_ID;
+    delaySyncTaskId_ = TaskExecutor::INVALID_TASK_ID;
 }
 
 void DelayNotify::ExecuteTask()

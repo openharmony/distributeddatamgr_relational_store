@@ -26,6 +26,8 @@ public:
     TransDB(std::shared_ptr<Connection> conn, const std::string &name);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
+    std::pair<int, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
     std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
         Resolution resolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;

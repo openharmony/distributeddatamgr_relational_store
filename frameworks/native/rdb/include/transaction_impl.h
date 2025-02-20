@@ -36,6 +36,8 @@ public:
     std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
+    std::pair<int32_t, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const RefRows &rows, Resolution resolution) override;
     std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
         Resolution resolution) override;
     std::pair<int32_t, int32_t> Update(
@@ -54,6 +56,7 @@ public:
 private:
     static std::string GetBeginSql(int32_t type);
     int32_t Begin(int32_t type);
+    bool IsInTransaction();
     int32_t CloseInner(bool connRecycle = true);
     std::shared_ptr<RdbStore> GetStore();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);

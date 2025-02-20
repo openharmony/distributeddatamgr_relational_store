@@ -26,7 +26,6 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
-#include "napi_rdb_store_observer.h"
 #include "rdb_helper.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
@@ -34,6 +33,8 @@
 namespace OHOS {
 namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
+class NapiRdbStoreObserver;
+class NapiStatisticsObserver;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -52,6 +53,7 @@ private:
     static napi_value Update(napi_env env, napi_callback_info info);
     static napi_value Insert(napi_env env, napi_callback_info info);
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
+    static napi_value BatchInsertWithConflictResolution(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value RemoteQuery(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
@@ -88,6 +90,7 @@ private:
     static napi_value Close(napi_env env, napi_callback_info info);
     static napi_value CreateTransaction(napi_env env, napi_callback_info info);
     static Descriptor GetDescriptors();
+    static void AddDistributedFunctions(std::vector<napi_property_descriptor> &properties);
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
     static napi_value ModifyLockStatus(napi_env env, napi_callback_info info, bool isLock);
     static napi_value LockRow(napi_env env, napi_callback_info info);
@@ -121,21 +124,6 @@ private:
         void Clear();
         bool operator==(napi_value value);
         void ProgressNotification(const DistributedRdb::Details &details) override;
-
-    private:
-        napi_env env_ = nullptr;
-        napi_ref callback_ = nullptr;
-        std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
-    };
-
-    class NapiStatisticsObserver
-        : public DistributedRdb::SqlObserver, public std::enable_shared_from_this<NapiStatisticsObserver> {
-    public:
-        NapiStatisticsObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
-        virtual ~NapiStatisticsObserver();
-        void Clear();
-        bool operator==(napi_value value);
-        void OnStatistic(const SqlExecutionInfo &sqlExeInfo) override;
 
     private:
         napi_env env_ = nullptr;

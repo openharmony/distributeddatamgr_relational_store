@@ -294,6 +294,70 @@ describe('rdbStoreReadOnlyTest', function () {
         console.info(TAG + "************* readOnlyTest0010 end *************");
     })
 
+    /**
+     * @tc.name batch insert with conflict resolution to read-only database
+     * @tc.number readOnlyTest011
+     * @tc.desc batch insert with conflict resolution by store
+     * @tc.size MediumTest
+     * @tc.type Function
+     * @tc.level Level 2
+     */
+    it('readOnlyTest011', 0, async function () {
+        console.info(TAG + "************* readOnlyTest011 start *************");
+        const row = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+        }
+        let valueBucketArray = new Array();
+        for (let i = 0; i < 2; i++) {
+            valueBucketArray.push(row);
+        }
+        try {
+            store.batchInsertWithConflictResolutionSync('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_NONE failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        try {
+            await store.batchInsertWithConflictResolution('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_ROLLBACK failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        try {
+            store.batchInsertWithConflictResolutionSync('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_ABORT);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_ABORT failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        try {
+            await store.batchInsertWithConflictResolution('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_FAIL);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_FAIL failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        try {
+            store.batchInsertWithConflictResolutionSync('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_IGNORE);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_IGNORE failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        try {
+            await store.batchInsertWithConflictResolution('test', valueBucketArray, relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+            expect().assertFail();
+        } catch (err) {
+            console.error(TAG, `readOnlyTest011 ON_CONFLICT_REPLACE failed, errCode:${err.code}, message:${err.message}`);
+            expect(err.code == 801).assertTrue();
+        }
+        console.info(TAG + "************* readOnlyTest011 end *************");
+    })
+
     console.info(TAG + "*************Unit Test End*************");
 })
 

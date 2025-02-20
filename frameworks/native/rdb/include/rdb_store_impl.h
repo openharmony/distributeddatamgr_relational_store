@@ -82,7 +82,9 @@ public:
     RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
-    std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &values) override;
+    std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
+    std::pair<int, int64_t> BatchInsertWithConflictResolution(
+        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
     std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
         Resolution resolution) override;
     int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
@@ -238,6 +240,7 @@ private:
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
     const RdbStoreConfig config_;
+    // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
     std::string path_;
     std::string name_;

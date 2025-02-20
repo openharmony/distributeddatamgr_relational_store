@@ -56,6 +56,18 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
 
+static constexpr bool IsIncreasing()
+{
+    for (size_t i = 1; i < sizeof(JS_ERROR_CODE_MSGS) / sizeof(JsErrorCode); i++) {
+        if (JS_ERROR_CODE_MSGS[i].status <= JS_ERROR_CODE_MSGS[i - 1].status) {
+            return false;
+        }
+    }
+    return true;
+}
+// JS_ERROR_CODE_MSGS must ensure increment
+static_assert(IsIncreasing());
+
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
 {
     auto jsErrorCode = JsErrorCode{ errorCode, -1, "" };
