@@ -285,12 +285,14 @@ int RdbStoreManager::ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpe
     return openCallback.OnOpen(rdbStore);
 }
 
-bool RdbStoreManager::Delete(const std::string &path, bool shouldClose)
+bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
 {
+    auto path = config.GetPath();
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto tokens = StringUtils::Split(path, "/");
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
+        param.bundleName_ = config.GetBundleName();
         param.storeName_ = *tokens.rbegin();
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
