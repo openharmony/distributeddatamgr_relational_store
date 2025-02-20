@@ -108,11 +108,22 @@ static napi_value ExportNetWorkStrategy(napi_env env)
     return netStrategy;
 }
 
+static napi_value ExportSyncStatus(napi_env env)
+{
+    napi_value syncStatus = nullptr;
+    napi_create_object(env, &syncStatus);
+    SetNamedProperty(env, syncStatus, "RUNNING", SyncStatus::RUNNING);
+    SetNamedProperty(env, syncStatus, "FINISHED", SyncStatus::FINISHED);
+    napi_object_freeze(env, syncStatus);
+    return syncStatus;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("Action", ExportAction(env)),
         DECLARE_NAPI_PROPERTY("ClearAction", ExportAction(env)),
+        DECLARE_NAPI_PROPERTY("SyncStatus", ExportSyncStatus(env)),
         DECLARE_NAPI_PROPERTY("DATA_CHANGE_EVENT_ID",
             AppDataMgrJsKit::JSUtils::Convert2JSValue(env, std::string(CloudData::DATA_CHANGE_EVENT_ID))),
     };

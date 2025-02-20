@@ -63,6 +63,7 @@ struct StatisticInfo {
 };
 
 struct QueryKey {
+    int32_t user;
     std::string accountId;
     std::string bundleName;
     std::string storeId;
@@ -71,20 +72,30 @@ struct QueryKey {
         if (accountId < queryKey.accountId) {
             return true;
         } else if (accountId == queryKey.accountId) {
-            if (bundleName < queryKey.bundleName) {
+            if (user < queryKey.user) {
                 return true;
-            } else if (bundleName == queryKey.bundleName) {
-                return storeId < queryKey.storeId;
+            } else if (user == queryKey.user) {
+                if (bundleName < queryKey.bundleName) {
+                    return true;
+                } else if (bundleName == queryKey.bundleName) {
+                    return storeId < queryKey.storeId;
+                }
             }
         }
         return false;
     }
 };
 
+enum SyncStatus : int32_t {
+    RUNNING,
+    FINISHED
+};
+
 struct CloudSyncInfo {
     int64_t startTime = 0;
     int64_t finishTime = 0;
     int32_t code = -1;
+    int32_t syncStatus = SyncStatus::RUNNING;
 };
 
 using StatisticInfos = std::vector<StatisticInfo>;
