@@ -1185,11 +1185,11 @@ describe('rdbStoreTransactionTest', function () {
                     transactionType: data_relationalStore.TransactionType.EXCLUSIVE
                 })
                 console.log(TAG + "begin EXCLUSIVE success abnormal");
-                await exclusiveTrans.rollback();
+                exclusiveTrans.rollback();
             } catch (e) {
                 console.log(TAG + e);
+                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "begin EXCLUSIVE failed");
-                expect(true).assertFail();
             }
             var rowId = await deferredTrans.insert("test", valueBucket);
             console.log(TAG + "testTransactionIsolation0008 deferredTrans.insert row " + rowId)
@@ -1694,6 +1694,545 @@ describe('rdbStoreTransactionTest', function () {
         await data_relationalStore.deleteRdbStore(context, storeConfig);
         done();
         console.log(TAG + "************* testTransactionWithReadOnlyStore0001 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0001
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc normal batch insert with ON_CONFLICT_NONE
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0001', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0001 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 2; i++) {
+                valueBucketArray.push(valueBucket);
+            }
+            var num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num1 " + num)
+            expect(2).assertEqual(num);
+
+            num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num2 " + num)
+            expect(2).assertEqual(num);
+
+            num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ABORT)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num3 " + num)
+            expect(2).assertEqual(num);
+
+            num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_FAIL)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num4 " + num)
+            expect(2).assertEqual(num);
+
+            num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num5 " + num)
+            expect(2).assertEqual(num);
+
+            num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 batch num6 " + num)
+            expect(2).assertEqual(num);
+
+            let resultSet = await transaction.querySql("select * from test")
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 result count " + resultSet.rowCount)
+            expect(12).assertEqual(resultSet.rowCount)
+            resultSet.close()
+
+            await transaction.commit()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            await transaction.rollback()
+            expect(null).assertFail()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0001 failed");
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0001 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0011
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc conflict batch insert with ON_CONFLICT_NONE
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0011', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0011 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "id" : 2,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket);
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 5; i++) {
+                var vb = {...valueBucket};
+                vb.id = i;
+                valueBucketArray.push(vb);
+            }
+            let num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_NONE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0011 failed num " + num);
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(14800032).assertEqual(e.code)
+            await transaction.rollback()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0011 success");
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0011 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0012
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc conflict batch insert with ON_CONFLICT_ABORT
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0012', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0012 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "id" : 2,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket);
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 5; i++) {
+                var vb = {...valueBucket};
+                vb.id = i;
+                valueBucketArray.push(vb);
+            }
+            let num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ABORT)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0012 failed num " + num);
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(14800032).assertEqual(e.code)
+            await transaction.rollback()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0012 success");
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0012 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0013
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc conflict batch insert with ON_CONFLICT_FAIL
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0013', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0013 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "id" : 2,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket);
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 5; i++) {
+                var vb = {...valueBucket};
+                vb.id = i;
+                valueBucketArray.push(vb);
+            }
+            let num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_FAIL)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0013 failed num " + num);
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(14800032).assertEqual(e.code)
+            await transaction.rollback()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0013 success");
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0013 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0014
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc conflict batch insert with ON_CONFLICT_IGNORE
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0014', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0014 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "id" : 2,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket);
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 5; i++) {
+                var vb = {...valueBucket};
+                vb.id = i;
+                valueBucketArray.push(vb);
+            }
+            let num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_IGNORE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0014 success num " + num);
+            expect(4).assertEqual(num)
+
+            let resultSet = await transaction.querySql("select * from test")
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0014 result count " + resultSet.rowCount)
+            expect(5).assertEqual(resultSet.rowCount)
+            resultSet.close()
+
+            await transaction.commit()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            await transaction.rollback()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0014 failed");
+            expect(null).assertFail()
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0014 end *************");
+    })
+
+    /**
+     * @tc.number testbatchInsertWithConflictResolutionInTransaction0015
+     * @tc.name batchInsertWithConflictResolutionInTransaction
+     * @tc.desc conflict batch insert with ON_CONFLICT_REPLACE
+     */
+    it('testbatchInsertWithConflictResolutionInTransaction0015', 0, async function (done) {
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0015 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "id" : 2,
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            await transaction.insert("test", valueBucket);
+            let valueBucketArray = new Array();
+            for (let i = 0; i < 5; i++) {
+                var vb = {...valueBucket};
+                vb.id = i;
+                valueBucketArray.push(vb);
+            }
+            let num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE)
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0015 success num " + num);
+            expect(5).assertEqual(num)
+
+            let resultSet = await transaction.querySql("select * from test")
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0015 result count " + resultSet.rowCount)
+            expect(5).assertEqual(resultSet.rowCount)
+            resultSet.close()
+
+            await transaction.commit()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            await transaction.rollback()
+            console.log(TAG + "testbatchInsertWithConflictResolutionInTransaction0015 failed");
+            expect(null).assertFail()
+        }
+        done()
+        console.log(TAG + "************* testbatchInsertWithConflictResolutionInTransaction0015 end *************");
+    })
+
+    /**
+     * @tc.number testON_CONFLICT_ROLLBACKInTransaction0021
+     * @tc.name InsertWithON_CONFLICT_ROLLBACKInTransaction
+     * @tc.desc conflict insert with ON_CONFLICT_ROLLBACK
+     */
+    it('testON_CONFLICT_ROLLBACKInTransaction0021', 0, async function (done) {
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0021 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": null,
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            var num = await transaction.insert("test", valueBucket,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0021 fail num " + num);
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800032)
+            try {
+                await transaction.rollback()
+                expect(null).assertFail()
+            } catch (e) {
+                console.log(TAG + e + " code: " + e.code);
+                expect(e.code).assertEqual(14800014);
+            }
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0021 success");
+        }
+        done()
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0021 end *************");
+    })
+
+    /**
+     * @tc.number testON_CONFLICT_ROLLBACKInTransaction0022
+     * @tc.name InsertWithON_CONFLICT_ROLLBACKInTransaction
+     * @tc.desc conflict insert with ON_CONFLICT_ROLLBACK
+     */
+    it('testON_CONFLICT_ROLLBACKInTransaction0022', 0, async function (done) {
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0022 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": "zhangsan",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            var num = await transaction.insert("test", valueBucket);
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0022 insert num " + num)
+            let predicates = new data_relationalStore.RdbPredicates("test");
+            predicates.equalTo("name", "zhangsan");
+            const updateValueBucket = {
+                "name": null,
+                "age": 28,
+                "salary": 25,
+                "blobType": u8,
+            }
+            await transaction.update(updateValueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800032)
+            try {
+                await transaction.rollback()
+                expect(null).assertFail()
+            } catch (e) {
+                console.log(TAG + e + " code: " + e.code);
+                expect(e.code).assertEqual(14800014);
+            }
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0022 success");
+        }
+        done()
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0022 end *************");
+    })
+
+    /**
+     * @tc.number testON_CONFLICT_ROLLBACKInTransaction0023
+     * @tc.name BatchInsertWithON_CONFLICT_ROLLBACKInTransaction
+     * @tc.desc conflict insert with ON_CONFLICT_ROLLBACK
+     */
+    it('testON_CONFLICT_ROLLBACKInTransaction0023', 0, async function (done) {
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0023 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": null,
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            valueBucketArray.push(valueBucket);
+            var num = transaction.batchInsertWithConflictResolutionSync("test", valueBucketArray,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ROLLBACK);
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0023 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800032)
+            try {
+                await transaction.rollback()
+                expect(null).assertFail()
+            } catch (e) {
+                console.log(TAG + e + " code: " + e.code);
+                expect(e.code).assertEqual(14800014);
+            }
+            console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0023 success");
+        }
+        done()
+        console.log(TAG + "************* testON_CONFLICT_ROLLBACKInTransaction0023 end *************");
+    })
+
+    /**
+     * @tc.number testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031
+     * @tc.name testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs
+     * @tc.desc batch Insert With ConflictResolution with Invalid Args
+     */
+    it('testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction();
+        try {
+            const valueBucket = {
+                "name": "bbb",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            valueBucketArray.push(valueBucket);
+            var num = await transaction.batchInsertWithConflictResolution(123, valueBucket,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_ABORT);
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(String(e.code)).assertEqual(String(401))
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031 success");
+        }
+        await transaction.rollback();
+        done()
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0031 end *************");
+    })
+
+    /**
+     * @tc.number testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032
+     * @tc.name testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs
+     * @tc.desc batch Insert With ConflictResolution with Invalid Args
+     */
+    it('testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032 start *************");
+        var transaction = await rdbStore.createTransaction();
+        try {
+            var num = transaction.batchInsertWithConflictResolutionSync("table", undefined,
+                data_relationalStore.ConflictResolution.ON_CONFLICT_FAIL);
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(String(e.code)).assertEqual(String(401))
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032 success");
+        }
+        await transaction.rollback();
+        done()
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0032 end *************");
+    })
+
+    /**
+     * @tc.number testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033
+     * @tc.name testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs
+     * @tc.desc batch Insert With ConflictResolution with Invalid Args
+     */
+    it('testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": "aaa",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            valueBucketArray.push(valueBucket);
+            var num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray, "abc");
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(String(e.code)).assertEqual(String(401))
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033 success");
+        }
+        await transaction.rollback();
+        done()
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0033 end *************");
+    })
+
+    /**
+     * @tc.number testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034
+     * @tc.name testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs
+     * @tc.desc batch Insert With ConflictResolution with Invalid Args
+     */
+    it('testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": "aaa",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            valueBucketArray.push(valueBucket);
+            var num = transaction.batchInsertWithConflictResolutionSync("test", valueBucketArray);
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(String(e.code)).assertEqual(String(401))
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034 success");
+        }
+        await transaction.rollback();
+        done()
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0034 end *************");
+    })
+
+    /**
+     * @tc.number testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035
+     * @tc.name testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs
+     * @tc.desc batch Insert With ConflictResolution with Invalid Args
+     */
+    it('testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035', 0, async function (done) {
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035 start *************");
+        var u8 = new Uint8Array([1, 2, 3])
+        var transaction = await rdbStore.createTransaction()
+        try {
+            const valueBucket = {
+                "name": "aaa",
+                "age": 18,
+                "salary": 100.5,
+                "blobType": u8,
+            }
+            let valueBucketArray = new Array();
+            let rows = 32768 / 4 + 1;
+            for (let i = 0; i < rows; i++) {
+                valueBucketArray.push(valueBucket);
+            }
+            var num = await transaction.batchInsertWithConflictResolution("test", valueBucketArray, data_relationalStore.ConflictResolution.ON_CONFLICT_NONE);
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035 insert num " + num)
+            expect(null).assertFail()
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(String(e.code)).assertEqual(String(14800000))
+            console.log(TAG + "testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035 success");
+        }
+        await transaction.rollback();
+        done()
+        console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");

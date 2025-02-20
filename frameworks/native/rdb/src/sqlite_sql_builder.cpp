@@ -299,13 +299,13 @@ std::string SqliteSqlBuilder::GetSqlArgs(size_t size)
 }
 
 SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::GenerateSqls(
-    const std::string &table, const ValuesBuckets &buckets, int limit)
+    const std::string &table, const ValuesBuckets &buckets, int limit, ConflictResolution resolution)
 {
     auto [fields, values] = buckets.GetFieldsAndValues();
     auto columnSize = fields->size();
     auto rowSize = buckets.RowSize();
     std::vector<std::reference_wrapper<ValueObject>> args(columnSize * rowSize, nullRef_);
-    std::string sql = "INSERT OR REPLACE INTO " + table + " (";
+    std::string sql = "INSERT" + g_onConflictClause[static_cast<int32_t>(resolution)] + " INTO " + table + " (";
     size_t columnIndex = 0;
     for (auto &field : *fields) {
         for (size_t row = 0; row < rowSize; ++row) {
