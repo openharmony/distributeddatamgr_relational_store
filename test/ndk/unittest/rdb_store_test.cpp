@@ -1512,3 +1512,130 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_034, TestSize.Level1)
     errCode = OH_Rdb_IsTokenizerSupported(static_cast<Rdb_Tokenizer>(RDB_CUSTOM_TOKENIZER + 1), &isSupported);
     EXPECT_EQ(RDB_E_INVALID_ARGS, errCode);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_035
+ * @tc.desc: conflict testCase for OH_Rdb_BatchInsert.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_035, TestSize.Level1)
+{
+    ASSERT_NE(storeTestRdbStore_, nullptr);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 12);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    int errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    EXPECT_EQ(12, errCode);
+
+    OH_Data_VBuckets *rows = OH_VBuckets_Create();
+    ASSERT_NE(rows, nullptr);
+    OH_VBucket *vbs[5];
+    for (auto i = 0; i < 5; i++) {
+        OH_VBucket *row = OH_Rdb_CreateValuesBucket();
+        ASSERT_NE(row, nullptr);
+        row->putInt64(row, "id", 10 + i);
+        row->putText(row, "data1", "test_name");
+        vbs[i] = row;
+        EXPECT_EQ(OH_VBuckets_PutRow(rows, row), RDB_OK);
+    }
+
+    int64_t changes = -1;
+    int ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_NONE, &changes);
+    ASSERT_EQ(ret, RDB_E_SQLITE_CONSTRAINT);
+    ASSERT_EQ(changes, 0);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_ROLLBACK, &changes);
+    ASSERT_EQ(ret, RDB_E_SQLITE_CONSTRAINT);
+    ASSERT_EQ(changes, 0);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_ABORT, &changes);
+    ASSERT_EQ(ret, RDB_E_SQLITE_CONSTRAINT);
+    ASSERT_EQ(changes, 0);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_FAIL, &changes);
+    ASSERT_EQ(ret, RDB_E_SQLITE_CONSTRAINT);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_IGNORE, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_REPLACE, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 5);
+
+    for (OH_VBucket *vb : vbs) {
+        vb->destroy(vb);
+    }
+    OH_VBuckets_Destroy(rows);
+
+    char querySql[] = "SELECT * FROM store_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 6);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_036
+ * @tc.desc: normal testCase for OH_Rdb_BatchInsert.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_036, TestSize.Level1)
+{
+    ASSERT_NE(storeTestRdbStore_, nullptr);
+
+    OH_Data_VBuckets *rows = OH_VBuckets_Create();
+    ASSERT_NE(rows, nullptr);
+    OH_VBucket *vbs[2];
+    for (auto i = 0; i < 2; i++) {
+        OH_VBucket *row = OH_Rdb_CreateValuesBucket();
+        ASSERT_NE(row, nullptr);
+        row->putText(row, "data1", "test_name4");
+        row->putInt64(row, "data2", 14800);
+        row->putReal(row, "data3", 300.1);
+        row->putText(row, "data5", "ABCDEFGHI");
+        EXPECT_EQ(OH_VBuckets_PutRow(rows, row), RDB_OK);
+        vbs[i] = row;
+    }
+
+    int64_t changes = -1;
+    int ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_NONE, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_ROLLBACK, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_ABORT, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_FAIL, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_IGNORE, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+
+    ret = OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_REPLACE, &changes);
+    ASSERT_EQ(ret, RDB_OK);
+    ASSERT_EQ(changes, 2);
+    for (OH_VBucket *vb : vbs) {
+        vb->destroy(vb);
+    }
+    OH_VBuckets_Destroy(rows);
+
+    char querySql[] = "SELECT * FROM store_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 13);
+    cursor->destroy(cursor);
+}
