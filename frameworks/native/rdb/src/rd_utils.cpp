@@ -271,12 +271,12 @@ int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
         LOG_ERROR("Invalid len %{public}d", len);
         return E_INVALID_ARGS;
     }
-    uint8_t *tmpVal = new uint8_t[len]();
+    uint8_t *tmpVal = new (std::nothrow)uint8_t[len]();
     if (tmpVal == nullptr) {
         return E_ERROR;
     }
     errno_t err = memcpy_s(tmpVal, len * sizeof(uint8_t), val, len * sizeof(uint8_t));
-    if (err < 0) {
+    if (err != EOK) {
         delete[] tmpVal;
         LOG_ERROR("BindBlob failed due to memcpy %{public}d, len is %{public}d", err, len);
         return TransferGrdErrno(GRD_INNER_ERR);
@@ -304,12 +304,12 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
         LOG_ERROR("Invalid len %{public}d", len);
         return E_INVALID_ARGS;
     }
-    char *tmpVal = new char[len + 1]();
+    char *tmpVal = new (std::nothrow)char[len + 1]();
     if (tmpVal == nullptr) {
         return E_ERROR;
     }
     errno_t err = strcpy_s(tmpVal, len + 1, (const char *)val);
-    if (err < 0) {
+    if (err != EOK) {
         LOG_ERROR("BindText failed due to strycpy %{public}d, len is %{public}d", err, len + 1);
         delete[] tmpVal;
         return TransferGrdErrno(GRD_INNER_ERR);
@@ -381,12 +381,12 @@ int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val, u
         LOG_ERROR("Invalid dim %{public}d", dim);
         return E_INVALID_ARGS;
     }
-    float *tmpVal = new float[dim]();
+    float *tmpVal = new (std::nothrow)float[dim]();
     if (tmpVal == nullptr) {
         return E_ERROR;
     }
     errno_t err = memcpy_s(tmpVal, dim * sizeof(float), val, dim * sizeof(float));
-    if (err < 0) {
+    if (err != EOK) {
         delete[] tmpVal;
         LOG_ERROR("BindFloat failed due to memcpy %{public}d, dim is %{public}d", err, dim);
         return TransferGrdErrno(GRD_INNER_ERR);
