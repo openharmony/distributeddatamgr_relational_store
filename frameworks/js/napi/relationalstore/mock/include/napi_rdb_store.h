@@ -51,6 +51,7 @@ private:
     static napi_value Update(napi_env env, napi_callback_info info);
     static napi_value Insert(napi_env env, napi_callback_info info);
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
+    static napi_value BatchInsertWithConflictResolution(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
