@@ -73,18 +73,18 @@ int DeleteRdFiles(const std::string &dbFileName)
     return errCode;
 }
 
-int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
+int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
     RdbStoreConfig config(dbFileName);
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = DeleteRdbStore(config, shouldClose);
+    int errCodeSqlite = DeleteRdbStore(config);
 
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = DeleteRdbStore(config, shouldClose);
+    int errCodeVector = DeleteRdbStore(config);
     return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
 }
 
-int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
+int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto dbFile = config.GetPath();
@@ -92,7 +92,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         return E_INVALID_FILE_PATH;
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
-        RdbStoreManager::GetInstance().Delete(config, shouldClose);
+        RdbStoreManager::GetInstance().Delete(config);
     }
     Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete"));
     Connection::Delete(config);
