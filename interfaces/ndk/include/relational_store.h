@@ -42,6 +42,7 @@
 #include "oh_value_object.h"
 #include "oh_values_bucket.h"
 #include "oh_rdb_transaction.h"
+#include "oh_rdb_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -484,6 +485,36 @@ int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config);
  * @since 10
  */
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket);
+
+/**
+ * @brief Inserts a batch of data into the target table.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param table Represents the target table.
+ * @param rows Represents the rows data to be inserted into the table.
+ * @param resolution Represents the resolution when conflict occurs.
+ * @param changes Represents the number of successful insertions.
+ * @return Returns the status code of the execution.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_ERROR} database common error.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
+ *         Returns {@link RDB_E_WAL_SIZE_OVER_LIMIT} the WAL file size over default limit.
+ *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
+ *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
+ *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
+ *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
+ *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
+ *         Returns {@link RDB_E_SQLITE_NOMEM} SQLite: The database is out of memory.
+ *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
+ *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
+ *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
+ *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
+ *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
+ * @since 16
+ */
+int OH_Rdb_BatchInsert(OH_Rdb_Store *store, const char *table,
+    const OH_Data_VBuckets *rows, Rdb_ConflictResolution resolution, int64_t *changes);
 
 /**
  * @brief Updates data in the database based on specified conditions.
