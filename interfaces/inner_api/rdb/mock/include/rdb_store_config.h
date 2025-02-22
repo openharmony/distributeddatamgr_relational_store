@@ -268,6 +268,8 @@ public:
     ssize_t GetStartCheckpointSize() const;
     ssize_t GetWalLimitSize() const;
     void SetWalLimitSize(ssize_t size);
+    int32_t GetSubUser() const;
+    void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
     void SetCryptoParam(CryptoParam cryptoParam);
@@ -328,6 +330,7 @@ private:
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;
+    int32_t subUser_ = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif

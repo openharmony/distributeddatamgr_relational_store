@@ -101,6 +101,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.uids_ = config.GetPromiseInfo().uids_;
     syncerParam_.user_ = config.GetPromiseInfo().user_;
     syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
+    syncerParam_.subUser_ = config.GetSubUser();
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
@@ -956,6 +957,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         RdbParam param;
         param.bundleName_ = config_.GetBundleName();
         param.storeName_ = config_.GetName();
+        param.subUser_ = config_.GetSubUser();
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (service != nullptr) {
             service->Disable(param);

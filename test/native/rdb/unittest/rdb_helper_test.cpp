@@ -710,3 +710,24 @@ HWTEST_F(RdbHelperTest, GetDatabase_004, TestSize.Level0)
     EXPECT_NE(errCode, E_OK);
     EXPECT_EQ(rdbStore2, nullptr);
 }
+
+HWTEST_F(RdbHelperTest, GetDatabase_005, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetSubUserDatabase.db";
+    RdbStoreConfig config(dbPath);
+    config.SetName("RdbStoreConfig_test.db");
+    std::string bundleName = "com.ohos.config.TestSubUser";
+    config.SetBundleName(bundleName);
+    config.SetSubUser(100);
+    auto subUser = config.GetSubUser();
+    EXPECT_EQ(subUser, 100);
+    int errCode = E_OK;
+ 
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+ 
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
