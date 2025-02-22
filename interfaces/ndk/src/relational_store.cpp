@@ -35,6 +35,8 @@
 #include "securec.h"
 #include "sqlite_global_config.h"
 #include "oh_data_define.h"
+#include "oh_data_utils.h"
+#include "values_buckets.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -500,6 +502,31 @@ int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBuck
     int64_t rowId = -1;
     rdbStore->GetStore()->Insert(rowId, table, bucket->Get());
     return rowId >= 0 ? rowId : OH_Rdb_ErrCode::RDB_ERR;
+}
+
+int OH_Rdb_BatchInsert(OH_Rdb_Store *store, const char *table,
+    const OH_Data_VBuckets *rows, Rdb_ConflictResolution resolution, int64_t *changes)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || table == nullptr || rows == nullptr || changes == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    OHOS::NativeRdb::ValuesBuckets datas;
+    for (size_t i = 0; i < rows->rows_.size(); i++) {
+        auto valuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(rows->rows_[i]));
+        if (valuesBucket == nullptr) {
+            continue;
+        }
+        datas.Put(valuesBucket->Get());
+    }
+    auto [errCode, count] = rdbStore->GetStore()->BatchInsertWithConflictResolution(table,
+        datas, Utils::ConvertConflictResolution(resolution));
+    *changes = count;
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64 "" PRId64, errCode, count);
+    }
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
 
 int OH_Rdb_Update(OH_Rdb_Store *store, OH_VBucket *valueBucket, OH_Predicates *predicates)

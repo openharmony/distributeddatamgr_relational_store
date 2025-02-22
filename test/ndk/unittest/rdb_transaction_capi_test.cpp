@@ -442,7 +442,7 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_004, TestSize.Level1)
 
     // batch insert
     int64_t changes = -1;
-    ret = OH_RdbTrans_BatchInsert(trans, table, rows, &changes);
+    ret = OH_RdbTrans_BatchInsert(trans, table, rows, RDB_CONFLICT_NONE, &changes);
     EXPECT_EQ(ret, RDB_OK);
     EXPECT_EQ(changes, 2);
 
@@ -521,7 +521,7 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_005, TestSize.Level1)
 
     // batch insert
     int64_t changes = -1;
-    ret = OH_RdbTrans_BatchInsert(trans, table, rows2, &changes);
+    ret = OH_RdbTrans_BatchInsert(trans, table, rows2, RDB_CONFLICT_REPLACE, &changes);
     EXPECT_EQ(ret, RDB_OK);
     EXPECT_EQ(changes, 2);
 
