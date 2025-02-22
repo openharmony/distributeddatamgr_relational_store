@@ -44,6 +44,7 @@
 #include "oh_data_values.h"
 #include "oh_values_bucket.h"
 #include "oh_data_values_buckets.h"
+#include "oh_rdb_types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -196,6 +197,7 @@ int OH_RdbTrans_Insert(OH_Rdb_Transaction *trans, const char *table, const OH_VB
  * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
  * @param table Represents the target table.
  * @param rows Represents the rows data to be inserted into the table.
+ * @param resolution Represents the resolution when conflict occurs.
  * @param changes Represents the number of successful insertions.
  * @return Returns the status code of the execution.
  *         Returns {@link RDB_OK} if the execution is successful.
@@ -213,10 +215,11 @@ int OH_RdbTrans_Insert(OH_Rdb_Transaction *trans, const char *table, const OH_VB
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
+ *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
  * @since 16
  */
 int OH_RdbTrans_BatchInsert(OH_Rdb_Transaction *trans, const char *table, const OH_Data_VBuckets *rows,
-    int64_t *changes);
+    Rdb_ConflictResolution resolution, int64_t *changes);
 
 /**
  * @brief Updates data in the database based on specified conditions.

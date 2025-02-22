@@ -416,6 +416,13 @@ typedef enum OH_Rdb_ErrCode {
      * @since 16
      */
     RDB_E_TYPE_MISMATCH = (E_BASE + 64),
+
+    /**
+     * @brief Data value type is null.
+     *
+     * @since 16
+     */
+    RDB_E_SQLITE_CONSTRAINT = (E_BASE + 65),
 } OH_Rdb_ErrCode;
 
 #ifdef __cplusplus

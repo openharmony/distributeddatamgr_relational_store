@@ -17,6 +17,7 @@
 
 #include "oh_rdb_transaction.h"
 #include "oh_data_define.h"
+#include "oh_data_utils.h"
 #include "relational_values_bucket.h"
 #include "relational_store_error_code.h"
 #include "convertor_error_code.h"
@@ -123,20 +124,22 @@ int OH_RdbTrans_Insert(OH_Rdb_Transaction *trans, const char *table, const OH_VB
 }
 
 int OH_RdbTrans_BatchInsert(OH_Rdb_Transaction *trans, const char *table, const OH_Data_VBuckets *rows,
-    int64_t *changes)
+    Rdb_ConflictResolution resolution, int64_t *changes)
 {
-    if (!IsValidRdbTrans(trans) || table == nullptr || rows == nullptr || !rows->IsValid() || changes == nullptr) {
+    if (!IsValidRdbTrans(trans) || table == nullptr || rows == nullptr || !rows->IsValid() || changes == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
         return RDB_E_INVALID_ARGS;
     }
-    std::vector<ValuesBucket> datas;
+    ValuesBuckets datas;
     for (size_t i = 0; i < rows->rows_.size(); i++) {
         auto valuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(rows->rows_[i]));
         if (valuesBucket == nullptr) {
             continue;
         }
-        datas.push_back(valuesBucket->Get());
+        datas.Put(valuesBucket->Get());
     }
-    auto [errCode, count] = trans->trans_->BatchInsert(table, datas);
+    auto [errCode, count] =
+        trans->trans_->BatchInsertWithConflictResolution(table, datas, Utils::ConvertConflictResolution(resolution));
     *changes = count;
     if (errCode != E_OK) {
         LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64 "" PRId64, errCode, count);
