@@ -73,7 +73,7 @@ struct RdbSyncerParam {
     std::string user_;
     std::vector<std::string> permissionNames_ = {};
     bool asyncDownloadAsset_ = false;
-    bool enableCloud_ = true;
+    int32_t subUser_ = 0;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
