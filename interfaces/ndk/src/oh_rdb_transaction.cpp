@@ -118,7 +118,7 @@ int OH_RdbTrans_Insert(OH_Rdb_Transaction *trans, const char *table, const OH_VB
     auto [errCode, id] = trans->trans_->Insert(table, valuesBucket->Get());
     *rowId = id;
     if (errCode != E_OK) {
-        LOG_ERROR("insert fail, errCode=%{public}d id=%{public}" PRId64 "" PRId64, errCode, id);
+        LOG_ERROR("insert fail, errCode=%{public}d id=%{public}" PRId64, errCode, id);
     }
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
@@ -142,7 +142,7 @@ int OH_RdbTrans_BatchInsert(OH_Rdb_Transaction *trans, const char *table, const 
         trans->trans_->BatchInsertWithConflictResolution(table, datas, Utils::ConvertConflictResolution(resolution));
     *changes = count;
     if (errCode != E_OK) {
-        LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64 "" PRId64, errCode, count);
+        LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64, errCode, count);
     }
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
