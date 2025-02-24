@@ -389,3 +389,45 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_007, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(rowCount, 1);
 }
+
+/**
+ * @tc.name: RdbStore_Transaction_008
+ * @tc.desc: After executing the ddl statement, the transaction links cached in the history need to be cleared.
+ * Continuing to use the old connections will result in errors due to changes in the table structure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_008, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto result = transaction->Insert("test", row);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 1);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+    transaction = nullptr;
+
+    auto res = store->Execute(
+        "CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
+    ASSERT_EQ(res.first, E_OK);
+    // After creating the table, the links will be cleared, and creating a new transaction will create a new connection,
+    // ensuring that the transaction operation does not report errors.
+    std::tie(ret, transaction) = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 1);
+}
