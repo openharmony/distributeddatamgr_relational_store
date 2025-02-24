@@ -1191,7 +1191,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
                 SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
             vSchema_ = version;
-            errCode = connectionPool_->RestartReaders();
+            errCode = connectionPool_->RestartConns();
         }
     }
     statement = nullptr;
@@ -1278,7 +1278,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(std::share
             LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> sql:%{public}s.",
                      SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version), sql.c_str());
             vSchema_ = version;
-            errCode = connectionPool_->RestartReaders();
+            errCode = connectionPool_->RestartConns();
         }
     }
     return { errCode, object };
