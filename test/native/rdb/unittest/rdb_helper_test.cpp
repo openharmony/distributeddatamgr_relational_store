@@ -731,3 +731,49 @@ HWTEST_F(RdbHelperTest, GetDatabase_005, TestSize.Level0)
     int ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: GetDatabase_006
+ * @tc.desc: Insert after GetRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_006, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase1.db";
+    RdbStoreConfig config(dbPath);
+    config.SetName("RdbStoreConfig_test.db");
+    std::string bundleName = "com.ohos.config.TestSubUser";
+    config.SetBundleName(bundleName);
+    config.SetSubUser(100);
+    auto subUser = config.GetSubUser();
+    EXPECT_EQ(subUser, 100);
+    int errCode = E_OK;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+    rdbStore1->ExecuteSql("CREATE TABLE IF NOT EXISTS test "
+                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER, salary "
+                          "REAL, blobType BLOB);");
+
+    int64_t id;
+    ValuesBucket values;
+    int deletedRows;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = rdbStore1->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ret = rdbStore1->Delete(deletedRows, "test", "id = 1", std::vector<std::string>());
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(deletedRows, 1);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
