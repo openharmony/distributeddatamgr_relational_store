@@ -524,7 +524,7 @@ int OH_Rdb_BatchInsert(OH_Rdb_Store *store, const char *table,
         datas, Utils::ConvertConflictResolution(resolution));
     *changes = count;
     if (errCode != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64 "" PRId64, errCode, count);
+        LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64, errCode, count);
     }
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
