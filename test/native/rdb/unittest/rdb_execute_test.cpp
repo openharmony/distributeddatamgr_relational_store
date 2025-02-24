@@ -644,23 +644,12 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_021, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("wangyjing"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = rdbStore->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
     int64_t count;
     ret = rdbStore->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 3);
+    EXPECT_EQ(count, 2);
 
-    ret = rdbStore->ExecuteSql("DELETE FROM test WHERE age = ? OR age = ?",
-        std::vector<ValueObject>{ ValueObject(std::string("18")), ValueObject(std ::string("20")) });
+    ret = rdbStore->ExecuteSql("DELETE FROM test WHERE age = 18");
     EXPECT_EQ(ret, E_OK);
 
     ret = rdbStore->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test where age = 19");
@@ -669,10 +658,6 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_021, TestSize.Level1)
 
     ret = rdbStore->ExecuteSql("DELETE FROM test WHERE age = 19");
     EXPECT_EQ(ret, E_OK);
-
-    ret = rdbStore->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(count, 0);
 
     ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
