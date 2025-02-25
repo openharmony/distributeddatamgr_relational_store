@@ -235,6 +235,7 @@ private:
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_;
+    std::atomic<bool> hasRegisterDataChange_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
