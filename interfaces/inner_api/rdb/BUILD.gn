@@ -300,7 +300,6 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
-      "${relational_store_native_path}/rdb/mock/src/rdb_stat_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
 

@@ -16,7 +16,6 @@
 #include "rdb_stat_reporter.h"
 
 namespace OHOS::NativeRdb {
-using namespace OHOS::Rdb;
 
 RdbStatReporter::RdbStatReporter(
     StatType statType, SubType subType, const RdbStoreConfig &config, const DistributedRdb::RdbSyncerParam &param)
@@ -29,6 +28,7 @@ RdbStatReporter::~RdbStatReporter()
 
 TimeType RdbStatReporter::GetTimeType(uint32_t costTime)
 {
+    return TIME_LEVEL_FIRST;
 }
 
 } // namespace OHOS::NativeRdb
