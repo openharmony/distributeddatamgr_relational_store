@@ -115,6 +115,9 @@ int RdbStoreImpl::InnerOpen()
     }
 
     AfterOpen(syncerParam_);
+    if (config_.GetDBType() == DB_VECTOR || !config_.IsSearchable()) {
+        return E_OK;
+    }
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
@@ -322,6 +325,9 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(
 
 void RdbStoreImpl::NotifyDataChange()
 {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || !hasRegisterDataChange_.exchange(false)) {
+        return;
+    }
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterDataChangeCallback is failed, err is %{public}d.", errCode);
@@ -351,13 +357,12 @@ int RdbStoreImpl::SetDistributedTables(
     syncerParam_.enableCloud_ = distributedConfig.enableCloud;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
-    if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
-        int SYNC_DATA_INDEX = 500;
-        Reportor::ReportCorrupted(Reportor::Create(config_, SYNC_DATA_INDEX, "RdbDeviceToDeviceDataSync"));
-    }
     if (errorCode != E_OK) {
         LOG_ERROR("Fail to set distributed tables, error=%{public}d.", errorCode);
         return errorCode;
+    }
+    if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
+        RegisterDataChangeCallback();
     }
     if (type != DistributedRdb::DISTRIBUTED_CLOUD) {
         return E_OK;
@@ -807,8 +812,8 @@ void RdbStoreImpl::InitDelayNotifier()
 
 int RdbStoreImpl::RegisterDataChangeCallback()
 {
-    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
-        return E_NOT_SUPPORT;
+    if (hasRegisterDataChange_.exchange(true)) {
+        return E_OK;
     }
     InitDelayNotifier();
     auto callBack = [delayNotifier = delayNotifier_](const DistributedRdb::RdbChangedData &rdbChangedData) {
