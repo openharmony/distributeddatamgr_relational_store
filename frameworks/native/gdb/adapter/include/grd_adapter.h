@@ -29,7 +29,6 @@ namespace OHOS::DistributedDataAip {
 
 class GrdAdapter {
 public:
-    static int TransErrno(int err);
     static ColumnType TransColType(int grdColType);
     static int Open(const char *dbPath, const char *configStr, uint32_t flags, GRD_DB **db);
     static int Repair(const char *dbPath, const char *configStr);
@@ -56,6 +55,8 @@ public:
     static int Rekey(const char *dbFile, const char *configStr, const std::vector<uint8_t> &encryptedKey);
 
 private:
+    static int TransErrno(int err);
+
     static std::map<int32_t, int32_t> GRD_ERRNO_MAP;
 };
 
