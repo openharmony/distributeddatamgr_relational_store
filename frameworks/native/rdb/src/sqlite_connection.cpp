@@ -86,12 +86,12 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 {
     std::string path = config.GetPath();
     std::string slavePath = SqliteUtils::GetSlavePath(path);
-    Delete(path);
-    Delete(slavePath);
+    DeleteByPath(path);
+    DeleteByPath(slavePath);
     return E_OK;
 }
 
-int32_t SqliteConnection::Delete(const std::string &path)
+int32_t SqliteConnection::DeleteByPath(const std::string &path)
 {
     for (const auto &suffix : FILE_SUFFIXES) {
         SqliteUtils::DeleteFile(path + suffix.suffix_);
