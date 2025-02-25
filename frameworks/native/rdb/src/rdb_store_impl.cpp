@@ -2220,6 +2220,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     if (errCode == E_OK) {
+        ExchangeSlaverToMaster();
         Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
