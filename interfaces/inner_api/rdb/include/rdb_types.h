@@ -105,6 +105,27 @@ enum DistributedTableType {
     DISTRIBUTED_SEARCH
 };
 
+struct RdbStatEvent {
+    uint32_t statType;
+    std::string bundleName;
+    std::string storeName;
+    uint32_t subType;
+    uint32_t costTime;
+
+    bool operator<(const RdbStatEvent &other) const
+    {
+        if (statType != other.statType)
+            return statType < other.statType;
+        if (bundleName != other.bundleName)
+            return bundleName < other.bundleName;
+        if (storeName != other.storeName)
+            return storeName < other.storeName;
+        if (subType != other.subType)
+            return subType < other.subType;
+        return costTime < other.costTime;
+    }
+};
+
 struct Reference {
     std::string sourceTable;
     std::string targetTable;

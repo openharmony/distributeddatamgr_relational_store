@@ -243,4 +243,16 @@ bool Unmarshalling(DebugInfo &output, MessageParcel &data)
 {
     return Unmarshal(data, output.inode_, output.mode_, output.uid_, output.gid_);
 }
+
+template<>
+bool Marshalling(const StatReporter &input, MessageParcel &data)
+{
+    return ITypesUtil::Marshal(data, input.statType, input.bundleName, input.storeName, input.subType, input.costTime);
+}
+template<>
+bool Unmarshalling(StatReporter &output, MessageParcel &data)
+{
+    return ITypesUtil::Unmarshal(
+        data, output.statType, output.bundleName, output.storeName, output.subType, output.costTime);
+}
 } // namespace OHOS::ITypesUtil

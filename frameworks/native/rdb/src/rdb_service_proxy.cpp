@@ -369,6 +369,18 @@ int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
     return status;
 }
 
+int32_t RdbServiceProxy::ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent)
+{
+    MessageParcel reply;
+    int32_t status =
+        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REPORT_STAT), reply, param, statEvent);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::Delete(const RdbSyncerParam &param)
 {
     MessageParcel reply;
