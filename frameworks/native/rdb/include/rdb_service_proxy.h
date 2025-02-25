@@ -75,6 +75,8 @@ public:
 
     int32_t AfterOpen(const RdbSyncerParam &param) override;
 
+    int32_t ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent) override;
+
     int32_t Delete(const RdbSyncerParam &param) override;
 
     int32_t NotifyDataChange(const RdbSyncerParam &param, const RdbChangedData &clientChangedData,

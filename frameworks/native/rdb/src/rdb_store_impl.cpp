@@ -35,6 +35,7 @@
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_radar_reporter.h"
+#include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
@@ -1005,6 +1006,7 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 
 std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
+    RdbStatReporter reportStat(RDB_PERF, INSERT, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1055,6 +1057,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
+    RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, syncerParam_);
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1162,6 +1165,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
 std::pair<int, int> RdbStoreImpl::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
+    RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1214,6 +1218,7 @@ std::pair<int, int> RdbStoreImpl::Update(
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
 {
+    RdbStatReporter reportStat(RDB_PERF, DELETE, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
@@ -1287,6 +1292,7 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
 {
+    RdbStatReporter reportStat(RDB_PERF, EXECUTESQL, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_) {
         return E_NOT_SUPPORT;
@@ -1335,6 +1341,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
 
 std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
+    RdbStatReporter reportStat(RDB_PERF, EXECUTE, config_, syncerParam_);
     ValueObject object;
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, object };
@@ -1967,6 +1974,7 @@ int RdbStoreImpl::SetVersion(int version)
  */
 int RdbStoreImpl::BeginTransaction()
 {
+    RdbStatReporter reportStat(RDB_PERF, BEGINTRANSACTION, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2035,6 +2043,7 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
 */
 int RdbStoreImpl::RollBack()
 {
+    RdbStatReporter reportStat(RDB_PERF, ROLLBACK, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2136,6 +2145,7 @@ int RdbStoreImpl::RollBack(int64_t trxId)
 */
 int RdbStoreImpl::Commit()
 {
+    RdbStatReporter reportStat(RDB_PERF, COMMIT, config_, syncerParam_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
