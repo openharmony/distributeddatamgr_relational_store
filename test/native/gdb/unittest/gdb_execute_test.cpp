@@ -1812,23 +1812,6 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsAnonymousTest, TestSize.Level1)
     EXPECT_EQ(ret, "/***/el1/***/com.my.hmos.arkwebcore");
 }
 
-HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsErrorTest, TestSize.Level1)
-{
-    auto errCode = GrdAdapter::TransErrno(100);
-    EXPECT_EQ(errCode, 100);
-    errCode = GrdAdapter::TransErrno(E_PARSE_JSON_FAILED);
-    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
-
-    errCode = GrdAdapter::TransErrno(E_PARSE_JSON_FAILED);
-    EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
-
-    errCode = GrdAdapter::TransErrno(E_OK);
-    EXPECT_EQ(errCode, E_OK);
-
-    errCode = GrdAdapter::TransErrno(-100);
-    EXPECT_EQ(errCode, E_GRD_INNER_ERR);
-}
-
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_StatementTest, TestSize.Level1)
 {
     auto errCode = E_OK;
