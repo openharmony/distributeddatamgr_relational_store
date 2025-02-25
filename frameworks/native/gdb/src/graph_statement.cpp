@@ -33,13 +33,12 @@ GraphStatement::GraphStatement(GRD_DB *db, const std::string &gql, std::shared_p
         return;
     }
 
-    int32_t ret = GrdAdapter::Prepare(dbHandle_, gql_.c_str(), gql_.size(), &stmtHandle_, nullptr);
-    if (ret != GRD_OK) {
-        LOG_ERROR("GRD_GqlPrepare failed. ret=%{public}d", ret);
+    errCode = GrdAdapter::Prepare(dbHandle_, gql_.c_str(), gql_.size(), &stmtHandle_, nullptr);
+    if (errCode != E_OK) {
+        LOG_ERROR("GRD_GqlPrepare failed. ret=%{public}d", errCode);
         if (stmtHandle_ != nullptr) {
             GrdAdapter::Finalize(stmtHandle_);
         }
-        errCode = GrdAdapter::TransErrno(ret);
     }
 }
 
@@ -55,10 +54,10 @@ int32_t GraphStatement::Prepare()
     }
 
     int32_t ret = GrdAdapter::Prepare(dbHandle_, gql_.c_str(), gql_.size(), &stmtHandle_, nullptr);
-    if (ret != GRD_OK) {
+    if (ret != E_OK) {
         LOG_ERROR("GRD_GqlPrepare failed. ret=%{public}d", ret);
     }
-    return GrdAdapter::TransErrno(ret);
+    return ret;
 }
 
 int32_t GraphStatement::Step()
@@ -67,10 +66,10 @@ int32_t GraphStatement::Step()
         return E_STEP_CHECK_FAILED;
     }
     int32_t ret = GrdAdapter::Step(stmtHandle_);
-    if (ret != GRD_OK) {
+    if (ret != E_OK) {
         LOG_ERROR("GRD_GqlStep failed. ret=%{public}d", ret);
     }
-    return GrdAdapter::TransErrno(ret);
+    return ret;
 }
 
 int32_t GraphStatement::Finalize()
@@ -79,9 +78,9 @@ int32_t GraphStatement::Finalize()
         return E_OK;
     }
     int32_t ret = GrdAdapter::Finalize(stmtHandle_);
-    if (ret != GRD_OK) {
+    if (ret != E_OK) {
         LOG_ERROR("GRD_GqlFinalize failed. ret=%{public}d", ret);
-        return GrdAdapter::TransErrno(ret);
+        return ret;
     }
     stmtHandle_ = nullptr;
     gql_ = "";
