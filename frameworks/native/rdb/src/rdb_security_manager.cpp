@@ -157,7 +157,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
             Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
                 "HksUpdate ret=" + std::to_string(result)));
             LOG_ERROR("HksUpdate Failed.");
-            HksAbort(handle, paramSet);
+            
             return HKS_FAILURE;
         }
 
