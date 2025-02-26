@@ -84,8 +84,16 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 
 int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
 {
-    auto path = config.GetPath();
-    for (auto &suffix : FILE_SUFFIXES) {
+    std::string path = config.GetPath();
+    std::string slavePath = SqliteUtils::GetSlavePath(path);
+    Delete(path);
+    Delete(slavePath);
+    return E_OK;
+}
+
+int32_t SqliteConnection::Delete(const std::string &path)
+{
+    for (const auto &suffix : FILE_SUFFIXES) {
         SqliteUtils::DeleteFile(path + suffix.suffix_);
     }
     return E_OK;
@@ -165,7 +173,7 @@ int SqliteConnection::CreateSlaveConnection(const RdbStoreConfig &config, bool c
         SqliteUtils::TryAccessSlaveLock(config_.GetPath(), false, true, true);
         if (errCode == E_SQLITE_CORRUPT) {
             LOG_WARN("slave corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
-            (void)Delete(config);
+            (void)Delete(config.GetPath());
             errCode = connection->InnerOpen(config);
             if (errCode != E_OK) {
                 LOG_ERROR("reopen slave failed:%{public}d", errCode);
@@ -1381,7 +1389,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, SlaveStatus &curSta
             RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
             if (rc != SQLITE_BUSY && rc != SQLITE_LOCKED) {
                 slaveConnection_ = nullptr;
-                (void)SqliteConnection::Delete(slaveConfig);
+                (void)SqliteConnection::Delete(slaveConfig.GetPath());
             }
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
         }
@@ -1460,7 +1468,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
         return ret;
     }
     LOG_WARN("begin repair main:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
-    (void)SqliteConnection::Delete(config);
+    (void)SqliteConnection::Delete(config.GetPath());
     ret = connection->InnerOpen(config);
     if (ret != E_OK) {
         LOG_ERROR("reopen db failed, err:%{public}d", ret);

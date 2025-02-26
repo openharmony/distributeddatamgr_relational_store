@@ -147,6 +147,54 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DeleteDatabase_002
+ * @tc.desc: DeleteRdbStore if the dbFile is not exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_002, TestSize.Level1)
+
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(rdbStore, nullptr);
+
+    remove(rdbStorePath.c_str());
+
+    int ret = RdbHelper::DeleteRdbStore("rdbhelper.db");
+    EXPECT_EQ(ret, E_OK);
+    std::string shmFileName = rdbStorePath + "-shm";
+    std::string walFileName = rdbStorePath + "-wal";
+    EXPECT_NE(access(shmFileName.c_str(), F_OK), 0);
+    EXPECT_NE(access(walFileName.c_str(), F_OK), 0);
+}
+
+/**
+ * @tc.name: DeleteDatabase_003
+ * @tc.desc: DeleteRdbStore if the dbFile is not exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_003, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbHelperTest::rdbStorePath);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(rdbStore, nullptr);
+
+    remove(rdbStorePath.c_str());
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+
+    EXPECT_EQ(ret, E_OK);
+    std::string shmFileName = rdbStorePath + "-shm";
+    std::string walFileName = rdbStorePath + "-wal";
+    EXPECT_NE(access(shmFileName.c_str(), F_OK), 0);
+    EXPECT_NE(access(walFileName.c_str(), F_OK), 0);
+}
+
+/**
  * @tc.name: getrdbstore_001
  * @tc.desc: get db file with a invalid path
  * @tc.type: FUNC
