@@ -61,7 +61,6 @@ RdbStatReporter::~RdbStatReporter()
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
     if (duration >= TIMEOUT_FIRST) {
         statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
-
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (err != E_OK || service == nullptr) {
             LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
