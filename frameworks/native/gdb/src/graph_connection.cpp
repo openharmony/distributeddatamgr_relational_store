@@ -50,14 +50,8 @@ std::pair<int32_t, std::shared_ptr<Connection>> GraphConnection::Create(const St
             break;
         }
         if (errCode == E_GRD_INVALID_ARGS && connection->IsEncryptInvalidChanged(config)) {
-            auto configTemp = config;
-            configTemp.SetEncryptStatus(true);
-            configTemp.GenerateEncryptedKey();
-            errCode = connection->InnerOpen(configTemp);
-            if (errCode == E_OK) {
-                conn = connection;
-                break;
-            }
+            errCode = E_CONFIG_INVALID_CHANGE;
+            break;
         }
     }
     return result;

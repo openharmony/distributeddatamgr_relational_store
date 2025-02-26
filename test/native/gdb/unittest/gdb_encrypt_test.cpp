@@ -223,8 +223,8 @@ HWTEST_F(GdbEncryptTest, GdbEncrypt_EncryptToUnencrypt, TestSize.Level1)
     // encryptdb to Unencryptdb
     config.SetEncryptStatus(false);
     store = GDBHelper::GetDBStore(config, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(store, nullptr);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
     GDBHelper::DeleteDBStore(config);
 }
 
