@@ -311,11 +311,10 @@ describe('rdbStoreTest', function () {
         console.log(TAG + "************* testRdbStore0012 start *************");
 
         try {
-            const rowCount = 18;
+            const rowCount = 19;
             const rdbStore = await data_relationalStore.getRdbStore(context, {
                 name: "walTest",
                 securityLevel: data_relationalStore.SecurityLevel.S3,
-                encrypt: true,
             })
             const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -337,7 +336,7 @@ describe('rdbStoreTest', function () {
             const value = new Uint8Array(Array(1024 * 1024).fill(1));
             const startTime = new Date().getTime();
             rdbStore.insertSync('test', {
-                blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
+                blobType: new Uint8Array(Array(1024 * 1024 * 1.5).fill(1)),
             })
             const middleTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime + " costTime" + (middleTime-startTime));
