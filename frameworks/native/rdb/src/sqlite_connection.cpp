@@ -986,6 +986,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 int SqliteConnection::TryCheckPoint(bool timeout)
 {
     if (!isWriter_ || config_.IsMemoryRdb()) {
+        LOG_ERROR("bai: !isWriter_ || config_.IsMemoryRdb()");
         return E_NOT_SUPPORT;
     }
 
@@ -1002,10 +1003,12 @@ int SqliteConnection::TryCheckPoint(bool timeout)
     }
 
     if (size <= config_.GetStartCheckpointSize()) {
+        LOG_ERROR("bai: size <= config_.GetStartCheckpointSize() WAL:%{public}s size:%{public}zd", SqliteUtils::Anonymous(walName).c_str(), size);
         return E_OK;
     }
 
     if (!timeout && size < config_.GetCheckpointSize()) {
+        LOG_ERROR("bai: !timeout && size < config_.GetCheckpointSize() WAL:%{public}s size:%{public}zd", SqliteUtils::Anonymous(walName).c_str(), size);
         return E_INNER_WARNING;
     }
 
