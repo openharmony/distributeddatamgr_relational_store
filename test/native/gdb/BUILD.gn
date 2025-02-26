@@ -75,12 +75,70 @@ ohos_unittest("NativeGdbAdaptTest") {
   deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
 }
 
+ohos_unittest("NativeGdbGrdAdapterTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_innerapi_path}/gdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/gdb/include",
+    "${relational_store_native_path}/gdb/adapter/include",
+    "${relational_store_native_path}/rdb/include",
+  ]
+
+  sources = [
+    "mock/grd_adapter.cpp",
+    "unittest/gdb_grd_adapter_test.cpp",
+    "${relational_store_native_path}/gdb/adapter/src/grd_adapter_manager.cpp",
+    "${relational_store_native_path}/gdb/src/connection.cpp",
+    "${relational_store_native_path}/gdb/src/connection_pool.cpp",
+    "${relational_store_native_path}/gdb/src/db_helper.cpp",
+    "${relational_store_native_path}/gdb/src/db_store_impl.cpp",
+    "${relational_store_native_path}/gdb/src/db_store_manager.cpp",
+    "${relational_store_native_path}/gdb/src/edge.cpp",
+    "${relational_store_native_path}/gdb/src/full_result.cpp",
+    "${relational_store_native_path}/gdb/src/gdb_utils.cpp",
+    "${relational_store_native_path}/gdb/src/graph_connection.cpp",
+    "${relational_store_native_path}/gdb/src/graph_statement.cpp",
+    "${relational_store_native_path}/gdb/src/path.cpp",
+    "${relational_store_native_path}/gdb/src/path_segment.cpp",
+    "${relational_store_native_path}/gdb/src/store_config.cpp",
+    "${relational_store_native_path}/gdb/src/trans_db.cpp",
+    "${relational_store_native_path}/gdb/src/transaction.cpp",
+    "${relational_store_native_path}/gdb/src/transaction_impl.cpp",
+    "${relational_store_native_path}/gdb/src/vertex.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "file_api:securitylabel",
+    "googletest:gmock",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "huks:libhukssdk",
+    "json:nlohmann_json_static",
+  ]
+
+  if (arkdata_db_core_is_exists) {
+    defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+  }
+}
+
 ###############################################################################
 group("unittest") {
   testonly = true
 
   deps = [
     ":NativeGdbAdaptTest",
+    ":NativeGdbGrdAdapterTest",
     ":NativeGdbTest",
   ]
 }
