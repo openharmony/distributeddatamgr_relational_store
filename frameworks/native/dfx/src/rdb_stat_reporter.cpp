@@ -68,6 +68,7 @@ RdbStatReporter::~RdbStatReporter()
             return;
         }
         err = service->ReportStatistic(syncerParam_, statEvent_);
+
         if (err != E_OK) {
             LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
                 SqliteUtils::Anonymous(syncerParam_.storeName_).c_str());
