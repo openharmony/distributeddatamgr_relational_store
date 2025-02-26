@@ -1236,3 +1236,30 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
     RdbDoubleWriteTest::CheckNumber(store, count + 1);
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_031
+ * @tc.desc: open db, delete main.db, deleteRdbStore, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_031, TestSize.Level1)
+{
+    InitDb();
+    remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
+    RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
+    EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_032
+ * @tc.desc: open db, delete main.db, deleteRdbStore, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
+{
+    InitDb();
+    remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
+}

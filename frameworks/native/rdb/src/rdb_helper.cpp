@@ -75,31 +75,13 @@ int DeleteRdFiles(const std::string &dbFileName)
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (dbFileName.empty()) {
-        return E_INVALID_FILE_PATH;
-    }
-    if (access(dbFileName.c_str(), F_OK) != 0) {
-        LOG_ERROR("Store to delete doesn't exist, path %{public}s", SqliteUtils::Anonymous(dbFileName).c_str());
-        return E_OK; // not not exist
-    }
     RdbStoreConfig config(dbFileName);
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
-    
-    RdbStoreManager::GetInstance().Delete(dbFileName);
-    RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFileName);
-    DeleteRdbStore(SqliteUtils::GetSlavePath(dbFileName));
-
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = Connection::Delete(config);
+    int errCodeSqlite = DeleteRdbStore(config);
 
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = Connection::Delete(config);
-
-    int errCode = (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
-    LOG_INFO("Delete rdb store ret sqlite=%{public}d, vector=%{public}d, path %{public}s",
-        errCodeSqlite, errCodeVector, SqliteUtils::Anonymous(dbFileName).c_str());
-    return errCode;
+    int errCodeVector = DeleteRdbStore(config);
+    return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
 }
 
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
@@ -109,15 +91,14 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config)
     if (dbFile.empty()) {
         return E_INVALID_FILE_PATH;
     }
-    if (access(dbFile.c_str(), F_OK) != 0) {
-        LOG_ERROR("not exist, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
-        return E_OK; // not not exist
+    if (access(dbFile.c_str(), F_OK) == 0) {
+        RdbStoreManager::GetInstance().Delete(dbFile);
     }
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Restore"));
-    RdbStoreManager::GetInstance().Delete(dbFile);
+    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete"));
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
-    LOG_INFO("Delete rdb store, path %{public}s", SqliteUtils::Anonymous(dbFile).c_str());
+    LOG_INFO("Delete rdb store, dbType:%{public}d, path %{public}s", config.GetDBType(),
+        SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
 }
 } // namespace NativeRdb
