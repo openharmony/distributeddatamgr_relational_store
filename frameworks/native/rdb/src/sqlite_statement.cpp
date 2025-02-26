@@ -359,12 +359,13 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         if (!conn_->IsWriter() && !ReadOnly()) {
             return E_EXECUTE_WRITE_IN_READ_CONNECTION;
         }
-        auto errCode = conn_->LimitWalSize();
+        auto errCode = E_OK;
+        int sqlType = SqliteUtils::GetSqlStatementType(sql_);
+        if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
+            errCode = conn_->LimitWalSize();
+        }
         if (errCode != E_OK) {
-            int sqlType = SqliteUtils::GetSqlStatementType(sql_);
-            if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
-                return errCode;
-            }
+            return errCode;
         }
     }
 
