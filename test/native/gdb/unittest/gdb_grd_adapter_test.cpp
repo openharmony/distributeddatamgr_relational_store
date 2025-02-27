@@ -56,6 +56,7 @@ public:
     static const std::string createGraphGql;
     static const std::string executeGql;
     static const std::string queryGql;
+
     static std::shared_ptr<DBStore> store_;
 };
 
@@ -293,4 +294,162 @@ HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest003, TestSize.Level1)
     for (auto [grdErr, gdbErr] : errCodeMap) {
         CheckRekeyErrCode(grdErr, gdbErr);
     }
+}
+
+/**
+ * @tc.name: GdbGrdAdapterTest004
+ * @tc.desc: test whether the error code returned by Prepare when using the following gql is correct
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest004, TestSize.Level1)
+{
+    std::string duplicateObjectGql = "CREATE GRAPH test { "
+                                     "(person:Person {name STRING, age INT, age DOUBLE}),"
+                                     "(person) -[:Friend]-> (person) "
+                                     "};";
+    std::map<std::string, int32_t> errCodeMap = {
+        { "INSERT (:Person {});", E_GRD_SYNTAX_ERROR },  // GRD_SYNTAX_ERROR
+        { "INSERT ();", E_GRD_SEMANTIC_ERROR },  // GRD_SEMANTIC_ERROR
+        { "INSERT (:Person {name: 11, age: 'age_11'});", E_GRD_SEMANTIC_ERROR },  // GRD_DATATYPE_MISMATCH
+        { "DROP GRAPH nonexistent_graph;", E_GRD_UNDEFINED_PARAM },  // GRD_UNDEFINE_COLUMN
+        { "MATCH (a: Person {name: 'Alf'}) SET a.nationality='EN'", E_GRD_UNDEFINED_PARAM },  // GRD_UNDEFINED_OBJECT
+        { "INSERT (:Student {name: 'name_1', age: 11});", E_GRD_UNDEFINED_PARAM },  // GRD_UNDEFINED_TABLE
+        { duplicateObjectGql, E_GRD_DUPLICATE_PARAM },  // GRD_DUPLICATE_OBJECT
+    };
+
+    for (auto [gql, gdbErr] : errCodeMap) {
+        std::string name = "prepare_test";
+        GetStore(name);
+        ASSERT_NE(store_, nullptr);
+
+        auto [errCode, result] = store_->ExecuteGql(gql);
+        EXPECT_EQ(errCode, gdbErr);
+
+        DeleteStore(name);
+    }
+}
+
+/**
+ * @tc.name: GdbGrdAdapterTest005
+ * @tc.desc: test whether the error code returned by Prepare when using the following gql is correct
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest005, TestSize.Level1)
+{
+    std::string graphName = "test_";
+    for (int i = 0; i < MAX_LEN; i++) {
+        graphName += "a";
+    }
+    std::string nameTooLongGql = "CREATE GRAPH " + graphName + " { "
+                                 "(person:Person {name STRING, age INT, sex BOOL DEFAULT false}),"
+                                 "(person) -[:Friend]-> (person) "
+                                 "};";
+    std::string duplicateTableGql = "CREATE GRAPH test { "
+                                    "(person:Person {name STRING, age INT, sex BOOL DEFAULT false}),"
+                                    "(student:Person {name STRING, age INT}), "
+                                    "(person) -[:Friend]-> (person) "
+                                    "};";
+    std::string duplicateColumnGql = "CREATE GRAPH test { "
+                                     "(person:Person {name STRING, age INT, age DOUBLE}),"
+                                     "(person) -[:Friend]-> (person) "
+                                     "};";
+    std::map<std::string, int32_t> errCodeMap = {
+        { nameTooLongGql, E_GRD_INVALID_NAME },  // GRD_NAME_TOO_LONG
+        { duplicateTableGql, E_GRD_DUPLICATE_PARAM },  // GRD_DUPLICATE_TABLE
+        { duplicateColumnGql, E_GRD_DUPLICATE_PARAM },  // GRD_DUPLICATE_COLUMN
+    };
+
+    for (auto [gql, gdbErr] : errCodeMap) {
+        std::string name = "prepare_test";
+        auto config = StoreConfig(name, path);
+        GDBHelper::DeleteDBStore(config);
+
+        int32_t errorCode = E_OK;
+        store_ = GDBHelper::GetDBStore(config, errorCode);
+        ASSERT_NE(store_, nullptr);
+        ASSERT_EQ(errorCode, E_OK);
+
+        auto [errCode, result] = store_->ExecuteGql(gql);
+        EXPECT_EQ(errCode, gdbErr);
+
+        DeleteStore(name);
+    }
+}
+
+/**
+ * @tc.name: GdbGrdAdapterTest006
+ * @tc.desc: test whether the error code returned by Step when using the following gql is correct
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest006, TestSize.Level1)
+{
+    std::map<std::string, int32_t> errCodeMap = {
+        { "MATCH (p:Person {age: 11}) RETURN p.age / 0;", E_GRD_SYNTAX_ERROR },  // GRD_DIVISION_BY_ZERO
+        { "MATCH (p:Person {age: 11}) SET p.age=9223372036854775808;", E_GRD_SEMANTIC_ERROR },  // GRD_FIELD_OVERFLOW
+    };
+
+    for (auto [gql, gdbErr] : errCodeMap) {
+        std::string name = "step_test";
+        GetStore(name);
+        ASSERT_NE(store_, nullptr);
+
+        auto [errCode, result] = store_->ExecuteGql(executeGql);
+        EXPECT_EQ(errCode, E_OK);
+
+        std::tie(errCode, result) = store_->ExecuteGql(gql);
+        EXPECT_EQ(errCode, gdbErr);
+
+        DeleteStore(name);
+    }
+}
+
+/**
+ * @tc.name: GdbGrdAdapterTest007
+ * @tc.desc: test whether the error code returned by Step when using the following gql is correct
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest007, TestSize.Level1)
+{
+    std::string name = "step_test";
+    auto config = StoreConfig(name, path);
+    GDBHelper::DeleteDBStore(config);
+
+    int32_t errorCode = E_OK;
+    store_ = GDBHelper::GetDBStore(config, errorCode);
+    ASSERT_NE(store_, nullptr);
+    ASSERT_EQ(errorCode, E_OK);
+
+    std::string overLimitGql = "CREATE GRAPH test { (person:Person {";
+    for (int i = 0; i < MAX_PROP_CNT; i++) {
+        overLimitGql += "name" + std::to_string(i) + " STRING, ";
+    }
+    overLimitGql += "age INT, sex BOOL DEFAULT false}) };";
+
+    auto [errCode, result] = store_->ExecuteGql(overLimitGql);
+    EXPECT_EQ(errCode, E_GRD_OVER_LIMIT);  // GRD_OVER_LIMIT
+
+    DeleteStore(name);
+}
+
+/**
+ * @tc.name: GdbGrdAdapterTest008
+ * @tc.desc: test whether the error code returned by Step when using the following gql is correct
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbGrdAdapterTest, GdbGrdAdapterTest008, TestSize.Level1)
+{
+    std::string name = "step_test";
+    GetStore(name);
+    ASSERT_NE(store_, nullptr);
+
+    auto [errCode, result] = store_->ExecuteGql("CREATE UNIQUE INDEX nameIndex ON Person(name);");
+    EXPECT_EQ(errCode, E_OK);
+
+    std::tie(errCode, result) = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 11});");
+    EXPECT_EQ(errCode, E_OK);
+
+    std::tie(errCode, result) = store_->ExecuteGql("INSERT (:Person {name: 'name_1', age: 22});");
+    EXPECT_EQ(errCode, E_GRD_DATA_CONFLICT);  // GRD_UNIQUE_VIOLATION
+
+    DeleteStore(name);
 }

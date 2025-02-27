@@ -233,7 +233,6 @@ ColumnType GrdAdapter::TransColType(int grdColType)
         case GRD_DB_DATATYPE_NULL:
             return ColumnType::TYPE_NULL;
         default:
-            LOG_ERROR("trans failed. GRD_DbDataTypeE=%{public}d.", grdColType);
             return ColumnType::TYPE_NULL;
     }
 }
@@ -247,13 +246,11 @@ int GrdAdapter::Open(const char *dbPath, const char *configStr, uint32_t flags, 
         return E_NOT_SUPPORT;
     }
     auto ret = g_adapterHolder.Open(dbPath, configStr, flags, db);
-    LOG_DEBUG("Open ret=%{public}d, *db=%{public}p", ret, *db);
     return TransErrno(ret);
 }
 
 int GrdAdapter::Close(GRD_DB *db, uint32_t flags)
 {
-    LOG_DEBUG("Close *db=%{public}p", db);
     if (g_adapterHolder.Close == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
@@ -261,7 +258,6 @@ int GrdAdapter::Close(GRD_DB *db, uint32_t flags)
         return E_NOT_SUPPORT;
     }
     auto ret = g_adapterHolder.Close(db, flags);
-    LOG_DEBUG("Close ret=%{public}d", ret);
     return TransErrno(ret);
 }
 
