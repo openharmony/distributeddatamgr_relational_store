@@ -1185,11 +1185,11 @@ describe('rdbStoreTransactionTest', function () {
                     transactionType: data_relationalStore.TransactionType.EXCLUSIVE
                 })
                 console.log(TAG + "begin EXCLUSIVE success abnormal");
-                exclusiveTrans.rollback();
+                await exclusiveTrans.rollback();
             } catch (e) {
                 console.log(TAG + e);
-                expect(e.code).assertEqual(14800024)
                 console.log(TAG + "begin EXCLUSIVE failed");
+                expect(true).assertFail();
             }
             var rowId = await deferredTrans.insert("test", valueBucket);
             console.log(TAG + "testTransactionIsolation0008 deferredTrans.insert row " + rowId)

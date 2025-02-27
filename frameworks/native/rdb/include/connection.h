@@ -49,6 +49,8 @@ public:
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
+    void SetIsRecyclable(bool recyclable);
+    bool IsRecyclable() const;
     virtual ~Connection() = default;
     virtual int32_t OnInitialize() = 0;
     virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
@@ -75,6 +77,7 @@ public:
 
 private:
     int32_t id_ = 0;
+    bool isRecyclable_ = true;
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H

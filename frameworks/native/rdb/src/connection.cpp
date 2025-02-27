@@ -147,4 +147,14 @@ int Connection::GetId() const
 {
     return id_;
 }
+
+void Connection::SetIsRecyclable(bool isRecyclable)
+{
+    isRecyclable_ = isRecyclable;
+}
+
+bool Connection::IsRecyclable() const
+{
+    return isRecyclable_;
+}
 } // namespace OHOS::NativeRdb
