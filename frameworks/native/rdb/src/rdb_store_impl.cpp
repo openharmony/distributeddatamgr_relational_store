@@ -21,9 +21,11 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstdint>
+#include <fstream>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <sys/stat.h>
 #include <string>
 
 #include "cache_result_set.h"
@@ -1290,6 +1292,42 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
     return ExecuteAndGetLong(outValue, sql, predicates.GetBindArgs());
 }
 
+void WriteToCompareFile(const std::string &dbPath, const std::string &bundleName, const std::string &sql)
+{
+    auto poolTask = TaskExecutor::GetInstance().GetExecutor();
+    if (poolTask != nullptr) {
+        poolTask->Execute([dbPath, bundleName, sql]() {
+            std::string comparePath = dbPath + "-compare";
+            if (SqliteUtils::CleanFileContent(comparePath)) {
+                Reportor::ReportFault(
+                    RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, "compare file is deleted"));
+            }
+            SqliteUtils::WriteSqlToFile(comparePath, sql);
+        });
+    }
+}
+
+void RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement,
+    std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode)
+{
+    statement->Reset();
+    statement->Prepare("PRAGMA schema_version");
+    auto [err, version] = statement->ExecuteForValue();
+    statement = nullptr;
+    if (vSchema_ < static_cast<int64_t>(version)) {
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
+                 "> app self can check the SQL.",
+            SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
+        vSchema_ = version;
+        errCode = pool->RestartConns();
+        if (!isMemoryRdb_) {
+            std::string dbPath = config_.GetPath();
+            std::string bundleName = config_.GetBundleName();
+            WriteToCompareFile(dbPath, bundleName, sql);
+        }
+    }
+}
+
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -1319,17 +1357,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        statement->Reset();
-        statement->Prepare("PRAGMA schema_version");
-        auto [err, version] = statement->ExecuteForValue();
-        statement = nullptr;
-        if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
-                     "> app self can check the SQL.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
-            vSchema_ = version;
-            errCode = pool->RestartConns();
-        }
+        HandleSchemaDDL(statement, pool, sql, errCode);
     }
     statement = nullptr;
     if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
@@ -1417,16 +1445,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        statement->Reset();
-        statement->Prepare("PRAGMA schema_version");
-        auto [err, version] = statement->ExecuteForValue();
-        if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
-                     "> app self can check the SQL.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
-            vSchema_ = version;
-            errCode = pool->RestartConns();
-        }
+        HandleSchemaDDL(statement, pool, sql, errCode);
     }
     return { errCode, object };
 }
