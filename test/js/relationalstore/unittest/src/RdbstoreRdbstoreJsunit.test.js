@@ -328,7 +328,7 @@ describe('rdbStoreTest', function () {
                 }
             })
 
-            await rdbStore.batchInsert('test', valueBuckets);
+            rdbStore.batchInsertSync('test', valueBuckets);
 
             const predicates = new data_relationalStore.RdbPredicates('test');
             const resultSet = rdbStore.querySync(predicates);
@@ -336,8 +336,8 @@ describe('rdbStoreTest', function () {
             resultSet.goToFirstRow()
             const value = new Uint8Array(Array(1024 * 1024).fill(1));
             const startTime = new Date().getTime();
-            await rdbStore.insert('test', {
-                blobType: new Uint8Array(Array(1024 * 1024 * 1.5).fill(1)),
+            rdbStore.insertSync('test', {
+                blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
             })
             const middleTime = new Date().getTime();
             console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime + " costTime" + (middleTime-startTime));
