@@ -25,6 +25,12 @@
 namespace OHOS {
 namespace NativeRdb {
 
+struct ErrMsgState {
+    bool isCreated = false;
+    bool isDeleted = false;
+    bool isRenamed = false;
+};
+
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 class SqliteUtils {
 public:
@@ -74,6 +80,13 @@ public:
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
     static std::string FomatConfigChg(const std::string &path, const RdbStoreConfig &config,
         const DistributedRdb::RdbSyncerParam &lastParam);
+    static void WriteSqlToFile(const std::string &comparePath, const std::string &sql);
+    static bool CleanFileContent(const std::string &filePath);
+    static std::string GetErrInfoFromMsg(const std::string &message, const std::string &errStr);
+    static ErrMsgState CompareTableFileContent(const std::string &dbPath, const std::string &bundleName,
+        const std::string &tableName);
+    static ErrMsgState CompareColumnFileContent(const std::string &dbPath, const std::string &bundleName,
+        const std::string &columnName);
     static std::string ReadFileHeader(const std::string &filePath);
     static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);

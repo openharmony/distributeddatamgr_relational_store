@@ -65,6 +65,10 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_SET_SERVICE_ENCRYPT_FAIL, 0 },
     { E_CHECK_POINT_FAIL, 0 },
     { E_SQLITE_META_RECOVERED, 0 },
+    { E_DFX_IS_NOT_CREATE, 0 },
+    { E_DFX_IS_DELETE, 0 },
+    { E_DFX_IS_RENAME, 0 },
+    { E_DFX_IS_NOT_EXIST, 0 },
 };
 
 void RdbFaultHiViewReporter::ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo)

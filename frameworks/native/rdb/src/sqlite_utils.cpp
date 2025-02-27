@@ -16,6 +16,7 @@
 #include "sqlite_utils.h"
 
 #include <fcntl.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -49,6 +50,8 @@ constexpr int32_t AREA_MINI_SIZE = 4;
 constexpr int32_t AREA_OFFSET_SIZE = 5;
 constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t DISPLAY_BYTE = 2;
+constexpr int32_t PREFIX_LENGTH = 3;
+constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -436,6 +439,126 @@ std::string SqliteUtils::GetFileStatInfo(const DebugInfo &debugInfo)
         << " mtim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
         << " ctim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
+}
+
+bool SqliteUtils::CleanFileContent(const std::string &filePath)
+{
+    struct stat fileStat;
+    if (stat(filePath.c_str(), &fileStat) != 0) {
+        return false;
+    }
+    if (fileStat.st_size < FILE_MAX_SIZE) {
+        return false;
+    }
+    return DeleteFile(filePath);
+}
+
+void SqliteUtils::WriteSqlToFile(const std::string &comparePath, const std::string &sql)
+{
+    int fd = open(comparePath.c_str(), O_RDWR | O_CREAT, 0660);
+    if (fd == -1) {
+        LOG_ERROR("open file failed errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
+        return ;
+    }
+    if (flock(fd, LOCK_EX) == -1) {
+        LOG_ERROR("Failed to lock file errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
+        close(fd);
+        return ;
+    }
+    std::ofstream outFile(comparePath, std::ios::app);
+    if (!outFile) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        return ;
+    }
+
+    outFile << sql << "\n";
+    outFile.close();
+    if (flock(fd, LOCK_UN) == -1) {
+        LOG_ERROR("Failed to unlock file errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
+    }
+    close(fd);
+}
+
+std::string SqliteUtils::GetErrInfoFromMsg(const std::string &message, const std::string &errStr)
+{
+    size_t startPos = message.find(errStr);
+    std::string result;
+    if (startPos != std::string::npos) {
+        startPos += errStr.length();
+        size_t endPos = message.length();
+        result = message.substr(startPos, endPos - startPos);
+    }
+    return result;
+}
+
+ErrMsgState SqliteUtils::CompareTableFileContent(
+    const std::string &dbPath, const std::string &bundleName, const std::string &tableName)
+{
+    ErrMsgState state;
+    std::string compareFilePath = dbPath + "-compare";
+    std::ifstream file(compareFilePath.c_str());
+    if (!file.is_open()) {
+        LOG_ERROR("compare File open failed errno %{public}d %{public}s", errno, Anonymous(compareFilePath).c_str());
+        return state;
+    }
+
+    std::string line;
+    while (getline(file, line)) {
+        std::string target = line;
+        if (target.find(tableName) == std::string::npos) {
+            continue;
+        }
+        std::transform(target.begin(), target.end(), target.begin(), ::toupper);
+        if (target.substr(0, PREFIX_LENGTH) == "CRE") {
+            state.isCreated = true;
+            state.isDeleted = false;
+            state.isRenamed = false;
+        } else if (target.substr(0, PREFIX_LENGTH) == "DRO") {
+            state.isDeleted = true;
+            state.isRenamed = false;
+        } else if (target.substr(0, PREFIX_LENGTH) == "ALT" && target.find("RENAME") != std::string::npos) {
+            state.isDeleted = false;
+            state.isRenamed = true;
+        }
+    }
+    file.close();
+    return state;
+}
+
+ErrMsgState SqliteUtils::CompareColumnFileContent(
+    const std::string &dbPath, const std::string &bundleName, const std::string &columnName)
+{
+    ErrMsgState state;
+    std::string compareFilePath = dbPath + "-compare";
+    std::ifstream file(compareFilePath.c_str());
+    if (!file.is_open()) {
+        LOG_ERROR("compare File open failed errno %{public}d %{public}s", errno, Anonymous(compareFilePath).c_str());
+        return state;
+    }
+
+    std::string line;
+    while (getline(file, line)) {
+        std::string target = line;
+        if (target.find(columnName) == std::string::npos) {
+            continue;
+        }
+        std::transform(target.begin(), target.end(), target.begin(), ::toupper);
+        if (target.substr(0, PREFIX_LENGTH) == "CRE" || (
+            target.substr(0, PREFIX_LENGTH) == "ALT" && target.find("ADD") != std::string::npos)) {
+            state.isCreated = true;
+            state.isDeleted = false;
+            state.isRenamed = false;
+        } else if (target.substr(0, PREFIX_LENGTH) == "ALT" && target.find("DROP") != std::string::npos) {
+            state.isDeleted = true;
+            state.isRenamed = false;
+        } else if (target.substr(0, PREFIX_LENGTH) == "ALT" && target.find("RENAME") != std::string::npos) {
+            state.isDeleted = false;
+            state.isRenamed = true;
+        }
+    }
+    file.close();
+    return state;
 }
 
 std::string SqliteUtils::FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header)
