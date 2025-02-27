@@ -69,20 +69,8 @@ struct QueryKey {
     std::string storeId;
     bool operator<(const QueryKey &queryKey) const
     {
-        if (accountId < queryKey.accountId) {
-            return true;
-        } else if (accountId == queryKey.accountId) {
-            if (user < queryKey.user) {
-                return true;
-            } else if (user == queryKey.user) {
-                if (bundleName < queryKey.bundleName) {
-                    return true;
-                } else if (bundleName == queryKey.bundleName) {
-                    return storeId < queryKey.storeId;
-                }
-            }
-        }
-        return false;
+        return std::tie(accountId, user, bundleName, storeId) <
+            std::tie(queryKey.accountId, queryKey.user, queryKey.bundleName, queryKey.storeId);
     }
 };
 
