@@ -63,28 +63,27 @@ struct StatisticInfo {
 };
 
 struct QueryKey {
+    int32_t user;
     std::string accountId;
     std::string bundleName;
     std::string storeId;
     bool operator<(const QueryKey &queryKey) const
     {
-        if (accountId < queryKey.accountId) {
-            return true;
-        } else if (accountId == queryKey.accountId) {
-            if (bundleName < queryKey.bundleName) {
-                return true;
-            } else if (bundleName == queryKey.bundleName) {
-                return storeId < queryKey.storeId;
-            }
-        }
-        return false;
+        return std::tie(accountId, user, bundleName, storeId) <
+            std::tie(queryKey.accountId, queryKey.user, queryKey.bundleName, queryKey.storeId);
     }
+};
+
+enum SyncStatus : int32_t {
+    RUNNING,
+    FINISHED
 };
 
 struct CloudSyncInfo {
     int64_t startTime = 0;
     int64_t finishTime = 0;
     int32_t code = -1;
+    int32_t syncStatus = SyncStatus::RUNNING;
 };
 
 using StatisticInfos = std::vector<StatisticInfo>;

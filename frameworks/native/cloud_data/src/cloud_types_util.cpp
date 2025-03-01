@@ -145,11 +145,11 @@ bool Marshalling(const CommonAsset &input, MessageParcel &data)
 template<>
 bool Marshalling(const CloudSyncInfo &input, MessageParcel &data)
 {
-    return Marshal(data, input.startTime, input.finishTime, input.code);
+    return Marshal(data, input.startTime, input.finishTime, input.code, input.syncStatus);
 }
 template<>
 bool Unmarshalling(CloudSyncInfo &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.startTime, output.finishTime, output.code);
+    return Unmarshal(data, output.startTime, output.finishTime, output.code, output.syncStatus);
 }
 } // namespace OHOS::ITypesUtil
