@@ -398,11 +398,6 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     // set the user version to the wal file;
     SetWalFile(config);
 
-    errCode = SetJournalSizeLimit(config);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
     errCode = SetAutoCheckpoint(config);
     if (errCode != E_OK) {
         return errCode;
@@ -826,7 +821,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 
 int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
-    if (isReadOnly_ || !config.IsAutoCheck()) {
+    if (isReadOnly_) {
         return E_OK;
     }
 
