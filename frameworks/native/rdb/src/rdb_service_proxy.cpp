@@ -498,6 +498,21 @@ void RdbServiceProxy::OnDataChange(
     });
 }
 
+void RdbServiceProxy::OnRemoteDeadSyncComplete()
+{
+    std::map<std::string, ProgressDetail> result;
+    result.insert(std::pair<std::string, ProgressDetail>("", {Progress::SYNC_FINISH, ProgressCode::UNKNOWN_ERROR}));
+    auto callbacks = std::move(syncCallbacks_);
+    callbacks.ForEach([&result](const auto &key, const AsyncDetail &callback) {
+        LOG_INFO("remote dead, compensate progress notification");
+        std::map<std::string, ProgressDetail> copyResult = result;
+        if (callback != nullptr) {
+            callback(std::move(result));
+        }
+        return false;
+    });
+}
+
 void RdbServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 {
     syncCallbacks_.ComputeIfPresent(seqNum, [&result](const auto &key, const AsyncDetail &callback) {
