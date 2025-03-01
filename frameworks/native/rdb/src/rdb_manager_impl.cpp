@@ -144,8 +144,12 @@ void RdbManagerImpl::OnRemoteDied()
         return;
     }
     auto proxy = std::static_pointer_cast<RdbServiceProxy>(rdbService_);
+    if (proxy == nullptr) {
+        return;
+    }
     auto observers = proxy->ExportObservers();
     auto syncObservers = proxy->ExportSyncObservers();
+    proxy->OnRemoteDeadSyncComplete();
     ResetServiceHandle();
 
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
