@@ -640,6 +640,16 @@ ssize_t RdbStoreConfig::GetStartCheckpointSize() const
     return startCheckpointSize_;
 }
 
+int32_t RdbStoreConfig::GetSubUser() const
+{
+    return subUser_;
+}
+ 
+void RdbStoreConfig::SetSubUser(int32_t subUser)
+{
+    subUser_ = subUser;
+}
+
 void RdbStoreConfig::EnableRekey(bool enable)
 {
     autoRekey_ = enable;
