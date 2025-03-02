@@ -1227,6 +1227,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.isSearchable_ = config.IsSearchable();
     param.haMode_ = config.GetHaMode();
     param.password_ = {};
+    param.subUser_ = config.GetSubUser();
     std::vector<std::vector<uint8_t>> keys;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto [svcErr, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);

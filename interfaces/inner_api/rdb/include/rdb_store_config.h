@@ -704,6 +704,10 @@ public:
 
     void SetHaMode(int32_t haMode);
 
+    int32_t GetSubUser() const;
+ 
+    void SetSubUser(int32_t subUser);
+
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
     void SetCryptoParam(CryptoParam cryptoParam);
@@ -770,6 +774,7 @@ private:
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;
+    int32_t subUser_ = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
