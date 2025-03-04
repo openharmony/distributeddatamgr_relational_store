@@ -133,13 +133,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
     const struct HksBlob *inData, struct HksBlob *outData)
 {
     if (outData->size < inData->size * TIMES) {
-        auto result = HksAbort(handle, paramSet);
-        if (result != HKS_SUCCESS) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
-                "HksAbort ret=" + std::to_string(result)));
-            LOG_ERROR("HksAbort Failed.");
-            return HKS_FAILURE;
-        }
+        HksAbort(handle, paramSet);
         return HKS_ERROR_INVALID_ARGUMENT;
     }
 
