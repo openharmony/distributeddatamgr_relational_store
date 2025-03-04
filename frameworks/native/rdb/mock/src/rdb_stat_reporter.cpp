@@ -18,7 +18,7 @@
 namespace OHOS::NativeRdb {
 
 RdbStatReporter::RdbStatReporter(
-    StatType statType, SubType subType, const RdbStoreConfig &config, const DistributedRdb::RdbSyncerParam &param)
+    StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func)
 {
 }
 

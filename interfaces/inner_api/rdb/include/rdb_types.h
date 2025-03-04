@@ -114,14 +114,24 @@ struct RdbStatEvent {
 
     bool operator<(const RdbStatEvent &other) const
     {
-        if (statType != other.statType)
+        if (statType != other.statType) {
             return statType < other.statType;
-        if (bundleName != other.bundleName)
+        }
+        if (bundleName.size() != other.bundleName.size()) {
+            return bundleName.size() < other.bundleName.size();
+        }
+        if (bundleName != other.bundleName) {
             return bundleName < other.bundleName;
-        if (storeName != other.storeName)
+        }
+        if (storeName.size() != other.storeName.size()) {
+            return storeName.size() < other.storeName.size();
+        }
+        if (storeName != other.storeName) {
             return storeName < other.storeName;
-        if (subType != other.subType)
+        }
+        if (subType != other.subType) {
             return subType < other.subType;
+        }
         return costTime < other.costTime;
     }
 };
