@@ -57,7 +57,7 @@ public:
     static TimeType GetTimeType(uint32_t costTime);
     std::chrono::steady_clock::time_point startTime_;
     DistributedRdb::RdbStatEvent statEvent_;
-    DistributedRdb::RdbSyncerParam syncerParam_;
+    std::function<void()> func_;
 };
 
 } // namespace OHOS::NativeRdb
