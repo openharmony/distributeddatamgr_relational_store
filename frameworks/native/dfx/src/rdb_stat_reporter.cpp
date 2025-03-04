@@ -53,7 +53,19 @@ RdbStatReporter::RdbStatReporter(
     statEvent_.bundleName = config.GetBundleName();
     statEvent_.storeName = SqliteUtils::Anonymous(config.GetName());
     statEvent_.subType = static_cast<uint32_t>(subType);
-    syncerParam_ = param;
+    func_ = [event = statEvent_, syncParam = param]() {
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncParam);
+        if (err != E_OK || service == nullptr) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(syncParam.storeName_).c_str());
+            return;
+        }
+        err = service->ReportStatistic(syncParam, event);
+        if (err != E_OK) {
+            LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(syncParam.storeName_).c_str());
+        }
+    };
 }
 
 RdbStatReporter::~RdbStatReporter()
@@ -66,19 +78,7 @@ RdbStatReporter::~RdbStatReporter()
         if (pool == nullptr) {
             LOG_WARN("task pool err when restore");
         }
-        pool->Execute([this, param = syncerParam_, event = statEvent_]() {
-            auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
-            if (err != E_OK || service == nullptr) {
-                LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-                    SqliteUtils::Anonymous(param.storeName_).c_str());
-                return;
-            }
-            err = service->ReportStatistic(param, event);
-            if (err != E_OK) {
-                LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
-                    SqliteUtils::Anonymous(param.storeName_).c_str());
-            }
-        });
+        pool->Execute(func_);
     }
 }
 
