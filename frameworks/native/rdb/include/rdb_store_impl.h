@@ -163,6 +163,7 @@ private:
     using RdbParam = DistributedRdb::RdbSyncerParam;
     using Options = DistributedRdb::RdbService::Option;
     using Memo = DistributedRdb::PredicatesMemo;
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
     class CloudTables {
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
@@ -235,6 +236,7 @@ private:
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_;
+    std::atomic<bool> hasRegisterDataChange_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
@@ -242,6 +244,8 @@ private:
     const RdbStoreConfig config_;
     // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
+    DistributedRdb::RdbStatEvent statEvent_;
+    ReportFunc func_;
     std::string path_;
     std::string name_;
     std::string fileType_;

@@ -51,13 +51,14 @@ enum TimeType : int32_t {
 
 class RdbStatReporter {
 public:
-    RdbStatReporter(
-        StatType statType, SubType subType, const RdbStoreConfig &config, const DistributedRdb::RdbSyncerParam &param);
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent &)>;
+    RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func);
     ~RdbStatReporter();
     static TimeType GetTimeType(uint32_t costTime);
     std::chrono::steady_clock::time_point startTime_;
+    std::chrono::steady_clock::time_point reportTime_;
     DistributedRdb::RdbStatEvent statEvent_;
-    std::function<void()> func_;
+    ReportFunc reportFunc_;
 };
 
 } // namespace OHOS::NativeRdb

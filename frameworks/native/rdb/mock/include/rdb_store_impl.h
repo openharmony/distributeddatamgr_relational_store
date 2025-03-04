@@ -89,6 +89,7 @@ public:
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
     class CloudTables {
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
@@ -149,6 +150,8 @@ private:
     std::atomic<int64_t> newTrxId_ = 1;
     const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
+    DistributedRdb::RdbStatEvent statEvent_;
+    ReportFunc func_;
     std::string path_;
     std::string name_;
     std::string fileType_;

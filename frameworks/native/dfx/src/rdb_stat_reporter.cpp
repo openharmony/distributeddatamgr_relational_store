@@ -40,45 +40,35 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+constexpr int32_t WAIT_TIME = 600;
 constexpr int32_t TIMEOUT_FIRST = 1500;
 constexpr int32_t TIMEOUT_SECOND = 5000;
 constexpr int32_t TIMEOUT_THIRD = 10000;
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 
-RdbStatReporter::RdbStatReporter(
-    StatType statType, SubType subType, const RdbStoreConfig &config, const DistributedRdb::RdbSyncerParam &param)
+RdbStatReporter::RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func)
 {
     startTime_ = std::chrono::steady_clock::now();
     statEvent_.statType = static_cast<uint32_t>(statType);
     statEvent_.bundleName = config.GetBundleName();
     statEvent_.storeName = SqliteUtils::Anonymous(config.GetName());
     statEvent_.subType = static_cast<uint32_t>(subType);
-    func_ = [event = statEvent_, syncParam = param]() {
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncParam);
-        if (err != E_OK || service == nullptr) {
-            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(syncParam.storeName_).c_str());
-            return;
-        }
-        err = service->ReportStatistic(syncParam, event);
-        if (err != E_OK) {
-            LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(syncParam.storeName_).c_str());
-        }
-    };
+    reportFunc_ = func;
 }
 
 RdbStatReporter::~RdbStatReporter()
 {
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
-    if (duration >= TIMEOUT_FIRST) {
+    auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - reportTime_).count();
+    if (duration >= TIMEOUT_FIRST && reportInterval >= WAIT_TIME) {
         statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool == nullptr) {
-            LOG_WARN("task pool err when restore");
+            LOG_WARN("task pool err when RdbStatReporter");
         }
-        pool->Execute(func_);
+        pool->Execute(std::bind(reportFunc_, statEvent_));
+        reportTime_ = std::chrono::steady_clock::now();
     }
 }
 
