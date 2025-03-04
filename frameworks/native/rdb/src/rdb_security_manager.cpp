@@ -133,6 +133,7 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
     const struct HksBlob *inData, struct HksBlob *outData)
 {
     if (outData->size < inData->size * TIMES) {
+        HksAbort(handle, paramSet);
         return HKS_ERROR_INVALID_ARGUMENT;
     }
 

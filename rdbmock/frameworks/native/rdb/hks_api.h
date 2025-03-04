@@ -65,6 +65,17 @@ static int32_t HksFinish(const struct HksBlob *handle, const struct HksParamSet 
 }
 
 /**
+ * @brief Abort operation
+ * @param handle operation handle
+ * @param paramSet required parameter set
+ * @return error code, see hks_type.h
+ */
+static int32_t HksAbort(const struct HksBlob *handle, const struct HksParamSet *paramSet)
+{
+    return HKS_SUCCESS;
+}
+
+/**
  * @brief Generate key
  * @param keyAlias key alias
  * @param paramSetIn required parameter set
