@@ -89,7 +89,7 @@ public:
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
-	using RdbMgr = DistributedRdb::RdbManagerImpl;
+    using RdbMgr = DistributedRdb::RdbManagerImpl;
     using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
     class CloudTables {
     public:
