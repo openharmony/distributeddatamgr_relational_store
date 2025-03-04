@@ -247,12 +247,11 @@ bool Unmarshalling(DebugInfo &output, MessageParcel &data)
 template<>
 bool Marshalling(const StatReporter &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.statType, input.bundleName, input.storeName, input.subType, input.costTime);
+    return Marshal(data, input.statType, input.bundleName, input.storeName, input.subType, input.costTime);
 }
 template<>
 bool Unmarshalling(StatReporter &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(
-        data, output.statType, output.bundleName, output.storeName, output.subType, output.costTime);
+    return Unmarshal(data, output.statType, output.bundleName, output.storeName, output.subType, output.costTime);
 }
 } // namespace OHOS::ITypesUtil
