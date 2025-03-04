@@ -36,6 +36,7 @@
 #include "rdb_time_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "task_executor.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -61,17 +62,23 @@ RdbStatReporter::~RdbStatReporter()
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
     if (duration >= TIMEOUT_FIRST) {
         statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-        if (err != E_OK || service == nullptr) {
-            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(syncerParam_.storeName_).c_str());
-            return;
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (pool == nullptr) {
+            LOG_WARN("task pool err when restore");
         }
-        err = service->ReportStatistic(syncerParam_, statEvent_);
-        if (err != E_OK) {
-            LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(syncerParam_.storeName_).c_str());
-        }
+        pool->Execute([this, param = syncerParam_, event = statEvent_]() {
+            auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
+            if (err != E_OK || service == nullptr) {
+                LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+                    SqliteUtils::Anonymous(param.storeName_).c_str());
+                return;
+            }
+            err = service->ReportStatistic(param, event);
+            if (err != E_OK) {
+                LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
+                    SqliteUtils::Anonymous(param.storeName_).c_str());
+            }
+        });
     }
 }
 
