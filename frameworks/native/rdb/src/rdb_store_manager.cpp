@@ -154,8 +154,11 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
             SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()));
     }
 
-    // Reset the first effective attribute
-    config.SetEncryptStatus(lastParam.isEncrypt_);
+    if (lastParam.isEncrypt_ != config.IsEncrypt()) {
+        LOG_WARN("Reset encrypt, storePath %{public}s, input:%{public}d  original:%{public}d",
+            SqliteUtils::Anonymous(path).c_str(), config.IsEncrypt(), lastParam.isEncrypt_);
+        config.SetEncryptStatus(lastParam.isEncrypt_);
+    }
     return false;
 }
 
@@ -369,7 +372,7 @@ std::pair<int32_t, std::shared_ptr<RdbStoreImpl>> RdbStoreManager::OpenStore(
     std::pair<int32_t, std::shared_ptr<RdbStoreImpl>> result = { E_ERROR, nullptr };
     auto &[errCode, store] = result;
     store = std::make_shared<RdbStoreImpl>(modifyConfig, errCode);
-    if (errCode != E_OK && modifyConfig != config) {
+    if (errCode != E_OK && modifyConfig.IsEncrypt() != config.IsEncrypt()) {
         LOG_WARN("Failed to OpenStore using modifyConfig. path:%{public}s, rc=%{public}d",
             SqliteUtils::Anonymous(path).c_str(), errCode);
         store = std::make_shared<RdbStoreImpl>(config, errCode); // retry with input config
