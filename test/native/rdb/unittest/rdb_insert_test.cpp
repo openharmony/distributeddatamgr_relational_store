@@ -807,5 +807,27 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize
     EXPECT_EQ(0, id);
 }
 
+/**
+ * @tc.name: OverLimitWithInsert_001
+ * @tc.desc: over limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbStoreInsertTest, OverLimitWithInsert_001, TestSize.Level1)
+{
+    std::shared_ptr store = *GetParam();
+    auto [code, maxPageCount] = store->Execute("PRAGMA max_page_count;");
+    auto recover = std::shared_ptr("recover", [defPageCount = maxPageCount, store](const char *) {
+        store->Execute("PRAGMA max_page_count = " + static_caststd::string(defPageCount) + ";");
+    });
+    std::tie(code, maxPageCount) = store->Execute("PRAGMA max_page_count = 256;");
+
+    ValuesBucket row;
+    row.Put("name", std::string(1024 * 1024, 'e'));
+    auto result = store->Insert("test", row, ConflictResolution::ON_CONFLICT_NONE);
+    ASSERT_EQ(result.first, E_SQLITE_FULL);
+}
+
 INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreInsertTest

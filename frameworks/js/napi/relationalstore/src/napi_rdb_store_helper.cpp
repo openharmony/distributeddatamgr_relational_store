@@ -74,7 +74,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
             std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
         if (!context->config.persist) {
-            CHECK_RETURN_SET_E(!context->config.rootDir.empty(),
+            CHECK_RETURN_SET_E(context->config.rootDir.empty(),
                 std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
             return;
         }

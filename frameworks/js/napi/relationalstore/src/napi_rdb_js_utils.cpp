@@ -523,7 +523,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
     rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
     rdbStoreConfig.SetIsVector(rdbConfig.vector);
-    rdbConfig.vector ? rdbStoreConfig.SetDBType(DB_VECTOR) : rdbStoreConfig.SetDBType(DB_SQLITE);
+    rdbStoreConfig.SetDBType(rdbConfig.vector ? DB_VECTOR : DB_SQLITE);
     rdbStoreConfig.SetStorageMode(rdbConfig.persist ? StorageMode::MODE_DISK : StorageMode::MODE_MEMORY);
     rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
     rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);

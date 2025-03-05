@@ -473,10 +473,10 @@ describe('ActsRdbStoreAttachTest', function () {
         await attachBatchInsert(memStore, "test");
         try {
             await store.attach(context, STORE_CONFIG_MEM, "attachMemDB");
+            console.log("testRdbStoreAttach00015 attach success");
             let resultSet = await store.querySql("select * from attachMemDB.test");
-            let count = resultSet.getCount();
+            expect(resultSet.rowCount).assertEqual(10);
             resultSet.close();
-            expect(count).assertEqual(10);
         } catch (e) {
             console.log("testRdbStoreAttach00015 : failed, err: code=" + e.code + " message=" + e.message);
             expect().assertFail();
@@ -505,10 +505,10 @@ describe('ActsRdbStoreAttachTest', function () {
         await attachBatchInsert(memStore, "test");
         try {
             await store.attach(context, STORE_CONFIG_MEM, "attachMemDB");
+            console.log("testRdbStoreAttach00016 attach success");
             let resultSet = await store.querySql("select * from attachMemDB.test");
-            let count = resultSet.getCount();
+            expect(resultSet.rowCount).assertEqual(10);
             resultSet.close();
-            expect(count).assertEqual(10);
         } catch (e) {
             console.log("testRdbStoreAttach00016 : failed, err: code=" + e.code + " message=" + e.message);
             expect().assertFail();
@@ -532,10 +532,10 @@ describe('ActsRdbStoreAttachTest', function () {
         let memStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_MEM);
         try {
             await memStore.attach(context, STORE_CONFIG, "attachWalDB");
-            let resultSet = store.querySqlSync("select * from attachWalDB.test");
-            let count = resultSet.getCount();
+            console.log("testRdbStoreAttach00017 attach success");
+            let resultSet = memStore.querySqlSync("select * from attachWalDB.test");
+            expect(resultSet.rowCount).assertEqual(10);
             resultSet.close();
-            expect(count).assertEqual(10);
         } catch (e) {
             console.log("testRdbStoreAttach00017 : failed, err: code=" + e.code + " message=" + e.message);
             expect().assertFail();

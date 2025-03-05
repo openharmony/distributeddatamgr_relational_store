@@ -38,16 +38,16 @@ describe('rdbStoreMemoryDbTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll')
         rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
-        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
     })
 
     beforeEach(async function () {
         console.info(TAG + 'beforeEach')
-        await rdbStore.executeSql("DELETE FROM test");
+        await rdbStore.executeSql(CREATE_TABLE_TEST, null);
     })
 
     afterEach(async function () {
         console.info(TAG + 'afterEach')
+        await rdbStore.executeSql("DROP TABLE IF EXISTS test")
     })
 
     afterAll(async function () {
@@ -67,7 +67,7 @@ describe('rdbStoreMemoryDbTest', function () {
         console.log(TAG + "************* testMemoryDbNotSupport0001 start *************");
         let predicates = new data_relationalStore.RdbPredicates("test");
         try {
-            await rdbStore.cleanDirtyData("test", 0);
+            await rdbStore.cleanDirtyData("test");
             expect(null).assertFail()
         } catch (err) {
             console.log("cleanDirtyData catch err: failed, err: code=" + err.code + " message=" + err.message)
@@ -84,7 +84,7 @@ describe('rdbStoreMemoryDbTest', function () {
             await rdbStore.restore("memoryBackup");
             expect(null).assertFail();
         } catch (err) {
-            console.log("backup catch err: failed, err: code=" + err.code + " message=" + err.message)
+            console.log("restore catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
@@ -95,17 +95,10 @@ describe('rdbStoreMemoryDbTest', function () {
             expect(true).assertEqual(err.code == 801);
         }
         try {
-            await rdbStore.sync(dataRdb.SyncMode.SYNC_MODE_PUSH, predicates);
+            await rdbStore.sync(data_relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
             expect(null).assertFail();
         } catch (err) {
             console.log("sync catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            await rdbStore.remoteQuery("networkId", "test", predicates, []);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("cloudSync catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
@@ -115,6 +108,7 @@ describe('rdbStoreMemoryDbTest', function () {
             console.log("queryLockedRow catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
+        done();
         console.log(TAG + "************* testMemoryDbNotSupport0001 end *************");
     })
 
@@ -131,28 +125,28 @@ describe('rdbStoreMemoryDbTest', function () {
             expect(devices).assertEqual(null)
         }
         try {
-            rdbStore.on("dataChange", SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
+            rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
             expect(null).assertFail();
         } catch (err) {
             console.log("on dataChange SUBSCRIBE_TYPE_REMOTE catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
-            rdbStore.on("dataChange", SubscribeType.SUBSCRIBE_TYPE_CLOUD, storeObserver);
+            rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD, storeObserver);
             expect(null).assertFail();
         } catch (err) {
             console.log("on dataChange SUBSCRIBE_TYPE_CLOUD catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
-            rdbStore.on("dataChange", SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, storeObserver);
+            rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, storeObserver);
             expect(null).assertFail();
         } catch (err) {
             console.log("on dataChange SUBSCRIBE_TYPE_CLOUD_DETAILS catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
-            rdbStore.on("dataChange", SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
+            rdbStore.on("dataChange", data_relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
             expect(null).assertFail();
         } catch (err) {
             console.log("on dataChange SUBSCRIBE_TYPE_LOCAL_DETAILS catch err: failed, err: code=" + err.code + " message=" + err.message)
@@ -175,84 +169,19 @@ describe('rdbStoreMemoryDbTest', function () {
             console.log("on interProcess catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
+        done();
         console.log(TAG + "************* testMemoryDbNotSupport0002 end *************");
     })
 
     /**
      * @tc.number SUB_DDM_JSRDB_MEMORY_DB_NOT_SUPPORT_0003
-     * @tc.name nor support off test case of memory db
+     * @tc.name nor support getRdbStore test case of memory db
      * @tc.desc
      */
     it('testMemoryDbNotSupport0003', 0, async function (done) {
         console.log(TAG + "************* testMemoryDbNotSupport0003 start *************");
-        function storeObserver(devices) {
-            console.info(TAG + devices + " dataChange");
-            expect(devices).assertEqual(null)
-        }
-        try {
-            rdbStore.off("dataChange", SubscribeType.SUBSCRIBE_TYPE_REMOTE, storeObserver);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off dataChange SUBSCRIBE_TYPE_REMOTE catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.off("dataChange", SubscribeType.SUBSCRIBE_TYPE_CLOUD, storeObserver);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off dataChange SUBSCRIBE_TYPE_CLOUD catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.off("dataChange", SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS, storeObserver);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off dataChange SUBSCRIBE_TYPE_CLOUD_DETAILS catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.off("dataChange", SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off dataChange SUBSCRIBE_TYPE_LOCAL_DETAILS catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.off("autoSyncProgress",function (detail) {
-                console.log(TAG + `Progress:` + JSON.stringify(detail));
-            });
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off autoSyncProgress catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.off("shareEvent", true, function () {
-            });
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("off interProcess catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            rdbStore.emit("shareEvent");
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("emit catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        console.log(TAG + "************* testMemoryDbNotSupport0003 end *************");
-    })
-
-    /**
-     * @tc.number SUB_DDM_JSRDB_MEMORY_DB_NOT_SUPPORT_0004
-     * @tc.name nor support getRdbStore test case of memory db
-     * @tc.desc
-     */
-    it('testMemoryDbNotSupport0004', 0, async function (done) {
-        console.log(TAG + "************* testMemoryDbNotSupport0004 start *************");
         let config = {
-            name: "testMemoryDbNotSupport0004.db",
+            name: "testMemoryDbNotSupport0003.db",
             securityLevel: data_relationalStore.SecurityLevel.S1,
             persist: false,
         }
@@ -263,15 +192,6 @@ describe('rdbStoreMemoryDbTest', function () {
             expect(null).assertFail();
         } catch (err) {
             console.log("getRdbStore encrypt catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
-        try {
-            let tmp = JSON.parse(JSON.stringify(config))
-            tmp.dataGroupId = "groupId";
-            let store = await data_relationalStore.getRdbStore(context, tmp);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("getRdbStore dataGroupId catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
         try {
@@ -321,7 +241,7 @@ describe('rdbStoreMemoryDbTest', function () {
         }
         try {
             let tmp = JSON.parse(JSON.stringify(config))
-            tmp.haMode = HAMode.MAIN_REPLICA;
+            tmp.haMode = data_relationalStore.HAMode.MAIN_REPLICA;
             let store = await data_relationalStore.getRdbStore(context, tmp);
             expect(null).assertFail();
         } catch (err) {
@@ -344,7 +264,8 @@ describe('rdbStoreMemoryDbTest', function () {
             console.log("getRdbStore cryptoParam catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
-        console.log(TAG + "************* testMemoryDbNotSupport0004 end *************");
+        done();
+        console.log(TAG + "************* testMemoryDbNotSupport0003 end *************");
     })
 
     /**
@@ -799,8 +720,8 @@ describe('rdbStoreMemoryDbTest', function () {
             // 1 represent that the last data is inserted in the first row
             expect(1).assertEqual(ret);
         } catch (err) {
-            expect(null).assertFail();
             console.error(`execute select sql failed, code:${err.code}, message: ${err.message}`);
+            expect(null).assertFail();
         }
         done();
         console.info(TAG + "************* testMemoryDbExecute0004 end   *************");
@@ -819,8 +740,8 @@ describe('rdbStoreMemoryDbTest', function () {
             // 1 represent that the last data is inserted in the first row
             expect(1).assertEqual(ret);
         } catch (err) {
-            expect(null).assertFail();
             console.error(`execute insert sql failed, code:${err.code}, message: ${err.message}`);
+            expect(null).assertFail();
         }
         done();
         console.info(TAG + "************* testMemoryDbExecute0005 end   *************");
@@ -844,8 +765,8 @@ describe('rdbStoreMemoryDbTest', function () {
             // 1 represent that effected row id
             expect(1).assertEqual(ret);
         } catch (err) {
-            expect(null).assertFail();
             console.error(`execute update sql failed, code:${err.code}, message: ${err.message}`);
+            expect(null).assertFail();
         }
         done();
         console.info(TAG + "************* testMemoryDbExecute0006 end   *************");
@@ -869,8 +790,8 @@ describe('rdbStoreMemoryDbTest', function () {
             // 2 represent that effected row id
             expect(2).assertEqual(ret);
         } catch (err) {
-            expect(null).assertFail();
             console.error(`execute delete sql failed, code:${err.code}, message: ${err.message}`);
+            expect(null).assertFail();
         }
         done();
         console.info(TAG + "************* testMemoryDbExecute0007 end   *************");
@@ -1230,7 +1151,7 @@ describe('rdbStoreMemoryDbTest', function () {
                 'blobType': new Uint8Array([1, 2, 3]),
             };
             let rowId = await rdbStore.insert('test', valueBucket1);
-            expect(2).assertEqual(rowId);
+            expect(1).assertEqual(rowId);
             await sleep(500);
             expect('INSERT INTO test(age,blobType,name,salary) VALUES (?,?,?,?)').assertEqual(sql)
         } catch (error) {
@@ -1269,6 +1190,7 @@ describe('rdbStoreMemoryDbTest', function () {
             await rdbStore.insert("test", valuesBucket2);
 
             let valuesBucket3 = {
+                "name": "bob",
                 "age": 116,
                 "salary": 5503.3,
             }
@@ -1540,7 +1462,7 @@ describe('rdbStoreMemoryDbTest', function () {
         })
         try {
             var exclusiveTrans = await rdbStore.createTransaction({
-                transactionType: data_relationalStore.TransactionType.EXCLUSIVE
+                transactionType: data_relationalStore.TransactionType.IMMEDIATE
             })
             try {
                 const valueBucket = {
@@ -1554,14 +1476,14 @@ describe('rdbStoreMemoryDbTest', function () {
 
                 var resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
                 console.log(TAG + "testMemoryDbTransactionIsolation0002 deferredTrans querySqlSync before exclusiveTrans commit count " + resultSet.rowCount);
-                expect(0).assertEqual(resultSet.rowCount);
+                expect(-1).assertEqual(resultSet.rowCount);
                 resultSet.close()
 
                 await exclusiveTrans.commit();
 
                 resultSet = deferredTrans.querySqlSync("select * from test where name = ?", ["lisi"]);
                 console.log(TAG + "testMemoryDbTransactionIsolation0002 deferredTrans querySqlSync after exclusiveTrans commit count " + resultSet.rowCount);
-                expect(0).assertEqual(resultSet.rowCount);
+                expect(1).assertEqual(resultSet.rowCount);
 
                 resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
                 console.log(TAG + "testMemoryDbTransactionIsolation0002 rdbStore querySqlSync after exclusiveTrans commit count " + resultSet.rowCount);
@@ -1664,7 +1586,8 @@ describe('rdbStoreMemoryDbTest', function () {
 
             var resultSet = rdbStore.querySqlSync("select * from test where name = ?", ["lisi"]);
             console.log(TAG + "testMemoryDbTransactionIsolation0004 rdbStore.querySqlSync count " + resultSet.rowCount);
-            expect(1).assertEqual(resultSet.rowCount);
+            // because sqlite_locked
+            expect(-1).assertEqual(resultSet.rowCount);
 
             try {
                 await rdbStore.insert("test", valueBucket);

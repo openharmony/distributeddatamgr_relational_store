@@ -834,5 +834,36 @@ void RdbStoreUpdateTest::ExpectValue(
     }
 }
 
+/**
+ * @tc.name: OverLimitWithUpdate_001
+ * @tc.desc: over limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, OverLimitWithUpdate_001, TestSize.Level1)
+{
+    std::shared_ptr store = *GetParam();
+    auto [code, maxPageCount] = store->Execute("PRAGMA max_page_count;");
+    auto recover = std::shared_ptr("recover", [defPageCount = maxPageCount, store](const char *) {
+        store->Execute("PRAGMA max_page_count = " + static_caststd::string(defPageCount) + ";");
+    });
+    std::tie(code, maxPageCount) = store->Execute("PRAGMA max_page_count = 256;");
+
+    int64_t id = -1;
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(ret, E_OK);
+
+    ValuesBucket row;
+    row.PutInt("id", id);
+    row.Put("name", std::string(1024 * 1024, 'e'));
+    row.PutInt("age", 20);
+    row.PutDouble("salary", 200.5);
+    row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    int changedRows;
+    auto result = store->Update(changedRows, "test", row);
+    ASSERT_EQ(result, E_SQLITE_FULL);
+}
+
 INSTANTIATE_TEST_SUITE_P(UpdateTest, RdbStoreUpdateTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreUpdateTest
