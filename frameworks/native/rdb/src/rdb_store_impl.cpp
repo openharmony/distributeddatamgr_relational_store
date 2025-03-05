@@ -105,6 +105,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     func_ = [param = syncerParam_](const DistributedRdb::RdbStatEvent &event) {
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
@@ -119,6 +120,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
         }
         return;
     };
+#endif
 }
 
 int RdbStoreImpl::InnerOpen()

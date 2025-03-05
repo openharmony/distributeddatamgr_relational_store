@@ -244,7 +244,7 @@ private:
     // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
     DistributedRdb::RdbStatEvent statEvent_;
-    ReportFunc func_;
+    ReportFunc func_ = nullptr;
     std::string path_;
     std::string name_;
     std::string fileType_;
