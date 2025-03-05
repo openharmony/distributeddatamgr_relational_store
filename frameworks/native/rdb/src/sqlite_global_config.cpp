@@ -151,7 +151,8 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
         return E_NOT_SUPPORT;
     }
     if (path.empty() || path.front() != '/') {
-        LOG_ERROR("invalid path.");
+        LOG_ERROR("invalid path, bundleName:%{public}s, role:%{public}d, %{public}s",
+            config.GetBundleName().c_str(), config.GetRoleType(), SqliteUtils::Anonymous(path).c_str());
         return E_INVALID_FILE_PATH;
     }
     dbPath = std::move(path);

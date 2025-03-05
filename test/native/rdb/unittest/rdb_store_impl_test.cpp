@@ -1385,3 +1385,72 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_007, TestSize.Level
     ASSERT_EQ(resultSet->GetRowCount(rowCount), E_OK);
     ASSERT_EQ(rowCount, 0);
 }
+
+/**
+ * @tc.name: RdbStore_Execute_001
+ * @tc.desc: test RdbStore Execute
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Execute_001, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase1.db";
+    RdbStoreConfig config(dbPath);
+    config.SetName("RdbStoreConfig_test.db");
+    std::string bundleName = "com.ohos.config.TestSubUser";
+    config.SetBundleName(bundleName);
+    config.SetSubUser(100);
+    auto subUser = config.GetSubUser();
+    EXPECT_EQ(subUser, 100);
+    int errCode = E_OK;
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
+
+    constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                              "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                              "blobType BLOB)";
+    rdbStore->ExecuteSql(CREATE_TABLE_TEST);
+
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = rdbStore->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    ret = rdbStore->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    int64_t count;
+    ret = rdbStore->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 2);
+
+    ret = rdbStore->ExecuteSql("DELETE FROM test WHERE age = 18");
+    EXPECT_EQ(ret, E_OK);
+
+    ret = rdbStore->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test where age = 19");
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(count, 1);
+
+    ret = rdbStore->ExecuteSql("DELETE FROM test WHERE age = 19");
+    EXPECT_EQ(ret, E_OK);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
