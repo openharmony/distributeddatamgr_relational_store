@@ -25,24 +25,33 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+namespace OHOS::RdbStoreInsertTest {
+struct RdbTestParam {
+    std::shared_ptr<RdbStore> store;
+    operator std::shared_ptr<RdbStore>()
+    {
+        return store;
+    }
+};
+static RdbTestParam g_store;
+static RdbTestParam g_memDb;
 
-class RdbStoreInsertTest : public testing::Test {
+class RdbStoreInsertTest : public testing::TestWithParam<RdbTestParam *> {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    void CheckResultSet(std::shared_ptr<RdbStore> &store);
-    void CheckAge(std::shared_ptr<ResultSet> &resultSet);
-    void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
-    void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
+    static void CheckResultSet(std::shared_ptr<RdbStore> &store);
+    static void CheckAge(std::shared_ptr<ResultSet> &resultSet);
+    static void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
+    static void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
+    std::shared_ptr<RdbStore> store_;
 
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
 };
 
 const std::string RdbStoreInsertTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
-std::shared_ptr<RdbStore> RdbStoreInsertTest::store = nullptr;
 
 class InsertTestOpenCallback : public RdbOpenCallback {
 public:
@@ -69,20 +78,29 @@ int InsertTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVe
 void RdbStoreInsertTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbStoreInsertTest::DATABASE_NAME);
     InsertTestOpenCallback helper;
-    RdbStoreInsertTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStoreInsertTest::store, nullptr);
+    g_store.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_store.store, nullptr);
+
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    g_memDb.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_memDb.store, nullptr);
 }
 
 void RdbStoreInsertTest::TearDownTestCase(void)
 {
     RdbHelper::DeleteRdbStore(RdbStoreInsertTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbStoreInsertTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbHelper::DeleteRdbStore(config);
 }
 
 void RdbStoreInsertTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store_ = *GetParam();
+    store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbStoreInsertTest::TearDown(void)
@@ -94,9 +112,9 @@ void RdbStoreInsertTest::TearDown(void)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_001, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Insert_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -240,9 +258,9 @@ void RdbStoreInsertTest::CheckBlob(std::shared_ptr<ResultSet> &resultSet)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -263,9 +281,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_002, TestSize.Level1)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket emptyBucket;
@@ -287,9 +305,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Insert_003, TestSize.Level1)
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -338,9 +356,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level1)
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -399,9 +417,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level1)
  * @tc.desc: test RdbStore Replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -422,9 +440,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_003, TestSize.Level1)
  * @tc.desc: test RdbStore Replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket emptyBucket;
@@ -446,9 +464,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_004, TestSize.Level1)
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_005, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
 
@@ -493,9 +511,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_005, TestSize.Level1)
  * @tc.desc: test RdbStore replace
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_006, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -551,9 +569,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_Replace_006, TestSize.Level1)
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -584,9 +602,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_001_002, Test
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -615,9 +633,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_003_004, Test
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_005, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -647,9 +665,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_005, TestSize
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -709,9 +727,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006, TestSize
  * @tc.desc: test RdbStore InsertWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_007, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -768,9 +786,9 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_007, TestSize
  * @tc.desc: Abnormal testCase of InsertWithConflictResolution, if conflictResolution is invalid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize.Level1)
+HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreInsertTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id = 0;
     ValuesBucket values;
@@ -788,3 +806,6 @@ HWTEST_F(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_008, TestSize
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, id);
 }
+
+INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
+} // namespace OHOS::RdbStoreInsertTest

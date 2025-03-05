@@ -22,6 +22,7 @@
 #include "rdb_security_manager.h"
 #include "string_utils.h"
 #include "sqlite_global_config.h"
+#include "sqlite_utils.h"
 #include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS::NativeRdb {
@@ -425,17 +426,17 @@ void RdbStoreConfig::ClearEncryptKey()
 
 void RdbStoreConfig::SetScalarFunction(const std::string &functionName, int argc, ScalarFunction function)
 {
-    customScalarFunctions.try_emplace(functionName, ScalarFunctionInfo(function, argc));
+    customScalarFunctions_.try_emplace(functionName, ScalarFunctionInfo(function, argc));
 }
 
 void RdbStoreConfig::SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions)
 {
-    customScalarFunctions = functions;
+    customScalarFunctions_ = functions;
 }
 
 std::map<std::string, ScalarFunctionInfo> RdbStoreConfig::GetScalarFunctions() const
 {
-    return customScalarFunctions;
+    return customScalarFunctions_;
 }
 
 void RdbStoreConfig::SetDataGroupId(const std::string &DataGroupId)
@@ -705,25 +706,51 @@ bool RdbStoreConfig::CryptoParam::IsValid() const
            (cryptoPageSize & (cryptoPageSize - 1)) == 0;
 }
 
-std::string RdbStoreConfig::Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig)
+std::string RdbStoreConfig::ToString() const
 {
     std::stringstream oss;
-    oss << " isEncrypt:" << static_cast<int32_t>(cacheConfig.IsEncrypt()) << "->"
-        << static_cast<int32_t>(incomingConfig.IsEncrypt()) << ",";
-    oss << " securityLevel:" << static_cast<int32_t>(cacheConfig.securityLevel_) << "->"
-        << static_cast<int32_t>(incomingConfig.securityLevel_) << ",";
-    oss << " area:" << cacheConfig.area_ << "->" << incomingConfig.area_ << ",";
-    oss << " storageMode:" << static_cast<int32_t>(cacheConfig.storageMode_) << "->"
-        << static_cast<int32_t>(incomingConfig.storageMode_) << ",";
-    oss << " journalMode:" << cacheConfig.journalMode_ << "->" << incomingConfig.journalMode_ << ",";
-    oss << " syncMode:" << cacheConfig.syncMode_ << "->" << incomingConfig.syncMode_ << ",";
-    oss << " databaseFileType:" << cacheConfig.databaseFileType << "->" << incomingConfig.databaseFileType << ",";
-    oss << " journalSize:" << cacheConfig.journalSize_ << "->" << incomingConfig.journalSize_ << ",";
-    oss << " pageSize:" << cacheConfig.pageSize_ << "->" << incomingConfig.pageSize_ << ",";
-    oss << " customDir:" << cacheConfig.customDir_ << "->" << incomingConfig.customDir_ << ",";
-    oss << " haMode:" << cacheConfig.haMode_ << "->" << incomingConfig.haMode_ << ",";
-    oss << " dbType:" << cacheConfig.dbType_ << "->" << incomingConfig.dbType_ << ",";
+    oss << " bundleName:" << bundleName_ << ",";
+    oss << " moduleName:" << moduleName_ << ",";
+    oss << " dataGroupId:" << dataGroupId_ << ",";
+    oss << " path:" << SqliteUtils::Anonymous(path_) << ",";
+    oss << " storageMode:" << static_cast<int32_t>(storageMode_) << ",";
+    oss << " journalMode:" << journalMode_ << ",";
+    oss << " syncMode:" << syncMode_ << ",";
+    oss << " databaseFileType:" << databaseFileType << ",";
+    oss << " isEncrypt:" << IsEncrypt() << ",";
+    oss << " isSearchable:" << IsSearchable() << ",";
+    oss << " readOnly_:" << readOnly_ << ",";
+    oss << " securityLevel:" << static_cast<int32_t>(securityLevel_) << ",";
+    oss << " journalSize:" << journalSize_ << ",";
+    oss << " pageSize:" << pageSize_ << ",";
+    oss << " dbType:" << dbType_ << ",";
+    oss << " customDir:" << customDir_ << ",";
+    oss << " haMode:" << haMode_ << ",";
+    oss << " pluginLibs size:" << pluginLibs_.size() << ",";
+    oss << " area:" << area_ << ",";
+    return oss.str();
+}
 
+std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStoreConfig &second)
+{
+    std::stringstream oss;
+    oss << " storageMode:" << static_cast<int32_t>(first.storageMode_) << "->"
+        << static_cast<int32_t>(second.storageMode_) << ",";
+    oss << " journalMode:" << first.journalMode_ << "->" << second.journalMode_ << ",";
+    oss << " syncMode:" << first.syncMode_ << "->" << second.syncMode_ << ",";
+    oss << " databaseFileType:" << first.databaseFileType << "->" << second.databaseFileType << ",";
+    oss << " isEncrypt:" << first.IsEncrypt() << "->" << second.IsEncrypt() << ",";
+    oss << " isSearchable:" << first.IsSearchable() << "->" << second.IsSearchable() << ",";
+    oss << " readOnly_:" << first.readOnly_ << "->" << second.readOnly_ << ",";
+    oss << " securityLevel:" << static_cast<int32_t>(first.securityLevel_) << "->"
+        << static_cast<int32_t>(second.securityLevel_) << ",";
+    oss << " journalSize:" << first.journalSize_ << "->" << second.journalSize_ << ",";
+    oss << " pageSize:" << first.pageSize_ << "->" << second.pageSize_ << ",";
+    oss << " dbType:" << first.dbType_ << "->" << second.dbType_ << ",";
+    oss << " customDir:" << first.customDir_ << "->" << second.customDir_ << ",";
+    oss << " haMode:" << first.haMode_ << "->" << second.haMode_ << ",";
+    oss << " pluginLibs size:" << first.pluginLibs_.size() << "->" << second.pluginLibs_.size() << ",";
+    oss << " area:" << first.area_ << "->" << second.area_ << ",";
     return oss.str();
 }
 } // namespace OHOS::NativeRdb

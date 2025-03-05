@@ -304,3 +304,13 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_006, TestSize.Level1)
     }
     OH_Rdb_DestroyConfig(config);
 }
+
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_007, TestSize.Level1)
+{
+    auto config = InitRdbConfig();
+    int errCode = OH_Rdb_SetPersistent(config, true);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+    errCode = OH_Rdb_SetPersistent(config, false);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+    OH_Rdb_DestroyConfig(config);
+}

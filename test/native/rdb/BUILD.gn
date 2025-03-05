@@ -120,6 +120,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_get_store_test.cpp",
     "unittest/rdb_helper_test.cpp",
     "unittest/rdb_insert_test.cpp",
+    "unittest/rdb_memory_db_test.cpp",
     "unittest/rdb_open_callback_test.cpp",
     "unittest/rdb_predicates_join_b_test.cpp",
     "unittest/rdb_predicates_join_test.cpp",

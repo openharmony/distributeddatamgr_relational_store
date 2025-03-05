@@ -46,11 +46,13 @@ private:
     using Info = DistributedRdb::RdbDebugInfo;
     int ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
-    bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
+    static bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
+    static int32_t CheckConfig(const RdbStoreConfig &config);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collector(const RdbStoreConfig &config);
-    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const RdbStoreConfig &config, const std::string &path);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path);
+    std::pair<int32_t, std::shared_ptr<RdbStoreImpl>> OpenStore(const RdbStoreConfig &config, const std::string &path);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;

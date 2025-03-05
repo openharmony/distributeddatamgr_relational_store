@@ -103,6 +103,9 @@ int32_t SqliteConnection::Delete(const std::string &path)
 std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStoreConfig &config)
 {
     std::map<std::string, Connection::Info> collection;
+    if (config.IsMemoryRdb()) {
+        return collection;
+    }
     std::string path;
     SqliteGlobalConfig::GetDbPath(config, path);
     for (auto &suffix : FILE_SUFFIXES) {
@@ -130,7 +133,7 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
 }
 
 SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
-    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0), filePath(""),
+    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
@@ -241,6 +244,9 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     isReadOnly_ = !isWriter_ || config.IsReadOnly();
     int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
                                             : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+    if (config.IsMemoryRdb()) {
+        openFileFlags |= SQLITE_OPEN_URI;
+    }
     errCode = OpenDatabase(dbPath, openFileFlags);
     if (errCode != E_OK) {
         Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
@@ -271,8 +277,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             }
         }
     }
-
-    filePath = dbPath;
     return E_OK;
 }
 
@@ -355,7 +359,7 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
 
 int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPath)
 {
-    if (config.GetStorageMode() == StorageMode::MODE_MEMORY || config.GetRoleType() == VISITOR) {
+    if (config.GetRoleType() == VISITOR) {
         return E_OK;
     }
 
@@ -371,11 +375,10 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
     SetBusyTimeout(DEFAULT_BUSY_TIMEOUT_MS);
 
-    LimitPermission(dbPath);
+    LimitPermission(config, dbPath);
 
     SetDwrEnable(config);
-
-    errCode = SetPersistWal();
+    errCode = SetPersistWal(config);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -610,7 +613,7 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
 
 int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
 {
-    if (config.IsEncrypt()) {
+    if (config.IsEncrypt() || config.IsMemoryRdb()) {
         return E_OK;
     }
     int n = -1;
@@ -628,7 +631,7 @@ int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
 
 void SqliteConnection::SetDwrEnable(const RdbStoreConfig &config)
 {
-    if (config.IsEncrypt()) {
+    if (config.IsEncrypt() || config.IsMemoryRdb()) {
         return;
     }
     auto errCode = ExecuteSql(GlobalExpr::PRAGMA_META_DOUBLE_WRITE);
@@ -643,6 +646,9 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
 {
     if (!config.IsEncrypt()) {
         return E_OK;
+    }
+    if (config.IsMemoryRdb()) {
+        return E_NOT_SUPPORT;
     }
 
     std::vector<uint8_t> key = config.GetEncryptKey();
@@ -713,8 +719,11 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
     return errCode;
 }
 
-int SqliteConnection::SetPersistWal()
+int SqliteConnection::SetPersistWal(const RdbStoreConfig &config)
 {
+    if (config.IsMemoryRdb()) {
+        return E_OK;
+    }
     int opcode = 1;
     int errCode = sqlite3_file_control(dbHandle_, "main", SQLITE_FCNTL_PERSIST_WAL, &opcode);
     if (errCode != SQLITE_OK) {
@@ -757,7 +766,7 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
 
 int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 {
-    if (isReadOnly_) {
+    if (isReadOnly_ || config.IsMemoryRdb()) {
         return E_OK;
     }
 
@@ -797,7 +806,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
 
 int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 {
-    if (isReadOnly_ || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE) {
+    if (isReadOnly_ || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE || config.IsMemoryRdb()) {
         return E_OK;
     }
 
@@ -821,7 +830,7 @@ int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
 
 int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
-    if (isReadOnly_) {
+    if (isReadOnly_ || config.IsMemoryRdb()) {
         return E_OK;
     }
 
@@ -934,8 +943,11 @@ int SqliteConnection::ClearCache()
     return E_OK;
 }
 
-void SqliteConnection::LimitPermission(const std::string &dbPath) const
+void SqliteConnection::LimitPermission(const RdbStoreConfig &config, const std::string &dbPath) const
 {
+    if (config.IsMemoryRdb()) {
+        return;
+    }
     struct stat st = { 0 };
     if (stat(dbPath.c_str(), &st) == 0) {
         if ((st.st_mode & (S_IXUSR | S_IXGRP | S_IRWXO)) != 0) {

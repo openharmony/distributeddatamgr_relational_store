@@ -111,7 +111,7 @@ int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (isReadOnly_) {
+    if (isReadOnly_ || isMemoryRdb_) {
         return E_OK;
     }
 
@@ -263,9 +263,9 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
 
 int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
-    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
-        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d.",
-            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType());
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
         return E_NOT_SUPPORT;
     }
     auto [errCode, conn] = GetConn(false);
@@ -304,7 +304,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(
     const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return nullptr;
     }
     std::vector<std::string> selectionArgs = predicates.GetWhereArgs();
@@ -343,7 +343,7 @@ int RdbStoreImpl::SetDistributedTables(
     const std::vector<std::string> &tables, int32_t type, const DistributedRdb::DistributedConfig &distributedConfig)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR || isReadOnly_) {
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     if (tables.empty()) {
@@ -406,7 +406,7 @@ int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
 std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return "";
     }
     std::string uuid;
@@ -450,6 +450,9 @@ int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
@@ -565,6 +568,9 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
     }
     if (option.mode == SubscribeMode::LOCAL) {
         return SubscribeLocal(option, observer);
+    }
+    if (isMemoryRdb_) {
+        return E_NOT_SUPPORT;
     }
     if (option.mode == SubscribeMode::LOCAL_SHARED) {
         return SubscribeLocalShared(option, observer);
@@ -702,7 +708,11 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
         return UnSubscribeLocal(option, observer);
     } else if (option.mode == SubscribeMode::LOCAL && !observer) {
         return UnSubscribeLocalAll(option);
-    } else if (option.mode == SubscribeMode::LOCAL_SHARED && observer) {
+    }
+    if (isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    if (option.mode == SubscribeMode::LOCAL_SHARED && observer) {
         return UnSubscribeLocalShared(option, observer);
     } else if (option.mode == SubscribeMode::LOCAL_SHARED && !observer) {
         return UnSubscribeLocalSharedAll(option);
@@ -712,7 +722,7 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
 
 int RdbStoreImpl::SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     return SubscribeLocalDetail(option, observer);
@@ -720,7 +730,7 @@ int RdbStoreImpl::SubscribeObserver(const SubscribeOption &option, const std::sh
 
 int RdbStoreImpl::UnsubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     return UnsubscribeLocalDetail(option, observer);
@@ -731,6 +741,20 @@ int RdbStoreImpl::Notify(const std::string &event)
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto obs = localObservers_.find(event);
+        if (obs != localObservers_.end()) {
+            auto &list = obs->second;
+            for (auto &it : list) {
+                it->OnChange();
+            }
+        }
+    }
+    if (isMemoryRdb_) {
+        return E_OK;
+    }
     auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
     if (client == nullptr) {
         LOG_ERROR("Failed to get DataObsMgrClient.");
@@ -740,20 +764,14 @@ int RdbStoreImpl::Notify(const std::string &event)
     if (err != 0) {
         LOG_ERROR("Notify failed.");
     }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto obs = localObservers_.find(event);
-    if (obs != localObservers_.end()) {
-        auto &list = obs->second;
-        for (auto &it : list) {
-            it->OnChange();
-        }
-    }
     return E_OK;
 }
 
 int RdbStoreImpl::SetSearchable(bool isSearchable)
 {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
@@ -764,7 +782,7 @@ int RdbStoreImpl::SetSearchable(bool isSearchable)
 
 int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
 {
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
@@ -776,7 +794,7 @@ int RdbStoreImpl::RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserve
 
 int RdbStoreImpl::UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer)
 {
-    if (config_.GetDBType() == DB_VECTOR) {
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
@@ -870,6 +888,9 @@ int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::
 
 int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLock)
 {
+    if (config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return E_NOT_SUPPORT;
+    }
     std::vector<std::vector<uint8_t>> hashKeys;
     int ret = GetHashKeyForLockRow(predicates, hashKeys);
     if (ret != E_OK) {
@@ -897,6 +918,9 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
 std::pair<int32_t, uint32_t> RdbStoreImpl::LockCloudContainer()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return { E_NOT_SUPPORT, 0 };
+    }
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
@@ -918,6 +942,9 @@ std::pair<int32_t, uint32_t> RdbStoreImpl::LockCloudContainer()
 int32_t RdbStoreImpl::UnlockCloudContainer()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return E_NOT_SUPPORT;
+    }
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode == E_NOT_SUPPORT) {
@@ -941,7 +968,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
       fileType_(config.GetDatabaseFileType())
 {
-    path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
+    SqliteGlobalConfig::GetDbPath(config_, path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
@@ -950,7 +977,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
       fileType_(config.GetDatabaseFileType())
 {
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
-    path_ = (config.GetRoleType() != OWNER) ? config.GetVisitorDir() : config.GetPath();
+    SqliteGlobalConfig::GetDbPath(config_, path_);
     bool created = access(path_.c_str(), F_OK) != 0;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
@@ -1574,7 +1601,7 @@ int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFileP
 int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey)
 {
     LOG_INFO("Backup db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
-    if (isReadOnly_) {
+    if (isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     std::string backupFilePath;
@@ -1807,8 +1834,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
         return E_DATABASE_BUSY;
     }
 
-    if (config_.GetStorageMode() != StorageMode::MODE_MEMORY &&
-        conn->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
+    if (!isMemoryRdb_ && conn->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
         // close first to prevent the connection from being put back.
         pool->CloseAllConnections();
         conn = nullptr;
@@ -1850,12 +1876,13 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
 std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime)
 {
-    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || config_.GetHaMode() != HAMode::SINGLE) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || config_.GetHaMode() != HAMode::SINGLE ||
+        (config.IsMemoryRdb() && config.IsEncrypt())) {
         return { E_NOT_SUPPORT, 0 };
     }
     std::string dbPath;
     int err = SqliteGlobalConfig::GetDbPath(config, dbPath);
-    if (err != E_OK || access(dbPath.c_str(), F_OK) != E_OK) {
+    if (err != E_OK || (access(dbPath.c_str(), F_OK) != E_OK && !config.IsMemoryRdb())) {
         return { E_INVALID_FILE_PATH, 0 };
     }
 
@@ -1928,11 +1955,13 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
         return { E_OK, attachedInfo_.Size() };
     }
     statement = nullptr;
-    // close first to prevent the connection from being put back.
-    pool->CloseAllConnections();
-    connection = nullptr;
-    readers.clear();
-    errCode = pool->EnableWal();
+    if (!isMemoryRdb_ && connection->GetJournalMode() == static_cast<int32_t>(JournalMode::MODE_WAL)) {
+        // close first to prevent the connection from being put back.
+        pool->CloseAllConnections();
+        connection = nullptr;
+        readers.clear();
+        errCode = pool->EnableWal();
+    }
     return { errCode, 0 };
 }
 
@@ -2346,7 +2375,7 @@ int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPa
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
-    if (isReadOnly_) {
+    if (isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
 
