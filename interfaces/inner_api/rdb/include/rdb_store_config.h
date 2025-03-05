@@ -722,8 +722,6 @@ public:
 
     void SetNcandidates(int ncandidates);
 
-    static std::string Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig);
-
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
