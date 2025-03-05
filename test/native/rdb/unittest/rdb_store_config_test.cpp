@@ -22,8 +22,8 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite_global_config.h"
 #include "unistd.h"
-
 using namespace testing::ext;
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -1039,6 +1039,59 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_033, TestSize.Level1)
     store = nullptr;
 
     RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_034
+ * @tc.desc: test RdbStoreConfig GetCheckpointSize
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_034, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    ssize_t walSize = config.GetWalLimitSize();
+    ssize_t checkpointSize = config.GetCheckpointSize();
+    ssize_t startCheckpointSize = config.GetStartCheckpointSize();
+    EXPECT_EQ(walSize, GlobalExpr::DB_WAL_DEFAULT_SIZE);
+    EXPECT_EQ(checkpointSize, GlobalExpr::DB_WAL_WARNING_SIZE);
+    EXPECT_EQ(startCheckpointSize, GlobalExpr::DB_WAL_SIZE_LIMIT_MIN);
+}
+/**
+ * @tc.name: RdbStoreConfig_035
+ * @tc.desc: test RdbStoreConfig GetPromiseInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_035, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+    PromiseInfo expectedInfo;
+    expectedInfo.user_ = "zhangsan";
+    expectedInfo.tokenIds_ = { 1, 2, 3 };
+    expectedInfo.uids_ = { 4, 5, 6 };
+    expectedInfo.permissionNames_ = { "lisi", "wangwu" };
+
+    config.SetPromiseInfo(expectedInfo);
+    const PromiseInfo &actualInfo = config.GetPromiseInfo();
+
+    EXPECT_EQ(actualInfo.user_, expectedInfo.user_);
+
+    EXPECT_EQ(actualInfo.tokenIds_.size(), expectedInfo.tokenIds_.size());
+    for (size_t i = 0; i < expectedInfo.tokenIds_.size(); ++i) {
+        EXPECT_EQ(actualInfo.tokenIds_[i], expectedInfo.tokenIds_[i]);
+    }
+
+    EXPECT_EQ(actualInfo.uids_.size(), expectedInfo.uids_.size());
+    for (size_t i = 0; i < expectedInfo.uids_.size(); ++i) {
+        EXPECT_EQ(actualInfo.uids_[i], expectedInfo.uids_[i]);
+    }
+
+    EXPECT_EQ(actualInfo.permissionNames_.size(), expectedInfo.permissionNames_.size());
+    for (size_t i = 0; i < expectedInfo.permissionNames_.size(); ++i) {
+        EXPECT_EQ(actualInfo.permissionNames_[i], expectedInfo.permissionNames_[i]);
+    }
 }
 
 /**
