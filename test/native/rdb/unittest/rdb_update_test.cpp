@@ -843,7 +843,7 @@ void RdbStoreUpdateTest::ExpectValue(
  */
 HWTEST_P(RdbStoreUpdateTest, OverLimitWithUpdate_001, TestSize.Level1)
 {
-    std::shared_ptr store = *GetParam();
+    std::shared_ptr<RdbStore> store = *GetParam();
     auto [code, maxPageCount] = store->Execute("PRAGMA max_page_count;");
     auto recover = std::shared_ptr("recover", [defPageCount = maxPageCount, store](const char *) {
         store->Execute("PRAGMA max_page_count = " + static_caststd::string(defPageCount) + ";");
