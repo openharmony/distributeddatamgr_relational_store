@@ -51,4 +51,10 @@ DistributedDB::DBStatus UnLock(
     const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db);
 DistributedDB::DBStatus DropLogicDeletedData(sqlite3 *db, const std::string &tableName, uint64_t cursor);
 
+void RegisterDbHook(sqlite3 *db);
+
+void UnregisterDbHook(sqlite3 *db);
+
+DistributedDB::DBStatus CreateDataChangeTempTrigger(sqlite3 *db);
+
 #endif //RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H

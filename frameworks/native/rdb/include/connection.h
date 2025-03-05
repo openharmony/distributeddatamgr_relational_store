@@ -25,6 +25,10 @@
 #include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
+
+namespace DistributedDB {
+class StoreObserver;
+}
 namespace OHOS::NativeRdb {
 class RdbStoreConfig;
 class Statement;
@@ -55,7 +59,7 @@ public:
     void SetIsRecyclable(bool recyclable);
     bool IsRecyclable() const;
     virtual ~Connection() = default;
-    virtual int32_t OnInitialize() = 0;
+    virtual int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) = 0;
     virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
@@ -69,10 +73,8 @@ public:
     virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
     virtual int32_t ClearCache() = 0;
-    virtual int32_t Subscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
-    virtual int32_t Unsubscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) = 0;
+    virtual int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
+    virtual int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
         SlaveStatus &slaveStatus) = 0;
     virtual int32_t Restore(

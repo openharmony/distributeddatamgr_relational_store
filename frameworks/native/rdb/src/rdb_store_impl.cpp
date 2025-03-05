@@ -36,6 +36,7 @@
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
+#include "rdb_local_db_observer.h"
 #include "rdb_radar_reporter.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
@@ -328,9 +329,10 @@ std::shared_ptr<ResultSet> RdbStoreImpl::RemoteQuery(
 
 void RdbStoreImpl::NotifyDataChange()
 {
-    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || !hasRegisterDataChange_.exchange(false)) {
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || !config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER)) {
         return;
     }
+    config_.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, false);
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterDataChangeCallback is failed, err is %{public}d.", errCode);
@@ -364,7 +366,7 @@ int RdbStoreImpl::SetDistributedTables(
         LOG_ERROR("Fail to set distributed tables, error=%{public}d.", errorCode);
         return errorCode;
     }
-    if (type == DistributedRdb::DISTRIBUTED_DEVICE) {
+    if (type == DistributedRdb::DISTRIBUTED_DEVICE && !config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER)) {
         RegisterDataChangeCallback();
     }
     if (type != DistributedRdb::DISTRIBUTED_CLOUD) {
@@ -540,18 +542,30 @@ int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, RdbStoreOb
 int32_t RdbStoreImpl::SubscribeLocalDetail(
     const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
+    if (observer == nullptr) {
+        return E_OK;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto it = localDetailObservers_.begin(); it != localDetailObservers_.end(); it++) {
+        if ((*it)->GetObserver() == observer) {
+            LOG_WARN("duplicate subscribe.");
+            return E_OK;
+        }
+    }
+    auto localStoreObserver = std::make_shared<RdbStoreLocalDbObserver>(observer);
     auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK) {
-        LOG_ERROR("Get connection failed, errCode:%{public}d.", errCode);
+    if (conn == nullptr) {
         return errCode;
     }
-
-    errCode = conn->Subscribe(option.event, observer);
+    errCode = conn->Subscribe(localStoreObserver);
     if (errCode != E_OK) {
         LOG_ERROR("Subscribe local detail observer failed. db name:%{public}s errCode:%{public}." PRId32,
             SqliteUtils::Anonymous(config_.GetName()).c_str(), errCode);
+        return errCode;
     }
-    return errCode;
+    config_.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    localDetailObservers_.emplace_back(localStoreObserver);
+    return E_OK;
 }
 
 int RdbStoreImpl::SubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer)
@@ -589,28 +603,20 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserv
     }
 
     auto &list = obs->second;
-    for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it)->getObserver() == observer) {
+    for (auto it = list.begin(); it != list.end();) {
+        if (observer == nullptr || (*it)->getObserver() == observer) {
             it = list.erase(it);
-            break;
+            if (observer != nullptr) {
+                break;
+            }
+        } else {
+            it++;
         }
     }
 
     if (list.empty()) {
         localObservers_.erase(option.event);
     }
-    return E_OK;
-}
-
-int RdbStoreImpl::UnSubscribeLocalAll(const SubscribeOption &option)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto obs = localObservers_.find(option.event);
-    if (obs == localObservers_.end()) {
-        return E_OK;
-    }
-
-    localObservers_.erase(option.event);
     return E_OK;
 }
 
@@ -629,15 +635,19 @@ int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, RdbStore
     }
 
     auto &list = obs->second;
-    for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it)->getObserver() == observer) {
+    for (auto it = list.begin(); it != list.end();) {
+        if (observer == nullptr || (*it)->getObserver() == observer) {
             int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
             if (err != 0) {
                 LOG_ERROR("UnSubscribeLocalShared failed.");
                 return err;
             }
-            list.erase(it);
-            break;
+            it = list.erase(it);
+            if (observer != nullptr) {
+                break;
+            }
+        } else {
+            it++;
         }
     }
     if (list.empty()) {
@@ -646,50 +656,31 @@ int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, RdbStore
     return E_OK;
 }
 
-int RdbStoreImpl::UnSubscribeLocalSharedAll(const SubscribeOption &option)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto obs = localSharedObservers_.find(option.event);
-    if (obs == localSharedObservers_.end()) {
-        return E_OK;
-    }
-
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient.");
-        return E_GET_DATAOBSMGRCLIENT_FAIL;
-    }
-
-    auto &list = obs->second;
-    auto it = list.begin();
-    while (it != list.end()) {
-        int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
-        if (err != 0) {
-            LOG_ERROR("UnSubscribe failed.");
-            return err;
-        }
-        it = list.erase(it);
-    }
-
-    localSharedObservers_.erase(option.event);
-    return E_OK;
-}
-
 int32_t RdbStoreImpl::UnsubscribeLocalDetail(
     const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer)
 {
     auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK) {
-        LOG_ERROR("Get connection failed, errCode:%{public}d.", errCode);
+    if (conn == nullptr) {
         return errCode;
     }
-
-    errCode = conn->Unsubscribe(option.event, observer);
-    if (errCode != E_OK) {
-        LOG_ERROR("Unsubscribe local detail observer failed. db name:%{public}s errCode:%{public}." PRId32,
-            SqliteUtils::Anonymous(config_.GetName()).c_str(), errCode);
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto it = localDetailObservers_.begin(); it != localDetailObservers_.end();) {
+        if (observer == nullptr || (*it)->GetObserver() == observer) {
+            int32_t err = conn->Unsubscribe(*it);
+            if (err != 0) {
+                LOG_ERROR("Unsubscribe local detail observer failed. db name:%{public}s errCode:%{public}." PRId32,
+                    SqliteUtils::Anonymous(config_.GetName()).c_str(), errCode);
+                return err;
+            }
+            it = localDetailObservers_.erase(it);
+            if (observer != nullptr) {
+                break;
+            }
+        } else {
+            it++;
+        }
     }
-    return errCode;
+    return E_OK;
 }
 
 int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer)
@@ -706,18 +697,14 @@ int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *o
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
-    if (option.mode == SubscribeMode::LOCAL && observer) {
+    if (option.mode == SubscribeMode::LOCAL) {
         return UnSubscribeLocal(option, observer);
-    } else if (option.mode == SubscribeMode::LOCAL && !observer) {
-        return UnSubscribeLocalAll(option);
     }
     if (isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
-    if (option.mode == SubscribeMode::LOCAL_SHARED && observer) {
+    if (option.mode == SubscribeMode::LOCAL_SHARED) {
         return UnSubscribeLocalShared(option, observer);
-    } else if (option.mode == SubscribeMode::LOCAL_SHARED && !observer) {
-        return UnSubscribeLocalSharedAll(option);
     }
     return UnSubscribeRemote(option, observer);
 }
@@ -833,20 +820,43 @@ void RdbStoreImpl::InitDelayNotifier()
 
 int RdbStoreImpl::RegisterDataChangeCallback()
 {
-    if (hasRegisterDataChange_.exchange(true)) {
-        return E_OK;
-    }
     InitDelayNotifier();
-    auto callBack = [delayNotifier = delayNotifier_](const DistributedRdb::RdbChangedData &rdbChangedData) {
+    auto connPool = GetPool();
+    if (connPool == nullptr) {
+        return E_ALREADY_CLOSED;
+    }
+
+    RegisterDataChangeCallback(delayNotifier_, connPool, 0);
+    config_.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
+    return E_OK;
+}
+
+void RdbStoreImpl::RegisterDataChangeCallback(
+    std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry)
+{
+    auto relConnPool = connPool.lock();
+    if (relConnPool == nullptr) {
+        return;
+    }
+    auto conn = relConnPool->AcquireConnection(false);
+    if (conn == nullptr) {
+        relConnPool->Dump(true, "DATACHANGE");
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+            pool->Schedule(std::chrono::seconds(1),
+                [delayNotifier, connPool, retry]() { RegisterDataChangeCallback(delayNotifier, connPool, retry); });
+        }
+        return;
+    }
+    auto callBack = [delayNotifier](const DistributedRdb::RdbChangedData &rdbChangedData) {
         if (delayNotifier != nullptr) {
             delayNotifier->UpdateNotify(rdbChangedData);
         }
     };
-    auto [errCode, conn] = GetConn(false);
+    auto errCode = conn->SubscribeTableChanges(callBack);
     if (errCode != E_OK) {
-        return errCode;
+        return;
     }
-    return conn->SubscribeTableChanges(callBack);
 }
 
 int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys)
@@ -2076,6 +2086,7 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
             SqliteUtils::Anonymous(name_).c_str(), errCode);
         return { errCode, 0 };
     }
+
     tmpTrxId = newTrxId_.fetch_add(1);
     trxConnMap_.Insert(tmpTrxId, connection);
     errCode = ExecuteByTrxId(BEGIN_TRANSACTION_SQL, tmpTrxId);

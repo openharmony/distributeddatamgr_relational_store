@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "connection.h"
-#include "rdb_local_db_observer.h"
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
 #include "sqlite_statement.h"
@@ -48,7 +47,7 @@ public:
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
-    int32_t OnInitialize() override;
+    int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
     int TryCheckPoint(bool timeout) override;
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
@@ -62,10 +61,8 @@ public:
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
     int32_t ClearCache() override;
-    int32_t Subscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
-    int32_t Unsubscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
+    int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
         SlaveStatus &slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
@@ -124,6 +121,9 @@ private:
     int SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus);
     int VeritySlaveIntegrity();
     bool IsDbVersionBelowSlave();
+    int RegisterStoreObs();
+    int RegisterClientObs();
+    int RegisterHookIfNecessary();
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite);
     static int CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
@@ -146,19 +146,25 @@ private:
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
     static const int32_t regRestorer_;
+    using EventHandle = int (SqliteConnection::*)();
+    struct HandleInfo {
+        RegisterType Type;
+        EventHandle handle;
+    };
+    static constexpr HandleInfo onEventHandlers_[RegisterType::OBSERVER_END] = {
+        { RegisterType::STORE_OBSERVER, &SqliteConnection::RegisterStoreObs },
+        { RegisterType::CLIENT_OBSERVER, &SqliteConnection::RegisterClientObs },
+    };
 
     std::atomic<uint64_t> backupId_;
     sqlite3 *dbHandle_;
     bool isWriter_;
     bool isReadOnly_;
     bool isConfigured_ = false;
-    bool hasClientObserver_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
-    std::mutex mutex_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-    std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
     const RdbStoreConfig config_;
 };
 } // namespace NativeRdb

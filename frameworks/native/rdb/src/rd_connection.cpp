@@ -26,7 +26,6 @@
 #include "rdb_security_manager.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -200,7 +199,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     return errCode;
 }
 
-int32_t RdConnection::OnInitialize()
+int32_t RdConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
 {
     return E_NOT_SUPPORT;
 }
@@ -301,14 +300,12 @@ int32_t RdConnection::ClearCache()
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Subscribe(
-    const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer)
+int32_t RdConnection::Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer)
 {
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::Unsubscribe(
-    const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer)
+int32_t RdConnection::Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer)
 {
     return E_NOT_SUPPORT;
 }

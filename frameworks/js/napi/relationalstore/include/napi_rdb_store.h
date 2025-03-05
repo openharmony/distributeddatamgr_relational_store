@@ -105,14 +105,10 @@ private:
     static constexpr int WAIT_TIME_LIMIT = 300;
 
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
-    napi_value OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
-    napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
-        std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback);
+    napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
 
     napi_value OffRemote(napi_env env, size_t argc, napi_value *argv);
-    napi_value OffLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
-    napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
-        std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback);
+    napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
 
     class SyncObserver
         : public DistributedRdb::DetailProgressObserver, public std::enable_shared_from_this<SyncObserver> {
