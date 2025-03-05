@@ -704,26 +704,4 @@ bool RdbStoreConfig::CryptoParam::IsValid() const
     return (cryptoPageSize != 0) && ((cryptoPageSize & DB_INVALID_CRYPTO_PAGE_SIZE_MASK) == 0) &&
            (cryptoPageSize & (cryptoPageSize - 1)) == 0;
 }
-
-std::string RdbStoreConfig::Format(const RdbStoreConfig &cacheConfig, const RdbStoreConfig &incomingConfig)
-{
-    std::stringstream oss;
-    oss << " isEncrypt:" << static_cast<int32_t>(cacheConfig.IsEncrypt()) << "->"
-        << static_cast<int32_t>(incomingConfig.IsEncrypt()) << ",";
-    oss << " securityLevel:" << static_cast<int32_t>(cacheConfig.securityLevel_) << "->"
-        << static_cast<int32_t>(incomingConfig.securityLevel_) << ",";
-    oss << " area:" << cacheConfig.area_ << "->" << incomingConfig.area_ << ",";
-    oss << " storageMode:" << static_cast<int32_t>(cacheConfig.storageMode_) << "->"
-        << static_cast<int32_t>(incomingConfig.storageMode_) << ",";
-    oss << " journalMode:" << cacheConfig.journalMode_ << "->" << incomingConfig.journalMode_ << ",";
-    oss << " syncMode:" << cacheConfig.syncMode_ << "->" << incomingConfig.syncMode_ << ",";
-    oss << " databaseFileType:" << cacheConfig.databaseFileType << "->" << incomingConfig.databaseFileType << ",";
-    oss << " journalSize:" << cacheConfig.journalSize_ << "->" << incomingConfig.journalSize_ << ",";
-    oss << " pageSize:" << cacheConfig.pageSize_ << "->" << incomingConfig.pageSize_ << ",";
-    oss << " customDir:" << cacheConfig.customDir_ << "->" << incomingConfig.customDir_ << ",";
-    oss << " haMode:" << cacheConfig.haMode_ << "->" << incomingConfig.haMode_ << ",";
-    oss << " dbType:" << cacheConfig.dbType_ << "->" << incomingConfig.dbType_ << ",";
-
-    return oss.str();
-}
 } // namespace OHOS::NativeRdb
