@@ -372,7 +372,7 @@ static OHOS::NativeRdb::Tokenizer ConvertTokenizer2Native(Rdb_Tokenizer token)
 
 static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *config, int *errCode)
 {
-    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE || (!config->persist &&
+    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE || (config->persist &&
         ((OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
             OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST))) ||
         (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
