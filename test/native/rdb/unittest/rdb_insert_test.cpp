@@ -818,7 +818,7 @@ HWTEST_P(RdbStoreInsertTest, OverLimitWithInsert_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> store = *GetParam();
     auto [code, maxPageCount] = store->Execute("PRAGMA max_page_count;");
-    auto recover = std::shared_ptr("recover", [defPageCount = maxPageCount, store](const char *) {
+    auto recover = std::shared_ptr<const char>("recover", [defPageCount = maxPageCount, store](const char *) {
         store->Execute("PRAGMA max_page_count = " + static_cast<std::string>(defPageCount) + ";");
     });
     std::tie(code, maxPageCount) = store->Execute("PRAGMA max_page_count = 256;");

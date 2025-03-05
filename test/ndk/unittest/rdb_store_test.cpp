@@ -1674,7 +1674,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
     int len = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "data4", arr, len);
     valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-    errCode = OH_Rdb_Insert(storeTestRdbStore_, "store_test", valueBucket);
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "mem_test", valueBucket);
     EXPECT_EQ(errCode, 1);
 
     char querySql[] = "SELECT * FROM mem_test";
