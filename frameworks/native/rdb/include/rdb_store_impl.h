@@ -42,6 +42,7 @@ class ExecutorPool;
 
 namespace OHOS::NativeRdb {
 class DelayNotify;
+class RdbStoreLocalDbObserver;
 class RdbStoreLocalObserver {
 public:
     explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
@@ -177,6 +178,8 @@ private:
     };
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    static void RegisterDataChangeCallback(
+        std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry);
     int InnerOpen();
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
@@ -198,9 +201,7 @@ private:
     int32_t SubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
     int SubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
     int UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer);
-    int UnSubscribeLocalAll(const SubscribeOption &option);
     int UnSubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer);
-    int UnSubscribeLocalSharedAll(const SubscribeOption &option);
     int32_t UnsubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
     int UnSubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
     int RegisterDataChangeCallback();
@@ -256,6 +257,7 @@ private:
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
+    std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;

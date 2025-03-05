@@ -18,9 +18,9 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
-
 namespace OHOS::NativeRdb {
 enum class IntegrityCheck {
     NONE,
@@ -111,6 +111,43 @@ enum Tokenizer : int32_t {
     TOKENIZER_END
 };
 
+enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
+
+struct RegisterInfo {
+public:
+    RegisterInfo()
+    {
+        info_ = 0;
+    }
+
+    RegisterInfo(const RegisterInfo &info)
+    {
+        info_ = info.info_;
+    }
+
+    bool Get(RegisterType type)
+    {
+        uint8_t bit = type % sizeof(uint8_t);
+        std::lock_guard<std::mutex> LockGuard(mutex_);
+        return (1 << bit) & info_;
+    }
+
+    void Set(RegisterType type, bool state)
+    {
+        uint8_t bit = type % sizeof(uint8_t);
+        std::lock_guard<std::mutex> LockGuard(mutex_);
+        info_ |= 1 << bit;
+    }
+
+    bool operator==(const RegisterInfo& info)
+    {
+        std::lock_guard<std::mutex> LockGuard(mutex_);
+        return info_ == info.info_;
+    }
+private:
+    uint8_t info_;
+    std::mutex mutex_;
+};
 
 using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
 
@@ -284,6 +321,9 @@ public:
     void SetNcandidates(int ncandidates);
     std::string ToString() const;
     static std::string FormatCfg(const RdbStoreConfig &first, const RdbStoreConfig &second);
+    void SetRegisterInfo(RegisterType type, bool state) const;
+    bool GetRegisterInfo(RegisterType type) const;
+    bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
 
 private:
     void ClearEncryptKey();
@@ -336,6 +376,7 @@ private:
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
+    mutable RegisterInfo registerInfo_;
 };
 } // namespace OHOS::NativeRdb
 #endif

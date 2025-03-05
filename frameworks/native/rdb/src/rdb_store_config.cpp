@@ -754,4 +754,19 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
     return oss.str();
 }
+
+void RdbStoreConfig::SetRegisterInfo(RegisterType type, bool state) const
+{
+    registerInfo_.Set(type, state);
+}
+
+bool RdbStoreConfig::GetRegisterInfo(RegisterType type) const
+{
+    return registerInfo_.Get(type);
+}
+
+bool RdbStoreConfig::IsEqualRegisterInfo(const RdbStoreConfig& config) const
+{
+    return registerInfo_ == config.registerInfo_;
+}
 } // namespace OHOS::NativeRdb

@@ -179,10 +179,10 @@ std::shared_ptr<Connection> ConnPool::Convert2AutoConn(std::shared_ptr<ConnNode>
     if (conn == nullptr) {
         return nullptr;
     }
+    conn->VerifyAndRegisterHook(config_);
     if (isTrans) {
         transCount_++;
     }
-
     return std::shared_ptr<Connection>(conn.get(), [pool = weak_from_this(), node, isTrans](auto *) mutable {
         auto realPool = pool.lock();
         if (realPool == nullptr) {
