@@ -154,7 +154,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_001, TestSize.Level1)
     int ret1 = RdbHelper::DeleteRdbStore(config1);
     EXPECT_EQ(ret1, E_OK);
     int ret2 = RdbHelper::DeleteRdbStore(config2);
-    EXPECT_EQ(ret2, E_OK);
+    EXPECT_EQ(ret2, E_INVALID_FILE_PATH);
     int ret3 = RdbHelper::DeleteRdbStore(config3);
     EXPECT_EQ(ret3, E_INVALID_FILE_PATH);
 }
@@ -174,7 +174,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_002, TestSize.Level1)
 
     remove(rdbStorePath.c_str());
 
-    int ret = RdbHelper::DeleteRdbStore("rdbhelper.db");
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(ret, E_OK);
     std::string shmFileName = rdbStorePath + "-shm";
     std::string walFileName = rdbStorePath + "-wal";
@@ -680,10 +680,7 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
     ASSERT_NE(rdbStore2, nullptr);
 
     // Ensure that two databases will not be opened after the encrypt parameters are changed
-    errCode = rdbStore1->BeginTransaction();
-    EXPECT_EQ(errCode, E_OK);
-    errCode = rdbStore2->BeginTransaction();
-    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(rdbStore1, rdbStore2);
 }
 
 HWTEST_F(RdbHelperTest, GetDatabase_004, TestSize.Level0)
@@ -776,4 +773,35 @@ HWTEST_F(RdbHelperTest, GetDatabase_006, TestSize.Level0)
 
     ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetDatabase_007
+ * @tc.desc: Insert after GetRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_007, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase_007.db";
+    RdbStoreConfig config(dbPath);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+
+    RdbHelper::DeleteRdbStore(config);
+
+    // Ensure that the database returns OK when it is successfully opened
+    int errCode = E_ERROR;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    RdbHelper::DeleteRdbStore(dbPath);
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    // Ensure that the database can be opened after the encryption parameters are changed
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore2, nullptr);
+
+    // Ensure that two databases not equal
+    EXPECT_NE(rdbStore1, rdbStore2);
 }

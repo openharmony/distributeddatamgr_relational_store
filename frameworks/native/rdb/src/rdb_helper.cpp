@@ -51,11 +51,15 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = DeleteRdbStore(config, shouldClose);
+    int errCode = DeleteRdbStore(config, shouldClose);
 
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    errCode = DeleteRdbStore(config, shouldClose) == E_OK ? errCode : E_REMOVE_FILE;
+
+    config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = DeleteRdbStore(config, shouldClose);
-    return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
+    errCode = DeleteRdbStore(config, shouldClose) == E_OK ? errCode : E_REMOVE_FILE;
+    return errCode;
 }
 
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)

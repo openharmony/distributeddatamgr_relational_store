@@ -619,9 +619,8 @@ public:
         }
         if (storageMode_ != config.storageMode_ || journalMode_ != config.journalMode_ ||
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
-            IsEncrypt() != config.IsEncrypt() || journalSize_ != config.journalSize_ ||
-            pageSize_ != config.pageSize_ || dbType_ != config.dbType_ || customDir_ != config.customDir_ ||
-            pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
+            journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
+            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
             return false;
         }
 
