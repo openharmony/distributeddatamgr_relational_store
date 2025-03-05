@@ -26,8 +26,10 @@
 #include "connection.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
+#include "rdb_dfx_errno.h"
 namespace OHOS::NativeRdb {
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
+using DfxInfo = OHOS::DistributedRdb::RdbDfxInfo;
 struct RdbCorruptedEvent {
     std::string bundleName;
     std::string moduleName;
@@ -43,6 +45,7 @@ struct RdbCorruptedEvent {
     time_t errorOccurTime;
     std::string path;
     std::map<std::string, DebugInfo> debugInfos;
+    DfxInfo dfxInfo;
 };
 
 struct RdbFaultCode {
@@ -56,6 +59,9 @@ static constexpr const char *FT_CURD = "CURD_DB";
 static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
+static constexpr const char *FT_SQLITE = "SQLITE";
+
+static constexpr const char *BUNDLE_NAME_COMMON = "common";
 
 class API_EXPORT RdbFaultEvent {
 public:
@@ -101,8 +107,11 @@ public:
 
 class API_EXPORT RdbFaultHiViewReporter {
 public:
-    static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "");
-    static bool RegCollector(Connection::Collector collector);
+    using Collector =  int32_t (*)(const RdbStoreConfig &config, std::map<std::string,
+        DistributedRdb::RdbDebugInfo>&, DistributedRdb::RdbDfxInfo&);
+    static RdbCorruptedEvent Create(const RdbStoreConfig &config, int32_t errCode, const std::string &appendix = "",
+        bool needSyncParaFromSrv = true);
+    static bool RegCollector(Collector collector);
     static void ReportCorrupted(const RdbCorruptedEvent &eventInfo);
     static void ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo);
     static void ReportFault(const RdbFaultEvent &faultEvent);
@@ -116,8 +125,9 @@ private:
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static bool IsReportFault(const std::string &bundleName, int32_t errCode);
     static uint8_t *GetFaultCounter(int32_t errCode);
-    static Connection::Collector collector_;
+    static Collector collector_;
     static RdbFaultCode faultCounters_[];
+    static bool memCorruptReportedFlg_;
 };
 } // namespace OHOS::NativeRdb
 #endif // DISTRIBUTEDDATAMGR_RDB_FAULT_HIVIEW_REPORTER_H

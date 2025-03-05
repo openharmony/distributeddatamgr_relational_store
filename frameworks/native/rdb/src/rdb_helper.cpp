@@ -27,6 +27,7 @@
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "security_policy.h"
 #endif
+#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -38,7 +39,12 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    return RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
+    auto rdb = RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
+    if (errCode != E_OK) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "LOG:RdbHelper::GetRdbStore", true));
+    }
+
+    return rdb;
 }
 
 void RdbHelper::ClearCache()
@@ -79,7 +85,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
-    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete"));
+    Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete", false));
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);
     LOG_INFO("Delete rdb store, dbType:%{public}d, path %{public}s", config.GetDBType(),
