@@ -34,6 +34,10 @@ public:
     {
         return (source.empty());
     }
+    static bool Contain(const std::string &str, char sign)
+    {
+        return str.find(sign) != std::string::npos;
+    }
 
     static std::string Trim(const std::string &source)
     {

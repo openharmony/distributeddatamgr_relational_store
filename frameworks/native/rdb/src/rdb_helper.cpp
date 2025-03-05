@@ -61,9 +61,16 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto dbFile = config.GetPath();
-    if (dbFile.empty()) {
+    std::string dbFile;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbFile);
+    if (errCode != E_OK || dbFile.empty()) {
         return E_INVALID_FILE_PATH;
+    }
+    if (config.IsMemoryRdb()) {
+        RdbStoreManager::GetInstance().Remove(dbFile, shouldClose);
+        LOG_INFO("Remove memory store, dbType:%{public}d, path %{public}s", config.GetDBType(),
+            SqliteUtils::Anonymous(dbFile).c_str());
+        return E_OK;
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);

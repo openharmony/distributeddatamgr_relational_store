@@ -25,8 +25,17 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-
-class RdbConcurrentTest : public testing::Test {
+namespace OHOS::RdbConcurrentTest {
+struct RdbTestParam {
+    std::shared_ptr<RdbStore> store;
+    operator std::shared_ptr<RdbStore>()
+    {
+        return store;
+    }
+};
+static RdbTestParam g_store;
+static RdbTestParam g_memDb;
+class RdbConcurrentTest : public testing::TestWithParam<RdbTestParam *> {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -34,7 +43,7 @@ public:
     void TearDown();
 
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
+    std::shared_ptr<RdbStore> store_;
 
     static void InsertThread(int n);
     static void QueryThread(int n);
@@ -50,7 +59,6 @@ public:
 };
 
 const std::string RdbConcurrentTest::DATABASE_NAME = RDB_TEST_PATH + "concurrent_test.db";
-std::shared_ptr<RdbStore> RdbConcurrentTest::store = nullptr;
 int RdbConcurrentTest::insertResult = E_OK;
 int RdbConcurrentTest::queryResult = E_OK;
 
@@ -58,15 +66,11 @@ class ConcurrentTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
-    static const std::string CREATE_TABLE_TEST;
 };
-
-const std::string ConcurrentTestOpenCallback::CREATE_TABLE_TEST =
-    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY "
-                                                                  "AUTOINCREMENT, name TEXT NOT NULL, "
-                                                                  "age INTEGER, salary REAL, blobType "
-                                                                  "BLOB)");
-
+constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY "
+                                     "AUTOINCREMENT, name TEXT NOT NULL, "
+                                     "age INTEGER, salary REAL, blobType "
+                                     "BLOB)";
 int ConcurrentTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
@@ -83,19 +87,29 @@ void RdbConcurrentTest::SetUpTestCase(void)
     RdbHelper::DeleteRdbStore(RdbConcurrentTest::DATABASE_NAME);
     RdbStoreConfig config(RdbConcurrentTest::DATABASE_NAME);
     ConcurrentTestOpenCallback helper;
-    RdbConcurrentTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbConcurrentTest::store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    g_store.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_store.store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    g_memDb.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_memDb.store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
 }
 
 void RdbConcurrentTest::TearDownTestCase(void)
 {
     RdbHelper::DeleteRdbStore(RdbConcurrentTest::DATABASE_NAME);
+
+    RdbStoreConfig config(RdbConcurrentTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbHelper::DeleteRdbStore(config);
 }
 
 void RdbConcurrentTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store_ = *GetParam();
+    store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbConcurrentTest::TearDown(void)
@@ -105,7 +119,7 @@ void RdbConcurrentTest::TearDown(void)
 void RdbConcurrentTest::InsertThread(int n)
 {
     insertResult = E_OK;
-    std::shared_ptr<RdbStore> &store = RdbConcurrentTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     int64_t id;
 
@@ -143,7 +157,7 @@ void RdbConcurrentTest::QueryThread(int n)
 
 int RdbConcurrentTest::Query()
 {
-    std::shared_ptr<RdbStore> &store = RdbConcurrentTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
     if (resultSet == nullptr) {
         return E_ERROR;
@@ -306,7 +320,7 @@ int RdbConcurrentTest::CheckBlob(ResultSet &resultSet)
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
  */
-HWTEST_F(RdbConcurrentTest, RdbStore_Concurrent_001, TestSize.Level1)
+HWTEST_P(RdbConcurrentTest, RdbStore_Concurrent_001, TestSize.Level1)
 {
     std::thread insertThread = std::thread(RdbConcurrentTest::InsertThread, 5);
     std::thread queryThread = std::thread(RdbConcurrentTest::QueryThread, 5);
@@ -314,3 +328,6 @@ HWTEST_F(RdbConcurrentTest, RdbStore_Concurrent_001, TestSize.Level1)
     queryThread.join();
     EXPECT_EQ(insertResult, E_OK);
 }
+
+INSTANTIATE_TEST_SUITE_P(InsertTest, RdbConcurrentTest, testing::Values(&g_store, &g_memDb));
+} // namespace OHOS::RdbConcurrentTest

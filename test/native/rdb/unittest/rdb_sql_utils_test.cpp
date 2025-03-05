@@ -22,6 +22,8 @@
 
 #include "grd_type_export.h"
 #include "rd_utils.h"
+#include "sqlite_sql_builder.h"
+#include "values_buckets.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -56,4 +58,26 @@ HWTEST_F(RdbSqlUtilsTest, RdbSqlUtils_Test_001, TestSize.Level1)
     auto [dataBasePath1, errCode1] = RdbSqlUtils::GetDefaultDatabasePath("/data/test", "RdbTest.db", "myself");
     EXPECT_EQ(dataBasePath1, "/data/test/rdb/myself/RdbTest.db");
     EXPECT_EQ(errCode1, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_UpdateSqlBuilder_001
+ * @tc.desc: test RdbStore UpdateSqlBuilder
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqlUtilsTest, RdbSqlUtils_UpdateSqlBuilder_001, TestSize.Level1)
+{
+    ValuesBucket values;
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 300.5);
+
+    std::vector<ValueObject> bindArgs;
+    std::string updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{ "19" }, "",
+        "age = ?", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=? WHERE age = ?");
+
+    updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{}, "", "", "", "",
+        INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=?");
 }

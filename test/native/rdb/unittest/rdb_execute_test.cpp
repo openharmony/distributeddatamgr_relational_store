@@ -24,32 +24,39 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+namespace OHOS::RdbExecuteTest {
+struct RdbTestParam {
+    std::shared_ptr<RdbStore> store;
+    std::string mode;
+    operator std::shared_ptr<RdbStore>()
+    {
+        return store;
+    }
+};
+static RdbTestParam g_store;
+static RdbTestParam g_memDb;
 
-class RdbExecuteTest : public testing::Test {
+class RdbExecuteTest : public testing::TestWithParam<RdbTestParam *> {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
 
+    std::shared_ptr<RdbStore> store_;
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
-    static const std::string CREATE_TABLE_TEST;
 };
-
+constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                    "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                    "blobType BLOB)";
 const std::string RdbExecuteTest::DATABASE_NAME = RDB_TEST_PATH + "execute_test.db";
-std::shared_ptr<RdbStore> RdbExecuteTest::store = nullptr;
 
 class ExecuteTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
-
-const std::string RdbExecuteTest::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
-                                                      "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                      "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                                      "blobType BLOB)";
 
 int ExecuteTestOpenCallback::OnCreate(RdbStore &store)
 {
@@ -64,28 +71,37 @@ int ExecuteTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newV
 void RdbExecuteTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
-    RdbHelper::DeleteRdbStore(RdbExecuteTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbExecuteTest::DATABASE_NAME);
     ExecuteTestOpenCallback helper;
-    RdbExecuteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbExecuteTest::store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    g_store.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_store.store, nullptr);
+    g_store.mode = "wal";
+
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    g_memDb.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_memDb.store, nullptr);
+    g_memDb.mode = "memory";
 }
 
 void RdbExecuteTest::TearDownTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(RdbExecuteTest::DATABASE_NAME);
-    store = nullptr;
+    RdbStoreConfig config(RdbExecuteTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(config);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbHelper::DeleteRdbStore(config);
 }
 
 void RdbExecuteTest::SetUp(void)
 {
-    store->ExecuteSql(CREATE_TABLE_TEST);
+    store_ = *GetParam();
+    store_->ExecuteSql(CREATE_TABLE_TEST);
 }
 
 void RdbExecuteTest::TearDown(void)
 {
-    store->ExecuteSql("DROP TABLE test");
+    store_ = *GetParam();
+    store_->ExecuteSql("DROP TABLE test");
 }
 
 /**
@@ -93,9 +109,9 @@ void RdbExecuteTest::TearDown(void)
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_001, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -155,9 +171,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_001, TestSize.Level1)
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -207,9 +223,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
  * @tc.desc: test RdbStore Execute
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t pageSize;
     int ret = store->ExecuteAndGetLong(pageSize, "PRAGMA page_size");
@@ -224,7 +240,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
     std::string journalMode;
     ret = store->ExecuteAndGetString(journalMode, "PRAGMA journal_mode");
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(journalMode, "wal");
+    EXPECT_EQ(journalMode, GetParam()->mode);
 }
 
 /**
@@ -232,9 +248,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_003, TestSize.Level1)
  * @tc.desc: Abnormal testCase for ExecuteAndGetString, if sqlstatementtype is special
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_004, TestSize.Level4)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_004, TestSize.Level4)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     std::string outValue;
     int ret = store->ExecuteAndGetString(outValue, "BEGIN;");
@@ -247,9 +263,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_004, TestSize.Level4)
  * @tc.type: FUNC
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     int64_t outValue;
     int ret = store->ExecuteForLastInsertedRowId(outValue, "", {});
     EXPECT_NE(E_OK, ret);
@@ -260,9 +276,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_005, TestSize.Level4)
  * @tc.desc: Abnormal testCase for ExecuteForChangedRowCount, if sql is invalid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     int64_t outValue;
     int ret = store->ExecuteForChangedRowCount(outValue, "", {});
     EXPECT_NE(E_OK, ret);
@@ -273,9 +289,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_006, TestSize.Level4)
  * @tc.desc: Normal testCase for ExecuteAndGetString, check integrity for store
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_007, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     auto [ret, outValue] = store->Execute("PRAGMA integrity_check");
     EXPECT_EQ(E_OK, ret);
@@ -291,9 +307,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_007, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, check integrity for store
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_008, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_008, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     auto [ret, outValue] = store->Execute("PRAGMA quick_check");
     EXPECT_EQ(E_OK, ret);
@@ -309,9 +325,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_008, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, get user_version of store
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     // set user_version as 5
     store->SetVersion(5);
@@ -332,9 +348,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_009, TestSize.Level1)
  * @tc.desc: AbNormal testCase for Execute, execute select sql
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0010, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0010, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     auto [ret, outValue] = store->Execute("SELECT * FROM test");
     EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
@@ -345,9 +361,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0010, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute sql for inserting data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0011, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0011, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
         ValueObject(double(50000.0)) };
@@ -366,9 +382,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0011, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute sql for batch insert data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0012, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0012, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
         ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(58)),
@@ -389,9 +405,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0012, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute sql for updating data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0013, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0013, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
         ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(58)),
@@ -419,9 +435,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0013, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute sql for deleting data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0014, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0014, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     std::vector<ValueObject> args = { ValueObject(std::string("tt")), ValueObject(int(28)),
         ValueObject(double(50000.0)), ValueObject(std::string("ttt")), ValueObject(int(82)),
@@ -449,9 +465,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0014, TestSize.Level1)
  * @tc.desc: AbNormal testCase for Execute, execute sql for attaching database and transaction
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0015, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0015, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     auto [ret1, outValue1] = store->Execute("ATTACH DATABASE 'execute_attach_test.db' AS 'attach.db'");
     EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret1);
@@ -474,17 +490,18 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0015, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute DDL sql for creating and dropping table
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     int64_t intOutValue;
 
-    const std::string CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
-                                           "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                           "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                           "blobType BLOB)";
-    const std::string DROP_TABLE_TEST2 = "DROP TABLE test2";
-    const std::string TEST_TABLE_IS_EXIST = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='test2'";
+    constexpr const char *CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
+                                                "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                                "blobType BLOB)";
+    constexpr const char *DROP_TABLE_TEST2 = "DROP TABLE test2";
+    constexpr const char *TEST_TABLE_IS_EXIST =
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='test2'";
 
     auto [ret1, outValue1] = store->Execute(CREATE_TABLE_TEST2);
     EXPECT_EQ(E_OK, ret1);
@@ -518,17 +535,17 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, execute sql for creating table and insert, query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0017, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0017, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     int64_t intOutValue;
     int intOutResultSet;
 
-    const std::string CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
+    constexpr const char *CREATE_TABLE_TEST2 = "CREATE TABLE IF NOT EXISTS test2 "
                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                            "name TEXT NOT NULL, age INTEGER, salary REAL, "
                                            "blobType BLOB)";
-    const std::string DROP_TABLE_TEST2 = "DROP TABLE test2";
+    constexpr const char *DROP_TABLE_TEST2 = "DROP TABLE test2";
 
     auto [ret1, outValue1] = store->Execute(CREATE_TABLE_TEST2);
     EXPECT_EQ(E_OK, ret1);
@@ -556,9 +573,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0017, TestSize.Level1)
  * @tc.desc: AbNormal testCase for Execute, execute sql for inserting data but args is []
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0018, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0018, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValueObject outValue;
 
     auto [ret1, outValue1] = store->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)");
@@ -570,9 +587,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0018, TestSize.Level1)
  * @tc.desc: Normal testCase for Execute, set user_version of store
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0019, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0019, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     // set user_version as 5
     auto [ret, outValue] = store->Execute("PRAGMA user_version=5");
@@ -590,9 +607,9 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_0019, TestSize.Level1)
  * @tc.desc: AbNormal testCase for Execute, get table_info
  * @tc.type: FUNC
  */
-HWTEST_F(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbExecuteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     auto [ret, outValue] = store->Execute("PRAGMA table_info(test)");
     EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
@@ -662,3 +679,7 @@ HWTEST_F(RdbExecuteTest, RdbStore_Execute_021, TestSize.Level1)
     ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
 }
+
+INSTANTIATE_TEST_SUITE_P(ExecuteTest, RdbExecuteTest, testing::Values(&g_store, &g_memDb));
+
+} // namespace OHOS::RdbExecuteTest

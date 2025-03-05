@@ -28,6 +28,7 @@
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -94,6 +95,15 @@ std::string SqliteGlobalConfig::GetMemoryDbPath()
     return GlobalExpr::MEMORY_DB_PATH;
 }
 
+std::string SqliteGlobalConfig::GetSharedMemoryDbPath(const std::string &name)
+{
+    if (StringUtils::Contain(name, '?') || StringUtils::Contain(name, '#') || StringUtils::Contain(name, '%') ||
+        StringUtils::Contain(name, ' ') || StringUtils::Contain(name, ';') || StringUtils::Contain(name, '&')) {
+        return "";
+    }
+    return GlobalExpr::SHARED_MEMORY_DB_PATH_PREFIX + name + GlobalExpr::SHARED_MEMORY_DB_PATH_SUFFIX;
+}
+
 int SqliteGlobalConfig::GetPageSize()
 {
     return GlobalExpr::DB_PAGE_SIZE;
@@ -121,26 +131,30 @@ std::string SqliteGlobalConfig::GetDefaultJournalMode()
 
 int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbPath)
 {
-    std::string path;
-    if (config.GetRoleType() == VISITOR) {
-        path = config.GetVisitorDir();
-    } else {
-        path = config.GetPath();
-    }
-
     if (config.GetStorageMode() == StorageMode::MODE_MEMORY) {
-        if (config.GetRoleType() == VISITOR) {
+        if (config.GetRoleType() != OWNER) {
             LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d",
                 SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetRoleType());
             return E_NOT_SUPPORT;
         }
-        dbPath = SqliteGlobalConfig::GetMemoryDbPath();
-    } else if (path.empty() || (path.front() != '/' && path.at(1) != ':')) {
-        LOG_ERROR("SqliteConnection GetDbPath input empty database path.");
-        return E_INVALID_FILE_PATH;
-    } else {
-        dbPath = path;
+        dbPath = SqliteGlobalConfig::GetSharedMemoryDbPath(config.GetName());
+        return dbPath.empty() ? E_INVALID_FILE_PATH : E_OK;
     }
+    std::string path;
+    if (config.GetRoleType() == OWNER) {
+        path = config.GetPath();
+    } else if (config.GetRoleType() == VISITOR || config.GetRoleType() == VISITOR_WRITE) {
+        path = config.GetVisitorDir();
+    } else {
+        LOG_ERROR("not support Role, storeName:%{public}s, role:%{public}d",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetRoleType());
+        return E_NOT_SUPPORT;
+    }
+    if (path.empty() || path.front() != '/') {
+        LOG_ERROR("invalid path.");
+        return E_INVALID_FILE_PATH;
+    }
+    dbPath = std::move(path);
     return E_OK;
 }
 
