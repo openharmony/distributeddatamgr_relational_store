@@ -53,6 +53,11 @@ struct RdbDebugInfo {
     uint32_t gid_ = 0;
 };
 
+struct RdbDfxInfo {
+    std::string lastOpenTime_;
+    int curUserId_;
+};
+
 struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;
@@ -75,6 +80,7 @@ struct RdbSyncerParam {
     bool asyncDownloadAsset_ = false;
     bool enableCloud_ = true;
     int32_t subUser_ = 0;
+    RdbDfxInfo dfxInfo_;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
