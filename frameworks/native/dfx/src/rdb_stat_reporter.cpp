@@ -58,6 +58,9 @@ RdbStatReporter::RdbStatReporter(StatType statType, SubType subType, const RdbSt
 
 RdbStatReporter::~RdbStatReporter()
 {
+    if (reportFunc_ == nullptr) {
+        return;
+    }
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
     auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - reportTime_).count();
