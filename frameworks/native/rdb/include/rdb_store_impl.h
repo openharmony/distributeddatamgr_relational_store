@@ -224,6 +224,8 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
+    void HandleSchemaDDL(std::shared_ptr<Statement> statement,
+        std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;

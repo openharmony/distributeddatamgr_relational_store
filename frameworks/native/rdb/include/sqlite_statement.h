@@ -22,6 +22,7 @@
 #include "rdb_store_config.h"
 #include "share_block.h"
 #include "sqlite3sym.h"
+#include "sqlite_utils.h"
 #include "statement.h"
 #include "value_object.h"
 
@@ -90,6 +91,9 @@ private:
     ValueObject GetValueFromBlob(int32_t index, int32_t type) const;
     void ReadFile2Buffer();
     void PrintInfoForDbError(int errCode, const std::string &sql);
+    void TableReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
+    void ColumnReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
+    void HandleErrMsg(const std::string &errMsg, const std::string &dbPath, const std::string &bundleName);
 
     static constexpr uint32_t BUFFER_LEN = 16;
 

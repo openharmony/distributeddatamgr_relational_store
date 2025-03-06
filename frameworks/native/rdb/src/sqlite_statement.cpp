@@ -46,6 +46,12 @@ using SqlStatistic = DistributedRdb::SqlStatistic;
 using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
+static constexpr int ERR_MSG_SIZE = 2;
+static constexpr const char *ERR_MSG[] = {
+    "no such table:",
+    "no such column:",
+    "has no column named"
+};
 SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
 {
     seqId_ = SqlStatistic::GenerateId();
@@ -60,6 +66,61 @@ SqliteStatement::~SqliteStatement()
     config_ = nullptr;
 }
 
+void SqliteStatement::TableReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state)
+{
+    std::string custLog;
+    if (!state.isCreated) {
+        custLog = "table is not created " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
+    } else if (state.isDeleted) {
+        custLog = "table is deleted " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
+    } else if (state.isRenamed) {
+        custLog = "table is renamed " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
+    } else {
+        custLog = errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
+    }
+}
+
+void SqliteStatement::ColumnReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state)
+{
+    std::string custLog;
+    if (!state.isCreated) {
+        custLog = "column is not created " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
+    } else if (state.isDeleted) {
+        custLog = "column is deleted " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
+    } else if (state.isRenamed) {
+        custLog = "column is renamed " + errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
+    } else {
+        custLog = errMsg;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
+    }
+}
+
+void SqliteStatement::HandleErrMsg(const std::string &errMsg, const std::string &dbPath, const std::string &bundleName)
+{
+    for (auto err: ERR_MSG) {
+        if (errMsg.find(err) == std::string::npos) {
+            continue;
+        }
+        if (err == ERR_MSG[0]) {
+            std::string tableName = SqliteUtils::GetErrInfoFromMsg(errMsg, err);
+            ErrMsgState state = SqliteUtils::CompareTableFileContent(dbPath, bundleName, tableName);
+            TableReport(errMsg, bundleName, state);
+        }
+        if (err == ERR_MSG[1] || err == ERR_MSG[ERR_MSG_SIZE]) {
+            std::string columnName = SqliteUtils::GetErrInfoFromMsg(errMsg, err);
+            ErrMsgState state = SqliteUtils::CompareColumnFileContent(dbPath, bundleName, columnName);
+            ColumnReport(errMsg, bundleName, state);
+        }
+    }
+}
+
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
 {
     if (sql_.compare(newSql) == 0) {
@@ -70,6 +131,10 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     SqlStatistic sqlStatistic(newSql, SqlStatistic::Step::STEP_PREPARE, seqId_);
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
+        std::string errMsg(sqlite3_errmsg(dbHandle));
+        if (errMsg.size() != 0) {
+            HandleErrMsg(errMsg, config_->GetPath(), config_->GetBundleName());
+        }
         if (stmt != nullptr) {
             sqlite3_finalize(stmt);
         }
