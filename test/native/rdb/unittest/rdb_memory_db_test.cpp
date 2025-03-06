@@ -461,3 +461,62 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_004, TestSize.Level1)
     ASSERT_EQ(ret3, E_SQLITE_LOCKED);
     ASSERT_EQ(transaction3, nullptr);
 }
+
+/**
+*@tc.name: GetMemoryDb_004
+*@tc.desc: Get MemoryDb with diff name
+*@tc.type: FUNC
+*@tc.require:
+*@tc.author:
+*/
+HWTEST_F(RdbMemoryDbTest, GetMemoryDb_004, TestSize.Level1)
+{
+    int errCode = E_ERROR;
+    RdbStoreConfig config(RDB_TEST_PATH);
+    config.SetName("mem_test");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbMemoryDbTestOpenCallback normalCallback;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore, nullptr);
+
+    config.SetName("eme.db");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore, nullptr);
+
+    config.SetName("test123-test");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_NE(rdbStore, nullptr);
+
+    config.SetName("test%");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+
+    config.SetName("test:");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+
+    config.SetName("test?");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+
+    config.SetName("test$");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+
+    config.SetName("test(");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+
+    config.SetName("test)");
+    rdbStore = RdbHelper::GetRdbStore(config, 1, normalCallback, errCode);
+    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(rdbStore, nullptr);
+}
