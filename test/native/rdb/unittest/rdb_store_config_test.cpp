@@ -152,7 +152,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_001, TestSize.Level1)
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_002, TestSize.Level1)
 {
     int errCode = E_OK;
-    RdbStoreConfig config("mem", StorageMode::MODE_MEMORY);
+    RdbStoreConfig config("", StorageMode::MODE_MEMORY);
     ConfigTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
