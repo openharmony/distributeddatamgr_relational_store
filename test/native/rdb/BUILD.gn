@@ -124,6 +124,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_predicates_join_b_test.cpp",
     "unittest/rdb_predicates_join_test.cpp",
     "unittest/rdb_predicates_test.cpp",
+    "unittest/rdb_rd_data_aging_test.cpp",
     "unittest/rdb_read_only_test.cpp",
     "unittest/rdb_security_manager_test.cpp",
     "unittest/rdb_sql_utils_test.cpp",
