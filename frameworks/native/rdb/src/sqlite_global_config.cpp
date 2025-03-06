@@ -98,7 +98,7 @@ std::string SqliteGlobalConfig::GetMemoryDbPath()
 std::string SqliteGlobalConfig::GetSharedMemoryDbPath(const std::string &name)
 {
     static const std::regex pattern(R"(^[\w\-\.]+$)");
-    if (!std::regex_match(name, pattern)) {
+    if (!name.empty() && !std::regex_match(name, pattern)) {
         return "";
     }
     return GlobalExpr::SHARED_MEMORY_DB_PATH_PREFIX + name + GlobalExpr::SHARED_MEMORY_DB_PATH_SUFFIX;
@@ -136,10 +136,6 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
             LOG_ERROR("not support MODE_MEMORY, storeName:%{public}s, role:%{public}d",
                 SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetRoleType());
             return E_NOT_SUPPORT;
-        }
-        if (config.GetName().empty()) {
-            dbPath = SqliteGlobalConfig::GetMemoryDbPath();
-            return E_OK;
         }
         dbPath = SqliteGlobalConfig::GetSharedMemoryDbPath(config.GetName());
         return dbPath.empty() ? E_INVALID_FILE_PATH : E_OK;
