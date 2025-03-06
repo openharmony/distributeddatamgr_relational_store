@@ -149,7 +149,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         return false;
     }
     if (config.GetSecurityLevel() != SecurityLevel::LAST &&
-        static_cast<int32_t>(config.GetSecurityLevel()) > lastParam.level_) {
+        static_cast<int32_t>(config.GetSecurityLevel()) < lastParam.level_) {
         LOG_WARN("Illegal change, storePath %{public}s, securityLevel: %{public}d -> %{public}d",
             SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()));
     }

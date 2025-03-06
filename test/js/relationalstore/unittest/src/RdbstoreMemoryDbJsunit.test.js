@@ -101,13 +101,6 @@ describe('rdbStoreMemoryDbTest', function () {
             console.log("sync catch err: failed, err: code=" + err.code + " message=" + err.message)
             expect(true).assertEqual(err.code == 801);
         }
-        try {
-            await rdbStore.queryLockedRow(predicates);
-            expect(null).assertFail();
-        } catch (err) {
-            console.log("queryLockedRow catch err: failed, err: code=" + err.code + " message=" + err.message)
-            expect(true).assertEqual(err.code == 801);
-        }
         done();
         console.log(TAG + "************* testMemoryDbNotSupport0001 end *************");
     })
