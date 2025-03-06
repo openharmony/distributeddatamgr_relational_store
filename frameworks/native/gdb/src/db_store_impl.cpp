@@ -17,12 +17,12 @@
 
 #include <utility>
 
-#include "aip_errors.h"
 #include "connection.h"
 #include "db_trace.h"
-#include "logger.h"
+#include "gdb_errors.h"
+#include "gdb_transaction.h"
 #include "gdb_utils.h"
-#include "transaction.h"
+#include "logger.h"
 #include "transaction_impl.h"
 
 namespace OHOS::DistributedDataAip {

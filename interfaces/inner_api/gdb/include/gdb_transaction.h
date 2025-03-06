@@ -13,8 +13,8 @@
  * limitations under the License.
  */
  
-#ifndef ARKDATA_INTELLIGENCE_PLATFORM_TRANSACTION_H
-#define ARKDATA_INTELLIGENCE_PLATFORM_TRANSACTION_H
+#ifndef ARKDATA_INTELLIGENCE_PLATFORM_GDB_TRANSACTION_H
+#define ARKDATA_INTELLIGENCE_PLATFORM_GDB_TRANSACTION_H
  
 #include <functional>
 #include <tuple>
@@ -33,10 +33,10 @@ public:
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(std::shared_ptr<Connection> conn);
     static int32_t RegisterCreator(Creator creator);
  
-    virtual ~Transaction() = default;
+    API_EXPORT virtual ~Transaction() = default;
  
-    virtual int32_t Commit() = 0;
-    virtual int32_t Rollback() = 0;
+    API_EXPORT virtual int32_t Commit() = 0;
+    API_EXPORT virtual int32_t Rollback() = 0;
     virtual int32_t Close() = 0;
  
     /**
@@ -44,14 +44,14 @@ public:
      *
      * @param gql Indicates the GQL statement to execute.
      */
-    virtual std::pair<int32_t, std::shared_ptr<Result>> Query(const std::string &gql) = 0;
+    API_EXPORT virtual std::pair<int32_t, std::shared_ptr<Result>> Query(const std::string &gql) = 0;
  
     /**
      * @brief Executes an GQL statement.
      *
      * @param gql Indicates the GQL statement to execute.
      */
-    virtual std::pair<int32_t, std::shared_ptr<Result>> Execute(const std::string &gql) = 0;
+    API_EXPORT virtual std::pair<int32_t, std::shared_ptr<Result>> Execute(const std::string &gql) = 0;
  
 private:
     static inline Creator creator_;

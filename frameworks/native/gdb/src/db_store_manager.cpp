@@ -19,7 +19,7 @@
 
 #include <regex>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "db_store_impl.h"
 #include "gdb_utils.h"
 #include "logger.h"

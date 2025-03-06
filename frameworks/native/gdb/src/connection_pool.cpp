@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <utility>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "gdb_utils.h"
 #include "logger.h"
 #include "rdb_store_config.h"

@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H
-#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -25,25 +25,26 @@
 #include "edge.h"
 #include "nlohmann/json.hpp"
 #include "path_segment.h"
+#include "rdb_visibility.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
 class Path {
 public:
-    Path();
-    Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end);
-    Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end, uint32_t pathLen,
+    API_EXPORT Path();
+    API_EXPORT Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end);
+    API_EXPORT Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end, uint32_t pathLen,
         std::vector<std::shared_ptr<PathSegment>> segments);
 
     static std::shared_ptr<Path> Parse(const nlohmann::json &json, int32_t &errCode);
 
-    uint32_t GetPathLength() const;
-    void SetPathLength(uint32_t pathLen);
-    std::shared_ptr<Vertex> GetStart() const;
-    void SetStart(std::shared_ptr<Vertex> start);
-    std::shared_ptr<Vertex> GetEnd() const;
-    void SetEnd(std::shared_ptr<Vertex> end);
-    const std::vector<std::shared_ptr<PathSegment>> &GetSegments() const;
+    API_EXPORT uint32_t GetPathLength() const;
+    API_EXPORT void SetPathLength(uint32_t pathLen);
+    API_EXPORT std::shared_ptr<Vertex> GetStart() const;
+    API_EXPORT void SetStart(std::shared_ptr<Vertex> start);
+    API_EXPORT std::shared_ptr<Vertex> GetEnd() const;
+    API_EXPORT void SetEnd(std::shared_ptr<Vertex> end);
+    API_EXPORT const std::vector<std::shared_ptr<PathSegment>> &GetSegments() const;
 
     static constexpr const char *PATHLEN = "length";
     static constexpr const char *START = "start";
@@ -58,4 +59,4 @@ private:
 };
 
 } // namespace OHOS::DistributedDataAip
-#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_H

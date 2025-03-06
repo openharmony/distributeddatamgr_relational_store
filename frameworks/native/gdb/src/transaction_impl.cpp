@@ -17,7 +17,7 @@
  
 #include <utility>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "db_trace.h"
 #include "logger.h"
 #include "trans_db.h"

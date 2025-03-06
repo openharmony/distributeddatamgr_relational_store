@@ -15,7 +15,7 @@
 #define LOG_TAG "GdbDataSet"
 #include "full_result.h"
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "statement.h"
 #include "logger.h"
 

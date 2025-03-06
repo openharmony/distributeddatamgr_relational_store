@@ -22,7 +22,7 @@
 #include "rdb_visibility.h"
 
 namespace OHOS::DistributedDataAip {
-class API_EXPORT GDBHelper {
+class GDBHelper {
 public:
     API_EXPORT static std::shared_ptr<DBStore> GetDBStore(const StoreConfig &config, int &errCode);
     API_EXPORT static int DeleteDBStore(const StoreConfig &config);

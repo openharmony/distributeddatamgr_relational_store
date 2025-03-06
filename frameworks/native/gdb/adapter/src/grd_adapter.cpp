@@ -19,7 +19,7 @@
 #include <cinttypes>
 #include <map>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "gdb_utils.h"
 #include "grd_adapter_manager.h"
 #include "grd_error.h"

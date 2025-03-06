@@ -17,7 +17,7 @@
 
 #include <algorithm>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 
 namespace OHOS::GraphStoreJsKit {
 using namespace DistributedDataAip;

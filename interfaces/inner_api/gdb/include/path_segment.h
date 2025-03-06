@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H
-#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_SEGMENT_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_SEGMENT_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -23,24 +23,25 @@
 #include <vector>
 
 #include "edge.h"
+#include "rdb_visibility.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
 class PathSegment {
 public:
-    PathSegment();
-    PathSegment(std::shared_ptr<Vertex> sourceVertex, std::shared_ptr<Vertex> targetVertex,
+    API_EXPORT PathSegment();
+    API_EXPORT PathSegment(std::shared_ptr<Vertex> sourceVertex, std::shared_ptr<Vertex> targetVertex,
         std::shared_ptr<Edge> edge);
     static std::shared_ptr<PathSegment> Parse(const nlohmann::json &json, int32_t &errCode);
 
-    std::shared_ptr<Vertex> GetSourceVertex() const;
-    void SetSourceVertex(std::shared_ptr<Vertex> vertex);
+    API_EXPORT std::shared_ptr<Vertex> GetSourceVertex() const;
+    API_EXPORT void SetSourceVertex(std::shared_ptr<Vertex> vertex);
 
-    std::shared_ptr<Edge> GetEdge() const;
-    void SetEdge(std::shared_ptr<Edge> edge);
+    API_EXPORT std::shared_ptr<Edge> GetEdge() const;
+    API_EXPORT void SetEdge(std::shared_ptr<Edge> edge);
 
-    std::shared_ptr<Vertex> GetTargetVertex() const;
-    void SetTargetVertex(std::shared_ptr<Vertex> vertex);
+    API_EXPORT std::shared_ptr<Vertex> GetTargetVertex() const;
+    API_EXPORT void SetTargetVertex(std::shared_ptr<Vertex> vertex);
 
     static constexpr const char *SOURCE_VERTEX = "start";
     static constexpr const char *TARGET_VERTEX = "end";
@@ -52,4 +53,4 @@ private:
     std::shared_ptr<Vertex> targetVertex_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_PATH_SEGMENT_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_PATH_SEGMENT_H

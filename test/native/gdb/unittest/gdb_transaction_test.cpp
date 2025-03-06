@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "gdb_transaction.h"
+
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -21,15 +23,14 @@
 #include <thread>
 #include <variant>
 
-#include "aip_errors.h"
 #include "edge.h"
 #include "full_result.h"
+#include "gdb_errors.h"
 #include "gdb_helper.h"
 #include "gdb_store.h"
 #include "grd_adapter_manager.h"
 #include "path.h"
 #include "result.h"
-#include "transaction.h"
 #include "vertex.h"
 
 using namespace testing::ext;

@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H
-#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_EDGE_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_EDGE_H
 
 #include <cstdint>
 #include <functional>
@@ -24,20 +24,21 @@
 #include <vector>
 
 #include "nlohmann/json.hpp"
+#include "rdb_visibility.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
 class Edge : public Vertex {
 public:
-    Edge();
-    Edge(std::string id, std::string label, std::string sourceId, std::string targetId);
-    Edge(const std::shared_ptr<Vertex> &element, std::string sourceId, std::string targetId);
+    API_EXPORT Edge();
+    API_EXPORT Edge(std::string id, std::string label, std::string sourceId, std::string targetId);
+    API_EXPORT Edge(const std::shared_ptr<Vertex> &element, std::string sourceId, std::string targetId);
     static std::shared_ptr<Edge> Parse(const nlohmann::json &json, int32_t &errCode);
-    std::string GetSourceId() const;
-    void SetSourceId(std::string sourceId);
+    API_EXPORT std::string GetSourceId() const;
+    API_EXPORT void SetSourceId(std::string sourceId);
 
-    std::string GetTargetId() const;
-    void SetTargetId(std::string targetId);
+    API_EXPORT std::string GetTargetId() const;
+    API_EXPORT void SetTargetId(std::string targetId);
 
     static constexpr const char *SOURCEID = "start";
     static constexpr const char *TARGETID = "end";
@@ -49,4 +50,4 @@ private:
 };
 
 }
-#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_EDGE_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_EDGE_H

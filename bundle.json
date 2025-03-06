@@ -89,7 +89,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
-                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:framework_graphstore",
+                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore"
             ],
             "inner_kits": [
@@ -178,6 +178,24 @@
                         ],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data/include"
                     }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
+                    "header": {
+                        "header_files": [
+                            "edge.h",
+                            "gdb_errors.h",
+                            "gdb_helper.h",
+                            "gdb_store.h",
+                            "gdb_store_config.h",
+                            "gdb_transaction.h",
+                            "path.h",
+                            "path_segment.h",
+                            "result.h",
+                            "vertex.h"
+                        ],
+                      "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb/include"
+                  }
                 }
             ],
             "test": [

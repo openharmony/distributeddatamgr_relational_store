@@ -17,7 +17,7 @@
 
 #include <utility>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "connection.h"
 #include "full_result.h"
 #include "grd_error.h"
@@ -66,7 +66,7 @@ int32_t GraphStatement::Step()
         return E_STEP_CHECK_FAILED;
     }
     int32_t ret = GrdAdapter::Step(stmtHandle_);
-    if (ret != E_OK) {
+    if (ret != E_OK && ret != E_GRD_NO_DATA) {
         LOG_ERROR("GRD_GqlStep failed. ret=%{public}d", ret);
     }
     return ret;

@@ -15,7 +15,7 @@
 #define LOG_TAG "GdbPath"
 #include "path.h"
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "path_segment.h"
 #include "grd_error.h"
 #include "logger.h"
