@@ -137,6 +137,10 @@ int SqliteGlobalConfig::GetDbPath(const RdbStoreConfig &config, std::string &dbP
                 SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetRoleType());
             return E_NOT_SUPPORT;
         }
+        if (config.GetName().empty()) {
+            dbPath = SqliteGlobalConfig::GetMemoryDbPath();
+            return E_OK;
+        }
         dbPath = SqliteGlobalConfig::GetSharedMemoryDbPath(config.GetName());
         return dbPath.empty() ? E_INVALID_FILE_PATH : E_OK;
     }
