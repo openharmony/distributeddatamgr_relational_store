@@ -56,9 +56,10 @@ public:
     ~RdbStatReporter();
     static TimeType GetTimeType(uint32_t costTime);
     std::chrono::steady_clock::time_point startTime_;
-    std::chrono::steady_clock::time_point reportTime_;
     DistributedRdb::RdbStatEvent statEvent_;
     ReportFunc reportFunc_;
+    static std::atomic<std::chrono::steady_clock::time_point> reportTime_;
+    static void setReportTime();
 };
 
 } // namespace OHOS::NativeRdb
