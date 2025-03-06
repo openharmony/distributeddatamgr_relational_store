@@ -97,7 +97,7 @@ std::string SqliteGlobalConfig::GetMemoryDbPath()
 
 std::string SqliteGlobalConfig::GetSharedMemoryDbPath(const std::string &name)
 {
-    static const std::regex pattern("^[a-zA-Z0-9_]+$");
+    static const std::regex pattern(R"(^[\w\-\.]+$)");
     if (!std::regex_match(name, pattern)) {
         return "";
     }
