@@ -23,12 +23,12 @@
 #include <cinttypes>
 #include <cstring>
 #include <mutex>
+#include <regex>
 
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
-#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -97,8 +97,8 @@ std::string SqliteGlobalConfig::GetMemoryDbPath()
 
 std::string SqliteGlobalConfig::GetSharedMemoryDbPath(const std::string &name)
 {
-    if (StringUtils::Contain(name, '?') || StringUtils::Contain(name, '#') || StringUtils::Contain(name, '%') ||
-        StringUtils::Contain(name, ' ') || StringUtils::Contain(name, ';') || StringUtils::Contain(name, '&')) {
+    static const std::regex pattern("^[a-zA-Z0-9_]+$");
+    if (!std::regex_match(name, pattern)) {
         return "";
     }
     return GlobalExpr::SHARED_MEMORY_DB_PATH_PREFIX + name + GlobalExpr::SHARED_MEMORY_DB_PATH_SUFFIX;

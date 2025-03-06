@@ -724,7 +724,7 @@ std::string RdbStoreConfig::ToString() const
     oss << " journalSize:" << journalSize_ << ",";
     oss << " pageSize:" << pageSize_ << ",";
     oss << " dbType:" << dbType_ << ",";
-    oss << " customDir:" << customDir_ << ",";
+    oss << " customDir:" << SqliteUtils::Anonymous(customDir_) << ",";
     oss << " haMode:" << haMode_ << ",";
     oss << " pluginLibs size:" << pluginLibs_.size() << ",";
     oss << " area:" << area_ << ",";
@@ -747,7 +747,8 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " journalSize:" << first.journalSize_ << "->" << second.journalSize_ << ",";
     oss << " pageSize:" << first.pageSize_ << "->" << second.pageSize_ << ",";
     oss << " dbType:" << first.dbType_ << "->" << second.dbType_ << ",";
-    oss << " customDir:" << first.customDir_ << "->" << second.customDir_ << ",";
+    oss << " customDir:" << SqliteUtils::Anonymous(first.customDir_) << "->"
+        << SqliteUtils::Anonymous(second.customDir_) << ",";
     oss << " haMode:" << first.haMode_ << "->" << second.haMode_ << ",";
     oss << " pluginLibs size:" << first.pluginLibs_.size() << "->" << second.pluginLibs_.size() << ",";
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
