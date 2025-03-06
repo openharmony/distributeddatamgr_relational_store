@@ -48,7 +48,7 @@ enum class DBType : int {
     DB_BUTT
 };
 
-class API_EXPORT StoreConfig {
+class StoreConfig {
 public:
     API_EXPORT StoreConfig() = default;
     API_EXPORT ~StoreConfig();
@@ -60,7 +60,6 @@ public:
     API_EXPORT void SetEncryptStatus(bool status);
     API_EXPORT void SetSecurityLevel(int32_t securityLevel);
     API_EXPORT bool IsEncrypt() const;
-    API_EXPORT std::string GetJson() const;
     API_EXPORT std::string GetFullPath() const;
     API_EXPORT std::string GetPath() const;
     API_EXPORT std::string GetName() const;
@@ -89,24 +88,11 @@ private:
     bool isEncrypt_ = false;
     mutable std::vector<uint8_t> encryptKey_{};
     mutable std::vector<uint8_t> newEncryptKey_{};
-    int32_t pageSize_ = 4;
-    int32_t defaultIsolationLevel_ = 3;  // serialization
     mutable int32_t iter_ = 0;
     int32_t writeTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1;  // seconds
     int32_t readConSize_ = 4;
     int32_t securityLevel_ = SecurityLevel::S1;
-
-    [[maybe_unused]] int32_t redoFlushByTrx_ = 0;
-    [[maybe_unused]] int32_t redoPubBufSize_ = 1024;
-    [[maybe_unused]] int32_t maxConnNum_ = 100;
-    [[maybe_unused]] int32_t bufferPoolSize_ = 1024;
-    [[maybe_unused]] int32_t crcCheckEnable_ = 1;
-    std::string bufferPoolPolicy_ = "BUF_PRIORITY_TABLE";
-
-    [[maybe_unused]] int32_t sharedModeEnable_ = 0;
-    [[maybe_unused]] int32_t MetaInfoBak_ = 0;
-    [[maybe_unused]] int32_t dbFileSize_ = 128 * 1024 * 1024;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds

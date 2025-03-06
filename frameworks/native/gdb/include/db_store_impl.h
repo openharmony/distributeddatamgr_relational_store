@@ -23,7 +23,7 @@
 #include "connection_pool.h"
 #include "gdb_store.h"
 #include "gdb_store_config.h"
-#include "transaction.h"
+#include "gdb_transaction.h"
 
 namespace OHOS::DistributedDataAip {
 class DBStoreImpl final : public DBStore {

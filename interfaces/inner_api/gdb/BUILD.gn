@@ -14,12 +14,16 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-config("common_public_config") {
+config("native_gdb_public_config") {
   visibility = [ ":*" ]
+  include_dirs = [
+    "${relational_store_innerapi_path}/gdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+  ]
 }
 
-ohos_shared_library("framework_graphstore") {
-  configs = [ ":common_public_config" ]
+ohos_shared_library("native_graphstore") {
+  public_configs = [ ":native_gdb_public_config" ]
   sanitize = {
     boundary_sanitize = true
     ubsan = true
@@ -27,13 +31,12 @@ ohos_shared_library("framework_graphstore") {
     cfi_cross_dso = true
     debug = false
   }
+  cflags_cc = [ "-fvisibility=hidden" ]
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_innerapi_path}/gdb/include",
-    "${relational_store_innerapi_path}/rdb/include",
   ]
   sources = [
     "${relational_store_native_path}/gdb/adapter/src/grd_adapter.cpp",

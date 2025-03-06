@@ -15,6 +15,33 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 module_output_path = "relational_store/native_gdb"
 
+base_sources = [
+  "${relational_store_native_path}/gdb/adapter/src/grd_adapter.cpp",
+  "${relational_store_native_path}/gdb/adapter/src/grd_adapter_manager.cpp",
+  "${relational_store_native_path}/gdb/src/connection.cpp",
+  "${relational_store_native_path}/gdb/src/connection_pool.cpp",
+  "${relational_store_native_path}/gdb/src/db_helper.cpp",
+  "${relational_store_native_path}/gdb/src/db_store_impl.cpp",
+  "${relational_store_native_path}/gdb/src/db_store_manager.cpp",
+  "${relational_store_native_path}/gdb/src/edge.cpp",
+  "${relational_store_native_path}/gdb/src/full_result.cpp",
+  "${relational_store_native_path}/gdb/src/gdb_utils.cpp",
+  "${relational_store_native_path}/gdb/src/graph_connection.cpp",
+  "${relational_store_native_path}/gdb/src/graph_statement.cpp",
+  "${relational_store_native_path}/gdb/src/path.cpp",
+  "${relational_store_native_path}/gdb/src/path_segment.cpp",
+  "${relational_store_native_path}/gdb/src/store_config.cpp",
+  "${relational_store_native_path}/gdb/src/trans_db.cpp",
+  "${relational_store_native_path}/gdb/src/transaction.cpp",
+  "${relational_store_native_path}/gdb/src/transaction_impl.cpp",
+  "${relational_store_native_path}/gdb/src/vertex.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+  "${relational_store_native_path}/rdb/src/string_utils.cpp",
+]
+
 ###############################################################################
 
 ohos_unittest("NativeGdbTest") {
@@ -29,7 +56,8 @@ ohos_unittest("NativeGdbTest") {
     "${relational_store_native_path}/rdb/include",
   ]
 
-  sources = [
+  sources = base_sources
+  sources += [
     "unittest/gdb_encrypt_test.cpp",
     "unittest/gdb_execute_test.cpp",
     "unittest/gdb_function_test.cpp",
@@ -41,13 +69,18 @@ ohos_unittest("NativeGdbTest") {
 
   external_deps = [
     "c_utils:utils",
+    "file_api:securitylabel",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "huks:libhukssdk",
     "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
   ]
-
-  deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
+  if (arkdata_db_core_is_exists) {
+    defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+  }
 }
 
 ohos_unittest("NativeGdbAdaptTest") {
@@ -62,17 +95,24 @@ ohos_unittest("NativeGdbAdaptTest") {
     "${relational_store_native_path}/rdb/include",
   ]
 
-  sources = [ "unittest/gdb_adapt_test.cpp" ]
+  sources = base_sources
+  sources += [ "unittest/gdb_adapt_test.cpp" ]
 
   external_deps = [
     "c_utils:utils",
+    "file_api:securitylabel",
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "huks:libhukssdk",
     "json:nlohmann_json_static",
+    "kv_store:distributeddata_inner",
   ]
-
-  deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
+  if (arkdata_db_core_is_exists) {
+    defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+  }
 }
 
 ohos_unittest("NativeGdbGrdAdapterTest") {

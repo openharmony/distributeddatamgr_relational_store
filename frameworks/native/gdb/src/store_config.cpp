@@ -15,7 +15,7 @@
 #define LOG_TAG "GdbStoreConfig"
 #include <utility>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "gdb_store_config.h"
 #include "gdb_utils.h"
 #include "logger.h"
@@ -23,8 +23,8 @@
 
 namespace OHOS::DistributedDataAip {
 StoreConfig::StoreConfig(
-    std::string name, std::string path, DBType dbType, bool status, const std::vector<uint8_t> &encryptKey)
-    : name_(std::move(name)), path_(std::move(path)), dbType_(dbType), isEncrypt_(status), encryptKey_(encryptKey)
+    std::string name, std::string path, DBType dbType, bool isEncrypt, const std::vector<uint8_t> &encryptKey)
+    : name_(std::move(name)), path_(std::move(path)), dbType_(dbType), isEncrypt_(isEncrypt), encryptKey_(encryptKey)
 {
 }
 
@@ -56,12 +56,6 @@ void StoreConfig::SetEncryptStatus(const bool status)
 bool StoreConfig::IsEncrypt() const
 {
     return isEncrypt_;
-}
-
-std::string StoreConfig::GetJson() const
-{
-    return "{\"pageSize\":" + std::to_string(pageSize_) +
-        ", \"defaultIsolationLevel\":" + std::to_string(defaultIsolationLevel_) + "}";
 }
 
 std::string StoreConfig::GetFullPath() const

@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "executor_pool.h"
 #include "grd_adapter_manager.h"
 #include "gdb_helper.h"

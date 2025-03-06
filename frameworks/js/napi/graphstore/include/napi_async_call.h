@@ -21,7 +21,7 @@
 #include <functional>
 #include <memory>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "logger.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
