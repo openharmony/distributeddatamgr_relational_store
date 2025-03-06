@@ -179,6 +179,7 @@ private:
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int InnerOpen();
+    void InnerReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
@@ -244,7 +245,7 @@ private:
     // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
     DistributedRdb::RdbStatEvent statEvent_;
-    ReportFunc func_ = nullptr;
+    ReportFunc reportFunc_ = nullptr;
     std::string path_;
     std::string name_;
     std::string fileType_;

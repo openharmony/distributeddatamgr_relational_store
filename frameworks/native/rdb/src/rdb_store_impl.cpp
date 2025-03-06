@@ -105,22 +105,6 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    func_ = [param = syncerParam_](const DistributedRdb::RdbStatEvent &event) {
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
-        if (err != E_OK || service == nullptr) {
-            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(param.storeName_).c_str());
-            return;
-        }
-        err = service->ReportStatistic(param, event);
-        if (err != E_OK) {
-            LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
-                SqliteUtils::Anonymous(param.storeName_).c_str());
-        }
-        return;
-    };
-#endif
 }
 
 int RdbStoreImpl::InnerOpen()
@@ -138,6 +122,26 @@ int RdbStoreImpl::InnerOpen()
     }
 #endif
     return E_OK;
+}
+
+void RdbStoreImpl::InnerReportFunc(const RdbParam &param)
+{
+#if !defined(CROSS_PLATFORM)
+    reportFunc_ = [reportParam = param](const DistributedRdb::RdbStatEvent &event) {
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(reportParam);
+        if (err != E_OK || service == nullptr) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(reportParam.storeName_).c_str());
+            return;
+        }
+        err = service->ReportStatistic(reportParam, event);
+        if (err != E_OK) {
+            LOG_ERROR("ReportStatistic failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(reportParam.storeName_).c_str());
+        }
+        return;
+    };
+#endif
 }
 
 void RdbStoreImpl::Close()
@@ -999,6 +1003,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         return;
     }
     InitSyncerParam(config_, created);
+    InnerReportFunc(syncerParam_);
     InnerOpen();
 }
 
@@ -1022,7 +1027,6 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 
 std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
-    RdbStatReporter reportStat(RDB_PERF, INSERT, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1039,6 +1043,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     if (conflictClause == nullptr) {
         return { E_INVALID_CONFLICT_FLAG, -1 };
     }
+    RdbStatReporter reportStat(RDB_PERF, INSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::string sql;
     sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
@@ -1073,7 +1078,6 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
-    RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, func_);
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1082,6 +1086,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
         return { E_OK, 0 };
     }
 
+    RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -1181,7 +1186,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
 std::pair<int, int> RdbStoreImpl::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
-    RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1198,6 +1202,7 @@ std::pair<int, int> RdbStoreImpl::Update(
     if (clause == nullptr) {
         return { E_INVALID_CONFLICT_FLAG, -1 };
     }
+    RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::string sql;
     sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
@@ -1234,7 +1239,6 @@ std::pair<int, int> RdbStoreImpl::Update(
 
 int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
 {
-    RdbStatReporter reportStat(RDB_PERF, DELETE, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
@@ -1243,6 +1247,7 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
         return E_EMPTY_TABLE_NAME;
     }
 
+    RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::string sql;
     sql.append("DELETE FROM ").append(table);
@@ -1308,7 +1313,6 @@ int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
 
 int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
 {
-    RdbStatReporter reportStat(RDB_PERF, EXECUTESQL, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_) {
         return E_NOT_SUPPORT;
@@ -1317,6 +1321,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     if (ret != E_OK) {
         return ret;
     }
+    RdbStatReporter reportStat(RDB_PERF, EXECUTESQL, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     auto [errCode, statement] = BeginExecuteSql(sql);
     if (statement == nullptr) {
@@ -1357,12 +1362,12 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
 
 std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
-    RdbStatReporter reportStat(RDB_PERF, EXECUTE, config_, func_);
     ValueObject object;
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, object };
     }
 
+    RdbStatReporter reportStat(RDB_PERF, EXECUTE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
@@ -1990,7 +1995,6 @@ int RdbStoreImpl::SetVersion(int version)
  */
 int RdbStoreImpl::BeginTransaction()
 {
-    RdbStatReporter reportStat(RDB_PERF, BEGINTRANSACTION, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2001,6 +2005,7 @@ int RdbStoreImpl::BeginTransaction()
         return E_NOT_SUPPORT;
     }
     // size + 1 means the number of transactions in process
+    RdbStatReporter reportStat(RDB_PERF, BEGINTRANSACTION, config_, reportFunc_);
     size_t transactionId = pool->GetTransactionStack().size() + 1;
     BaseTransaction transaction(pool->GetTransactionStack().size());
     auto [errCode, statement] = GetStatement(transaction.GetTransactionStr());
@@ -2059,7 +2064,6 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
 */
 int RdbStoreImpl::RollBack()
 {
-    RdbStatReporter reportStat(RDB_PERF, ROLLBACK, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2069,6 +2073,7 @@ int RdbStoreImpl::RollBack()
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    RdbStatReporter reportStat(RDB_PERF, ROLLBACK, config_, reportFunc_);
     size_t transactionId = pool->GetTransactionStack().size();
 
     if (pool->GetTransactionStack().empty()) {
@@ -2161,7 +2166,6 @@ int RdbStoreImpl::RollBack(int64_t trxId)
 */
 int RdbStoreImpl::Commit()
 {
-    RdbStatReporter reportStat(RDB_PERF, COMMIT, config_, func_);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2171,6 +2175,7 @@ int RdbStoreImpl::Commit()
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    RdbStatReporter reportStat(RDB_PERF, COMMIT, config_, reportFunc_);
     size_t transactionId = pool->GetTransactionStack().size();
 
     if (pool->GetTransactionStack().empty()) {

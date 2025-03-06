@@ -44,6 +44,7 @@ constexpr int32_t WAIT_TIME = 600;
 constexpr int32_t TIMEOUT_FIRST = 1500;
 constexpr int32_t TIMEOUT_SECOND = 5000;
 constexpr int32_t TIMEOUT_THIRD = 10000;
+std::atomic<std::chrono::steady_clock::time_point> RdbStatReporter::reportTime_ = std::chrono::steady_clock::now();
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 
 RdbStatReporter::RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func)
@@ -63,7 +64,8 @@ RdbStatReporter::~RdbStatReporter()
     }
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
-    auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - reportTime_).count();
+    auto loadedReportTime = reportTime_.load();
+    auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - loadedReportTime).count();
     if (duration >= TIMEOUT_FIRST && reportInterval >= WAIT_TIME) {
         statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
         auto pool = TaskExecutor::GetInstance().GetExecutor();
@@ -71,7 +73,7 @@ RdbStatReporter::~RdbStatReporter()
             LOG_WARN("task pool err when RdbStatReporter");
         }
         pool->Execute(std::bind(reportFunc_, statEvent_));
-        reportTime_ = std::chrono::steady_clock::now();
+        RdbStatReporter::setReportTime();
     }
 }
 
@@ -83,6 +85,11 @@ TimeType RdbStatReporter::GetTimeType(uint32_t costTime)
         return TIME_LEVEL_SECOND;
     }
     return TIME_LEVEL_THIRD;
+}
+
+void RdbStatReporter::setReportTime()
+{
+    reportTime_ = std::chrono::steady_clock::now();
 }
 
 } // namespace OHOS::NativeRdb

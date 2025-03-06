@@ -31,4 +31,8 @@ TimeType RdbStatReporter::GetTimeType(uint32_t costTime)
     return TIME_LEVEL_FIRST;
 }
 
+void RdbStatReporter::setReportTime()
+{
+}
+
 } // namespace OHOS::NativeRdb

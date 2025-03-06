@@ -106,11 +106,11 @@ enum DistributedTableType {
 };
 
 struct RdbStatEvent {
-    uint32_t statType;
-    std::string bundleName;
-    std::string storeName;
-    uint32_t subType;
-    uint32_t costTime;
+    uint32_t statType = 0;
+    std::string bundleName = "";
+    std::string storeName = "";
+    uint32_t subType = 0;
+    uint32_t costTime = 0;
 
     bool operator<(const RdbStatEvent &other) const
     {
