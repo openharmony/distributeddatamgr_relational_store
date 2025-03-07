@@ -282,6 +282,158 @@ HWTEST_F(RdbAttachTest, RdbStore_Attach_006, TestSize.Level2)
     EXPECT_EQ(0, ret.second);
 }
 
+/**
+ * @tc.name: RdbStore_Attach_007
+ * @tc.desc: normal testCase for Attach with memoryDb
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAttachTest, RdbStore_Attach_007, TestSize.Level2)
+{
+    const std::string attachedName = "attached";
+    RdbStoreConfig config(RdbAttachTest::MAIN_DATABASE_NAME);
+    MainOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> walDb = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(nullptr, walDb);
+    ASSERT_EQ(E_OK, errCode);
+
+    RdbStoreConfig attachedConfig("/data/test/memoryAttachTest007.db");
+    attachedConfig.SetStorageMode(StorageMode::MODE_MEMORY);
+    std::shared_ptr<RdbStore> memDb = RdbHelper::GetRdbStore(attachedConfig, 1, helper, errCode);
+
+    std::string sql = "CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY "
+                      "AUTOINCREMENT, name TEXT NOT NULL)";
+    auto code = memDb->ExecuteSql(sql);
+    ASSERT_EQ(E_OK, code);
+
+    ValueObject val;
+    std::tie(code, val) = memDb->Execute("insert into test (id, name) values(?,?)", { 1, "memDbName" });
+    ASSERT_EQ(E_OK, code);
+
+    auto ret = walDb->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    ASSERT_EQ(E_OK, ret.first);
+    ASSERT_EQ(1, ret.second);
+
+    auto result = walDb->QuerySql("select * from attached.test");
+    ASSERT_NE(result, nullptr);
+    int count = -1;
+    ASSERT_EQ(E_OK, result->GetRowCount(count));
+    EXPECT_EQ(count, 1);
+    ASSERT_EQ(E_OK, result->GoToFirstRow());
+
+    int index = -1;
+    ASSERT_EQ(E_OK, result->GetColumnIndex("name", index));
+    std::string name;
+    ASSERT_EQ(E_OK, result->GetString(index, name));
+    EXPECT_EQ(name, "memDbName");
+    result->Close();
+
+    ret = walDb->Detach(attachedName);
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(0, ret.second);
+}
+
+/**
+ * @tc.name: RdbStore_Attach_008
+ * @tc.desc: normal testCase for memoryDb attach with memoryDb
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAttachTest, RdbStore_Attach_008, TestSize.Level2)
+{
+    const std::string attachedName = "attached";
+    RdbStoreConfig config("/data/test/memoryAttachMain008.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    MainOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> mainMemDb = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(nullptr, mainMemDb);
+    ASSERT_EQ(E_OK, errCode);
+
+    RdbStoreConfig attachedConfig("/data/test/memoryAttachTest008.db");
+    attachedConfig.SetStorageMode(StorageMode::MODE_MEMORY);
+    std::shared_ptr<RdbStore> memDb = RdbHelper::GetRdbStore(attachedConfig, 1, helper, errCode);
+
+    std::string sql = "CREATE TABLE IF NOT EXISTS test1(id INTEGER PRIMARY KEY "
+                      "AUTOINCREMENT, name TEXT NOT NULL)";
+    auto code = memDb->ExecuteSql(sql);
+    ASSERT_EQ(E_OK, code);
+
+    auto ret = mainMemDb->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    ASSERT_EQ(E_OK, ret.first);
+    ASSERT_EQ(1, ret.second);
+
+    ValueObject val;
+    std::tie(code, val) = mainMemDb->Execute("insert into attached.test1 (id, name) values(?,?)", { 1, "memDbName" });
+    ASSERT_EQ(E_OK, ret.first);
+    auto result = mainMemDb->QuerySql("select * from attached.test1;");
+    ASSERT_NE(result, nullptr);
+    int count = -1;
+    ASSERT_EQ(E_OK, result->GetRowCount(count));
+    EXPECT_EQ(count, 1);
+    ASSERT_EQ(E_OK, result->GoToFirstRow());
+
+    int index = -1;
+    ASSERT_EQ(E_OK, result->GetColumnIndex("name", index));
+    std::string name;
+    ASSERT_EQ(E_OK, result->GetString(index, name));
+    EXPECT_EQ(name, "memDbName");
+    result->Close();
+
+    ret = mainMemDb->Detach(attachedName);
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(0, ret.second);
+}
+
+/**
+ * @tc.name: RdbStore_Attach_009
+ * @tc.desc: normal testCase for memoryDb attach with walDb
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAttachTest, RdbStore_Attach_009, TestSize.Level2)
+{
+    const std::string attachedName = "attached";
+    RdbStoreConfig config("/data/test/memoryAttachMain009.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    MainOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> mainMemDb = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(nullptr, mainMemDb);
+    ASSERT_EQ(E_OK, errCode);
+
+    RdbStoreConfig attachedConfig("/data/test/AttachTest009.db");
+    std::shared_ptr<RdbStore> walDb = RdbHelper::GetRdbStore(attachedConfig, 1, helper, errCode);
+
+    std::string sql = "CREATE TABLE IF NOT EXISTS test1(id INTEGER PRIMARY KEY "
+                      "AUTOINCREMENT, name TEXT NOT NULL)";
+    auto code = walDb->ExecuteSql(sql);
+    ASSERT_EQ(E_OK, code);
+
+    auto ret = mainMemDb->Attach(attachedConfig, attachedName, BUSY_TIMEOUT);
+    ASSERT_EQ(E_OK, ret.first);
+    ASSERT_EQ(1, ret.second);
+
+    ValueObject val;
+    std::tie(code, val) = mainMemDb->Execute("insert into attached.test1 (id, name) values(?,?)", { 1, "memDbName" });
+    ASSERT_EQ(E_OK, ret.first);
+    auto result = mainMemDb->QuerySql("select * from attached.test1;");
+    ASSERT_NE(result, nullptr);
+    int count = -1;
+    ASSERT_EQ(E_OK, result->GetRowCount(count));
+    EXPECT_EQ(count, 1);
+    ASSERT_EQ(E_OK, result->GoToFirstRow());
+
+    int index = -1;
+    ASSERT_EQ(E_OK, result->GetColumnIndex("name", index));
+    std::string name;
+    ASSERT_EQ(E_OK, result->GetString(index, name));
+    EXPECT_EQ(name, "memDbName");
+    result->Close();
+
+    ret = mainMemDb->Detach(attachedName);
+    EXPECT_EQ(E_OK, ret.first);
+    EXPECT_EQ(0, ret.second);
+}
+
 void RdbAttachTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");

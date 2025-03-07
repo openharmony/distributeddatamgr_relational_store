@@ -51,6 +51,12 @@ const STORE_CONFIG3 = {
     securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
+const STORE_CONFIG_MEM = {
+    name: "memStore.db",
+    persist: false,
+    securityLevel: data_relationalStore.SecurityLevel.S1,
+}
+
 describe('ActsRdbStoreAttachTest', function () {
     beforeAll(async function () {
         console.info(TAG + 'beforeAll');
@@ -452,6 +458,92 @@ describe('ActsRdbStoreAttachTest', function () {
             expect('401').assertEqual(e.code);
         }
         console.log(TAG + "************* testRdbStoreAttach00014 end *************");
+    })
+
+    /**
+     * @tc.name the attach function
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_attach_0015
+     * @tc.desc attach memDb
+     */
+    it('testRdbStoreAttach00015', 0, async function () {
+        console.log(TAG + "************* testRdbStoreAttach00015 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        let memStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_MEM);
+        await memStore.executeSql(CREATE_TABLE_TEST);
+        await attachBatchInsert(memStore, "test");
+        try {
+            await store.attach(context, STORE_CONFIG_MEM, "attachMemDB");
+            console.log("testRdbStoreAttach00015 attach success");
+            let resultSet = await store.querySql("select * from attachMemDB.test");
+            expect(resultSet.rowCount).assertEqual(10);
+            resultSet.close();
+        } catch (e) {
+            console.log("testRdbStoreAttach00015 : failed, err: code=" + e.code + " message=" + e.message);
+            expect().assertFail();
+        } finally {
+            store.close();
+            memStore.close();
+        }
+        console.log(TAG + "************* testRdbStoreAttach00015 end *************");
+    })
+
+    /**
+     * @tc.name the attach function
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_attach_0016
+     * @tc.desc memDb attach memDb
+     */
+    it('testRdbStoreAttach00016', 0, async function () {
+        console.log(TAG + "************* testRdbStoreAttach00016 start *************");
+        const STORE_CONFIG_MAIN = {
+            name: "mainMemStore.db",
+            persist: false,
+            securityLevel: data_relationalStore.SecurityLevel.S1,
+        }
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG_MAIN);
+        let memStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_MEM);
+        await memStore.executeSql(CREATE_TABLE_TEST);
+        await attachBatchInsert(memStore, "test");
+        try {
+            await store.attach(context, STORE_CONFIG_MEM, "attachMemDB");
+            console.log("testRdbStoreAttach00016 attach success");
+            let resultSet = await store.querySql("select * from attachMemDB.test");
+            expect(resultSet.rowCount).assertEqual(10);
+            resultSet.close();
+        } catch (e) {
+            console.log("testRdbStoreAttach00016 : failed, err: code=" + e.code + " message=" + e.message);
+            expect().assertFail();
+        } finally {
+            store.close();
+            memStore.close();
+        }
+        console.log(TAG + "************* testRdbStoreAttach00016 end *************");
+    })
+
+    /**
+     * @tc.name the attach function
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_attach_0017
+     * @tc.desc memDb attach walDb
+     */
+    it('testRdbStoreAttach00017', 0, async function () {
+        console.log(TAG + "************* testRdbStoreAttach00017 start *************");
+        let store = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await store.executeSql(CREATE_TABLE_TEST);
+        await attachBatchInsert(store, "test");
+        let memStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_MEM);
+        try {
+            await memStore.attach(context, STORE_CONFIG, "attachWalDB");
+            console.log("testRdbStoreAttach00017 attach success");
+            let resultSet = memStore.querySqlSync("select * from attachWalDB.test");
+            expect(resultSet.rowCount).assertEqual(10);
+            resultSet.close();
+        } catch (e) {
+            console.log("testRdbStoreAttach00017 : failed, err: code=" + e.code + " message=" + e.message);
+            expect().assertFail();
+        } finally {
+            store.close();
+            memStore.close();
+        }
+        console.log(TAG + "************* testRdbStoreAttach00017 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");

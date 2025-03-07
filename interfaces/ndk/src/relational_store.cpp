@@ -54,6 +54,7 @@ struct OH_Rdb_ConfigV2 {
     std::string bundleName = "";
     std::string moduleName = "";
     bool isEncrypt = false;
+    bool persist = true;
     int securityLevel = 0;
     int area = 0;
     int dbType = RDB_SQLITE;
@@ -205,6 +206,17 @@ int OH_Rdb_SetTokenizer(OH_Rdb_ConfigV2 *config, Rdb_Tokenizer tokenizer)
         return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
     }
     config->token = tokenizer;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetPersistent(OH_Rdb_ConfigV2 *config, bool isPersistent)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("config is null %{public}d or magicNum not valid %{public}d. isPersistent %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum), isPersistent);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->persist = isPersistent;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -360,19 +372,20 @@ static OHOS::NativeRdb::Tokenizer ConvertTokenizer2Native(Rdb_Tokenizer token)
 
 static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *config, int *errCode)
 {
-    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE ||
-        (OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
-            OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST) ||
+    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE || (config->persist &&
+        ((OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
+            OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST))) ||
         (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
         (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY) ||
         (config->token < RDB_NONE_TOKENIZER || config->token > RDB_CUSTOM_TOKENIZER)) {
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
-                  "dbType %{public}d token %{public}d ret %{public}d",
-            config->magicNum, config->securityLevel, config->area, config->dbType, config->token, *errCode);
+                  "dbType %{public}d token %{public}d ret %{public}d persist %{public}d",
+            config->magicNum, config->securityLevel, config->area, config->dbType, config->token, *errCode,
+            config->persist);
         return OHOS::NativeRdb::RdbStoreConfig("");
     }
-    std::string realPath =
+    std::string realPath = !config->persist ? config->dataBaseDir:
         OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
     if (*errCode != 0) {
         *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
@@ -380,6 +393,9 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
         return OHOS::NativeRdb::RdbStoreConfig("");
     }
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
+    if (!config->storeName.empty()) {
+        rdbStoreConfig.SetName(config->storeName);
+    }
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
     rdbStoreConfig.SetArea(config->area - 1);
@@ -387,6 +403,8 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
     rdbStoreConfig.SetBundleName(config->bundleName);
     rdbStoreConfig.SetName(config->storeName);
     rdbStoreConfig.SetTokenizer(ConvertTokenizer2Native(static_cast<Rdb_Tokenizer>(config->token)));
+    rdbStoreConfig.SetStorageMode(
+        config->persist ? OHOS::NativeRdb::StorageMode::MODE_DISK : OHOS::NativeRdb::StorageMode::MODE_MEMORY);
     return rdbStoreConfig;
 }
 

@@ -222,25 +222,29 @@ public:
     std::string GetVisitorDir() const;
     bool operator==(const RdbStoreConfig &config) const
     {
-        if (this->customScalarFunctions.size() != config.customScalarFunctions.size()) {
+        if (customScalarFunctions_.size() != config.customScalarFunctions_.size()) {
             return false;
         }
 
-        auto iter1 = this->customScalarFunctions.begin();
-        auto iter2 = config.customScalarFunctions.begin();
-        for (; iter1 != this->customScalarFunctions.end(); ++iter1, ++iter2) {
+        auto iter1 = customScalarFunctions_.begin();
+        auto iter2 = config.customScalarFunctions_.begin();
+        for (; iter1 != customScalarFunctions_.end(); ++iter1, ++iter2) {
             if (iter1->first != iter2->first) {
                 return false;
             }
         }
+        if (storageMode_ != config.storageMode_ || journalMode_ != config.journalMode_ ||
+            syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
+            journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
+            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
+            return false;
+        }
 
-        return this->path_ == config.path_ && this->storageMode_ == config.storageMode_ &&
-               this->journalMode_ == config.journalMode_ && this->syncMode_ == config.syncMode_ &&
-               this->databaseFileType == config.databaseFileType && IsEncrypt() == config.IsEncrypt() &&
-               this->securityLevel_ == config.securityLevel_ && this->journalSize_ == config.journalSize_ &&
-               this->pageSize_ == config.pageSize_ && this->readConSize_ == config.readConSize_ &&
-               this->customDir_ == config.customDir_ && this->allowRebuilt_ == config.allowRebuilt_ &&
-               this->pluginLibs_ == config.pluginLibs_ && this->haMode_ == config.haMode_;
+        if (storageMode_ == StorageMode::MODE_MEMORY) {
+            return name_ == config.name_;
+        } else {
+            return path_ == config.path_ && securityLevel_ == config.securityLevel_;
+        }
     }
 
     bool IsSearchable() const;
@@ -278,6 +282,8 @@ public:
     void EnableRekey(bool enable);
     int GetNcandidates() const;
     void SetNcandidates(int ncandidates);
+    std::string ToString() const;
+    static std::string FormatCfg(const RdbStoreConfig &first, const RdbStoreConfig &second);
 
 private:
     void ClearEncryptKey();
@@ -322,7 +328,7 @@ private:
     std::string dataGroupId_;
     std::string customDir_;
     mutable std::vector<uint8_t> newEncryptKey_{};
-    std::map<std::string, ScalarFunctionInfo> customScalarFunctions;
+    std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::vector<std::string> pluginLibs_{};
     int ncandidates_ = 128;
 

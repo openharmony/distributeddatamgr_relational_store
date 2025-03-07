@@ -24,33 +24,39 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+namespace OHOS::RdbDeleteTest {
+struct RdbTestParam {
+    std::shared_ptr<RdbStore> store;
+    operator std::shared_ptr<RdbStore>()
+    {
+        return store;
+    }
+};
+static RdbTestParam g_store;
+static RdbTestParam g_memDb;
 
-class RdbDeleteTest : public testing::Test {
+class RdbDeleteTest : public testing::TestWithParam<RdbTestParam *> {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
 
+    std::shared_ptr<RdbStore> store_;
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
 };
 
 const std::string RdbDeleteTest::DATABASE_NAME = RDB_TEST_PATH + "delete_test.db";
-std::shared_ptr<RdbStore> RdbDeleteTest::store = nullptr;
 
 class DeleteTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
-    static const std::string CREATE_TABLE_TEST;
 };
-
-std::string const DeleteTestOpenCallback::CREATE_TABLE_TEST =
-    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                  "name TEXT NOT NULL, age INTEGER, salary "
-                                                                  "REAL, blobType BLOB)");
-
+constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test"
+                                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                    "name TEXT NOT NULL, age INTEGER, salary "
+                                    "REAL, blobType BLOB)";
 int DeleteTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
@@ -64,20 +70,29 @@ int DeleteTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVe
 void RdbDeleteTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbDeleteTest::DATABASE_NAME);
     DeleteTestOpenCallback helper;
-    RdbDeleteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbDeleteTest::store, nullptr);
+    g_store.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_store.store, nullptr);
+
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    g_memDb.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_memDb.store, nullptr);
 }
 
 void RdbDeleteTest::TearDownTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(RdbDeleteTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbDeleteTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(config);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbHelper::DeleteRdbStore(config);
 }
 
 void RdbDeleteTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store_ = *GetParam();
+    store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbDeleteTest::TearDown(void)
@@ -89,9 +104,9 @@ void RdbDeleteTest::TearDown(void)
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDeleteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     int deletedRows;
@@ -144,9 +159,9 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDeleteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -198,9 +213,9 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbDeleteTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -228,3 +243,6 @@ HWTEST_F(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(deletedRows, 1);
 }
+
+INSTANTIATE_TEST_SUITE_P(DeleteTest, RdbDeleteTest, testing::Values(&g_store, &g_memDb));
+} // namespace OHOS::RdbDeleteTest

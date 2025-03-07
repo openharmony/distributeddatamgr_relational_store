@@ -394,6 +394,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "tokenizer", tokenizer, true);
     ASSERT(OK == status, "get tokenizer failed.", napi_invalid_arg);
     rdbConfig.tokenizer = static_cast<Tokenizer>(tokenizer);
+
+    status = GetNamedProperty(env, jsValue, "persist", rdbConfig.persist, true);
+    ASSERT(OK == status, "get persist failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -520,7 +523,8 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
     rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
     rdbStoreConfig.SetIsVector(rdbConfig.vector);
-    rdbConfig.vector ? rdbStoreConfig.SetDBType(DB_VECTOR) : rdbStoreConfig.SetDBType(DB_SQLITE);
+    rdbStoreConfig.SetDBType(rdbConfig.vector ? DB_VECTOR : DB_SQLITE);
+    rdbStoreConfig.SetStorageMode(rdbConfig.persist ? StorageMode::MODE_DISK : StorageMode::MODE_MEMORY);
     rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
     rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
     rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);

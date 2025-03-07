@@ -101,9 +101,9 @@ private:
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int SetTokenizer(const RdbStoreConfig &config);
-    void LimitPermission(const std::string &dbPath) const;
+    void LimitPermission(const RdbStoreConfig &config, const std::string &dbPath) const;
 
-    int SetPersistWal();
+    int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
     int SetCrcCheck(const RdbStoreConfig &config);
     void SetDwrEnable(const RdbStoreConfig &config);
@@ -156,7 +156,6 @@ private:
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::mutex mutex_;
-    std::string filePath;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalDbObserver>>> observers_;
