@@ -51,19 +51,30 @@ int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
     config.SetDBType(DB_SQLITE);
-    int errCodeSqlite = DeleteRdbStore(config, shouldClose);
+    int errCode = DeleteRdbStore(config, shouldClose);
 
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    errCode = DeleteRdbStore(config, shouldClose) == E_OK ? errCode : E_REMOVE_FILE;
+
+    config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
-    int errCodeVector = DeleteRdbStore(config, shouldClose);
-    return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
+    errCode = DeleteRdbStore(config, shouldClose) == E_OK ? errCode : E_REMOVE_FILE;
+    return errCode;
 }
 
 int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto dbFile = config.GetPath();
-    if (dbFile.empty()) {
+    std::string dbFile;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbFile);
+    if (errCode != E_OK || dbFile.empty()) {
         return E_INVALID_FILE_PATH;
+    }
+    if (config.IsMemoryRdb()) {
+        RdbStoreManager::GetInstance().Remove(dbFile, shouldClose);
+        LOG_INFO("Remove memory store, dbType:%{public}d, path %{public}s", config.GetDBType(),
+            SqliteUtils::Anonymous(dbFile).c_str());
+        return E_OK;
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);

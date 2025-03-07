@@ -26,39 +26,44 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+namespace OHOS::RdbStoreUpdateTest {
+struct RdbTestParam {
+    std::shared_ptr<RdbStore> store;
+    operator std::shared_ptr<RdbStore>()
+    {
+        return store;
+    }
+};
+static RdbTestParam g_store;
+static RdbTestParam g_memDb;
 
-class RdbStoreUpdateTest : public testing::Test {
+class RdbStoreUpdateTest : public testing::TestWithParam<RdbTestParam *> {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     static void ExpectValue(const std::shared_ptr<OHOS::NativeRdb::ResultSet> &resultSet, const RowData &expect);
     void SetUp();
     void TearDown();
+    std::shared_ptr<RdbStore> store_;
 
     static const std::string DATABASE_NAME;
-    static std::shared_ptr<RdbStore> store;
 };
 
 const std::string RdbStoreUpdateTest::DATABASE_NAME = RDB_TEST_PATH + "update_test.db";
-std::shared_ptr<RdbStore> RdbStoreUpdateTest::store = nullptr;
 
 class UpdateTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
-    static const std::string CREATE_TABLE_TEST;
 };
-
-const std::string UpdateTestOpenCallback::CREATE_TABLE_TEST =
-    std::string("CREATE TABLE IF NOT EXISTS test (") +
-    std::string("id INTEGER PRIMARY KEY AUTOINCREMENT, ") +
-    std::string("name TEXT UNIQUE, ") +
-    std::string("age INTEGER, ") +
-    std::string("salary REAL, ") +
-    std::string("blobType BLOB, ") +
-    std::string("assetType ASSET, ") +
-    std::string("assetsType ASSETS)");
-
+constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
+                                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                    "name TEXT UNIQUE, "
+                                    "age INTEGER, "
+                                    "salary REAL, "
+                                    "blobType BLOB, "
+                                    "assetType ASSET, "
+                                    "assetsType ASSETS)";
 int UpdateTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
@@ -75,19 +80,26 @@ void RdbStoreUpdateTest::SetUpTestCase(void)
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
     RdbStoreConfig config(RdbStoreUpdateTest::DATABASE_NAME);
     UpdateTestOpenCallback helper;
-    RdbStoreUpdateTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStoreUpdateTest::store, nullptr);
+    g_store.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_store.store, nullptr);
+
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    g_memDb.store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(g_memDb.store, nullptr);
 }
 
 void RdbStoreUpdateTest::TearDownTestCase(void)
 {
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreUpdateTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbStoreUpdateTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(config);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RdbHelper::DeleteRdbStore(config);
 }
 
 void RdbStoreUpdateTest::SetUp(void)
 {
-    store->ExecuteSql("DELETE FROM test");
+    store_ = *GetParam();
+    store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbStoreUpdateTest::TearDown(void)
@@ -100,9 +112,9 @@ void RdbStoreUpdateTest::TearDown(void)
  * @tc.desc: test RdbStore update, select id and update one row
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -141,9 +153,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
  * @tc.desc: test RdbStore update, no select and update all rows
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int64_t id;
     ValuesBucket values;
@@ -187,9 +199,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
  * @tc.desc: test RdbStore update
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int changedRows;
     ValuesBucket values;
@@ -210,9 +222,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int changedRows;
     ValuesBucket emptyBucket;
@@ -234,9 +246,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -255,9 +267,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
  * @tc.desc: test RdbStore insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -296,9 +308,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
  * @tc.desc: test RdbStore update asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue value{ .version = 1, .name = "123", .uri = "your test path", .createTime = "13", .modifyTime = "13" };
     int changedRows;
@@ -324,8 +336,7 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
                                                        .name = "123",
                                                        .uri = "your test path",
                                                        .createTime = "13",
-                                                       .modifyTime = "13"
-                                                        } });
+                                                       .modifyTime = "13" } });
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 }
@@ -335,9 +346,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
  * @tc.desc: test RdbStore update asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue valueDef{
         .version = 0,
@@ -375,9 +386,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
  * @tc.desc: test RdbStore update asset
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue valueDef{ .version = 0,
         .status = AssetValue::STATUS_NORMAL,
@@ -422,9 +433,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
  * @tc.desc: test RdbStore update assets
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     std::vector<AssetValue> assetsDef{
         { .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" }
@@ -452,9 +463,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -501,9 +512,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -550,9 +561,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -600,9 +611,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -649,9 +660,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -699,9 +710,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     ValuesBucket values;
     int changedRows;
@@ -744,9 +755,9 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
  * @tc.desc: test RdbStore UpdateWithConflictResolution
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize.Level1)
+HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = RdbStoreUpdateTest::store;
+    std::shared_ptr<RdbStore> store = *GetParam();
 
     int changedRows = 0;
     int64_t id = -1;
@@ -770,28 +781,6 @@ HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize
         changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" }, static_cast<ConflictResolution>(-1));
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, changedRows);
-}
-
-/**
- * @tc.name: RdbStore_UpdateSqlBuilder_001
- * @tc.desc: test RdbStore UpdateSqlBuilder
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreUpdateTest, RdbStore_UpdateSqlBuilder_001, TestSize.Level1)
-{
-    ValuesBucket values;
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 20);
-    values.PutDouble("salary", 300.5);
-
-    std::vector<ValueObject> bindArgs;
-    std::string updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{ "19" }, "",
-        "age = ?", "", "", INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
-    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=? WHERE age = ?");
-
-    updateSql = SqliteSqlBuilder::BuildUpdateString(values, "test", std::vector<std::string>{}, "", "", "", "",
-        INT_MIN, INT_MIN, bindArgs, ConflictResolution::ON_CONFLICT_NONE);
-    EXPECT_EQ(updateSql, "UPDATE test SET age=?,name=?,salary=?");
 }
 
 void RdbStoreUpdateTest::ExpectValue(
@@ -844,3 +833,37 @@ void RdbStoreUpdateTest::ExpectValue(
         }
     }
 }
+
+/**
+ * @tc.name: OverLimitWithUpdate_001
+ * @tc.desc: over limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, OverLimitWithUpdate_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> store = *GetParam();
+    auto [code, maxPageCount] = store->Execute("PRAGMA max_page_count;");
+    auto recover = std::shared_ptr<const char>("recover", [defPageCount = maxPageCount, store](const char *) {
+        store->Execute("PRAGMA max_page_count = " + static_cast<std::string>(defPageCount) + ";");
+    });
+    std::tie(code, maxPageCount) = store->Execute("PRAGMA max_page_count = 256;");
+
+    int64_t id = -1;
+    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(ret, E_OK);
+
+    ValuesBucket row;
+    row.PutInt("id", id);
+    row.Put("name", std::string(1024 * 1024, 'e'));
+    row.PutInt("age", 20);
+    row.PutDouble("salary", 200.5);
+    row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    int changedRows;
+    auto result = store->Update(changedRows, "test", row);
+    ASSERT_EQ(result, E_SQLITE_FULL);
+}
+
+INSTANTIATE_TEST_SUITE_P(UpdateTest, RdbStoreUpdateTest, testing::Values(&g_store, &g_memDb));
+} // namespace OHOS::RdbStoreUpdateTest

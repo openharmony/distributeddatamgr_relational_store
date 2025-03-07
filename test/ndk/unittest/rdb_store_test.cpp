@@ -1639,3 +1639,50 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_036, TestSize.Level1)
     EXPECT_EQ(rowCount, 13);
     cursor->destroy(cursor);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_037
+ * @tc.desc: normal testCase for memDb.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    ASSERT_NE(config, nullptr);
+    OH_Rdb_SetStoreName(config, "memDb");
+    OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk");
+    OH_Rdb_SetPersistent(config, false);
+    OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1);
+    OH_Rdb_SetSecurityLevel(config, S1);
+
+    int errCode = 0;
+    OH_Rdb_Store *store = OH_Rdb_CreateOrOpen(config, &errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+
+    char createTableSql[] = "CREATE TABLE mem_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, 0);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
+    int len = sizeof(arr) / sizeof(arr[0]);
+    valueBucket->putBlob(valueBucket, "data4", arr, len);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    errCode = OH_Rdb_Insert(storeTestRdbStore_, "mem_test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    char querySql[] = "SELECT * FROM mem_test";
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+    cursor->destroy(cursor);
+    valueBucket->destroy(valueBucket);
+}

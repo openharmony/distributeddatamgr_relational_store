@@ -73,7 +73,11 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
             std::make_shared<ParamError>("Illegal tokenizer."));
         CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
             std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
-
+        if (!context->config.persist) {
+            CHECK_RETURN_SET_E(context->config.rootDir.empty(),
+                std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+            return;
+        }
         auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;

@@ -48,6 +48,8 @@ public:
     static constexpr char JOURNAL_MODE_WAL[] = "WAL";
     static constexpr char DEFAULE_SYNC_MODE[] = "FULL";
     static constexpr char MEMORY_DB_PATH[] = ":memory:";
+    static constexpr char SHARED_MEMORY_DB_PATH_PREFIX[] = "file:";
+    static constexpr char SHARED_MEMORY_DB_PATH_SUFFIX[] = "?mode=memory&cache=shared";
     static constexpr char CODEC_HMAC_ALGO[] = "PRAGMA codec_hmac_algo=sha256";
     static constexpr char CODEC_HMAC_ALGO_PREFIX[] = "PRAGMA codec_hmac_algo='";
     static constexpr char CODEC_KDF_ALGO_PREFIX[] = "PRAGMA codec_kdf_algo='";
@@ -73,6 +75,7 @@ public:
     static void InitSqliteGlobalConfig();
     static void Log(const void *data, int err, const char *msg);
     static std::string GetMemoryDbPath();
+    static std::string GetSharedMemoryDbPath(const std::string &name);
     static int GetPageSize();
     static std::string GetSyncMode();
     static int GetJournalFileSize();
