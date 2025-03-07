@@ -179,7 +179,7 @@ private:
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int InnerOpen();
-    void InnerReportFunc(const RdbParam &param);
+    void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});

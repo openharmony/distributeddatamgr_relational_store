@@ -74,7 +74,7 @@ RdbStatReporter::~RdbStatReporter()
             LOG_WARN("task pool err when RdbStatReporter");
         }
         pool->Execute(std::bind(reportFunc_, statEvent_));
-        RdbStatReporter::setReportTime();
+        reportTime_ = std::chrono::steady_clock::now();
     }
 }
 
@@ -86,11 +86,6 @@ TimeType RdbStatReporter::GetTimeType(uint32_t costTime)
         return TIME_LEVEL_SECOND;
     }
     return TIME_LEVEL_THIRD;
-}
-
-void RdbStatReporter::setReportTime()
-{
-    reportTime_ = std::chrono::steady_clock::now();
 }
 
 } // namespace OHOS::NativeRdb
