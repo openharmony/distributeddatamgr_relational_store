@@ -28,19 +28,4 @@ static bool LoadBufferFromFile(const std::string &filePath, std::vector<char> &c
 {
     return true;
 }
-
-#ifndef LOCK_EX
-#define LOCK_EX 0
-#endif
-
-#ifndef LOCK_UN
-#define LOCK_UN 1
-#endif
-#ifdef __cplusplus
-extern "C" {
-#endif
-#define flock(a, b) 0
-#ifdef __cplusplus
-}
-#endif
 #endif /* MOCK_UTILS_BASE_FILE_EX_H */

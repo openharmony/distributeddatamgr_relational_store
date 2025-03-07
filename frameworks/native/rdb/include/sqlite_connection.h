@@ -128,7 +128,7 @@ private:
         const RdbStoreConfig &config, bool isWrite);
     static int CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
-        { "-dwr", "DWR"}, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
+        { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr }, { "-compare", nullptr } };
     static constexpr int CHECKPOINT_TIME = 500;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
