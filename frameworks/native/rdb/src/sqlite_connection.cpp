@@ -446,6 +446,10 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn)
 {
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>();
+    // When memory is not cleared, quick_check reads memory pages and detects damage but does not report it
+    if (sql == INTEGRITIES[1] && dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
+        sqlite3_db_release_memory(dbHandle_);
+    }
     statement->config_ = &config_;
     int errCode = statement->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
@@ -454,6 +458,9 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     statement->conn_ = conn;
     if (slaveConnection_ && IsWriter()) {
         auto slaveStmt = std::make_shared<SqliteStatement>();
+        if (sql == INTEGRITIES[1] && dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
+            sqlite3_db_release_memory(dbHandle_);
+        }
         slaveStmt->config_ = &slaveConnection_->config_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
@@ -932,7 +939,12 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(
 int SqliteConnection::ClearCache()
 {
     if (dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
-        sqlite3_db_release_memory(dbHandle_);
+        int usedBytes = 0;
+        int nEnyry = 0;
+        int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEnyry, 0);
+        if (errCode == SQLITE_OK && usedBytes > GlobalExpr::CLEAR_MEMORY_SIZE) {
+            sqlite3_db_release_memory(dbHandle_);
+        }
     }
     if (slaveConnection_) {
         int errCode = slaveConnection_->ClearCache();
