@@ -124,7 +124,7 @@ int RdbStoreImpl::InnerOpen()
     return E_OK;
 }
 
-void RdbStoreImpl::InnerReportFunc(const RdbParam &param)
+void RdbStoreImpl::InitReportFunc(const RdbParam &param)
 {
 #if !defined(CROSS_PLATFORM)
     reportFunc_ = [reportParam = param](const DistributedRdb::RdbStatEvent &event) {
@@ -1003,7 +1003,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         return;
     }
     InitSyncerParam(config_, created);
-    InnerReportFunc(syncerParam_);
+    InitReportFunc(syncerParam_);
     InnerOpen();
 }
 

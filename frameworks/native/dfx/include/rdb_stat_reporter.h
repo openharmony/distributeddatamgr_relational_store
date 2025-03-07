@@ -59,7 +59,6 @@ public:
     DistributedRdb::RdbStatEvent statEvent_;
     ReportFunc reportFunc_;
     static std::atomic<std::chrono::steady_clock::time_point> reportTime_;
-    static void setReportTime();
 };
 
 } // namespace OHOS::NativeRdb
