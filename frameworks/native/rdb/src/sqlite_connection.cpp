@@ -30,13 +30,14 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
+#include "rdb_local_db_observer.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
 #include "sqlite3.h"
-#include "sqlite_errno.h"
 #include "sqlite_default_function.h"
+#include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "value_object.h"
@@ -410,7 +411,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
     if (errCode != E_OK) {
         return errCode;
     }
-
+    RegisterHookIfNecessary();
     return LoadExtension(config, dbHandle_);
 }
 
@@ -423,13 +424,6 @@ SqliteConnection::~SqliteConnection()
         }
     }
     if (dbHandle_ != nullptr) {
-        if (hasClientObserver_) {
-            UnRegisterClientObserver(dbHandle_);
-        }
-        if (isWriter_) {
-            UnregisterStoreObserver(dbHandle_);
-        }
-
         int errCode = sqlite3_close_v2(dbHandle_);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
@@ -437,9 +431,48 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
-int32_t SqliteConnection::OnInitialize()
+int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
 {
-    return 0;
+    if (!isWriter_  || config_.IsEqualRegisterInfo(config)) {
+        return E_OK;
+    }
+    for (auto &eventInfo : onEventHandlers_) {
+        if (config.GetRegisterInfo(eventInfo.Type) && !config_.GetRegisterInfo(eventInfo.Type)) {
+            config_.SetRegisterInfo(eventInfo.Type, true);
+            (this->*(eventInfo.handle))();
+        }
+    }
+    return E_OK;
+}
+
+int32_t SqliteConnection::RegisterHookIfNecessary()
+{
+    if (!isWriter_) {
+        return E_OK;
+    }
+    for (auto &eventInfo : onEventHandlers_) {
+        if (config_.GetRegisterInfo(eventInfo.Type)) {
+            (this->*(eventInfo.handle))();
+        }
+    }
+    return E_OK;
+}
+
+int SqliteConnection::RegisterStoreObs()
+{
+    RegisterDbHook(dbHandle_);
+    auto status = CreateDataChangeTempTrigger(dbHandle_);
+    if (status != E_OK) {
+        LOG_ERROR("CreateDataChangeTempTrigger failed. status %{public}d", status);
+        return status;
+    }
+    return E_OK;
+}
+
+int SqliteConnection::RegisterClientObs()
+{
+    RegisterDbHook(dbHandle_);
+    return E_OK;
 }
 
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
@@ -477,7 +510,7 @@ int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier
     if (!isWriter_ || notifier == nullptr) {
         return E_OK;
     }
-    hasClientObserver_ = true;
+
     int32_t status = RegisterClientObserver(dbHandle_, [notifier](const ClientChangedData &clientData) {
         DistributedRdb::RdbChangedData rdbChangedData;
         for (auto &[key, val] : clientData.tableData) {
@@ -491,6 +524,8 @@ int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier
     if (status != E_OK) {
         LOG_ERROR("RegisterClientObserver error, status:%{public}d", status);
     }
+    RegisterDbHook(dbHandle_);
+    config_.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
     return status;
 #endif
     return E_OK;
@@ -1049,88 +1084,29 @@ int SqliteConnection::LimitWalSize()
     return E_OK;
 }
 
-int32_t SqliteConnection::Subscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
+int32_t SqliteConnection::Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer)
 {
     if (!isWriter_ || observer == nullptr) {
         return E_OK;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    observers_.try_emplace(event);
-    auto &list = observers_.find(event)->second;
-    for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it)->GetObserver() == observer) {
-            LOG_ERROR("duplicate subscribe.");
-            return E_OK;
-        }
-    }
-    auto localStoreObserver = std::make_shared<RdbStoreLocalDbObserver>(observer);
-    int32_t errCode = RegisterStoreObserver(dbHandle_, localStoreObserver);
+    int32_t errCode = RegisterStoreObserver(dbHandle_, observer);
     if (errCode != E_OK) {
-        LOG_ERROR("subscribe failed.");
         return errCode;
     }
-    observers_[event].push_back(std::move(localStoreObserver));
+    RegisterDbHook(dbHandle_);
+    config_.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
     return E_OK;
 }
 
-int32_t SqliteConnection::Unsubscribe(const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
+int32_t SqliteConnection::Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer)
 {
-    if (!isWriter_) {
+    if (!isWriter_ || observer == nullptr) {
         return E_OK;
     }
-    if (observer) {
-        return UnsubscribeLocalDetail(event, observer);
+    int32_t errCode = UnregisterStoreObserver(dbHandle_, observer);
+    if (errCode != 0) {
+        return errCode;
     }
-    return UnsubscribeLocalDetailAll(event);
-}
-
-int32_t SqliteConnection::UnsubscribeLocalDetail(
-    const std::string &event, const std::shared_ptr<RdbStoreObserver> &observer)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto observers = observers_.find(event);
-    if (observers == observers_.end()) {
-        return E_OK;
-    }
-
-    auto &list = observers->second;
-    for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it)->GetObserver() == observer) {
-            int32_t err = UnregisterStoreObserver(dbHandle_, *it);
-            if (err != 0) {
-                LOG_ERROR("unsubscribeLocalShared failed.");
-                return err;
-            }
-            list.erase(it);
-            break;
-        }
-    }
-    if (list.empty()) {
-        observers_.erase(event);
-    }
-    return E_OK;
-}
-
-int32_t SqliteConnection::UnsubscribeLocalDetailAll(const std::string &event)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto observers = observers_.find(event);
-    if (observers == observers_.end()) {
-        return E_OK;
-    }
-
-    auto &list = observers->second;
-    auto it = list.begin();
-    while (it != list.end()) {
-        int32_t err = UnregisterStoreObserver(dbHandle_, *it);
-        if (err != 0) {
-            LOG_ERROR("unsubscribe failed.");
-            return err;
-        }
-        it = list.erase(it);
-    }
-
-    observers_.erase(event);
     return E_OK;
 }
 

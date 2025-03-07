@@ -567,6 +567,162 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail005, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail006, TestSize.Level1)
 {
+    int num = 20;
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test2"
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
+    store->ExecuteSql(createTableTest);
+    auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+
+    observer_->RegisterCallback([num](RdbStoreObserver::ChangeInfo &changeInfo) {
+        ASSERT_EQ(changeInfo.size(), 1u);
+        EXPECT_TRUE(changeInfo["local_test2"][1].empty());
+        EXPECT_TRUE(changeInfo["local_test2"][2].empty()); // 2 is delete subscript
+        for (int i = 0; i < num; i++) {
+            EXPECT_EQ(std::get<int64_t>(changeInfo["local_test2"][0][i]), i);
+        }
+    });
+
+    observer_->count = 0;
+    std::vector<ValuesBucket> values;
+    for (int i = 0; i < num; i++) {
+        ValuesBucket value;
+        value.PutInt("id", i);
+        value.PutString("name", std::string("lisi"));
+        value.PutInt("age", 16);
+        values.push_back(value);
+    }
+    std::shared_ptr<Transaction> trans = nullptr;
+    std::tie(status, trans) = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(status, E_OK);
+    int64_t insertRows = 0;
+    std::tie(status, insertRows) = trans->BatchInsert("local_test2", values);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(insertRows, num);
+    EXPECT_EQ(observer_->count, 0);
+    trans->Commit();
+    trans = nullptr;
+    EXPECT_EQ(observer_->count, 1);
+    status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    observer_->RegisterCallback(nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalDetail007
+ * @tc.desc: test abnormal parametar subscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail007, TestSize.Level1)
+{
+    int num = 20;
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test3"
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
+    store->ExecuteSql(createTableTest);
+    std::shared_ptr<Transaction> trans1 = nullptr;
+    int status = 0;
+    std::tie(status, trans1) = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(status, E_OK);
+    status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    trans1 = nullptr;
+    observer_->RegisterCallback([num](RdbStoreObserver::ChangeInfo &changeInfo) {
+        ASSERT_EQ(changeInfo.size(), 1u);
+        EXPECT_TRUE(changeInfo["local_test3"][1].empty());
+        EXPECT_TRUE(changeInfo["local_test3"][2].empty()); // 2 is delete subscript
+        for (int i = 0; i < num; i++) {
+            EXPECT_EQ(std::get<int64_t>(changeInfo["local_test3"][0][i]), i);
+        }
+    });
+
+    observer_->count = 0;
+    std::vector<ValuesBucket> values;
+    for (int i = 0; i < num; i++) {
+        ValuesBucket value;
+        value.PutInt("id", i);
+        value.PutString("name", std::string("lisi"));
+        value.PutInt("age", 16);
+        values.push_back(value);
+    }
+    std::shared_ptr<Transaction> trans2 = nullptr;
+    std::tie(status, trans2) = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(status, E_OK);
+    int64_t insertRows = 0;
+    std::tie(status, insertRows) = trans2->BatchInsert("local_test3", values);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(insertRows, num);
+    EXPECT_EQ(observer_->count, 0);
+    trans2->Commit();
+    trans2 = nullptr;
+    EXPECT_EQ(observer_->count, 1);
+    status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    observer_->RegisterCallback(nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalDetail008
+ * @tc.desc: test abnormal parametar subscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail008, TestSize.Level1)
+{
+    int num = 20;
+    EXPECT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test4"
+                                            "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                            "name TEXT NOT NULL, age INTEGER)";
+    store->ExecuteSql(createTableTest);
+    auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+
+    observer_->RegisterCallback([](RdbStoreObserver::ChangeInfo &) { ASSERT_TRUE(false); });
+
+    observer_->count = 0;
+    std::vector<ValuesBucket> values;
+    for (int i = 0; i < num; i++) {
+        ValuesBucket value;
+        value.PutInt("id", i);
+        value.PutString("name", std::string("lisi"));
+        value.PutInt("age", 16);
+        values.push_back(value);
+    }
+    std::shared_ptr<Transaction> trans = nullptr;
+    std::tie(status, trans) = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(status, E_OK);
+    int64_t insertRows = 0;
+    std::tie(status, insertRows) = trans->BatchInsert("local_test4", values);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(insertRows, num);
+    EXPECT_EQ(observer_->count, 0);
+    status = store->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    trans->Commit();
+    trans = nullptr;
+    EXPECT_EQ(observer_->count, 0);
+    observer_->RegisterCallback(nullptr);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalDetail009
+ * @tc.desc: test abnormal parametar subscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail009, TestSize.Level1)
+{
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, nullptr);

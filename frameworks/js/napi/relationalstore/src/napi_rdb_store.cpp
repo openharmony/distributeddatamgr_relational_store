@@ -84,7 +84,7 @@ void RdbStoreProxy::UnregisterAll()
         return;
     }
 #if !defined(CROSS_PLATFORM)
-    for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::LOCAL; mode++) {
+    for (int32_t mode = SubscribeMode::REMOTE; mode < SubscribeMode::LOCAL; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
                 continue;
@@ -92,24 +92,18 @@ void RdbStoreProxy::UnregisterAll()
             rdbStore->UnSubscribe({ static_cast<SubscribeMode>(mode) }, obs.get());
         }
     }
+    rdbStore->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL }, nullptr);
     for (const auto &[event, observers] : localObservers_) {
-        for (const auto &obs : observers) {
-            if (obs == nullptr) {
-                continue;
-            }
-            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL), event }, obs.get());
-        }
+        rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL), event }, nullptr);
     }
     for (const auto &[event, observers] : localSharedObservers_) {
-        for (const auto &obs : observers) {
-            if (obs == nullptr) {
-                continue;
-            }
-            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL_SHARED), event }, obs.get());
-        }
+        rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL_SHARED), event }, nullptr);
     }
     for (const auto &obs : syncObservers_) {
         rdbStore->UnregisterAutoSyncCallback(obs);
+    }
+    for (const auto &obs : statisticses_) {
+        DistributedRdb::SqlStatistic::Unsubscribe(obs);
     }
 #endif
 }
@@ -1662,9 +1656,10 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     return nullptr;
 }
 
-napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
-    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback)
+napi_value RdbStoreProxy::RegisteredObserver(
+    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
 {
+    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
     observers.try_emplace(option.event);
     auto &list = observers.find(option.event)->second;
     bool result =
@@ -1681,14 +1676,6 @@ napi_value RdbStoreProxy::RegisteredObserver(napi_env env, const DistributedRdb:
     observers[option.event].push_back(localObserver);
     LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
     return nullptr;
-}
-
-napi_value RdbStoreProxy::OnLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
-{
-    if (option.mode == SubscribeMode::LOCAL) {
-        return RegisteredObserver(env, option, localObservers_, callback);
-    }
-    return RegisteredObserver(env, option, localSharedObservers_, callback);
 }
 
 napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
@@ -1734,9 +1721,10 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
     return nullptr;
 }
 
-napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,
-    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> &observers, napi_value callback)
+napi_value RdbStoreProxy::UnRegisteredObserver(
+    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
 {
+    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
         LOG_INFO("Observer not found, event: %{public}s", option.event.c_str());
@@ -1763,14 +1751,6 @@ napi_value RdbStoreProxy::UnRegisteredObserver(napi_env env, const DistributedRd
     }
     LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
     return nullptr;
-}
-
-napi_value RdbStoreProxy::OffLocal(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
-{
-    if (option.mode == SubscribeMode::LOCAL) {
-        return UnRegisteredObserver(env, option, localObservers_, callback);
-    }
-    return UnRegisteredObserver(env, option, localSharedObservers_, callback);
 }
 
 napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
@@ -1806,9 +1786,9 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
     SubscribeOption option;
     option.event = event;
-    valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
+    option.mode = valueBool ? SubscribeMode::LOCAL_SHARED : SubscribeMode::LOCAL;
     // 'argv[2]' represents a callback function
-    return proxy->OnLocal(env, option, argv[2]);
+    return proxy->RegisteredObserver(env, option, argv[2]);
 }
 
 napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
@@ -1850,7 +1830,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     option.event = event;
     valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
     // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
-    return proxy->OffLocal(env, option, argc == 3 ? argv[2] : nullptr);
+    return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
 }
 
 napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
