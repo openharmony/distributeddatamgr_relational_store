@@ -47,6 +47,11 @@ protected:
     std::shared_ptr<RdbStore> store_;
 };
 
+constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
+                                          "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                          "name TEXT NOT NULL, age INTEGER, salary REAL, "
+                                          "blobType BLOB)";
+
 const std::string RdbStoreImplTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_impl_test.db";
 
 class RdbStoreImplTestOpenCallback : public RdbOpenCallback {
@@ -1407,11 +1412,6 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Execute_001, TestSize.Level1)
     std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     ASSERT_NE(rdbStore, nullptr);
-
-    constexpr const char *CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
-                                              "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                              "name TEXT NOT NULL, age INTEGER, salary REAL, "
-                                              "blobType BLOB)";
     rdbStore->ExecuteSql(CREATE_TABLE_TEST);
 
     int64_t id;
