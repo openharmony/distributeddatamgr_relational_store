@@ -44,7 +44,8 @@ constexpr int32_t WAIT_TIME = 600;
 constexpr int32_t TIMEOUT_FIRST = 1500;
 constexpr int32_t TIMEOUT_SECOND = 5000;
 constexpr int32_t TIMEOUT_THIRD = 10000;
-std::atomic<std::chrono::steady_clock::time_point> RdbStatReporter::reportTime_ = std::chrono::steady_clock::now();
+std::atomic<std::chrono::steady_clock::time_point> RdbStatReporter::reportTime_ =
+    std::chrono::steady_clock::time_point();
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 
 RdbStatReporter::RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func)
