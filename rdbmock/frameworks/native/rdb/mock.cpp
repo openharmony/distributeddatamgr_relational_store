@@ -110,6 +110,22 @@ __attribute__((visibility("default"))) DBStatus DropLogicDeletedData(
     return DBStatus::OK;
 }
 
+__attribute__((visibility("default"))) void RegisterDbHook(sqlite3 *db)
+{
+    (void)db;
+}
+
+__attribute__((visibility("default"))) void UnregisterDbHook(sqlite3 *db)
+{
+    (void)db;
+}
+
+__attribute__((visibility("default"))) DBStatus CreateDataChangeTempTrigger(sqlite3 *db)
+{
+    (void)db;
+    return DBStatus::OK;
+}
+
 __attribute__((visibility("default"))) std::string DistributedDB::RelationalStoreManager::GetDistributedLogTableName(
     const std::string &tableName)
 {

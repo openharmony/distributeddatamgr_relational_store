@@ -37,7 +37,7 @@ public:
     static int32_t Delete(const RdbStoreConfig &config);
     RdConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~RdConnection();
-    int32_t OnInitialize() override;
+    int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
@@ -51,10 +51,8 @@ public:
     int32_t GetMaxVariable() const override;
     int32_t GetJournalMode() override;
     int32_t ClearCache() override;
-    int32_t Subscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
-    int32_t Unsubscribe(
-        const std::string &event, const std::shared_ptr<DistributedRdb::RdbStoreObserver> &observer) override;
+    int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
+    int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
         SlaveStatus &slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
