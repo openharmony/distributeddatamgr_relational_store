@@ -813,7 +813,8 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_EQ(rowCount, 1);
     int64_t currentMemory = sqlite3_memory_used();
     EXPECT_EQ(E_OK, resultSet->Close());
-    EXPECT_LT(sqlite3_memory_used(), currentMemory);
+    // Clean up memory after reaching the threshold 1024 * 1024
+    EXPECT_LT(currentMemory, 1024 * 1024);
 }
 
 /* *

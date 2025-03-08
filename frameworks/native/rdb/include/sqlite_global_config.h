@@ -29,6 +29,7 @@ public:
     static constexpr int SOFT_HEAP_LIMIT = 8 * 1024 * 1024;            /* 8MB */
     static constexpr int DB_PAGE_SIZE = 4096;                          /* default page size : 4k */
     static constexpr int DB_JOURNAL_SIZE = 1024 * 1024;                /* default file size : 1M */
+    static constexpr int CLEAR_MEMORY_SIZE = 1024 * 1024;              /* default file size : 1M */
     static constexpr ssize_t DB_WAL_SIZE_LIMIT_MIN = 20 * 1024 * 1024; /* default wal file maximum size : 20M */
     static constexpr ssize_t DB_WAL_WARNING_SIZE = 256 * 1024 * 1024;  /* default wal file maximum size : 256M */
     static constexpr ssize_t DB_WAL_DEFAULT_SIZE = 0x20000000;         /* default wal file size 512M */

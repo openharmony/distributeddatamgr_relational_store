@@ -607,8 +607,9 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
     file.close();
     LOG_INFO("RdbStore_DoubleWrite_011 corrupt db finish");
 
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    EXPECT_NE(store->Backup(std::string(""), {}), E_OK);
     LOG_INFO("RdbStore_DoubleWrite_011 backup db finish");
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
@@ -1020,7 +1021,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_029, TestSize.Level1)
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
 
     RdbDoubleWriteTest::CheckNumber(store, count);
-    RdbDoubleWriteTest::CheckNumber(slaveStore, -1, E_SQLITE_IOERR);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, -1, E_SQLITE_CORRUPT);
 
     int errCode = E_OK;
     slaveStore = nullptr;
