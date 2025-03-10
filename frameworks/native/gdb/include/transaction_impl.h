@@ -14,16 +14,16 @@
  */
 #ifndef ARKDATA_INTELLIGENCE_PLATFORM_TRANSACTION_IMPL_H
 #define ARKDATA_INTELLIGENCE_PLATFORM_TRANSACTION_IMPL_H
- 
+
 #include <memory>
 #include <mutex>
 #include <vector>
- 
+
 #include "connection.h"
 #include "gdb_store_config.h"
+#include "gdb_transaction.h"
 #include "result.h"
-#include "transaction.h"
- 
+
 namespace OHOS::DistributedDataAip {
 class DBStore;
 class TransactionImpl : public Transaction {

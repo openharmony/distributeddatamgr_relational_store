@@ -15,7 +15,7 @@
 #define LOG_TAG "TransDB"
 #include "trans_db.h"
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "db_trace.h"
 #include "gdb_utils.h"
 #include "logger.h"

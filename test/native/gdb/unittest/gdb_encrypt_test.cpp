@@ -21,7 +21,7 @@
 #include <utility>
 #include <variant>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "db_store_impl.h"
 #include "db_store_manager.h"
 #include "edge.h"

@@ -17,8 +17,10 @@
 #define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GDB_UTILS_H
 #include <string>
 
+#include "rdb_visibility.h"
+
 namespace OHOS::DistributedDataAip {
-class GdbUtils {
+class API_EXPORT GdbUtils {
 public:
     static bool IsTransactionGql(const std::string &gql);
     static int CreateDirectory(const std::string &databaseDir);

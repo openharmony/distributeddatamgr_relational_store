@@ -14,7 +14,7 @@
  */
 #include "connection.h"
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 
 namespace OHOS::DistributedDataAip {
 static Connection::Creator g_creators[static_cast<int32_t>(DBType::DB_BUTT)] = { nullptr, nullptr };

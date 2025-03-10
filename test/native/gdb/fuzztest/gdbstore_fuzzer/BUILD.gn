@@ -39,7 +39,7 @@ ohos_fuzztest("GdbStoreFuzzTest") {
 
   sources = [ "gdbstore_fuzzer.cpp" ]
 
-  deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
+  deps = [ "${relational_store_innerapi_path}/gdb:native_graphstore" ]
 
   external_deps = [
     "hilog:libhilog",

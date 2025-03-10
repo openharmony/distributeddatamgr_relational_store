@@ -20,12 +20,12 @@
 #include <memory>
 #include <mutex>
 
+#include "gdb_transaction.h"
 #include "js_proxy.h"
 #include "js_uv_queue.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "transaction.h"
 
 namespace OHOS::GraphStoreJsKit {
 using Transaction = DistributedDataAip::Transaction;
