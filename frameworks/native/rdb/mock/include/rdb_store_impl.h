@@ -152,7 +152,7 @@ private:
     const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
     DistributedRdb::RdbStatEvent statEvent_;
-    ReportFunc reportFunc_ = nullptr;
+    std::shared_ptr<ReportFunc> reportFunc_= nullptr;
     std::string path_;
     std::string name_;
     std::string fileType_;
