@@ -795,26 +795,65 @@ HWTEST_F(RdbStoreImplTest, Abnormal_CleanDirtyDataTest_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
 {
-    store_->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
     int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+    EXPECT_EQ(E_OK, errCode);
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t id;
     ValuesBucket valuesBucket;
-    valuesBucket.PutString("data1", std::string("zhangsan"));
-    valuesBucket.PutInt("data2", 10);
-    errCode = store_->Insert(id, "test", valuesBucket);
+    for (int i = 0; i < 1000; ++i) {
+        valuesBucket.PutString("data1", std::string(1024 * 1024, 'a'));
+        valuesBucket.PutInt("data2", 20);
+        errCode = store->Insert(id, "test", valuesBucket);
+    }
     EXPECT_EQ(errCode, E_OK);
-    EXPECT_EQ(1, id);
-
+    EXPECT_EQ(1000, id);
+ 
     int rowCount;
-    std::shared_ptr<ResultSet> resultSet = store_->QueryByStep("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     resultSet->GetRowCount(rowCount);
-    EXPECT_EQ(rowCount, 1);
+    EXPECT_EQ(rowCount, 1000);
     int64_t currentMemory = sqlite3_memory_used();
     EXPECT_EQ(E_OK, resultSet->Close());
-    // Clean up memory after reaching the threshold 1024 * 1024
-    EXPECT_LT(currentMemory, 1024 * 1024);
+    EXPECT_LT(sqlite3_memory_used(), currentMemory);
+}
+ 
+ /* *
+  * @tc.name: ClearCacheTest_002
+  * @tc.desc: Normal testCase for ClearCache
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_002, TestSize.Level2)
+{
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+    EXPECT_EQ(E_OK, errCode);
+    store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", std::string(524288, 'a'));
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(1, id);
+    int64_t currentMemory = sqlite3_memory_used();
+    valuesBucket.PutString("data1", std::string(524288, 'a'));
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(2, id);
+    EXPECT_LT(sqlite3_memory_used(), currentMemory);
 }
 
 /* *
