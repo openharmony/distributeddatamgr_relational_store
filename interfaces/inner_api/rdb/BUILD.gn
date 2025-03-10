@@ -54,7 +54,6 @@ if (!is_ohos) {
   base_sources += [
     "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
-    "${relational_store_native_path}/rdb/mock/src/rdb_stat_reporter.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_time_utils.cpp",
   ]
 }
