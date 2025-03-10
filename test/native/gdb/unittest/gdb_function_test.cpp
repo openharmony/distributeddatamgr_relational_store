@@ -18,7 +18,7 @@
 
 #include <variant>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "connection_pool.h"
 #include "gdb_helper.h"
 #include "grd_adapter_manager.h"

@@ -12,10 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "transaction.h"
- 
-#include "aip_errors.h"
- 
+#include "gdb_errors.h"
+#include "gdb_transaction.h"
+
 namespace OHOS::DistributedDataAip {
 std::pair<int32_t, std::shared_ptr<Transaction>> Transaction::Create(std::shared_ptr<Connection> conn)
 {

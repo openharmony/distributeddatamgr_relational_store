@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 
 namespace OHOS::DistributedDataAip {
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 5;

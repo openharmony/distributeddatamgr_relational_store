@@ -22,14 +22,13 @@ ohos_shared_library("graphstore") {
     cfi_cross_dso = true
     debug = false
   }
+  cflags_cc = [ "-fvisibility=hidden" ]
   include_dirs = [
     "${relational_store_common_path}/include",
-    "${relational_store_frameworks_path}/native/gdb/include",
-    "${relational_store_frameworks_path}/common/include",
     "${relational_store_frameworks_path}/js/napi/common/include",
     "${relational_store_frameworks_path}/js/napi/graphstore/include",
-    "${relational_store_innerapi_path}/gdb/include",
-    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/gdb/include",
+    "${relational_store_native_path}/rdb/include",
   ]
   sources = [
     "${relational_store_frameworks_path}/js/napi/common/src/js_ability.cpp",
@@ -45,7 +44,7 @@ ohos_shared_library("graphstore") {
     "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_store_helper.cpp",
     "${relational_store_frameworks_path}/js/napi/graphstore/src/napi_gdb_transaction.cpp",
   ]
-  deps = [ "${relational_store_innerapi_path}/gdb:framework_graphstore" ]
+  deps = [ "${relational_store_innerapi_path}/gdb:native_graphstore" ]
   external_deps = [
     "ability_runtime:abilitykit_native",
     "ability_runtime:extensionkit_native",

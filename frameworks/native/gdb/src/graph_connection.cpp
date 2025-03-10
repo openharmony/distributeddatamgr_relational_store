@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "aip_errors.h"
+#include "gdb_errors.h"
 #include "gdb_utils.h"
 #include "graph_statement.h"
 #include "logger.h"

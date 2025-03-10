@@ -15,9 +15,9 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H
 #define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_DB_STORE_H
+#include "gdb_transaction.h"
 #include "rdb_visibility.h"
 #include "result.h"
-#include "transaction.h"
 
 namespace OHOS::DistributedDataAip {
 class API_EXPORT DBStore {

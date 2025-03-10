@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H
-#define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H
+#ifndef OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_VERTEX_H
+#define OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_VERTEX_H
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -23,25 +23,26 @@
 #include <vector>
 
 #include "nlohmann/json.hpp"
+#include "rdb_visibility.h"
 
 namespace OHOS::DistributedDataAip {
 using PropType = std::variant<int64_t, double, std::string, bool, std::nullptr_t>;
 class Vertex {
 public:
-    Vertex();
-    Vertex(std::string id, std::string label);
-    Vertex(std::string id, std::string label, const std::unordered_map<std::string, PropType> &properties);
+    API_EXPORT Vertex();
+    API_EXPORT Vertex(std::string id, std::string label);
+    API_EXPORT Vertex(std::string id, std::string label, const std::unordered_map<std::string, PropType> &properties);
     static std::shared_ptr<Vertex> Parse(const nlohmann::json &json, int32_t &errCode);
 
-    std::string GetId() const;
-    void SetId(std::string id);
+    API_EXPORT std::string GetId() const;
+    API_EXPORT void SetId(std::string id);
 
-    const std::string &GetLabel() const;
-    const std::vector<std::string> &GetLabels() const;
-    void SetLabel(const std::string &label);
+    API_EXPORT const std::string &GetLabel() const;
+    API_EXPORT const std::vector<std::string> &GetLabels() const;
+    API_EXPORT void SetLabel(const std::string &label);
 
-    const std::unordered_map<std::string, PropType> &GetProperties() const;
-    void SetProperty(const std::string &key, PropType value);
+    API_EXPORT const std::unordered_map<std::string, PropType> &GetProperties() const;
+    API_EXPORT void SetProperty(const std::string &key, PropType value);
 
     static constexpr const char *ID = "identity";
     static constexpr const char *LABEL = "label";
@@ -54,4 +55,4 @@ protected:
     std::unordered_map<std::string, PropType> properties_;
 };
 } // namespace OHOS::DistributedDataAip
-#endif //OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GRAPH_VERTEX_H
+#endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_GRAPH_VERTEX_H
