@@ -77,7 +77,7 @@ RdbStatReporter::~RdbStatReporter()
         if (pool == nullptr) {
             LOG_WARN("task pool err when RdbStatReporter");
         }
-        pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)](){
+        pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)]() {
             (*report)(statEvent);
         });
         reportTime_ = std::chrono::steady_clock::now();
