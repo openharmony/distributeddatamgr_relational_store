@@ -55,6 +55,7 @@ public:
     RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, std::shared_ptr<ReportFunc> func);
     ~RdbStatReporter();
     static TimeType GetTimeType(uint32_t costTime);
+private:
     std::chrono::steady_clock::time_point startTime_;
     DistributedRdb::RdbStatEvent statEvent_;
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
