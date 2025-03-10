@@ -52,12 +52,12 @@ enum TimeType : int32_t {
 class RdbStatReporter {
 public:
     using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent &)>;
-    RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func);
+    RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, std::shared_ptr<ReportFunc> func);
     ~RdbStatReporter();
     static TimeType GetTimeType(uint32_t costTime);
     std::chrono::steady_clock::time_point startTime_;
     DistributedRdb::RdbStatEvent statEvent_;
-    ReportFunc reportFunc_;
+    std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     static std::atomic<std::chrono::steady_clock::time_point> reportTime_;
 };
 

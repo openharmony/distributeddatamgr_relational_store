@@ -48,14 +48,18 @@ std::atomic<std::chrono::steady_clock::time_point> RdbStatReporter::reportTime_ 
     std::chrono::steady_clock::time_point();
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 
-RdbStatReporter::RdbStatReporter(StatType statType, SubType subType, const RdbStoreConfig &config, ReportFunc func)
+RdbStatReporter::RdbStatReporter(
+    StatType statType, SubType subType, const RdbStoreConfig &config, std::shared_ptr<ReportFunc> func)
 {
+    if (func == nullptr) {
+        return;
+    }
     startTime_ = std::chrono::steady_clock::now();
     statEvent_.statType = static_cast<uint32_t>(statType);
     statEvent_.bundleName = config.GetBundleName();
     statEvent_.storeName = SqliteUtils::Anonymous(config.GetName());
     statEvent_.subType = static_cast<uint32_t>(subType);
-    reportFunc_ = func;
+    reportFunc_ = std::move(func);
 }
 
 RdbStatReporter::~RdbStatReporter()
@@ -73,7 +77,9 @@ RdbStatReporter::~RdbStatReporter()
         if (pool == nullptr) {
             LOG_WARN("task pool err when RdbStatReporter");
         }
-        pool->Execute(std::bind(reportFunc_, statEvent_));
+        pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)](){
+            (*report)(statEvent);
+        });
         reportTime_ = std::chrono::steady_clock::now();
     }
 }
