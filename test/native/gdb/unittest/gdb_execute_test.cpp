@@ -2023,9 +2023,13 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsConfigTest, TestSize.Level1)
 {
     std::vector<uint8_t> keys = {1, 2, 3, 4, 5, 6, 7, 8};
     auto ret = GdbUtils::GetConfigStr(keys, false);
-    EXPECT_EQ(ret, "{\"pageSize\":4, \"crcCheckEnable\":0}");
+    EXPECT_EQ(ret, R"({"pageSize": 4, "crcCheckEnable": 0, "defaultIsolationLevel": 3, )"
+        R"("redoFlushByTrx": 1, "metaInfoBak": 1, "maxConnNum": 500})");
+    
     ret = GdbUtils::GetConfigStr(keys, true);
-    EXPECT_EQ(ret, "{\"isEncrypted\":1,\"hexPassword\":\"0102030405060708\",\"pageSize\":4, \"crcCheckEnable\":0}");
+    EXPECT_EQ(ret, R"({"isEncrypted":1,"hexPassword":"0102030405060708",)"
+        R"("pageSize": 4, "crcCheckEnable": 0, "defaultIsolationLevel": 3, )"
+        R"("redoFlushByTrx": 1, "metaInfoBak": 1, "maxConnNum": 500})");
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsKeyTest, TestSize.Level1)
