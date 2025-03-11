@@ -16,23 +16,10 @@
 
 #include "rdb_stat_reporter.h"
 
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <chrono>
-#include <iomanip>
-#include <limits>
-#include <mutex>
-#include <sstream>
-#include <unordered_map>
 
-#include "accesstoken_kit.h"
-#include "connection.h"
-#include "hisysevent_c.h"
-#include "ipc_skeleton.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_manager_impl.h"
 #include "rdb_time_utils.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
@@ -46,7 +33,6 @@ constexpr int32_t TIMEOUT_SECOND = 5000;
 constexpr int32_t TIMEOUT_THIRD = 10000;
 std::atomic<std::chrono::steady_clock::time_point> RdbStatReporter::reportTime_ =
     std::chrono::steady_clock::time_point();
-using RdbMgr = DistributedRdb::RdbManagerImpl;
 
 RdbStatReporter::RdbStatReporter(
     StatType statType, SubType subType, const RdbStoreConfig &config, std::shared_ptr<ReportFunc> func)
@@ -71,8 +57,8 @@ RdbStatReporter::~RdbStatReporter()
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime_).count();
     auto loadedReportTime = reportTime_.load();
     auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - loadedReportTime).count();
-    if (duration >= TIMEOUT_FIRST && reportInterval >= WAIT_TIME) {
-        statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
+    statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
+    if (statEvent_.costTime > TIME_LEVEL_NONE && reportInterval >= WAIT_TIME) {
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool == nullptr) {
             LOG_WARN("task pool err when RdbStatReporter");
@@ -80,15 +66,17 @@ RdbStatReporter::~RdbStatReporter()
         pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)]() {
             (*report)(statEvent);
         });
-        reportTime_ = std::chrono::steady_clock::now();
+        reportTime_.store(std::chrono::steady_clock::now());
     }
 }
 
 TimeType RdbStatReporter::GetTimeType(uint32_t costTime)
 {
-    if (costTime >= TIMEOUT_FIRST && costTime < TIMEOUT_SECOND) {
+    if (costTime < TIMEOUT_FIRST) {
+        return TIME_LEVEL_NONE;
+    } else if (costTime < TIMEOUT_SECOND) {
         return TIME_LEVEL_FIRST;
-    } else if (costTime >= TIMEOUT_SECOND && costTime < TIMEOUT_THIRD) {
+    } else if (costTime < TIMEOUT_THIRD) {
         return TIME_LEVEL_SECOND;
     }
     return TIME_LEVEL_THIRD;

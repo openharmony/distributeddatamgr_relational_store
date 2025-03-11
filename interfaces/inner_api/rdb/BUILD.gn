@@ -14,6 +14,7 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 base_sources = [
+  "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
   "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
@@ -54,7 +55,6 @@ if (!is_ohos) {
   base_sources += [
     "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
-    "${relational_store_native_path}/rdb/mock/src/rdb_stat_reporter.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_time_utils.cpp",
   ]
 }
@@ -122,7 +122,6 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
       "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
-      "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
       "${relational_store_native_path}/rdb/src/rd_connection.cpp",
@@ -196,7 +195,6 @@ if (is_ohos && !build_ohos_sdk) {
     sources += [
       "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
       "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
-      "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
       "${relational_store_native_path}/rdb/src/rd_connection.cpp",
