@@ -14,6 +14,7 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 base_sources = [
+  "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
   "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",

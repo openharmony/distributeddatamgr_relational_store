@@ -46,6 +46,7 @@ using RdbProperties = DistributedRdb::RdbChangeProperties;
 using Reference = DistributedRdb::Reference;
 using BigInt = NativeRdb::BigInteger;
 using DebugInfo = DistributedRdb::RdbDebugInfo;;
+using StatReporter = DistributedRdb::RdbStatEvent;
 template<>
 API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
@@ -126,5 +127,9 @@ template<>
 API_EXPORT bool Marshalling(const DebugInfo &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(DebugInfo &output, MessageParcel &data);
+template<>
+API_EXPORT bool Marshalling(const StatReporter &input, MessageParcel &data);
+template<>
+API_EXPORT bool Unmarshalling(StatReporter &output, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
