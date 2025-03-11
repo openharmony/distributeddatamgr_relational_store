@@ -16,14 +16,8 @@
 #ifndef RDB_STAT_REPORTER_H
 #define RDB_STAT_REPORTER_H
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 #include <ctime>
-#include <string>
 
-#include "connection.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 namespace OHOS::NativeRdb {
@@ -44,7 +38,8 @@ enum SubType : int32_t {
 };
 
 enum TimeType : int32_t {
-    TIME_LEVEL_FIRST = 1,
+    TIME_LEVEL_NONE = 0,
+    TIME_LEVEL_FIRST,
     TIME_LEVEL_SECOND,
     TIME_LEVEL_THIRD,
 };
