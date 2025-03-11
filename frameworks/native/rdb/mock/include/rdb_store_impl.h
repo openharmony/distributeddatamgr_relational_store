@@ -89,6 +89,7 @@ public:
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
     class CloudTables {
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
@@ -103,6 +104,7 @@ private:
     };
 
     int InnerOpen();
+    void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
@@ -151,6 +153,8 @@ private:
     std::atomic<int64_t> newTrxId_ = 1;
     const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
+    DistributedRdb::RdbStatEvent statEvent_;
+    std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
     std::string name_;
     std::string fileType_;

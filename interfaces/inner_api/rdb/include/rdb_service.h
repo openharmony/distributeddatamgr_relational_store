@@ -91,6 +91,8 @@ public:
     virtual int32_t GetDebugInfo(const RdbSyncerParam &param, std::map<std::string, RdbDebugInfo> &debugInfo) = 0;
 
     virtual int32_t VerifyPromiseInfo(const RdbSyncerParam &param) = 0;
+
+    virtual int32_t ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent) = 0;
 };
 } // namespace DistributedRdb
 } // namespace OHOS

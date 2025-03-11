@@ -164,6 +164,7 @@ private:
     using RdbParam = DistributedRdb::RdbSyncerParam;
     using Options = DistributedRdb::RdbService::Option;
     using Memo = DistributedRdb::PredicatesMemo;
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
     class CloudTables {
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
@@ -181,6 +182,7 @@ private:
     static void RegisterDataChangeCallback(
         std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry);
     int InnerOpen();
+    void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
@@ -246,6 +248,8 @@ private:
     const RdbStoreConfig config_;
     // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
+    DistributedRdb::RdbStatEvent statEvent_;
+    std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
     std::string name_;
     std::string fileType_;
