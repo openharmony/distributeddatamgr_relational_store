@@ -134,16 +134,16 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == code, err);
     };
     auto exec = [context]() -> int {
-        // If the API version is greater than or equal to 16, close the connection.
+        // If the API version is greater than or equal to 20, close the connection.
         RdbStoreConfig storeConfig = GetRdbStoreConfig(context->config, context->param);
         if (context->onlyPath) {
             storeConfig.SetDBType(DB_SQLITE);
-            int errCodeSqlite = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
+            int errCodeSqlite = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 20);
             storeConfig.SetDBType(DB_VECTOR);
-            int errCodeVector = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
+            int errCodeVector = RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 20);
             return (errCodeSqlite == E_OK && errCodeVector == E_OK) ? E_OK : E_REMOVE_FILE;
         }
-        return RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 16);
+        return RdbHelper::DeleteRdbStore(storeConfig, JSUtils::GetHapVersion() >= 20);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, OK, &result);
