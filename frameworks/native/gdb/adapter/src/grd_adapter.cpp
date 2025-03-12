@@ -167,13 +167,11 @@ int GrdAdapter::Open(const char *dbPath, const char *configStr, uint32_t flags, 
         return E_NOT_SUPPORT;
     }
     auto ret = g_adapterHolder.Open(dbPath, configStr, flags, db);
-    LOG_DEBUG("Open ret=%{public}d, *db=%{public}p", ret, *db);
     return TransErrno(ret);
 }
 
 int GrdAdapter::Close(GRD_DB *db, uint32_t flags)
 {
-    LOG_DEBUG("Close *db=%{public}p", db);
     if (g_adapterHolder.Close == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
@@ -241,7 +239,6 @@ int GrdAdapter::Rekey(const char *dbFile, const char *configStr, const std::vect
 
 int32_t GrdAdapter::Prepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_StmtT **stmt, const char **unusedStr)
 {
-    LOG_DEBUG("Prepare *db=%{public}p", db);
     if (g_adapterHolder.Prepare == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
@@ -249,7 +246,6 @@ int32_t GrdAdapter::Prepare(GRD_DB *db, const char *str, uint32_t strLen, GRD_St
         return E_NOT_SUPPORT;
     }
     int32_t ret = g_adapterHolder.Prepare(db, str, strLen, stmt, unusedStr);
-    LOG_DEBUG("Prepare ret=%{public}d, stmt=%{public}p", ret, *stmt);
     return TransErrno(ret);
 }
 
@@ -266,7 +262,6 @@ int32_t GrdAdapter::Reset(GRD_StmtT *stmt)
 
 int32_t GrdAdapter::Finalize(GRD_StmtT *stmt)
 {
-    LOG_DEBUG("Finalize *stmt=%{public}p", stmt);
     if (g_adapterHolder.Finalize == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
@@ -280,7 +275,6 @@ int32_t GrdAdapter::Finalize(GRD_StmtT *stmt)
 
 int32_t GrdAdapter::Step(GRD_StmtT *stmt)
 {
-    LOG_DEBUG("Step *stmt=%{public}p", stmt);
     if (g_adapterHolder.Step == nullptr) {
         g_adapterHolder = GetAdapterHolder();
     }
