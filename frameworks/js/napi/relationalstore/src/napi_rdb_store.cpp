@@ -810,8 +810,8 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
 #endif
         context->rdbStore = nullptr;
-        // If the API version is greater than or equal to 16, throw E_ALREADY_CLOSED.
-        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
+        // If the API version is greater than or equal to 20, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 20) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -881,8 +881,8 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         context->resultSet = context->rdbStore->QuerySql(context->sql, context->bindArgs);
 #endif
         context->rdbStore = nullptr;
-        // If the API version is greater than or equal to 16, throw E_ALREADY_CLOSED.
-        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
+        // If the API version is greater than or equal to 20, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 20) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -1272,8 +1272,8 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         context->resultSet = context->isQuerySql ? rdbStore->QueryByStep(context->sql, context->bindArgs)
                                                  : rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
-        // If the API version is greater than or equal to 16, throw E_ALREADY_CLOSED.
-        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
+        // If the API version is greater than or equal to 20, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 20) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -2068,8 +2068,8 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
         context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
         context->rdbStore = nullptr;
-        // If the API version is greater than or equal to 16, throw E_ALREADY_CLOSED.
-        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 16) ? E_ALREADY_CLOSED : E_ERROR;
+        // If the API version is greater than or equal to 20, throw E_ALREADY_CLOSED.
+        return (context->resultSet != nullptr) ? E_OK : (JSUtils::GetHapVersion() >= 20) ? E_ALREADY_CLOSED : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
