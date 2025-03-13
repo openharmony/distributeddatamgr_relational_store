@@ -813,7 +813,7 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     }
     EXPECT_EQ(errCode, E_OK);
     EXPECT_EQ(1000, id);
- 
+
     int rowCount;
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
@@ -823,7 +823,7 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_LT(sqlite3_memory_used(), currentMemory);
 }
- 
+
  /* *
   * @tc.name: ClearCacheTest_002
   * @tc.desc: Normal testCase for ClearCache

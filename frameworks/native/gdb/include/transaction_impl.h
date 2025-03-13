@@ -30,16 +30,16 @@ class TransactionImpl : public Transaction {
 public:
     TransactionImpl(std::shared_ptr<Connection> connection);
     ~TransactionImpl() override;
- 
+
     int32_t Commit() override;
     int32_t Rollback() override;
     int32_t Close() override;
- 
+
     std::pair<int32_t, std::shared_ptr<Result>> Query(const std::string &gql) override;
     std::pair<int32_t, std::shared_ptr<Result>> Execute(const std::string &gql) override;
- 
+
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(std::shared_ptr<Connection> conn);
- 
+
 private:
     int32_t Start();
     int32_t CloseInner();

@@ -100,14 +100,8 @@ describe('rdbStoreCreateDeleteWithFAContextTest', function () {
         {
             let predicates = await new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("name", "zhangsan")
-            let deletePromise = rdbStore.delete(predicates)
-            deletePromise.then(async (ret) => {
-                await expect(1).assertEqual(ret)
-                await console.log(TAG + "Delete done: " + ret)
-            }).catch((err) => {
-                expect(null).assertFail()
-            })
-            await deletePromise
+            let ret = await rdbStore.delete(predicates)
+            expect(1).assertEqual(ret)
         }
         await rdbStore.executeSql("DELETE FROM test");
         rdbStore = null

@@ -615,6 +615,29 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
 }
 
 /**
+ * @tc.name: DeleteDatabase_024
+ * @tc.desc: BatchInsertWithConflictResolution after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, DeleteDatabase_024, TestSize.Level0)
+{
+    InitDb();
+    ValuesBuckets rows;
+
+    int ret = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
+    EXPECT_EQ(ret, E_OK);
+
+    for (int32_t i = 0; i < 10; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(result.first, E_ALREADY_CLOSED);
+}
+
+/**
  * @tc.name: getrdbstore_001
  * @tc.desc: get db file with a invalid path
  * @tc.type: FUNC

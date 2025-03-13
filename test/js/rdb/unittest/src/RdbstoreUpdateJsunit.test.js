@@ -75,8 +75,8 @@ describe('rdbStoreUpdateTest', function () {
             let predicates = await new dataRdb.RdbPredicates("test")
             await predicates.equalTo("id", "1")
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = await new dataRdb.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
@@ -88,14 +88,14 @@ describe('rdbStoreUpdateTest', function () {
                 const salary = await resultSet.getDouble(resultSet.getColumnIndex("salary"))
                 const blobType = await resultSet.getBlob(resultSet.getColumnIndex("blobType"))
 
-                await expect(1).assertEqual(id);
-                await expect("lisi").assertEqual(name);
-                await expect(20).assertEqual(age);
-                await expect(200.5).assertEqual(salary);
-                await expect(4).assertEqual(blobType[0]);
-                await expect(5).assertEqual(blobType[1]);
-                await expect(6).assertEqual(blobType[2]);
-                await expect(false).assertEqual(resultSet.goToNextRow())
+                expect(1).assertEqual(id);
+                expect("lisi").assertEqual(name);
+                expect(20).assertEqual(age);
+                expect(200.5).assertEqual(salary);
+                expect(4).assertEqual(blobType[0]);
+                expect(5).assertEqual(blobType[1]);
+                expect(6).assertEqual(blobType[2]);
+                expect(false).assertEqual(resultSet.goToNextRow())
             } finally {
                 resultSet.close()
                 resultSet = null
@@ -246,8 +246,8 @@ describe('rdbStoreUpdateTest', function () {
             let predicates = await new dataRdb.RdbPredicates("test")
             await predicates.equalTo("name", "xiaoming")
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 20)
@@ -255,7 +255,7 @@ describe('rdbStoreUpdateTest', function () {
             try {
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                await expect(nameStr).assertEqual(name);
+                expect(nameStr).assertEqual(name);
             } finally {
                 resultSet.close()
                 resultSet = null
@@ -296,8 +296,8 @@ describe('rdbStoreUpdateTest', function () {
             let predicates = await new dataRdb.RdbPredicates("test")
             await predicates.equalTo("name", "xiaohua")
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 19)
@@ -305,7 +305,7 @@ describe('rdbStoreUpdateTest', function () {
             try {
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                await expect(nameStr).assertEqual(name);
+                expect(nameStr).assertEqual(name);
             } finally {
                 resultSet.close()
                 resultSet = null
@@ -346,8 +346,8 @@ describe('rdbStoreUpdateTest', function () {
             let predicates = await new dataRdb.RdbPredicates("test")
             await predicates.equalTo("name", "xiaocan")
             let ret = await rdbStore.update(valueBucket, predicates);
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = await new dataRdb.RdbPredicates("test")
             predicates.equalTo("age", 21)
@@ -355,7 +355,7 @@ describe('rdbStoreUpdateTest', function () {
             try {
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                await expect(nameStr).assertEqual(name);
+                expect(nameStr).assertEqual(name);
             } finally {
                 resultSet.close()
                 resultSet = null

@@ -210,9 +210,9 @@ describe('rdbStoreDistributedTest', function () {
                 const name = await resultSet.getString(resultSet.getColumnIndex("name"))
                 const age = await resultSet.getLong(resultSet.getColumnIndex("age"))
 
-                await expect(1).assertEqual(id);
-                await expect("Jim").assertEqual(name);
-                await expect(30).assertEqual(age);
+                expect(1).assertEqual(id);
+                expect("Jim").assertEqual(name);
+                expect(30).assertEqual(age);
                 resultSet.close();
                 expect(true).assertEqual(resultSet.isClosed)
             } catch (e) {
