@@ -75,12 +75,12 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         let count = await resultSet.getLong(resultSet.getColumnIndex("num count"))
         let birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(2).assertEqual(count);
-        await expect("2022-09-01").assertEqual(birthday)
+        expect("2022-09-01").assertEqual(birthday)
         expect(true).assertEqual(resultSet.goToNextRow())
         count = await resultSet.getLong(resultSet.getColumnIndex("num count"))
         birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(3).assertEqual(count);
-        await expect("2022-09-02").assertEqual(birthday)
+        expect("2022-09-02").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
         resultSet.close();
         done();
@@ -102,12 +102,12 @@ describe('rdbStorePredicatesComplexFiledTest', function () {
         let count = await resultSet.getLong(resultSet.getColumnIndex("numcount"))
         let birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(3).assertEqual(count);
-        await expect("2022-09-02").assertEqual(birthday)
+        expect("2022-09-02").assertEqual(birthday)
         expect(true).assertEqual(resultSet.goToNextRow())
         count = await resultSet.getLong(resultSet.getColumnIndex("numcount"))
         birthday = await resultSet.getString(resultSet.getColumnIndex("birthday"))
         expect(2).assertEqual(count);
-        await expect("2022-09-01").assertEqual(birthday)
+        expect("2022-09-01").assertEqual(birthday)
         expect(false).assertEqual(resultSet.goToNextRow())
         resultSet.close();
         done();

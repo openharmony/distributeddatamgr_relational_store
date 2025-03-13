@@ -88,7 +88,7 @@ describe('rdbStoreExcuteSqlTest', function () {
 
         let querySqlPromise = rdbStore.querySql("SELECT * FROM test")
         querySqlPromise.then(async (resultSet) => {
-            await expect(0).assertEqual(resultSet.rowCount)
+            expect(0).assertEqual(resultSet.rowCount)
             resultSet.close()
             done();
         }).catch((err) => {
@@ -139,7 +139,7 @@ describe('rdbStoreExcuteSqlTest', function () {
         await rdbStore.executeSql("DELETE FROM test WHERE name = 'lisi'")
         let querySqlPromise = rdbStore.querySql("SELECT * FROM test")
         querySqlPromise.then(async (resultSet) => {
-            await expect(1).assertEqual(resultSet.rowCount)
+            expect(1).assertEqual(resultSet.rowCount)
             resultSet.close()
             done();
         }).catch((err) => {
@@ -193,7 +193,7 @@ describe('rdbStoreExcuteSqlTest', function () {
             predicates.equalTo("name", nameStr)
             let querySqlPromise = rdbStore.query(predicates)
             querySqlPromise.then(async (resultSet) => {
-                await expect(2).assertEqual(resultSet.rowCount)
+                expect(2).assertEqual(resultSet.rowCount)
                 resultSet.close()
             }).catch((err) => {
                 expect(null).assertFail();
@@ -203,7 +203,7 @@ describe('rdbStoreExcuteSqlTest', function () {
         {
             let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
             executeSqlPromise.then(async () => {
-                await console.log(TAG + "executeSql done.");
+                console.log(TAG + "executeSql done.");
             }).catch((err) => {
                 expect(null).assertFail();
             })
@@ -212,7 +212,7 @@ describe('rdbStoreExcuteSqlTest', function () {
         {
             let querySqlPromise = rdbStore.querySql("SELECT * FROM test WHERE name ='" + nameStr + "'")
             querySqlPromise.then(async (resultSet) => {
-                await expect(1).assertEqual(resultSet.rowCount)
+                expect(1).assertEqual(resultSet.rowCount)
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = resultSet.getString(resultSet.getColumnIndex("name"))
                 const age = resultSet.getLong(resultSet.getColumnIndex("age"))

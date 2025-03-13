@@ -957,3 +957,217 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_020, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(rowCount, 1);
 }
+
+/**
+ * @tc.name: RdbStore_Transaction_021
+ * @tc.desc: Abnormal testcase of Insert after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_021, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    auto [err, rows] = transaction->Insert(
+        "test", UTUtils::SetRowData(UTUtils::g_rowData[0]), Transaction::NO_ACTION);
+    EXPECT_EQ(err, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_022
+ * @tc.desc: Abnormal testcase of BatchInsert after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_022, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    Transaction::Rows rows{
+        UTUtils::SetRowData(UTUtils::g_rowData[0]),
+        UTUtils::SetRowData(UTUtils::g_rowData[1]),
+        UTUtils::SetRowData(UTUtils::g_rowData[2]),
+    };
+    auto result = transaction->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.second, -1);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_023
+ * @tc.desc: Abnormal testcase of BatchInsert after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_023, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    Transaction::RefRows rows;
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    rows.Put(UTUtils::SetRowData(UTUtils::g_rowData[2]));
+    auto result = transaction->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.second, -1);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_024
+ * @tc.desc: Abnormal testcase of BatchInsertWithConflictResolution after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_024, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        Transaction::Row row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsertWithConflictResolution(
+        "test", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_025
+ * @tc.desc: Abnormal testcase of Update after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_025, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    auto result = transaction->Update("test", UTUtils::SetRowData(UTUtils::g_rowData[1]), "id=1");
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_026
+ * @tc.desc: Abnormal testcase of Update after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_026, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", ValueObject(2));
+    auto result = transaction->Update(UTUtils::SetRowData(UTUtils::g_rowData[2]), predicates);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_027
+ * @tc.desc: Abnormal testcase of Delete after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_027, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    auto result = transaction->Delete("test", "id=1");
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.second, -1);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", ValueObject(2));
+    result = transaction->Delete(predicates);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+    ASSERT_EQ(result.second, -1);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_028
+ * @tc.desc: Abnormal testcase of QueryByStep after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_028, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    auto result = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_EQ(result, nullptr);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", ValueObject(2));
+    result = transaction->QueryByStep(predicates);
+    ASSERT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_029
+ * @tc.desc: Abnormal testcase of QueryByStep after commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_029, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    auto result = transaction->Execute(CREATE_TABLE_SQL);
+    ASSERT_EQ(result.first, E_ALREADY_CLOSED);
+}

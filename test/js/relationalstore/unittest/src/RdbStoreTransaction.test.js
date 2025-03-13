@@ -443,7 +443,7 @@ describe('rdbStoreTransactionTest', function () {
             predicates.equalTo("name", nameStr)
             let querySqlPromise = transaction.query(predicates)
             querySqlPromise.then(async (resultSet) => {
-                await expect(2).assertEqual(resultSet.rowCount)
+                expect(2).assertEqual(resultSet.rowCount)
                 resultSet.close()
             }).catch((err) => {
                 expect(null).assertFail();
@@ -453,7 +453,7 @@ describe('rdbStoreTransactionTest', function () {
         {
             let executeSqlPromise = transaction.execute("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
             executeSqlPromise.then(async () => {
-                await console.log(TAG + "executeSql done.");
+                console.log(TAG + "executeSql done.");
             }).catch((err) => {
                 console.log(TAG + "executeSql failed. " + err);
                 expect(null).assertFail();
@@ -467,7 +467,7 @@ describe('rdbStoreTransactionTest', function () {
             let querySqlPromise = rdbStore.query(predicates)
             querySqlPromise.then(async (resultSet) => {
                 console.log(TAG + "testExecute0003 rdbStore.querySql result count " + resultSet.rowCount)
-                await expect(1).assertEqual(resultSet.rowCount)
+                expect(1).assertEqual(resultSet.rowCount)
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = resultSet.getString(resultSet.getColumnIndex("name"))
                 expect(nameStr).assertEqual(name)

@@ -14,14 +14,14 @@
  */
 #define LOG_TAG "GdbTrans"
 #include "transaction_impl.h"
- 
+
 #include <utility>
 
 #include "gdb_errors.h"
 #include "db_trace.h"
 #include "logger.h"
 #include "trans_db.h"
- 
+
 namespace OHOS::DistributedDataAip {
 
 constexpr const char *START_GQL = "START TRANSACTION;";
@@ -30,17 +30,17 @@ constexpr const char *ROLLBACK_GQL = "ROLLBACK;";
 
 __attribute__((used))
 const int32_t TransactionImpl::regCreator_ = Transaction::RegisterCreator(TransactionImpl::Create);
- 
+
 TransactionImpl::TransactionImpl(std::shared_ptr<Connection> connection)
     : connection_(std::move(connection))
 {
 }
- 
+
 TransactionImpl::~TransactionImpl()
 {
     CloseInner();
 }
- 
+
 std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(std::shared_ptr<Connection> conn)
 {
     if (conn == nullptr) {
@@ -88,7 +88,7 @@ int32_t TransactionImpl::Start()
     }
     return E_OK;
 }
- 
+
 int32_t TransactionImpl::Commit()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -113,7 +113,7 @@ int32_t TransactionImpl::Commit()
     }
     return E_OK;
 }
- 
+
 int32_t TransactionImpl::Rollback()
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -138,7 +138,7 @@ int32_t TransactionImpl::Rollback()
     }
     return E_OK;
 }
- 
+
 int32_t TransactionImpl::CloseInner()
 {
     std::lock_guard lock(mutex_);

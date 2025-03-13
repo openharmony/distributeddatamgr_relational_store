@@ -645,7 +645,7 @@ int32_t RdbStoreConfig::GetSubUser() const
 {
     return subUser_;
 }
- 
+
 void RdbStoreConfig::SetSubUser(int32_t subUser)
 {
     subUser_ = subUser;

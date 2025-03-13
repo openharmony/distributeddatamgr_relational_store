@@ -673,14 +673,6 @@ public:
     }
 
     /**
-     * @brief Overload the does not equal the number operator.
-     */
-    bool operator!=(const RdbStoreConfig &config) const
-    {
-        return !(*this == config);
-    }
-
-    /**
      * @brief Checks whether the database isSearchable necessary.
      */
     bool IsSearchable() const;

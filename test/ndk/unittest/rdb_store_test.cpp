@@ -188,9 +188,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value_1[size + 1];
-    cursor->getText(cursor, 1, data1Value_1, size + 1);
-    EXPECT_EQ(strcmp(data1Value_1, "liSi"), 0);
+    EXPECT_EQ(size, 5);
+    char data1Value1[size];
+    cursor->getText(cursor, 1, data1Value1, size);
+    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -253,9 +254,10 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value_1[size + 1];
-    cursor->getText(cursor, 1, data1Value_1, size + 1);
-    EXPECT_EQ(strcmp(data1Value_1, "liSi"), 0);
+    EXPECT_EQ(size, 5);
+    char data1Value1[size];
+    cursor->getText(cursor, 1, data1Value1, size);
+    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -270,8 +272,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
     EXPECT_EQ(isNull, true);
 
     cursor->getSize(cursor, 5, &size);
-    char data5Value[size + 1];
-    cursor->getText(cursor, 5, data5Value, size + 1);
+    char data5Value[size];
+    cursor->getText(cursor, 5, data5Value, size);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
 
     valueObject->destroy(valueObject);
@@ -598,9 +600,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value_1[size + 1];
-    cursor->getText(cursor, 1, data1Value_1, size + 1);
-    EXPECT_EQ(strcmp(data1Value_1, "zhangSan"), 0);
+    char data1Value1[size];
+    cursor->getText(cursor, 1, data1Value1, size);
+    EXPECT_EQ(strcmp(data1Value1, "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
