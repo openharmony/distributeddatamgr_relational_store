@@ -194,7 +194,7 @@ void SqliteStatement::ReadFile2Buffer()
     FILE *file = fopen(fileName.c_str(), "r");
     if (file == nullptr) {
         LOG_ERROR(
-            "open db file failed: %{public}s, errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
+            "Open db file failed: %{public}s, errno is %{public}d", SqliteUtils::Anonymous(fileName).c_str(), errno);
         return;
     }
     size_t readSize = fread(buffer, sizeof(uint64_t), BUFFER_LEN, file);
