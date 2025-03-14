@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-module_output_path = "relational_store/native_gdb"
+module_output_path = "relational_store/relational_store/native_gdb"
 
 base_sources = [
   "${relational_store_native_path}/gdb/adapter/src/grd_adapter.cpp",
