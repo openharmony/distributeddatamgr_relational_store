@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "dataability/dataability"
+module_output_path = "relational_store/relational_store/dataability"
 
 ohos_js_unittest("DataAbJsTest") {
   module_out_path = module_output_path
