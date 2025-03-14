@@ -115,7 +115,7 @@ int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (isReadOnly_ || isMemoryRdb_) {
+    if (isReadOnly_ || isMemoryRdb_ || config_.IsLocalOnly()) {
         return E_OK;
     }
 
