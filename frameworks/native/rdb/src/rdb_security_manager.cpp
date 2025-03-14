@@ -134,6 +134,8 @@ int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const st
 {
     if (outData->size < inData->size * TIMES) {
         HksAbort(handle, paramSet);
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
+            "HksLoopUpdate out size not enough"));
         return HKS_ERROR_INVALID_ARGUMENT;
     }
 
@@ -178,7 +180,7 @@ int32_t RdbSecurityManager::HksEncryptThreeStage(const struct HksBlob *keyAlias,
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
-            GetBundleNameByAlias(), "HksInit ret=" + std::to_string(result)));
+            GetBundleNameByAlias(), "Encrypt HksInit ret=" + std::to_string(result)));
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
@@ -193,11 +195,16 @@ int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias,
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
-            "HksInit ret=" + std::to_string(result)));
+            "Decrypt HksInit ret=" + std::to_string(result)));
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
-    return HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
+    result = HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
+    if (result != HKS_SUCCESS) {
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            "Decrypt HksLoopUpdate ret=" + std::to_string(result)));
+    }
+    return result;
 }
 
 RdbSecurityManager::RdbSecurityManager()
@@ -329,7 +336,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksInitParamSet ret=" + std::to_string(ret)));
+            "Encrypt HksInitParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
     }
@@ -345,7 +352,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksAddParams ret=" + std::to_string(ret)));
+            "Encrypt HksAddParams ret=" + std::to_string(ret)));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -354,7 +361,7 @@ std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &ke
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksBuildParamSet ret=" + std::to_string(ret)));
+            "Encrypt HksBuildParamSet ret=" + std::to_string(ret)));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};

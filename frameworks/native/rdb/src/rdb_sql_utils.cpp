@@ -28,6 +28,8 @@
 #include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
+
 namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
@@ -54,6 +56,8 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
             if (MkDir(databaseDirectory)) {
                 LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
                     SqliteUtils::Anonymous(databaseDirectory).c_str());
+                RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
+                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory));
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server

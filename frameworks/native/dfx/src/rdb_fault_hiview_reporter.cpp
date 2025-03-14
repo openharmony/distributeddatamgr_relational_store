@@ -44,8 +44,10 @@ static constexpr const char *FAULT_EVENT = "DISTRIBUTED_DATA_RDB_FAULT";
 static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
 static constexpr int MAX_FAULT_TIMES = 1;
-Connection::Collector RdbFaultHiViewReporter::collector_ = nullptr;
+RdbFaultHiViewReporter::Collector RdbFaultHiViewReporter::collector_ = nullptr;
+
 RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
+    { E_CREATE_FOLDER_FAIL, 0},
     { E_SQLITE_FULL, 0 },
     { E_SQLITE_CORRUPT, 0 },
     { E_SQLITE_PERM, 0 },
@@ -69,13 +71,21 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_IS_DELETE, 0 },
     { E_DFX_IS_RENAME, 0 },
     { E_DFX_IS_NOT_EXIST, 0 },
+    { E_DFX_SQLITE_LOG, 0 },
+    { E_DFX_BATCH_INSERT_ARGS_SIZE, 0 },
+    { E_DFX_GET_JOURNAL_FAIL, 0 },
+    { E_DFX_SET_JOURNAL_FAIL, 0 },
+    { E_DFX_DUMP_INFO, 0 },
 };
+
+bool RdbFaultHiViewReporter::memCorruptReportedFlg_ = false;
 
 void RdbFaultHiViewReporter::ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo)
 {
     if (IsReportCorruptedFault(eventInfo.path)) {
         RdbCorruptedEvent eventInfoAppend = eventInfo;
         eventInfoAppend.appendix += SqliteUtils::FormatDebugInfo(eventInfoAppend.debugInfos, "");
+        eventInfoAppend.appendix += SqliteUtils::FormatDfxInfo(eventInfo.dfxInfo);
         LOG_WARN("Corrupted %{public}s errCode:0x%{public}x [%{public}s]",
             SqliteUtils::Anonymous(eventInfoAppend.storeName).c_str(), eventInfoAppend.errorCode,
             eventInfoAppend.appendix.c_str());
@@ -126,7 +136,7 @@ void RdbFaultHiViewReporter::ReportCorrupted(const RdbCorruptedEvent &eventInfo)
 
 bool RdbFaultHiViewReporter::IsReportCorruptedFault(const std::string &dbPath)
 {
-    if (dbPath.empty()) {
+    if (dbPath.empty() || memCorruptReportedFlg_) {
         return false;
     }
 
@@ -139,6 +149,7 @@ bool RdbFaultHiViewReporter::IsReportCorruptedFault(const std::string &dbPath)
 
 void RdbFaultHiViewReporter::CreateCorruptedFlag(const std::string &dbPath)
 {
+    memCorruptReportedFlg_ = true;
     if (dbPath.empty()) {
         return;
     }
@@ -166,7 +177,7 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
 }
 
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(
-    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix)
+    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix, bool needSyncParaFromSrv)
 {
     RdbCorruptedEvent eventInfo;
     eventInfo.bundleName = config.GetBundleName();
@@ -183,13 +194,16 @@ RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     eventInfo.errorOccurTime = time(nullptr);
     eventInfo.debugInfos = Connection::Collect(config);
     SqliteGlobalConfig::GetDbPath(config, eventInfo.path);
-    if (collector_ != nullptr && !IsReportCorruptedFault(eventInfo.path)) {
-        Update(eventInfo.debugInfos, collector_(config));
+    if (collector_ != nullptr && needSyncParaFromSrv) {
+        std::map<std::string, DistributedRdb::RdbDebugInfo> serviceDebugInfos;
+        if (collector_(config, serviceDebugInfos, eventInfo.dfxInfo) == E_OK) {
+            Update(eventInfo.debugInfos, serviceDebugInfos);
+        }
     }
     return eventInfo;
 }
 
-bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
+bool RdbFaultHiViewReporter::RegCollector(Collector collector)
 {
     if (collector_ != nullptr) {
         return false;
@@ -356,7 +370,6 @@ std::string RdbFaultDbFileEvent::BuildConfigLog() const
     std::string errNoStr = std::to_string(static_cast<uint32_t>(errno));
     std::string dbPath;
     SqliteGlobalConfig::GetDbPath(config_, dbPath);
-    dbPath = SqliteUtils::Anonymous(dbPath);
     std::vector<std::pair<std::string, std::string>> logInfo;
     logInfo.emplace_back("S_L", std::to_string(static_cast<uint32_t>(config_.GetSecurityLevel())));
     logInfo.emplace_back("P_A", std::to_string(static_cast<uint32_t>(config_.GetArea())));
@@ -377,16 +390,15 @@ std::string RdbFaultDbFileEvent::BuildConfigLog() const
 std::string RdbFaultDbFileEvent::BuildLogInfo() const
 {
     std::string appendInfo = GetLogInfo();
-    std::string dbFileInfo = SqliteUtils::FormatDebugInfo(
-        RdbFaultHiViewReporter::Create(config_, GetErrCode()).debugInfos, "");
-
     if (GetErrCode() == E_SQLITE_NOT_DB) {
         std::string dbPath;
         SqliteGlobalConfig::GetDbPath(config_, dbPath);
         appendInfo += SqliteUtils::ReadFileHeader(dbPath);
     }
     if (printDbInfo_) {
-        appendInfo += ("\n" + BuildConfigLog() + "\n" + dbFileInfo);
+        RdbCorruptedEvent eventInfo = RdbFaultHiViewReporter::Create(config_, GetErrCode());
+        appendInfo += ("\n" + BuildConfigLog() + "\n" + SqliteUtils::FormatDfxInfo(eventInfo.dfxInfo) + "\n" +
+            SqliteUtils::FormatDebugInfo(eventInfo.debugInfos, ""));
     }
     return appendInfo;
 }

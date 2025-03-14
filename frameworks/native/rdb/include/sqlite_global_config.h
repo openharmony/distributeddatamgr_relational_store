@@ -85,6 +85,9 @@ public:
     static int GetDbPath(const RdbStoreConfig &config, std::string &dbPath);
     static void Corruption(void *arg, const void *msg);
     static std::string GetLastCorruptionMsg();
+
+private:
+    static void SqliteErrReport(int err, const char *msg);
 };
 
 } // namespace NativeRdb

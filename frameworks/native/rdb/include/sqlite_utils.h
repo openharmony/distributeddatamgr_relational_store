@@ -32,6 +32,7 @@ struct ErrMsgState {
 };
 
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
+using DfxInfo = OHOS::DistributedRdb::RdbDfxInfo;
 class SqliteUtils {
 public:
     static constexpr int STATEMENT_SELECT = 1;
@@ -90,6 +91,7 @@ public:
     static std::string ReadFileHeader(const std::string &filePath);
     static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
+    static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
 
 private:
     struct SqlType {
