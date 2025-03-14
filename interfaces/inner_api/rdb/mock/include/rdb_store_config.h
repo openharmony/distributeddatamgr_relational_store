@@ -197,6 +197,7 @@ public:
 
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
+    bool IsLocalOnly() const;
     std::string GetDatabaseFileType() const;
     SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
@@ -208,6 +209,7 @@ public:
     void SetJournalMode(JournalMode journalMode);
     void SetPath(std::string path);
     void SetReadOnly(bool readOnly);
+    void SetLocalOnly(bool localOnly);
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetSecurityLevel(SecurityLevel secLevel);
@@ -337,6 +339,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
+    bool localOnly_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;

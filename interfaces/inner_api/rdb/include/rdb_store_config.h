@@ -612,6 +612,10 @@ public:
      */
     bool GetAutoClean() const;
 
+    bool IsLocalOnly() const;
+
+    void SetLocalOnly(bool localOnly);
+
     /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
      */
@@ -788,6 +792,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
+    bool localOnly_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;

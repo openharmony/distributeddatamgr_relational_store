@@ -510,6 +510,16 @@ void RdbStoreConfig::SetWriteTime(int timeout)
     writeTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
 }
 
+bool RdbStoreConfig::IsLocalOnly() const
+{
+    return localOnly_;
+}
+
+void RdbStoreConfig::SetLocalOnly(bool localOnly)
+{
+    localOnly_ = localOnly;
+}
+
 int RdbStoreConfig::GetReadTime() const
 {
     return readTimeout_;
