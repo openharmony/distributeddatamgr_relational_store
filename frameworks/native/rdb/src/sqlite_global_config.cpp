@@ -24,7 +24,6 @@
 #include <cstring>
 #include <mutex>
 #include <regex>
-#include <securec.h>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -39,7 +38,6 @@ using namespace std::chrono;
 
 static std::string g_lastCorruptionMsg;
 static std::mutex g_corruptionMutex;
-static constexpr int32_t BUFFER_LEN_MAX = 256;
 
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {
@@ -100,12 +98,9 @@ void SqliteGlobalConfig::SqliteErrReport(int err, const char *msg)
     if (lowErr == SQLITE_NOMEM || lowErr == SQLITE_INTERRUPT || lowErr == SQLITE_FULL || lowErr == SQLITE_SCHEMA ||
         lowErr ==  SQLITE_NOLFS || lowErr == SQLITE_AUTH || lowErr == SQLITE_BUSY || lowErr == SQLITE_LOCKED ||
         lowErr == SQLITE_IOERR || lowErr == SQLITE_CANTOPEN) {
-        char buffer[BUFFER_LEN_MAX] = {0};
-        if (sprintf_s(buffer, sizeof(buffer), "err=%d, errno=%d, msg:%s.",
-            err, errno, msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str()) < 0) {
-            return;
-        }
-        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_SQLITE, E_DFX_SQLITE_LOG, BUNDLE_NAME_COMMON, buffer));
+        std::string log(msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str());
+        log.append(",errcode=").append(std::to_string(err)).append(",errno=").append(std::to_string(errno));
+        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_SQLITE, E_DFX_SQLITE_LOG, BUNDLE_NAME_COMMON, log));
     }
 }
 
