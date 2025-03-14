@@ -69,6 +69,7 @@
 #else
 #define ISFILE(filePath) ((filePath.find("/") == std::string::npos))
 #endif
+#include "rdb_time_utils.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -106,6 +107,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.user_ = config.GetPromiseInfo().user_;
     syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam_.subUser_ = config.GetSubUser();
+    syncerParam_.dfxInfo_.lastOpenTime_ = RdbTimeUtils::GetCurSysTimeWithMs();
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
@@ -1144,6 +1146,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     }
 
     auto executeSqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable());
+    BatchInsertArgsDfx(static_cast<int>(executeSqlArgs.size()));
     if (executeSqlArgs.empty()) {
         LOG_ERROR("empty, table=%{public}s, values:%{public}zu, max number:%{public}d.", table.c_str(), rows.RowSize(),
             conn->GetMaxVariable());
@@ -1154,8 +1157,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
         auto [errCode, statement] = GetStatement(sql, conn);
         if (statement == nullptr) {
             LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
-                      "app self can check the SQL",
-                errCode, bindArgs.size(), table.c_str());
+                "app self can check the SQL", errCode, bindArgs.size(), table.c_str());
             return { E_OK, -1 };
         }
         for (const auto &args : bindArgs) {
@@ -1174,6 +1176,14 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     conn = nullptr;
     DoCloudSync(table);
     return { E_OK, int64_t(rows.RowSize()) };
+}
+
+void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
+{
+    if (argsSize > 1) {
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_BATCH_INSERT_ARGS_SIZE, config_.GetBundleName(),
+            "BatchInsert executeSqlArgs size[ " + std::to_string(argsSize) + "]"));
+    }
 }
 
 std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
@@ -2480,7 +2490,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
 #endif
     if (errCode == E_OK) {
         ExchangeSlaverToMaster();
-        Reportor::ReportRestore(Reportor::Create(config_, E_OK), corrupt);
+        Reportor::ReportRestore(Reportor::Create(config_, E_OK, "ErrorType::RdbStoreImpl::Restore", false), corrupt);
         rebuild_ = RebuiltType::NONE;
     }
     DoCloudSync("");
