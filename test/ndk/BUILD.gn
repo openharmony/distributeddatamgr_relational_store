@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-module_output_path = "relational_store/native_rdb_ndk"
+module_output_path = "relational_store/relational_store/native_rdb_ndk"
 
 ###############################################################################
 config("module_private_config") {

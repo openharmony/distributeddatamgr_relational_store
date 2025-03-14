@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-module_output_path = "dataability/native_dataability"
+module_output_path = "relational_store/relational_store/native_dataability"
 
 ###############################################################################
 config("module_private_config") {
