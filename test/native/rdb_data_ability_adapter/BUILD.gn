@@ -14,7 +14,8 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/data_share/datashare.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-module_output_path = "relational_store/rdb_data_ability_adapter"
+module_output_path =
+    "relational_store/relational_store/rdb_data_ability_adapter"
 
 ###############################################################################
 config("module_private_config") {
