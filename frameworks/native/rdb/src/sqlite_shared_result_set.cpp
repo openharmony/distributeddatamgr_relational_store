@@ -166,7 +166,13 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 
     if ((uint32_t)newPosition < sharedBlock->GetStartPos() || (uint32_t)newPosition >= sharedBlock->GetLastPos() ||
         oldPosition == rowCount_) {
-        return FillBlock(newPosition);
+        auto errCode = FillBlock(newPosition);
+        if (errCode == E_NO_MORE_ROWS && rowCount_ != Statement::INVALID_COUNT) {
+            rowCount_ = sharedBlock->GetLastPos();
+            rowPos_ = rowPos_ > rowCount_ ? rowCount_ : rowPos_;
+            errCode = E_ROW_OUT_RANGE;
+        }
+        return errCode;
     }
     return E_OK;
 }
@@ -200,7 +206,7 @@ int SqliteSharedResultSet::FillBlock(int requiredPos)
                  ", lastPos_= %{public}" PRIu32 ", blockPos_= %{public}" PRIu32 ".",
             rowCount_, requiredPos, block->GetStartPos(), block->GetLastPos(), block->GetBlockPos());
     }
-    return E_OK;
+    return (uint32_t)requiredPos >= block->GetLastPos() ? E_NO_MORE_ROWS : E_OK;
 }
 
 void SqliteSharedResultSet::SetBlock(AppDataFwk::SharedBlock *block)
