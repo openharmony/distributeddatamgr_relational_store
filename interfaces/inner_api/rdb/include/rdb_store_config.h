@@ -612,9 +612,10 @@ public:
      */
     bool GetAutoClean() const;
 
+    /**
+     * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
+     */
     bool IsLocalOnly() const;
-
-    void SetLocalOnly(bool localOnly);
 
     /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
