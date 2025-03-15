@@ -671,15 +671,7 @@ public:
             return path_ == config.path_ && securityLevel_ == config.securityLevel_;
         }
     }
-
-    /**
-     * @brief Overload the does not equal the number operator.
-     */
-    bool operator!=(const RdbStoreConfig &config) const
-    {
-        return !(*this == config);
-    }
-
+    
     /**
      * @brief Checks whether the database isSearchable necessary.
      */
