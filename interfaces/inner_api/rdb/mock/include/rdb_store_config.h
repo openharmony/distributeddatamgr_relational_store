@@ -209,7 +209,6 @@ public:
     void SetJournalMode(JournalMode journalMode);
     void SetPath(std::string path);
     void SetReadOnly(bool readOnly);
-    void SetLocalOnly(bool localOnly);
     void SetStorageMode(StorageMode storageMode);
     void SetDatabaseFileType(DatabaseFileType type);
     void SetSecurityLevel(SecurityLevel secLevel);

@@ -544,9 +544,6 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetHaMode(rdbConfig.haMode);
 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
-    if (!(rdbConfig.cryptoParam.encryptKey_.empty())) {
-        rdbStoreConfig.SetLocalOnly(true);
-    }
     return rdbStoreConfig;
 }
 

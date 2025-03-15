@@ -515,11 +515,6 @@ bool RdbStoreConfig::IsLocalOnly() const
     return localOnly_;
 }
 
-void RdbStoreConfig::SetLocalOnly(bool localOnly)
-{
-    localOnly_ = localOnly;
-}
-
 int RdbStoreConfig::GetReadTime() const
 {
     return readTimeout_;
@@ -669,6 +664,9 @@ void RdbStoreConfig::EnableRekey(bool enable)
 void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
 {
     cryptoParam_ = cryptoParam;
+    if (!(cryptoParam_.encryptKey_.empty())) {
+        localOnly_ = true;
+    }
 }
 
 RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const
