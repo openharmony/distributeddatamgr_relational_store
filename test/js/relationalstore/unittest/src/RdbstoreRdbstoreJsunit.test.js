@@ -309,55 +309,58 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0012', 0, async function (done) {
         console.log(TAG + "************* testRdbStore0012 start *************");
-
         try {
-            const rowCount = 18;
-            const rdbStore = await data_relationalStore.getRdbStore(context, {
-                name: "walTest",
-                securityLevel: data_relationalStore.SecurityLevel.S3,
-                encrypt: true,
-            })
-            const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + "blobType BLOB)";
-
-            rdbStore.executeSync(CREATE_TABLE_TEST);
-            const valueBuckets = Array(rowCount).fill(0).map(() => {
-                return {
-                    blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
-                }
-            })
-
-            rdbStore.batchInsertSync('test', valueBuckets);
-
-            const predicates = new data_relationalStore.RdbPredicates('test');
-            const resultSet = rdbStore.querySync(predicates);
-            expect(resultSet.rowCount).assertEqual(rowCount);
-            resultSet.goToFirstRow()
-            const value = new Uint8Array(Array(1024 * 1024).fill(1));
-            const startTime = new Date().getTime();
-            rdbStore.insertSync('test', {
-                blobType: new Uint8Array(Array(1024 * 1024).fill(1)),
-            })
-            const middleTime = new Date().getTime();
-            console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime + " costTime" + (middleTime-startTime));
-            expect((middleTime - startTime) > 500).assertTrue();
-
-            rdbStore.insertSync('test', {
-                blobType: value,
-            })
-            const endTime = new Date().getTime();
-            console.log(TAG + "testRdbStore0012, endTime:" + endTime + " middleTime:" + middleTime + " costTime" + (endTime-middleTime));
-            expect((endTime - middleTime) < 500).assertTrue();
-
-            console.log(TAG + "************* testRdbStore0012 end *************");
-            done();
+          const rowCount = 18;
+          const rdbStore = await data_relationalStore.getRdbStore(context, {
+            name: "walTest",
+            securityLevel: data_relationalStore.SecurityLevel.S3,
+            encrypt: true,
+          });
+          const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test ("
+            + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + "blobType BLOB)";
+          rdbStore.executeSync(CREATE_TABLE_TEST);
+          const valueTest = Array(rowCount).fill(0).map(() => {
+            return {
+              blobType: new Uint8Array(Array(1024).fill(1)),
+            };
+          });
+          rdbStore.batchInsertSync('test', valueTest);
+          const predicates = new data_relationalStore.RdbPredicates('test');
+          const resultSet = rdbStore.querySync(predicates);
+          expect(resultSet.rowCount).assertEqual(rowCount);
+          resultSet.goToFirstRow();
+          const value = new Uint8Array(Array(1024 * 1024).fill(1));
+          const valueBuckets = Array(rowCount).fill(0).map(() => {
+            return {
+              blobType: value,
+            };
+          });
+          rdbStore.batchInsertSync('test', valueBuckets);
+          const startTime = new Date().getTime();
+          rdbStore.insertSync('test', {
+            blobType: value,
+          });
+          const middleTime = new Date().getTime();
+          console.log(TAG + "testRdbStore0012, startTime:" + startTime + " middleTime:" + middleTime + " costTime" +
+            (middleTime - startTime));
+          expect((middleTime - startTime) > 500).assertTrue();
+          rdbStore.insertSync('test', {
+            blobType: value,
+          });
+          const endTime = new Date().getTime();
+          console.log(TAG + "testRdbStore0012, endTime:" + endTime + " middleTime:" + middleTime + " costTime" +
+            (endTime - middleTime));
+          expect((endTime - middleTime) < 500).assertTrue();
+          resultSet.close();
+          console.log(TAG + "************* testRdbStore0012 end *************");
+          done();
         } catch (e) {
-            console.log(TAG + "testRdbStore0012 failed " + JSON.stringify(e));
-            done();
-            expect().assertFail();
+          console.log(TAG + "testRdbStore0012 failed " + JSON.stringify(e));
+          done();
+          expect().assertFail();
         }
-    })
+      })
 
     /**
      * @tc.name rdb store update after deleteRdbStore
