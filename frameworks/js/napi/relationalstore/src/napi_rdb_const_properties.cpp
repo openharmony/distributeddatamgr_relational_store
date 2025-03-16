@@ -24,12 +24,12 @@
 
 using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SyncMode;
-
 #endif
 using OHOS::DistributedRdb::DistributedTableType;
 using OHOS::DistributedRdb::ProgressCode;
 using OHOS::NativeRdb::ConflictResolution;
 using OHOS::NativeRdb::SecurityLevel;
+using OHOS::DistributedRdb::ColumnType;
 
 #define SET_NAPI_PROPERTY(object, prop, value) \
     napi_set_named_property((env), (object), (prop), AppDataMgrJsKit::JSUtils::Convert2JSValue((env), (value)))
@@ -324,6 +324,27 @@ static napi_value ExportTokenizer(napi_env env)
     return tokenizerType;
 }
 
+static napi_value ExportColumnType(napi_env env)
+{
+    napi_value columnType = nullptr;
+    napi_status status = napi_create_object(env, &columnType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(columnType, "NULL", int32_t(ColumnType::TYPE_NULL));
+    SET_NAPI_PROPERTY(columnType, "INTEGER", int32_t(ColumnType::TYPE_INTEGER));
+    SET_NAPI_PROPERTY(columnType, "REAL", int32_t(ColumnType::TYPE_FLOAT));
+    SET_NAPI_PROPERTY(columnType, "TEXT", int32_t(ColumnType::TYPE_STRING));
+    SET_NAPI_PROPERTY(columnType, "BLOB", int32_t(ColumnType::TYPE_BLOB));
+    SET_NAPI_PROPERTY(columnType, "ASSET", int32_t(ColumnType::TYPE_ASSET));
+    SET_NAPI_PROPERTY(columnType, "ASSETS", int32_t(ColumnType::TYPE_ASSETS));
+    SET_NAPI_PROPERTY(columnType, "FLOAT_VECTOR", int32_t(ColumnType::TYPE_FLOAT32_ARRAY));
+    SET_NAPI_PROPERTY(columnType, "UNLIMITED_INT", int32_t(ColumnType::TYPE_BIGINT));
+    napi_object_freeze(env, columnType);
+    return columnType;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -347,6 +368,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("KdfAlgo", ExportKdfAlgo(env)),
         DECLARE_NAPI_PROPERTY("TransactionType", ExportTransactionType(env)),
         DECLARE_NAPI_PROPERTY("Tokenizer", ExportTokenizer(env)),
+        DECLARE_NAPI_PROPERTY("ColumnType", ExportColumnType(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);
