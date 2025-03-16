@@ -81,10 +81,11 @@ int SqliteUtils::GetSqlStatementType(const std::string &sql)
     return STATEMENT_OTHER;
 }
 
-std::string SqliteUtils::StrToUpper(std::string s)
+std::string SqliteUtils::StrToUpper(const std::string &s)
 {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
-    return s;
+    std::string str = s;
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::toupper(c); });
+    return str;
 }
 
 void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::string &dst)

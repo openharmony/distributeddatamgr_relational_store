@@ -22,6 +22,8 @@
 #include "logger.h"
 #include "shared_block_serializer_info.h"
 #include "sqlite_errno.h"
+#include "sqlite_utils.h"
+#include "string_utils.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -303,8 +305,7 @@ FillOneRowResult FillOneRowOfBlob(
     auto action = &AppDataFwk::SharedBlock::PutBlob;
     auto *declType = sqlite3_column_decltype(statement, pos);
     if (declType != nullptr) {
-        std::string type(declType);
-        std::transform(type.begin(), type.end(), type.begin(), [](auto ch) { return std::toupper(ch); });
+        auto type = StringUtils::TruncateAfterFirstParen(SqliteUtils::StrToUpper(declType));
         action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::SharedBlock::PutAsset
                  : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::SharedBlock::PutAssets
                  : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::SharedBlock::PutFloats
