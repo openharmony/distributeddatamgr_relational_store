@@ -16,11 +16,11 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import data_relationalStore from '@ohos.data.relationalStore'
 import ability_featureAbility from '@ohos.ability.featureAbility'
 
-var context = ability_featureAbility.getContext()
-
-const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
+var context = ability_featureAbility.getContext();
+const TAG = "[RELATIONAL_STORE_JSKITS_RESULTSET_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-    "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+    "data1 text," + "data2 long, " + "data3 double," + "data4 blob," + "data5 ASSET," + "data6 ASSETS," +
+    "data7 floatvector(128)," + "data8 UNLIMITED INT" + ")";
 
 const STORE_CONFIG = {
     name: "Resultset.db",
@@ -685,7 +685,7 @@ describe('rdbResultSetSyncTest', function () {
         console.log(TAG + "************* testSyncColumnCount0001 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = rdbStore.querySync(predicates)
-        expect(5).assertEqual(resultSet.columnCount);
+        expect(9).assertEqual(resultSet.columnCount);
         resultSet.close();
         resultSet = null;
         done();
@@ -2270,5 +2270,595 @@ describe('rdbResultSetSyncTest', function () {
         console.log(TAG + "************* testSyncBigData0014 end *************");
 
     })
+
+    /**
+     * @tc.name testgetColumnTypeSync001
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0244
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync001', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync001 start *************");
+        try {
+            const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            }
+            const assets = [asset];
+            const valueBucket = {
+            "data1": "hello world",
+            "data2": 3,
+            "data3": 10.5,
+            "data4": new Uint8Array([1, 2, 3]),
+            "data5":asset,
+            "data6":assets,
+            "data7":new Float32Array([1.5, 2.5]),
+            "data8":100n
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync001 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("id"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data1"));
+            expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data2"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data3"));
+            expect(type).assertEqual(relationalStore.ColumnType.REAL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data4"));
+            expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data5"));
+            expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data6"));
+            expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data7"));
+            expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data8"));
+            expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync001 getColumnTypeSync failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync001 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync002
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0245
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync002', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync002 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            "data2": null,
+            "data3": null,
+            "data4": null,
+            "data5": null,
+            "data6": null,
+            "data7": null,
+            "data8": null
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync002 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("id"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data1"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data2"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data3"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data4"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data5"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data6"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data7"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("data8"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync002 getColumnTypeSync failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync002 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync003
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0246
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync003', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync003 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync003 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.close();
+            resultSet?.getColumnTypeSync(resultSet?.getColumnIndex("id"));
+            console.error(TAG + "testgetColumnTypeSync003 getColumnTypeSync success");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('14800014').assertEqual(err.code);
+            console.error(TAG + "testgetColumnTypeSync003 getColumnTypeSync failed. " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync003 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync004
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0247
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync004', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync004 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync004 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            resultSet?.getColumnTypeSync(0);
+            console.error(TAG + "testgetColumnTypeSync004 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800012).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync004 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync004 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync005
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0248
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync005', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync005 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync005 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            resultSet?.getColumnTypeSync(columnCount);
+            console.error(TAG + "testgetColumnTypeSync005 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800013).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync005 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync005 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync006
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0249
+     * @tc.desc querySharingResource test
+     */
+    it('testgetColumnTypeSync006', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync006 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync006 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.getColumnTypeSync(-1);
+            console.error(TAG + "testgetColumnTypeSync006 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync006 getColumnType failed. " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync006 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync007
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0250
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync007', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync007 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync007 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = resultSet?.getColumnTypeSync(Number.MAX_SAFE_INTEGER);
+            console.error(TAG + "testgetColumnTypeSync007 failed type " + type);
+            expect(true).assertFail();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync007 success " + err);
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+        }
+        console.log(TAG + "************* testgetColumnTypeSync007 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync008
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0251
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync008', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync008 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync008 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = resultSet?.getColumnTypeSync(Number.MAX_VALUE);
+            console.error(TAG + "testgetColumnTypeSync008 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync008 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync008 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync009
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0252
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync009', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync009 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync009 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = resultSet?.getColumnTypeSync(Number.MIN_VALUE);
+            console.error(TAG + "testgetColumnTypeSync009 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync009 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync009 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0253
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync010', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync010 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync010 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = resultSet?.getColumnTypeSync(Number.MIN_SAFE_INTEGER);
+            console.error(TAG + "testgetColumnTypeSync010 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync010 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync010 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync011
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0254
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync011', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync011 start *************");
+        try {
+            const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            }
+            const assets = [asset];
+            const valueBucket = {
+            "data1": "hello world",
+            "data2": 3,
+            "data3": 100000,
+            "data4": new Uint8Array([1, 2, 3]),
+            "data5":asset,
+            "data6":assets,
+            "data7":new Float32Array([1.5, 2.5]),
+            "data8":100n
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync011 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = resultSet?.getColumnTypeSync("id");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync("data1");
+            expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+            type = resultSet?.getColumnTypeSync("data2");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync("data3");
+            expect(type).assertEqual(relationalStore.ColumnType.REAL);
+            type = resultSet?.getColumnTypeSync("data4");
+            expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+            type = resultSet?.getColumnTypeSync("data5");
+            expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+            type = resultSet?.getColumnTypeSync("data6");
+            expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+            type = resultSet?.getColumnTypeSync("data7");
+            expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+            type = resultSet?.getColumnTypeSync("data8");
+            resultSet?.close();
+            expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync011 querySql failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync011 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync012
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0255
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync012', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync012 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            "data2": null,
+            "data3": null,
+            "data4": null,
+            "data5": null,
+            "data6": null,
+            "data7": null,
+            "data8": null
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync012 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = resultSet?.getColumnTypeSync("id");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = resultSet?.getColumnTypeSync("data1");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data2");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data3");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data4");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data5");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data6");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data7");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = resultSet?.getColumnTypeSync("data8");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync012 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync012 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync013
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0256
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync013', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync013 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync013 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            resultSet?.getColumnTypeSync("");
+            console.error(TAG + "testgetColumnTypeSync013 failed ");
+            expect(true).assertFail();
+            
+        } catch(err) {
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync013 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync013 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync014
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0257
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync014', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync014 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync014 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            resultSet?.getColumnTypeSync("columnName");
+            console.error(TAG + "testgetColumnType014 failed ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(401).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync014 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync014 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync015
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0258
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync015', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync015 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync015 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.close();
+            resultSet?.getColumnTypeSync("id");
+            console.error(TAG + "testgetColumnTypeSync015 failed ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('14800014').assertEqual(err.code);
+            console.error(TAG + "testgetColumnTypeSync015 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync015 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnTypeSync016
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0259
+     * @tc.desc getColumnTypeSync test
+     */
+    it('testgetColumnTypeSync016', 0, async () => {
+        console.log(TAG + "************* testgetColumnTypeSync016 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnTypeSync016 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            resultSet?.getColumnTypeSync("id");
+            console.error(TAG + "testgetColumnTypeSync016 failed ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800012).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnTypeSync016 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnTypeSync016 end *************");
+    });
     console.log(TAG + "*************Unit Test End*************");
 })
