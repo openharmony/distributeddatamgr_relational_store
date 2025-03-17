@@ -1482,5 +1482,39 @@ describe('rdbStoreTest', function () {
             done();
         }
     })
+
+    /**
+     * @tc.number testCrypt
+     * @tc.name testCrypt0001
+     * @tc.desc
+     */
+    it('testCrypt0001', 0, async () => {
+        console.log(TAG + "************* testCrypt0001 start *************");
+        let cryptoParam = {
+            encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
+        }
+        let storeConfig = {
+            name: "testCrypt0001.db",
+            securityLevel: data_relationalStore.SecurityLevel.S2,
+            cryptoParam: cryptoParam
+        }
+        try {
+            let store = await data_relationalStore.getRdbStore(context, storeConfig);
+            await store.executeSql(CREATE_TABLE_TEST);
+            store.close();
+            console.log(TAG + "getRdbStore success 1");
+            cryptoParam.encryptionKey = new Uint8Array([6, 5, 4, 3, 2, 1]);
+            store = await data_relationalStore.getRdbStore(context, storeConfig);
+            store.close();
+            console.log(TAG + "getRdbStore success 2");
+            expect(false).assertTrue();
+        } catch (e) {
+            console.log(TAG + e + " code: " + e.code);
+            expect(e.code).assertEqual(14800011)
+            console.log(TAG + "testCorrupt0001 success");
+        }
+        await data_relationalStore.deleteRdbStore(context, storeConfig);
+        console.log(TAG + "************* testCorrupt0001 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
 })
