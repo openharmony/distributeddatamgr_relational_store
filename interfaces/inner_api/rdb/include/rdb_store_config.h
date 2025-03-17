@@ -613,6 +613,11 @@ public:
     bool GetAutoClean() const;
 
     /**
+     * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
+     */
+    bool IsLocalOnly() const;
+
+    /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
      */
     void SetIsVector(bool isVector);
@@ -780,6 +785,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
+    bool localOnly_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;

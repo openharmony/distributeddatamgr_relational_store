@@ -1494,3 +1494,33 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Execute_001, TestSize.Level1)
     ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: RdbStore_Crypt_001
+ * @tc.desc: test RdbStore Crypt
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Crypt_001, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase1.db";
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    RdbStoreConfig config(dbPath);
+    config.SetName("RdbStoreConfig_test.db");
+    std::string bundleName = "com.ohos.config.TestSubUser";
+    config.SetBundleName(bundleName);
+    config.SetCryptoParam(cryptoParam);
+    int errCode = E_OK;
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
+    rdbStore->ExecuteSql(CREATE_TABLE_TEST);
+    rdbStore = nullptr;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
+    config.SetCryptoParam(cryptoParam);
+
+    rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
+}
