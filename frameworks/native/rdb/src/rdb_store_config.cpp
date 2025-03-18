@@ -41,6 +41,7 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
     walLimitSize_ = GlobalExpr::DB_WAL_DEFAULT_SIZE;
     checkpointSize_ = GlobalExpr::DB_WAL_WARNING_SIZE;
     startCheckpointSize_ = GlobalExpr::DB_WAL_SIZE_LIMIT_MIN;
+    clearMemorySize_ = GlobalExpr::CLEAR_MEMORY_SIZE;
 }
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -634,6 +635,19 @@ void RdbStoreConfig::SetWalLimitSize(ssize_t size)
     checkpointSize_ = (size >> 1) + (size >> 2);
     // '(size >> 5) + (size >> 7)' Size of the WAL file for starting checkpoint.
     startCheckpointSize_ = (size >> 5) + (size >> 7);
+}
+
+int32_t RdbStoreConfig::GetClearMemorySize() const
+{
+    return clearMemorySize_;
+}
+
+void RdbStoreConfig::SetClearMemorySize(int32_t size)
+{
+    if (size < 0 || size > GlobalExpr::CLEAR_MEMORY_SIZE) {
+        size = GlobalExpr::CLEAR_MEMORY_SIZE;
+    }
+    clearMemorySize_ = size;
 }
 
 ssize_t RdbStoreConfig::GetCheckpointSize() const

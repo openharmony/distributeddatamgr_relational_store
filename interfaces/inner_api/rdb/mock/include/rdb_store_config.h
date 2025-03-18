@@ -310,6 +310,8 @@ public:
     ssize_t GetStartCheckpointSize() const;
     ssize_t GetWalLimitSize() const;
     void SetWalLimitSize(ssize_t size);
+    int32_t GetClearMemorySize() const;
+    void SetClearMemorySize(int32_t size);
     int32_t GetSubUser() const;
     void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
@@ -363,6 +365,7 @@ private:
     ssize_t walLimitSize_;
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
+    int32_t clearMemorySize_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
