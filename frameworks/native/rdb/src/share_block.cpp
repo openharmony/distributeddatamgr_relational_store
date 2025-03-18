@@ -131,6 +131,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     info->totalRows = serializer.GetTotalRows();
     info->startPos = serializer.GetStartPos();
     info->addedRows = serializer.GetAddedRows();
+    info->isFull = serializer.IsFull();
 
     if (errCode == SQLITE_DONE || errCode == SQLITE_ROW) {
         errCode = SQLITE_OK;
@@ -342,7 +343,7 @@ bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
         LOG_ERROR("startPos %{public}d > actual rows %{public}d", info->startPos, info->totalRows);
     }
 
-    if ((info->totalRows > 0 && info->addedRows == 0) && info->sharedBlock != nullptr) {
+    if ((info->isFull && info->totalRows > 0 && info->addedRows == 0) && info->sharedBlock != nullptr) {
         LOG_WARN("over 2MB[%{public}d, %{public}d]", info->totalRows, info->addedRows);
         return false;
     }
