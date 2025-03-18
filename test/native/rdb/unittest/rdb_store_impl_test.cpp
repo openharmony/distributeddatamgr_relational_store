@@ -824,11 +824,11 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_LT(sqlite3_memory_used(), currentMemory);
 }
  
- /* *
-  * @tc.name: ClearCacheTest_002
-  * @tc.desc: Normal testCase for ClearCache
-  * @tc.type: FUNC
-  */
+/* *
+* @tc.name: ClearCacheTest_002
+* @tc.desc: Normal testCase for ClearCache
+* @tc.type: FUNC
+*/
 HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_002, TestSize.Level2)
 {
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
@@ -842,18 +842,40 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_002, TestSize.Level2)
                        "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t id;
     ValuesBucket valuesBucket;
-    valuesBucket.PutString("data1", std::string(524288, 'a'));
+    valuesBucket.PutString("data1", std::string(0.5 * 1024 * 1024, 'a'));
     valuesBucket.PutInt("data2", 20);
     errCode = store->Insert(id, "test1", valuesBucket);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_EQ(1, id);
     int64_t currentMemory = sqlite3_memory_used();
-    valuesBucket.PutString("data1", std::string(524288, 'a'));
+    valuesBucket.PutString("data1", std::string(0.5 * 1024 * 1024, 'a'));
     valuesBucket.PutInt("data2", 20);
     errCode = store->Insert(id, "test1", valuesBucket);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_EQ(2, id);
     EXPECT_LT(sqlite3_memory_used(), currentMemory);
+}
+
+/* *
+ * @tc.name: ClearCacheTest_003
+ * @tc.desc: Normal testCase for ClearCache
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_003, TestSize.Level2)
+{
+    RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
+    int errCode = E_OK;
+    int clearMemorySize = 1024 * 1024;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetClearMemorySize(1024 * 1024 + 1);
+    EXPECT_EQ(clearMemorySize, config.GetClearMemorySize());
+    config.SetClearMemorySize(-1);
+    EXPECT_EQ(clearMemorySize, config.GetClearMemorySize());
+    config.SetClearMemorySize(10240);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(nullptr, store);
+    EXPECT_EQ(E_OK, errCode);
 }
 
 /* *
