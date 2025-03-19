@@ -815,6 +815,8 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
+        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_GET_JOURNAL_FAIL, config_.GetBundleName(),
+            "PRAGMA journal_mode get fail: " +  std::to_string(errCode) + "," + std::to_string(errno)));
         // errno: 28 No space left on device
         return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
@@ -828,6 +830,9 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
         auto [errorCode, journalMode] = ExecuteForValue("PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
+            Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_SET_JOURNAL_FAIL, config_.GetBundleName(),
+                "PRAGMA journal_mode set fail: " +  std::to_string(errCode) + "," + std::to_string(errno) + "," +
+                config.GetJournalMode()));
             return errorCode;
         }
 
@@ -842,30 +847,6 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     }
     if (config.GetJournalMode() == "TRUNCATE") {
         mode_ = JournalMode::MODE_TRUNCATE;
-    }
-    return errCode;
-}
-
-int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
-{
-    if (isReadOnly_ || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE || config.IsMemoryRdb()) {
-        return E_OK;
-    }
-
-    int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    auto [errCode, currentValue] = ExecuteForValue("PRAGMA journal_size_limit");
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
-        return errCode;
-    }
-
-    if (static_cast<int64_t>(currentValue) == targetValue) {
-        return E_OK;
-    }
-
-    std::tie(errCode, currentValue) = ExecuteForValue("PRAGMA journal_size_limit=" + std::to_string(targetValue));
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to set journal_size_limit : %{public}d", errCode);
     }
     return errCode;
 }
@@ -977,7 +958,7 @@ int SqliteConnection::ClearCache()
         int usedBytes = 0;
         int nEnyry = 0;
         int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEnyry, 0);
-        if (errCode == SQLITE_OK && usedBytes > GlobalExpr::CLEAR_MEMORY_SIZE) {
+        if (errCode == SQLITE_OK && usedBytes > config_.GetClearMemorySize()) {
             sqlite3_db_release_memory(dbHandle_);
         }
     }

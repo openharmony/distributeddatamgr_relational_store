@@ -646,6 +646,22 @@ int32_t RdbServiceProxy::GetDebugInfo(const RdbSyncerParam &param, std::map<std:
     return status;
 }
 
+int32_t RdbServiceProxy::GetDfxInfo(const RdbSyncerParam &param, DistributedRdb::RdbDfxInfo &dfxInfo)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_DFX_INFO), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    if (!ITypesUtil::Unmarshal(reply, dfxInfo)) {
+        LOG_ERROR("Unmarshal failed, bundleName:%{public}s, storeName:%{public}s",
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+        status = RDB_ERROR;
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
 {
     MessageParcel reply;

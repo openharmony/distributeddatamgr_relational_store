@@ -41,6 +41,7 @@ RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode,
     walLimitSize_ = GlobalExpr::DB_WAL_DEFAULT_SIZE;
     checkpointSize_ = GlobalExpr::DB_WAL_WARNING_SIZE;
     startCheckpointSize_ = GlobalExpr::DB_WAL_SIZE_LIMIT_MIN;
+    clearMemorySize_ = GlobalExpr::CLEAR_MEMORY_SIZE;
 }
 
 RdbStoreConfig::~RdbStoreConfig()
@@ -510,6 +511,11 @@ void RdbStoreConfig::SetWriteTime(int timeout)
     writeTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
 }
 
+bool RdbStoreConfig::IsLocalOnly() const
+{
+    return localOnly_;
+}
+
 int RdbStoreConfig::GetReadTime() const
 {
     return readTimeout_;
@@ -631,6 +637,19 @@ void RdbStoreConfig::SetWalLimitSize(ssize_t size)
     startCheckpointSize_ = (size >> 5) + (size >> 7);
 }
 
+int32_t RdbStoreConfig::GetClearMemorySize() const
+{
+    return clearMemorySize_;
+}
+
+void RdbStoreConfig::SetClearMemorySize(int32_t size)
+{
+    if (size < 0 || size > GlobalExpr::CLEAR_MEMORY_SIZE) {
+        size = GlobalExpr::CLEAR_MEMORY_SIZE;
+    }
+    clearMemorySize_ = size;
+}
+
 ssize_t RdbStoreConfig::GetCheckpointSize() const
 {
     return checkpointSize_;
@@ -659,6 +678,9 @@ void RdbStoreConfig::EnableRekey(bool enable)
 void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
 {
     cryptoParam_ = cryptoParam;
+    if (!(cryptoParam_.encryptKey_.empty())) {
+        localOnly_ = true;
+    }
 }
 
 RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const

@@ -29,6 +29,7 @@
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
 #include "sqlite_utils.h"
+#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -87,6 +88,19 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
         LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
     } else {
         LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, SqliteUtils::Anonymous(msg).c_str());
+        SqliteErrReport(err, msg);
+    }
+}
+
+void SqliteGlobalConfig::SqliteErrReport(int err, const char *msg)
+{
+    int lowErr = (err & 0xFF);
+    if (lowErr == SQLITE_NOMEM || lowErr == SQLITE_INTERRUPT || lowErr == SQLITE_FULL || lowErr == SQLITE_SCHEMA ||
+        lowErr ==  SQLITE_NOLFS || lowErr == SQLITE_AUTH || lowErr == SQLITE_BUSY || lowErr == SQLITE_LOCKED ||
+        lowErr == SQLITE_IOERR || lowErr == SQLITE_CANTOPEN) {
+        std::string log(msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str());
+        log.append(",errcode=").append(std::to_string(err)).append(",errno=").append(std::to_string(errno));
+        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_SQLITE, E_DFX_SQLITE_LOG, BUNDLE_NAME_COMMON, log));
     }
 }
 
