@@ -53,6 +53,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "Config changed." },
     { NativeRdb::E_INVALID_SECRET_KEY, 14800020, "The secret key is corrupted or lost." },
     { NativeRdb::E_SQLITE_IOERR_FULL, 14800028, "SQLite: Some kind of disk I/O error occurred." },
+    { NativeRdb::E_INVALID_ARGS_NEW, 401, "Invalid args." },
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
 

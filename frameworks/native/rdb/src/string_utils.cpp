@@ -70,6 +70,12 @@ std::string StringUtils::ExtractFileName(const std::string &fileFullName)
     return std::string(fileFullName).substr(fileFullName.rfind("/") + 1, fileFullName.size());
 }
 
+std::string StringUtils::TruncateAfterFirstParen(const std::string& str)
+{
+    size_t pos = str.find('(');
+    return (pos != std::string::npos) ? str.substr(0, pos) : str;
+}
+
 StringUtils::StringUtils() {}
 StringUtils::~StringUtils() {}
 } // namespace NativeRdb
