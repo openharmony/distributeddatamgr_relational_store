@@ -48,13 +48,17 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
 }
 
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(
-    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix)
+    const RdbStoreConfig &config, int32_t errCode, const std::string &appendix, bool needSyncParaFromSrv)
 {
+    (void)config;
+    (void)errCode;
+    (void)appendix;
+    (void)needSyncParaFromSrv;
     RdbCorruptedEvent eventInfo;
     return eventInfo;
 }
 
-bool RdbFaultHiViewReporter::RegCollector(Connection::Collector collector)
+bool RdbFaultHiViewReporter::RegCollector(Collector collector)
 {
     (void)collector;
     return true;

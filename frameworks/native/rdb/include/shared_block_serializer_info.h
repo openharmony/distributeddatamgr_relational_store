@@ -43,6 +43,9 @@ public:
         if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
             return SQLITE_OK;
         }
+        if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+            isFull = true;
+        }
         sharedBlock_->FreeLastRow();
         return SQLITE_FULL;
     }
@@ -62,6 +65,11 @@ public:
         return astartPos;
     }
 
+    bool IsFull() const
+    {
+        return isFull;
+    }
+
 private:
     AppDataFwk::SharedBlock *sharedBlock_;
     sqlite3_stmt *statement_ = nullptr;
@@ -69,6 +77,7 @@ private:
     int atotalRows;
     int astartPos;
     int raddedRows;
+    bool isFull = false;
 };
 
 struct Sqlite3SharedBlockMethods {

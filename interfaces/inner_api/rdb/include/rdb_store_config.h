@@ -613,6 +613,11 @@ public:
     bool GetAutoClean() const;
 
     /**
+     * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
+     */
+    bool IsLocalOnly() const;
+
+    /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
      */
     void SetIsVector(bool isVector);
@@ -737,6 +742,10 @@ public:
 
     void SetWalLimitSize(ssize_t size);
 
+    int32_t GetClearMemorySize() const;
+
+    void SetClearMemorySize(int32_t size);
+
     int32_t GetHaMode() const;
 
     void SetHaMode(int32_t haMode);
@@ -780,6 +789,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
+    bool localOnly_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;
@@ -804,6 +814,7 @@ private:
     ssize_t walLimitSize_;
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
+    int32_t clearMemorySize_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

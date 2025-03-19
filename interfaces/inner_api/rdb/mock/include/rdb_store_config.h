@@ -197,6 +197,7 @@ public:
 
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
+    bool IsLocalOnly() const;
     std::string GetDatabaseFileType() const;
     SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
@@ -309,6 +310,8 @@ public:
     ssize_t GetStartCheckpointSize() const;
     ssize_t GetWalLimitSize() const;
     void SetWalLimitSize(ssize_t size);
+    int32_t GetClearMemorySize() const;
+    void SetClearMemorySize(int32_t size);
     int32_t GetSubUser() const;
     void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
@@ -337,6 +340,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
+    bool localOnly_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;
@@ -361,6 +365,7 @@ private:
     ssize_t walLimitSize_;
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
+    int32_t clearMemorySize_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

@@ -475,25 +475,6 @@ static constexpr int E_CHECK_POINT_FAIL = (E_BASE + 0x56);
  */
 static constexpr int E_SQLITE_META_RECOVERED = (E_BASE + 0x57);
 
-/**
- * @brief Database db err message is not create.
- */
-static constexpr int E_DFX_IS_NOT_CREATE = (E_BASE + 0x58);
-
-/**
- * @brief Database db err message is delete.
- */
-static constexpr int E_DFX_IS_DELETE = (E_BASE + 0x59);
-
-/**
- * @brief Database db err message is rename.
- */
-static constexpr int E_DFX_IS_RENAME = (E_BASE + 0x5a);
-
-/**
- * @brief Database db err message is not exist.
- */
-static constexpr int E_DFX_IS_NOT_EXIST = (E_BASE + 0x5b);
 } // namespace NativeRdb
 } // namespace OHOS
 

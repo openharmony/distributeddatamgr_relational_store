@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "relational_store/gdb_perf"
+module_output_path = "relational_store/relational_store/gdb_perf"
 
 ohos_js_unittest("GdbPerfJsTest") {
   module_out_path = module_output_path

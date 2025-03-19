@@ -99,7 +99,7 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
             static_cast<uint32_t>(rebuiltType), SqliteUtils::Anonymous(storeConfig.GetName()).c_str(),
             storeConfig.IsEncrypt(), errCode, errno);
     } else {
-        Reportor::ReportRestore(Reportor::Create(storeConfig, E_OK, "RestoreType:Rebuild"), false);
+        Reportor::ReportRestore(Reportor::Create(storeConfig, E_OK, "RestoreType:Rebuild", false), false);
     }
 
     return result;
@@ -827,6 +827,7 @@ bool ConnPool::Container::Empty()
 int32_t ConnPool::Container::Dump(const char *header, int32_t count)
 {
     std::string info;
+    std::string allInfo;
     std::vector<std::shared_ptr<ConnNode>> details;
     std::string title = "B_M_T_C[" + std::to_string(count) + "," + std::to_string(max_) + "," +
                         std::to_string(total_) + "," + std::to_string(count_) + "]";
@@ -853,10 +854,13 @@ int32_t ConnPool::Container::Dump(const char *header, int32_t count)
         // 256 represent that limit to info length
         if (info.size() > 256) {
             LOG_WARN("%{public}s %{public}s:%{public}s", header, title.c_str(), info.c_str());
+            allInfo.append(header).append(": ").append(title).append(std::move(info)).append("\n");
             info.clear();
         }
     }
     LOG_WARN("%{public}s %{public}s:%{public}s", header, title.c_str(), info.c_str());
+    allInfo.append(header).append(": ").append(title).append(std::move(info));
+    Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_DUMP_INFO, BUNDLE_NAME_COMMON, allInfo));
     return 0;
 }
 

@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "relational_store/relationalstore"
+module_output_path = "relational_store/relational_store/relationalstore"
 
 ohos_js_unittest("CloudConfigJsTest") {
   module_out_path = module_output_path
