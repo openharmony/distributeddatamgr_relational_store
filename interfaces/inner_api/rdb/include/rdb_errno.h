@@ -475,6 +475,10 @@ static constexpr int E_CHECK_POINT_FAIL = (E_BASE + 0x56);
  */
 static constexpr int E_SQLITE_META_RECOVERED = (E_BASE + 0x57);
 
+/**
+* @brief The error code for common invalid args.
+*/
+static constexpr int E_INVALID_ARGS_NEW = (E_BASE + 0x58);
 } // namespace NativeRdb
 } // namespace OHOS
 
