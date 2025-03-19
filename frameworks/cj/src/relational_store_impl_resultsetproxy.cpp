@@ -18,6 +18,8 @@
 #include "napi_rdb_error.h"
 #include "value_object.h"
 #include "native_log.h"
+#include "js_utils.h"
+#include "rdb_errno.h"
 
 namespace OHOS {
 namespace Relational {
@@ -206,8 +208,12 @@ namespace Relational {
 
     int32_t ResultSetImpl::GetColumnIndex(char* columnName, int32_t* rtnCode)
     {
-        int32_t result;
+        int32_t result = -1;
         *rtnCode = resultSetValue->GetColumnIndex(columnName, result);
+        // If the API version is less than 13, directly return.
+        if (AppDataMgrJsKit::JSUtils::GetHapVersion() < 13 || (*rtnCode == NativeRdb::E_INVALID_ARGS)) {
+            *rtnCode = E_OK;
+        }
         return result;
     }
 

@@ -22,6 +22,8 @@
 #include "napi_rdb_js_utils.h"
 #include "rdb_errno.h"
 #include "relational_store_utils.h"
+#include "rdb_errno.h"
+#include "js_utils.h"
 
 using namespace OHOS::FFI;
 
@@ -368,7 +370,8 @@ int64_t FfiOHOSRelationalStoreQuery(
     }
     auto resultSet = nativeRdbStore->Query(*nativeRdbPredicates, columns, columnsSize);
     if (resultSet == nullptr) {
-        *errCode = RelationalStoreJsKit::E_INNER_ERROR;
+        // If the API version is greater than or equal to 20, throw E_ALREADY_CLOSED.
+        *errCode = (AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20) ? NativeRdb::E_ALREADY_CLOSED : NativeRdb::E_ERROR;
         return -1;
     } else {
         *errCode = RelationalStoreJsKit::OK;
