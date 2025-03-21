@@ -645,9 +645,20 @@ int32_t RdbStoreConfig::GetClearMemorySize() const
 void RdbStoreConfig::SetClearMemorySize(int32_t size)
 {
     if (size < 0 || size > GlobalExpr::CLEAR_MEMORY_SIZE) {
+        LOG_WARN("size is inValid, size:%{public}d", size);
         size = GlobalExpr::CLEAR_MEMORY_SIZE;
     }
     clearMemorySize_ = size;
+}
+
+std::string RdbStoreConfig::GetCollatorLocales() const
+{
+    return loacles_;
+}
+
+void RdbStoreConfig::SetCollatorLocales(const std::string &loacles)
+{
+    loacles_ = loacles;
 }
 
 ssize_t RdbStoreConfig::GetCheckpointSize() const

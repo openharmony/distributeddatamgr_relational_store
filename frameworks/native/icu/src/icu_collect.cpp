@@ -18,6 +18,7 @@
 #include <sqlite3sym.h>
 #include <unicode/ucol.h>
 
+#include "ohos/init_data.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_visibility.h"
@@ -63,22 +64,23 @@ void ICUCollect::LocalizedCollatorDestroy(void *collator)
 
 int32_t ICUCollect::Local(sqlite3 *dbHandle, const std::string &str)
 {
-    LOG_ERROR("bai:local success");
     UErrorCode status = U_ZERO_ERROR;
+    SetHwIcuDirectory();
+
     UCollator *collator = ucol_open(str.c_str(), &status);
     if (U_FAILURE(status)) {
-        LOG_ERROR("Can not open collator.");
+        LOG_ERROR("Can not open collator, status:%{public}d.", status);
         return E_ERROR;
     }
     ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
     if (U_FAILURE(status)) {
-        LOG_ERROR("Set attribute of collator failed.");
+        LOG_ERROR("Set attribute of collator failed, status:%{public}d.", status);
         return E_ERROR;
     }
     int err = sqlite3_create_collation_v2(dbHandle, "LOCALES", SQLITE_UTF8, collator, ICUCollect::Collate8Compare,
         (void (*)(void *))ICUCollect::LocalizedCollatorDestroy);
     if (err != SQLITE_OK) {
-        LOG_ERROR("SCreate collator in sqlite3 failed.");
+        LOG_ERROR("SCreate collator in sqlite3 failed err:%{public}d.", err);
         return err;
     }
     return E_OK;
