@@ -280,6 +280,10 @@ int StepResultSet::GetRowCount(int &count)
     if (isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) {
         return AbsResultSet::GetRowCount(count);
     }
+
+    int oldPosition = 0;
+    // Get the start position of the query result
+    GetRowIndex(oldPosition);
     int ret = E_OK;
     while (ret == E_OK) {
         ret = GoToNextRow();
@@ -293,7 +297,12 @@ int StepResultSet::GetRowCount(int &count)
         }
     };
     count = rowCount_;
-    Reset();
+    // Reset the start position of the query result
+    if (oldPosition != INIT_POS) {
+        GoToRow(oldPosition);
+    } else {
+        Reset();
+    }
     return E_OK;
 }
 
