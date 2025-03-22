@@ -746,6 +746,10 @@ public:
 
     void SetClearMemorySize(int32_t size);
 
+    std::string GetCollatorLocales() const;
+
+    void SetCollatorLocales(const std::string &loacles);
+
     int32_t GetHaMode() const;
 
     void SetHaMode(int32_t haMode);
@@ -815,6 +819,7 @@ private:
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
     int32_t clearMemorySize_;
+    std::string loacles_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

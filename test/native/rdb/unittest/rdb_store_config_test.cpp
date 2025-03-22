@@ -1135,3 +1135,145 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfigVisitor_001, TestSize.Level1)
     ret = RdbHelper::DeleteRdbStore(dbPath);
     EXPECT_EQ(ret, E_OK);
 }
+
+/* *
+ * @tc.name: RdbStoreConfigSetCollatorLocales_001
+ * @tc.desc: test RdbStoreConfigSetCollatorLocales
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_036, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(dbPath);
+    config.SetCollatorLocales("zh_CN");
+    EXPECT_EQ(config.GetCollatorLocales(), "zh_CN");
+    ConfigTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(nullptr, store);
+    store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket1);
+
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet = store->Query(predicates, columns);
+    ASSERT_NE(nullptr, store);
+    std::string strValue;
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "李四");
+
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "张三");
+}
+ 
+/* *
+* @tc.name: RdbStoreConfigSetCollatorLocales_002
+* @tc.desc: test RdbStoreConfigSetCollatorLocales_002
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_037, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(dbPath);
+    config.SetCollatorLocales("");
+    ConfigTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(nullptr, store);
+    store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket1);
+
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet = store->Query(predicates, columns);
+    ASSERT_NE(resultSet, nullptr);
+    std::string strValue;
+    errCode = resultSet->GoToNextRow();
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
+}
+
+/* *
+ * @tc.name: RdbStoreConfigSetCollatorLocales_003
+ * @tc.desc: test RdbStoreConfigSetCollatorLocales
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(dbPath);
+    ConfigTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(nullptr, store);
+    store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket1);
+
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet = store->Query(predicates, columns);
+    ASSERT_NE(resultSet, nullptr);
+    std::string strValue;
+    errCode = resultSet->GoToNextRow();
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
+
+    RdbHelper::ClearCache();
+    RdbStoreConfig config1(dbPath);
+    config1.SetVisitorDir(dbPath);
+    config1.SetCollatorLocales("zh_CN");
+    ConfigTestOpenCallback helper1;
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(nullptr, store1);
+
+    std::vector<std::string> columns1;
+    AbsRdbPredicates predicates1("test1");
+    predicates1.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet1 = store1->Query(predicates1, columns);
+    ASSERT_NE(nullptr, resultSet1);
+    std::string strValue1;
+    resultSet1->GoToNextRow();
+    resultSet1->GetString(1, strValue1);
+    EXPECT_EQ(strValue1, "李四");
+
+    resultSet1->GoToNextRow();
+    resultSet1->GetString(1, strValue1);
+    EXPECT_EQ(strValue1, "张三");
+}
