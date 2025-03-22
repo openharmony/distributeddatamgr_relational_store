@@ -360,6 +360,11 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
 
 int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPath)
 {
+    // there is a read-only dependency
+    if (!config.GetCollatorLocales().empty()) {
+        ConfigLocale(config.GetCollatorLocales());
+    }
+
     if (config.GetRoleType() == VISITOR) {
         return E_OK;
     }
