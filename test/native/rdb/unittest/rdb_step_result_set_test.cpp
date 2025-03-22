@@ -857,6 +857,55 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RdbStore_StepResultSet_018
+ * @tc.desc: normal testcase of StepResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test", {}, false);
+    EXPECT_NE(resultSet, nullptr);
+
+    bool bResultSet = false;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+
+    int count = -1;
+    int iRet = resultSet->GetRowCount(count);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(3, count);
+
+    iRet = resultSet->IsAtLastRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, false);
+
+    std::string name;
+    int columnIndex = -1;
+    int errCode = resultSet->GetColumnIndex("data1", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, name));
+    EXPECT_EQ(name, "hello");
+
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    errCode = resultSet->GetColumnIndex("data1", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, name));
+    EXPECT_EQ(name, "2");
+    iRet = resultSet->IsAtLastRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, false);
+    
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    errCode = resultSet->GetColumnIndex("data1", columnIndex);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, name));
+    EXPECT_EQ(name, "hello world");
+    iRet = resultSet->IsAtLastRow(bResultSet);
+    EXPECT_EQ(E_OK, iRet);
+    EXPECT_EQ(bResultSet, true);
+}
+
+/* *
  * @tc.name: testGetRowCount003
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC
