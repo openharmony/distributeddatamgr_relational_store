@@ -39,6 +39,9 @@ int SharedBlockSerializerInfo::AddRow(int addedRows)
         raddedRows = addedRows + 1;
         return SQLITE_OK;
     }
+    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+        isFull = true;
+    }
     return SQLITE_FULL;
 }
 
@@ -56,6 +59,7 @@ int SharedBlockSerializerInfo::Reset(int startPos)
     }
     astartPos = startPos;
     raddedRows = 0;
+    isFull = false;
     return SQLITE_OK;
 }
 
@@ -72,6 +76,9 @@ int SharedBlockSerializerInfo::PutLong(int row, int column, sqlite3_int64 value)
     if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return SQLITE_OK;
     }
+    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+        isFull = true;
+    }
     sharedBlock_->FreeLastRow();
     return SQLITE_FULL;
 }
@@ -81,6 +88,9 @@ int SharedBlockSerializerInfo::PutDouble(int row, int column, double value)
     int status = sharedBlock_->PutDouble(row, column, value);
     if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return SQLITE_OK;
+    }
+    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+        isFull = true;
     }
     sharedBlock_->FreeLastRow();
     return SQLITE_FULL;
@@ -104,6 +114,9 @@ int SharedBlockSerializerInfo::PutBlob(int row, int column, const void *blob, in
     if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return SQLITE_OK;
     }
+    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+        isFull = true;
+    }
     sharedBlock_->FreeLastRow();
     return SQLITE_FULL;
 }
@@ -113,6 +126,9 @@ int SharedBlockSerializerInfo::PutNull(int row, int column)
     int status = sharedBlock_->PutNull(row, column);
     if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return SQLITE_OK;
+    }
+    if (status == AppDataFwk::SharedBlock::SHARED_BLOCK_NO_MEMORY) {
+        isFull = true;
     }
     sharedBlock_->FreeLastRow();
     LOG_ERROR("Failed allocating space for a null in column %{public}d, error=%{public}d", column, status);
