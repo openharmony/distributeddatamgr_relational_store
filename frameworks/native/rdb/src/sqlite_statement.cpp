@@ -566,9 +566,12 @@ std::pair<int32_t, size_t> SqliteStatement::GetSize(int index) const
         return { errCode, 0 };
     }
 
-    if (type == int32_t(ColumnType::TYPE_STRING) || type == int32_t(ColumnType::TYPE_BLOB) ||
-        type == int32_t(ColumnType::TYPE_NULL)) {
+    if (type == static_cast<int32_t>(ColumnType::TYPE_BLOB) || type == static_cast<int32_t>(ColumnType::TYPE_NULL)) {
         auto size = static_cast<size_t>(sqlite3_column_bytes(stmt_, index));
+        return { E_OK, size };
+    } else if (type == static_cast<int32_t>(ColumnType::TYPE_STRING)) {
+        // Add 1 to size for the string terminator (null character).
+        auto size = static_cast<size_t>(sqlite3_column_bytes(stmt_, index) + 1);
         return { E_OK, size };
     }
     return { E_INVALID_COLUMN_TYPE, 0 };

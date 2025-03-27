@@ -193,7 +193,7 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
+            expect(1).assertEqual(ret);
             // check default status
             checkStatus(checkName, UNLOCK)
         } catch (err) {
@@ -404,7 +404,7 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
+            expect(1).assertEqual(ret);
             console.log(TAG + "update done: " + ret);
 
             // check default status
@@ -453,8 +453,8 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             // check default status
             await checkStatus(checkName, LOCK_CHANGE)
@@ -563,7 +563,7 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName2)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
+            expect(1).assertEqual(ret);
             // check default status
             await checkStatus(checkName2, UNLOCK)
             console.log(TAG + `update success`)
@@ -682,8 +682,8 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName2)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             // check default status
             await checkStatus(checkName2, LOCK_CHANGE)
@@ -734,8 +734,8 @@ describe('rdbStoreLockRowTest', function () {
             let predicates = new data_relationalStore.RdbPredicates(TABLE)
             predicates.equalTo("name", checkName2)
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             // check default status
             await checkStatus(checkName2, LOCK_CHANGE)

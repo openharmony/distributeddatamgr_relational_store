@@ -162,11 +162,11 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB create encrypt db test
      */
     it('RdbEncryptTest_0010', 0, async function (done) {
-        await console.log(TAG + "************* RdbEncryptTest_0010 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0010 start *************")
         let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT);
         storePromise.then(async (store) => {
             try {
-                await console.log(TAG + "getRdbStore done: " + store);
+                console.log(TAG + "getRdbStore done: " + store);
             } catch (err) {
                 expect(null).assertFail();
             }
@@ -178,7 +178,7 @@ describe('rdbEncryptTest', function () {
         storePromise = null
 
         done()
-        await console.log(TAG + "************* RdbEncryptTest_0010 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0010 end *************")
     })
 
     /**
@@ -187,11 +187,11 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB create unencrypted db test
      */
     it('RdbEncryptTest_0020', 0, async function (done) {
-        await console.log(TAG + "************* RdbEncryptTest_0020 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0020 start *************")
         let storePromise = data_relationalStore.getRdbStore(context, STORE_CONFIG_UNENCRYPT);
         storePromise.then(async (store) => {
             try {
-                await console.log(TAG + "getRdbStore done: " + store);
+                console.log(TAG + "getRdbStore done: " + store);
             } catch (err) {
                 expect(null).assertFail();
             }
@@ -203,7 +203,7 @@ describe('rdbEncryptTest', function () {
         storePromise = null
 
         done()
-        await console.log(TAG + "************* RdbEncryptTest_0020 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0020 end *************")
     })
 
 
@@ -213,7 +213,7 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB Encrypt function test
      */
     it('RdbEncryptTest_0030', 0, async function (done) {
-        await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0030 start *************")
         let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         let predicates = new data_relationalStore.RdbPredicates("test")
         predicates.equalTo("name", "zhangsan")
@@ -234,7 +234,7 @@ describe('rdbEncryptTest', function () {
         resultSet = null
         rdbStore = null
         done()
-        await console.log(TAG + "************* RdbEncryptTest_0030 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0030 end *************")
     })
 
     /**
@@ -286,7 +286,7 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB Encrypt function test for setDistributedTables and insert.
      */
     it('RdbEncryptTest_0050', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0050 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0050 start *************")
         try {
             let rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG_ENCRYPT)
             await rdbStore.executeSql(CREATE_TABLE_TEST, null)
@@ -317,7 +317,7 @@ describe('rdbEncryptTest', function () {
      *          4. query db1 and db2
      */
     it('RdbEncryptTest_0060', 0, async function () {
-        await console.info(TAG + "************* RdbEncryptTest_0060 start *************")
+        console.info(TAG + "************* RdbEncryptTest_0060 start *************")
         context = ability_featureAbility.getContext()
         let rdbStore1;
         let rdbStore2;
