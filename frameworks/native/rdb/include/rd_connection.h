@@ -41,7 +41,6 @@ public:
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
-    bool IsInTrans() const override;
     int32_t ReSetKey(const RdbStoreConfig &config) override;
     int32_t TryCheckPoint(bool timeout) override;
     int32_t LimitWalSize() override;

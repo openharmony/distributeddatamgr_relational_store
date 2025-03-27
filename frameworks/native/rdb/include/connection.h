@@ -63,7 +63,6 @@ public:
     virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
-    virtual bool IsInTrans() const = 0;
     virtual int32_t ReSetKey(const RdbStoreConfig &config) = 0;
     virtual int32_t TryCheckPoint(bool timeout) = 0;
     virtual int32_t LimitWalSize() = 0;
