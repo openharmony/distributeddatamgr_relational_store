@@ -13,5 +13,5 @@
 
 # any change to
 # interfaces/inner_api/rdb/include/distributeddata_relational_store_ipc_interface_code.h
-# needs to be reviewed by @leonchan5
-interfaces/inner_api/rdb/include/distributeddata_relational_store_ipc_interface_code.h @leonchan5
+# needs to be reviewed by @leonchan5 liubao6@huawei.com
+interfaces/inner_api/rdb/include/distributeddata_relational_store_ipc_interface_code.h @leonchan5 liubao6@huawei.com
