@@ -1994,7 +1994,7 @@ describe('rdbStoreTransactionTest', function () {
                 expect(null).assertFail()
             } catch (e) {
                 console.log(TAG + e + " code: " + e.code);
-                expect(e.code).assertEqual(14800014);
+                expect(e.code).assertEqual(14800021);
             }
             console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0021 success");
         }
@@ -2038,7 +2038,7 @@ describe('rdbStoreTransactionTest', function () {
                 expect(null).assertFail()
             } catch (e) {
                 console.log(TAG + e + " code: " + e.code);
-                expect(e.code).assertEqual(14800014);
+                expect(e.code).assertEqual(14800021);
             }
             console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0022 success");
         }
@@ -2076,7 +2076,7 @@ describe('rdbStoreTransactionTest', function () {
                 expect(null).assertFail()
             } catch (e) {
                 console.log(TAG + e + " code: " + e.code);
-                expect(e.code).assertEqual(14800014);
+                expect(e.code).assertEqual(14800021);
             }
             console.log(TAG + "testON_CONFLICT_ROLLBACKInTransaction0023 success");
         }

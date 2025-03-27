@@ -31,6 +31,7 @@
 #include <regex>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -396,17 +397,6 @@ std::pair<int32_t, DistributedRdb::RdbDebugInfo> SqliteUtils::Stat(const std::st
     info.uid_ = fileStat.st_uid;
     info.gid_ = fileStat.st_gid;
     return std::pair{ E_OK, info };
-}
-
-std::string SqliteUtils::FomatConfigChg(const std::string &path, const RdbStoreConfig &config,
-    const DistributedRdb::RdbSyncerParam &lastParam)
-{
-    std::stringstream ss;
-    ss << "CFG_CHG:Store config invalid change, storePath=" << SqliteUtils::Anonymous(path).c_str()
-        << ",securityLevel:" << lastParam.level_ << "->" << static_cast<int32_t>(config.GetSecurityLevel())
-        << ",area:" << lastParam.area_ << "->" << config.GetArea()
-        << ",isEncrypt:" << lastParam.isEncrypt_ << "->" << config.IsEncrypt();
-    return ss.str();
 }
 
 std::string SqliteUtils::ReadFileHeader(const std::string &filePath)
