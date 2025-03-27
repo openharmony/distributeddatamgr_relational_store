@@ -1171,3 +1171,26 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_029, TestSize.Level1)
     auto result = transaction->Execute(CREATE_TABLE_SQL);
     ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 }
+
+/**
+ * @tc.name: RdbStore_Transaction_030
+ * @tc.desc: Abnormal testcase of commit after commit and rollback.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_030, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
