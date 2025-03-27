@@ -676,7 +676,7 @@ public:
             return path_ == config.path_ && securityLevel_ == config.securityLevel_;
         }
     }
-    
+
     /**
      * @brief Checks whether the database isSearchable necessary.
      */

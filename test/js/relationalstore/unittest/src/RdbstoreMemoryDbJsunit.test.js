@@ -824,8 +824,8 @@ describe('rdbStoreMemoryDbTest', function () {
             let predicates = new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("id", "1")
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = new data_relationalStore.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
@@ -891,8 +891,8 @@ describe('rdbStoreMemoryDbTest', function () {
             let predicates = new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("name", "xiaoming")
             let ret = await rdbStore.update(valueBucket, predicates)
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
 
             predicates = new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("age", 20)
@@ -900,7 +900,7 @@ describe('rdbStoreMemoryDbTest', function () {
             try {
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = await resultSet.getString(resultSet.getColumnIndex("name"))
-                await expect(nameStr).assertEqual(name);
+                expect(nameStr).assertEqual(name);
             } finally {
                 resultSet.close()
                 resultSet = null
@@ -962,8 +962,8 @@ describe('rdbStoreMemoryDbTest', function () {
             let predicates = new data_relationalStore.RdbPredicates("test")
             predicates.equalTo("age", "19")
             let ret = rdbStore.updateSync(valueBucket, predicates, data_relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
-            await expect(1).assertEqual(ret);
-            await console.log(TAG + "update done: " + ret);
+            expect(1).assertEqual(ret);
+            console.log(TAG + "update done: " + ret);
             predicates = new data_relationalStore.RdbPredicates("test")
             let resultSet = await rdbStore.query(predicates)
             try {
@@ -977,15 +977,15 @@ describe('rdbStoreMemoryDbTest', function () {
                 console.log(TAG + "{id=" + id + ", name=" + name + ", age=" + age + ", salary="
                     + salary + ", blobType=" + blobType);
 
-                await expect(1).assertEqual(id);
-                await expect("zhangsan").assertEqual(name);
-                await expect(18).assertEqual(age);
-                await expect(100.5).assertEqual(salary);
-                await expect(1).assertEqual(blobType[0]);
-                await expect(2).assertEqual(blobType[1]);
-                await expect(3).assertEqual(blobType[2]);
+                expect(1).assertEqual(id);
+                expect("zhangsan").assertEqual(name);
+                expect(18).assertEqual(age);
+                expect(100.5).assertEqual(salary);
+                expect(1).assertEqual(blobType[0]);
+                expect(2).assertEqual(blobType[1]);
+                expect(3).assertEqual(blobType[2]);
 
-                await expect(true).assertEqual(resultSet.goToNextRow())
+                expect(true).assertEqual(resultSet.goToNextRow())
                 const id_1 = await resultSet.getLong(resultSet.getColumnIndex("id"))
                 const name_1 = await resultSet.getString(resultSet.getColumnIndex("name"))
                 const age_1 = await resultSet.getLong(resultSet.getColumnIndex("age"))
@@ -994,14 +994,14 @@ describe('rdbStoreMemoryDbTest', function () {
                 console.log(TAG + "{id=" + id_1 + ", name=" + name_1 + ", age=" + age_1 + ", salary="
                     + salary_1 + ", blobType=" + blobType_1);
 
-                await expect(3).assertEqual(id_1);
-                await expect("wangjing").assertEqual(name_1);
-                await expect(20).assertEqual(age_1);
-                await expect(300.5).assertEqual(salary_1);
-                await expect(7).assertEqual(blobType_1[0]);
-                await expect(8).assertEqual(blobType_1[1]);
-                await expect(9).assertEqual(blobType_1[2]);
-                await expect(false).assertEqual(resultSet.goToNextRow())
+                expect(3).assertEqual(id_1);
+                expect("wangjing").assertEqual(name_1);
+                expect(20).assertEqual(age_1);
+                expect(300.5).assertEqual(salary_1);
+                expect(7).assertEqual(blobType_1[0]);
+                expect(8).assertEqual(blobType_1[1]);
+                expect(9).assertEqual(blobType_1[2]);
+                expect(false).assertEqual(resultSet.goToNextRow())
             } finally {
                 resultSet.close()
                 resultSet = null
@@ -1289,7 +1289,7 @@ describe('rdbStoreMemoryDbTest', function () {
             predicates.equalTo("name", nameStr)
             let querySqlPromise = rdbStore.query(predicates)
             querySqlPromise.then(async (resultSet) => {
-                await expect(2).assertEqual(resultSet.rowCount)
+                expect(2).assertEqual(resultSet.rowCount)
                 resultSet.close()
             }).catch((err) => {
                 console.error(TAG + `testMemoryDbExecuteSqlTest0002 failed, err code:${err.code}, message:${err.message}`)
@@ -1300,7 +1300,7 @@ describe('rdbStoreMemoryDbTest', function () {
         {
             let executeSqlPromise = rdbStore.executeSql("DELETE FROM test WHERE age = 19 AND name ='" + nameStr + "'")
             executeSqlPromise.then(async () => {
-                await console.log(TAG + "executeSql done.");
+                console.log(TAG + "executeSql done.");
             }).catch((err) => {
                 console.error(TAG + `testMemoryDbExecuteSqlTest0002 failed, err code:${err.code}, message:${err.message}`)
                 expect(null).assertFail();
@@ -1310,7 +1310,7 @@ describe('rdbStoreMemoryDbTest', function () {
         {
             let querySqlPromise = rdbStore.querySql("SELECT * FROM test WHERE name ='" + nameStr + "'")
             querySqlPromise.then(async (resultSet) => {
-                await expect(1).assertEqual(resultSet.rowCount)
+                expect(1).assertEqual(resultSet.rowCount)
                 expect(true).assertEqual(resultSet.goToFirstRow())
                 const name = resultSet.getString(resultSet.getColumnIndex("name"))
                 const age = resultSet.getLong(resultSet.getColumnIndex("age"))

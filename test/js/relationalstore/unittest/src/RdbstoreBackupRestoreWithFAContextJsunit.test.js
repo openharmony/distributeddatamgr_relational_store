@@ -125,7 +125,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
      * @tc.desc RDB backup and restore function test
      */
     it('RdbBackupRestoreTest_0010', 0, async function (done) {
-        await console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0010 start *************")
 
         try {
             await rdbStore.backup(DATABASE_BACKUP_NAME)
@@ -157,7 +157,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         resultSet.close()
         resultSet = null
         done()
-        await console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0010 end *************")
     })
 
     /**
@@ -166,7 +166,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
      * @tc.desc RDB backup function test
      */
     it('RdbBackupRestoreTest_0020', 0, async function (done) {
-        await console.log(TAG + "************* RdbBackupRestoreTest_0020 start *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0020 start *************")
         // RDB backup function test, backup file name empty
         BackupTest("")
 
@@ -174,7 +174,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         BackupTest(STORE_CONFIG.name)
 
         done()
-        await console.log(TAG + "************* RdbBackupRestoreTest_0020 end *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0020 end *************")
     })
 
     /**
@@ -183,7 +183,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
      * @tc.desc RDB restore function test
      */
     it('RdbBackupRestoreTest_0030', 0, async function (done) {
-        await console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0030 start *************")
         await rdbStore.backup(DATABASE_BACKUP_NAME)
 
         // RDB restore function test, backup file name empty
@@ -193,7 +193,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         RestoreTest(STORE_CONFIG.name)
 
         done()
-        await console.log(TAG + "************* RdbBackupRestoreTest_0030 end *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0030 end *************")
     })
 
     /**
@@ -202,7 +202,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
      * @tc.desc RDB restore function test
      */
     it('RdbBackupRestoreTest_0040', 0, async function (done) {
-        await console.log(TAG + "************* RdbBackupRestoreTest_0040 start *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0040 start *************")
         let dbName = "notExistName.db"
 
         // RDB restore function test, backup file does not exists
@@ -213,7 +213,7 @@ describe('rdbStoreBackupRestoreWithFAContextTest', function () {
         }
         RestoreTest(dbName)
         done()
-        await console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
+        console.log(TAG + "************* RdbBackupRestoreTest_0040 end *************")
     })
 
     /**

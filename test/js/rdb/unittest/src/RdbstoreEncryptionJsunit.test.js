@@ -101,7 +101,7 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB create encrypt db test
      */
     it('RdbEncryptTest_0010', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0010 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0010 start *************")
         try {
             context = ability_featureAbility.getContext()
             await data_rdb.getRdbStore(context, STORE_CONFIG_ENCRYPT, 1);
@@ -109,7 +109,7 @@ describe('rdbEncryptTest', function () {
             console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
             expect(null).assertFail();
         }
-        await console.log(TAG + "************* RdbEncryptTest_0010 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0010 end *************")
     })
 
     /**
@@ -118,7 +118,7 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB create unencrypted db test
      */
     it('RdbEncryptTest_0020', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0020 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0020 start *************")
         context = ability_featureAbility.getContext()
         try {
             await data_rdb.getRdbStore(context, STORE_CONFIG_UNENCRYPT, 1);
@@ -126,7 +126,7 @@ describe('rdbEncryptTest', function () {
             console.log(TAG + `failed, errcode:${JSON.stringify(err)}.`);
             expect(null).assertFail();
         }
-        await console.log(TAG + "************* RdbEncryptTest_0020 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0020 end *************")
     })
 
 
@@ -136,7 +136,7 @@ describe('rdbEncryptTest', function () {
      * @tc.desc RDB encrypt function test
      */
     it('RdbEncryptTest_0030', 0, async function () {
-        await console.log(TAG + "************* RdbEncryptTest_0030 start *************")
+        console.log(TAG + "************* RdbEncryptTest_0030 start *************")
         context = ability_featureAbility.getContext()
         let rdbStore = await CreateRdbStore(context, STORE_CONFIG_ENCRYPT)
         let predicates = new data_rdb.RdbPredicates("test")
@@ -159,7 +159,7 @@ describe('rdbEncryptTest', function () {
             resultSet = null
             rdbStore = null
         }
-        await console.log(TAG + "************* RdbEncryptTest_0030 end *************")
+        console.log(TAG + "************* RdbEncryptTest_0030 end *************")
     })
 
     /**
@@ -213,7 +213,7 @@ describe('rdbEncryptTest', function () {
      *          4. query db1 and db2
      */
     it('RdbEncryptTest_0050', 0, async function () {
-        await console.info(TAG + "************* RdbEncryptTest_0050 start *************")
+        console.info(TAG + "************* RdbEncryptTest_0050 start *************")
         context = ability_featureAbility.getContext()
         let rdbStore1;
         let rdbStore2;

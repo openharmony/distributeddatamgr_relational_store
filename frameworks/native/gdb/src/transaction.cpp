@@ -23,7 +23,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> Transaction::Create(std::shared
     }
     return { E_ERROR, nullptr };
 }
- 
+
 int32_t Transaction::RegisterCreator(Creator creator)
 {
     creator_ = std::move(creator);

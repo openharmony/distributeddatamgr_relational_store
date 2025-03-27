@@ -328,8 +328,8 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
-    char data1Value[size + 1];
-    cursor->getText(cursor, 0, data1Value, size + 1);
+    char data1Value[size];
+    cursor->getText(cursor, 0, data1Value, size);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
 
     int64_t data2Value;
@@ -349,9 +349,9 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
     cursor->goToNextRow(cursor);
 
     cursor->getSize(cursor, 0, &size);
-    char data1Value_1[size + 1];
-    cursor->getText(cursor, 0, data1Value_1, size + 1);
-    EXPECT_EQ(strcmp(data1Value_1, "liSi"), 0);
+    char data1Value1[size];
+    cursor->getText(cursor, 0, data1Value1, size);
+    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
 
     cursor->getInt64(cursor, 1, &data2Value);
     EXPECT_EQ(data2Value, 13800);
