@@ -47,11 +47,14 @@ static constexpr int MAX_FAULT_TIMES = 1;
 RdbFaultHiViewReporter::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 
 RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
-    { E_CREATE_FOLDER_FAIL, 0},
+    { E_DATABASE_BUSY, 0 },
+    { E_CREATE_FOLDER_FAIL, 0 },
+    { E_WAL_SIZE_OVER_LIMIT, 0 },
     { E_SQLITE_FULL, 0 },
     { E_SQLITE_CORRUPT, 0 },
     { E_SQLITE_PERM, 0 },
     { E_SQLITE_BUSY, 0 },
+    { E_SQLITE_LOCKED, 0 },
     { E_SQLITE_NOMEM, 0 },
     { E_SQLITE_IOERR, 0 },
     { E_SQLITE_CANTOPEN, 0 },
