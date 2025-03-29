@@ -56,7 +56,6 @@ public:
 private:
     static std::string GetBeginSql(int32_t type);
     int32_t Begin(int32_t type);
-    bool IsInTransaction();
     int32_t CloseInner(bool connRecycle = true);
     std::shared_ptr<RdbStore> GetStore();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);

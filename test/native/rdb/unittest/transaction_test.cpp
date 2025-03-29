@@ -489,7 +489,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_010, TestSize.Level1)
     result = transaction->Update(row, predicates, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
-    ASSERT_EQ(transaction->Commit(), E_ALREADY_CLOSED);
+    ASSERT_EQ(transaction->Commit(), E_SQLITE_ERROR);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test1");
     ASSERT_NE(resultSet, nullptr);
