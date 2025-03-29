@@ -17,6 +17,7 @@
 #define RDB_STAT_REPORTER_H
 
 #include <ctime>
+#include <memory>
 
 #include "rdb_store_config.h"
 #include "rdb_types.h"
