@@ -414,7 +414,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_008, TestSize.Level1)
     result = transaction->Insert("test1", row, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, -1);
-    ASSERT_EQ(transaction->Commit(), E_ALREADY_CLOSED);
+    ASSERT_EQ(transaction->Commit(), E_SQLITE_ERROR);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test1");
     ASSERT_NE(resultSet, nullptr);
@@ -451,7 +451,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_009, TestSize.Level1)
         "test1", row, "id = ?", std::vector<ValueObject>{ "1" }, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
-    ASSERT_EQ(transaction->Commit(), E_ALREADY_CLOSED);
+    ASSERT_EQ(transaction->Commit(), E_SQLITE_ERROR);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test1");
     ASSERT_NE(resultSet, nullptr);
@@ -530,7 +530,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_011, TestSize.Level1)
     result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
-    ASSERT_EQ(transaction->Commit(), E_ALREADY_CLOSED);
+    ASSERT_EQ(transaction->Commit(), E_SQLITE_ERROR);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test1");
     ASSERT_NE(resultSet, nullptr);
