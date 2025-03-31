@@ -91,9 +91,11 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         return rdbStore;
     }
     if (rdbStore != nullptr) {
+        auto log = RdbStoreConfig::FormatCfg(rdbStore->GetConfig(), config);
         LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
-            RdbStoreConfig::FormatCfg(rdbStore->GetConfig(), config).c_str());
+            log.c_str());
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
         if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
             errCode = E_CONFIG_INVALID_CHANGE;
             return nullptr;
@@ -103,7 +105,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     }
     std::tie(errCode, rdbStore) = OpenStore(config, path);
     if (errCode != E_OK || rdbStore == nullptr) {
-        LOG_ERROR("OpenStore failed. path:%{public}s, rc=%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
         return nullptr;
     }
     if (rdbStore->GetConfig().GetRoleType() == OWNER && !rdbStore->GetConfig().IsReadOnly()) {
@@ -114,8 +115,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         (void)rdbStore->ExchangeSlaverToMaster();
         errCode = ProcessOpenCallback(*rdbStore, version, openCallback);
         if (errCode != E_OK) {
-            LOG_ERROR("fail, path:%{public}s ProcessOpenCallback errCode:%{public}d",
-                SqliteUtils::Anonymous(rdbStore->GetConfig().GetPath()).c_str(), errCode);
+            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path).c_str(), errCode);
             return nullptr;
         }
     }

@@ -79,8 +79,6 @@ public:
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
-    static std::string FomatConfigChg(const std::string &path, const RdbStoreConfig &config,
-        const DistributedRdb::RdbSyncerParam &lastParam);
     static void WriteSqlToFile(const std::string &comparePath, const std::string &sql);
     static bool CleanFileContent(const std::string &filePath);
     static std::string GetErrInfoFromMsg(const std::string &message, const std::string &errStr);
