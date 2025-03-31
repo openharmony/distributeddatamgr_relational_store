@@ -80,7 +80,6 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk/src:native_rdb_ndk",
-                "//foundation/distributeddatamgr/relational_store/frameworks/cj:cj_relational_store_ffi",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
@@ -195,6 +194,13 @@
                             "vertex.h"
                         ],
                       "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb/include"
+                  }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/frameworks/cj:cj_relational_store_ffi",
+                    "header": {
+                        "header_files": [],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/frameworks/cj/include"
                   }
                 }
             ],
