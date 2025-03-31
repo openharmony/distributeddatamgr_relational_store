@@ -2583,7 +2583,7 @@ bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
 {
-    if (isReadOnly_ || rebuild_ != RebuiltType::NONE) {
+    if (isReadOnly_ || isMemoryRdb_ || rebuild_ != RebuiltType::NONE) {
         return E_OK;
     }
     auto [errCode, conn] = GetConn(false);
