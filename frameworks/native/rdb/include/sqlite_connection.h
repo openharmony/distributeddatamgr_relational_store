@@ -56,7 +56,6 @@ public:
     int32_t GetJournalMode() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     bool IsWriter() const override;
-    bool IsInTrans() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
