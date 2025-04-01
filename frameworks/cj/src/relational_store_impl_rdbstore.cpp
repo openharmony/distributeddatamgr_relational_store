@@ -270,6 +270,9 @@ namespace Relational {
         DistributedRdb::SyncResult resMap;
         rdbStore_->Sync(option, *(predicates.GetPredicates()),
             [&resMap](const DistributedRdb::SyncResult &result) { resMap = result; });
+        if (resMap.size() == 0) {
+            return CArrSyncResult{nullptr, nullptr, -1};
+        }
         char** resultStr = static_cast<char**>(malloc(resMap.size() * sizeof(char*)));
         int32_t* resultNum = static_cast<int32_t*>(malloc(resMap.size() * sizeof(int32_t)));
         if (resultStr == nullptr || resultNum == nullptr) {
