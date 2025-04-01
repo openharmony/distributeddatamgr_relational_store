@@ -78,8 +78,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(7);
       done();
@@ -115,8 +115,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(7);
       done();
@@ -150,6 +150,7 @@ describe('QueryWithCrudTest', function () {
           const age = resultSet.getString(resultSet.getColumnIndex("age"));
           console.log(TAG + "age:" + age);
           expect().assertFail();
+          done();
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
@@ -190,8 +191,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(0);
       done();
@@ -234,6 +235,7 @@ describe('QueryWithCrudTest', function () {
           const age = resultSet.getString(resultSet.getColumnIndex("age"));
           console.log(TAG + "age:" + age);
           expect().assertFail();
+          done();
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
@@ -282,12 +284,50 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(9);
       done();
       console.log(TAG + "************* QueryWithDelete006 end   *************");
+    })
+
+    /**
+     * @tc.name Concurrent query and delet test
+     * @tc.number QueryWithDelete007
+     * @tc.desc 10 records with a total of less than 2M data,
+     * delete 10 records, rowCount equals 0 records.
+     */
+    it('QueryWithDelete007', 0, async function (done) {
+      console.log(TAG + "************* QueryWithDelete007 start *************");
+      let u8 = new Uint8Array(Array(1).fill(1));
+      for (let i = 0; i < 10; i++) {
+        const valueBucket = {
+          "name": "zhangsan" + String(i),
+          "age": i,
+          "salary": 100.5,
+          "blobType": u8,
+        };
+        await rdbStore.insert("test", valueBucket);
+      }
+      let predicates = new relationalStore.RdbPredicates("test");
+      let resultSet = await rdbStore.query(predicates);
+      predicates.between('age', 0, 9);
+      let deleteRows = await rdbStore.delete(predicates);
+      expect(deleteRows).assertEqual(10);
+      try {
+        while (resultSet.goToNextRow()) {
+          const age = resultSet.getString(resultSet.getColumnIndex("age"));
+          console.log(TAG + "age:" + age);
+        }
+      } catch (err) {
+        console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
+        expect().assertFail();
+        done();
+      }
+      expect(resultSet.rowCount).assertEqual(0);
+      done();
+      console.log(TAG + "************* QueryWithDelete007 end   *************");
     })
 
     /**
@@ -328,8 +368,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(7);
       done();
@@ -376,8 +416,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(9);
       done();
@@ -421,6 +461,7 @@ describe('QueryWithCrudTest', function () {
           const age = resultSet.getString(resultSet.getColumnIndex("age"));
           console.log(TAG + "age:" + age);
           expect().assertFail();
+          done();
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
@@ -470,8 +511,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(1);
       done();
@@ -560,8 +601,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(10);
       done();
@@ -603,8 +644,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(10);
       done();
@@ -648,8 +689,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       expect(resultSet.rowCount).assertEqual(2);
       done();
@@ -693,8 +734,8 @@ describe('QueryWithCrudTest', function () {
         }
       } catch (err) {
         console.log(TAG + "catch err: failed, err: code=" + err.code + " message=" + err.message);
-        done();
         expect().assertFail();
+        done();
       }
       console.log(TAG + "rowCount:" + resultSet.rowCount);
       done();
