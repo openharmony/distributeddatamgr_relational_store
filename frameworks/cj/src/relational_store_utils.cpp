@@ -143,6 +143,9 @@ namespace Relational {
     {
         NativeRdb::ValueObject::Assets val;
         object.GetAssets(val);
+        if (val.size() == 0) {
+            return ValueType {.assets = Assets{nullptr, -1}, .tag = TYPE_ASSETS};
+        }
         Assets assets = Assets {.head = static_cast<Asset*>(malloc(val.size() * sizeof(Asset))), .size = val.size()};
         if (assets.head == nullptr) {
             return ValueType {.assets = Assets{nullptr, -1}, .tag = TYPE_ASSETS};
@@ -189,6 +192,9 @@ namespace Relational {
             case NativeRdb::ValueObject::TYPE_BLOB: {
                 std::vector<uint8_t> val;
                 object.GetBlob(val);
+                if (val.size() == 0) {
+                    return ValueType {.Uint8Array = CArrUI8 {nullptr, -1}, .tag = TYPE_BLOB};
+                }
                 CArrUI8 arr = CArrUI8 {.head = static_cast<uint8_t*>(malloc(val.size() * sizeof(uint8_t))),
                     .size = val.size()};
                 if (arr.head == nullptr) {
@@ -282,6 +288,9 @@ namespace Relational {
     {
         ModifyTime modifyTime{0};
         modifyTime.size = static_cast<int64_t>(map.size());
+        if (modifyTime.size == 0) {
+            return ModifyTime{0};
+        }
         modifyTime.key = static_cast<RetPRIKeyType*>(malloc(sizeof(RetPRIKeyType) * modifyTime.size));
         modifyTime.value = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * modifyTime.size));
         if (modifyTime.key == nullptr || modifyTime.value == nullptr) {
