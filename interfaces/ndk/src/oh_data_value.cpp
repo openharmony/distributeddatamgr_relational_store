@@ -58,7 +58,7 @@ static int CheckValueType(const OH_Data_Value *value, int32_t type)
     return RDB_OK;
 }
 
-OH_Data_Value *OH_Value_Create()
+OH_Data_Value *OH_Value_Create(void)
 {
     OH_Data_Value *value = new (std::nothrow) OH_Data_Value;
     if (value == nullptr) {
