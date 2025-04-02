@@ -42,7 +42,7 @@ static bool IsValidValuesElement(OH_Data_Values *values, int index)
     return true;
 }
 
-OH_Data_Values *OH_Values_Create()
+OH_Data_Values *OH_Values_Create(void)
 {
     OH_Data_Values *values = new (std::nothrow) OH_Data_Values;
     return values;
