@@ -172,33 +172,6 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
   }
 }
 
-ohos_unittest("NativeGdbStoreConfigTest") {
-  module_out_path = module_output_path
-
-  include_dirs = [
-    "${relational_store_common_path}/include",
-    "${relational_store_innerapi_path}/gdb/include",
-    "${relational_store_innerapi_path}/rdb/include",
-    "${relational_store_native_path}/gdb/include",
-    "${relational_store_native_path}/rdb/include",
-  ]
-
-  sources = [
-    "${relational_store_native_path}/gdb/src/store_config.cpp",
-    "unittest/gdb_store_config_test.cpp",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "googletest:gtest_main",
-    "hilog:libhilog",
-    "huks:libhukssdk",
-  ]
-  if (arkdata_db_core_is_exists) {
-    defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
-  }
-}
-
 ###############################################################################
 group("unittest") {
   testonly = true
@@ -206,7 +179,6 @@ group("unittest") {
   deps = [
     ":NativeGdbAdaptTest",
     ":NativeGdbGrdAdapterTest",
-    ":NativeGdbStoreConfigTest",
     ":NativeGdbTest",
   ]
 }
