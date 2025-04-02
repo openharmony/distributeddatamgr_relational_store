@@ -61,7 +61,7 @@ typedef struct OH_Data_VBuckets OH_Data_VBuckets;
  * @see OH_VBuckets_Destroy.
  * @since 16
  */
-OH_Data_VBuckets *OH_VBuckets_Create();
+OH_Data_VBuckets *OH_VBuckets_Create(void);
 
 /**
  * @brief Destroys an OH_Data_VBuckets instance object.
@@ -99,7 +99,7 @@ int OH_VBuckets_PutRow(OH_Data_VBuckets *buckets, const OH_VBucket *row);
 int OH_VBuckets_PutRows(OH_Data_VBuckets *buckets, const OH_Data_VBuckets *rows);
 
 /**
- * @brief Add an OH_Data_VBuckets to OH_Data_VBuckets object.
+ * @brief Gets the number of rows in OH_Data_VBuckets object.
  *
  * @param buckets Represents a pointer to an instance of OH_Data_VBuckets.
  * @param count Represents the count of OH_VBucket in OH_Data_VBuckets. It is an output parameter.
