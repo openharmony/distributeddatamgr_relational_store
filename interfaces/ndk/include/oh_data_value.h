@@ -125,7 +125,7 @@ typedef struct OH_Data_Value OH_Data_Value;
  * @see OH_Value_Destroy.
  * @since 16
  */
-OH_Data_Value *OH_Value_Create();
+OH_Data_Value *OH_Value_Create(void);
 
 /**
  * @brief Destroys an OH_Data_Value instance object.
