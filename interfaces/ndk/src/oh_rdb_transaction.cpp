@@ -41,7 +41,7 @@ static bool IsValidRdbTransOptions(const OH_RDB_TransOptions *options)
     return ret;
 }
 
-OH_RDB_TransOptions *OH_RdbTrans_CreateOptions()
+OH_RDB_TransOptions *OH_RdbTrans_CreateOptions(void)
 {
     OH_RDB_TransOptions *value = new (std::nothrow) OH_RDB_TransOptions;
     if (value == nullptr) {
