@@ -34,7 +34,7 @@ static bool IsValidVBuckets(const OH_Data_VBuckets *vbuckets)
     return ret;
 }
 
-OH_Data_VBuckets *OH_VBuckets_Create()
+OH_Data_VBuckets *OH_VBuckets_Create(void)
 {
     OH_Data_VBuckets *vbuckets = new (std::nothrow) OH_Data_VBuckets;
     if (vbuckets == nullptr) {

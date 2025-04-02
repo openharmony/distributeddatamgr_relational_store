@@ -62,7 +62,7 @@ typedef struct OH_Data_Values OH_Data_Values;
  * @see OH_Values_Destroy.
  * @since 16
  */
-OH_Data_Values *OH_Values_Create();
+OH_Data_Values *OH_Values_Create(void);
 
 /**
  * @brief Destroys an OH_Data_Values instance object.
