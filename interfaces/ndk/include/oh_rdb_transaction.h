@@ -98,7 +98,7 @@ typedef struct OH_Rdb_Transaction OH_Rdb_Transaction;
  * @see OH_RdbTrans_DestroyOptions.
  * @since 16
  */
-OH_RDB_TransOptions *OH_RdbTrans_CreateOptions();
+OH_RDB_TransOptions *OH_RdbTrans_CreateOptions(void);
 
 /**
  * @brief Destroys an OH_RDB_TransOptions instance object.
