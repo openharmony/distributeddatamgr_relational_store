@@ -1766,6 +1766,22 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetReadTime, TestSize.Level
     GDBHelper::DeleteDBStore(StoreConfig(dbName, databasePath));
 }
 
+HWTEST_F(GdbExecuteTest, GdbStore_Execute_StoreConfigSetWriteTime, TestSize.Level1)
+{
+    int errCode = E_OK;
+    std::string dbName = "success01";
+    std::string dbPath = databasePath;
+    std::vector<uint8_t> encryptKey = std::vector<uint8_t>();
+    auto config = StoreConfig(dbName, dbPath);
+    config.SetWriteTime(3);
+    EXPECT_EQ(config.GetWriteTime(), 3);
+
+    auto store = GDBHelper::GetDBStore(config, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    GDBHelper::DeleteDBStore(config);
+}
+
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_UtilsTest, TestSize.Level1)
 {
     int errCode = E_OK;
