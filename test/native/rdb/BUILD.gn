@@ -110,6 +110,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rd_utils_test.cpp",
     "unittest/rdb_attach_test.cpp",
     "unittest/rdb_bigint_test.cpp",
+    "unittest/rdb_callback_icu_test.cpp",
     "unittest/rdb_concurrent_querywithcurd_test.cpp",
     "unittest/rdb_corrupt_test.cpp",
     "unittest/rdb_delete_test.cpp",
