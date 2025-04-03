@@ -1616,10 +1616,5 @@ int32_t SqliteConnection::Restore(const RdbStoreConfig &config, const std::strin
     Connection::Delete(slaveConfig.GetPath());
     return E_OK;
 }
-
-bool SqliteConnection::IsInTrans() const
-{
-    return sqlite3_get_autocommit(dbHandle_) == 0;
-}
 } // namespace NativeRdb
 } // namespace OHOS

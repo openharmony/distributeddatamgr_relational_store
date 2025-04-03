@@ -272,7 +272,7 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
     if (counter == nullptr) {
         return false;
     }
-    if (*counter < UCHAR_MAX) {
+    if (*counter < UINT8_MAX) {
         (*counter)++;
     }
     return *counter <= MAX_FAULT_TIMES;
@@ -305,7 +305,8 @@ void RdbFaultEvent::Report() const
         { .name = "FAULT_TIME", .t = HISYSEVENT_STRING, .v = { .s = occurTime.data() }, .arraySize = 0 },
         { .name = "FAULT_TYPE", .t = HISYSEVENT_STRING, .v = { .s = faultType.data() }, .arraySize = 0 },
         { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING, .v = { .s = bundleName.data() }, .arraySize = 0 },
-        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = errorCode_ }, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = static_cast<uint32_t>(errorCode_) },
+            .arraySize = 0 },
         { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
     };
     auto size = sizeof(params) / sizeof(params[0]);
@@ -358,7 +359,8 @@ void RdbFaultDbFileEvent::Report() const
         { .name = "MODULE_NAME", .t = HISYSEVENT_STRING, .v = { .s = moduleName.data() }, .arraySize = 0 },
         { .name = "STORE_NAME", .t = HISYSEVENT_STRING, .v = { .s = storeName.data() }, .arraySize = 0 },
         { .name = "BUSINESS_TYPE", .t = HISYSEVENT_STRING, .v = { .s = businessType.data() }, .arraySize = 0 },
-        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = GetErrCode()}, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32, .v = { .ui32 = static_cast<uint32_t>(GetErrCode())},
+            .arraySize = 0 },
         { .name = "APPENDIX", .t = HISYSEVENT_STRING, .v = { .s = appendInfo.data() }, .arraySize = 0 },
     };
     auto size = sizeof(params) / sizeof(params[0]);
