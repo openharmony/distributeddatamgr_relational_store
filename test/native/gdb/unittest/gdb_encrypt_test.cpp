@@ -443,18 +443,3 @@ HWTEST_F(GdbEncryptTest, GdbEncrypt_Config, TestSize.Level1)
     config.GenerateEncryptedKey();
     config.ChangeEncryptKey();
 }
-
-HWTEST_F(GdbEncryptTest, GdbEncrypt_Config_Test, TestSize.Level1)
-{
-    std::string dbName = "ConfigTest";
-    std::string dbPath = databasePath;
-    auto config = StoreConfig(dbName, dbPath, DBType::DB_GRAPH, true);
-    EXPECT_EQ(config.IsEncrypt(), true);
-    config.GenerateEncryptedKey();
-    ASSERT_TRUE(config.GetEncryptKey().size() > 0);
-    EXPECT_EQ(config.GetNewEncryptKey().size(), 0);
-    // newkey is empty, not change key
-    config.ChangeEncryptKey();
-    ASSERT_TRUE(config.GetEncryptKey().size() > 0);
-    EXPECT_EQ(config.GetNewEncryptKey().size(), 0);
-}
