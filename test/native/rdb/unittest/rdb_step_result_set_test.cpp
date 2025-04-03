@@ -106,31 +106,58 @@ void RdbStepResultSetTest::TearDown(void)
 
 void RdbStepResultSetTest::GenerateDefaultTable()
 {
-    std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
-                                 std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
+    std::string createTableSql =
+        "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, data3 FLOAT, data4 BLOB, "
+        "data5 ASSET, data6 ASSETS, data7 floatvector(128), data8 UNLIMITED INT);";
     store->ExecuteSql(createTableSql);
 
-    std::string insertSql = "INSERT INTO test (data1, data2, data3, data4) VALUES (?, ?, ?, ?);";
+    std::string insertSql = "INSERT INTO test (data1, data2, data3, data4, data5, data6, data7, data8) VALUES "
+                            "(?, ?, ?, ?, ?, ?, ?, ?);";
 
     /* insert first entry data */
-    uint8_t uValue = 66;
-    std::vector<uint8_t> typeBlob;
-    typeBlob.push_back(uValue);
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{ ValueObject(std::string("hello")), ValueObject((int)10),
-                                     ValueObject((double)1.0), ValueObject((std::vector<uint8_t>)typeBlob) });
+    AssetValue asset {
+        .version = 0,
+        .name = "123",
+        .uri = "my test path",
+        .createTime = "12",
+        .modifyTime = "12",
+    };
+    vector<AssetValue> assets;
+    assets.push_back(asset);
+    std::vector<ValueObject> args;
+    args.push_back("hello");
+    args.push_back(10); // set int value 10
+    args.push_back(1.0);
+    args.push_back(std::vector<uint8_t>(1, 66)); // set uint8_t value 66
+    args.push_back(asset);
+    args.push_back(assets);
+    args.push_back(std::vector<float>(1, 0.5)); // set float value 0.5
+    args.push_back(BigInteger(0));
+    store->ExecuteSql(insertSql, args);
 
     /* insert second entry data */
-    typeBlob.clear();
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-                                     ValueObject(std::string("2")), ValueObject((int)-5), ValueObject((double)2.5),
-                                     ValueObject() // set double value 2.5
-                                 });
+    args.clear();
+    args.push_back("2");
+    args.push_back(-5); // set int value -5
+    args.push_back(2.5); // set float value 2.5
+    args.push_back(ValueObject());
+    args.push_back(asset);
+    args.push_back(assets);
+    args.push_back(std::vector<float>(1, 0.5)); // set float value 0.5
+    args.push_back(BigInteger(0));
+    store->ExecuteSql(insertSql, args);
 
     /* insert third entry data */
-    store->ExecuteSql(insertSql, std::vector<ValueObject>{
-                                     ValueObject(std::string("hello world")), ValueObject((int)3),
-                                     ValueObject((double)1.8), ValueObject() // set int value 3, double 1.8
-                                 });
+    args.clear();
+    args.push_back("hello world");
+    args.push_back(3); // set int value 3
+    args.push_back(1.8); // set float value 1.8
+    args.push_back(ValueObject());
+    args.push_back(asset);
+    args.push_back(assets);
+    args.push_back(std::vector<float>(1, 0.5)); // set float value 0.5
+    args.push_back(BigInteger(0));
+    store->ExecuteSql(insertSql, args);
 }
 
 void RdbStepResultSetTest::GenerateDefaultEmptyTable()
@@ -208,7 +235,6 @@ void RdbStepResultSetTest::CheckResultSetData(
 HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 {
     GenerateDefaultTable();
-
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     bool bResultSet = true;
@@ -231,6 +257,14 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
     CheckColumnType(resultSet, 3, ColumnType::TYPE_FLOAT);
 
     CheckColumnType(resultSet, 4, ColumnType::TYPE_BLOB);
+
+    CheckColumnType(resultSet, 5, ColumnType::TYPE_ASSET);
+
+    CheckColumnType(resultSet, 6, ColumnType::TYPE_ASSETS);
+
+    CheckColumnType(resultSet, 7, ColumnType::TYPE_FLOAT32_ARRAY);
+
+    CheckColumnType(resultSet, 8, ColumnType::TYPE_BIGINT);
 
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     EXPECT_EQ(E_OK, resultSet->GoToNextRow());
@@ -723,7 +757,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
-    EXPECT_EQ(5, columnCount);
+    EXPECT_EQ(9, columnCount);
     iRet = resultSet->GetColumnType(columnCount, type);
     EXPECT_NE(E_OK, iRet);
 }
@@ -799,7 +833,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
 
     int columnCount = 0;
     iRet = resultSet->GetColumnCount(columnCount);
-    EXPECT_EQ(5, columnCount);
+    EXPECT_EQ(9, columnCount);
     iRet = resultSet->GetColumnName(columnCount, columnName);
     EXPECT_NE(E_OK, iRet);
 }
@@ -1627,7 +1661,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
 
     int columnCount = 0;
     ret = resultSet->GetColumnCount(columnCount);
-    EXPECT_EQ(5, columnCount);
+    EXPECT_EQ(9, columnCount);
     ret = resultSet->GetColumnName(columnCount, columnName);
     EXPECT_NE(E_OK, ret);
 
@@ -1800,6 +1834,49 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep024, TestSize.Level1)
     EXPECT_EQ(E_OK, iRet);
     EXPECT_EQ(2, iValue);
 
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: RdbStore_StepResultSet_025
+ * @tc.desc: test StepResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_025, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    int64_t id;
+    ValuesBucket values;
+    values.PutNull("data1");
+    values.PutNull("data2");
+    values.PutNull("data3");
+    values.PutNull("data4");
+    values.PutNull("data5");
+    values.PutNull("data6");
+    values.PutNull("data7");
+    values.PutNull("data8");
+    store->Insert(id, "test", values);
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
+    EXPECT_NE(resultSet, nullptr);
+    EXPECT_EQ(resultSet->GoTo(4), E_OK);
+
+    CheckColumnType(resultSet, 0, ColumnType::TYPE_INTEGER);
+
+    CheckColumnType(resultSet, 1, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 2, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 3, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 4, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 5, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 6, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 7, ColumnType::TYPE_NULL);
+
+    CheckColumnType(resultSet, 8, ColumnType::TYPE_NULL);
     resultSet->Close();
 }
 

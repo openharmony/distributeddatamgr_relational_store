@@ -57,7 +57,8 @@ public:
 
 std::string const SqliteSharedOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE test (id INTEGER PRIMARY KEY "
                                                                 "AUTOINCREMENT, data1 TEXT,data2 INTEGER, data3 "
-                                                                "FLOAT, data4 BLOB, data5 ASSET, data6 ASSETS);";
+                                                                "FLOAT, data4 BLOB, data5 ASSET, data6 ASSETS, "
+                                                                "data7 floatvector(128), data8 UNLIMITED INT);";
 
 int SqliteSharedOpenCallback::OnCreate(RdbStore &rdbStore)
 {
@@ -99,27 +100,40 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
 
     int64_t id;
     ValuesBucket values;
+    AssetValue asset {
+        .version = 0,
+        .name = "123",
+        .uri = "my test path",
+        .createTime = "12",
+        .modifyTime = "12",
+    };
+    vector<AssetValue> assets;
+    assets.push_back(asset);
 
     values.PutInt("id", 1);
     values.PutString("data1", std::string("hello"));
-    values.PutInt("data2", 10);
+    values.PutInt("data2", 10); // set int value 10
     values.PutDouble("data3", 1.0);
-    values.PutBlob("data4", std::vector<uint8_t>{ 66 });
+    values.PutBlob("data4", std::vector<uint8_t>{ 66 }); // set uint8_t value 66
+    values.Put("data5", asset);
+    values.Put("data6", assets);
+    values.Put("data7", std::vector<float>(1, 0.5));  // set float value 0.5
+    values.Put("data8", BigInteger(0));
     store->Insert(id, "test", values);
 
     values.Clear();
-    values.PutInt("id", 2);
+    values.PutInt("id", 2); // set int value 2
     values.PutString("data1", std::string("2"));
-    values.PutInt("data2", -5);
-    values.PutDouble("data3", 2.5);
+    values.PutInt("data2", -5); // set int value -5
+    values.PutDouble("data3", 2.5); // set float value 2.5
     values.PutBlob("data4", std::vector<uint8_t>{});
     store->Insert(id, "test", values);
 
     values.Clear();
-    values.PutInt("id", 3);
+    values.PutInt("id", 3); // set int value 3
     values.PutString("data1", std::string("hello world"));
-    values.PutInt("data2", 3);
-    values.PutDouble("data3", 1.8);
+    values.PutInt("data2", 3); // set int value 3
+    values.PutDouble("data3", 1.8); // set float value 1.8
     values.PutBlob("data4", std::vector<uint8_t>{});
     store->Insert(id, "test", values);
 }
@@ -686,24 +700,22 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_008, TestSize.Le
 
     rstSet->GetColumnType(0, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);
-
-    bool isColNull = true;
-    rstSet->IsColumnNull(0, isColNull);
-    EXPECT_EQ(isColNull, false);
-
     rstSet->GetColumnType(1, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_STRING);
-
-    isColNull = true;
-    rstSet->IsColumnNull(0, isColNull);
-    EXPECT_EQ(isColNull, false);
-
     rstSet->GetColumnType(2, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);
     rstSet->GetColumnType(3, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_FLOAT);
     rstSet->GetColumnType(4, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_BLOB);
+    rstSet->GetColumnType(5, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_ASSET);
+    rstSet->GetColumnType(6, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_ASSETS);
+    rstSet->GetColumnType(7, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_FLOAT32_ARRAY);
+    rstSet->GetColumnType(8, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_BIGINT);
 
     int colCnt = 0;
     rstSet->GetColumnCount(colCnt);
@@ -1585,4 +1597,50 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_038, TestSize.Le
     EXPECT_EQ("TEXT", strValue);
 
     resultSet->Close();
+}
+
+HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_039, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    int64_t id;
+    ValuesBucket values;
+    values.PutNull("data1");
+    values.PutNull("data2");
+    values.PutNull("data3");
+    values.PutNull("data4");
+    values.PutNull("data5");
+    values.PutNull("data6");
+    values.PutNull("data7");
+    values.PutNull("data8");
+    store->Insert(id, "test", values);
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<ResultSet> rstSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    EXPECT_NE(rstSet, nullptr);
+
+    ColumnType colType;
+    int ret = rstSet->GetColumnType(0, colType);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    int retF = rstSet->GoTo(4);
+    EXPECT_EQ(retF, E_OK);
+
+    rstSet->GetColumnType(0, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);
+    rstSet->GetColumnType(1, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(2, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(3, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(4, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(5, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(6, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(7, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->GetColumnType(8, colType);
+    EXPECT_EQ(colType, ColumnType::TYPE_NULL);
+    rstSet->Close();
 }
