@@ -63,7 +63,7 @@ static constexpr const char *FT_SQLITE = "SQLITE";
 
 static constexpr const char *BUNDLE_NAME_COMMON = "common";
 
-class API_EXPORT RdbFaultEvent {
+class RdbFaultEvent {
 public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
@@ -99,13 +99,7 @@ private:
     bool printDbInfo_;
 };
 
-class API_EXPORT RdbEmptyBlobEvent : public RdbFaultEvent {
-public:
-    RdbEmptyBlobEvent(const std::string &bundleName);
-    virtual void Report() const override;
-};
-
-class API_EXPORT RdbFaultHiViewReporter {
+class RdbFaultHiViewReporter {
 public:
     using Collector =  int32_t (*)(const RdbStoreConfig &config, std::map<std::string,
         DistributedRdb::RdbDebugInfo>&, DistributedRdb::RdbDfxInfo&);
