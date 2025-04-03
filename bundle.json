@@ -66,7 +66,8 @@
                 "icu",
                 "sqlite",
                 "file_api",
-                "json"
+                "json",
+                "runtime_core"
             ],
             "third_party": [
                 "sqlite"
@@ -90,7 +91,8 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/ani/relationalstore:relationalstore_ani_package"
             ],
             "inner_kits": [
                 {
