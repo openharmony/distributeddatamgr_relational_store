@@ -288,6 +288,32 @@ struct SubscribeOption {
     std::string event;
 };
 
+/**
+ * @brief Indicates the column type.
+ *
+ * Value returned by getColumnType(int)
+ */
+enum class ColumnType {
+    /** Indicates the column type is NULL.*/
+    TYPE_NULL = 0,
+    /** Indicates the column type is INTEGER.*/
+    TYPE_INTEGER,
+    /** Indicates the column type is FLOAT.*/
+    TYPE_FLOAT,
+    /** Indicates the column type is STRING.*/
+    TYPE_STRING,
+    /** Indicates the column type is BLOB.*/
+    TYPE_BLOB,
+    /** Indicates the column type is ASSET.*/
+    TYPE_ASSET,
+    /** Indicates the column type is ASSETS.*/
+    TYPE_ASSETS,
+    /** Indicates the column type is Float32.*/
+    TYPE_FLOAT32_ARRAY,
+    /** Indicates the column type is BigInt.*/
+    TYPE_BIGINT
+};
+
 struct Origin {
     enum OriginType : int32_t {
         ORIGIN_LOCAL,

@@ -20,7 +20,8 @@ var context = ability_featureAbility.getContext()
 
 const TAG = "[RELATIONAL_STORE_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-    "data1 text," + "data2 long, " + "data3 double," + "data4 blob)";
+    "data1 text," + "data2 long, " + "data3 double," + "data4 blob," + "data5 ASSET," + "data6 ASSETS," +
+    "data7 floatvector(128)," + "data8 UNLIMITED INT" + ")";
 
 const STORE_CONFIG = {
     name: "Resultset.db",
@@ -685,7 +686,7 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testColumnCount0001 start *************");
         let predicates = await new data_relationalStore.RdbPredicates("test")
         let resultSet = await rdbStore.query(predicates)
-        expect(5).assertEqual(resultSet.columnCount);
+        expect(9).assertEqual(resultSet.columnCount);
         resultSet.close();
         resultSet = null;
         done();
@@ -2555,5 +2556,628 @@ describe('rdbResultSetTest', function () {
         done();
         console.log(TAG + "************* testQuerySharingResource005 end *************");
     })
+
+    /**
+     * @tc.name testgetColumnType001
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0245
+     * @tc.desc testgetColumnType001 test
+     */
+    it('testgetColumnType001', 0, async () => {
+        console.log(TAG + "************* testgetColumnType001 start *************");
+        try {
+            const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            }
+            const assets = [asset];
+            const valueBucket = {
+            "data1": "hello world",
+            "data2": 3,
+            "data3": 10.5,
+            "data4": new Uint8Array([1, 2, 3]),
+            "data5":asset,
+            "data6":assets,
+            "data7":new Float32Array([1.5, 2.5]),
+            "data8":100n
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType001 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("id"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data1"));
+            expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data2"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data3"));
+            expect(type).assertEqual(relationalStore.ColumnType.REAL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data4"));
+            expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data5"));
+            expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data6"));
+            expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data7"));
+            expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data8"));
+            expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType001 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType001 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType002
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0246
+     * @tc.desc testgetColumnType002 test
+     */
+    it('testgetColumnType002', 0, async () => {
+        console.log(TAG + "************* testgetColumnType002 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            "data2": null,
+            "data3": null,
+            "data4": null,
+            "data5": null,
+            "data6": null,
+            "data7": null,
+            "data8": null
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType002 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("id"));
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data1"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data2"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data3"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data4"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data5"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data6"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data7"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType(resultSet?.getColumnIndex("data8"));
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType002 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType002 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType003
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0247
+     * @tc.desc testgetColumnType003 test
+     */
+    it('testgetColumnType003', 0, async () => {
+        console.log(TAG + "************* testgetColumnType003 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType003 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.close();
+            await resultSet?.getColumnType(resultSet?.getColumnIndex("id"));
+            console.error(TAG + "testgetColumnType003 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('14800014').assertEqual(err.code);
+            console.error(TAG + "testgetColumnType003 getColumnType failed. " + err);
+        }
+        console.log(TAG + "************* testgetColumnType003 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType004
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0248
+     * @tc.desc testgetColumnType004 test
+     */
+    it('testgetColumnType004', 0, async () => {
+        console.log(TAG + "************* testgetColumnType004 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType004 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            await resultSet?.getColumnType(0);
+            console.error(TAG + "testgetColumnType004 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800012).assertEqual(err.code);
+            resultSet.close();
+            console.error(TAG + "testgetColumnType004 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType004 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType005
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0248
+     * @tc.desc testgetColumnType005 test
+     */
+    it('testgetColumnType005', 0, async () => {
+        console.log(TAG + "************* testgetColumnType005 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType005 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            await resultSet?.getColumnType(columnCount);
+            console.error(TAG + "testgetColumnType005 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800013).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnType005 getColumnType failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType005 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType006
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0249
+     * @tc.desc testgetColumnType006 test
+     */
+    it('testgetColumnType006', 0, async () => {
+        console.log(TAG + "************* testgetColumnType006 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType006 insert failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            await resultSet?.getColumnType(-1);
+            console.error(TAG + "testgetColumnType006 getColumnType success ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnType006 getColumnType failed. " + err);
+        }
+        console.log(TAG + "************* testgetColumnType006 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType007
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0250
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType007', 0, async () => {
+        console.log(TAG + "************* testgetColumnType007 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType007 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = await resultSet?.getColumnType(Number.MAX_SAFE_INTEGER);
+            console.error(TAG + "testgetColumnType007 failed type " + type);
+            expect(true).assertFail();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType007 success " + err);
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+        }
+        console.log(TAG + "************* testgetColumnType007 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType008
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0251
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType008', 0, async () => {
+        console.log(TAG + "************* testgetColumnType008 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType008 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = await resultSet?.getColumnType(Number.MAX_VALUE);
+            console.error(TAG + "testgetColumnType008 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType008 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType008 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType009
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0252
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType009', 0, async () => {
+        console.log(TAG + "************* testgetColumnType009 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType009 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = await resultSet?.getColumnType(Number.MIN_VALUE);
+            console.error(TAG + "testgetColumnType009 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType009 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType009 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType010
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0253
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType010', 0, async () => {
+        console.log(TAG + "************* testgetColumnType010 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType010 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = await resultSet?.getColumnType(Number.MIN_SAFE_INTEGER);
+            console.error(TAG + "testgetColumnType010 success type " + type);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType010 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType010 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType011
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0254
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType011', 0, async () => {
+        console.log(TAG + "************* testgetColumnType011 start *************");
+        try {
+            const asset = {
+            name: "name4",
+            uri: "uri4",
+            createTime: "createTime4",
+            modifyTime: "modifyTime4",
+            size: "size4",
+            path: "path4",
+            }
+            const assets = [asset];
+            const valueBucket = {
+            "data1": "hello world",
+            "data2": 3,
+            "data3": 100000,
+            "data4": new Uint8Array([1, 2, 3]),
+            "data5":asset,
+            "data6":assets,
+            "data7":new Float32Array([1.5, 2.5]),
+            "data8":100n
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType011 insert failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = await resultSet?.getColumnType("id");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType("data1");
+            expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+            type = await resultSet?.getColumnType("data2");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType("data3");
+            expect(type).assertEqual(relationalStore.ColumnType.REAL);
+            type = await resultSet?.getColumnType("data4");
+            expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+            type = await resultSet?.getColumnType("data5");
+            expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+            type = await resultSet?.getColumnType("data6");
+            expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+            type = await resultSet?.getColumnType("data7");
+            expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+            type = await resultSet?.getColumnType("data8");
+            resultSet?.close();
+            expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType011 querySql failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType011 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType012
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0255
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType012', 0, async () => {
+        console.log(TAG + "************* testgetColumnType012 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            "data2": null,
+            "data3": null,
+            "data4": null,
+            "data5": null,
+            "data6": null,
+            "data7": null,
+            "data8": null
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType012 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let type = relationalStore.ColumnType.NULL;
+            type = await resultSet?.getColumnType("id");
+            expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+            type = await resultSet?.getColumnType("data1");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data2");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data3");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data4");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data5");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data6");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data7");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            type = await resultSet?.getColumnType("data8");
+            expect(type).assertEqual(relationalStore.ColumnType.NULL);
+            resultSet?.close();
+        } catch(err) {
+            console.error(TAG + "testgetColumnType012 failed " + err);
+        }
+        console.log(TAG + "************* testgetColumnType012 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType013
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0256
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType013', 0, async () => {
+        console.log(TAG + "************* testgetColumnType013 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType013 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            await resultSet?.getColumnType("");
+            console.error(TAG + "testgetColumnType013 failed ");
+            expect(true).assertFail();
+            
+        } catch(err) {
+            expect('401').assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnType013 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnType013 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType014
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0257
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType014', 0, async () => {
+        console.log(TAG + "************* testgetColumnType014 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType014 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            let columnCount = resultSet?.columnCount;
+            expect(9).assertEqual(columnCount);
+            await resultSet?.getColumnType("columnName");
+            console.error(TAG + "testgetColumnType014 failed ");
+            expect(true).assertFail();
+            
+        } catch(err) {
+            expect(401).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnType014 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnType014 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType015
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0258
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType015', 0, async () => {
+        console.log(TAG + "************* testgetColumnType015 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType015 failed " + err);
+        }
+        try {
+            let resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.close();
+            await resultSet?.getColumnType("id");
+            console.error(TAG + "testgetColumnType015 failed ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect('14800014').assertEqual(err.code);
+            console.error(TAG + "testgetColumnType015 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnType015 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType016
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0259
+     * @tc.desc getColumnType test
+     */
+    it('testgetColumnType016', 0, async () => {
+        console.log(TAG + "************* testgetColumnType016 start *************");
+        try {
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType016 failed " + err);
+        }
+        let resultSet;
+        try {
+            resultSet = await rdbStore?.querySql("SELECT * FROM test");
+            await resultSet?.getColumnType("id");
+            console.error(TAG + "testgetColumnType016 failed ");
+            expect(true).assertFail();
+        } catch(err) {
+            expect(14800012).assertEqual(err.code);
+            resultSet?.close();
+            console.error(TAG + "testgetColumnType016 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnType016 end *************");
+    });
+
+    /**
+     * @tc.name testgetColumnType017
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0260
+     * @tc.desc GetColumnType and close concurrent testing
+     */
+    it('testgetColumnType017', 0, async () => {
+        console.log(TAG + "************* testgetColumnType017 start *************");
+        try {
+            let predicates = new relationalStore.RdbPredicates("test");
+            await rdbStore?.delete(predicates);
+            const valueBucket = {
+            "data1": null,
+            }
+            await rdbStore?.insert("test", valueBucket);
+        } catch(err) {
+            console.error(TAG + "testgetColumnType017 insert failed " + err);
+        }
+        try {
+            for (let i = 0; i < 500; ++i) {
+            let resultSet = await rdbStore?.querySql("SELECT data1 FROM test");
+            let count = resultSet?.rowCount;
+            expect(true).assertEqual(resultSet?.goToRow(count - 1));
+            resultSet?.getColumnType(0);
+            resultSet?.close();
+            }
+        } catch(err) {
+            expect('14800014').assertEqual(err.code);
+            console.error(TAG + "testgetColumnType017 success " + err);
+        }
+        console.log(TAG + "************* testgetColumnType017 end *************");
+    });
     console.log(TAG + "*************Unit Test End*************");
 })

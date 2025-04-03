@@ -12,6 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <string>
+#include "js_native_api.h"
+#include "js_native_api_types.h"
 #define LOG_TAG "ResultSetProxy"
 #include "napi_result_set.h"
 
@@ -214,15 +218,54 @@ napi_value ResultSetProxy::GetColumnCount(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    int32_t columnIndex;
-    auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
-    ColumnType columnType = ColumnType::TYPE_NULL;
-    if (resultSet != nullptr) {
-        resultSet->GetColumnType(columnIndex, columnType);
-    }
-
-    return JSUtils::Convert2JSValue(env, int32_t(columnType));
+    struct TypeContextBase : public ContextBase {
+    public:
+        int32_t columnIndex = 0;
+        std::string columnName;
+        ColumnType columnType = ColumnType::TYPE_NULL;
+        std::weak_ptr<ResultSet> resultSet;
+    };
+    std::shared_ptr<TypeContextBase> context = std::make_shared<TypeContextBase>();
+    auto resultSet = GetInnerResultSet(env, info);
+    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    context->resultSet = resultSet;
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1"));
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[0], &type);
+        if (type == napi_number) {
+            auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->columnIndex);
+            CHECK_RETURN_SET_E(
+                OK == errCode && context->columnIndex >= 0, std::make_shared<ParamError>("Invalid columnIndex"));
+        } else {
+            auto errCode = JSUtils::Convert2Value(env, argv[0], context->columnName);
+            CHECK_RETURN_SET_E(OK == errCode && !context->columnName.empty(),
+                std::make_shared<ParamError>("columnName", "a non empty string."));
+        }
+    };
+    auto exec = [context]() -> int {
+        auto result = context->resultSet.lock();
+        if (result == nullptr) {
+            return E_ALREADY_CLOSED;
+        }
+        int errCode = E_OK;
+        if (!context->columnName.empty()) {
+            errCode = result->GetColumnIndex(context->columnName, context->columnIndex);
+        }
+        if (errCode == E_OK) {
+            errCode = result->GetColumnType(context->columnIndex, context->columnType);
+        }
+        if (errCode == E_INVALID_ARGS) {
+            return E_INVALID_ARGS_NEW;
+        }
+        return errCode;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = JSUtils::Convert2JSValue(env, static_cast<int32_t>(context->columnType));
+    };
+    context->SetAction(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
 }
 
 napi_value ResultSetProxy::GetRowCount(napi_env env, napi_callback_info info)
@@ -713,7 +756,8 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
         std::vector<napi_property_descriptor> properties = {
             DECLARE_NAPI_FUNCTION("goToRow", GoToRow),
             DECLARE_NAPI_FUNCTION("getLong", GetLong),
-            DECLARE_NAPI_FUNCTION("getColumnType", GetColumnType),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("getColumnType", GetColumnType, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("getColumnTypeSync", GetColumnType, SYNC),
             DECLARE_NAPI_FUNCTION("goTo", GoTo),
             DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
             DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),

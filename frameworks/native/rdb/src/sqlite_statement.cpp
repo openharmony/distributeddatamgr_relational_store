@@ -37,7 +37,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
-
+#include "string_utils.h"
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -543,7 +543,7 @@ std::pair<int32_t, int32_t> SqliteStatement::GetColumnType(int index) const
         return { E_ERROR, int32_t(ColumnType::TYPE_NULL) };
     }
 
-    auto declType = SqliteUtils::StrToUpper(std::string(decl));
+    auto declType = StringUtils::TruncateAfterFirstParen(SqliteUtils::StrToUpper(decl));
     if (declType == ValueObject::DeclType<ValueObject::Asset>()) {
         types_[index] = int32_t(ColumnType::TYPE_ASSET);
     } else if (declType == ValueObject::DeclType<ValueObject::Assets>()) {

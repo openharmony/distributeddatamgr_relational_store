@@ -163,7 +163,7 @@ describe('SceneGetValuesBucketPerf', function () {
       }
 
       for (let i = 0; i < 20; i++) {
-        switch (resultSet.getColumnType(indexes[i])) {
+        switch (resultSet.getColumnTypeSync(indexes[i])) {
           case 0: // TYPE_NULL
             values[FIELDS[i]] = null;
             break;
