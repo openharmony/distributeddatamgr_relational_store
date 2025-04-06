@@ -34,9 +34,16 @@ ohos_fuzztest("RdbStoreFuzzTest") {
 
   sources = [ "rdbstore_fuzzer.cpp" ]
 
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb_static" ]
+
   external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "hilog:libhilog",
-    "relational_store:native_rdb",
+    "ipc:ipc_core",
+    "kv_store:distributeddb",
+    "sqlite:sqlite",
   ]
 }
 
