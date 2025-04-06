@@ -20,25 +20,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 ohos_fuzztest("RdbImplFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
-  include_dirs = [
-    "${relational_store_native_path}/rdb/include",
-    "${relational_store_innerapi_path}/rdb/include",
-    "${distributeddata_base_path}/kv_store/frameworks/innerkitsimpl/rdb",
-    "${distributeddata_base_path}/kv_store/frameworks/innerkitsimpl/rdb/include",
-    "${common_tool_path}/",
-    "//third_party/sqlite/include",
-    "${distributeddata_base_path}/kv_store/frameworks/libs/distributeddb/common/include/relational",
-    "//third_party/jsoncpp/include/json",
-    "//third_party/skia/third_party/externals/spirv-headers/tools/buildHeaders/jsoncpp/dist/json",
-    "//third_party/skia/third_party/externals/swiftshader/third_party/SPIRV-Headers/tools/buildHeaders/jsoncpp/dist/json",
-    "//third_party/jsoncpp/include/json",
-    "//third_party/grpc/src/core/lib/json",
-    "${foundation_systemabilitymgr_path}/safwk/services/safwk/include",
-    "${foundation_systemabilitymgr_path}/samgr/interfaces/innerkits/samgr_proxy/include",
-    "${base_security_dataclassification_path}/interfaces/innerkits/datatransmitmgr/include",
-    "//third_party/json/single_include",
-    "//third_party/googletest/googletest/include/gtest",
-  ]
+  include_dirs = [ "${relational_store_native_path}/rdb/include" ]
 
   cflags = [
     "-g",
@@ -52,11 +34,7 @@ ohos_fuzztest("RdbImplFuzzTest") {
 
   sources = [ "rdbimpl_fuzzer.cpp" ]
 
-  deps = [
-    "${distributeddata_base_path}/kv_store/frameworks/libs/distributeddb:distributeddb",
-    "${distributeddata_base_path}/relational_store/interfaces/inner_api/rdb:native_rdb_static",
-    "//third_party/jsoncpp:jsoncpp",
-  ]
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb_static" ]
 
   external_deps = [
     "ability_base:zuri",
@@ -64,6 +42,8 @@ ohos_fuzztest("RdbImplFuzzTest") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:distributeddb",
+    "sqlite:sqlite",
   ]
 }
 
