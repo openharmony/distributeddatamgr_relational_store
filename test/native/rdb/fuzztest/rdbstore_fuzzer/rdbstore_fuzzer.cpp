@@ -197,7 +197,8 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     values.PutDouble("salary", valSalary);
     values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
 
-    errCode = RdbStoreFuzzTest::store_->Update(changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
+    errCode = RdbStoreFuzzTest::store_->Update(
+        changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
     if (errCode != E_OK) {
         result = false;
     }
