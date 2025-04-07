@@ -95,15 +95,6 @@ void RdbFaultEvent::Report() const
 {
 }
 
-RdbEmptyBlobEvent::RdbEmptyBlobEvent(const std::string &bundleName)
-    : RdbFaultEvent("", 0, "", "")
-{
-}
-
-void RdbEmptyBlobEvent::Report() const
-{
-}
-
 RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
     const std::string &custLog, bool printDbInfo) : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
 {
