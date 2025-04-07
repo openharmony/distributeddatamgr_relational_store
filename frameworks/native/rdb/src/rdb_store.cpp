@@ -607,4 +607,9 @@ std::string RdbStore::GetLogTableName(const std::string &tableName)
 {
     return "naturalbase_rdb_aux_" + tableName + "_log";
 }
+
+int RdbStore::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
 } // namespace OHOS::NativeRdb
