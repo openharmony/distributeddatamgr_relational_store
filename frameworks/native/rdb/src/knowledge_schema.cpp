@@ -58,7 +58,7 @@ std::string KnowledgeField::GetDescription() const
 bool KnowledgeTable::Marshal(json &node) const
 {
     SetValue(node[GET_NAME(tableName)], tableName_);
-    SetValue(node[GET_NAME(uniqueFields)], uniqueFields_);
+    SetValue(node[GET_NAME(referenceFields)], referenceFields_);
     SetValue(node[GET_NAME(knowledgeFields)], knowledgeFields_);
     return true;
 }
@@ -67,7 +67,7 @@ bool KnowledgeTable::Unmarshal(const json &node)
 {
     bool isUnmarshalSuccess = true;
     isUnmarshalSuccess = GetValue(node, GET_NAME(tableName), tableName_) && isUnmarshalSuccess;
-    isUnmarshalSuccess = GetValue(node, GET_NAME(uniqueFields), uniqueFields_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = GetValue(node, GET_NAME(referenceFields), referenceFields_) && isUnmarshalSuccess;
     isUnmarshalSuccess = GetValue(node, GET_NAME(knowledgeFields), knowledgeFields_) && isUnmarshalSuccess;
     return isUnmarshalSuccess;
 }
@@ -82,9 +82,9 @@ std::vector<KnowledgeField> KnowledgeTable::GetKnowledgeFields() const
     return knowledgeFields_;
 }
 
-std::vector<std::string> KnowledgeTable::GetUniqueFields() const
+std::vector<std::string> KnowledgeTable::GetReferenceFields() const
 {
-    return uniqueFields_;
+    return referenceFields_;
 }
 
 bool KnowledgeSchema::Marshal(json &node) const
