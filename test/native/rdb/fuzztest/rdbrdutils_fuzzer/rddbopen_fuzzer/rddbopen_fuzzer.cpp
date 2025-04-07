@@ -90,9 +90,10 @@ void RdDbOpenFuzzer(const uint8_t *data, size_t size)
     int32_t nit64t = ConvertToInt64(data, size);
     double doubleValue = ConvertToDouble(data, size);
     GRD_DB *dbHandle_ = nullptr;
-    RdUtils::RdDbOpen(reinterpret_cast<const char *>(data), reinterpret_cast<const char *>(data), unit32t, &dbHandle_);
+    std::string pathStr(reinterpret_cast<const char *>(data), size);
+    RdUtils::RdDbOpen(pathStr.c_str(), pathStr.c_str(), unit32t, &dbHandle_);
     GRD_SqlStmt *stmtHandle = nullptr;
-    RdUtils::RdSqlPrepare(dbHandle_, reinterpret_cast<const char *>(data), size, &stmtHandle, nullptr);
+    RdUtils::RdSqlPrepare(dbHandle_, pathStr.c_str(), size, &stmtHandle, nullptr);
     RdUtils::RdSqlReset(stmtHandle);
     RdUtils::RdSqlFinalize(stmtHandle);
     RdUtils::RdSqlBindBlob(stmtHandle, unit32t, static_cast<const void *>(data), size, nullptr);

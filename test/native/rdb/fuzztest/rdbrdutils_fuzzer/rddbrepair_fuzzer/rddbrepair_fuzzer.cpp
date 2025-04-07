@@ -21,9 +21,22 @@ using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace OHOS {
 
+uint32_t ConvertToUint32(const uint8_t *ptr, size_t size)
+{
+    if (ptr == nullptr || (size < sizeof(uint32_t))) {
+        return 0;
+    }
+    return *(reinterpret_cast<const uint32_t *>(ptr));
+}
+
 void rddbrepairFuzzer(const uint8_t *data, size_t size)
 {
-    RdUtils::RdDbRepair(reinterpret_cast<const char *>(data), reinterpret_cast<const char *>(data));
+    std::string pathStr(reinterpret_cast<const char *>(data), size);
+    uint32_t unit32t = ConvertToUint32(data, size);
+    GRD_DB *dbHandle_ = nullptr;
+    RdUtils::RdDbOpen(pathStr.c_str(), pathStr.c_str(), unit32t, &dbHandle_);
+    RdUtils::RdDbRepair(pathStr.c_str(), pathStr.c_str());
+    RdUtils::RdDbClose(dbHandle_, unit32t);
 }
 } // namespace OHOS
 
