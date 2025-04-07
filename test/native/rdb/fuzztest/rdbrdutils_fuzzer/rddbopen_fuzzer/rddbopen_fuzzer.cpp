@@ -90,6 +90,9 @@ void RdDbOpenFuzzer(const uint8_t *data, size_t size)
     int32_t nit64t = ConvertToInt64(data, size);
     double doubleValue = ConvertToDouble(data, size);
     GRD_DB *dbHandle_ = nullptr;
+    if (data == nullptr || (size < sizeof(char *))) {
+        return;
+    }
     std::string pathStr(reinterpret_cast<const char *>(data), size);
     RdUtils::RdDbOpen(pathStr.c_str(), pathStr.c_str(), unit32t, &dbHandle_);
     GRD_SqlStmt *stmtHandle = nullptr;

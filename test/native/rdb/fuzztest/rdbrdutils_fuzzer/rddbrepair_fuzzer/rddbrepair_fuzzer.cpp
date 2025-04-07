@@ -31,6 +31,9 @@ uint32_t ConvertToUint32(const uint8_t *ptr, size_t size)
 
 void rddbrepairFuzzer(const uint8_t *data, size_t size)
 {
+    if (data == nullptr || (size < sizeof(char *))) {
+        return;
+    }
     std::string pathStr(reinterpret_cast<const char *>(data), size);
     uint32_t unit32t = ConvertToUint32(data, size);
     GRD_DB *dbHandle_ = nullptr;
