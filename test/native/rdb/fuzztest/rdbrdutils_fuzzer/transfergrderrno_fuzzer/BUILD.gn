@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RdbRdUtilsTransferGrdErrnoFuzzTest") {
+ohos_fuzztest("TransferGrdErrnoFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [ "${relational_store_native_path}/rdb/include" ]
@@ -52,7 +52,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":RdbRdUtilsTransferGrdErrnoFuzzTest",
+    ":TransferGrdErrnoFuzzTest",
   ]
 }
 ###############################################################################
