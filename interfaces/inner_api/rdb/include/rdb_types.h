@@ -371,6 +371,7 @@ struct Field {
 struct RdbChangeProperties {
     bool isTrackedDataChange = false;
     bool isP2pSyncDataChange = false;
+    bool isKnowledgeDataChange = false;
 };
 
 struct RdbChangedData {
@@ -388,6 +389,25 @@ public:
     };
     virtual ~SqlObserver() = default;
     virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
+};
+
+struct RdbKnowledgeField {
+    std::string columnName;
+    std::vector<std::string> type;
+    std::string parser;
+    std::string description;
+};
+
+struct RdbKnowledgeTable {
+    std::string tableName;
+    std::vector<std::string> uniqueFields;
+    std::vector<RdbKnowledgeField> knowledgeFields;
+};
+
+struct RdbKnowledgeSchema {
+    int64_t version = 0;
+    std::string dbName;
+    std::vector<RdbKnowledgeTable> tables;
 };
 } // namespace OHOS::DistributedRdb
 #endif

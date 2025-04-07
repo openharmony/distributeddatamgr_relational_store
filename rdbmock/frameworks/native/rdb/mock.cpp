@@ -131,3 +131,15 @@ __attribute__((visibility("default"))) std::string DistributedDB::RelationalStor
 {
     return "";
 }
+
+__attribute__((visibility("default"))) DistributedDB::DBStatus SetKnowledgeSourceSchema([[gnu::unused]] sqlite3 *db,
+    [[gnu::unused]] const DistributedDB::KnowledgeSourceSchema &schema)
+{
+    return DBStatus::OK;
+}
+
+__attribute__((visibility("default"))) DistributedDB::DBStatus CleanDeletedData([[gnu::unused]] sqlite3 *db,
+    [[gnu::unused]] const std::string &tableName, [[gnu::unused]] uint64_t cursor)
+{
+    return DBStatus::OK;
+}
