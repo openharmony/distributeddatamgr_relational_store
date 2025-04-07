@@ -235,10 +235,7 @@ if (is_ohos) {
       "//plugins/libs/napi:napi_ios",
     ]
 
-    external_deps = [
-      "bounds_checking_function:libsec_static",
-      "c_utils:utils",
-    ]
+    external_deps = [ "bounds_checking_function:libsec_static" ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
