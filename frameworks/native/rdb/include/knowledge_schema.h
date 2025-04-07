@@ -45,11 +45,11 @@ public:
     bool Unmarshal(const json &node) override;
 
     std::string GetTableName() const;
-    std::vector<std::string> GetUniqueFields() const;
+    std::vector<std::string> GetReferenceFields() const;
     std::vector<KnowledgeField> GetKnowledgeFields() const;
 private:
     std::string tableName_;
-    std::vector<std::string> uniqueFields_;
+    std::vector<std::string> referenceFields_;
     std::vector<KnowledgeField> knowledgeFields_;
 };
 

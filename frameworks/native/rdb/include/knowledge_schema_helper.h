@@ -32,13 +32,14 @@ public:
     ~KnowledgeSchemaHelper();
 
     void Init(const RdbStoreConfig &config, const DistributedRdb::RdbKnowledgeSchema &schema);
-    std::vector<nlohmann::json> ParseSchema(const std::vector<std::string> &schemaStr);
     std::pair<int, DistributedRdb::RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName);
     void DonateKnowledgeData();
 private:
+    using Json = nlohmann::json;
     void LoadKnowledgeLib();
     void LoadKnowledgeSchemaManager(void *handle);
-    DistributedRdb::RdbKnowledgeSchema ParseRdbKnowledgeSchema(const nlohmann::json &json,
+    std::vector<KnowledgeSchemaHelper::Json> ParseSchema(const std::vector<std::string> &schemaStr);
+    DistributedRdb::RdbKnowledgeSchema ParseRdbKnowledgeSchema(const Json &json,
         const std::string &dbName);
     bool IsLoadLib() const;
 
