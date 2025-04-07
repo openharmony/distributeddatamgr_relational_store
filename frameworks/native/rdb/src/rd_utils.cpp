@@ -531,8 +531,8 @@ const float *RdUtils::RdSqlColumnFloatVector(GRD_SqlStmt *stmt, uint32_t idx, ui
 
 void RdUtils::ClearAndZeroString(std::string &str)
 {
-    str.clear();
     std::fill(str.begin(), str.end(), char(0));
+    str.clear();
 }
 
 const char *RdUtils::GetEncryptKey(const std::vector<uint8_t> &encryptedKey, char outBuff[], size_t outBufSize)
