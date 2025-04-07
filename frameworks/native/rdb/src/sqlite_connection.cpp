@@ -1350,8 +1350,8 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         for (const auto &item : table.knowledgeFields) {
             sourceSchema.knowledgeColNames.insert(item.columnName);
         }
-        sourceSchema.extendColNames = std::set<std::string>(table.uniqueFields.begin(),
-            table.uniqueFields.end());
+        sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
+            table.referenceFields.end());
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         LOG_INFO("status:%{public}d, table:%{public}s", status, SqliteUtils::Anonymous(table.tableName).c_str());
     }

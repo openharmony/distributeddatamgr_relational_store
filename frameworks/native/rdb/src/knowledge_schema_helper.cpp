@@ -56,9 +56,9 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
     schemaManager_->Init(config, schema);
 }
 
-std::vector<nlohmann::json> KnowledgeSchemaHelper::ParseSchema(const std::vector<std::string> &schemaStr)
+std::vector<KnowledgeSchemaHelper::Json> KnowledgeSchemaHelper::ParseSchema(const std::vector<std::string> &schemaStr)
 {
-    std::vector<nlohmann::json> schema;
+    std::vector<Json> schema;
     for (const auto &item : schemaStr) {
         auto config = Serializable::ToJson(item);
         if (config.is_null() || config.empty()) {
@@ -159,7 +159,7 @@ void KnowledgeSchemaHelper::LoadKnowledgeSchemaManager(void *handle)
 #endif
 }
 
-DistributedRdb::RdbKnowledgeSchema KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const nlohmann::json &json,
+DistributedRdb::RdbKnowledgeSchema KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const Json &json,
     const std::string &dbName)
 {
     KnowledgeSource source;
@@ -190,7 +190,7 @@ DistributedRdb::RdbKnowledgeSchema KnowledgeSchemaHelper::ParseRdbKnowledgeSchem
             field.parser = item.GetParser();
             knowledgeTable.knowledgeFields.push_back(std::move(field));
         }
-        knowledgeTable.uniqueFields = table.GetUniqueFields();
+        knowledgeTable.referenceFields = table.GetReferenceFields();
         schema.tables.push_back(knowledgeTable);
     }
     return schema;

@@ -400,7 +400,7 @@ struct RdbKnowledgeField {
 
 struct RdbKnowledgeTable {
     std::string tableName;
-    std::vector<std::string> uniqueFields;
+    std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
 };
 
