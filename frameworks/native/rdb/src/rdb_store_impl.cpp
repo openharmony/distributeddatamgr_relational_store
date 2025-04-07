@@ -32,6 +32,7 @@
 #include "connection_pool.h"
 #include "delay_notify.h"
 #include "directory_ex.h"
+#include "knowledge_schema_helper.h"
 #include "logger.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
@@ -120,9 +121,11 @@ int RdbStoreImpl::InnerOpen()
     if (isReadOnly_ || isMemoryRdb_ || config_.IsLocalOnly()) {
         return E_OK;
     }
-
+    if (config_.GetKnowledgeProcessing()) {
+        SetKnowledgeSchema();
+    }
     AfterOpen(syncerParam_);
-    if (config_.GetDBType() == DB_VECTOR || !config_.IsSearchable()) {
+    if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetKnowledgeProcessing())) {
         return E_OK;
     }
     int errCode = RegisterDataChangeCallback();
@@ -827,8 +830,23 @@ void RdbStoreImpl::InitDelayNotifier()
         return;
     }
     delayNotifier_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
-    delayNotifier_->SetTask([param = syncerParam_](const DistributedRdb::RdbChangedData &rdbChangedData,
-                                const RdbNotifyConfig &rdbNotifyConfig) -> int {
+    delayNotifier_->SetTask([param = syncerParam_, helper = GetKnowledgeSchemaHelper()](
+        const DistributedRdb::RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) -> int {
+        bool isKnowledgeDataChange = false;
+        bool isServiceWatchDataChange = false;
+        for (const auto &item : rdbChangedData.tableData) {
+            if (item.second.isKnowledgeDataChange) {
+                isKnowledgeDataChange = true;
+            }
+            isServiceWatchDataChange = isServiceWatchDataChange || item.second.isP2pSyncDataChange;
+            isServiceWatchDataChange = isServiceWatchDataChange || item.second.isTrackedDataChange;
+        }
+        if (isKnowledgeDataChange) {
+            helper->DonateKnowledgeData();
+        }
+        if (!isServiceWatchDataChange) {
+            return E_OK;
+        }
         auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (errCode == E_NOT_SUPPORT) {
             return errCode;
@@ -2646,6 +2664,21 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
     return { errCode, trans };
 }
 
+int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    return conn->CleanDirtyLog(table, cursor);
+}
+
 int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -2691,5 +2724,46 @@ std::set<std::string> RdbStoreImpl::CloudTables::Steal()
         result = std::move(changes_);
     }
     return result;
+}
+
+void RdbStoreImpl::SetKnowledgeSchema()
+{
+    {
+        std::lock_guard<std::mutex> autoLock(schemaMutex_);
+        if (knowledgeSchema_ != nullptr) {
+            return;
+        }
+    }
+    auto [errCode, schema] = GetKnowledgeSchemaHelper()->GetRdbKnowledgeSchema(config_.GetName());
+    if (errCode != E_OK) {
+        return;
+    }
+    std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema;
+    {
+        std::lock_guard<std::mutex> autoLock(schemaMutex_);
+        if (knowledgeSchema_ != nullptr) {
+            return;
+        }
+        knowledgeSchema_ = std::make_shared<DistributedRdb::RdbKnowledgeSchema>(schema);
+        auto [ret, conn] = GetConn(false);
+        if (ret != E_OK) {
+            LOG_ERROR("The database is busy or closed when set knowledge schema.");
+            return;
+        }
+        conn->SetKnowledgeSchema(schema);
+        knowledgeSchema = knowledgeSchema_;
+    }
+    auto helper = GetKnowledgeSchemaHelper();
+    helper->Init(config_, schema);
+    helper->DonateKnowledgeData();
+}
+
+std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> RdbStoreImpl::GetKnowledgeSchemaHelper()
+{
+    std::lock_guard<std::mutex> autoLock(helperMutex_);
+    if (knowledgeSchemaHelper_ == nullptr) {
+        knowledgeSchemaHelper_ = std::make_shared<NativeRdb::KnowledgeSchemaHelper>();
+    }
+    return knowledgeSchemaHelper_;
 }
 } // namespace OHOS::NativeRdb

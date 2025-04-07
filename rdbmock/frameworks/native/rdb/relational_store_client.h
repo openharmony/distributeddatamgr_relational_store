@@ -17,6 +17,7 @@
 #define RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
 
 #include <memory>
+#include <set>
 
 #include "sqlite3sym.h"
 #include "store_observer.h"
@@ -56,5 +57,17 @@ void RegisterDbHook(sqlite3 *db);
 void UnregisterDbHook(sqlite3 *db);
 
 DistributedDB::DBStatus CreateDataChangeTempTrigger(sqlite3 *db);
+
+namespace DistributedDB {
+struct KnowledgeSourceSchema {
+    std::string tableName;
+    std::set<std::string> extendColNames;
+    std::set<std::string> knowledgeColNames;
+};
+}
+
+DistributedDB::DBStatus SetKnowledgeSourceSchema(sqlite3 *db, const DistributedDB::KnowledgeSourceSchema &schema);
+
+DistributedDB::DBStatus CleanDeletedData(sqlite3 *db, const std::string &tableName, uint64_t cursor);
 
 #endif //RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H

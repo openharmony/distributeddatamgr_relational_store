@@ -27,6 +27,7 @@
 #include "connection_pool.h"
 #include "data_ability_observer_stub.h"
 #include "dataobs_mgr_client.h"
+#include "knowledge_schema_helper.h"
 #include "rdb_errno.h"
 #include "rdb_service.h"
 #include "rdb_store.h"
@@ -147,6 +148,7 @@ public:
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
+    int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
@@ -230,6 +232,8 @@ private:
     void HandleSchemaDDL(std::shared_ptr<Statement> statement,
         std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
     void BatchInsertArgsDfx(int argsSize);
+    void SetKnowledgeSchema();
+    std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -265,6 +269,10 @@ private:
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;
+    mutable std::mutex schemaMutex_;
+    std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema_;
+    std::mutex helperMutex_;
+    std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
 };
 } // namespace OHOS::NativeRdb
 #endif

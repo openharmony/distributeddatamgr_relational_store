@@ -67,7 +67,8 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         SlaveStatus &slaveStatus) override;
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
-
+    int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
+    int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
