@@ -157,6 +157,8 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/connection.cpp",
     "../../../frameworks/native/rdb/src/connection_pool.cpp",
     "../../../frameworks/native/rdb/src/grd_api_manager.cpp",
+    "../../../frameworks/native/rdb/src/knowledge_schema.cpp",
+    "../../../frameworks/native/rdb/src/knowledge_schema_helper.cpp",
     "../../../frameworks/native/rdb/src/raw_data_parser.cpp",
     "../../../frameworks/native/rdb/src/rd_connection.cpp",
     "../../../frameworks/native/rdb/src/rd_statement.cpp",
