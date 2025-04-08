@@ -141,6 +141,8 @@ private:
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
+    static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
+    static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;

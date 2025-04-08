@@ -449,6 +449,16 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
+
+void RdbCleanLogFuzz(const uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return;
+    }
+    std::string tableName(data, data + size);
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+    store->CleanDirtyLog(tableName, 0);
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -465,6 +475,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbUnlockRowFuzz(data, size);
     OHOS::RdbQueryLockedRowFuzz1(data, size);
     OHOS::RdbQueryLockedRowFuzz2(data, size);
+    OHOS::RdbCleanLogFuzz(data, size);
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }

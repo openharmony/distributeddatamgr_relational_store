@@ -1353,7 +1353,6 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
-        LOG_INFO("status:%{public}d, table:%{public}s", status, SqliteUtils::Anonymous(table.tableName).c_str());
     }
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
@@ -1365,8 +1364,6 @@ int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
         return E_INVALID_ARGS;
     }
     auto status = CleanDeletedData(dbHandle_, table, cursor);
-    LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
-        SqliteUtils::Anonymous(table).c_str(), cursor);
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
