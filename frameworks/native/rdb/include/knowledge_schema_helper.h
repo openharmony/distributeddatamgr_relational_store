@@ -46,7 +46,9 @@ private:
     mutable std::shared_mutex libMutex_;
     bool isLoadKnowledgeLib_ = false;
     IKnowledgeSchemaManager *schemaManager_ = nullptr;
+#ifndef CROSS_PLATFORM
     void *dlHandle_ = nullptr;
+#endif
 };
 }
 #endif // DISTRIBUTED_RDB_KNOWLEDGE_SCHEMA_HELPER_H

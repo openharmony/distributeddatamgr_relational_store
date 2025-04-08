@@ -832,19 +832,10 @@ void RdbStoreImpl::InitDelayNotifier()
     delayNotifier_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
     delayNotifier_->SetTask([param = syncerParam_, helper = GetKnowledgeSchemaHelper()](
         const DistributedRdb::RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) -> int {
-        bool isKnowledgeDataChange = false;
-        bool isServiceWatchDataChange = false;
-        for (const auto &item : rdbChangedData.tableData) {
-            if (item.second.isKnowledgeDataChange) {
-                isKnowledgeDataChange = true;
-            }
-            isServiceWatchDataChange = isServiceWatchDataChange || item.second.isP2pSyncDataChange;
-            isServiceWatchDataChange = isServiceWatchDataChange || item.second.isTrackedDataChange;
-        }
-        if (isKnowledgeDataChange) {
+        if (IsKnowledgeDataChange(rdbChangedData)) {
             helper->DonateKnowledgeData();
         }
-        if (!isServiceWatchDataChange) {
+        if (!IsNotifyService(rdbChangedData)) {
             return E_OK;
         }
         auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
@@ -2765,5 +2756,25 @@ std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> RdbStoreImpl::GetKnowledgeSche
         knowledgeSchemaHelper_ = std::make_shared<NativeRdb::KnowledgeSchemaHelper>();
     }
     return knowledgeSchemaHelper_;
+}
+
+bool RdbStoreImpl::IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData)
+{
+    for (const auto &item : rdbChangedData.tableData) {
+        if (item.second.isKnowledgeDataChange) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData)
+{
+    for (const auto &item : rdbChangedData.tableData) {
+        if (item.second.isP2pSyncDataChange || item.second.isTrackedDataChange) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::NativeRdb
