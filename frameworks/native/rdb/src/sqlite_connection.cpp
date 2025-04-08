@@ -378,7 +378,6 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
     LimitPermission(config, dbPath);
 
-    SetDwrEnable(config);
     errCode = SetPersistWal(config);
     if (errCode != E_OK) {
         return errCode;
@@ -669,19 +668,6 @@ int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
         (void)sqlite3_file_control(dbHandle_, 0, SQLITE_FCNTL_RESERVE_BYTES, &n);
     }
     return E_OK;
-}
-
-void SqliteConnection::SetDwrEnable(const RdbStoreConfig &config)
-{
-    if (config.IsEncrypt() || config.IsMemoryRdb()) {
-        return;
-    }
-    auto errCode = ExecuteSql(GlobalExpr::PRAGMA_META_DOUBLE_WRITE);
-    if (errCode == E_SQLITE_META_RECOVERED) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
-    } else if (errCode != E_OK) {
-        LOG_ERROR("meta double failed %{public}d", errCode);
-    }
 }
 
 int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)

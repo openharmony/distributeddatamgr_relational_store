@@ -17,7 +17,6 @@
 
 #include <gtest/gtest.h>
 
-#include <fcntl.h>
 #include <string>
 
 #include "common.h"
@@ -392,89 +391,3 @@ HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_05, TestSize.Level1)
     ret = helper.OnOpen(*store);
     EXPECT_EQ(ret, E_OK);
 }
-
-/**
- * @tc.name: RdbOpenCallback_06
- * @tc.desc: test rdb open with not a database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_06, TestSize.Level1)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbOpenCallbackTest::DATABASE_NAME);
-    OpenCallbackB helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    store->ExecuteSql(OpenCallbackB::CreateTableSQL("test1"));
-    store.reset();
-    store = nullptr;
-    int fd = open(RdbOpenCallbackTest::DATABASE_NAME.c_str(), O_WRONLY);
-    char str[] = "3333333333sss333333333333333333";
-    lseek(fd, 0, SEEK_SET);
-    write(fd, str, sizeof(str));
-    close(fd);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbOpenCallbackTest::DATABASE_NAME);
-}
-
-/**
- * @tc.name: RdbOpenCallback_07
- * @tc.desc: test rdb open with not a database and write file is not a database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_07, TestSize.Level1)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbOpenCallbackTest::DATABASE_NAME);
-    OpenCallbackB helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    store->ExecuteSql(OpenCallbackB::CreateTableSQL("test1"));
-    store.reset();
-    store = nullptr;
-    int fd = open(RdbOpenCallbackTest::DATABASE_NAME.c_str(), O_WRONLY);
-    char str[] = "3333333333sss333333333333333333";
-    lseek(fd, 0, SEEK_SET);
-    write(fd, str, sizeof(str));
-    close(fd);
-    char writeStr[] = "13333333333sss333333333333333333";
-    int writeFd = open((RdbOpenCallbackTest::DATABASE_NAME + "-dwr").c_str(), O_WRONLY);
-    lseek(writeFd, 0, SEEK_SET);
-    write(writeFd, writeStr, sizeof(writeStr));
-    close(writeFd);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
-    RdbHelper::DeleteRdbStore(RdbOpenCallbackTest::DATABASE_NAME);
-}
-
-/**
- * @tc.name: RdbOpenCallback_08
- * @tc.desc: test rdb open with not a database and write file is not a database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbOpenCallbackTest, RdbOpenCallback_08, TestSize.Level1)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbOpenCallbackTest::DATABASE_NAME);
-    OpenCallbackB helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    for (int i = 1; i < 11; ++i) {
-        std::string testName = "test" + std::to_string(i);
-        store->ExecuteSql(OpenCallbackB::CreateTableSQL(testName));
-    }
-    store.reset();
-    store = nullptr;
-    int fd = open(RdbOpenCallbackTest::DATABASE_NAME.c_str(), O_WRONLY);
-    char str[] = "3333333333sss333333333333333333";
-    lseek(fd, 0, SEEK_SET);
-    write(fd, str, sizeof(str));
-    close(fd);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbOpenCallbackTest::DATABASE_NAME);
-}
-
