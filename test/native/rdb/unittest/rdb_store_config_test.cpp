@@ -1277,3 +1277,5 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
     resultSet1->GetString(1, strValue1);
     EXPECT_EQ(strValue1, "张三");
 }
+
+11
