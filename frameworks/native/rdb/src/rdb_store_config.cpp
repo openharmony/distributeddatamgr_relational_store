@@ -622,6 +622,16 @@ ssize_t RdbStoreConfig::GetWalLimitSize() const
     return walLimitSize_;
 }
 
+void RdbStoreConfig::SetKnowledgeProcessing(bool knowledgeProcessing)
+{
+    knowledgeProcessing_ = knowledgeProcessing;
+}
+
+bool RdbStoreConfig::GetKnowledgeProcessing() const
+{
+    return knowledgeProcessing_;
+}
+
 void RdbStoreConfig::SetWalLimitSize(ssize_t size)
 {
     if (size < GlobalExpr::DB_WAL_DEFAULT_SIZE) {

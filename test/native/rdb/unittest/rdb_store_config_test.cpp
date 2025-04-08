@@ -1277,3 +1277,36 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
     resultSet1->GetString(1, strValue1);
     EXPECT_EQ(strValue1, "张三");
 }
+
+/* *
+ * @tc.name: RdbStoreConfigGetKnowledgeProcessing_001
+ * @tc.desc: test RdbStoreConfigGetKnowledgeProcessing
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool ret = config.GetKnowledgeProcessing();
+    EXPECT_EQ(ret, false);
+}
+
+/* *
+ * @tc.name: RdbStoreConfigSetKnowledgeProcessing_001
+ * @tc.desc: test RdbStoreConfigSetKnowledgeProcessing
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    bool knowledgeProcessing = true;
+    config.SetKnowledgeProcessing(knowledgeProcessing);
+    EXPECT_EQ(knowledgeProcessing, config.GetKnowledgeProcessing());
+
+    knowledgeProcessing = false;
+    config.SetKnowledgeProcessing(knowledgeProcessing);
+    EXPECT_EQ(knowledgeProcessing, config.GetKnowledgeProcessing());
+}
