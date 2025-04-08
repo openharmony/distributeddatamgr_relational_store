@@ -29,14 +29,14 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
 
-    static bool InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
-    static bool BatchInsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size);
+    static bool InsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size);
+    static bool BatchInsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size);
 
-    static const std::string DATABASE_NAME;
+    static std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
 };
 std::shared_ptr<RdbStore> RdbStoreFuzzTest::store_ = nullptr;
-const std::string RdbStoreFuzzTest::DATABASE_NAME = "/data/test/rdbStoreFuzz.db";
+std::string RdbStoreFuzzTest::DATABASE_NAME = "/data/test/rdbStoreFuzz.db";
 
 class RdbTestOpenCallback : public RdbOpenCallback {
 public:
@@ -62,7 +62,7 @@ int RdbTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersi
 void RdbStoreFuzzTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(DATABASE_NAME);
+    RdbStoreConfig config(RdbStoreFuzzTest::DATABASE_NAME);
     RdbTestOpenCallback helper;
     RdbStoreFuzzTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     if (store_ == nullptr || errCode != E_OK) {
@@ -77,9 +77,9 @@ void RdbStoreFuzzTest::TearDownTestCase(void)
     }
 }
 
-bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
+bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || store == nullptr) {
         return false;
     }
 
@@ -101,24 +101,21 @@ bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> &store, const uint8_
 
 bool RdbInsertFuzz(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-
-    if (!RdbStoreFuzzTest::InsertData(store, data, size)) {
+    if (!RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size)) {
         result = false;
     }
 
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
     return result;
 }
 
-bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> &store, const uint8_t *data, size_t size)
+bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || store == nullptr) {
         return false;
     }
 
@@ -141,31 +138,25 @@ bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> &store, const u
 
 bool RdbBatchInsertFuzz(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-
-    if (!RdbStoreFuzzTest::BatchInsertData(store, data, size)) {
+    if (!RdbStoreFuzzTest::BatchInsertData(RdbStoreFuzzTest::store_, data, size)) {
         result = false;
     }
 
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 bool RdbDeleteFuzz(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-
     bool result = true;
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         result = false;
     }
@@ -173,25 +164,22 @@ bool RdbDeleteFuzz(const uint8_t *data, size_t size)
     int deletedRows;
     std::string tableName(data, data + size);
     std::string whereClause(data, data + size);
-    errCode = store->Delete(deletedRows, tableName, whereClause);
+    errCode = RdbStoreFuzzTest::store_->Delete(deletedRows, tableName, whereClause);
     if (errCode != E_OK) {
         result = false;
     }
 
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 bool RdbUpdateFuzz(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     bool result = true;
-
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         result = false;
     }
@@ -209,24 +197,22 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     values.PutDouble("salary", valSalary);
     values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
 
-    errCode = store->Update(changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
+    errCode = RdbStoreFuzzTest::store_->Update(
+        changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
     if (errCode != E_OK) {
         result = false;
     }
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
     return result;
 }
 
 int RdbDoLockRowFuzz(const uint8_t *data, size_t size, bool isLock)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-
     bool result = true;
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         result = false;
     }
@@ -235,12 +221,12 @@ int RdbDoLockRowFuzz(const uint8_t *data, size_t size, bool isLock)
     std::string valName(data, data + size);
     AbsRdbPredicates predicates(tableName);
     predicates.EqualTo("name", ValueObject(valName));
-    errCode = store->ModifyLockStatus(predicates, isLock);
+    errCode = RdbStoreFuzzTest::store_->ModifyLockStatus(predicates, isLock);
     if (errCode != E_OK) {
         result = false;
     }
 
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
     return result;
 }
 
@@ -266,12 +252,10 @@ void RdbSetLockedRowPredicates(AbsRdbPredicates &predicates)
 
 void RdbQueryLockedRowFuzz1(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         return;
     }
@@ -282,42 +266,40 @@ void RdbQueryLockedRowFuzz1(const uint8_t *data, size_t size)
     AbsRdbPredicates predicates(tableName);
     RdbSetLockedRowPredicates(predicates);
     predicates.EqualTo("name", ValueObject(valName));
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.NotEqualTo("name", ValueObject(valName));
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.Contains("name", valName);
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.BeginsWith("name", valName);
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.EndsWith("name", valName);
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.Like("name", valName);
-    store->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
 
     RdbSetLockedRowPredicates(predicates);
     predicates.Glob("name", valName);
-    store->QueryByStep(predicates, { vectorElem });
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbQueryLockedRowFuzz2(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         return;
     }
@@ -331,47 +313,44 @@ void RdbQueryLockedRowFuzz2(const uint8_t *data, size_t size)
     AbsRdbPredicates predicates(tableName);
     RdbSetLockedRowPredicates(predicates);
     predicates.Between("age", valAge, valAgeChange);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.NotBetween("age", valAge, valAgeChange);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.GreaterThan("age", valAge);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.LessThan("age", valAgeChange);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.GreaterThanOrEqualTo("age", valAge);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.In("name", vectorElem);
-    store->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.NotIn("name", vectorElem);
-    store->QueryByStep(predicates, bindaArgs);
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbQueryFuzz1(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         return;
     }
@@ -382,51 +361,48 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     AbsRdbPredicates predicates(tableName);
 
     predicates.EqualTo("name", ValueObject(valName));
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotEqualTo("name", ValueObject(valName));
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Contains("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.BeginsWith("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.EndsWith("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Like("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotLike("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.NotContains("name", valName);
-    store->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
 
     predicates.Clear();
     predicates.Glob("name", valName);
-    store->Query(predicates, { vectorElem });
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->Query(predicates, { vectorElem });
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
 void RdbQueryFuzz2(const uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-
-    int errCode = RdbStoreFuzzTest::InsertData(store, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
     if (errCode != E_OK) {
         return;
     }
@@ -442,36 +418,36 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
 
     predicates.Clear();
     predicates.Between("age", valAge, valAgeChange);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.NotBetween("age", valAge, valAgeChange);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.GreaterThan("age", valAge);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.LessThan("age", valAgeChange);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.GreaterThanOrEqualTo("age", valAge);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.In("name", vectorElem);
-    store->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
 
     predicates.Clear();
     predicates.NotIn("name", vectorElem);
-    store->Query(predicates, bindaArgs);
-    store->ExecuteSql("DELETE FROM test");
+    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 } // namespace OHOS
 
