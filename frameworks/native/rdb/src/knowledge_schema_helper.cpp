@@ -15,7 +15,7 @@
 #define LOG_TAG "KnowledgeSchemaUtils"
 #include "knowledge_schema_helper.h"
 
-#ifndef _WIN32
+#ifndef CROSS_PLATFORM
 #include <dlfcn.h>
 #endif
 #include <fstream>
@@ -34,10 +34,12 @@ KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
         delete schemaManager_;
         schemaManager_ = nullptr;
     }
+#ifndef CROSS_PLATFORM
     if (dlHandle_ != nullptr) {
         dlclose(dlHandle_);
         dlHandle_ = nullptr;
     }
+#endif
     isLoadKnowledgeLib_ = false;
 }
 
@@ -86,16 +88,15 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
         errCode = E_ERROR;
         return res;
     }
+    errCode = E_OK;
     auto jsons = KnowledgeSchemaHelper::ParseSchema(schemaManager_->GetJsonSchema());
     for (const auto &json : jsons) {
         schema = ParseRdbKnowledgeSchema(json, dbName);
         if (!schema.dbName.empty()) {
-            errCode = E_OK;
             return res;
         }
     }
-    LOG_ERROR("not found db schema in source schema.");
-    errCode = E_ERROR;
+    LOG_WARN("not found db schema in source schema.");
     return res;
 }
 
@@ -118,18 +119,22 @@ void KnowledgeSchemaHelper::DonateKnowledgeData()
     }
     auto helper = shared_from_this();
     executor->Execute([this, helper]() {
-        std::shared_lock<std::shared_mutex> readLock(libMutex_);
-        if (schemaManager_ == nullptr) {
-            LOG_WARN("skip execute donate data by miss manager");
-            return;
+        IKnowledgeSchemaManager *manager = nullptr;
+        {
+            std::shared_lock<std::shared_mutex> readLock(libMutex_);
+            if (schemaManager_ == nullptr) {
+                LOG_WARN("skip execute donate data by miss manager");
+                return;
+            }
+            manager = schemaManager_;
         }
-        schemaManager_->StartTask();
+        manager->StartTask();
     });
 }
 
 void KnowledgeSchemaHelper::LoadKnowledgeLib()
 {
-#ifndef _WIN32
+#ifndef CROSS_PLATFORM
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
     if (isLoadKnowledgeLib_) {
         return;
@@ -147,7 +152,7 @@ void KnowledgeSchemaHelper::LoadKnowledgeLib()
 
 void KnowledgeSchemaHelper::LoadKnowledgeSchemaManager(void *handle)
 {
-#ifndef _WIN32
+#ifndef CROSS_PLATFORM
     typedef IKnowledgeSchemaManager* (*CreateKnowledgeSchemaManager)();
     auto creator = (CreateKnowledgeSchemaManager)(dlsym(handle, "CreateKnowledgeSchemaManager"));
     if (creator == nullptr) {
