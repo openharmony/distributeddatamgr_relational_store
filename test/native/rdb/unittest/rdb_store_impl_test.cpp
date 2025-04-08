@@ -1554,21 +1554,18 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Crypt_001, TestSize.Level1)
  */
 HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
 {
-    const std::string dbPath = RDB_TEST_PATH + "GetDatabase1.db";
-    RdbStoreConfig config(dbPath);
-    config.SetName("RdbStoreConfig_test.db");
-    std::string bundleName = "com.ohos.config.TestDirtyLog";
-    config.SetBundleName(bundleName);
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
     config.SetKnowledgeProcessing(true);
     RdbStoreImplTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+    errCode = store->ExecuteSql(CREATE_TABLE_TEST);
     EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(rdbStore, nullptr);
-    errCode = rdbStore->ExecuteSql(CREATE_TABLE_TEST);
+    errCode = store->CleanDirtyLog("test", 0);
     EXPECT_EQ(errCode, E_OK);
-    errCode = rdbStore->CleanDirtyLog("test", 0);
+    errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
-    ret = RdbHelper::DeleteRdbStore(config);
-    EXPECT_EQ(ret, E_OK);
 }
