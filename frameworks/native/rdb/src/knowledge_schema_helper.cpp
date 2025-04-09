@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "KnowledgeSchemaUtils"
+#define LOG_TAG "KnowledgeSchemaHelper"
 #include "knowledge_schema_helper.h"
 
 #ifndef CROSS_PLATFORM
@@ -22,15 +22,58 @@
 #include <sstream>
 #include "knowledge_schema.h"
 #include "logger.h"
+#include "nlohmann/json.hpp"
 #include "rdb_errno.h"
+#include "sqlite_utils.h"
 #include "task_executor.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+using Json = nlohmann::json;
+namespace {
+bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+    DistributedRdb::RdbKnowledgeSchema &schema)
+{
+    KnowledgeSource source;
+    if (!Serializable::Unmarshall(json, source)) {
+        LOG_WARN("Parse knowledge schema failed.");
+        return false;
+    }
+    auto sourceSchema = source.GetKnowledgeSchema();
+    auto find = std::find_if(sourceSchema.begin(), sourceSchema.end(), [&dbName](const KnowledgeSchema &item) {
+        return item.GetDBName() == dbName;
+    });
+    if (find == sourceSchema.end()) {
+        LOG_WARN("Not found same db:%{public}s schema.", SqliteUtils::Anonymous(dbName).c_str());
+        return false;
+    }
+    KnowledgeSchema knowledgeSchema = *find;
+    schema.dbName = knowledgeSchema.GetDBName();
+    auto tables = knowledgeSchema.GetTables();
+    for (const auto &table : tables) {
+        DistributedRdb::RdbKnowledgeTable knowledgeTable;
+        knowledgeTable.tableName = table.GetTableName();
+        auto fields = table.GetKnowledgeFields();
+        for (const auto &item : fields) {
+            DistributedRdb::RdbKnowledgeField field;
+            field.columnName = item.GetColumnName();
+            field.type = item.GetType();
+            field.description = item.GetDescription();
+            field.parser = item.GetParser();
+            knowledgeTable.knowledgeFields.push_back(std::move(field));
+        }
+        knowledgeTable.referenceFields = table.GetReferenceFields();
+        schema.tables.push_back(std::move(knowledgeTable));
+    }
+    return true;
+}
+}
+
 KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
 {
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
     if (schemaManager_ != nullptr) {
+        schemaManager_->StopTask();
         delete schemaManager_;
         schemaManager_ = nullptr;
     }
@@ -40,7 +83,6 @@ KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
         dlHandle_ = nullptr;
     }
 #endif
-    isLoadKnowledgeLib_ = false;
 }
 
 void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const DistributedRdb::RdbKnowledgeSchema &schema)
@@ -56,19 +98,6 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
         return;
     }
     schemaManager_->Init(config, schema);
-}
-
-std::vector<KnowledgeSchemaHelper::Json> KnowledgeSchemaHelper::ParseSchema(const std::vector<std::string> &schemaStr)
-{
-    std::vector<Json> schema;
-    for (const auto &item : schemaStr) {
-        auto config = Serializable::ToJson(item);
-        if (config.is_null() || config.empty()) {
-            continue;
-        }
-        schema.push_back(std::move(config));
-    }
-    return schema;
 }
 
 std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdbKnowledgeSchema(
@@ -89,10 +118,9 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
         return res;
     }
     errCode = E_OK;
-    auto jsons = KnowledgeSchemaHelper::ParseSchema(schemaManager_->GetJsonSchema());
+    auto jsons = schemaManager_->GetJsonSchema();
     for (const auto &json : jsons) {
-        schema = ParseRdbKnowledgeSchema(json, dbName);
-        if (!schema.dbName.empty()) {
+        if (ParseRdbKnowledgeSchema(json, dbName, schema)) {
             return res;
         }
     }
@@ -107,28 +135,19 @@ void KnowledgeSchemaHelper::DonateKnowledgeData()
         LOG_WARN("skip donate data by miss lib");
         return;
     }
-    std::shared_lock<std::shared_mutex> readLock(libMutex_);
-    if (schemaManager_ == nullptr) {
-        LOG_WARN("skip donate data by miss manager");
-        return;
-    }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
     if (executor == nullptr) {
         LOG_WARN("skip donate data by miss pool");
         return;
     }
+    std::shared_lock<std::shared_mutex> readLock(libMutex_);
+    if (schemaManager_ == nullptr) {
+        LOG_WARN("skip donate data by miss manager");
+        return;
+    }
     auto helper = shared_from_this();
-    executor->Execute([this, helper]() {
-        IKnowledgeSchemaManager *manager = nullptr;
-        {
-            std::shared_lock<std::shared_mutex> readLock(libMutex_);
-            if (schemaManager_ == nullptr) {
-                LOG_WARN("skip execute donate data by miss manager");
-                return;
-            }
-            manager = schemaManager_;
-        }
-        manager->StartTask();
+    executor->Execute([helper]() {
+        helper->StartTask();
     });
 }
 
@@ -136,12 +155,11 @@ void KnowledgeSchemaHelper::LoadKnowledgeLib()
 {
 #ifndef CROSS_PLATFORM
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
-    if (isLoadKnowledgeLib_) {
+    if (dlHandle_ != nullptr) {
         return;
     }
     auto handle = dlopen("libaip_knowledge_process.z.so", RTLD_LAZY);
     if (handle != nullptr) {
-        isLoadKnowledgeLib_ = true;
         LoadKnowledgeSchemaManager(handle);
         dlHandle_ = handle;
     } else {
@@ -153,57 +171,42 @@ void KnowledgeSchemaHelper::LoadKnowledgeLib()
 void KnowledgeSchemaHelper::LoadKnowledgeSchemaManager(void *handle)
 {
 #ifndef CROSS_PLATFORM
-    typedef IKnowledgeSchemaManager* (*CreateKnowledgeSchemaManager)();
+    typedef DistributedRdb::IKnowledgeSchemaManager* (*CreateKnowledgeSchemaManager)();
     auto creator = (CreateKnowledgeSchemaManager)(dlsym(handle, "CreateKnowledgeSchemaManager"));
     if (creator == nullptr) {
         LOG_WARN("unable to load creator, errno: %{public}d, %{public}s", errno, dlerror());
         return;
     }
     schemaManager_ = creator();
-    LOG_INFO("load creator success");
+    if (schemaManager_ != nullptr) {
+        LOG_INFO("load creator success");
+    } else {
+        LOG_WARN("load creator failed with oom");
+    }
 #endif
-}
-
-DistributedRdb::RdbKnowledgeSchema KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const Json &json,
-    const std::string &dbName)
-{
-    KnowledgeSource source;
-    if (!Serializable::GetValue(json, "", source)) {
-        LOG_WARN("parse knowledge schema failed.");
-        return {};
-    }
-    auto sourceSchema = source.GetKnowledgeSchema();
-    auto find = std::find_if(sourceSchema.begin(), sourceSchema.end(), [&dbName](const KnowledgeSchema &item) {
-        return item.GetDBName() == dbName;
-    });
-    if (find == sourceSchema.end()) {
-        return {};
-    }
-    DistributedRdb::RdbKnowledgeSchema schema;
-    KnowledgeSchema knowledgeSchema = *find;
-    schema.dbName = knowledgeSchema.GetDBName();
-    auto tables = knowledgeSchema.GetTables();
-    for (const auto &table : tables) {
-        DistributedRdb::RdbKnowledgeTable knowledgeTable;
-        knowledgeTable.tableName = table.GetTableName();
-        auto fields = table.GetKnowledgeFields();
-        for (const auto &item : fields) {
-            DistributedRdb::RdbKnowledgeField field;
-            field.columnName = item.GetColumnName();
-            field.type = item.GetType();
-            field.description = item.GetDescription();
-            field.parser = item.GetParser();
-            knowledgeTable.knowledgeFields.push_back(std::move(field));
-        }
-        knowledgeTable.referenceFields = table.GetReferenceFields();
-        schema.tables.push_back(knowledgeTable);
-    }
-    return schema;
 }
 
 bool KnowledgeSchemaHelper::IsLoadLib() const
 {
+#ifndef CROSS_PLATFORM
     std::shared_lock<std::shared_mutex> readLock(libMutex_);
-    return isLoadKnowledgeLib_;
+    return dlHandle_ != nullptr;
+#else
+    return false;
+#endif
+}
+
+void KnowledgeSchemaHelper::StartTask()
+{
+    DistributedRdb::IKnowledgeSchemaManager *manager = nullptr;
+    {
+        std::shared_lock<std::shared_mutex> readLock(libMutex_);
+        if (schemaManager_ == nullptr) {
+            LOG_WARN("skip execute donate data by miss manager");
+            return;
+        }
+        manager = schemaManager_;
+    }
+    manager->StartTask();
 }
 }

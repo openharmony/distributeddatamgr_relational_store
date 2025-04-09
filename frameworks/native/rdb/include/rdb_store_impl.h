@@ -271,8 +271,6 @@ private:
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;
-    mutable std::mutex schemaMutex_;
-    std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
 };
