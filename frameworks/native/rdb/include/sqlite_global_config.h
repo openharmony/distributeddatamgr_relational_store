@@ -66,7 +66,6 @@ public:
     static constexpr char CIPHER_DEFAULT_ATTACH_KDF_ALGO_PREFIX[] = "PRAGMA cipher_default_attach_kdf_algo='";
     static constexpr char CIPHER_DEFAULT_ATTACH_PAGE_SIZE_PREFIX[] = "PRAGMA cipher_default_attach_page_size=";
     static constexpr char CIPHER_DEFAULT_ATTACH_KDF_ITER_PREFIX[] = "PRAGMA cipher_default_attach_kdf_iter=";
-    static constexpr char PRAGMA_META_DOUBLE_WRITE[] = "PRAGMA meta_double_write=enabled";
 };
 
 class SqliteGlobalConfig {
