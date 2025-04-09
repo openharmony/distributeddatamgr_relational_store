@@ -702,6 +702,7 @@ public:
      */
     virtual int SetSearchable(bool isSearchable);
 
+    virtual int CleanDirtyLog(const std::string &table, uint64_t cursor = 0);
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };

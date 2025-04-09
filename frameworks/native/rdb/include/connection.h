@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "knowledge_types.h"
 #include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
@@ -80,6 +81,8 @@ public:
     virtual int32_t Restore(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus) = 0;
     virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
+    virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
+    virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
 
 private:
     int32_t id_ = 0;

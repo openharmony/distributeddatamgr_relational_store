@@ -27,6 +27,7 @@
 #include "abs_shared_result_set.h"
 #include "concurrent_map.h"
 #include "connection_pool.h"
+#include "knowledge_schema_helper.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_statement.h"
@@ -79,6 +80,7 @@ public:
     int32_t GetBackupStatus() const override;
     int32_t GetDbType() const override;
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
+    int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     const RdbStoreConfig &GetConfig();
     int ConfigLocale(const std::string &localeStr);
     std::string GetName();
@@ -137,6 +139,10 @@ private:
     void HandleSchemaDDL(std::shared_ptr<Statement> statement,
         std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
     void BatchInsertArgsDfx(int argsSize);
+    void SetKnowledgeSchema();
+    std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
+    static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
+    static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
@@ -167,6 +173,10 @@ private:
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;
+    mutable std::mutex schemaMutex_;
+    std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema_;
+    std::mutex helperMutex_;
+    std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
 };
 } // namespace OHOS::NativeRdb
 #endif

@@ -371,6 +371,7 @@ struct Field {
 struct RdbChangeProperties {
     bool isTrackedDataChange = false;
     bool isP2pSyncDataChange = false;
+    bool isKnowledgeDataChange = false;
 };
 
 struct RdbChangedData {
