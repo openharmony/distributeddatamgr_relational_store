@@ -101,8 +101,6 @@ private:
 
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
-    int SetCrcCheck(const RdbStoreConfig &config);
-    void SetDwrEnable(const RdbStoreConfig &config);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     int SetCustomFunctions(const RdbStoreConfig &config);
@@ -139,7 +137,6 @@ private:
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
     static constexpr uint32_t ITER_V1 = 5000;
-    static constexpr uint32_t SQLITE_CKSUMVFS_RESERVE_BYTES = 8;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
