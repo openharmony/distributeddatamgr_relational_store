@@ -2719,30 +2719,19 @@ std::set<std::string> RdbStoreImpl::CloudTables::Steal()
 
 void RdbStoreImpl::SetKnowledgeSchema()
 {
-    {
-        std::lock_guard<std::mutex> autoLock(schemaMutex_);
-        if (knowledgeSchema_ != nullptr) {
-            return;
-        }
-    }
     auto [errCode, schema] = GetKnowledgeSchemaHelper()->GetRdbKnowledgeSchema(config_.GetName());
     if (errCode != E_OK) {
         return;
     }
-    std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema;
-    {
-        std::lock_guard<std::mutex> autoLock(schemaMutex_);
-        if (knowledgeSchema_ != nullptr) {
-            return;
-        }
-        knowledgeSchema_ = std::make_shared<DistributedRdb::RdbKnowledgeSchema>(schema);
-        auto [ret, conn] = GetConn(false);
-        if (ret != E_OK) {
-            LOG_ERROR("The database is busy or closed when set knowledge schema.");
-            return;
-        }
-        conn->SetKnowledgeSchema(schema);
-        knowledgeSchema = knowledgeSchema_;
+    auto [ret, conn] = GetConn(false);
+    if (ret != E_OK) {
+        LOG_ERROR("The database is busy or closed when set knowledge schema ret %{public}d.", ret);
+        return;
+    }
+    ret = conn->SetKnowledgeSchema(schema);
+    if (ret != E_OK) {
+        LOG_ERROR("Set knowledge schema failed %{public}d.", ret);
+        return;
     }
     auto helper = GetKnowledgeSchemaHelper();
     helper->Init(config_, schema);

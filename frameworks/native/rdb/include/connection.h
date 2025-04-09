@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "knowledge_types.h"
 #include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
