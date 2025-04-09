@@ -26,8 +26,7 @@
 #include "transaction_impl.h"
 
 namespace OHOS::DistributedDataAip {
-
-constexpr int32_t MAX_GQL_LEN = 1024 * 1024;
+static constexpr int32_t MAX_GQL_LEN = 1024 * 1024;
 
 DBStoreImpl::DBStoreImpl(StoreConfig config) : config_(std::move(config))
 {
@@ -72,11 +71,11 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (gql.empty() || gql.length() > MAX_GQL_LEN) {
         LOG_ERROR("Gql is empty or length is too long.");
-        return { E_INVALID_ARGS, nullptr };
+        return { E_INVALID_ARGS, std::make_shared<FullResult>() };
     }
     if (GdbUtils::IsTransactionGql(gql)) {
         LOG_ERROR("Transaction related statements are not supported.");
-        return { E_INVALID_ARGS, nullptr };
+        return { E_INVALID_ARGS, std::make_shared<FullResult>() };
     }
     auto connectionPool = GetConnectionPool();
     if (connectionPool == nullptr) {

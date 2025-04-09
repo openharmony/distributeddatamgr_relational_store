@@ -31,8 +31,7 @@ public:
 private:
     static constexpr int DIR_RWXRWS__X = 0771;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
-        R"("pageSize": 8, "crcCheckEnable": 0, "defaultIsolationLevel": 3, "redoFlushByTrx": 1, )"
-        R"("metaInfoBak": 1, "maxConnNum": 500, "bufferPoolSize": 10240)";
+        R"("pageSize": 4, "crcCheckEnable": 0, "defaultIsolationLevel": 3, "redoFlushByTrx": 1, metaInfoBak": 1)";
     static std::string GetAnonymousName(const std::string& fileName);
     static std::string AnonyDigits(const std::string& fileName);
 };
