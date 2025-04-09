@@ -393,15 +393,5 @@ private:
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
 };
-
-class API_EXPORT IKnowledgeSchemaManager {
-public:
-    API_EXPORT virtual ~IKnowledgeSchemaManager() = default;
-    API_EXPORT virtual void Init(const NativeRdb::RdbStoreConfig &config,
-        const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
-    API_EXPORT virtual void StartTask() = 0;
-    API_EXPORT virtual void StopTask() = 0;
-    API_EXPORT virtual std::vector<std::string> GetJsonSchema() = 0;
-};
 } // namespace OHOS::NativeRdb
 #endif

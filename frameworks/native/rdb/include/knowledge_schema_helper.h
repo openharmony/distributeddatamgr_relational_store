@@ -21,8 +21,7 @@
 #include <shared_mutex>
 #include <string>
 
-#include "nlohmann/json.hpp"
-#include "rdb_store_config.h"
+#include "knowledge_types.h"
 #include "rdb_types.h"
 
 namespace OHOS::NativeRdb {
@@ -35,17 +34,13 @@ public:
     std::pair<int, DistributedRdb::RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName);
     void DonateKnowledgeData();
 private:
-    using Json = nlohmann::json;
     void LoadKnowledgeLib();
     void LoadKnowledgeSchemaManager(void *handle);
-    std::vector<KnowledgeSchemaHelper::Json> ParseSchema(const std::vector<std::string> &schemaStr);
-    DistributedRdb::RdbKnowledgeSchema ParseRdbKnowledgeSchema(const Json &json,
-        const std::string &dbName);
     bool IsLoadLib() const;
+    void StartTask();
 
     mutable std::shared_mutex libMutex_;
-    bool isLoadKnowledgeLib_ = false;
-    IKnowledgeSchemaManager *schemaManager_ = nullptr;
+    DistributedRdb::IKnowledgeSchemaManager *schemaManager_ = nullptr;
 #ifndef CROSS_PLATFORM
     void *dlHandle_ = nullptr;
 #endif
