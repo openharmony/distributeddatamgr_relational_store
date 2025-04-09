@@ -114,6 +114,7 @@
                             "abs_rdb_predicates.h",
                             "abs_result_set.h",
                             "abs_shared_result_set.h",
+                            "knowledge_types.h",
                             "rdb_common.h",
                             "rdb_errno.h",
                             "rdb_helper.h",

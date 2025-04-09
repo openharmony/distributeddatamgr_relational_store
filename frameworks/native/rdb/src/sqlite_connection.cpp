@@ -526,9 +526,10 @@ int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier
     int32_t status = RegisterClientObserver(dbHandle_, [notifier](const ClientChangedData &clientData) {
         DistributedRdb::RdbChangedData rdbChangedData;
         for (auto &[key, val] : clientData.tableData) {
-            if (val.isTrackedDataChange || val.isP2pSyncDataChange) {
+            if (val.isTrackedDataChange || val.isP2pSyncDataChange || val.isKnowledgeDataChange) {
                 rdbChangedData.tableData[key].isTrackedDataChange = val.isTrackedDataChange;
                 rdbChangedData.tableData[key].isP2pSyncDataChange = val.isP2pSyncDataChange;
+                rdbChangedData.tableData[key].isKnowledgeDataChange = val.isKnowledgeDataChange;
             }
         }
         notifier(rdbChangedData);
@@ -1338,6 +1339,32 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
     }
     LOG_INFO("backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
     return ExchangeStrategy::BACKUP;
+}
+
+int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
+{
+    DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
+    for (const auto &table : schema.tables) {
+        DistributedDB::KnowledgeSourceSchema sourceSchema;
+        sourceSchema.tableName = table.tableName;
+        for (const auto &item : table.knowledgeFields) {
+            sourceSchema.knowledgeColNames.insert(item.columnName);
+        }
+        sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
+            table.referenceFields.end());
+        status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
+    }
+    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+}
+
+int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto status = CleanDeletedData(dbHandle_, table, cursor);
+    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
