@@ -24,7 +24,9 @@ ohos_copy("relational_store_declaration") {
 ohos_shared_library("napi_rdb") {
   sources = [
     "../common/src/js_df_manager.cpp",
+    "../common/src/js_scope.cpp",
     "../common/src/js_utils.cpp",
+    "../common/src/js_uv_queue.cpp",
     "src/napi_async_call.cpp",
     "src/napi_rdb_const_properties.cpp",
     "src/napi_rdb_js_utils.cpp",
@@ -32,7 +34,6 @@ ohos_shared_library("napi_rdb") {
     "src/napi_rdb_store.cpp",
     "src/napi_rdb_store_helper.cpp",
     "src/napi_result_set.cpp",
-    "src/napi_uv_queue.cpp",
     "src/napi_values_bucket.cpp",
   ]
 
@@ -100,6 +101,7 @@ ohos_shared_library("napi_rdb") {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "napi:ace_napi",

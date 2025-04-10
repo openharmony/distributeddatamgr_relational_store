@@ -19,6 +19,7 @@
 
 #include "js_scope.h"
 #include "logger.h"
+#include "napi/native_node_api.h"
 namespace OHOS::AppDataMgrJsKit {
 using namespace OHOS::Rdb;
 constexpr size_t ARGC_MAX = 6;
@@ -39,21 +40,11 @@ UvQueue::~UvQueue()
 
 void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
 {
-    if (loop_ == nullptr || callback.IsNull()) {
-        LOG_ERROR("loop_ or callback is nullptr.");
+    if (callback.IsNull()) {
+        LOG_ERROR("callback is nullptr.");
         return;
     }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        LOG_ERROR("No memory for uv_work_t.");
-        return;
-    }
-    auto entry = new (std::nothrow) UvEntry();
-    if (entry == nullptr) {
-        delete work;
-        LOG_ERROR("No memory for UvEntry.");
-        return;
-    }
+    auto entry = std::make_shared<UvEntry>();
     entry->env_ = env_;
     entry->object_ = callback.object_;
     entry->callback_ = callback.callback_;
@@ -61,12 +52,9 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     entry->getter_ = std::move(callback.getter_);
     entry->args_ = std::move(args);
     entry->result_ = std::move(result);
-    work->data = entry;
-    int ret = uv_queue_work(loop_, work, DoWork, DoUvCallback);
-    if (ret < 0) {
-        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
-        delete entry;
-        delete work;
+    auto status = napi_send_event(env_, GenCallbackTask(entry), napi_eprio_immediate);
+    if (status != napi_ok) {
+        LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
 }
 
@@ -95,30 +83,17 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
 
 void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
 {
-    if (loop_ == nullptr || promise.IsNull()) {
-        LOG_ERROR("loop_ or promise is nullptr.");
+    if (promise.IsNull()) {
+        LOG_ERROR("promise is nullptr.");
         return;
     }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        LOG_ERROR("No memory for uv_work_t.");
-        return;
-    }
-    auto entry = new (std::nothrow) UvEntry();
-    if (entry == nullptr) {
-        delete work;
-        LOG_ERROR("No memory for UvEntry.");
-        return;
-    }
+    auto entry = std::make_shared<UvEntry>();
     entry->env_ = env_;
     entry->defer_ = promise.defer_;
     entry->args_ = std::move(args);
-    work->data = entry;
-    int ret = uv_queue_work(loop_, work, DoWork, DoUvPromise);
-    if (ret < 0) {
-        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
-        delete entry;
-        delete work;
+    auto status = napi_send_event(env_, GenPromiseTask(entry), napi_eprio_immediate);
+    if (status != napi_ok) {
+        LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
 }
 
@@ -181,43 +156,12 @@ napi_value UvQueue::Future(napi_env env, napi_callback_info info, bool exception
     return nullptr;
 }
 
-void UvQueue::DoWork(uv_work_t *work)
-{
-}
-
 void UvQueue::DoExecute(uv_work_t *work)
 {
     Task *task = static_cast<Task *>(work->data);
     work->data = nullptr;
     (*task)();
     delete task;
-}
-
-void UvQueue::DoUvCallback(uv_work_t *work, int status)
-{
-    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
-        delete data;
-        delete work;
-    });
-
-    GenCallbackTask(entry)();
-}
-
-void UvQueue::DoUvPromise(uv_work_t *work, int status)
-{
-    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
-        delete data;
-        delete work;
-    });
-
-    Scope scope(entry->env_);
-    napi_value argv[ARG_BUTT] = { nullptr };
-    auto argc = entry->GetArgv(argv, ARG_BUTT);
-    if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
-        napi_reject_deferred(entry->env_, entry->defer_, argv[ARG_ERROR]);
-    } else {
-        napi_resolve_deferred(entry->env_, entry->defer_, argv[ARG_DATA]);
-    }
 }
 
 UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
@@ -244,6 +188,23 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
             return;
         }
         entry->BindPromise(promise);
+    };
+}
+
+UvQueue::Task UvQueue::GenPromiseTask(std::shared_ptr<UvEntry> entry)
+{
+    return [entry]() {
+        if (entry == nullptr) {
+            return;
+        }
+        Scope scope(entry->env_);
+        napi_value argv[ARG_BUTT] = { nullptr };
+        auto argc = entry->GetArgv(argv, ARG_BUTT);
+        if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
+            napi_reject_deferred(entry->env_, entry->defer_, argv[ARG_ERROR]);
+        } else {
+            napi_resolve_deferred(entry->env_, entry->defer_, argv[ARG_DATA]);
+        }
     };
 }
 
