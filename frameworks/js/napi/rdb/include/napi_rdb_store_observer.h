@@ -24,8 +24,7 @@ class NapiRdbStoreObserver
     : public DistributedRdb::RdbStoreObserver
     , public std::enable_shared_from_this<NapiRdbStoreObserver> {
 public:
-    explicit NapiRdbStoreObserver(
-        napi_value callback, std::shared_ptr<UvQueue> uvQueue, int32_t mode = DistributedRdb::REMOTE);
+    explicit NapiRdbStoreObserver(napi_value callback, std::shared_ptr<UvQueue> uvQueue);
     virtual ~NapiRdbStoreObserver() noexcept;
     bool operator==(napi_value value);
     void OnChange(const std::vector<std::string> &devices) override;
