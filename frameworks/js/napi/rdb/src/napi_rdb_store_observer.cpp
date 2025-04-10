@@ -22,8 +22,7 @@ using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 namespace OHOS::RdbJsKit {
-NapiRdbStoreObserver::NapiRdbStoreObserver(napi_value callback, std::shared_ptr<UvQueue> uvQueue, int32_t mode)
-    : uvQueue_(uvQueue)
+NapiRdbStoreObserver::NapiRdbStoreObserver(napi_value callback, std::shared_ptr<UvQueue> uvQueue) : uvQueue_(uvQueue)
 {
     napi_create_reference(uvQueue_->GetEnv(), callback, 1, &callback_);
 }
