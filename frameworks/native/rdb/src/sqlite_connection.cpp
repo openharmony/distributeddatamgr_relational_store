@@ -813,30 +813,6 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     return errCode;
 }
 
-int SqliteConnection::SetJournalSizeLimit(const RdbStoreConfig &config)
-{
-    if (isReadOnly_ || config.GetJournalSize() == GlobalExpr::DB_JOURNAL_SIZE || config.IsMemoryRdb()) {
-        return E_OK;
-    }
-
-    int targetValue = SqliteGlobalConfig::GetJournalFileSize();
-    auto [errCode, currentValue] = ExecuteForValue("PRAGMA journal_size_limit");
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to get journal_size_limit : %{public}d", errCode);
-        return errCode;
-    }
-
-    if (static_cast<int64_t>(currentValue) == targetValue) {
-        return E_OK;
-    }
-
-    std::tie(errCode, currentValue) = ExecuteForValue("PRAGMA journal_size_limit=" + std::to_string(targetValue));
-    if (errCode != E_OK) {
-        LOG_ERROR("SqliteConnection SetJournalSizeLimit fail to set journal_size_limit : %{public}d", errCode);
-    }
-    return errCode;
-}
-
 int SqliteConnection::SetAutoCheckpoint(const RdbStoreConfig &config)
 {
     if (isReadOnly_ || config.IsMemoryRdb()) {
@@ -944,7 +920,7 @@ int SqliteConnection::ClearCache()
         int usedBytes = 0;
         int nEnyry = 0;
         int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEnyry, 0);
-        if (errCode == SQLITE_OK && usedBytes > GlobalExpr::CLEAR_MEMORY_SIZE) {
+        if (errCode == SQLITE_OK && usedBytes > config_.GetClearMemorySize()) {
             sqlite3_db_release_memory(dbHandle_);
         }
     }

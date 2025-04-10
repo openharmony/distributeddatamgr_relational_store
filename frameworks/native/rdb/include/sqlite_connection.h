@@ -92,7 +92,6 @@ private:
     int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
     int SetEncryptAgo(const RdbStoreConfig &config);
     int SetJournalMode(const RdbStoreConfig &config);
-    int SetJournalSizeLimit(const RdbStoreConfig &config);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
