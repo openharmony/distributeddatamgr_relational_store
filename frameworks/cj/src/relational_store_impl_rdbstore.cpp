@@ -31,7 +31,6 @@
 #include "rdb_common.h"
 #include "native_log.h"
 #include "relational_store_impl_rdbstore.h"
-#include "js_utils.h"
 
 #ifndef PATH_SPLIT
 #define PATH_SPLIT '/'
@@ -762,9 +761,7 @@ namespace Relational {
         if (*errCode != NativeRdb::E_OK) {
             return;
         }
-        // If the API version is greater than or equal to 20, close the connection.
-        bool isClose = (AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20);
-        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, isClose);
+        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
         return;
     }
 
@@ -785,9 +782,7 @@ namespace Relational {
         if (*errCode != NativeRdb::E_OK) {
             return;
         }
-        // If the API version is greater than or equal to 20, close the connection.
-        bool isClose = (AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20);
-        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, isClose);
+        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
         return;
     }
 }
