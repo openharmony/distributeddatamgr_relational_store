@@ -33,6 +33,7 @@ public:
     void Init(const RdbStoreConfig &config, const DistributedRdb::RdbKnowledgeSchema &schema);
     std::pair<int, DistributedRdb::RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName);
     void DonateKnowledgeData();
+    void Close();
 private:
     void LoadKnowledgeLib();
     void LoadKnowledgeSchemaManager(void *handle);
