@@ -20,9 +20,8 @@
 
 namespace OHOS::RdbJsKit {
 using namespace OHOS::AppDataMgrJsKit;
-class NapiRdbStoreObserver
-    : public DistributedRdb::RdbStoreObserver
-    , public std::enable_shared_from_this<NapiRdbStoreObserver> {
+class NapiRdbStoreObserver : public DistributedRdb::RdbStoreObserver,
+    public std::enable_shared_from_this<NapiRdbStoreObserver> {
 public:
     explicit NapiRdbStoreObserver(napi_value callback, std::shared_ptr<UvQueue> uvQueue);
     virtual ~NapiRdbStoreObserver() noexcept;
