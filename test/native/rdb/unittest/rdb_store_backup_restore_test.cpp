@@ -691,7 +691,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
 
     auto res = store->ExecuteSql("SELECT import_db_from_path");
 
-    EXPECT_EQ(res, E_SQLITE_ERROR);
+    EXPECT_EQ(res, E_SQLITE_SCHEMA);
 
     auto [code, result] = store->Execute("pragma integrity_check");
     std::string val;
