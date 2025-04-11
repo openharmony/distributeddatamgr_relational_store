@@ -101,6 +101,7 @@ public:
     int32_t VerifyPromiseInfo(const RdbSyncerParam &param) override;
     SyncObservers ExportSyncObservers();
     void ImportSyncObservers(SyncObservers &SyncObservers);
+    void OnRemoteDeadSyncComplete();
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
