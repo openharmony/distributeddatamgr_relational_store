@@ -130,6 +130,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_rd_data_aging_test.cpp",
     "unittest/rdb_read_only_test.cpp",
     "unittest/rdb_security_manager_test.cpp",
+    "unittest/rdb_service_proxy_test.cpp",
     "unittest/rdb_sql_utils_test.cpp",
     "unittest/rdb_sqlite_shared_result_set_test.cpp",
     "unittest/rdb_step_result_get_row_test.cpp",
