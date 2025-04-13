@@ -17,19 +17,19 @@
 #define ANI_UTILS_H
 
 #include <ani.h>
-
 #include <cstdarg>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 #include <iostream>
 
 class AniObjectUtils {
 public:
-    static ani_object Create(ani_env *env, const char* nsName, const char* clsName, ...)
+    static ani_object Create(ani_env *env, const char *nsName, const char *clsName, ...)
     {
         ani_object nullobj{};
 
@@ -63,7 +63,7 @@ public:
         return obj;
     }
 
-    static ani_object Create(ani_env *env, const char* clsName, ...)
+    static ani_object Create(ani_env *env, const char *clsName, ...)
     {
         ani_object nullobj{};
 
@@ -114,13 +114,13 @@ public:
     }
 
     template<typename T>
-    static ani_status Wrap(ani_env *env, ani_object object, T* nativePtr, const char* propName = "nativePtr")
+    static ani_status Wrap(ani_env *env, ani_object object, T *nativePtr, const char *propName = "nativePtr")
     {
         return env->Object_SetFieldByName_Long(object, propName, reinterpret_cast<ani_long>(nativePtr));
     }
 
     template<typename T>
-    static T* Unwrap(ani_env *env, ani_object object, const char* propName = "nativePtr")
+    static T* Unwrap(ani_env *env, ani_object object, const char *propName = "nativePtr")
     {
         ani_long nativePtr;
         if (ANI_OK != env->Object_GetFieldByName_Long(object, propName, &nativePtr)) {
@@ -142,9 +142,9 @@ public:
         }
 
         std::vector<char> buffer(strSize + 1); // +1 for null terminator
-        char* utf8Buffer = buffer.data();
+        char *utf8Buffer = buffer.data();
 
-        //String_GetUTF8 Supportted by https://gitee.com/openharmony/arkcompiler_runtime_core/pulls/3416
+        // String_GetUTF8 Supportted by https://gitee.com/openharmony/arkcompiler_runtime_core/pulls/3416
         ani_size bytesWritten = 0;
         status = env->String_GetUTF8(ani_str, utf8Buffer, strSize + 1, &bytesWritten);
         if (ANI_OK != status) {
@@ -157,7 +157,7 @@ public:
         return content;
     }
 
-    static ani_string ToAni(ani_env* env, const std::string& str)
+    static ani_string ToAni(ani_env *env, const std::string& str)
     {
         ani_string aniStr = nullptr;
         if (ANI_OK != env->String_NewUTF8(str.data(), str.size(), &aniStr)) {
@@ -190,8 +190,36 @@ public:
     template<typename T>
     bool TryConvert(T &value);
 
+    template<typename... Types>
+    bool TryConvertVariant(std::variant<Types...> &value)
+    {
+        return GetNativeValue<decltype(value), Types...>(value);
+    }
+
+    template<typename T>
+    bool GetNativeValue(T &value)
+    {
+        return false;
+    }
+
+    template<typename T, typename First, typename... Types>
+    bool GetNativeValue(T &value)
+    {
+        First cValue;
+        auto ret = TryConvert(cValue);
+        if (ret == true) {
+            value = cValue;
+            return ret;
+        }
+        return GetNativeValue<T, Types...>(value);
+    }
+
     template<typename T>
     bool TryConvertArray(std::vector<T> &value);
+
+    bool GetObjectRefPropertyByName(std::string clsName, const char *name, ani_ref &val);
+    bool GetObjectStringPropertyByName(std::string clsName, const char *name, std::string &val);
+    bool GetObjectEnumValuePropertyByName(std::string clsName, const char *name, ani_int &val);
 
 private:
     ani_env *env_;
@@ -220,3 +248,4 @@ private:
 };
 
 #endif
+

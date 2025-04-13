@@ -16,6 +16,7 @@
 #define ANI_RDB_STORE_H
 
 #include <ani.h>
+#include "rdb_store.h"
 
 namespace OHOS {
 namespace RelationalStoreAniKit {
@@ -31,3 +32,4 @@ ani_status RdbStoreInit(ani_env *env);
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
 #endif // ANI_RDB_STORE_H
+
