@@ -74,19 +74,10 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
     return std::nullopt;
 }
 
-ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
+ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, std::string msg)
 {
-    auto errInfo = GetJsErrorCode(errorCode);
-    auto code_ = E_INNER_ERROR;
-    auto msg_ = "Inner error. Inner code is " + std::to_string(errorCode % E_INNER_ERROR);
-    if (errInfo.has_value()) {
-        auto aniError = errInfo.value();
-        code_ = aniError.jsCode;
-        msg_ = aniError.message;
-    }
-
     ani_string message;
-    env->String_NewUTF8(msg_.c_str(), msg_.size(), &message);
+    env->String_NewUTF8(msg.c_str(), msg.size(), &message);
 
     static const char *businessErrorName = "L@ohos/base/BusinessError;";
     ani_class cls;
@@ -105,7 +96,7 @@ ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
         return nullptr;
     }
     const char* codeFieldName = "code";
-    if (ANI_OK != env->Object_SetFieldByName_Double(businessErrorObject, codeFieldName, code_)) {
+    if (ANI_OK != env->Object_SetFieldByName_Double(businessErrorObject, codeFieldName, code)) {
         LOG_ERROR("Can not set business error code.");
         return nullptr;
     }
@@ -118,17 +109,50 @@ ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
     return businessErrorObject;
 }
 
+ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
+{
+    auto errInfo = GetJsErrorCode(errorCode);
+    auto code_ = E_INNER_ERROR;
+    auto msg_ = "Inner error. Inner code is " + std::to_string(errorCode % E_INNER_ERROR);
+    if (errInfo.has_value()) {
+        auto aniError = errInfo.value();
+        code_ = aniError.jsCode;
+        msg_ = aniError.message;
+    }
+
+    return CreateBusinessErrorObj(env, code_, msg_);
+}
+
 void ThrowBusinessError(ani_env *env, int32_t status)
 {
     if (NativeRdb::E_OK != status) {
         ani_object businessError = GetAniBusinessError(env, status);
         if (nullptr == businessError) {
-            std::cerr << "Can not get business error." << std::endl;
+            LOG_ERROR("Can not get business error.");
         } else {
-            env->ThrowError(static_cast<ani_error>(businessError));
+            auto status = env->ThrowError(static_cast<ani_error>(businessError));
+            if (status != ANI_OK) {
+                LOG_ERROR("ThrowError err %{public}d.", status);
+            }
+        }
+    }
+}
+
+void ThrowBusinessError(ani_env *env, int32_t status, std::string message)
+{
+    if (OK != status) {
+        ani_object businessError = CreateBusinessErrorObj(env, status, message);
+        if (nullptr == businessError) {
+            LOG_ERROR("Can not get business error.");
+        } else {
+            auto status = env->ThrowError(static_cast<ani_error>(businessError));
+            if (status != ANI_OK) {
+                LOG_ERROR("ThrowError err %{public}d.", status);
+            }
         }
     }
 }
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
+

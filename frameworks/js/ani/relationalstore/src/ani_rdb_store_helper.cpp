@@ -52,17 +52,23 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     RdbSqlUtils::CreateDirectory("/data/storage/el2/database/rdb");
     auto rdbConfig = RdbStoreConfig("/data/storage/el2/database/rdb/test.db");
     proxy->nativeRdb = RdbHelper::GetRdbStore(rdbConfig, -1, callback, errCode);
+    if (proxy->nativeRdb == nullptr) {
+        ThrowBusinessError(env, E_INNER_ERROR, "RdbHelper returned nullptr.");
+        return nullptr;
+    }
 
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     static const char *className = "LRdbStoreInner;";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
-        std::cerr << "[ANI] Failed to create class obj" << className << std::endl;
+        LOG_ERROR("[ANI] Failed to create class '%{public}s' obj", className);
+        ThrowBusinessError(env, E_INNER_ERROR, "ANI create class.");
         return nullptr;
     }
     ani_status status = AniObjectUtils::Wrap(env, obj, proxy);
     if (ANI_OK != status) {
-        std::cerr << "[ANI] Failed to wrap for class " << className << std::endl;
+        LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'", className);
+        ThrowBusinessError(env, E_INNER_ERROR, "ANI SetField.");
         return nullptr;
     }
     return obj;
@@ -73,7 +79,7 @@ ani_status RdbStoreHelperInit(ani_env *env)
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        std::cerr << "Not found '" << namespaceName << "'" << std::endl;
+        LOG_ERROR("Not found '%{public}s'", namespaceName);
         return ANI_ERROR;
     }
 
@@ -81,7 +87,7 @@ ani_status RdbStoreHelperInit(ani_env *env)
         ani_native_function {"getRdbStoreSync", nullptr, reinterpret_cast<void *>(GetRdbStoreSync)},
     };
     if (ANI_OK != env->Namespace_BindNativeFunctions(ns, functions.data(), functions.size())) {
-        std::cerr << "Cannot bind native functions to '" << namespaceName << "'" << std::endl;
+        LOG_ERROR("Cannot bind native functions to '%{public}s'", namespaceName);
         return ANI_ERROR;
     }
     return ANI_OK;
@@ -89,3 +95,4 @@ ani_status RdbStoreHelperInit(ani_env *env)
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
+
