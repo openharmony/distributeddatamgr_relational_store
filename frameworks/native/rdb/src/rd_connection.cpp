@@ -360,5 +360,15 @@ ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &statu
 {
     return ExchangeStrategy::NOT_HANDLE;
 }
+
+int RdConnection::SetKnowledgeSchema([[gnu::unused]] const DistributedRdb::RdbKnowledgeSchema &schema)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
 } // namespace NativeRdb
 } // namespace OHOS

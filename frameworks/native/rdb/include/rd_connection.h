@@ -57,6 +57,8 @@ public:
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         SlaveStatus &slaveStatus) override;
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
+    int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
+    int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
 
 private:
     static void CheckConfig(std::shared_ptr<Connection> conn, const RdbStoreConfig &config);

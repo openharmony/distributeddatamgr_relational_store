@@ -21,6 +21,10 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include "rdb_types.h"
+#include "rdb_visibility.h"
+
 namespace OHOS::NativeRdb {
 enum class IntegrityCheck {
     NONE,
@@ -329,6 +333,8 @@ public:
     void SetRegisterInfo(RegisterType type, bool state) const;
     bool GetRegisterInfo(RegisterType type) const;
     bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
+    void SetKnowledgeProcessing(bool knowledgeProcessing);
+    bool GetKnowledgeProcessing() const;
 
 private:
     void ClearEncryptKey();
@@ -343,6 +349,7 @@ private:
     bool isVector_ = false;
     bool autoRekey_ = false;
     bool localOnly_ = false;
+    bool knowledgeProcessing_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;

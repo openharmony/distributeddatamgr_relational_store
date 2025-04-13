@@ -397,6 +397,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
 
     status = GetNamedProperty(env, jsValue, "persist", rdbConfig.persist, true);
     ASSERT(OK == status, "get persist failed.", napi_invalid_arg);
+
+    status = GetNamedProperty(env, jsValue, "knowledgeProcessing", rdbConfig.knowledgeProcessing, true);
+    ASSERT(OK == status, "get knowledgeProcessing failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -544,6 +547,8 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetHaMode(rdbConfig.haMode);
 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
+
+    rdbStoreConfig.SetKnowledgeProcessing(rdbConfig.knowledgeProcessing);
     return rdbStoreConfig;
 }
 
