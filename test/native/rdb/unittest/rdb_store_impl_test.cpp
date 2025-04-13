@@ -1546,3 +1546,26 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Crypt_001, TestSize.Level1)
     rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
 }
+
+/**
+ * @tc.name: RdbStore_ClearDirtyLog_001
+ * @tc.desc: test RdbStore ClearDirtyLog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    config.SetKnowledgeProcessing(true);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+    errCode = store->ExecuteSql(CREATE_TABLE_TEST);
+    EXPECT_EQ(errCode, E_OK);
+    errCode = store->CleanDirtyLog("test", 0);
+    EXPECT_EQ(errCode, E_OK);
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
