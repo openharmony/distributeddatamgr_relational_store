@@ -58,11 +58,13 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
         std::cerr << "[ANI] Failed to create class obj" << className << std::endl;
+        delete proxy;
         return nullptr;
     }
     ani_status status = AniObjectUtils::Wrap(env, obj, proxy);
     if (ANI_OK != status) {
         std::cerr << "[ANI] Failed to wrap for class " << className << std::endl;
+        delete proxy;
         return nullptr;
     }
     return obj;
