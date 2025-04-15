@@ -243,12 +243,12 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 #endif
     isReadOnly_ = !isWriter_ || config.IsReadOnly();
-    int openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
-                                            : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
+    uint32_t openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
+                                                 : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
     if (config.IsMemoryRdb()) {
         openFileFlags |= SQLITE_OPEN_URI;
     }
-    errCode = OpenDatabase(dbPath, openFileFlags);
+    errCode = OpenDatabase(dbPath, static_cast<int>(openFileFlags));
     if (errCode != E_OK) {
         Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
         return errCode;

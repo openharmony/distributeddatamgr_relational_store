@@ -61,12 +61,14 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     static const char *className = "LRdbStoreInner;";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
+        delete proxy;
         LOG_ERROR("[ANI] Failed to create class '%{public}s' obj", className);
         ThrowBusinessError(env, E_INNER_ERROR, "ANI create class.");
         return nullptr;
     }
     ani_status status = AniObjectUtils::Wrap(env, obj, proxy);
     if (ANI_OK != status) {
+        delete proxy;
         LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'", className);
         ThrowBusinessError(env, E_INNER_ERROR, "ANI SetField.");
         return nullptr;
