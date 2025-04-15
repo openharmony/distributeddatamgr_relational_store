@@ -168,7 +168,7 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
         oldPosition == rowCount_) {
         auto errCode = FillBlock(newPosition);
         if (errCode == E_NO_MORE_ROWS && rowCount_ != Statement::INVALID_COUNT) {
-            rowCount_ = sharedBlock->GetLastPos();
+            rowCount_ = static_cast<int>(sharedBlock->GetLastPos());
             rowPos_ = rowPos_ > rowCount_ ? rowCount_ : rowPos_;
             errCode = E_ROW_OUT_RANGE;
         }
