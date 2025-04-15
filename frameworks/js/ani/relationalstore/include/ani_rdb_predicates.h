@@ -23,8 +23,8 @@ namespace OHOS {
 namespace RelationalStoreAniKit {
 
 class PredicatesProxy {
-    public:
-        std::shared_ptr<OHOS::NativeRdb::AbsRdbPredicates> predicates;
+public:
+    std::shared_ptr<OHOS::NativeRdb::AbsRdbPredicates> predicates;
 };
 
 ani_status PredicatesInit(ani_env *env);

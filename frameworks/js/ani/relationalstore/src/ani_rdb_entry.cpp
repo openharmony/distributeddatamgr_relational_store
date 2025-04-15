@@ -27,28 +27,33 @@ using namespace OHOS::RelationalStoreAniKit;
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        LOG_ERROR("Unsupported ANI_VERSION_1");
+    auto status = vm->GetEnv(ANI_VERSION_1, &env);
+    if (ANI_OK != status) {
+        LOG_ERROR("Unsupported ANI_VERSION_1 errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != ResultSetInit(env)) {
-        LOG_ERROR("ResultSetInit failed.");
+    status = ResultSetInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("ResultSetInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != RdbStoreHelperInit(env)) {
-        LOG_ERROR("RdbStoreHelperInit failed.");
+    status = RdbStoreHelperInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("RdbStoreHelperInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != RdbStoreInit(env)) {
-        LOG_ERROR("RdbStoreInit failed.");
+    status = RdbStoreInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("RdbStoreInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != PredicatesInit(env)) {
-        LOG_ERROR("PredicatesInit failed.");
+    status = PredicatesInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("PredicatesInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 

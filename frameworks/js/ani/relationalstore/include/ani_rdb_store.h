@@ -24,8 +24,8 @@ namespace RelationalStoreAniKit {
 using namespace OHOS::NativeRdb;
 
 class RdbStoreProxy {
-    public:
-        std::shared_ptr<RdbStore> nativeRdb;
+public:
+    std::shared_ptr<RdbStore> nativeRdb;
 };
 ani_status RdbStoreInit(ani_env *env);
 

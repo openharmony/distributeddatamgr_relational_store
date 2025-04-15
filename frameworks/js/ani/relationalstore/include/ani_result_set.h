@@ -22,8 +22,8 @@ namespace OHOS {
 namespace RelationalStoreAniKit {
 
 class ResultSetProxy {
-    public:
-        std::shared_ptr<OHOS::NativeRdb::ResultSet> resultset;
+public:
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultset;
 };
 
 ani_status ResultSetInit(ani_env *env);
