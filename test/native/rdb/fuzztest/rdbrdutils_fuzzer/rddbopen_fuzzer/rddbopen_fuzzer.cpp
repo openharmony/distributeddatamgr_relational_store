@@ -99,8 +99,8 @@ void RdDbOpenFuzzer(const uint8_t *data, size_t size)
     RdUtils::RdSqlPrepare(dbHandle_, pathStr.c_str(), size, &stmtHandle, nullptr);
     RdUtils::RdSqlReset(stmtHandle);
     RdUtils::RdSqlFinalize(stmtHandle);
-    RdUtils::RdSqlBindBlob(stmtHandle, unit32t, static_cast<const void *>(data), size, nullptr);
-    RdUtils::RdSqlBindText(stmtHandle, unit32t, static_cast<const void *>(data), size, nullptr);
+    RdUtils::RdSqlBindBlob(stmtHandle, unit32t, pathStr.c_str(), pathStr.length(), nullptr);
+    RdUtils::RdSqlBindText(stmtHandle, unit32t, pathStr.c_str(), pathStr.length(), nullptr);
     RdUtils::RdSqlBindInt(stmtHandle, unit32t, nit32t);
     RdUtils::RdSqlBindInt64(stmtHandle, unit32t, nit64t);
     RdUtils::RdSqlBindDouble(stmtHandle, unit32t, doubleValue);
