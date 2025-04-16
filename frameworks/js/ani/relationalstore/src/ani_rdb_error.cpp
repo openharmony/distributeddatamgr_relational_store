@@ -74,6 +74,46 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
     return std::nullopt;
 }
 
+ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string &msg)
+{
+    ani_string message;
+    env->String_NewUTF8(msg.c_str(), msg.size(), &message);
+
+    static const char *businessErrorName = "L@ohos/base/BusinessError;";
+    ani_class cls;
+    auto status = env->FindClass(businessErrorName, &cls);
+    if (ANI_OK != status) {
+        LOG_ERROR("Not found class '%{public}s' errcode %{public}d.", businessErrorName, status);
+        return nullptr;
+    }
+    ani_method ctor;
+    status = env->Class_FindMethod(cls, "<ctor>", ":V", &ctor);
+    if (ANI_OK != status) {
+        LOG_ERROR("Not found ctor of '%{public}s' errcode %{public}d.", businessErrorName, status);
+        return nullptr;
+    }
+    ani_object businessErrorObject;
+    status = env->Object_New(cls, ctor, &businessErrorObject);
+    if (ANI_OK != status) {
+        LOG_ERROR("Can not create business error errcode %{public}d.", status);
+        return nullptr;
+    }
+    const char* codeFieldName = "code";
+    status = env->Object_SetFieldByName_Double(businessErrorObject, codeFieldName, code);
+    if (ANI_OK != status) {
+        LOG_ERROR("Can not set business error code errcode %{public}d.", status);
+        return nullptr;
+    }
+    const char* dataFieldName = "data";
+    status = env->Object_SetFieldByName_Ref(businessErrorObject, dataFieldName, static_cast<ani_ref>(message));
+    if (ANI_OK != status) {
+        LOG_ERROR("Can not set business error data errcode %{public}d.", status);
+        return businessErrorObject;
+    }
+
+    return businessErrorObject;
+}
+
 ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
 {
     auto errInfo = GetJsErrorCode(errorCode);
@@ -85,50 +125,49 @@ ani_object GetAniBusinessError(ani_env *env, int32_t errorCode)
         msg_ = aniError.message;
     }
 
-    ani_string message;
-    env->String_NewUTF8(msg_.c_str(), msg_.size(), &message);
-
-    static const char *businessErrorName = "L@ohos/base/BusinessError;";
-    ani_class cls;
-    if (ANI_OK != env->FindClass(businessErrorName, &cls)) {
-        LOG_ERROR("Not found class '%{public}s'.", businessErrorName);
-        return nullptr;
-    }
-    ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
-        LOG_ERROR("Not found ctor of '%{public}s'.", businessErrorName);
-        return nullptr;
-    }
-    ani_object businessErrorObject;
-    if (ANI_OK != env->Object_New(cls, ctor, &businessErrorObject)) {
-        LOG_ERROR("Can not create business error.");
-        return nullptr;
-    }
-    const char* codeFieldName = "code";
-    if (ANI_OK != env->Object_SetFieldByName_Double(businessErrorObject, codeFieldName, code_)) {
-        LOG_ERROR("Can not set business error code.");
-        return nullptr;
-    }
-    const char* dataFieldName = "data";
-    if (ANI_OK != env->Object_SetFieldByName_Ref(businessErrorObject, dataFieldName, static_cast<ani_ref>(message))) {
-        LOG_ERROR("Can not set business error data.");
-        return businessErrorObject;
-    }
-
-    return businessErrorObject;
+    return CreateBusinessErrorObj(env, code_, msg_);
 }
 
 void ThrowBusinessError(ani_env *env, int32_t status)
 {
-    if (NativeRdb::E_OK != status) {
-        ani_object businessError = GetAniBusinessError(env, status);
-        if (nullptr == businessError) {
-            std::cerr << "Can not get business error." << std::endl;
-        } else {
-            env->ThrowError(static_cast<ani_error>(businessError));
+    if (NativeRdb::E_OK == status) {
+        return;
+    }
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
+    ani_object businessError = GetAniBusinessError(env, status);
+    if (nullptr == businessError) {
+        LOG_ERROR("Can not get business error.");
+    } else {
+        auto status = env->ThrowError(static_cast<ani_error>(businessError));
+        if (status != ANI_OK) {
+            LOG_ERROR("ThrowError err %{public}d.", status);
+        }
+    }
+}
+
+void ThrowBusinessError(ani_env *env, int32_t status, std::string message)
+{
+    if (OK == status) {
+        return;
+    }
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
+    ani_object businessError = CreateBusinessErrorObj(env, status, message);
+    if (nullptr == businessError) {
+        LOG_ERROR("Can not get business error.");
+    } else {
+        auto status = env->ThrowError(static_cast<ani_error>(businessError));
+        if (status != ANI_OK) {
+            LOG_ERROR("ThrowError err %{public}d.", status);
         }
     }
 }
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
+

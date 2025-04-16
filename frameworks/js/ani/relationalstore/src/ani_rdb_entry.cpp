@@ -12,36 +12,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define LOG_TAG "AniResultSet"
 #include <ani.h>
 #include <iostream>
-#include "ani_result_set.h"
+#include "ani_rdb_predicates.h"
 #include "ani_rdb_store_helper.h"
+#include "ani_result_set.h"
+#include "logger.h"
 
+using namespace OHOS::Rdb;
 using namespace OHOS::RelationalStoreAniKit;
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
     ani_env *env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        std::cerr << "Unsupported ANI_VERSION_1" << std::endl;
+    auto status = vm->GetEnv(ANI_VERSION_1, &env);
+    if (ANI_OK != status) {
+        LOG_ERROR("Unsupported ANI_VERSION_1 errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != ResultSetInit(env)) {
-        std::cerr << "ResultSetInit failed." << std::endl;
+    status = ResultSetInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("ResultSetInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != RdbStoreHelperInit(env)) {
-        std::cerr << "RdbStoreHelperInit failed." << std::endl;
+    status = RdbStoreHelperInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("RdbStoreHelperInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
-    if (ANI_OK != RdbStoreInit(env)) {
-        std::cerr << "RdbStoreInit failed." << std::endl;
+    status = RdbStoreInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("RdbStoreInit failed errcode %{public}d", status);
+        return ANI_ERROR;
+    }
+
+    status = PredicatesInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("PredicatesInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 
     *result = ANI_VERSION_1;
     return ANI_OK;
 }
+
