@@ -473,6 +473,27 @@ bool UnionAccessor::TryConvert<std::vector<ani_ref>>(std::vector<ani_ref> &value
     return TryConvertArray(value);
 }
 
+ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
+{
+    ani_ref next;
+    ani_boolean done;
+    if (ANI_OK != env_->Object_CallMethodByName_Ref(static_cast<ani_object>(interator), "next", nullptr, &next)) {
+        LOG_ERROR("Failed to get next key");
+        isSuccess = false;
+        return nullptr;
+    }
+
+    if (ANI_OK != env_->Object_GetFieldByName_Boolean(static_cast<ani_object>(next), "done", &done)) {
+        LOG_ERROR("Failed to check iterator done");
+        isSuccess = false;
+        return nullptr;
+    }
+    if (done) {
+        return nullptr;
+    }
+    return next;
+}
+
 template<>
 bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
 {
@@ -485,24 +506,8 @@ bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
         LOG_ERROR("Object_CallMethodByName_Ref failed");
     }
     bool success = true;
-    while (true) {
-        ani_ref next;
-        ani_boolean done;
-
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(static_cast<ani_object>(keys), "next", nullptr, &next)) {
-            LOG_ERROR("Failed to get next key");
-            success = false;
-            break;
-        }
-
-        if (ANI_OK != env_->Object_GetFieldByName_Boolean(static_cast<ani_object>(next), "done", &done)) {
-            LOG_ERROR("Failed to check iterator done");
-            success = false;
-            break;
-        }
-        if (done)
-            break;
-
+    ani_ref next = AniIteratorNext(keys, success);
+    while (next) {
         ani_ref key_value;
         if (ANI_OK != env_->Object_GetFieldByName_Ref(static_cast<ani_object>(next), "value", &key_value)) {
             LOG_ERROR("Failed to get key value");
@@ -526,6 +531,7 @@ bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
             LOG_ERROR("Failed to convert AssetValue");
             break;
         }
+        next = AniIteratorNext(keys, success);
     }
     return success;
 }
