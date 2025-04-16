@@ -220,6 +220,7 @@ public:
     bool GetObjectRefPropertyByName(std::string clsName, const char *name, ani_ref &val);
     bool GetObjectStringPropertyByName(std::string clsName, const char *name, std::string &val);
     bool GetObjectEnumValuePropertyByName(std::string clsName, const char *name, ani_int &val);
+    ani_ref AniIteratorNext(ani_ref interator, bool &isSuccess);
 
 private:
     ani_env *env_;
