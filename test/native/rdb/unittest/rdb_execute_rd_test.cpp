@@ -94,10 +94,9 @@ void RdbExecuteRdTest::TearDown(void)
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
 }
 
-// 随机数生成器
-std::random_device g_rd; // 用于获取随机种子
-std::mt19937 g_gen(g_rd()); // 以随机设备作为种子的Mersenne Twister生成器
-std::uniform_real_distribution<> dis(-1.0, 1.0); // 定义一个均匀分布的实数范围
+std::random_device g_rd;
+std::mt19937 g_gen(g_rd());
+std::uniform_real_distribution<> dis(-1.0, 1.0);
 
 /**
 @tc.name: RdbStore_Execute_001
