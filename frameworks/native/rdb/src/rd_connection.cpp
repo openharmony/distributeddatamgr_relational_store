@@ -69,7 +69,7 @@ void RdConnection::CheckConfig(std::shared_ptr<Connection> conn, const RdbStoreC
 
 void RdConnection::ExecuteSet(std::shared_ptr<Connection> conn, const std::string &paramName, int num)
 {
-    std::string sql = "SET " + paramName + " = " + std::to_string(num);
+    std::string sql = "PRAGMA " + paramName + " = " + std::to_string(num);
     auto [errCode, stmt] = conn->CreateStatement(sql, conn);
     if (errCode != E_OK || stmt == nullptr) {
         LOG_ERROR("Create statement failed, paramName: %{public}s, errCode: %{public}d",
