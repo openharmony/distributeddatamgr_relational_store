@@ -179,9 +179,9 @@ void RdbDataShareAdapterTest::GenerateDefaultTable()
     /* insert third entry data */
     store->ExecuteSql(
         insertSql, std::vector<ValueObject>{
-                       ValueObject(std::string("hello world")), ValueObject((int)3), ValueObject((double)1.8),
-                       ValueObject(std::vector<uint8_t>{ 4, 5, 6 }) // set int value 3, double 1.8
-                   });
+            ValueObject(std::string("hello world")), ValueObject((int)3), ValueObject((double)1.8),
+                ValueObject(std::vector<uint8_t>{ 4, 5, 6 }) // set int value 3, double 1.8
+    });
 
     /* insert four entry data */
     store->ExecuteSql(insertSql, std::vector<ValueObject>{
