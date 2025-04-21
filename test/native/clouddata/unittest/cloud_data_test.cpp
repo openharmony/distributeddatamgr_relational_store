@@ -180,7 +180,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level0)
+HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level1)
 {
     AllocSystemHapToken(g_notPermissonPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -196,7 +196,7 @@ HWTEST_F(CloudDataTest, CloudDataTest_002, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, CloudDataTest_003, TestSize.Level0)
+HWTEST_F(CloudDataTest, CloudDataTest_003, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -259,7 +259,7 @@ HWTEST_F(CloudDataTest, ChangeAppSwitch001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, Clean001, TestSize.Level0)
+HWTEST_F(CloudDataTest, Clean001, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -276,7 +276,7 @@ HWTEST_F(CloudDataTest, Clean001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, NotifyDataChange001, TestSize.Level0)
+HWTEST_F(CloudDataTest, NotifyDataChange001, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -291,7 +291,7 @@ HWTEST_F(CloudDataTest, NotifyDataChange001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, NotifyDataChange002, TestSize.Level0)
+HWTEST_F(CloudDataTest, NotifyDataChange002, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -306,7 +306,7 @@ HWTEST_F(CloudDataTest, NotifyDataChange002, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, SetGlobalCloudStrategy001, TestSize.Level0)
+HWTEST_F(CloudDataTest, SetGlobalCloudStrategy001, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -338,7 +338,7 @@ HWTEST_F(CloudDataTest, QueryLastSyncInfo001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, QueryLastSyncInfo002, TestSize.Level0)
+HWTEST_F(CloudDataTest, QueryLastSyncInfo002, TestSize.Level1)
 {
     AllocSystemHapToken(g_notPermissonPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -514,7 +514,7 @@ HWTEST_F(CloudDataTest, ChangeConfirmation001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, SetCloudStrategy001, TestSize.Level0)
+HWTEST_F(CloudDataTest, SetCloudStrategy001, TestSize.Level1)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
