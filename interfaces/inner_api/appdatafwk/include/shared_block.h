@@ -98,21 +98,8 @@ public:
         API_EXPORT const uint8_t *GetRawData(SharedBlock *block) const;
     } __attribute((packed));
 
-    /**
-     * @brief Constructor.
-     */
-    API_EXPORT SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
-
-    /**
-     * @brief Destructor.
-     */
-    API_EXPORT ~SharedBlock();
-
-    /**
-     * @brief Init current shared block.
-     */
-    API_EXPORT bool Init();
-
+    ~SharedBlock();
+    
     /**
      * @brief Create a shared block.
      */
@@ -364,6 +351,10 @@ private:
     };
 
     SharedBlockHeader *mHeader;
+
+    SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
+
+    bool Init();
 
     /**
      * Allocate a portion of the block. Returns the offset of the allocation.
