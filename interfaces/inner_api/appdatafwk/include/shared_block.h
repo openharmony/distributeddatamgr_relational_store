@@ -98,8 +98,6 @@ public:
         API_EXPORT const uint8_t *GetRawData(SharedBlock *block) const;
     } __attribute((packed));
 
-    ~SharedBlock();
-    
     /**
      * @brief Create a shared block.
      */
@@ -353,6 +351,8 @@ private:
     SharedBlockHeader *mHeader;
 
     SharedBlock(const std::string &name, sptr<Ashmem> ashmem, size_t size, bool readOnly);
+
+    ~SharedBlock();
 
     bool Init();
 
