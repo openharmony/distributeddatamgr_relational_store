@@ -276,19 +276,13 @@ void UvQueue::UvEntry::BindPromise(napi_value promise)
 
     auto object = StealResult();
     napi_value argv[ARGC_MAX] = { nullptr };
-    status = napi_create_function(env_, RESOLVED, RESOLVED_SIZE, Resolved, object, &argv[0]);
-    if (status != napi_ok) {
-        if (object) {
-            delete object;
+    for (const auto &param : params) {
+        status = napi_create_function(env_, param.str, param.size, param.cb, object, &argv[param.argv_idx]);
+        if (status != napi_ok) {
+            if (object)
+                delete object;
+            return;
         }
-        return;
-    }
-    status = napi_create_function(env_, REJECTED, REJECTED_SIZE, Rejected, object, &argv[1]);
-    if (status != napi_ok) {
-        if (object) {
-            delete object;
-        }
-        return;
     }
     napi_value result = nullptr;
     // Enter 2 parameters argv[0] and argv[1]
