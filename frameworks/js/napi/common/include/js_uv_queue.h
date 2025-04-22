@@ -89,8 +89,16 @@ private:
         void DelReference();
         Result *StealResult();
         int32_t GetArgv(napi_value *argv, int32_t max);
+        const struct {
+            const char* str;
+            size_t size;
+            int argv_idx;
+            napi_callback cb;
+        } params[2] = {
+            {RESOLVED, RESOLVED_SIZE, 0, Resolved},
+            {REJECTED, REJECTED_SIZE, 1, Rejected}
+        };
     };
-
     static Task GenCallbackTask(std::shared_ptr<UvEntry> entry);
     static Task GenPromiseTask(std::shared_ptr<UvEntry> entry);
     napi_env env_ = nullptr;
