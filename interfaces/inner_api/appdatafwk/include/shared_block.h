@@ -36,7 +36,7 @@ static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
  * This class stores a set of rows from a database in a buffer,
  * which is used as the set of query result.
  */
-class API_EXPORT SharedBlock {
+class SharedBlock {
 public:
     /**
      * @brief Cell Unit types.
