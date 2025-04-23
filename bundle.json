@@ -218,7 +218,8 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/gdb:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/js/gdb:performancetest",
-                "//foundation/distributeddatamgr/relational_store/test/js/gdb:unittest"
+                "//foundation/distributeddatamgr/relational_store/test/js/gdb:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest"
             ]
         }
     }

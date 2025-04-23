@@ -36,6 +36,7 @@ ohos_unittest("NativeRdbNdkTest") {
   sources = [
     "unittest/rdb_asset_test.cpp",
     "unittest/rdb_cursor_test.cpp",
+    "unittest/rdb_predicates_pref_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_store_configv2_test.cpp",
     "unittest/rdb_store_test.cpp",

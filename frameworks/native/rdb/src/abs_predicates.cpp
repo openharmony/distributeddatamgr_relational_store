@@ -497,6 +497,16 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
     return this;
 }
 
+AbsPredicates *AbsPredicates::Having(const std::string &conditions, const std::vector<ValueObject> &values)
+{
+    if (!CheckParameter("having", conditions, {})) {
+        return this;
+    }
+    havingClause = conditions;
+    bindArgs.insert(bindArgs.end(), values.begin(), values.end());
+    return this;
+}
+
 void AbsPredicates::Initial()
 {
     distinct = false;
@@ -561,7 +571,7 @@ void AbsPredicates::AppendWhereClauseWithInOrNotIn(
 
 std::string AbsPredicates::GetStatement() const
 {
-    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
+    return "";
 }
 
 std::string AbsPredicates::GetWhereClause() const
@@ -652,6 +662,11 @@ std::string AbsPredicates::GetGroup() const
 std::string AbsPredicates::GetIndex() const
 {
     return index;
+}
+
+std::string AbsPredicates::GetHaving() const
+{
+    return havingClause;
 }
 } // namespace NativeRdb
 } // namespace OHOS
