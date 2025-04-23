@@ -17,13 +17,99 @@
 
 #include "logger.h"
 #include "raw_data_parser.h"
+#include "datashare_abs_predicates.h"
+#include "datashare_values_bucket.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::RdbDataShareAdapter;
 using namespace OHOS::DataShare;
 using namespace OHOS::NativeRdb;
 
-constexpr RdbUtils::OperateHandler RdbUtils::HANDLERS[LAST_TYPE];
+class RdbUtilsImpl : public RdbUtils {
+private:
+    static void NoSupport(const OperationItem &item, RdbPredicates &query);
+    static void EqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void NotEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void GreaterThan(const OperationItem &item, RdbPredicates &predicates);
+    static void LessThan(const OperationItem &item, RdbPredicates &predicates);
+    static void GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates);
+    static void And(const OperationItem &item, RdbPredicates &predicates);
+    static void Or(const OperationItem &item, RdbPredicates &predicates);
+    static void IsNull(const OperationItem &item, RdbPredicates &predicates);
+    static void IsNotNull(const OperationItem &item, RdbPredicates &predicates);
+    static void In(const OperationItem &item, RdbPredicates &predicates);
+    static void NotIn(const OperationItem &item, RdbPredicates &predicates);
+    static void Like(const OperationItem &item, RdbPredicates &predicates);
+    static void NotLike(const OperationItem &item, RdbPredicates &predicates);
+    static void OrderByAsc(const OperationItem &item, RdbPredicates &predicates);
+    static void OrderByDesc(const OperationItem &item, RdbPredicates &predicates);
+    static void Limit(const OperationItem &item, RdbPredicates &predicates);
+    static void Offset(const OperationItem &item, RdbPredicates &predicates);
+    static void BeginWrap(const OperationItem &item, RdbPredicates &predicates);
+    static void EndWrap(const OperationItem &item, RdbPredicates &predicates);
+    static void BeginsWith(const OperationItem &item, RdbPredicates &predicates);
+    static void EndsWith(const OperationItem &item, RdbPredicates &predicates);
+    static void Distinct(const OperationItem &item, RdbPredicates &predicates);
+    static void GroupBy(const OperationItem &item, RdbPredicates &predicates);
+    static void IndexedBy(const OperationItem &item, RdbPredicates &predicates);
+    static void Contains(const OperationItem &item, RdbPredicates &predicates);
+    static void NotContains(const OperationItem &item, RdbPredicates &predicates);
+    static void Glob(const OperationItem &item, RdbPredicates &predicates);
+    static void Between(const OperationItem &item, RdbPredicates &predicates);
+    static void NotBetween(const OperationItem &item, RdbPredicates &predicates);
+    static void CrossJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void InnerJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void LeftOuterJoin(const OperationItem &item, RdbPredicates &predicates);
+    static void Using(const OperationItem &item, RdbPredicates &predicates);
+    static void On(const OperationItem &item, RdbPredicates &predicates);
+    using OperateHandler = void (*)(const OperationItem &, RdbPredicates &);
+    static OHOS::NativeRdb::ValueObject ToValueObject(const DataSharePredicatesObject &predicatesObject);
+
+public:
+RDB_UTILS_PUSH_WARNING
+RDB_UTILS_DISABLE_WARNING("-Wc99-designator")
+    static constexpr OperateHandler HANDLERS[LAST_TYPE] = {
+        [INVALID_OPERATION] = &RdbUtilsImpl::NoSupport,
+        [EQUAL_TO] = &RdbUtilsImpl::EqualTo,
+        [NOT_EQUAL_TO] = &RdbUtilsImpl::NotEqualTo,
+        [GREATER_THAN] = &RdbUtilsImpl::GreaterThan,
+        [LESS_THAN] = &RdbUtilsImpl::LessThan,
+        [GREATER_THAN_OR_EQUAL_TO] = &RdbUtilsImpl::GreaterThanOrEqualTo,
+        [LESS_THAN_OR_EQUAL_TO] = &RdbUtilsImpl::LessThanOrEqualTo,
+        [AND] = &RdbUtilsImpl::And,
+        [OR] = &RdbUtilsImpl::Or,
+        [IS_NULL] = &RdbUtilsImpl::IsNull,
+        [IS_NOT_NULL] = &RdbUtilsImpl::IsNotNull,
+        [SQL_IN] = &RdbUtilsImpl::In,
+        [NOT_IN] = &RdbUtilsImpl::NotIn,
+        [LIKE] = &RdbUtilsImpl::Like,
+        [UNLIKE] = &RdbUtilsImpl::NoSupport,
+        [ORDER_BY_ASC] = &RdbUtilsImpl::OrderByAsc,
+        [ORDER_BY_DESC] = &RdbUtilsImpl::OrderByDesc,
+        [LIMIT] = &RdbUtilsImpl::Limit,
+        [OFFSET] = &RdbUtilsImpl::Offset,
+        [BEGIN_WARP] = &RdbUtilsImpl::BeginWrap,
+        [END_WARP] = &RdbUtilsImpl::EndWrap,
+        [BEGIN_WITH] = &RdbUtilsImpl::BeginsWith,
+        [END_WITH] = &RdbUtilsImpl::EndsWith,
+        [IN_KEY] = &RdbUtilsImpl::NoSupport,
+        [DISTINCT] = &RdbUtilsImpl::Distinct,
+        [GROUP_BY] = &RdbUtilsImpl::GroupBy,
+        [INDEXED_BY] = &RdbUtilsImpl::IndexedBy,
+        [CONTAINS] = &RdbUtilsImpl::Contains,
+        [GLOB] = &RdbUtilsImpl::Glob,
+        [BETWEEN] = &RdbUtilsImpl::Between,
+        [NOTBETWEEN] = &RdbUtilsImpl::NotBetween,
+        [KEY_PREFIX] = &RdbUtilsImpl::NoSupport,
+        [CROSSJOIN] = &RdbUtilsImpl::CrossJoin,
+        [INNERJOIN] = &RdbUtilsImpl::InnerJoin,
+        [LEFTOUTERJOIN] = &RdbUtilsImpl::LeftOuterJoin,
+        [USING] = &RdbUtilsImpl::Using,
+        [ON] = &RdbUtilsImpl::On,
+    };
+RDB_UTILS_POP_WARNING
+};
 
 ValuesBucket RdbUtils::ToValuesBucket(DataShareValuesBucket valuesBucket)
 {
@@ -48,13 +134,13 @@ RdbPredicates RdbUtils::ToPredicates(const DataShareAbsPredicates &predicates, c
     const auto &operations = predicates.GetOperationList();
     for (const auto &oper : operations) {
         if (oper.operation >= 0 && oper.operation < LAST_TYPE) {
-            (*HANDLERS[oper.operation])(oper, rdbPredicates);
+            (*RdbUtilsImpl::HANDLERS[oper.operation])(oper, rdbPredicates);
         }
     }
     return rdbPredicates;
 }
 
-OHOS::NativeRdb::ValueObject RdbUtils::ToValueObject(const DataSharePredicatesObject &predicatesObject)
+OHOS::NativeRdb::ValueObject RdbUtilsImpl::ToValueObject(const DataSharePredicatesObject &predicatesObject)
 {
     if (auto *val = std::get_if<int>(&predicatesObject.value)) {
         return ValueObject(*val);
@@ -73,12 +159,12 @@ std::shared_ptr<ResultSetBridge> RdbUtils::ToResultSetBridge(std::shared_ptr<Res
     return std::make_shared<RdbResultSetBridge>(resultSet);
 }
 
-void RdbUtils::NoSupport(const OperationItem &item, RdbPredicates &query)
+void RdbUtilsImpl::NoSupport(const OperationItem &item, RdbPredicates &query)
 {
     LOG_ERROR("invalid operation:%{public}d", item.operation);
 }
 
-void RdbUtils::EqualTo(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::EqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -88,7 +174,7 @@ void RdbUtils::EqualTo(const OperationItem &item, RdbPredicates &predicates)
     predicates.EqualTo(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::NotEqualTo(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::NotEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -98,7 +184,7 @@ void RdbUtils::NotEqualTo(const OperationItem &item, RdbPredicates &predicates)
     predicates.NotEqualTo(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::GreaterThan(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::GreaterThan(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -108,7 +194,7 @@ void RdbUtils::GreaterThan(const OperationItem &item, RdbPredicates &predicates)
     predicates.GreaterThan(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::LessThan(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::LessThan(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -118,7 +204,7 @@ void RdbUtils::LessThan(const OperationItem &item, RdbPredicates &predicates)
     predicates.LessThan(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -128,7 +214,7 @@ void RdbUtils::GreaterThanOrEqualTo(const OperationItem &item, RdbPredicates &pr
     predicates.GreaterThanOrEqualTo(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -138,17 +224,17 @@ void RdbUtils::LessThanOrEqualTo(const OperationItem &item, RdbPredicates &predi
     predicates.LessThanOrEqualTo(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::And(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::And(const OperationItem &item, RdbPredicates &predicates)
 {
     predicates.And();
 }
 
-void RdbUtils::Or(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Or(const OperationItem &item, RdbPredicates &predicates)
 {
     predicates.Or();
 }
 
-void RdbUtils::IsNull(const OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::IsNull(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -157,7 +243,7 @@ void RdbUtils::IsNull(const OperationItem &item, RdbPredicates &predicates)
     predicates.IsNull(item.GetSingle(0));
 }
 
-void RdbUtils::IsNotNull(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::IsNotNull(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -166,7 +252,7 @@ void RdbUtils::IsNotNull(const DataShare::OperationItem &item, RdbPredicates &pr
     predicates.IsNotNull(item.GetSingle(0));
 }
 
-void RdbUtils::In(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::In(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1 || item.multiParams.size() < 1) {
         LOG_ERROR(
@@ -177,7 +263,7 @@ void RdbUtils::In(const DataShare::OperationItem &item, RdbPredicates &predicate
     predicates.In(item.GetSingle(0), MutliValue(item.multiParams[0]));
 }
 
-void RdbUtils::NotIn(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::NotIn(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1 || item.multiParams.size() < 1) {
         LOG_ERROR(
@@ -188,7 +274,7 @@ void RdbUtils::NotIn(const DataShare::OperationItem &item, RdbPredicates &predic
     predicates.NotIn(item.GetSingle(0), MutliValue(item.multiParams[0]));
 }
 
-void RdbUtils::Like(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Like(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -198,7 +284,7 @@ void RdbUtils::Like(const DataShare::OperationItem &item, RdbPredicates &predica
     predicates.Like(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::NotLike(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::NotLike(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -208,7 +294,7 @@ void RdbUtils::NotLike(const DataShare::OperationItem &item, RdbPredicates &pred
     predicates.NotLike(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::OrderByAsc(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::OrderByAsc(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -217,7 +303,7 @@ void RdbUtils::OrderByAsc(const DataShare::OperationItem &item, RdbPredicates &p
     predicates.OrderByAsc(item.GetSingle(0));
 }
 
-void RdbUtils::OrderByDesc(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::OrderByDesc(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -226,7 +312,7 @@ void RdbUtils::OrderByDesc(const DataShare::OperationItem &item, RdbPredicates &
     predicates.OrderByDesc(item.GetSingle(0));
 }
 
-void RdbUtils::Limit(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Limit(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -237,7 +323,7 @@ void RdbUtils::Limit(const DataShare::OperationItem &item, RdbPredicates &predic
     predicates.Offset(item.GetSingle(1));
 }
 
-void RdbUtils::Offset(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Offset(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -246,17 +332,17 @@ void RdbUtils::Offset(const DataShare::OperationItem &item, RdbPredicates &predi
     predicates.Offset(item.GetSingle(0));
 }
 
-void RdbUtils::BeginWrap(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::BeginWrap(const OperationItem &item, RdbPredicates &predicates)
 {
     predicates.BeginWrap();
 }
 
-void RdbUtils::EndWrap(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::EndWrap(const OperationItem &item, RdbPredicates &predicates)
 {
     predicates.EndWrap();
 }
 
-void RdbUtils::BeginsWith(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::BeginsWith(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -266,7 +352,7 @@ void RdbUtils::BeginsWith(const DataShare::OperationItem &item, RdbPredicates &p
     predicates.BeginsWith(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::EndsWith(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::EndsWith(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -276,12 +362,12 @@ void RdbUtils::EndsWith(const DataShare::OperationItem &item, RdbPredicates &pre
     predicates.EndsWith(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::Distinct(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Distinct(const OperationItem &item, RdbPredicates &predicates)
 {
     predicates.Distinct();
 }
 
-void RdbUtils::GroupBy(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::GroupBy(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.multiParams.size() < 1) {
         LOG_ERROR("MultiParams is missing elements, size is %{public}zu", item.multiParams.size());
@@ -290,7 +376,7 @@ void RdbUtils::GroupBy(const DataShare::OperationItem &item, RdbPredicates &pred
     predicates.GroupBy(MutliValue(item.multiParams[0]));
 }
 
-void RdbUtils::IndexedBy(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::IndexedBy(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -299,7 +385,7 @@ void RdbUtils::IndexedBy(const DataShare::OperationItem &item, RdbPredicates &pr
     predicates.IndexedBy(item.GetSingle(0));
 }
 
-void RdbUtils::Contains(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Contains(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -309,7 +395,7 @@ void RdbUtils::Contains(const DataShare::OperationItem &item, RdbPredicates &pre
     predicates.Contains(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::NotContains(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::NotContains(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -319,7 +405,7 @@ void RdbUtils::NotContains(const DataShare::OperationItem &item, RdbPredicates &
     predicates.NotContains(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Glob(const OperationItem &item, RdbPredicates &predicates)
 {
     // 2 is the number of argument item.singleParams
     if (item.singleParams.size() < 2) {
@@ -329,7 +415,7 @@ void RdbUtils::Glob(const DataShare::OperationItem &item, RdbPredicates &predica
     predicates.Glob(item.GetSingle(0), ToValueObject(item.GetSingle(1)));
 }
 
-void RdbUtils::Between(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Between(const OperationItem &item, RdbPredicates &predicates)
 {
     // 3 is the number of argument item.singleParams
     if (item.singleParams.size() < 3) {
@@ -340,7 +426,7 @@ void RdbUtils::Between(const DataShare::OperationItem &item, RdbPredicates &pred
     predicates.Between(item.GetSingle(0), ToValueObject(item.GetSingle(1)), ToValueObject(item.GetSingle(2)));
 }
 
-void RdbUtils::NotBetween(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::NotBetween(const OperationItem &item, RdbPredicates &predicates)
 {
     // 3 is the number of argument item.singleParams
     if (item.singleParams.size() < 3) {
@@ -351,7 +437,7 @@ void RdbUtils::NotBetween(const DataShare::OperationItem &item, RdbPredicates &p
     predicates.NotBetween(item.GetSingle(0), ToValueObject(item.GetSingle(1)), ToValueObject(item.GetSingle(2)));
 }
 
-void RdbUtils::CrossJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::CrossJoin(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -360,7 +446,7 @@ void RdbUtils::CrossJoin(const DataShare::OperationItem &item, RdbPredicates &pr
     predicates.CrossJoin(item.GetSingle(0));
 }
 
-void RdbUtils::InnerJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::InnerJoin(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -369,7 +455,7 @@ void RdbUtils::InnerJoin(const DataShare::OperationItem &item, RdbPredicates &pr
     predicates.InnerJoin(item.GetSingle(0));
 }
 
-void RdbUtils::LeftOuterJoin(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::LeftOuterJoin(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.singleParams.size() < 1) {
         LOG_ERROR("SingleParams is missing elements, size is %{public}zu", item.singleParams.size());
@@ -378,7 +464,7 @@ void RdbUtils::LeftOuterJoin(const DataShare::OperationItem &item, RdbPredicates
     predicates.LeftOuterJoin(item.GetSingle(0));
 }
 
-void RdbUtils::Using(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::Using(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.multiParams.size() < 1) {
         LOG_ERROR("MultiParams is missing elements, size is %{public}zu", item.multiParams.size());
@@ -387,7 +473,7 @@ void RdbUtils::Using(const DataShare::OperationItem &item, RdbPredicates &predic
     predicates.Using(MutliValue(item.multiParams[0]));
 }
 
-void RdbUtils::On(const DataShare::OperationItem &item, RdbPredicates &predicates)
+void RdbUtilsImpl::On(const OperationItem &item, RdbPredicates &predicates)
 {
     if (item.multiParams.size() < 1) {
         LOG_ERROR("MultiParams is missing elements, size is %{public}zu", item.multiParams.size());

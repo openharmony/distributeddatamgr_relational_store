@@ -57,8 +57,14 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
         return nullptr;
     }
 
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return nullptr;
+    }
+
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     static const char *className = "LRdbStoreInner;";
+    static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
         delete proxy;
@@ -73,11 +79,22 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
         ThrowBusinessError(env, E_INNER_ERROR, "ANI SetField.");
         return nullptr;
     }
+    status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
+    if (ANI_OK != status) {
+        LOG_ERROR("[ANI] Failed to initFinalizer for class '%{public}s'.", className);
+        ThrowBusinessError(env, E_INNER_ERROR, "init rdbStore finalizer failed.");
+        return nullptr;
+    }
     return obj;
 }
 
 ani_status RdbStoreHelperInit(ani_env *env)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
+
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {

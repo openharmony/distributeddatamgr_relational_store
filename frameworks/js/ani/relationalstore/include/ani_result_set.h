@@ -16,12 +16,13 @@
 #ifndef ANI_RESULT_SET_H
 #define ANI_RESULT_SET_H
 
+#include "ani_utils.h"
 #include "rdb_helper.h"
 
 namespace OHOS {
 namespace RelationalStoreAniKit {
 
-class ResultSetProxy {
+class ResultSetProxy : public NativeObject {
 public:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultset;
 };

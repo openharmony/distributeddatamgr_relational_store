@@ -37,7 +37,6 @@ ohos_shared_library("relationalstore_ani") {
     "ability_runtime:appkit_native",
     "ability_runtime:wantagent_innerkits",
     "c_utils:utils",
-    "data_share:datashare_common",
     "hilog:libhilog",
     "runtime_core:ani",
     "samgr:samgr_proxy",

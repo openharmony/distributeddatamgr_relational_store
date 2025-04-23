@@ -79,6 +79,11 @@ ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string 
     ani_string message;
     env->String_NewUTF8(msg.c_str(), msg.size(), &message);
 
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return nullptr;
+    }
+
     static const char *businessErrorName = "L@ohos/base/BusinessError;";
     ani_class cls;
     auto status = env->FindClass(businessErrorName, &cls);
@@ -98,16 +103,14 @@ ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string 
         LOG_ERROR("Can not create business error errcode %{public}d.", status);
         return nullptr;
     }
-    const char* codeFieldName = "code";
-    status = env->Object_SetFieldByName_Double(businessErrorObject, codeFieldName, code);
+    status = env->Object_SetFieldByName_Double(businessErrorObject, "code", code);
     if (ANI_OK != status) {
         LOG_ERROR("Can not set business error code errcode %{public}d.", status);
         return nullptr;
     }
-    const char* dataFieldName = "data";
-    status = env->Object_SetFieldByName_Ref(businessErrorObject, dataFieldName, static_cast<ani_ref>(message));
+    status = env->Object_SetPropertyByName_Ref(businessErrorObject, "message", message);
     if (ANI_OK != status) {
-        LOG_ERROR("Can not set business error data errcode %{public}d.", status);
+        LOG_ERROR("Can not set business error message errcode %{public}d.", status);
         return businessErrorObject;
     }
 
