@@ -17,7 +17,9 @@
 
 #include <variant>
 
+#include "convertor_error_code.h"
 #include "logger.h"
+#include "oh_data_define.h"
 #include "oh_predicates.h"
 #include "relational_predicates_objects.h"
 #include "relational_store_error_code.h"
@@ -377,3 +379,29 @@ RelationalPredicate *RelationalPredicate::GetSelf(OH_Predicates *predicates)
 }
 } // namespace RdbNdk
 } // namespace OHOS
+
+using namespace OHOS::RdbNdk;
+using namespace OHOS::NativeRdb;
+int OH_Predicates_Having(OH_Predicates *predicates, const char *conditions, const OH_Data_Values *values)
+{
+    auto self = RelationalPredicate::GetSelf(predicates);
+    if (self == nullptr || conditions == nullptr || (values != nullptr && !values->IsValid())) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (self->Get().GetGroup().empty() || strlen(conditions) == 0) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (values == nullptr) {
+        self->Get().Having(conditions);
+        return OH_Rdb_ErrCode::RDB_OK;
+    }
+    std::vector<ValueObject> datas;
+    for (auto &value : values->values_) {
+        if (!value.IsValid()) {
+            return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+        }
+        datas.push_back(value.value_);
+    }
+    self->Get().Having(conditions, datas);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
