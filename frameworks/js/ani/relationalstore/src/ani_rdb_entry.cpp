@@ -19,6 +19,7 @@
 #include "ani_rdb_predicates.h"
 #include "ani_rdb_store_helper.h"
 #include "ani_result_set.h"
+#include "ani_utils.h"
 #include "logger.h"
 
 using namespace OHOS::Rdb;
@@ -26,6 +27,11 @@ using namespace OHOS::RelationalStoreAniKit;
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
+    if (vm == nullptr) {
+        LOG_ERROR("vm is nullptr.");
+        return ANI_ERROR;
+    }
+
     ani_env *env;
     auto status = vm->GetEnv(ANI_VERSION_1, &env);
     if (ANI_OK != status) {
@@ -54,6 +60,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     status = PredicatesInit(env);
     if (ANI_OK != status) {
         LOG_ERROR("PredicatesInit failed errcode %{public}d", status);
+        return ANI_ERROR;
+    }
+
+    status = CleanerInit(env);
+    if (ANI_OK != status) {
+        LOG_ERROR("CleanerInit failed errcode %{public}d", status);
         return ANI_ERROR;
     }
 

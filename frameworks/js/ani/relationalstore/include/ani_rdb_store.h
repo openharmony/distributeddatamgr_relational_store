@@ -16,6 +16,7 @@
 #define ANI_RDB_STORE_H
 
 #include <ani.h>
+#include "ani_utils.h"
 #include "rdb_store.h"
 
 namespace OHOS {
@@ -23,7 +24,7 @@ namespace RelationalStoreAniKit {
 
 using namespace OHOS::NativeRdb;
 
-class RdbStoreProxy {
+class RdbStoreProxy : public NativeObject {
 public:
     std::shared_ptr<RdbStore> nativeRdb;
 };

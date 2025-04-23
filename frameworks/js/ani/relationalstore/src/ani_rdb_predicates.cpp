@@ -36,6 +36,11 @@ void InitNativePredicates(ani_env *env, ani_object object, ani_string tableName)
     auto tname = AniStringUtils::ToStd(env, tableName);
     proxy->predicates = std::make_shared<RdbPredicates>(tname);
 
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
+
     ani_status status = env->Object_SetFieldByName_Long(object, "nativePtr", reinterpret_cast<ani_long>(proxy));
     if (ANI_OK != status) {
         LOG_ERROR("[ANI] Failed to set nativePtr to predicates object.");
@@ -43,6 +48,11 @@ void InitNativePredicates(ani_env *env, ani_object object, ani_string tableName)
 }
 ani_status PredicatesInit(ani_env *env)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
+
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {

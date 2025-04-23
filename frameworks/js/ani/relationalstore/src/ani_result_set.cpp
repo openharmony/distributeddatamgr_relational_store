@@ -32,6 +32,10 @@ using namespace OHOS::Rdb;
 
 ani_double GetColumnIndex(ani_env *env, ani_object object, ani_string col_name)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return 0;
+    }
     auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
     if (proxy == nullptr || proxy->resultset == nullptr) {
         LOG_ERROR("ResultSet should be initialized properly.");
@@ -47,6 +51,10 @@ ani_double GetColumnIndex(ani_env *env, ani_object object, ani_string col_name)
 
 ani_double GetLong(ani_env *env, ani_object object, ani_double index)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return 0;
+    }
     auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
     if (proxy == nullptr || proxy->resultset == nullptr) {
         LOG_ERROR("ResultSet should be initialized properly.");
@@ -61,6 +69,10 @@ ani_double GetLong(ani_env *env, ani_object object, ani_double index)
 
 ani_string GetString(ani_env *env, ani_object object, ani_double index)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return nullptr;
+    }
     auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
     if (proxy == nullptr || proxy->resultset == nullptr) {
         LOG_ERROR("ResultSet should be initialized properly.");
@@ -77,6 +89,10 @@ ani_string GetString(ani_env *env, ani_object object, ani_double index)
 
 ani_boolean GoToFirstRow(ani_env *env, ani_object object)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return false;
+    }
     auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
     if (proxy == nullptr || proxy->resultset == nullptr) {
         LOG_ERROR("ResultSet should be initialized properly.");
@@ -89,6 +105,10 @@ ani_boolean GoToFirstRow(ani_env *env, ani_object object)
 
 ani_status ResultSetInit(ani_env *env)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
