@@ -37,10 +37,12 @@
  * @since 10
  */
 
-#include <cstdint>
 #include <stddef.h>
-#include "oh_value_object.h"
 
+#include <cstdint>
+
+#include "oh_data_values.h"
+#include "oh_value_object.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -396,6 +398,18 @@ typedef struct OH_Predicates {
     int (*destroy)(OH_Predicates *predicates);
 } OH_Predicates;
 
+/**
+ * @brief Sets the OH_Predicates to specify conditions to filter grouped results that will appear in the final result.
+ *
+ * @param predicates Represents a pointer to an instance of OH_Predicates.
+ * @param conditions Indicates filter conditions in the having clause.
+ * @param values Indicates a pointer to an instance of OH_Data_Values.
+ * @return Returns the error code.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ * @since 20
+*/
+int OH_Predicates_Having(OH_Predicates *predicates, const char *conditions, const OH_Data_Values *values);
 #ifdef __cplusplus
 };
 #endif
