@@ -214,6 +214,13 @@ public:
     API_EXPORT AbsRdbPredicates *Glob(const std::string &field, const std::string &value) override;
 
     /**
+     * @brief Adds an Glob condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to glob of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *NotGlob(const std::string &field, const std::string &value) override;
+
+    /**
      * @brief Adds an Distinct condition to the remote AbsRdbPredicates.
      *
      * This method is similar to distinct of the SQL statement.
