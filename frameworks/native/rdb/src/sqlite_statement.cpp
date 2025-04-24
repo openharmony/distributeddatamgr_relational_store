@@ -26,7 +26,9 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_types.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
 #include "share_block.h"
@@ -121,6 +123,23 @@ void SqliteStatement::HandleErrMsg(const std::string &errMsg, const std::string 
     }
 }
 
+void SqliteStatement::NotifyErrorLog(const int &code, const std::string &message, const std::string &sql)
+{
+    DistributedRdb::SqlErrorObserver::ExceptionMessage exceMessage;
+    exceMessage.code = code;
+    exceMessage.message = message;
+    exceMessage.sql = sql;
+    NativeRdb::SqlLog::Notify(config_->GetPath(), exceMessage);
+}
+
+bool SqliteStatement::CheckSQLiteError(const int &errCode)
+{
+    if (errCode != SQLITE_ROW && errCode != SQLITE_DONE && errCode != SQLITE_OK) {
+        return true;
+    }
+    return false;
+}
+
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
 {
     if (sql_.compare(newSql) == 0) {
@@ -132,6 +151,9 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         std::string errMsg(sqlite3_errmsg(dbHandle));
+        if (CheckSQLiteError(errCode)) {
+            NotifyErrorLog(errCode, errMsg, newSql);
+        }
         if (errMsg.size() != 0) {
             HandleErrMsg(errMsg, config_->GetPath(), config_->GetBundleName());
         }
@@ -354,6 +376,10 @@ int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
+    if (CheckSQLiteError(errCode)) {
+        std::string errMsg(sqlite3_errmsg(sqlite3_db_handle(stmt_)));
+        NotifyErrorLog(errCode, errMsg, sql_);
+    }
     int ret = SQLiteError::ErrNo(errCode);
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
@@ -792,7 +818,12 @@ int SqliteStatement::InnerFinalize()
         return E_OK;
     }
 
+    auto db = sqlite3_db_handle(stmt_);
     int errCode = sqlite3_finalize(stmt_);
+    if (CheckSQLiteError(errCode)) {
+        std::string errMsg(sqlite3_errmsg(db));
+        NotifyErrorLog(errCode, errMsg, sql_);
+    }
     stmt_ = nullptr;
     sql_ = "";
     readOnly_ = false;

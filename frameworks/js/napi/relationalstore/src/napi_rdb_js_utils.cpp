@@ -218,6 +218,21 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::SqlObserver::SqlE
 }
 
 template<>
+napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "code", value.code),
+        DECLARE_JS_PROPERTY(env, "message", value.message),
+        DECLARE_JS_PROPERTY(env, "sql", value.sql),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 {
     return nullptr;
