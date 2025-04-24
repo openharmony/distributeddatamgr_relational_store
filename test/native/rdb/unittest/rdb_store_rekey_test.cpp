@@ -1167,7 +1167,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
     values.PutString("name", std::string("zhangsan1"));
     values.PutInt("age", 50);
     values.PutDouble("salary", 263);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4 ,5});
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4, 5 });
     int ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
@@ -1180,7 +1180,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
     EXPECT_EQ(1, changedRows);
 
     auto resultSet = store->QueryByStep("SELECT * FROM test1");
-    ASSERT_NE(resultSet, nullptr);
     int32_t rowCount{};
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);

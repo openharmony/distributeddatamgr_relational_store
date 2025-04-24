@@ -415,8 +415,8 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         (config_.IsCustomEncryptParam() == cryptoParam.encryptKey_.empty())) {
         LOG_ERROR("Rekey is not supported, name:%{public}s, IsCustomEncrypt:%{public}d, crypto param: %{public}d,"
                 "%{public}d,%{public}d, %{public}d, %{public}u",
-          SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
-          cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
+            cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
         return E_NOT_SUPPORT;
     }
 
