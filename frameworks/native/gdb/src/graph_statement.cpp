@@ -183,9 +183,10 @@ std::pair<int32_t, GraphValue> GraphStatement::GetColumnValue(int32_t index) con
         case ColumnType::TYPE_BLOB:
             LOG_ERROR("not support blob type. index=%{public}d", index);
             return { E_NOT_SUPPORT, nullptr };
-        case ColumnType::TYPE_FLOATVECTOR:
-            LOG_ERROR("not support float vector type. index=%{public}d", index);
-            return { E_NOT_SUPPORT, nullptr };
+        case ColumnType::TYPE_FLOATVECTOR: {
+            value = GrdAdapter::ColumnFloatVector(stmtHandle_, index);
+            break;
+        }
         case ColumnType::TYPE_NULL:
         default:
             value = nullptr;

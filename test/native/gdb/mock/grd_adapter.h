@@ -58,6 +58,7 @@ public:
     static int32_t ColumnInt(GRD_StmtT *stmt, uint32_t idx);
     static double ColumnDouble(GRD_StmtT *stmt, uint32_t idx);
     static const char *ColumnText(GRD_StmtT *stmt, uint32_t idx);
+    static std::vector<float> ColumnFloatVector(GRD_StmtT *stmt, uint32_t idx);
 
     static int Backup(GRD_DB *db, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);
     static int Restore(const char *dbFile, const char *backupDbFile, const std::vector<uint8_t> &encryptedKey);

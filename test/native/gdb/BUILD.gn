@@ -60,6 +60,7 @@ ohos_unittest("NativeGdbTest") {
   sources += [
     "unittest/gdb_encrypt_test.cpp",
     "unittest/gdb_execute_test.cpp",
+    "unittest/gdb_float_vector_test.cpp",
     "unittest/gdb_function_test.cpp",
     "unittest/gdb_grdapi_test.cpp",
     "unittest/gdb_multi_thread_test.cpp",
