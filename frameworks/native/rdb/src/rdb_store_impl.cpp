@@ -118,7 +118,7 @@ int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    if (isReadOnly_ || isMemoryRdb_ || config_.IsLocalOnly()) {
+    if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam()) {
         return E_OK;
     }
     if (config_.GetKnowledgeProcessing()) {
@@ -400,6 +400,56 @@ int RdbStoreImpl::SetDistributedTables(
     }
 
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
+}
+
+int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    if (!cryptoParam.IsValid()) {
+        LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
+        return E_INVALID_ARGS;
+    }
+    if (!config_.IsEncrypt() || !config_.GetCryptoParam().Equal(cryptoParam) ||
+        (config_.IsCustomEncryptParam() == cryptoParam.encryptKey_.empty())) {
+        LOG_ERROR("Rekey is not supported, name:%{public}s, IsCustomEncrypt:%{public}d, crypto param: %{public}d,"
+                "%{public}d,%{public}d, %{public}d, %{public}u",
+          SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
+          cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
+        return E_NOT_SUPPORT;
+    }
+
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        LOG_ERROR("Database already closed.");
+        return E_ALREADY_CLOSED;
+    }
+
+#if !defined(CROSS_PLATFORM)
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+#endif
+    LOG_INFO("Start rekey, name:%{public}s, IsCustomEncrypt:%{public}d. ",
+        SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
+    auto errCode = pool->Rekey(cryptoParam);
+    LOG_INFO("End rekey, errCode:%{public}d, name:%{public}s, IsCustomEncrypt:%{public}d, crypto param: %{public}d,"
+        "%{public}d, %{public}d, %{public}d, %{public}u",
+        errCode, SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
+        cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
+#if !defined(CROSS_PLATFORM)
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+        if (errCode == E_OK && !config_.IsCustomEncryptParam()) {
+            auto syncerParam = syncerParam_;
+            syncerParam.password_ = config_.GetEncryptKey();
+            service->AfterOpen(syncerParam);
+        }
+    }
+#endif
+    return errCode;
 }
 
 int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(

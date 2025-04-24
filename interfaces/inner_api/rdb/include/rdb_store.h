@@ -595,6 +595,13 @@ public:
     virtual int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async);
 
     /**
+     * @brief Changes the key used to encrypt the database.
+     *
+     * @param Crypto parameters
+     */
+    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
+
+    /**
      * @brief Subscribe to event changes.
      */
     virtual int Subscribe(const SubscribeOption &option, RdbStoreObserver *observer);

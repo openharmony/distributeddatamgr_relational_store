@@ -43,6 +43,7 @@ public:
     bool IsWriter() const override;
     bool IsInTrans() const override;
     int32_t ReSetKey(const RdbStoreConfig &config) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t TryCheckPoint(bool timeout) override;
     int32_t LimitWalSize() override;
     int32_t ConfigLocale(const std::string &localeStr) override;
