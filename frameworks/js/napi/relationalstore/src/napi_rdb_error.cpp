@@ -21,6 +21,7 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 using JsErrorCode = OHOS::RelationalStoreJsKit::JsErrorCode;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
+    { E_PARAM_ERROR, 401, "Invalid args."},
     { E_NOT_STAGE_MODE, 14801001, "The operation is supported in the stage model only." },
     { E_DATA_GROUP_ID_INVALID, 14801002, "Invalid data ground ID." },
     { NativeRdb::E_NOT_SELECT, 14800019, "The SQL must be a query statement." },
@@ -53,7 +54,7 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "Config changed." },
     { NativeRdb::E_INVALID_SECRET_KEY, 14800020, "The secret key is corrupted or lost." },
     { NativeRdb::E_SQLITE_IOERR_FULL, 14800028, "SQLite: Some kind of disk I/O error occurred." },
-    { NativeRdb::E_INVALID_ARGS_NEW, 401, "Invalid args." },
+    { NativeRdb::E_INVALID_ARGS_NEW, 14800001, "Invalid args." },
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
 
