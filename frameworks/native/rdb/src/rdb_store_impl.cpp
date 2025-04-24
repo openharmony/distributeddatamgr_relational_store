@@ -41,6 +41,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -940,10 +941,12 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
         LOG_ERROR("GetHashKeyForLockRow failed, err is %{public}d.", ret);
         return ret;
     }
+    SqlLog::Pause();
     auto [err, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION);
     if (statement == nullptr || err != E_OK) {
         return err;
     }
+    SqlLog::Resume();
     int errCode = statement->ModifyLockStatus(predicates.GetTableName(), hashKeys, isLock);
     if (errCode == E_WAIT_COMPENSATED_SYNC) {
         LOG_DEBUG("Start compensation sync.");
@@ -1774,6 +1777,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     }
 
     std::vector<ValueObject> bindArgs = CreateBackupBindArgs(databasePath, destEncryptKey);
+    SqlLog::Pause();
     auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_BACKUP_SQL, conn);
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
@@ -1788,6 +1792,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     int ret = statement->Execute();
     errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
     int res = statement->Execute();
+    SqlLog::Resume();
     return (res == E_OK) ? ret : res;
 }
 
@@ -1863,6 +1868,7 @@ int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, 
     std::string sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_CIPHER_PREFIX) +
                       SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
                       std::string(GlobalExpr::ALGO_SUFFIX);
+    SqlLog::Pause();
     auto [errCode, statement] = conn->CreateStatement(sql, conn);
     errCode = SetDefaultEncryptSql(statement, sql, config);
     if (errCode != E_OK) {
@@ -1894,7 +1900,9 @@ int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, 
 
     sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_PAGE_SIZE_PREFIX) +
           std::to_string(config.GetCryptoParam().cryptoPageSize);
-    return SetDefaultEncryptSql(statement, sql, config);
+    errCode = SetDefaultEncryptSql(statement, sql, config);
+    SqlLog::Resume();
+    return errCode;
 }
 
 int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
@@ -1923,6 +1931,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
     std::vector<ValueObject> bindArgs;
     bindArgs.emplace_back(ValueObject(dbPath));
     bindArgs.emplace_back(ValueObject(attachName));
+    SqlLog::Pause();
     if (!key.empty()) {
         auto ret = SetDefaultEncryptAlgo(conn, config);
         if (ret != E_OK) {
@@ -1942,7 +1951,9 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
         LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
         return errCode;
     }
-    return statement->Execute(bindArgs);
+    errCode = statement->Execute(bindArgs);
+    SqlLog::Resume();
+    return errCode;
 }
 
 /**
@@ -2012,7 +2023,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(attachName));
-
+    SqlLog::Pause();
     auto [errCode, statement] = connection->CreateStatement(GlobalExpr::DETACH_SQL, connection);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Detach get statement failed, errCode %{public}d", errCode);
@@ -2024,7 +2035,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
             SqliteUtils::Anonymous(config_.GetName()).c_str(), attachName.c_str());
         return { errCode, 0 };
     }
-
+    SqlLog::Resume();
     attachedInfo_.Erase(attachName);
     if (!attachedInfo_.Empty()) {
         return { E_OK, attachedInfo_.Size() };
@@ -2045,12 +2056,14 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
+    SqlLog::Pause();
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
         return errCode;
     }
     ValueObject value;
     std::tie(errCode, value) = statement->ExecuteForValue();
+    SqlLog::Resume();
     auto val = std::get_if<int64_t>(&value.value);
     if (val != nullptr) {
         version = static_cast<int>(*val);
@@ -2066,12 +2079,15 @@ int RdbStoreImpl::SetVersion(int version)
     if (isReadOnly_) {
         return E_NOT_SUPPORT;
     }
+    SqlLog::Pause();
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
         return errCode;
     }
-    return statement->Execute();
+    errCode = statement->Execute();
+    SqlLog::Resume();
+    return errCode;
 }
 /**
  * Begins a transaction in EXCLUSIVE mode.
@@ -2332,7 +2348,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     if (sqlType != "ATT") {
         return E_OK;
     }
-
+    SqlLog::Pause();
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     if (statement == nullptr) {
         return errCode;
@@ -2354,7 +2370,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
         return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
-
+    SqlLog::Resume();
     return E_OK;
 }
 

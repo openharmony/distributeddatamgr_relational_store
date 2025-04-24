@@ -32,6 +32,7 @@
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
 #include "rdb_security_manager.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
@@ -566,6 +567,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
+    SqlLog::Pause();
     auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SetPageSize fail to get page size : %{public}d", errCode);
@@ -580,11 +582,13 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         LOG_ERROR("SetPageSize fail to set page size : %{public}d", errCode);
     }
+    SqlLog::Resume();
     return errCode;
 }
 
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 {
+    SqlLog::Pause();
     if (!config.GetCryptoParam().IsValid()) {
         LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
@@ -637,6 +641,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
+    SqlLog::Resume();
     return E_OK;
 }
 
@@ -750,7 +755,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
     if (errCode != SQLITE_OK) {
         return SQLiteError::ErrNo(errCode);
     }
-
+    SqlLog::Pause();
     errCode = SetEncryptAgo(config);
     if (errCode != E_OK) {
         return errCode;
@@ -762,8 +767,8 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
         if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
             return errCode;
         }
-        return E_OK;
     }
+    SqlLog::Resume();
     return errCode;
 }
 
@@ -900,11 +905,14 @@ int SqliteConnection::SetWalFile(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
+    SqlLog::Pause();
     auto [errCode, version] = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
     if (errCode != E_OK) {
         return errCode;
     }
-    return ExecuteSql(std::string(GlobalExpr::PRAGMA_VERSION) + "=?", { std::move(version) });
+    errCode = ExecuteSql(std::string(GlobalExpr::PRAGMA_VERSION) + "=?", { std::move(version) });
+    SqlLog::Resume();
+    return errCode;
 }
 
 int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
@@ -913,7 +921,7 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     if (syncMode.length() != 0) {
         targetValue = syncMode;
     }
-
+    SqlLog::Pause();
     auto [errCode, object] = ExecuteForValue("PRAGMA synchronous");
     if (errCode != E_OK) {
         LOG_ERROR("get wal sync mode fail, errCode:%{public}d", errCode);
@@ -929,6 +937,7 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     if (errCode != E_OK) {
         LOG_ERROR("set wal sync mode fail, errCode:%{public}d", errCode);
     }
+    SqlLog::Resume();
     return errCode;
 }
 
@@ -1518,7 +1527,7 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     if (slaveConnection_ == nullptr) {
         return false;
     }
-
+    SqlLog::Pause();
     auto [cRet, cObj] = ExecuteForValue("SELECT COUNT(*) FROM sqlite_master WHERE type='table';");
     auto cVal = std::get_if<int64_t>(&cObj.value);
     if (cRet == E_SQLITE_CORRUPT || (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L))) {
@@ -1535,6 +1544,7 @@ bool SqliteConnection::IsDbVersionBelowSlave()
             return true;
         }
     }
+    SqlLog::Resume();
     return false;
 }
 
