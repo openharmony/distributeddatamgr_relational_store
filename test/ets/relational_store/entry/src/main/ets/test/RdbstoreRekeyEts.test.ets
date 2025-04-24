@@ -1,7 +1,6 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from '@ohos/hypium';
 import data_relationalStore from '@ohos.data.relationalStore'
 import common from "@ohos.app.ability.common"
-let context: common.UIAbilityContext
 
 const TAG = "[RDB_REKEY_TEST]";
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -35,7 +34,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -65,7 +64,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -95,7 +94,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -125,7 +124,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -155,7 +154,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -184,7 +183,7 @@ export default function RdbstoreRekeysEtsTest() {
         name: "testRekey0006.db",
         securityLevel: data_relationalStore.SecurityLevel.S2,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -213,7 +212,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -243,7 +242,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -273,7 +272,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -303,7 +302,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -333,7 +332,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -368,7 +367,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       await rdbStore.executeSql(CREATE_TABLE_TEST);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
@@ -415,7 +414,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array([6, 5, 4, 3, 2, 1]),
@@ -443,7 +442,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       await rdbStore.executeSql(CREATE_TABLE_TEST);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
@@ -495,7 +494,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array(),
@@ -523,7 +522,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let SQL_CREATE_TABLE =
         'CREATE TABLE IF NOT EXISTS employee (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER)';
@@ -565,7 +564,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let SQL_CREATE_TABLE =
         'CREATE TABLE IF NOT EXISTS employee (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER)';
@@ -607,7 +606,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       try {
         await rdbStore.rekey(undefined);
       } catch (e) {
@@ -630,7 +629,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       try {
         await rdbStore.rekey(null);
       } catch (e) {
@@ -653,7 +652,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       try {
         await rdbStore.rekey();
       } catch (e) {
@@ -676,7 +675,7 @@ export default function RdbstoreRekeysEtsTest() {
         securityLevel: data_relationalStore.SecurityLevel.S2,
         encrypt: true,
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       await rdbStore.executeSql(CREATE_TABLE_TEST);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
@@ -723,7 +722,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
@@ -758,7 +757,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
@@ -793,7 +792,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
@@ -828,7 +827,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam: cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       let cryptoParam1: data_relationalStore.CryptoParam = {
         encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
