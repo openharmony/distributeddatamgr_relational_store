@@ -360,6 +360,12 @@ std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
     return cryptoParam_.encryptKey_;
 }
 
+void RdbStoreConfig::ReSetEncryptKey(const std::vector<uint8_t> &encryptKey) const
+{
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_ = encryptKey;
+}
+
 void RdbStoreConfig::ChangeEncryptKey() const
 {
     RdbSecurityManager::GetInstance().ChangeKeyFile(GetPath());
@@ -511,9 +517,9 @@ void RdbStoreConfig::SetWriteTime(int timeout)
     writeTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
 }
 
-bool RdbStoreConfig::IsLocalOnly() const
+bool RdbStoreConfig::IsCustomEncryptParam() const
 {
-    return localOnly_;
+    return customEncryptParam_;
 }
 
 int RdbStoreConfig::GetReadTime() const
@@ -700,7 +706,7 @@ void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
 {
     cryptoParam_ = cryptoParam;
     if (!(cryptoParam_.encryptKey_.empty())) {
-        localOnly_ = true;
+        customEncryptParam_ = true;
     }
 }
 
