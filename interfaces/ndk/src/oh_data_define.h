@@ -22,6 +22,7 @@
 #include "transaction.h"
 #include "oh_predicates.h"
 #include "oh_rdb_transaction.h"
+#include "rdb_store_config.h"
 
 struct OH_Rdb_Transaction {
     static constexpr int64_t OH_RDB_TRANS_ID = 0x10000000;
@@ -60,6 +61,14 @@ struct OH_Data_VBuckets {
     int64_t id = OH_VBUCKETS_ID;
 
     std::vector<OH_VBucket *> rows_;
+    bool IsValid() const;
+};
+
+struct OH_Rdb_CryptoParam {
+    static constexpr int64_t OH_CRYPTO_PARAM_ID = 0x10005000;
+    int64_t id = OH_CRYPTO_PARAM_ID;
+
+    OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
     bool IsValid() const;
 };
 #endif
