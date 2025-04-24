@@ -30,7 +30,7 @@
 
 namespace OHOS::DistributedDataAip {
 using GraphValue = std::variant<std::monostate, int32_t, int64_t, double, std::string, std::vector<uint8_t>,
-    std::shared_ptr<Vertex>, std::shared_ptr<Edge>, std::shared_ptr<Path>, std::nullptr_t>;
+    std::shared_ptr<Vertex>, std::shared_ptr<Edge>, std::shared_ptr<Path>, std::vector<float>, std::nullptr_t>;
 
 class Result {
 public:

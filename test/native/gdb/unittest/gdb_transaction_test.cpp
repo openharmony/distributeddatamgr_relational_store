@@ -73,7 +73,6 @@ static constexpr int32_t MAX_GQL_LEN = 1024 * 1024;
 static constexpr int32_t MAX_CNT = 4;
 static constexpr int32_t MAX_DATA_CNT = 200;
 
-static constexpr int32_t BUSY_TIMEOUT = 2;
 static constexpr int32_t EXECUTE_INTERVAL = 3;
 static constexpr int32_t READ_INTERVAL = 100;
 
@@ -615,13 +614,23 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest016_TransactionMultiThread, TestS
  */
 HWTEST_F(GdbTransactionTest, GdbTransactionTest017_TransactionMultiThread, TestSize.Level1)
 {
-    std::thread th[MAX_CNT];
-    std::atomic_int insertCnt = 0;
-    std::atomic_int insertIndex = -1;
-    for (int32_t i = 0; i < MAX_CNT; i++) {
-        th[i] = std::thread([this, i, &insertCnt, &insertIndex] () {
-            ASSERT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
+    auto [err, trans] = store_->CreateTransaction();
+    ASSERT_EQ(err, E_OK);
+    ASSERT_NE(trans, nullptr);
 
+    int index = 3;
+    std::shared_ptr<Result> result = std::make_shared<FullResult>();
+    std::string age = std::to_string(index);
+    std::string name = "name_" + age;
+    std::string gql = "INSERT (:Person {name: '" + name + "', age: " + age + "});";
+    std::tie(err, result) = trans->Execute(gql);
+    ASSERT_EQ(err, E_OK);
+
+    std::thread th[MAX_CNT - 1];
+    for (int32_t i = 0; i < MAX_CNT - 1; i++) {
+        th[i] = std::thread([this, i] () {
+            ASSERT_NE(store_, nullptr);
             auto [err, trans] = store_->CreateTransaction();
             EXPECT_EQ(err, E_OK);
             ASSERT_NE(trans, nullptr);
@@ -631,33 +640,26 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest017_TransactionMultiThread, TestS
             std::string name = "name_" + age;
             std::string gql = "INSERT (:Person {name: '" + name + "', age: " + age + "});";
             std::tie(err, result) = trans->Execute(gql);
-            if (err == E_OK && insertCnt.load() == 0) {
-                insertCnt++;
-                insertIndex.store(i);
-            } else {
-                EXPECT_EQ(err, E_DATABASE_BUSY);
-            }
-
-            std::this_thread::sleep_for(std::chrono::seconds(BUSY_TIMEOUT));
-
+            EXPECT_EQ(err, E_DATABASE_BUSY);
             err = trans->Commit();
             EXPECT_EQ(err, E_OK);
         });
     }
 
-    for (int32_t i = 0; i < MAX_CNT; i++) {
+    for (int32_t i = 0; i < MAX_CNT - 1; i++) {
         th[i].join();
     }
 
+    err = trans->Commit();
+    EXPECT_EQ(err, E_OK);
+
     for (int32_t i = 0; i < MAX_CNT; i++) {
-        if (i == insertIndex.load()) {
+        if (i == index) {
             MatchAndVerifyPerson("name_" + std::to_string(i), i);
         } else {
             MatchAndVerifyPerson("name_" + std::to_string(i), i, nullptr, false);
         }
     }
-
-    EXPECT_EQ(insertCnt, 1);
 }
 
 /**

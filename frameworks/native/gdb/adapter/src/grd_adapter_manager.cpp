@@ -41,6 +41,7 @@ void GrdAdapterHolderInit(GrdAdapterHolder &adapterHolder)
     adapterHolder.ColumnInt = (ColumnInt)dlsym(g_library, "GRD_GqlColumnInt");
     adapterHolder.ColumnDouble = (ColumnDouble)dlsym(g_library, "GRD_GqlColumnDouble");
     adapterHolder.ColumnText = (ColumnText)dlsym(g_library, "GRD_GqlColumnText");
+    adapterHolder.ColumnFloatVector = (ColumnFloatVector)dlsym(g_library, "GsPD_GqlColumnFloatVector");
 }
 
 bool IsSupportArkDataDb()

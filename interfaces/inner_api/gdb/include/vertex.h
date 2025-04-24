@@ -26,7 +26,7 @@
 #include "rdb_visibility.h"
 
 namespace OHOS::DistributedDataAip {
-using PropType = std::variant<int64_t, double, std::string, bool, std::nullptr_t>;
+using PropType = std::variant<int64_t, double, std::string, bool, std::vector<float>, std::nullptr_t>;
 class Vertex {
 public:
     API_EXPORT Vertex();
