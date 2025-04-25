@@ -15,9 +15,11 @@
 
 import RdbPredicatesEtsTest from './RdbstorePredicatesEts.test.ets';
 import RdbPredicatesPrefEtsTest from './RdbPredicatesPerfEts.test.ets';
+import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
 import RelationalStoreDataGroupId from './RdbGroupIdEts.test.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
+  RdbRekeyEtsTest();
   RelationalStoreDataGroupId();
 }
