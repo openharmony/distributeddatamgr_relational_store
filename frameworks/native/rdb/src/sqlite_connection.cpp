@@ -682,12 +682,14 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     }
     errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     if (errCode != SQLITE_OK) {
+        key.assign(key.size(), 0);
         LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
             SqliteUtils::Anonymous(config_.GetName()).c_str());
         return SQLiteError::ErrNo(errCode);
     }
     errCode = SetEncryptAgo(cryptoParam);
     if (errCode != E_OK) {
+        key.assign(key.size(), 0);
         LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
             SqliteUtils::Anonymous(config_.GetName()).c_str());
         return errCode;
