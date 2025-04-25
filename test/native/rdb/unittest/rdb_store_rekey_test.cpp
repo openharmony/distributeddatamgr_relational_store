@@ -576,27 +576,27 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_009, TestSize.Level1)
     RdbStoreConfig::CryptoParam cryptoParam1;
     cryptoParam1.iterNum = -1;
     errCode = store->Rekey(cryptoParam1);
-    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 
     RdbStoreConfig::CryptoParam cryptoParam2;
     cryptoParam2.encryptAlgo = -1;
     errCode = store->Rekey(cryptoParam2);
-    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 
     RdbStoreConfig::CryptoParam cryptoParam3;
     cryptoParam3.hmacAlgo = -1;
     errCode = store->Rekey(cryptoParam3);
-    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 
     RdbStoreConfig::CryptoParam cryptoParam4;
     cryptoParam4.kdfAlgo = -1;
     errCode = store->Rekey(cryptoParam4);
-    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 
     RdbStoreConfig::CryptoParam cryptoParam5;
     cryptoParam5.cryptoPageSize = -1;
     errCode = store->Rekey(cryptoParam5);
-    ASSERT_EQ(errCode, E_INVALID_ARGS);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 
     values.Clear();
     values.PutInt("id", 2);
