@@ -409,14 +409,17 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     }
     if (!cryptoParam.IsValid()) {
         LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
-        return E_INVALID_ARGS;
+        return E_INVALID_ARGS_NEW;
     }
     if (!config_.IsEncrypt() || !config_.GetCryptoParam().Equal(cryptoParam) ||
         (config_.IsCustomEncryptParam() == cryptoParam.encryptKey_.empty())) {
-        LOG_ERROR("Rekey is not supported, name:%{public}s, IsCustomEncrypt:%{public}d, crypto param: %{public}d,"
-                "%{public}d,%{public}d, %{public}d, %{public}u",
-            SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
-            cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
+        LOG_ERROR("Not supported! name:%{public}s, [%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}u]"
+            "->[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}u]",
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.GetCryptoParam().encryptKey_.empty(),
+            config_.GetCryptoParam().iterNum, config_.GetCryptoParam().encryptAlgo, config_.GetCryptoParam().hmacAlgo,
+            config_.GetCryptoParam().kdfAlgo, config_.GetCryptoParam().cryptoPageSize, cryptoParam.encryptKey_.empty(),
+            cryptoParam.iterNum, cryptoParam.encryptAlgo, cryptoParam.hmacAlgo,
+            cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
         return E_NOT_SUPPORT;
     }
 
@@ -435,10 +438,6 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     LOG_INFO("Start rekey, name:%{public}s, IsCustomEncrypt:%{public}d. ",
         SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
     auto errCode = pool->Rekey(cryptoParam);
-    LOG_INFO("End rekey, errCode:%{public}d, name:%{public}s, IsCustomEncrypt:%{public}d, crypto param: %{public}d,"
-        "%{public}d, %{public}d, %{public}d, %{public}u",
-        errCode, SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam(), cryptoParam.iterNum,
-        cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo, cryptoParam.cryptoPageSize);
 #if !defined(CROSS_PLATFORM)
     if (service != nullptr) {
         service->Enable(syncerParam_);

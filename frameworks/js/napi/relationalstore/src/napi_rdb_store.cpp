@@ -1635,7 +1635,7 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
     LOG_INFO("RdbStoreProxy::Rekey start.");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc >= 0, std::make_shared<ParamNumError>("0 - 1"));
+        CHECK_RETURN_SET_E(argc >= 0 && argc <=1, std::make_shared<ParamNumError>("0 - 1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
             CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
