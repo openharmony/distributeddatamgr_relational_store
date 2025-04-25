@@ -24,6 +24,7 @@
 
 #include "knowledge_types.h"
 #include "rdb_common.h"
+#include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "statement.h"
 
@@ -62,6 +63,7 @@ public:
     virtual ~Connection() = default;
     virtual int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) = 0;
     virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
+    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
     virtual bool IsInTrans() const = 0;
