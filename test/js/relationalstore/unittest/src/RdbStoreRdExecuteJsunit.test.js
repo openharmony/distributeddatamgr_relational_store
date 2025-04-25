@@ -87,6 +87,72 @@ const vec10 = '[10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,3
     '78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,' +
     '110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137]';
 
+const clstVec0 = '[0.12,-0.05,0.23,-0.17,0.08,0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,-0.03,' +
+    '0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,0.31,-0.02,' +
+    '0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,-0.09,' +
+    '0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,' +
+    '-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,0.31,' +
+    '-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,' +
+    '-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,' +
+    '0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,' +
+    '0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,' +
+    '0.13,-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,0.08,0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,' +
+    '0.16,0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,-0.07,0.13,-0.09,0.24,0.01,-0.16,0.04,0.12,-0.05,0.23,-0.17,' +
+    '0.08,0.31,-0.02,0.14,-0.11,0.25,0.03,-0.19,0.07,0.29,-0.08,0.16,0.21,-0.03,0.09,-0.14,0.27,0.05,-0.22,0.11,0.18,' +
+    '-0.07,0.13,-0.09,0.24,0.01,-0.16,0.04]';
+const clstVec1 = '[-0.08,0.15,-0.22,0.07,0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,0.04,0.17,' +
+    '-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,0.19,-0.03,' +
+    '0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,-0.19,' +
+    '0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,' +
+    '0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,0.19,' +
+    '-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,' +
+    '-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,' +
+    '-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,' +
+    '0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,' +
+    '0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,0.07,0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,' +
+    '0.21,-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,0.24,0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12,-0.08,0.15,-0.22,' +
+    '0.07,0.19,-0.03,0.11,-0.14,0.26,0.02,-0.18,0.09,0.13,-0.06,0.21,-0.11,0.04,0.17,-0.09,0.23,-0.15,0.08,0.12,-0.07,' +
+    '0.24,0.01,-0.19,0.05,0.16,-0.04,0.14,-0.12]';
+const clstVec2 = '[0.15,-0.12,0.18,-0.09,0.22,0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,-0.11,' +
+    '0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,0.04,-0.17,' +
+    '0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,-0.05,' +
+    '0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,' +
+    '-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,0.04,' +
+    '-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,' +
+    '-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,' +
+    '0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,' +
+    '0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,' +
+    '0.17,-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,0.22,0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,' +
+    '0.08,0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,-0.13,0.17,-0.05,0.25,0.01,-0.19,0.07,0.15,-0.12,0.18,-0.09,' +
+    '0.22,0.04,-0.17,0.11,0.07,-0.14,0.23,-0.06,0.19,0.02,-0.21,0.08,0.13,-0.11,0.16,-0.07,0.24,0.03,-0.18,0.09,0.12,' +
+    '-0.13,0.17,-0.05,0.25,0.01,-0.19,0.07]';
+const clstVec3 = '[-0.21,0.08,0.14,-0.19,0.05,0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,0.13,' +
+    '0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,0.17,-0.12,' +
+    '0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,-0.13,' +
+    '0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,' +
+    '0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,0.17,' +
+    '-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,' +
+    '-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,' +
+    '-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,' +
+    '0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,' +
+    '0.17,-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,0.05,0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,' +
+    '0.18,-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,0.12,0.17,-0.13,0.08,0.21,-0.05,0.15,-0.21,0.08,0.14,-0.19,' +
+    '0.05,0.17,-0.12,0.23,-0.07,0.11,0.16,-0.14,0.09,0.22,-0.04,0.18,-0.11,0.13,0.15,-0.16,0.07,0.24,-0.02,0.19,-0.09,' +
+    '0.12,0.17,-0.13,0.08,0.21,-0.05,0.15]';
+const clstVec4 = '[0.07,-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,' +
+    '-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,' +
+    '0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,' +
+    '-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,' +
+    '0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,' +
+    '-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,' +
+    '0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,' +
+    '-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,' +
+    '-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,' +
+    '-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,' +
+    '0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,' +
+    '-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19,0.07,-0.18,0.12,0.15,-0.09,0.21,-0.14,0.06,0.17,-0.11,0.19,-0.07,0.13,' +
+    '0.16,-0.12,0.08,0.22,-0.05,0.14,-0.17,0.09,0.18,-0.13,0.11,0.15,-0.08,0.2,-0.04,0.16,-0.14,0.1,0.19]';
+
 let isSupportVector = false;
 let store;
 let context = ability_featureAbility.getContext()
@@ -811,6 +877,212 @@ describe('rdbStoreRdExecuteTest', function () {
             expect(14800012 == e.code).assertTrue();
         }
         console.log(TAG + "************* testVectorSubSelectFailed0009 end   *************");
+    });
+
+    /**
+     * @tc.name testVectorClusterIndexSuccess0001
+     * @tc.number SUB_DISTRIBUTEDDATAMGR_RDB_JSVectorStore_ClusterIndex_success_0001
+     * @tc.desc create cluster index and insert 10 vec, then query from table and check.
+     */
+    it('testVectorClusterInsertSuccess0001', 0, async function () {
+        console.log(TAG + "************* testVectorClusterInsertSuccess0001 start *************");
+        if (!isSupportVector) {
+            expect(isSupportVector).assertFalse();
+            return;
+        }
+
+        try {
+            await store?.execute("create table cluster_vec_10 (id int PRIMARY KEY, repr floatvector(256));");
+        } catch (e) {
+            console.error(TAG + `create table cluster_vec_10 failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("create index cluster_index on cluster_vec_10 using IVFCLUSTER(repr COSINE);");
+        } catch (e) {
+            console.error(TAG + `create cluster index failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (0, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (1, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (2, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (3, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (4, '${clstVec4}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (5, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (6, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (7, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (8, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (9, '${clstVec4}');`);
+        } catch (e) {
+            console.error(TAG + `insert face vector in table failed. errcode: ${e.code}`);
+        }
+
+        const selectSql = `select id, repr, CLUSTER_ID(repr) from cluster_vec_10;`;
+        const result = await store?.querySql(selectSql);
+        expect(result?.rowCount).assertEqual(10);
+        try {
+            while (result?.goToNextRow()) {
+                let id = result.getValue(0);
+                let tmpVec = result.getValue(1);
+                let clstId = result.getValue(2);
+                console.log(TAG + "id: " + id?.toString() + "clstId: " + clstId?.toString());
+            }
+            result?.getValue(10);
+            expect().assertFail();
+            result?.close();
+        } catch (e) {
+            console.error(TAG + `testVectorClusterInsertSuccess0001 failed. err: ${JSON.stringify(e)}`);
+            result?.close();
+            expect(14800012 == e.code).assertTrue();
+        }
+        console.log(TAG + "************* testVectorClusterInsertSuccess0001 end   *************");
+    });
+
+    /**
+     * @tc.name testVectorClusterIndexSuccess0002
+     * @tc.number SUB_DISTRIBUTEDDATAMGR_RDB_JSVectorStore_ClusterIndex_success_0002
+     * @tc.desc insert 10 vec, run cluster, then query from table and check.
+     */
+    it('testVectorClusterIndexSuccess0002', 0, async function () {
+        console.log(TAG + "************* testVectorClusterIndexSuccess0002 start *************");
+        if (!isSupportVector) {
+            expect(isSupportVector).assertFalse();
+            return;
+        }
+
+        try {
+            await store?.execute("create table cluster_vec_10 (id int PRIMARY KEY, repr floatvector(256));");
+        } catch (e) {
+            console.error(TAG + `create table cluster_vec_10 failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("create index cluster_index on cluster_vec_10 using IVFCLUSTER(repr COSINE);");
+        } catch (e) {
+            console.error(TAG + `create cluster index failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (0, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (1, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (2, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (3, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (4, '${clstVec4}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (5, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (6, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (7, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (8, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (9, '${clstVec4}');`);
+        } catch (e) {
+            console.error(TAG + `insert face vector in table failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("PRAGMA CLUSTER_RUN cluster_vec_10.cluster_index;");
+            await new Promise(resolve => setTimeout(resolve, 50)); // wait 50ms for cluster build exec
+        } catch (e) {
+            console.error(TAG + `run cluster build failed. errcode: ${e.code}`);
+        }
+
+        const selectSql = `select id, repr, CLUSTER_ID(repr) from cluster_vec_10;`;
+        const result = await store?.querySql(selectSql);
+        expect(result?.rowCount).assertEqual(10);
+        try {
+            while (result?.goToNextRow()) {
+                let id = result.getValue(0);
+                let tmpVec = result.getValue(1);
+                let clstId = result.getValue(2);
+                console.log(TAG + "id: " + id?.toString() + "clstId: " + clstId?.toString());
+            }
+            result?.getValue(10);
+            expect().assertFail();
+            result?.close();
+        } catch (e) {
+            console.error(TAG + `testVectorClusterIndexSuccess0002 failed. err: ${JSON.stringify(e)}`);
+            result?.close();
+            expect(14800012 == e.code).assertTrue();
+        }
+        console.log(TAG + "************* testVectorClusterIndexSuccess0002 end   *************");
+    });
+
+    /**
+     * @tc.name testVectorClusterIndexSuccess0003
+     * @tc.number SUB_DISTRIBUTEDDATAMGR_RDB_JSVectorStore_ClusterIndex_success_0003
+     * @tc.desc insert 5 vec, run cluster, then insert 5 vec, run cluster again.
+     */
+    it('testVectorClusterIndexSuccess0003', 0, async function () {
+        console.log(TAG + "************* testVectorClusterIndexSuccess0003 start *************");
+        if (!isSupportVector) {
+            expect(isSupportVector).assertFalse();
+            return;
+        }
+
+        try {
+            await store?.execute("create index cluster_index on cluster_vec_10 using IVFCLUSTER(repr COSINE);");
+        } catch (e) {
+            console.error(TAG + `create table cluster_vec_10 failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("create index cluster_index on using IVFCLUSTER(repr COSINE);");
+        } catch (e) {
+            console.error(TAG + `create cluster index failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (0, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (1, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (2, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (3, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (4, '${clstVec4}');`);
+        } catch (e) {
+            console.error(TAG + `insert face vector in table failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("PRAGMA CLUSTER_RUN cluster_vec_10.cluster_index;");
+            await new Promise(resolve => setTimeout(resolve, 50)); // wait 50ms for cluster build exec
+        } catch (e) {
+            console.error(TAG + `run cluster build failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (5, '${clstVec0}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (6, '${clstVec1}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (7, '${clstVec2}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (8, '${clstVec3}');`);
+            await store?.execute(`INSERT INTO cluster_vec_10 VALUES (9, '${clstVec4}');`);
+        } catch (e) {
+            console.error(TAG + `insert face vector in table failed. errcode: ${e.code}`);
+        }
+
+        try {
+            await store?.execute("PRAGMA CLUSTER_RUN cluster_vec_10.cluster_index;");
+            await new Promise(resolve => setTimeout(resolve, 50)); // wait 50ms for cluster build exec
+        } catch (e) {
+            console.error(TAG + `run cluster build failed. errcode: ${e.code}`);
+        }
+
+        const selectSql = `select id, repr, CLUSTER_ID(repr) from cluster_vec_10;`;
+        const result = await store?.querySql(selectSql);
+        expect(result?.rowCount).assertEqual(10);
+        try {
+            while (result?.goToNextRow()) {
+                let id = result.getValue(0);
+                let tmpVec = result.getValue(1);
+                let clstId = result.getValue(2);
+                console.log(TAG + "id: " + id?.toString() + "clstId: " + clstId?.toString());
+            }
+            result?.getValue(10);
+            expect().assertFail();
+            result?.close();
+        } catch (e) {
+            console.error(TAG + `testVectorClusterIndexSuccess0003 failed. err: ${JSON.stringify(e)}`);
+            result?.close();
+            expect(14800012 == e.code).assertTrue();
+        }
+        console.log(TAG + "************* testVectorClusterIndexSuccess0003 end   *************");
     });
 
     console.log(TAG + "*************Unit Test End*************");
