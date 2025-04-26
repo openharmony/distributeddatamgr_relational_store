@@ -175,6 +175,12 @@ void RdbStoreImpl::Close()
         }
         transactions_ = {};
     }
+    {
+        std::lock_guard<decltype(helperMutex_)> autoLock(helperMutex_);
+        if (knowledgeSchemaHelper_ != nullptr) {
+            knowledgeSchemaHelper_->Close();
+        }
+    }
 }
 
 std::shared_ptr<ConnectionPool> RdbStoreImpl::GetPool() const
@@ -1123,6 +1129,9 @@ RdbStoreImpl::~RdbStoreImpl()
         }
     }
     transactions_ = {};
+    if (knowledgeSchemaHelper_ != nullptr) {
+        knowledgeSchemaHelper_->Close();
+    }
 }
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
