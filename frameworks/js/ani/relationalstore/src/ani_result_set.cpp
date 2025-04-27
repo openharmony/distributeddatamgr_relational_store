@@ -32,13 +32,14 @@ using namespace OHOS::Rdb;
 
 ani_double GetColumnIndex(ani_env *env, ani_object object, ani_string col_name)
 {
-    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
-    if (nullptr == proxy) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
         return 0;
     }
-    if (nullptr == proxy->resultset) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
+    if (proxy == nullptr || proxy->resultset == nullptr) {
+        LOG_ERROR("ResultSet should be initialized properly.");
+        ThrowBusinessError(env, E_INNER_ERROR, "ResultSet uninitialized.");
         return 0;
     }
     auto name = AniStringUtils::ToStd(env, col_name);
@@ -50,13 +51,14 @@ ani_double GetColumnIndex(ani_env *env, ani_object object, ani_string col_name)
 
 ani_double GetLong(ani_env *env, ani_object object, ani_double index)
 {
-    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
-    if (nullptr == proxy) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
         return 0;
     }
-    if (nullptr == proxy->resultset) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
+    if (proxy == nullptr || proxy->resultset == nullptr) {
+        LOG_ERROR("ResultSet should be initialized properly.");
+        ThrowBusinessError(env, E_INNER_ERROR, "ResultSet uninitialized.");
         return 0;
     }
     int64_t ret;
@@ -67,13 +69,14 @@ ani_double GetLong(ani_env *env, ani_object object, ani_double index)
 
 ani_string GetString(ani_env *env, ani_object object, ani_double index)
 {
-    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
-    if (nullptr == proxy) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
         return nullptr;
     }
-    if (nullptr == proxy->resultset) {
-        std::cerr << "ResultSet should be initialized properly." << std::endl;
+    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
+    if (proxy == nullptr || proxy->resultset == nullptr) {
+        LOG_ERROR("ResultSet should be initialized properly.");
+        ThrowBusinessError(env, E_INNER_ERROR, "ResultSet uninitialized.");
         return nullptr;
     }
     std::string ret;
@@ -84,19 +87,39 @@ ani_string GetString(ani_env *env, ani_object object, ani_double index)
     return retStr;
 }
 
+ani_boolean GoToFirstRow(ani_env *env, ani_object object)
+{
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return false;
+    }
+    auto proxy = AniObjectUtils::Unwrap<ResultSetProxy>(env, object);
+    if (proxy == nullptr || proxy->resultset == nullptr) {
+        LOG_ERROR("ResultSet should be initialized properly.");
+        ThrowBusinessError(env, E_INNER_ERROR, "ResultSet uninitialized.");
+        return false;
+    }
+    auto status = proxy->resultset->GoToFirstRow();
+    return (status == ANI_OK);
+}
+
 ani_status ResultSetInit(ani_env *env)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        std::cerr << "Not found '" << namespaceName << "'" << std::endl;
+        LOG_ERROR("Not found '%{public}s", namespaceName);
         return ANI_ERROR;
     }
 
     ani_class cls;
     const char *className = "LResultSetInner;";
     if (ANI_OK != env->Namespace_FindClass(ns, className, &cls)) {
-        std::cerr << "Not found '" << className << "'" << std::endl;
+        LOG_ERROR("Not found '%{public}s", className);
         return ANI_ERROR;
     }
 
@@ -104,9 +127,10 @@ ani_status ResultSetInit(ani_env *env)
         ani_native_function {"getColumnIndex", nullptr, reinterpret_cast<void *>(GetColumnIndex)},
         ani_native_function {"getLong", nullptr, reinterpret_cast<void *>(GetLong)},
         ani_native_function {"getString", nullptr, reinterpret_cast<void *>(GetString)},
+        ani_native_function {"goToFirstRow", nullptr, reinterpret_cast<void *>(GoToFirstRow)},
     };
     if (ANI_OK != env->Class_BindNativeMethods(cls, methods.data(), methods.size())) {
-        std::cerr << "Cannot bind native methods to '" << className << "'" << std::endl;
+        LOG_ERROR("Cannot bind native methods to '%{public}s", className);
         return ANI_ERROR;
     }
     return ANI_OK;
@@ -114,3 +138,4 @@ ani_status ResultSetInit(ani_env *env)
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
+

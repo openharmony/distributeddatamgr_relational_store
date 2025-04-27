@@ -15,6 +15,8 @@
 
 import { AsyncCallback, Callback } from '@ohos.base'
 import Context from 'application.BaseContext'
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
+import { BusinessError } from '@ohos.base';
 
 export default namespace relationalStore {
 
@@ -45,18 +47,74 @@ export default namespace relationalStore {
 
   export type ValuesBucket = Record<string, ValueType>;
 
+  class Cleaner {
+    static callback(cleaner: Cleaner): void {
+      cleaner.clean()
+    }
+
+    constructor(targetPtr: long) {
+      this.targetPtr = targetPtr
+    }
+
+    native clean(): void
+    private targetPtr: long = 0
+  }
+
+  class FinalizationAgent<T extends Object> {
+    constructor(obj: T, ptr: long) {
+      this.register(obj, ptr);
+    }
+
+    register(obj: T, ptr: long): void {
+      this.unregisterToken = {};
+      this.cleaner = new Cleaner(ptr);
+      finalizer.register(obj, this.cleaner!, this.unregisterToken);
+    }
+
+    unregister(): void {
+      finalizer.unregister(this.unregisterToken);
+    }
+
+    private cleaner: Cleaner | null = null;
+    private unregisterToken: object;
+  }
+
+  let finalizer = new FinalizationRegistry<Cleaner>(Cleaner.callback)
+
+  export class RdbPredicates {
+    private nativePtr: long = 0
+    private fzAgent: FinalizationAgent<RdbPredicates>
+
+    constructor(name: string) {
+      this.initNativePredicates(name)
+      this.initFinalizer()
+    }
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<RdbPredicates>(this, this.nativePtr)
+    }
+    private native initNativePredicates(name: string): void;
+  }
+
   export interface ResultSet {
     getColumnIndex(columnName: string): number;
     getString(columnIndex: number): string;
     getLong(columnIndex: number): number;
+    goToFirstRow(): boolean;
   }
 
   class ResultSetInner implements ResultSet {
     private nativePtr: long = 0;
+    private fzAgent: FinalizationAgent<ResultSetInner>
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<ResultSetInner>(this, this.nativePtr)
+    }
 
     native getColumnIndex(columnName: string): number;
     native getString(columnIndex: number): string;
     native getLong(columnIndex: number): number;
+    native goToFirstRow(): boolean;
   }
 
   export enum SecurityLevel {
@@ -118,63 +176,206 @@ export default namespace relationalStore {
     batchInsert(table: string, values: Array<ValuesBucket>): Promise<number>;
     batchInsertSync(table: string, values: Array<ValuesBucket>): number;
 
+    deleteSync(predicates: RdbPredicates): number;
+    delete(predicates: RdbPredicates): Promise<number>;
+    delete(predicates: RdbPredicates, callback: AsyncCallback<number>): void;
+    delete(table: string, predicates: dataSharePredicates.DataSharePredicates): Promise<number>;
+    delete(table: string, predicates: dataSharePredicates.DataSharePredicates, callback: AsyncCallback<number>): void;
+
     executeSql(sql: string, callback: AsyncCallback<void>): void;
     executeSql(sql: string, bindArgs: Array<ValueType>, callback: AsyncCallback<void>): void;
     executeSql(sql: string, bindArgs?: Array<ValueType>): Promise<void>;
-    executeSqlSync(sql: string, args?: Array<ValueType>): void;
 
     beginTransaction(): void;
-
     commit(): void;
-    commit(txId: number): Promise<void>;
-
     rollBack(): void;
-    rollback(txId: number): Promise<void>;
+
+    querySqlSync(sql: string, bindArgs?: Array<ValueType>): ResultSet;
   }
 
   class RdbStoreInner implements RdbStore {
     private nativePtr: long = 0;
+    private fzAgent: FinalizationAgent<RdbStoreInner>
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<RdbStoreInner>(this, this.nativePtr)
+    }
 
     batchInsert(table: string, values: Array<ValuesBucket>, callback: AsyncCallback<number>): void {
+      let cb = (): Object => {
+          let num = this.batchInsertSync(table, values)
+          return num as Object
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((v: NullishType): void => {
+        let error = new BusinessError<void>
+        error.code = 0
+        callback(error, v as number)
+      });
+      p1.catch((err: NullishType): void => {
+        callback(err as BusinessError<void>, 0 as number)
+      });
     }
+
     batchInsert(table: string, values: Array<ValuesBucket>): Promise<number> {
       let p = new Promise<number>((resolve: (value: number) => void, reject: (error: Object) => void): void => {
+        let cb = (): Object => {
+            let num = this.batchInsertSync(table, values)
+            return num as Object
+        }
+        let p1 = taskpool.execute(cb);
+        p1.then((v: NullishType): void => {
+          resolve(v as number);
+        });
+        p1.catch((err: NullishType): void => {
+          reject(err as Error);
+        });
       });
       return p
     }
     native batchInsertSync(table: string, values: Array<ValuesBucket>): number;
 
-    executeSql(sql: string, callback: AsyncCallback<void>): void {
-    }
-    executeSql(sql: string, bindArgs: Array<ValueType>, callback: AsyncCallback<void>): void {
-    }
-    executeSql(sql: string, bindArgs?: Array<ValueType>): Promise<void> {
-      let p = new Promise<void>((resolve: () => void, reject: (error: Object) => void): void => {
+    native deleteSync(predicates: RdbPredicates): number;
+
+    delete(predicates: RdbPredicates): Promise<number> {
+      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Object) => void): void => {
+        let cb = (): Object => {
+            let num = this.deleteSync(predicates)
+            return num as Object
+        }
+        let p1 = taskpool.execute(cb);
+        p1.then((v: NullishType): void => {
+          resolve(v as number);
+        });
+        p1.catch((err: NullishType): void => {
+          reject(err as Error);
+        });
       });
       return p
     }
-    native executeSqlSync(sql: string, args?: Array<ValueType>): void;
+
+    delete(predicates: RdbPredicates, callback: AsyncCallback<number>): void {
+      let cb = (): Object => {
+          let num = this.deleteSync(predicates)
+          return num as Object
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((v: NullishType): void => {
+        let error = new BusinessError
+        error.code = 0
+        callback(error, v as number)
+      });
+      p1.catch((err: NullishType): void => {
+        callback(err as BusinessError, 0 as number)
+      });
+    }
+
+    private native deleteShareSync(table: string, predicates: dataSharePredicates.DataSharePredicates): number;
+
+    delete(table: string, predicates: dataSharePredicates.DataSharePredicates): Promise<number> {
+      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Object) => void): void => {
+        let cb = (): Object => {
+            let num = this.deleteShareSync(table, predicates)
+            return num as Object
+        }
+        let p1 = taskpool.execute(cb);
+        p1.then((v: NullishType): void => {
+          resolve(v as number);
+        });
+        p1.catch((err: NullishType): void => {
+          reject(err as Error);
+        });
+      });
+      return p
+    }
+
+    delete(table: string, predicates: dataSharePredicates.DataSharePredicates, callback: AsyncCallback<number>): void {
+      let cb = (): Object => {
+          let num = this.deleteShareSync(table, predicates)
+          return num as Object
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((v: NullishType): void => {
+        let error = new BusinessError
+        error.code = 0
+        callback(error, v as number)
+      });
+      p1.catch((err: NullishType): void => {
+        callback(err as BusinessError, 0 as number)
+      });
+    }
+
+    executeSql(sql: string, callback: AsyncCallback<void>): void {
+      let cb = (): undefined => {
+          this.executeSqlSync(sql)
+          return undefined
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((v: NullishType): void => {
+        let error = new BusinessError
+        error.code = 0
+        callback(error, undefined)
+      });
+      p1.catch((err: NullishType): void => {
+        callback(err as BusinessError, undefined)
+      });
+    }
+
+    executeSql(sql: string, bindArgs: Array<ValueType>, callback: AsyncCallback<void>): void {
+      let cb = (): undefined => {
+          this.executeSqlSync(sql, bindArgs)
+          return undefined
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((v: NullishType): void => {
+        let error = new BusinessError
+        error.code = 0
+        callback(error, undefined)
+      });
+      p1.catch((err: NullishType): void => {
+        callback(err as BusinessError, undefined)
+      });
+    }
+
+    executeSql(sql: string, bindArgs?: Array<ValueType>): Promise<void> {
+      let p = new Promise<void>((resolve: (v: NullishType) => void, reject: (error: Object) => void): void => {
+        let cb = (): undefined => {
+            this.executeSqlSync(sql, bindArgs)
+            return undefined
+        }
+        let p1 = taskpool.execute(cb);
+        p1.then((v: NullishType): void => {
+          resolve(v);
+        });
+        p1.catch((err: NullishType): void => {
+          reject(err as Error);
+        });
+      });
+      return p
+    }
+
+    private native executeSqlSync(sql: string, args?: Array<ValueType>): void;
 
     native beginTransaction(): void;
-
     native commit(): void;
-    commit(txId: number): Promise<void> {
-      let p = new Promise<void>((resolve: () => void, reject: (error: Object) => void): void => {
-      });
-      return p
-    }
-
     native rollBack(): void;
-    rollback(txId: number): Promise<void> {
-      let p = new Promise<void>((resolve: () => void, reject: (error: Object) => void): void => {
-      });
-      return p
-    }
+
+    native querySqlSync(sql: string, bindArgs?: Array<ValueType>): ResultSet;
   }
 
   export native function getRdbStoreSync(context: Context, config: StoreConfig): RdbStore
 
   export function getRdbStore(context: Context, config: StoreConfig, callback: AsyncCallback<RdbStore>): void {
+    let p1 = taskpool.execute(getRdbStoreSync, context, config);
+    p1.then((rdb: NullishType): void => {
+      let error = new BusinessError
+      error.code = 0
+      callback(error, rdb as RdbStore)
+    });
+    p1.catch((err: NullishType): void => {
+      let rdb = new RdbStoreInner()
+      callback(err as BusinessError, rdb)
+    });
   }
   export function getRdbStore(context: Context, config: StoreConfig): Promise<RdbStore> {
     let p = new Promise<RdbStore>((resolve: (value: RdbStore) => void, reject: (error: Object) => void): void => {
@@ -189,3 +390,4 @@ export default namespace relationalStore {
     return p
   }
 }
+
