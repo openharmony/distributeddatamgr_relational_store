@@ -90,7 +90,6 @@ private:
         Result *StealResult();
         int32_t GetArgv(napi_value *argv, int32_t max);
     };
-
     static Task GenCallbackTask(std::shared_ptr<UvEntry> entry);
     static Task GenPromiseTask(std::shared_ptr<UvEntry> entry);
     napi_env env_ = nullptr;
