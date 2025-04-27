@@ -280,10 +280,10 @@ void UvQueue::UvEntry::BindPromise(napi_value promise)
     auto rejectedStatus = napi_create_function(env_, REJECTED, REJECTED_SIZE, Rejected, object, &argv[1]);
     if (resolvedStatus != napi_ok || rejectedStatus != napi_ok) {
         if (object) {
-            LOG_ERROR("napi_create_function failed. resolvedStat:%{public}d, rejectedStat:%{public}d", resolvedStatus,
-                rejectedStatus);
             delete object;
         }
+        LOG_ERROR("napi_create_function failed. resolvedStat:%{public}d, rejectedStat:%{public}d", resolvedStatus,
+            rejectedStatus);
         return;
     }
     napi_value result = nullptr;
