@@ -209,4 +209,12 @@ void KnowledgeSchemaHelper::StartTask()
     }
     manager->StartTask();
 }
+
+void KnowledgeSchemaHelper::Close()
+{
+    std::unique_lock<std::shared_mutex> writeLock(libMutex_);
+    if (schemaManager_ != nullptr) {
+        schemaManager_->StopTask();
+    }
+}
 }

@@ -123,7 +123,7 @@ export default function rdbStoreErrorlogTest() {
       expect().assertFail();
     } catch (err) {
       console.error(`errorlog on is failed code:${err.code},message:${err.message}`);
-      expect(e.code == 14800021).assertTrue();
+      expect(err.code == 14800021).assertTrue();
     }
     rdbStore.off('errorlog');
     console.log(TAG + "************* testRdbStoreOnerrorlog0002 end *************");

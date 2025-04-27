@@ -123,21 +123,17 @@ void SqliteStatement::HandleErrMsg(const std::string &errMsg, const std::string 
     }
 }
 
-void SqliteStatement::NotifyErrorLog(const int &code, const std::string &message, const std::string &sql)
+void SqliteStatement::TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, const std::string &sql)
 {
+    if (errCode == SQLITE_ROW || errCode == SQLITE_DONE || errCode == SQLITE_OK) {
+        return ;
+    }
+    std::string errMsg(sqlite3_errmsg(dbHandle));
     DistributedRdb::SqlErrorObserver::ExceptionMessage exceMessage;
-    exceMessage.code = code;
-    exceMessage.message = message;
+    exceMessage.code = errCode;
+    exceMessage.message = std::move(errMsg);
     exceMessage.sql = sql;
     NativeRdb::SqlLog::Notify(config_->GetPath(), exceMessage);
-}
-
-bool SqliteStatement::CheckSQLiteError(const int &errCode)
-{
-    if (errCode != SQLITE_ROW && errCode != SQLITE_DONE && errCode != SQLITE_OK) {
-        return true;
-    }
-    return false;
 }
 
 int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
@@ -151,9 +147,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         std::string errMsg(sqlite3_errmsg(dbHandle));
-        if (CheckSQLiteError(errCode)) {
-            NotifyErrorLog(errCode, errMsg, newSql);
-        }
+        TryNotifyErrorLog(errCode, dbHandle, newSql);
         if (errMsg.size() != 0) {
             HandleErrMsg(errMsg, config_->GetPath(), config_->GetBundleName());
         }
@@ -376,10 +370,8 @@ int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
-    if (CheckSQLiteError(errCode)) {
-        std::string errMsg(sqlite3_errmsg(sqlite3_db_handle(stmt_)));
-        NotifyErrorLog(errCode, errMsg, sql_);
-    }
+    auto db = sqlite3_db_handle(stmt_);
+    TryNotifyErrorLog(errCode, db, sql_);
     int ret = SQLiteError::ErrNo(errCode);
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
@@ -820,10 +812,7 @@ int SqliteStatement::InnerFinalize()
 
     auto db = sqlite3_db_handle(stmt_);
     int errCode = sqlite3_finalize(stmt_);
-    if (CheckSQLiteError(errCode)) {
-        std::string errMsg(sqlite3_errmsg(db));
-        NotifyErrorLog(errCode, errMsg, sql_);
-    }
+    TryNotifyErrorLog(errCode, db, sql_);
     stmt_ = nullptr;
     sql_ = "";
     readOnly_ = false;

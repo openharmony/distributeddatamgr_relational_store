@@ -41,6 +41,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "suspender.h"
 #include "value_object.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_manager_impl.h"
@@ -567,7 +568,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
-    SqlLog::Pause();
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SetPageSize fail to get page size : %{public}d", errCode);
@@ -582,31 +583,35 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         LOG_ERROR("SetPageSize fail to set page size : %{public}d", errCode);
     }
-    SqlLog::Resume();
     return errCode;
 }
 
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 {
-    SqlLog::Pause();
-    if (!config.GetCryptoParam().IsValid()) {
-        LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
-            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
-            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
-            config.GetCryptoParam().cryptoPageSize);
+    return SetEncryptAgo(config.GetCryptoParam());
+}
+
+int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    Suspender suspender(Suspender::SQL_LOG);
+    if (!cryptoParam.IsValid()) {
+        LOG_ERROR("Invalid crypto param: %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
+            cryptoParam.iterNum, cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo,
+            cryptoParam.cryptoPageSize);
         return E_INVALID_ARGS;
     }
 
-    if (config.GetIter() != NO_ITER) {
-        auto errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_ALGO_PREFIX) +
-                                  SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
-                                  std::string(GlobalExpr::ALGO_SUFFIX));
+    if (cryptoParam.iterNum != NO_ITER) {
+        auto errCode =
+            ExecuteSql(std::string(GlobalExpr::CIPHER_ALGO_PREFIX) +
+                       SqliteUtils::EncryptAlgoDescription(static_cast<EncryptAlgo>(cryptoParam.encryptAlgo)) +
+                       std::string(GlobalExpr::ALGO_SUFFIX));
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
 
-        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(config.GetIter()));
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(cryptoParam.iterNum));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
@@ -614,7 +619,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
     }
 
     auto errCode = ExecuteSql(std::string(GlobalExpr::CODEC_HMAC_ALGO_PREFIX) +
-                              SqliteUtils::HmacAlgoDescription(config.GetCryptoParam().hmacAlgo) +
+                              SqliteUtils::HmacAlgoDescription(cryptoParam.hmacAlgo) +
                               std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
@@ -622,7 +627,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
     }
 
     errCode = ExecuteSql(std::string(GlobalExpr::CODEC_KDF_ALGO_PREFIX) +
-                         SqliteUtils::KdfAlgoDescription(config.GetCryptoParam().kdfAlgo) +
+                         SqliteUtils::KdfAlgoDescription(cryptoParam.kdfAlgo) +
                          std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec kdf algo failed, err = %{public}d", errCode);
@@ -630,7 +635,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
     }
 
     errCode = ExecuteSql(
-        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(config.GetCryptoParam().cryptoPageSize));
+        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(cryptoParam.cryptoPageSize));
     if (errCode != E_OK) {
         LOG_ERROR("set codec page size failed, err = %{public}d", errCode);
         return errCode;
@@ -641,7 +646,6 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
-    SqlLog::Resume();
     return E_OK;
 }
 
@@ -661,6 +665,43 @@ int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
         return E_OK;
     }
     config.ChangeEncryptKey();
+    return E_OK;
+}
+
+int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    std::vector<uint8_t> key;
+    RdbPassword rdbPwd;
+    int errCode = E_OK;
+    if (cryptoParam.encryptKey_.empty()) {
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
+            config_.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    } else {
+        key = cryptoParam.encryptKey_;
+    }
+    if (key.empty()) {
+        LOG_ERROR("key is empty");
+        return E_ERROR;
+    }
+    errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
+    if (errCode != SQLITE_OK) {
+        key.assign(key.size(), 0);
+        LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+        return SQLiteError::ErrNo(errCode);
+    }
+    errCode = SetEncryptAgo(cryptoParam);
+    if (errCode != E_OK) {
+        key.assign(key.size(), 0);
+        LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+        return errCode;
+    }
+    if (cryptoParam.encryptKey_.empty()) {
+        RdbSecurityManager::GetInstance().ChangeKeyFile(config_.GetPath());
+    }
+    key.assign(key.size(), 0);
     return E_OK;
 }
 
@@ -755,7 +796,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
     if (errCode != SQLITE_OK) {
         return SQLiteError::ErrNo(errCode);
     }
-    SqlLog::Pause();
+    Suspender suspender(Suspender::SQL_LOG);
     errCode = SetEncryptAgo(config);
     if (errCode != E_OK) {
         return errCode;
@@ -767,8 +808,8 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
         if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {
             return errCode;
         }
+        return E_OK;
     }
-    SqlLog::Resume();
     return errCode;
 }
 
@@ -905,14 +946,12 @@ int SqliteConnection::SetWalFile(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
-    SqlLog::Pause();
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, version] = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
     if (errCode != E_OK) {
         return errCode;
     }
-    errCode = ExecuteSql(std::string(GlobalExpr::PRAGMA_VERSION) + "=?", { std::move(version) });
-    SqlLog::Resume();
-    return errCode;
+    return ExecuteSql(std::string(GlobalExpr::PRAGMA_VERSION) + "=?", { std::move(version) });
 }
 
 int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
@@ -921,7 +960,7 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     if (syncMode.length() != 0) {
         targetValue = syncMode;
     }
-    SqlLog::Pause();
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, object] = ExecuteForValue("PRAGMA synchronous");
     if (errCode != E_OK) {
         LOG_ERROR("get wal sync mode fail, errCode:%{public}d", errCode);
@@ -937,7 +976,6 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     if (errCode != E_OK) {
         LOG_ERROR("set wal sync mode fail, errCode:%{public}d", errCode);
     }
-    SqlLog::Resume();
     return errCode;
 }
 
@@ -1490,6 +1528,7 @@ int SqliteConnection::VeritySlaveIntegrity()
         return E_SQLITE_CORRUPT;
     }
 
+    Suspender suspender(Suspender::SQL_LOG);
     std::string sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [err, obj] = slaveConnection_->ExecuteForValue(sql);
     auto val = std::get_if<int64_t>(&obj.value);
@@ -1527,7 +1566,7 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     if (slaveConnection_ == nullptr) {
         return false;
     }
-    SqlLog::Pause();
+    Suspender suspender(Suspender::SQL_LOG);
     auto [cRet, cObj] = ExecuteForValue("SELECT COUNT(*) FROM sqlite_master WHERE type='table';");
     auto cVal = std::get_if<int64_t>(&cObj.value);
     if (cRet == E_SQLITE_CORRUPT || (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L))) {
@@ -1544,7 +1583,6 @@ bool SqliteConnection::IsDbVersionBelowSlave()
             return true;
         }
     }
-    SqlLog::Resume();
     return false;
 }
 

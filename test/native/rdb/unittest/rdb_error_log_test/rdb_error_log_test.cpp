@@ -38,6 +38,7 @@ static std::string g_createTable = "CREATE TABLE IF NOT EXISTS test "
 "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
 "name TEXT NOT NULL, age INTEGER, salary "
 "REAL, blobType BLOB)";
+static std::string g_databaseName = "/data/test/subscribe.db";
 
 class RdbStoreLogSubTest : public testing::Test {
 public:
@@ -46,24 +47,22 @@ public:
     void SetUp();
     void TearDown();
 
-    static const std::string MAIN_DATABASE_NAME;
     static std::shared_ptr<RdbStore> CreateRDB(int version);
     static std::shared_ptr<RdbStore> store;
 };
 
-const std::string RdbStoreLogSubTest::MAIN_DATABASE_NAME = "/data/test/subscribe.db";
 std::shared_ptr<RdbStore> RdbStoreLogSubTest::store = nullptr;
 
 void RdbStoreLogSubTest::SetUpTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(g_databaseName);
     store = CreateRDB(1);
 }
 
 void RdbStoreLogSubTest::TearDownTestCase(void)
 {
     store = nullptr;
-    RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(g_databaseName);
 }
 
 void RdbStoreLogSubTest::SetUp()
@@ -92,7 +91,7 @@ int Callback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 
 std::shared_ptr<RdbStore> RdbStoreLogSubTest::CreateRDB(int version)
 {
-    RdbStoreConfig config(RdbStoreSubTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(g_databaseName);
     config.SetBundleName("subscribe_test");
     config.SetArea(0);
     config.SetCreateNecessary(true);
@@ -146,7 +145,7 @@ void OnErrorObserver::SetBlockData(std::shared_ptr<OHOS::BlockData<bool>> block)
 HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog001, TestSize.Level1)
 {
     auto observer = std::make_shared<OnErrorObserver>();
-    SqlLog::Subscribe(MAIN_DATABASE_NAME, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     observer->SetBlockData(block);
     ValuesBucket values;
@@ -185,7 +184,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog002, TestSize.Level1)
     ret = store->Insert(id, "errorlog_test", values);
     EXPECT_EQ(ret, E_OK);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
-    SqlLog::Subscribe(MAIN_DATABASE_NAME, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     observer->SetBlockData(block);
     ret = store->Insert(id, "errorlog_test", values);
     EXPECT_NE(ret, E_OK);
@@ -221,7 +220,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog003, TestSize.Level1)
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    SqlLog::Subscribe(MAIN_DATABASE_NAME, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     observer->SetBlockData(block);
     auto result = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
@@ -306,7 +305,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog005, TestSize.Level1)
         block1->SetValue(errCode);
     });
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
-    SqlLog::Subscribe(MAIN_DATABASE_NAME, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     observer->SetBlockData(block);
     std::shared_ptr<OHOS::BlockData<int32_t>> block2 = std::make_shared<OHOS::BlockData<int32_t>>(3, false);
     auto taskId2 = executors->Execute([storeCopy = store, block2]() {
@@ -352,7 +351,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog006, TestSize.Level1)
     ValuesBucket row;
     row.Put("name", std::string(1024 * 1024, 'e'));
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
-    SqlLog::Subscribe(MAIN_DATABASE_NAME, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     observer->SetBlockData(block);
     auto result = store->Insert("test", row, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_FULL);
@@ -364,52 +363,25 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog006, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog007
- * @tc.desc: test errorlog observer when Notify
+ * @tc.desc: test errorlog observer when off observer
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
  */
 HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog007, TestSize.Level1)
 {
-    std::string storeId = "test_db";
     auto observer = std::make_shared<OnErrorObserver>();
-    SqlLog::Subscribe(storeId, observer);
+    SqlLog::Subscribe(g_databaseName, observer);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     observer->SetBlockData(block);
-
-    SqlErrorObserver::ExceptionMessage error;
-    error.code = 2;
-    error.message = "concurrent error";
-    error.sql = "UPDATE table SET invalid";
-
-    SqlLog::Notify(storeId, error);
-
-    EXPECT_TRUE(block->GetValue());
-    EXPECT_EQ(observer->GetLastMessage().code, 2);
-    EXPECT_EQ(observer->GetLastMessage().message, "concurrent error");
-    EXPECT_EQ(observer->GetLastMessage().sql, "UPDATE table SET invalid");
-}
-
-/**
- * @tc.name: RdbStoreSubscribeLog008
- * @tc.desc: test errorlog observer when off observer
- * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
- */
-HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog008, TestSize.Level1)
-{
-    std::string storeId = "test_db";
-    auto observer = std::make_shared<OnErrorObserver>();
-    SqlLog::Subscribe(storeId, observer);
-    std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
-    observer->SetBlockData(block);
-    SqlLog::Unsubscribe(storeId, observer);
-    SqlErrorObserver::ExceptionMessage error;
-    error.code = 2;
-    error.message = "concurrent error";
-    error.sql = "UPDATE table SET invalid";
-    SqlLog::Notify(storeId, error);
+    SqlLog::Unsubscribe(g_databaseName, observer);
+    ValuesBucket values;
+    int64_t id;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    auto ret = store->Insert(id, "sqliteLog", values);
+    EXPECT_NE(ret, E_OK);
     EXPECT_EQ(block->GetValue(), false);
     EXPECT_EQ(observer->GetLastMessage().code, 0);
 }
