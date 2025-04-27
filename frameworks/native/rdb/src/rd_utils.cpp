@@ -16,15 +16,14 @@
 #define LOG_TAG "RdUtils"
 #include "rd_utils.h"
 
-#include <securec.h>
-
 #include <iomanip>
 #include <iostream>
+#include <securec.h>
 #include <sstream>
 #include <string>
 
-#include "grd_api_manager.h"
 #include "grd_error.h"
+#include "grd_api_manager.h"
 #include "logger.h"
 #include "remote_result_set.h"
 #include "task_executor.h"
@@ -108,8 +107,8 @@ const GrdErrnoPair GRD_ERRNO_MAP[] = {
     { GRD_SHARED_OBJ_INVALID_REDO, E_ERROR },
 
     { GRD_JSON_LIB_HANDLE_FAILED, E_ERROR },
-    { GRD_DIRECTORY_OPERATE_FAILED, E_SQLITE_IOERR_FULL },
-    { GRD_FILE_OPERATE_FAILED, E_SQLITE_IOERR_FULL },
+    { GRD_DIRECTORY_OPERATE_FAILED, E_SQLITE_IOERR },
+    { GRD_FILE_OPERATE_FAILED, E_SQLITE_IOERR },
     { GRD_LOAD_THIRD_PARTY_LIBRARY_FAILED, E_ERROR },
     { GRD_THIRD_PARTY_FUNCTION_EXECUTE_FAILED, E_ERROR },
     { GRD_INSUFFICIENT_RESOURCES, E_ERROR },
@@ -369,7 +368,8 @@ void RdSqlFreeFloatArr(void *floatElement)
     delete[] ((float *)floatElement);
 }
 
-int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val, uint32_t dim, void (*freeFunc)(void *))
+int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
+    uint32_t dim, void (*freeFunc)(void *))
 {
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
