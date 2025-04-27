@@ -282,6 +282,8 @@ void UvQueue::UvEntry::BindPromise(napi_value promise)
         if (object) {
             delete object;
         }
+        LOG_ERROR("napi_create_function failed. resolvedStat:%{public}d, rejectedStat:%{public}d", resolvedStatus,
+            rejectedStatus);
         return;
     }
     napi_value result = nullptr;
