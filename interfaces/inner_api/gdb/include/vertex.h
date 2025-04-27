@@ -30,6 +30,7 @@ using PropType = std::variant<int64_t, double, std::string, bool, std::nullptr_t
 class Vertex {
 public:
     API_EXPORT Vertex();
+    API_EXPORT virtual ~Vertex() = default;
     API_EXPORT Vertex(std::string id, std::string label);
     API_EXPORT Vertex(std::string id, std::string label, const std::unordered_map<std::string, PropType> &properties);
     static std::shared_ptr<Vertex> Parse(const nlohmann::json &json, int32_t &errCode);

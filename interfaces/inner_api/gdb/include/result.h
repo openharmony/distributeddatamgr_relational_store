@@ -35,6 +35,7 @@ using GraphValue = std::variant<std::monostate, int32_t, int64_t, double, std::s
 class Result {
 public:
     API_EXPORT virtual std::vector<std::unordered_map<std::string, GraphValue>> GetAllData() const = 0;
+    virtual ~Result() = default;
 };
 } // namespace OHOS::DistributedDataAip
 #endif //OHOS_DISTRIBUTED_DATA_INTERFACE_GDB_RESULT_H
