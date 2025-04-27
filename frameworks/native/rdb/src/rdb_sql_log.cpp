@@ -27,11 +27,14 @@
 
 namespace OHOS::NativeRdb {
 ConcurrentMap<std::string, std::set<std::shared_ptr<SqlErrorObserver>>> SqlLog::observerSets_;
-ConcurrentMap<uint64_t, bool> SqlLog::enabled_;
+std::unordered_map<uint64_t, int> SqlLog::suspenders_;
+std::mutex SqlLog::mutex_;
+std::atomic<bool> SqlLog::enabled_ = false;
 int SqlLog::Subscribe(const std::string storeId, std::shared_ptr<SqlErrorObserver> observer)
 {
     observerSets_.Compute(storeId, [observer](const std::string& key, auto& observers) {
         observers.insert(observer);
+        enabled_ = true;
         return true;
     });
     return E_OK;
@@ -44,13 +47,23 @@ int SqlLog::Unsubscribe(const std::string storeId, std::shared_ptr<SqlErrorObser
             observers.erase(observer);
             return observer !=nullptr && !observers.empty();
         });
+    observerSets_.DoActionIfEmpty([]() {
+        enabled_ = false;
+    });
     return E_OK;
 }
 
 void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptionMessage)
 {
-    if (enabled_.Contains(GetThreadId())) {
+    if (!enabled_) {
         return;
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        auto it = suspenders_.find(GetThreadId());
+        if (it != suspenders_.end() && (it->second != 0)) {
+            return;
+        }
     }
     if (!observerSets_.Contains(storeId)) {
         return;
@@ -71,14 +84,34 @@ void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptio
         }
     });
 }
+
 void SqlLog::Pause()
 {
-    enabled_.Insert(GetThreadId(), true);
+    if (!enabled_) {
+        return;
+    }
+    uint64_t tid = GetThreadId();
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (suspenders_.find(tid) == suspenders_.end()) {
+        suspenders_[tid] = 0;
+    }
+    suspenders_[tid]++;
 }
 
 void SqlLog::Resume()
 {
-    enabled_.Erase(GetThreadId());
+    if (!enabled_) {
+        return;
+    }
+    uint64_t tid = GetThreadId();
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    auto it = suspenders_.find(tid);
+    if (it != suspenders_.end()) {
+        --it->second;
+        if (it->second == 0) {
+            suspenders_.erase(it);
+        }
+    }
 }
 
 SqlLog::SqlLog()

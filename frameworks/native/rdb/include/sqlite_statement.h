@@ -94,8 +94,7 @@ private:
     void TableReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
     void ColumnReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
     void HandleErrMsg(const std::string &errMsg, const std::string &dbPath, const std::string &bundleName);
-    void NotifyErrorLog(const int &code, const std::string &message, const std::string &sql);
-    bool CheckSQLiteError(const int &errCode);
+    void TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, const std::string &sql);
 
     static constexpr uint32_t BUFFER_LEN = 16;
 

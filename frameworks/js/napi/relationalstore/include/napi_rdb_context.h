@@ -71,6 +71,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
     std::vector<NativeRdb::RdbStore::PRIKey> keys;
     std::map<RdbStore::PRIKey, RdbStore::Date> modifyTime;
     bool isQuerySql = false;
+    NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
     uint32_t expiredTime = 0;
 
     RdbStoreContext()
