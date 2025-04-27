@@ -30,13 +30,14 @@ void BaseContext::SetAction(
     napi_value self = nullptr;
     napi_value argv[MAX_INPUT_COUNT] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-
     napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, argv[argc - 1], &valueType);
-    if (valueType == napi_function) {
-        LOG_DEBUG("AsyncCall set callback");
-        NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
-        argc = argc - 1;
+    if (argc > 0) {
+        napi_typeof(env, argv[argc - 1], &valueType);
+        if (valueType == napi_function) {
+            LOG_DEBUG("AsyncCall set callback");
+            NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, argv[argc - 1], 1, &callback_));
+            argc = argc - 1;
+        }
     }
     // int -->input_(env, argc, argv, self)
     int status = input(env, argc, argv, self);
