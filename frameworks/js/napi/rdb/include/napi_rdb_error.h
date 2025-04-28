@@ -168,19 +168,6 @@ public:
     };
 };
 
-class DbCorruptedError : public Error {
-public:
-    DbCorruptedError() = default;
-    std::string GetMessage() override
-    {
-        return "Failed open database, database corrupted.";
-    };
-    int GetCode() override
-    {
-        return E_DB_CORRUPTED;
-    };
-};
-
 class ResultGetError : public Error {
 public:
     ResultGetError() = default;
