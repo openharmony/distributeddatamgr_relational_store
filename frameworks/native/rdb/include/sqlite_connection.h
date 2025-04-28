@@ -43,7 +43,6 @@ public:
     static int32_t Delete(const RdbStoreConfig &config);
     static int32_t Delete(const std::string &path);
     static int32_t Repair(const RdbStoreConfig &config);
-    static int32_t Restore(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
@@ -71,6 +70,7 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    static bool IsSupportBinlog(const RdbStoreConfig &config);
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
@@ -100,6 +100,7 @@ private:
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
     int SetTokenizer(const RdbStoreConfig &config);
+    int SetBinlog();
     void LimitPermission(const RdbStoreConfig &config, const std::string &dbPath) const;
 
     int SetPersistWal(const RdbStoreConfig &config);
@@ -128,7 +129,14 @@ private:
     int RegisterHookIfNecessary();
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite);
-    static int CopyDb(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
+    static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg);
+    static void BinlogCloseHandle(sqlite3 *dbHandle);
+    static int CheckPathExist(const std::string &dbPath);
+    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *dbHandle, bool isMemoryRdb);
+    static void BinlogSetConfig(sqlite3 *dbHandle);
+    static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount);
+    static int AsyncReplayBinlog(sqlite3 *dbHandle, sqlite3 *slaveDbHandle);
+    static int ReplayBinlog(const RdbStoreConfig &config);
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr }, { "-compare", nullptr } };
@@ -138,16 +146,16 @@ private:
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
     static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647;       // 2147483647 = 2g - 1
     static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
+    static constexpr unsigned short BINLOG_FILE_NUMS_LIMIT = 2;
+    static constexpr uint32_t BINLOG_FILE_SIZE_LIMIT = 1024 * 1024 * 128; // 134217728 == 1024 * 1024 * 128
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
-    static constexpr uint32_t ITER_V1 = 5000;
     static constexpr uint32_t SQLITE_CKSUMVFS_RESERVE_BYTES = 8;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
-    static const int32_t regRestorer_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;
@@ -163,6 +171,7 @@ private:
     bool isWriter_;
     bool isReadOnly_;
     bool isConfigured_ = false;
+    bool isReplay_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
