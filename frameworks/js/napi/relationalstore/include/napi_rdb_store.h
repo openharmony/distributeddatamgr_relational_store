@@ -35,6 +35,7 @@ namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
+class NapiLogObserver;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -101,7 +102,7 @@ private:
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     void UnregisterAll();
 
-    static constexpr int EVENT_HANDLE_NUM = 3;
+    static constexpr int EVENT_HANDLE_NUM = 4;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 
@@ -130,6 +131,8 @@ private:
     napi_value UnregisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
     napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
     napi_value OffStatistics(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnErrorLog(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffErrorLog(napi_env env, size_t argc, napi_value *argv);
 
     using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
     struct HandleInfo {
@@ -139,12 +142,14 @@ private:
     static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OnRemote },
         { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback },
-        { "statistics", &RdbStoreProxy::OnStatistics }
+        { "statistics", &RdbStoreProxy::OnStatistics },
+        { "errorlog", &RdbStoreProxy::OnErrorLog }
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OffRemote },
         { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback },
-        { "statistics", &RdbStoreProxy::OffStatistics }
+        { "statistics", &RdbStoreProxy::OffStatistics },
+        { "errorlog", &RdbStoreProxy::OffErrorLog }
     };
 
     bool isSystemAppCalled_ = false;
@@ -156,6 +161,7 @@ private:
     std::list<std::shared_ptr<SyncObserver>> syncObservers_;
     std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
     std::string bundleName_;
+    std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
