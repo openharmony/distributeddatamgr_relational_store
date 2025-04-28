@@ -99,7 +99,7 @@ public:
             msg_ = napiError.message;
         } else {
             code_ = E_INNER_ERROR;
-            msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
+            msg_ = "Inner error. Possible cause: The SQL statement fails to be executed.";
         }
     }
 
@@ -186,7 +186,7 @@ public:
     PathError(){};
     std::string GetMessage() override
     {
-        return "Invalid database path.";
+        return "Failed to open or delete database by invalid database path.";
     };
     int GetCode() override
     {
