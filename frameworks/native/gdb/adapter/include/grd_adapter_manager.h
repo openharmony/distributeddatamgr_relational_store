@@ -38,6 +38,7 @@ typedef int64_t (*ColumnInt64)(GRD_StmtT *stmt, uint32_t idx);
 typedef int32_t (*ColumnInt)(GRD_StmtT *stmt, uint32_t idx);
 typedef double (*ColumnDouble)(GRD_StmtT *stmt, uint32_t idx);
 typedef const char *(*ColumnText)(GRD_StmtT *stmt, uint32_t idx);
+typedef float *(*ColumnFloatVector)(GRD_StmtT *stmt, uint32_t idx, uint32_t *dim);
 
 typedef int32_t (*Backup)(GRD_DB *db, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
 typedef int32_t (*Restore)(const char *dbFile, const char *backupDbFile, GRD_CipherInfoT *cipherInfo);
@@ -61,6 +62,7 @@ struct GrdAdapterHolder {
     ColumnInt ColumnInt = nullptr;
     ColumnDouble ColumnDouble = nullptr;
     ColumnText ColumnText = nullptr;
+    ColumnFloatVector ColumnFloatVector = nullptr;
 
     Backup Backup = nullptr;
     Restore Restore = nullptr;

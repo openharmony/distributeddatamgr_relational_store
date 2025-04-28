@@ -385,4 +385,25 @@ const char *GrdAdapter::ColumnText(GRD_StmtT *stmt, uint32_t idx)
     return g_adapterHolder.ColumnText(stmt, idx);
 }
 
+std::vector<float> GrdAdapter::ColumnFloatVector(GRD_StmtT *stmt, uint32_t idx)
+{
+    if (g_adapterHolder.ColumnFloatVector == nullptr) {
+        g_adapterHolder = GetAdapterHolder();
+    }
+    if (g_adapterHolder.ColumnFloatVector == nullptr) {
+        return std::vector<float>();
+    }
+    uint32_t dim = 0;
+    auto floatVector = g_adapterHolder.ColumnFloatVector(stmt, idx, &dim);
+    if (floatVector == nullptr || dim == 0) {
+        return std::vector<float>();
+    }
+    std::vector<float> result;
+    result.reserve(dim);
+    for (uint32_t i = 0; i < dim; i++) {
+        result.push_back(floatVector[i]);
+    }
+    return result;
+}
+
 } // namespace OHOS::DistributedDataAip
