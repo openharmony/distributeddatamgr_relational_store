@@ -24,7 +24,7 @@ Suspender::Suspender(Flag flag) : flag_(flag)
         SqlLog::Pause();
     }
 }
-NativeRdb::Suspender::~Suspender()
+Suspender::~Suspender()
 {
     if ((flag_ & SQL_LOG) != 0) {
         SqlLog::Resume();
