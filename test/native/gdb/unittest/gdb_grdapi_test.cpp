@@ -37,6 +37,8 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+
+    void CheckColumnFunc(GRD_Stmt *stmt);
 };
 
 void GdbGrdApiTest::SetUpTestCase()
@@ -130,6 +132,39 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed01, TestSize.Level1)
     GDBHelper::DeleteDBStore({"test", "/data"});
 }
 
+void GdbGrdApiTest::CheckColumnFunc(GRD_Stmt *stmt)
+{
+    if (g_library != nullptr) {
+        dlclose(g_library);
+    }
+    auto result = GrdAdapter::ColumnBytes(stmt, 0);
+    EXPECT_EQ(result, 0);
+
+    if (g_library != nullptr) {
+        dlclose(g_library);
+    }
+    auto result2 = GrdAdapter::ColumnInt64(stmt, 0);
+    EXPECT_EQ(result2, 0);
+
+    if (g_library != nullptr) {
+        dlclose(g_library);
+    }
+    result2 = GrdAdapter::ColumnInt(stmt, 0);
+    EXPECT_EQ(result2, 0);
+
+    if (g_library != nullptr) {
+        dlclose(g_library);
+    }
+    auto result3 = GrdAdapter::ColumnDouble(stmt, 0);
+    EXPECT_EQ(result3, 0.0);
+
+    if (g_library != nullptr) {
+        dlclose(g_library);
+    }
+    auto result4 = GrdAdapter::ColumnFloatVector(stmt, 0);
+    EXPECT_EQ(result4.size(), 0);
+}
+
 HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
 {
     std::string createGql = "CREATE GRAPH test {(person:Person {name STRING} )};";
@@ -156,23 +191,7 @@ HWTEST_F(GdbGrdApiTest, GdbStore_GrdApi_NotUsed02, TestSize.Level1)
     ret = GrdAdapter::Reset(stmt);
     EXPECT_EQ(ret, E_OK);
 
-    if (g_library != nullptr) {
-        dlclose(g_library);
-    }
-    auto result = GrdAdapter::ColumnBytes(stmt, 0);
-    EXPECT_EQ(result, 0);
-
-    if (g_library != nullptr) {
-        dlclose(g_library);
-    }
-    auto result2 = GrdAdapter::ColumnInt64(stmt, 0);
-    EXPECT_EQ(result2, 0);
-
-    result2 = GrdAdapter::ColumnInt(stmt, 0);
-    EXPECT_EQ(result2, 0);
-
-    auto result3 = GrdAdapter::ColumnDouble(stmt, 0);
-    EXPECT_EQ(result3, 0.0);
+    CheckColumnFunc(stmt);
 
     if (g_library != nullptr) {
         dlclose(g_library);

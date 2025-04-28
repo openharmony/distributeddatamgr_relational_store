@@ -79,6 +79,7 @@ public:
         {"GRD_GqlColumnInt", reinterpret_cast<void *>(0xeeee)},
         {"GRD_GqlColumnDouble", reinterpret_cast<void *>(0xffff)},
         {"GRD_GqlColumnText", reinterpret_cast<void *>(0x1112)},
+        {"GsPD_GqlColumnFloatVector", reinterpret_cast<void *>(0x1113)},
         {"GRD_DBBackup", reinterpret_cast<void *>(0x1222)},
         {"GRD_DBRestore", reinterpret_cast<void *>(0x1333)},
         {"GRD_DBRekey", reinterpret_cast<void *>(0x1444)},
@@ -153,6 +154,7 @@ HWTEST_F(GdbAdaptTest, GdbAdaptTest_Dlopen01, TestSize.Level2)
     EXPECT_EQ(holder.ColumnInt, nullptr);
     EXPECT_EQ(holder.ColumnDouble, nullptr);
     EXPECT_EQ(holder.ColumnText, nullptr);
+    EXPECT_EQ(holder.ColumnFloatVector, nullptr);
     EXPECT_EQ(holder.Backup, nullptr);
     EXPECT_EQ(holder.Restore, nullptr);
     EXPECT_EQ(holder.Rekey, nullptr);
@@ -172,6 +174,7 @@ HWTEST_F(GdbAdaptTest, GdbAdaptTest_Dlopen01, TestSize.Level2)
     GrdAdapter::ColumnInt(nullptr, 1);
     GrdAdapter::ColumnDouble(nullptr, 1);
     GrdAdapter::ColumnText(nullptr, 1);
+    GrdAdapter::ColumnFloatVector(nullptr, 1);
     GrdAdapter::Backup(nullptr, databaseName.c_str(), {});
     GrdAdapter::Restore(nullptr, databaseName.c_str(), {});
     GrdAdapter::Rekey(nullptr, databaseName.c_str(), {});
@@ -204,6 +207,7 @@ HWTEST_F(GdbAdaptTest, GdbAdaptTest_Dlopen02, TestSize.Level2)
     EXPECT_NE(holder.ColumnInt, nullptr);
     EXPECT_NE(holder.ColumnDouble, nullptr);
     EXPECT_NE(holder.ColumnText, nullptr);
+    EXPECT_NE(holder.ColumnFloatVector, nullptr);
     EXPECT_NE(holder.Backup, nullptr);
     EXPECT_NE(holder.Restore, nullptr);
     EXPECT_NE(holder.Rekey, nullptr);
