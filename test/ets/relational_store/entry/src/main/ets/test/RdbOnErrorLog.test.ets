@@ -80,7 +80,7 @@ export default function rdbStoreErrorlogTest() {
      * @tc.name Normal test case of Onerrorlog Already closed
      * @tc.desc 1.create db 2.close db 3.Onerrorlog
      */
-    it('testRdbStoreOnerrorlog0001', 0, async (done: () => void) => {
+    it('testRdbStoreOnerrorlog0001', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStoreOnerrorlog0001 start *************");
       try {
         rdbStore.close();
@@ -90,7 +90,7 @@ export default function rdbStoreErrorlogTest() {
         });
       } catch (err) {
         expect(err.code == 14800014).assertTrue();
-        console.error(`testRdbStoreOnerrorlog0001 errorlog on is failed code:${err.code},message:${err.message}`);
+        console.error(`errorlog on is failed code:${err.code},message:${err.message}`);
       }
       done();
       console.log(TAG + "************* testRdbStoreOnerrorlog0001 end *************");
@@ -157,7 +157,7 @@ export default function rdbStoreErrorlogTest() {
           done();
         });
       } catch (err) {
-        console.error(`testRdbStoreOnerrorlog0003 err code is ${err.code},message is ${err.message}`);
+        console.error(`err log failed, code is ${err.code},message is ${err.message}`);
         expect(true).assertFail();
       }
       let u8 = new Uint8Array([1, 2, 3]);
