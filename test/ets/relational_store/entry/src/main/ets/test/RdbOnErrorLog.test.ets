@@ -16,7 +16,6 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Level, Size, TestType } from "@ohos/hypium";
 import data_relationalStore from '@ohos.data.relationalStore';
 import abilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import { BusinessError } from "@kit.BasicServicesKit";
 
 let context = abilityDelegatorRegistry.getAbilityDelegator().getAppContext().getApplicationContext();
 const TAG = "[RELATIONAL_STORE_ON_ERROR]"
@@ -62,8 +61,7 @@ export default function rdbStoreErrorlogTest() {
       try {
         rdbStore.off('errorlog');
         await rdbStore.close();
-      } catch (e) {
-        const err = e as BusinessError;
+      } catch (err) {
         console.log(`afterEach error, failed code:${err.code},message:${err.message}`);
       }
       await data_relationalStore.deleteRdbStore(context, "errorlog.db");
@@ -86,7 +84,7 @@ export default function rdbStoreErrorlogTest() {
         rdbStore.close();
         let exceptionMessage: data_relationalStore.ExceptionMessage;
         rdbStore.on('errorlog', exceptionMessage => {
-          console.log(`error log is ${exceptionMessage.code}, ${exceptionMessage.message}, ${exceptionMessage.sql}`)
+          console.log(`error log is ${exceptionMessage.code}`)
         });
       } catch (err) {
         expect(err.code == 14800014).assertTrue();
