@@ -22,7 +22,6 @@ static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
 static Connection::Repairer g_repairers[DB_BUTT] = { nullptr, nullptr };
 static Connection::Deleter g_fileDeleter[DB_BUTT] = { nullptr, nullptr };
 static Connection::Collector g_collectors[DB_BUTT] = { nullptr, nullptr };
-static Connection::Restorer g_restorer[DB_BUTT] = { nullptr, nullptr };
 std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig &config, bool isWriter)
 {
     auto dbType = config.GetDBType();
@@ -82,21 +81,6 @@ std::map<std::string, Connection::Info> Connection::Collect(const RdbStoreConfig
     return collector(config);
 }
 
-int32_t Connection::Restore(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath)
-{
-    auto dbType = config.GetDBType();
-    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
-        return E_INVALID_ARGS;
-    }
-
-    auto restorer = g_restorer[dbType];
-    if (restorer == nullptr) {
-        return E_NOT_SUPPORT;
-    }
-
-    return restorer(config, srcPath, destPath);
-}
-
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
 {
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
@@ -150,20 +134,6 @@ int32_t Connection::RegisterCollector(int32_t dbType, Collector collector)
     }
 
     g_collectors[dbType] = collector;
-    return E_OK;
-}
-
-int32_t Connection::RegisterRestorer(int32_t dbType, Restorer restorer)
-{
-    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
-        return E_INVALID_ARGS;
-    }
-
-    if (g_restorer[dbType] != nullptr) {
-        return E_OK;
-    }
-
-    g_restorer[dbType] = restorer;
     return E_OK;
 }
 
