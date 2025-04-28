@@ -39,8 +39,8 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { E_GRD_OVER_LIMIT, 31300012,
         "The number of graph names, vertex or edge types, or vertex or edge properties exceeds the limit." },
     { E_GRD_DATA_CONFLICT, 31300013, "A conflicting constraint already exists." },
-    { E_DBPATH_ACCESS_FAILED, 31300014, "Invalid database path." },
-    { E_CONFIG_INVALID_CHANGE, 31300015, "Config changed." },
+    { E_DBPATH_ACCESS_FAILED, 31300014, "Failed to open or delete database with an invalid database path." },
+    { E_CONFIG_INVALID_CHANGE, 31300015, "StoreConfig, for example, securityLevel or encrypt, is changed." },
 };
 
 std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
