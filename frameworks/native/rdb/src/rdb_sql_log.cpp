@@ -17,8 +17,6 @@
 
 #include "rdb_sql_log.h"
 
-#include <thread>
-
 #include "concurrent_map.h"
 #include "logger.h"
 #include "rdb_errno.h"
@@ -27,8 +25,7 @@
 
 namespace OHOS::NativeRdb {
 ConcurrentMap<std::string, std::set<std::shared_ptr<SqlErrorObserver>>> SqlLog::observerSets_;
-std::unordered_map<uint64_t, int> SqlLog::suspenders_;
-std::mutex SqlLog::mutex_;
+thread_local int32_t SqlLog::suspenders_ = 0;
 std::atomic<bool> SqlLog::enabled_ = false;
 int SqlLog::Subscribe(const std::string storeId, std::shared_ptr<SqlErrorObserver> observer)
 {
@@ -58,12 +55,8 @@ void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptio
     if (!enabled_) {
         return;
     }
-    {
-        std::lock_guard<std::mutex> lockGuard(mutex_);
-        auto it = suspenders_.find(GetThreadId());
-        if (it != suspenders_.end() && (it->second != 0)) {
-            return;
-        }
+    if (suspenders_ > 0) {
+        return;
     }
     if (!observerSets_.Contains(storeId)) {
         return;
@@ -87,30 +80,13 @@ void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptio
 
 void SqlLog::Pause()
 {
-    if (!enabled_) {
-        return;
-    }
-    uint64_t tid = GetThreadId();
-    std::lock_guard<std::mutex> lockGuard(mutex_);
-    if (suspenders_.find(tid) == suspenders_.end()) {
-        suspenders_[tid] = 0;
-    }
-    suspenders_[tid]++;
+    ++suspenders_;
 }
 
 void SqlLog::Resume()
 {
-    if (!enabled_) {
-        return;
-    }
-    uint64_t tid = GetThreadId();
-    std::lock_guard<std::mutex> lockGuard(mutex_);
-    auto it = suspenders_.find(tid);
-    if (it != suspenders_.end()) {
-        --it->second;
-        if (it->second == 0) {
-            suspenders_.erase(it);
-        }
+    if (suspenders_ > 0) {
+        --suspenders_;
     }
 }
 
