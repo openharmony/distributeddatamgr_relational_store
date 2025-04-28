@@ -18,8 +18,6 @@
 #include <set>
 #include <string>
 #include <memory>
-#include <mutex>
-#include <unordered_map>
 
 #include "rdb_types.h"
 #include "rdb_visibility.h"
@@ -41,8 +39,7 @@ public:
     static void Resume();
 private:
     static ConcurrentMap<std::string, std::set<std::shared_ptr<SqlErrorObserver>>> observerSets_;
-    static std::unordered_map<uint64_t, int> suspenders_;
-    static std::mutex mutex_;
+    static thread_local int32_t suspenders_;
     static std::atomic<bool> enabled_;
 };
 } // namespace NativeRdb
