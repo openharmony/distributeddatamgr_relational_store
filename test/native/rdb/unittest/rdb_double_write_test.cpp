@@ -12,11 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define LOG_TAG "RdbDoubleWriteTest"
 #include <gtest/gtest.h>
 #include <sys/stat.h>
+#include <sqlite3sym.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <filesystem>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 
@@ -27,7 +32,10 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "sqlite3.h"
+#include "sqlite_connection.h"
 #include "sqlite_utils.h"
+#include "sqlite_global_config.h"
 #include "sys/types.h"
 
 using namespace testing::ext;
@@ -44,15 +52,22 @@ public:
     void CheckAge(std::shared_ptr<ResultSet> &resultSet);
     void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
-    void CheckNumber(
+    static void CheckNumber(
         std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK, const std::string &tableName = "test");
-    void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
-    void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
+    static bool CheckFolderExist(const std::string &path);
+    void RemoveFolder(const std::string &path);
+    static void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
+    void Update(int64_t start, int count, bool isSlave = false, int dataSize = 0);
+    void CheckProcess(std::shared_ptr<RdbStore> &store);
+    void DeleteDbFile(const RdbStoreConfig &config);
+    void PutValue(std::shared_ptr<RdbStore> &store, char *data, int64_t id, int age);
+    static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
     void TryInterruptBackup();
     void InitDb();
 
     static const std::string DATABASE_NAME;
     static const std::string SLAVE_DATABASE_NAME;
+    static const std::string BINLOG_DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
     static std::shared_ptr<RdbStore> store3;
@@ -68,6 +83,7 @@ public:
 
 const std::string RdbDoubleWriteTest::DATABASE_NAME = RDB_TEST_PATH + "dual_write_test.db";
 const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "dual_write_test_slave.db";
+const std::string RdbDoubleWriteTest::BINLOG_DATABASE_NAME = RDB_TEST_PATH + "dual_write_test.db_binlog";
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
@@ -75,6 +91,7 @@ const int BLOB_SIZE = 3;
 const uint8_t EXPECTED_BLOB_DATA[]{ 1, 2, 3 };
 const int CHECKAGE = 18;
 const double CHECKCOLUMN = 100.5;
+const int CHANGENUM = 12;
 
 class DoubleWriteTestOpenCallback : public RdbOpenCallback {
 public:
@@ -134,49 +151,6 @@ void RdbDoubleWriteTest::InitDb()
     slaveStore->ExecuteSql("DELETE FROM test");
 }
 
-/**
- * @tc.name: RdbStore_DoubleWrite_001
- * @tc.desc: test RdbStore doubleWrite
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
-{
-    InitDb();
-    int64_t id;
-    ValuesBucket values;
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    values.Clear();
-    values.PutInt("id", 2);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(2, id);
-
-    values.Clear();
-    values.PutInt("id", 3);
-    values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 20L);
-    values.PutDouble("salary", 100.5f);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
-
-    RdbDoubleWriteTest::CheckResultSet(slaveStore);
-}
-
 void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave, int dataSize)
 {
     ValuesBucket values;
@@ -191,6 +165,33 @@ void RdbDoubleWriteTest::Insert(int64_t start, int count, bool isSlave, int data
             values.PutString("name", std::string("zhangsan"));
         }
         values.PutInt("age", CHECKAGE);
+        values.PutDouble("salary", CHECKCOLUMN);
+        values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+        if (isSlave) {
+            ret = slaveStore->Insert(id, "test", values);
+        } else {
+            ret = store->Insert(id, "test", values);
+        }
+        EXPECT_EQ(ret, E_OK);
+        id++;
+    }
+}
+
+void RdbDoubleWriteTest::Update(int64_t start, int count, bool isSlave, int dataSize)
+{
+    ValuesBucket values;
+    int64_t id = start;
+    int age = 20;
+    int ret = E_OK;
+    for (int i = 0; i < count; i++) {
+        values.Clear();
+        values.PutInt("id", id);
+        if (dataSize > 0) {
+            values.PutString("name", std::string(dataSize, 'a'));
+        } else {
+            values.PutString("name", std::string("zhangsan"));
+        }
+        values.PutInt("age", age);
         values.PutDouble("salary", CHECKCOLUMN);
         values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
         if (isSlave) {
@@ -340,6 +341,211 @@ void RdbDoubleWriteTest::CheckNumber(
     EXPECT_EQ(num, countNum);
 }
 
+bool RdbDoubleWriteTest::CheckFolderExist(const std::string &path)
+{
+    if (access(path.c_str(), F_OK) != 0) {
+        return false;
+    }
+    return true;
+}
+
+void RdbDoubleWriteTest::RemoveFolder(const std::string &path)
+{
+    std::filesystem::path folder(path);
+    for (const auto &entry : std::filesystem::directory_iterator(folder)) {
+        if (entry.is_directory()) {
+            RemoveFolder(entry.path());
+        } else {
+            std::filesystem::remove(entry.path());
+        }
+    }
+    std::filesystem::remove(folder);
+}
+
+typedef int (*GtForkCallbackT)(const char *arg);
+static pid_t GtFork(GtForkCallbackT callback, const char *arg)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        int ret = callback(arg);
+        exit(ret);
+    }
+    return pid;
+}
+
+static int InsertProcess(const char *arg)
+{
+    std::string test = std::string(arg);
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    int64_t id = 11;
+    int count = 1000;
+    RdbDoubleWriteTest::Insert(id, count);
+    int32_t num = 1010;
+    RdbDoubleWriteTest::CheckNumber(RdbDoubleWriteTest::store, num);
+    return 0;
+}
+
+static int InsertTwoProcess(const char *arg)
+{
+    std::string test = std::string(arg);
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    bool isBinlogExist = RdbDoubleWriteTest::CheckFolderExist(RdbDoubleWriteTest::BINLOG_DATABASE_NAME);
+    EXPECT_TRUE(isBinlogExist);
+    int count = 10;
+    for (int i = 0; i < count; i++) {
+        errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
+        RdbDoubleWriteTest::WaitForBackupFinish(BACKUP_FINISHED);
+    }
+    return 0;
+}
+
+static int InsertManualProcess(const char *arg)
+{
+    std::string test = std::string(arg);
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    int64_t id = 11;
+    int count = 1000;
+    RdbDoubleWriteTest::Insert(id, count);
+    int32_t num = 1010;
+    RdbDoubleWriteTest::CheckNumber(RdbDoubleWriteTest::store, num);
+    return 0;
+}
+
+static int InsertManualTwoProcess(const char *arg)
+{
+    std::string test = std::string(arg);
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    bool isBinlogExist = RdbDoubleWriteTest::CheckFolderExist(RdbDoubleWriteTest::BINLOG_DATABASE_NAME);
+    EXPECT_TRUE(isBinlogExist);
+    int count = 10;
+    for (int i = 0; i < count; i++) {
+        errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
+        RdbDoubleWriteTest::WaitForBackupFinish(BACKUP_FINISHED);
+    }
+    return 0;
+}
+
+void RdbDoubleWriteTest::CheckProcess(std::shared_ptr<RdbStore> &store)
+{
+    int64_t changeId = 2;
+    int changeCount = 4;
+    Update(changeId, changeCount);
+    int deletedRows;
+    store->Delete(deletedRows, "test", "id == 8");
+    store->Delete(deletedRows, "test", "id == 9");
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    std::string sqlCreateIndex = "CREATE INDEX id_index ON test (id);";
+    store->ExecuteSql(sqlCreateIndex.c_str());
+    ret = store->Commit();
+    EXPECT_EQ(ret, E_OK);
+    ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    changeId = CHANGENUM;
+    Update(changeId, changeCount);
+    store->Delete(deletedRows, "test", "id == 18");
+    store->Delete(deletedRows, "test", "id == 19");
+    ret = store->RollBack();
+    EXPECT_EQ(ret, E_OK);
+}
+
+void RdbDoubleWriteTest::DeleteDbFile(const RdbStoreConfig &config)
+{
+    std::string dbFile;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbFile);
+    if (errCode != E_OK || dbFile.empty()) {
+        return;
+    }
+    std::ifstream binFile(dbFile);
+    if (binFile.is_open()) {
+        std::string content((std::istreambuf_iterator<char>(binFile)), (std::istreambuf_iterator<char>()));
+        std::remove(dbFile.c_str());
+    }
+}
+
+void RdbDoubleWriteTest::PutValue(std::shared_ptr<RdbStore> &store, char *data, int64_t id, int age)
+{
+    ValuesBucket values;
+    values.PutInt("id", id);
+    values.PutString("name", std::string(data));
+    values.PutInt("age", age);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_001
+ * @tc.desc: test RdbStore doubleWrite
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_001, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    InitDb();
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20L);
+    values.PutDouble("salary", 100.5f);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(3, id);
+
+    RdbDoubleWriteTest::CheckResultSet(slaveStore);
+}
+
 /**
  * @tc.name: RdbStore_DoubleWrite_003
  * @tc.desc: test RdbStore execute
@@ -347,6 +553,10 @@ void RdbDoubleWriteTest::CheckNumber(
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     int64_t id;
@@ -371,6 +581,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_003, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     int64_t id;
@@ -400,6 +614,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_004, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     ValuesBucket values;
@@ -449,8 +667,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_005, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    int errCode = E_OK;
     config.SetHaMode(HAMode::SINGLE);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -482,6 +703,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_007, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -503,7 +728,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
     SqliteUtils::DeleteFile(RdbDoubleWriteTest::DATABASE_NAME + "-dwr");
     SqliteUtils::DeleteFile(RdbDoubleWriteTest::SLAVE_DATABASE_NAME + "-dwr");
     int errCode = E_OK;
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     config.SetAllowRebuild(true);
     DoubleWriteTestOpenCallback helper;
@@ -525,6 +749,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_008, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     Insert(id, 100);
@@ -543,6 +771,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_009, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -565,7 +797,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
     SqliteUtils::DeleteFile(RdbDoubleWriteTest::SLAVE_DATABASE_NAME + "-dwr");
 
     int errCode = E_OK;
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -589,6 +820,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_010, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -628,6 +863,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_011, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     int err = store->BeginTransaction();
@@ -656,8 +895,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_012, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    int errCode = E_OK;
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -697,8 +939,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_013, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    int errCode = E_OK;
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -736,6 +981,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_014, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -746,7 +995,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
         values.PutInt("id", id);
         values.PutString("name", std::string("zhangsan"));
         values.PutInt("age", 18);
-        values.PutDouble("salary", 100.5);
+        values.PutDouble("salary", CHECKCOLUMN);
         values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
         int ret = store->Insert(id, "test", values);
         EXPECT_EQ(ret, E_OK);
@@ -772,7 +1021,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
     EXPECT_EQ(slaveStore->Insert(id, "xx", values), E_OK);
 
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     config.SetAllowRebuild(true);
     DoubleWriteTestOpenCallback helper;
@@ -794,6 +1042,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_015, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -808,7 +1060,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
     SqliteUtils::DeleteFile(DATABASE_NAME + "-wal");
     LOG_INFO("RdbStore_DoubleWrite_016 delete db file finish");
 
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     DoubleWriteTestOpenCallback helper;
     int errCode;
@@ -831,6 +1082,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_016, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     int64_t id;
@@ -875,6 +1130,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_018, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
 
     int64_t id;
@@ -905,7 +1164,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
     ASSERT_TRUE(store->IsSlaveDiffFromMaster());
 
     store = nullptr;
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     config.SetAllowRebuild(true);
     DoubleWriteTestOpenCallback helper;
@@ -924,8 +1182,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_019, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_026, TestSize.Level1)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    int errCode = E_OK;
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -950,22 +1211,23 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_026, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_027, TestSize.Level1)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    int errCode = E_OK;
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     config.SetAllowRebuild(true);
     DoubleWriteTestOpenCallback helper;
-
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(store, nullptr);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
     EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
 
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
 
     int64_t id = 10;
     int count = 100;
@@ -999,6 +1261,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_027, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_029, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -1040,6 +1306,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_029, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -1068,6 +1338,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_030, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_031, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
@@ -1081,9 +1355,12 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_031, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     remove(RdbDoubleWriteTest::DATABASE_NAME.c_str());
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     RdbHelper::DeleteRdbStore(config);
     EXPECT_NE(access(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(), F_OK), 0);
 }
@@ -1095,6 +1372,10 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_032, TestSize.Level1)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
 {
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
     InitDb();
     int64_t id = 10;
     int count = 100;
@@ -1115,7 +1396,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
     SqliteUtils::DeleteFile(RdbDoubleWriteTest::DATABASE_NAME + "-dwr");
     SqliteUtils::DeleteFile(RdbDoubleWriteTest::SLAVE_DATABASE_NAME + "-dwr");
     int errCode = E_OK;
-    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::SINGLE);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -1129,44 +1409,612 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
     RdbDoubleWriteTest::CheckNumber(store, count);
 }
 
-/**
- * @tc.name: RdbStore_DoubleWrite_034
- * @tc.desc: open MANUAL_TRIGGER db, write, backup, insert, check count, restore, check count
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_034, TestSize.Level1)
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_001, TestSize.Level0)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
-    config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    config.SetAllowRebuild(true);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
     DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
 
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_002, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_FALSE(isBinlogExist);
+    errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(store, nullptr);
+    isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
 
-    int64_t id = 10;
-    int count = 100;
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_003, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    int64_t id = 1;
+    int count = 10;
     Insert(id, count);
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isSlaveDbFileExist = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_TRUE(isSlaveDbFileExist);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_004, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isSlaveDbFileExist = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_FALSE(isSlaveDbFileExist);
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    isSlaveDbFileExist = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_TRUE(isSlaveDbFileExist);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_005, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
+    store = nullptr;
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_006, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
-    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
-
-    id = 1000;
+    EXPECT_NE(slaveStore, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    slaveStore->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
     Insert(id, count, true);
-    RdbDoubleWriteTest::CheckNumber(store, count);
-    RdbDoubleWriteTest::CheckNumber(slaveStore, count + count);
-    slaveStore = nullptr;
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
 
-    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
-    RdbDoubleWriteTest::CheckNumber(store, count + count);
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_007, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
 
+    SqliteUtils::SetSlaveInvalid(DATABASE_NAME);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + +"-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+    store = nullptr;
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_008, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
-    RdbDoubleWriteTest::CheckNumber(slaveStore, 0L);
+    EXPECT_NE(slaveStore, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    slaveStore->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
+
+    SqliteUtils::SetSlaveInvalid(DATABASE_NAME);
+    std::string failureFlagPath = RdbDoubleWriteTest::DATABASE_NAME + +"-slaveFailure";
+    bool isFlagFileExists = OHOS::FileExists(failureFlagPath);
+    ASSERT_TRUE(isFlagFileExists);
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_FALSE(isBinlogExist);
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_009, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+
+    store = nullptr;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+    id = 11;
+    Insert(id, count);
+    store = nullptr;
+    DeleteDbFile(config);
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    int32_t num = 20;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_010, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(slaveStore, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    slaveStore->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
+
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+    id = 11;
+    Insert(id, count);
+    store = nullptr;
+    DeleteDbFile(config);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    int32_t num = 20;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_011, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+
+    store = nullptr;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+    id = 11;
+    Insert(id, count);
+    int32_t num = 20;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+    CheckProcess(store);
+
+    store = nullptr;
+    DeleteDbFile(config);
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    num = 18;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_012, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(slaveStore, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    slaveStore->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
+
+    store = nullptr;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+    id = 11;
+    Insert(id, count);
+    int32_t num = 20;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+    CheckProcess(store);
+
+    store = nullptr;
+    DeleteDbFile(config);
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    num = 18;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_013, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    bool isSlaveDbFileExists = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_TRUE(isSlaveDbFileExists);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+
+    int64_t id = 1;
+    int count = 20;
+    Insert(id, count);
+    CheckProcess(store);
+
+    int64_t num = 18;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(slaveStore, nullptr);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_014, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+
+    bool isSlaveDbFileExists = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_FALSE(isSlaveDbFileExists);
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    isSlaveDbFileExists = OHOS::FileExists(SLAVE_DATABASE_NAME);
+    ASSERT_TRUE(isSlaveDbFileExists);
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+
+    int64_t id = 1;
+    int count = 20;
+    Insert(id, count);
+    CheckProcess(store);
+
+    int64_t num = 18;
+    RdbDoubleWriteTest::CheckNumber(store, num);
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(slaveStore, nullptr);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, num);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_015, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+    std::string test = "lisi";
+    pid_t pid1 = GtFork(InsertProcess, test.c_str());
+    ASSERT_GT(pid1, 0);
+    pid_t pid2 = GtFork(InsertTwoProcess, test.c_str());
+    ASSERT_GT(pid2, 0);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_016, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(slaveStore, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    slaveStore->ExecuteSql("DELETE FROM test");
+
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    Insert(id, count, true);
+    store = nullptr;
+    slaveStore = nullptr;
+    std::string test = "lisi";
+    pid_t pid1 = GtFork(InsertManualProcess, test.c_str());
+    ASSERT_GT(pid1, 0);
+    pid_t pid2 = GtFork(InsertManualTwoProcess, test.c_str());
+    ASSERT_GT(pid2, 0);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_017, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+
+    size_t bigSize = 1024 * 1024 * 128;
+    char *data = (char *)malloc(bigSize);
+    if (data == nullptr) {
+        return;
+    }
+    memset_s(data, bigSize - 1, 'a', bigSize - 1);
+
+    PutValue(store, data, 11, 18);
+    PutValue(store, data, 12, 19);
+
+    store = nullptr;
+    id = 13;
+    for (int i = 0; i < count; i++) {
+        config.SetHaMode(HAMode::MAIN_REPLICA);
+        RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+        EXPECT_NE(store, nullptr);
+        PutValue(store, data, id, CHECKAGE);
+        store = nullptr;
+        id++;
+    }
+    free(data);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_018, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+
+    size_t bigSize = 1024 * 1024 * 13;
+    char *data = (char *)malloc(bigSize);
+    if (data == nullptr) {
+        return;
+    }
+    memset_s(data, bigSize - 1, 'a', bigSize - 1);
+
+    store = nullptr;
+    id = 11;
+    for (int i = 0; i < count; i++) {
+        config.SetHaMode(HAMode::MAIN_REPLICA);
+        RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+        EXPECT_NE(store, nullptr);
+        PutValue(store, data, id, CHECKAGE);
+        store = nullptr;
+        id++;
+    }
+    free(data);
 }
