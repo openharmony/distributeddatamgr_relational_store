@@ -137,7 +137,7 @@ void OnErrorObserver::SetBlockData(std::shared_ptr<OHOS::BlockData<bool>> block)
 
 /**
  * @tc.name: RdbStoreSubscribeLog001
- * @tc.desc: test errorlog observer when SQLITE_ERROR
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_ERROR
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -163,7 +163,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog001, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog002
- * @tc.desc: test errorlog observer when SQLITE_CONSTRAINT
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_CONSTRAINT
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -196,7 +196,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog003
- * @tc.desc: test errorlog observer when SQLITE_BUSY
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_BUSY
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -234,7 +234,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog003, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog004
- * @tc.desc: test errorlog observer when SQLITE_LOCKED
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_LOCKED
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -278,7 +278,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog003, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog005
- * @tc.desc: test errorlog observer when SQLITE_SCHEMA
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_SCHEMA
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -333,7 +333,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog005, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog006
- * @tc.desc: test errorlog observer when SQLITE_FULL
+ * @tc.desc: test sqliteErrorOccurred observer when SQLITE_FULL
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -363,7 +363,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog006, TestSize.Level1)
 
 /**
  * @tc.name: RdbStoreSubscribeLog007
- * @tc.desc: test errorlog observer when off observer
+ * @tc.desc: test sqliteErrorOccurred observer when off observer
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
