@@ -29,7 +29,7 @@ DelayNotify::~DelayNotify()
         return;
     }
     if (delaySyncTaskId_ != TaskExecutor::INVALID_TASK_ID) {
-        pool_->Remove(delaySyncTaskId_);
+        pool_->Remove(delaySyncTaskId_, true);
     }
     if (task_ != nullptr && changedData_.tableData.size() > 0) {
         DistributedRdb::RdbNotifyConfig rdbNotifyConfig;
