@@ -26,7 +26,7 @@ namespace OHOS::NativeRdb {
 class RdbStore;
 class TransactionImpl : public Transaction {
 public:
-    TransactionImpl(std::shared_ptr<Connection> connection, const std::string &name);
+    TransactionImpl(std::shared_ptr<Connection> connection, const std::string &path);
     ~TransactionImpl() override;
 
     int32_t Commit() override;
@@ -51,7 +51,7 @@ public:
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
 
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
-        int32_t type, std::shared_ptr<Connection> connection, const std::string &name);
+        int32_t type, std::shared_ptr<Connection> connection, const std::string &path);
 
 private:
     static std::string GetBeginSql(int32_t type);
@@ -61,7 +61,8 @@ private:
     std::shared_ptr<RdbStore> GetStore();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);
 
-    std::string name_;
+    std::string path_;
+    uint32_t seqId_ = 0;
     std::recursive_mutex mutex_;
     std::shared_ptr<RdbStore> store_;
     std::shared_ptr<Connection> connection_;

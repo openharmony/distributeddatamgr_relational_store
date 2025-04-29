@@ -362,6 +362,7 @@ int SqliteConnection::SetCustomScalarFunction(const std::string &functionName, i
 
 int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPath)
 {
+    Suspender suspender(Suspender::SQL_STATISTIC);
     // there is a read-only dependency
     if (!config.GetCollatorLocales().empty()) {
         ConfigLocale(config.GetCollatorLocales());
@@ -485,12 +486,11 @@ int SqliteConnection::RegisterClientObs()
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn)
 {
-    std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>();
+    std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>(&config_);
     // When memory is not cleared, quick_check reads memory pages and detects damage but does not report it
     if (sql == INTEGRITIES[1] && dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
         sqlite3_db_release_memory(dbHandle_);
     }
-    statement->config_ = &config_;
     int errCode = statement->Prepare(dbHandle_, sql);
     if (errCode != E_OK) {
         return { errCode, nullptr };
