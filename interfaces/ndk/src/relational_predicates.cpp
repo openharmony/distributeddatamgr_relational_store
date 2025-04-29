@@ -382,6 +382,37 @@ RelationalPredicate *RelationalPredicate::GetSelf(OH_Predicates *predicates)
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::NativeRdb;
+
+int OH_Predicates_NotLike(OH_Predicates *predicates, const char *field, const char *pattern)
+{
+    auto self = RelationalPredicate::GetSelf(predicates);
+    if (self == nullptr || field == nullptr || pattern == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    self->Get().NotLike(field, pattern);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Predicates_Glob(OH_Predicates *predicates, const char *field, const char *pattern)
+{
+    auto self = RelationalPredicate::GetSelf(predicates);
+    if (self == nullptr || field == nullptr || pattern == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    self->Get().Glob(field, pattern);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Predicates_NotGlob(OH_Predicates *predicates, const char *field, const char *pattern)
+{
+    auto self = RelationalPredicate::GetSelf(predicates);
+    if (self == nullptr || field == nullptr || pattern == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    self->Get().NotGlob(field, pattern);
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
 int OH_Predicates_Having(OH_Predicates *predicates, const char *conditions, const OH_Data_Values *values)
 {
     auto self = RelationalPredicate::GetSelf(predicates);
