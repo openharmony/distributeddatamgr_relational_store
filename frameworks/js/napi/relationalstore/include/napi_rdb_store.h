@@ -35,6 +35,7 @@ namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
+class NapiPerfStatObserver;
 class NapiLogObserver;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
@@ -102,7 +103,7 @@ private:
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     void UnregisterAll();
 
-    static constexpr int EVENT_HANDLE_NUM = 4;
+    static constexpr int EVENT_HANDLE_NUM = 6;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 
@@ -133,6 +134,8 @@ private:
     napi_value OffStatistics(napi_env env, size_t argc, napi_value *argv);
     napi_value OnErrorLog(napi_env env, size_t argc, napi_value *argv);
     napi_value OffErrorLog(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnPerfStat(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffPerfStat(napi_env env, size_t argc, napi_value *argv);
 
     using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
     struct HandleInfo {
@@ -143,12 +146,16 @@ private:
         { "dataChange", &RdbStoreProxy::OnRemote },
         { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback },
         { "statistics", &RdbStoreProxy::OnStatistics },
+        { "errorlog", &RdbStoreProxy::OnErrorLog },
+        { "perfStat", &RdbStoreProxy::OnPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OnErrorLog }
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OffRemote },
         { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback },
         { "statistics", &RdbStoreProxy::OffStatistics },
+        { "errorlog", &RdbStoreProxy::OffErrorLog },
+        { "perfStat", &RdbStoreProxy::OffPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog }
     };
 
@@ -160,6 +167,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::list<std::shared_ptr<SyncObserver>> syncObservers_;
     std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
+    std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
     std::string bundleName_;
     std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
 };
