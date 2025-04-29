@@ -141,6 +141,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/cache_result_set_test.cpp",
     "unittest/common.cpp",
     "unittest/connection_test.cpp",
+    "unittest/knowledge_schema_helper_test.cpp",
     "unittest/raw_data_parser_test.cpp",
     "unittest/rd_utils_test.cpp",
     "unittest/rdb_attach_test.cpp",
