@@ -986,3 +986,142 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_030, TestSize.Level
     errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_DROP_SQL);
     EXPECT_EQ(errCode, RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Native_predicates_test_031
+ * @tc.desc: Normal testCase of Predicates for notLike.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_031, TestSize.Level1)
+{
+    int errCode = 0;
+    const char *data5Value = "BBCD%";
+    const char *data2Value = "12%";
+
+    auto ret = OH_Predicates_NotLike(nullptr, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates wrong;
+    wrong.id = 1;
+    ret = OH_Predicates_NotLike(&wrong, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+
+    ret = OH_Predicates_NotLike(predicates, nullptr, data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_NotLike(predicates, "data5", nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_NotLike(predicates, "data5", data5Value);
+    ret = OH_Predicates_NotLike(predicates, "data2", data2Value);
+
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    int rowCount = 0;
+    errCode = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 2);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_032
+ * @tc.desc: Normal testCase of Predicates for glob.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_032, TestSize.Level1)
+{
+    int errCode = 0;
+    const char *data5Value = "aBCD*";
+    const char *data5Value2 = "ABCD*";
+
+    auto ret = OH_Predicates_Glob(nullptr, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates wrong;
+    wrong.id = 1;
+    ret = OH_Predicates_Glob(&wrong, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+
+    ret = OH_Predicates_Glob(predicates, nullptr, data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_Glob(predicates, "data5", nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_Glob(predicates, "data5", data5Value);
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    int rowCount = 0;
+    errCode = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 0);
+    cursor->destroy(cursor);
+    predicates->destroy(predicates);
+
+    predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+    ret = OH_Predicates_Glob(predicates, "data5", data5Value2);
+    cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    rowCount = 0;
+    errCode = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 3);
+    cursor->destroy(cursor);
+    predicates->destroy(predicates);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_033
+ * @tc.desc: Normal testCase of Predicates for glob.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_033, TestSize.Level1)
+{
+    int errCode = 0;
+    const char *data5Value = "aBCD*";
+    const char *data5Value2 = "ABCD*";
+
+    auto ret = OH_Predicates_NotGlob(nullptr, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates wrong;
+    wrong.id = 1;
+    ret = OH_Predicates_NotGlob(&wrong, "data5", data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+
+    ret = OH_Predicates_NotGlob(predicates, nullptr, data5Value);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_NotGlob(predicates, "data5", nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_NotGlob(predicates, "data5", data5Value);
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    int rowCount = 0;
+    errCode = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 3);
+    cursor->destroy(cursor);
+    predicates->destroy(predicates);
+
+    predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+    ret = OH_Predicates_NotGlob(predicates, "data5", data5Value2);
+    cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+    rowCount = 0;
+    errCode = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 0);
+    cursor->destroy(cursor);
+    predicates->destroy(predicates);
+}
