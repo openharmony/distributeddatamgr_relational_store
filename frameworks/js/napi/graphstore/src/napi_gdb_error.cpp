@@ -24,7 +24,7 @@ using namespace DistributedDataAip;
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { E_INVALID_ARGS, 401, "Parameter error." },
     { E_GRD_DATA_CORRUPTED, 31300001, "Database corrupted." },
-    { E_GRD_DB_INSTANCE_ABNORMAL, 31300002, "The close method of RdbStore or ResultSet has been called." },
+    { E_GRD_DB_INSTANCE_ABNORMAL, 31300002, "Already closed." },
     { E_DATABASE_BUSY, 31300003, "The database is busy." },
     { E_GRD_FAILED_MEMORY_ALLOCATE, 31300004, "The database is out of memory." },
     { E_GRD_DISK_SPACE_FULL, 31300005, "The database is full." },
@@ -39,8 +39,8 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { E_GRD_OVER_LIMIT, 31300012,
         "The number of graph names, vertex or edge types, or vertex or edge properties exceeds the limit." },
     { E_GRD_DATA_CONFLICT, 31300013, "A conflicting constraint already exists." },
-    { E_DBPATH_ACCESS_FAILED, 31300014, "Failed to open or delete database by invalid database path." },
-    { E_CONFIG_INVALID_CHANGE, 31300015, "Configuration of StoreConfig has changed." },
+    { E_DBPATH_ACCESS_FAILED, 31300014, "Failed to open or delete database with an invalid database path." },
+    { E_CONFIG_INVALID_CHANGE, 31300015, "StoreConfig, for example, securityLevel or encrypt, is changed." },
 };
 
 std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
