@@ -24,14 +24,14 @@ const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIM
 const CREATE_TABLE_TEST4 = "CREATE TABLE IF NOT EXISTS users (" + "id INTEGER PRIMARY KEY," + "username TEXT UNIQUE," +
   "email TEXT NOT NULL)";
 const STORE_CONFIG: data_relationalStore.StoreConfig = {
-  name: "errorlog.db",
+  name: "sqliteErrorOccurred.db",
   securityLevel: data_relationalStore.SecurityLevel.S1,
 }
 
 let rdbStore: data_relationalStore.RdbStore;
 
-export default function rdbStoreErrorlogTest() {
-  describe('rdbStoreErrorlogTest', () => {
+export default function rdbStoreSqliteErrorOccurredTest() {
+  describe('rdbStoreSqliteErrorOccurredTest', () => {
     beforeAll(async () => {
       console.info(TAG + 'beforeAll')
     })
@@ -59,12 +59,12 @@ export default function rdbStoreErrorlogTest() {
     afterEach(async (done: Function) => {
       console.info(TAG + 'afterEach')
       try {
-        rdbStore.off('errorlog');
+        rdbStore.off('sqliteErrorOccurred');
         await rdbStore.close();
       } catch (err) {
         console.log(`afterEach error, failed code:${err.code},message:${err.message}`);
       }
-      await data_relationalStore.deleteRdbStore(context, "errorlog.db");
+      await data_relationalStore.deleteRdbStore(context, "sqliteErrorOccurred.db");
       done();
     })
     afterAll(async () => {
@@ -74,36 +74,36 @@ export default function rdbStoreErrorlogTest() {
     console.log(TAG + "*************Unit Test Begin*************");
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Onerrorlog_0001
-     * @tc.name Normal test case of Onerrorlog Already closed
-     * @tc.desc 1.create db 2.close db 3.Onerrorlog
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0001
+     * @tc.name Normal test case of OnsqliteErrorOccurred Already closed
+     * @tc.desc 1.create db 2.close db 3.OnsqliteErrorOccurred
      */
-    it('testRdbStoreOnerrorlog0001', 0, async (done: Function) => {
-      console.log(TAG + "************* testRdbStoreOnerrorlog0001 start *************");
+    it('testRdbStoreOnsqliteErrorOccurred0001', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0001 start *************");
       try {
         rdbStore.close();
         let exceptionMessage: data_relationalStore.ExceptionMessage;
-        rdbStore.on('errorlog', exceptionMessage => {
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
           console.log(`error log is ${exceptionMessage.code}`)
         });
       } catch (err) {
         expect(err.code == 14800014).assertTrue();
-        console.error(`errorlog on is failed code:${err.code},message:${err.message}`);
+        console.error(`error is failed code:${err.code},message:${err.message}`);
       }
       done();
-      console.log(TAG + "************* testRdbStoreOnerrorlog0001 end *************");
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0001 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Onerrorlog_0002
-     * @tc.name Normal test case of Onerrorlog SQLITE_ERROR
-     * @tc.desc 1.Onerrorlog 2.execute sql with SQLITE_ERROR
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0002
+     * @tc.name Normal test case of OnsqliteErrorOccurred SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute sql with SQLITE_ERROR
      */
-    it('testRdbStoreOnerrorlog0002', 0, async (done: Function) => {
-      console.log(TAG + "************* testRdbStoreOnerrorlog0002 start *************");
+    it('testRdbStoreOnsqliteErrorOccurred0002', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0002 start *************");
       try {
         let exceptionMessage: data_relationalStore.ExceptionMessage;
-        rdbStore.on('errorlog', exceptionMessage => {
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
           let sqliteCode = exceptionMessage.code;
           let sqliteMessage = exceptionMessage.message;
           let errSQL = exceptionMessage.sql;
@@ -113,9 +113,9 @@ export default function rdbStoreErrorlogTest() {
           expect(errSQL == "INSERT INTO test(age,blobType,exsc,name,salary) VALUES (?,?,?,?,?)").assertTrue();
           done();
         });
-        console.log(`errorlog on is success`);
+        console.log(`sqliteErrorOccurred on is success`);
       } catch (err) {
-        console.error(`errorlog on is failed ${err.code}`);
+        console.error(`sqliteErrorOccurred on is failed ${err.code}`);
       }
       try {
         let u8: Uint8Array = new Uint8Array([1, 2, 3]);
@@ -129,22 +129,22 @@ export default function rdbStoreErrorlogTest() {
         await rdbStore.insert("test", valueBucket);
         expect(true).assertFail();
       } catch (err) {
-        console.error(`errorlog on is failed code:${err.code},message:${err.message}`);
+        console.error(`sqliteErrorOccurred on is failed code:${err.code},message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
       }
-      console.log(TAG + "************* testRdbStoreOnerrorlog0002 end *************");
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0002 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Onerrorlog_0003
-     * @tc.name Normal test case of Onerrorlog SQLITE_MISMATCH
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0003
+     * @tc.name Normal test case of OnsqliteErrorOccurred SQLITE_MISMATCH
      * @tc.desc 1.Insert data
      */
-    it('testRdbStoreOnerrorlog0003', 0, async (done: Function) => {
-      console.log(TAG + "************* testRdbStoreOnerrorlog0003 start *************");
+    it('testRdbStoreOnsqliteErrorOccurred0003', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0003 start *************");
       try {
         let exceptionMessage: data_relationalStore.ExceptionMessage;
-        rdbStore.on('errorlog', exceptionMessage => {
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
           let sqliteCode = exceptionMessage.code;
           let sqliteMessage = exceptionMessage.message;
           let errSQL = exceptionMessage.sql;
@@ -171,61 +171,61 @@ export default function rdbStoreErrorlogTest() {
           "blobType": u8,
         };
         let row = transaction?.insertSync("test", valueBucket);
-        console.log(TAG + "testRdbStoreOnerrorlog0003 insert row:" + row);
+        console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0003 insert row:" + row);
         expect(true).assertFail();
         await transaction?.commit();
       } catch (e) {
         await transaction?.rollback();
         console.log(TAG + e + " code: " + e.code);
         expect(e.code == 14800033).assertTrue();
-        console.log(TAG + "testRdbStoreOnerrorlog0003 failed");
+        console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0003 failed");
       }
-      console.log(TAG + "************* testRdbStoreOnerrorlog0003 end *************");
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0003 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Onerrorlog_0004
-     * @tc.name Normal test case of Onerrorlog performance
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0004
+     * @tc.name Normal test case of OnsqliteErrorOccurred performance
      * @tc.desc 1.Insert data
      */
-    it('testRdbStoreOnerrorlog0004', 0, async (done: Function) => {
-      console.log(TAG + "************* testRdbStoreOnerrorlog0004 start *************");
+    it('testRdbStoreOnsqliteErrorOccurred0004', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0004 start *************");
       try {
         let averageTime = 0;
         let startTime = new Date().getTime();
         for (let i = 0; i < 2000; ++i) {
           let exceptionMessage: data_relationalStore.ExceptionMessage | undefined = undefined;
-          rdbStore.on('errorlog', exceptionMessage => {
+          rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
           });
         }
         let endTime = new Date().getTime();
         averageTime = ((endTime - startTime) * 1000) / 2000;
         expect(averageTime < 1000).assertTrue();
-        console.info(TAG + " testRdbStoreOnerrorlog0004 average time is: " + averageTime + " μs");
+        console.info(TAG + " testRdbStoreOnsqliteErrorOccurred0004 average time is: " + averageTime + " μs");
       } catch (err) {
         console.error(`on err log failed, code is ${err.code},message is ${err.message}`);
         expect(true).assertFail();
       }
-      rdbStore.off('errorlog');
+      rdbStore.off('sqliteErrorOccurred');
       done();
-      console.log(TAG + "************* testRdbStoreOnerrorlog0004 end *************");
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0004 end *************");
     })
 
     /**
-     * @tc.number SUB_DDM_AppDataFWK_JSRDB_Onerrorlog_0005
-     * @tc.name Normal test case of Onerrorlog and offerrorlog
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0005
+     * @tc.name Normal test case of OnsqliteErrorOccurred and offsqliteErrorOccurred
      * @tc.desc 1.Insert data
      */
-    it('testRdbStoreOnerrorlog0005', 0, async (done: Function) => {
-      console.log(TAG + "************* testRdbStoreOnerrorlog0005 start *************");
+    it('testRdbStoreOnsqliteErrorOccurred0005', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0005 start *************");
       try {
         let exceptionMessage: data_relationalStore.ExceptionMessage;
-        rdbStore.on('errorlog', exceptionMessage => {
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
           expect(exceptionMessage.code === 0).assertTrue();
         });
-        rdbStore.off('errorlog');
+        rdbStore.off('sqliteErrorOccurred');
       } catch (err) {
-        console.error(`errorlog on is failed ${err.code}`);
+        console.error(`sqliteErrorOccurred on is failed ${err.code}`);
       }
       try {
         let u8: Uint8Array = new Uint8Array([1, 2, 3]);
@@ -239,11 +239,11 @@ export default function rdbStoreErrorlogTest() {
         await rdbStore.insert("test", valueBucket);
         expect().assertFail();
       } catch (err) {
-        console.error(`errorlog on is failed code:${err.code},message:${err.message}`);
+        console.error(`sqliteErrorOccurred on is failed code:${err.code},message:${err.message}`);
         expect(true).assertTrue();
       }
       done();
-      console.log(TAG + "************* testRdbStoreOnerrorlog0005 end *************");
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0005 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
   })

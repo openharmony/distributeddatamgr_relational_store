@@ -2068,7 +2068,7 @@ napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv
 {
     napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("errorlog", "function"));
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("sqliteErrorOccurred", "function"));
     bool result = std::any_of(logObservers_.begin(), logObservers_.end(),
         [argv](std::shared_ptr<NapiLogObserver> obs) { return obs && *obs == argv[0]; });
     if (result) {
@@ -2080,7 +2080,7 @@ napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv
     int errCode = NativeRdb::SqlLog::Subscribe(dbPath, observer);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     logObservers_.push_back(std::move(observer));
-    LOG_DEBUG("errorlog subscribe success.");
+    LOG_DEBUG("sqliteErrorOccurred subscribe success.");
     return nullptr;
 }
 
@@ -2089,7 +2089,7 @@ napi_value RdbStoreProxy::OffErrorLog(napi_env env, size_t argc, napi_value *arg
     napi_valuetype type;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
-        std::make_shared<ParamError>("errorlog", "function"));
+        std::make_shared<ParamError>("sqliteErrorOccurred", "function"));
 
     auto it = logObservers_.begin();
     while (it != logObservers_.end()) {

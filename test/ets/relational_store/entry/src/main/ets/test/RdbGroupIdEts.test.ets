@@ -227,9 +227,9 @@ export default function RelationalStoreDataGroupId() {
       let groupDir:string = await contextEl3.getGroupDir("123456");
       console.info(TAG, "DataGroupId groupDir:" + groupDir);
       try {
-        let store:relationalStore.RdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+        let store:relationalStore.RdbStore = await relationalStore.getRdbStore(contextEl3, STORE_CONFIG);
         await crudTest(store);
-        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+        await relationalStore.deleteRdbStore(contextEl3, STORE_CONFIG);
       } catch (errInfo) {
         console.error(TAG, `failed, code is ${errInfo.code},message is ${errInfo.message}`);
         expect().assertFail();
@@ -254,42 +254,14 @@ export default function RelationalStoreDataGroupId() {
       let groupDir:string = await contextEl4.getGroupDir("123456");
       console.info(TAG, "DataGroupId groupDir:" + groupDir);
       try {
-        let store:relationalStore.RdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+        let store:relationalStore.RdbStore = await relationalStore.getRdbStore(contextEl4, STORE_CONFIG);
         await crudTest(store);
-        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+        await relationalStore.deleteRdbStore(contextEl4, STORE_CONFIG);
       } catch (errInfo) {
         console.error(TAG, `failed, code is ${errInfo.code},message is ${errInfo.message}`);
         expect().assertFail();
       }
     })
-
-    /**
-     * @tc.number SUB_DistributedData_RelationalStore_SDK_GetRdbStoreJsAPITest_0700
-     * @tc.name relationalStore dataGroupId el5 test
-     * @tc.desc relationalStore deleteRdbStore dataGroupId test
-     * @tc.size MediumTest
-     * @tc.type Function
-     * @tc.level Level 0
-     */
-    it('SUB_DDM_RelationalStore_DataGroupId_0700', TestType.FUNCTION | Size.MEDIUMTEST | Level.LEVEL0, async () => {
-      const STORE_CONFIG: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
-        securityLevel: relationalStore.SecurityLevel.S1,
-        dataGroupId: '123456',
-      };
-      let contextEl5:Context = context.createAreaModeContext(contextConstant.AreaMode.EL5);
-      let groupDir:string = await contextEl5.getGroupDir("123456");
-      console.info(TAG, "DataGroupId groupDir:" + groupDir);
-      try {
-        let store:relationalStore.RdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-        await crudTest(store);
-        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
-      } catch (errInfo) {
-        console.error(TAG, `failed, code is ${errInfo.code},message is ${errInfo.message}`);
-        expect().assertFail();
-      }
-    })
-
     console.info(TAG + "*************Unit Test End*************");
   })
 }
