@@ -143,13 +143,13 @@ private:
         { "dataChange", &RdbStoreProxy::OnRemote },
         { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback },
         { "statistics", &RdbStoreProxy::OnStatistics },
-        { "errorlog", &RdbStoreProxy::OnErrorLog }
+        { "sqliteErrorOccurred", &RdbStoreProxy::OnErrorLog }
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
         { "dataChange", &RdbStoreProxy::OffRemote },
         { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback },
         { "statistics", &RdbStoreProxy::OffStatistics },
-        { "errorlog", &RdbStoreProxy::OffErrorLog }
+        { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog }
     };
 
     bool isSystemAppCalled_ = false;
