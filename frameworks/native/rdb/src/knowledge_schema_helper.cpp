@@ -30,8 +30,7 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using Json = nlohmann::json;
-namespace {
-bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
     DistributedRdb::RdbKnowledgeSchema &schema)
 {
     KnowledgeSource source;
@@ -59,14 +58,15 @@ bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
             field.columnName = item.GetColumnName();
             field.type = item.GetType();
             field.description = item.GetDescription();
-            field.parser = item.GetParser();
+            for (const auto &parser : item.GetParser()) {
+                field.parser.push_back({parser.GetType(), parser.GetPath()});
+            }
             knowledgeTable.knowledgeFields.push_back(std::move(field));
         }
         knowledgeTable.referenceFields = table.GetReferenceFields();
         schema.tables.push_back(std::move(knowledgeTable));
     }
     return true;
-}
 }
 
 KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
