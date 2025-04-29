@@ -23,7 +23,7 @@
 namespace OHOS::NativeRdb {
 class TransDB : public RdbStore {
 public:
-    TransDB(std::shared_ptr<Connection> conn, const std::string &name);
+    TransDB(std::shared_ptr<Connection> conn, const std::string &path);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int, int64_t> BatchInsertWithConflictResolution(
@@ -44,7 +44,7 @@ private:
     int32_t maxArgs_ = 0;
     int64_t vSchema_ = 0;
     std::weak_ptr<Connection> conn_;
-    std::string name_;
+    std::string path_;
 };
 } // namespace OHOS::NativeRdb
 #endif // NATIVE_RDB_TRANS_DB_H
