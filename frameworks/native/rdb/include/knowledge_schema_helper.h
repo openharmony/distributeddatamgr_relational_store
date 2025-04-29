@@ -34,6 +34,8 @@ public:
     std::pair<int, DistributedRdb::RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName);
     void DonateKnowledgeData();
     void Close();
+    bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+        DistributedRdb::RdbKnowledgeSchema &schema);
 private:
     void LoadKnowledgeLib();
     void LoadKnowledgeSchemaManager(void *handle);
