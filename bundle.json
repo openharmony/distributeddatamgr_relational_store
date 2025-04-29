@@ -52,6 +52,7 @@
                 "access_token",
                 "common_event_service",
                 "c_utils",
+                "data_share",
                 "device_manager",
                 "eventhandler",
                 "hilog",
@@ -92,7 +93,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/ani/relationalstore:relationalstore_ani_package"
+                "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/relational_store:relationalstore_ani_pack"
             ],
             "inner_kits": [
                 {
