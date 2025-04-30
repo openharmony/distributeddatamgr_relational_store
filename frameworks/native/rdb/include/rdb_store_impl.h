@@ -152,7 +152,7 @@ public:
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
-    int ConfigLocale(const std::string &localeStr);
+    int ConfigLocale(const std::string &localeStr) override;
     std::string GetName();
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();

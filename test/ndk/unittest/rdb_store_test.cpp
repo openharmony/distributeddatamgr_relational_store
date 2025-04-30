@@ -1855,3 +1855,20 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
 
     DeleteAttachDatabase();
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_041
+ * @tc.desc: normal testCase for OH_Rdb_SetLocale.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_041, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Rdb_Store *store = storeTestRdbStore_;
+    errCode = OH_Rdb_SetLocale(nullptr, "zh");
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_SetLocale(store, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_SetLocale(store, "zh");
+    EXPECT_EQ(errCode, RDB_OK);
+}
