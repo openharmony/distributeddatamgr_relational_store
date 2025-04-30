@@ -21,6 +21,7 @@
 #include <shared_mutex>
 #include <string>
 
+#include "knowledge_schema.h"
 #include "knowledge_types.h"
 #include "rdb_types.h"
 
@@ -41,6 +42,10 @@ private:
     void LoadKnowledgeSchemaManager(void *handle);
     bool IsLoadLib() const;
     void StartTask();
+    bool CheckSchemaField(const std::string &fieldStr);
+    bool CheckSchemaTableName(const std::string &fieldStr);
+    bool CheckKnowledgeFields(const std::vector<KnowledgeField> &fields);
+    bool CheckKnowledgeSchema(const KnowledgeSchema &schema);
 
     mutable std::shared_mutex libMutex_;
     DistributedRdb::IKnowledgeSchemaManager *schemaManager_ = nullptr;
