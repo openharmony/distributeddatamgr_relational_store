@@ -103,7 +103,7 @@ private:
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     void UnregisterAll();
 
-    static constexpr int EVENT_HANDLE_NUM = 6;
+    static constexpr int EVENT_HANDLE_NUM = 5;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 
@@ -146,7 +146,6 @@ private:
         { "dataChange", &RdbStoreProxy::OnRemote },
         { "autoSyncProgress", &RdbStoreProxy::RegisterSyncCallback },
         { "statistics", &RdbStoreProxy::OnStatistics },
-        { "errorlog", &RdbStoreProxy::OnErrorLog },
         { "perfStat", &RdbStoreProxy::OnPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OnErrorLog }
     };
@@ -154,7 +153,6 @@ private:
         { "dataChange", &RdbStoreProxy::OffRemote },
         { "autoSyncProgress", &RdbStoreProxy::UnregisterSyncCallback },
         { "statistics", &RdbStoreProxy::OffStatistics },
-        { "errorlog", &RdbStoreProxy::OffErrorLog },
         { "perfStat", &RdbStoreProxy::OffPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog }
     };

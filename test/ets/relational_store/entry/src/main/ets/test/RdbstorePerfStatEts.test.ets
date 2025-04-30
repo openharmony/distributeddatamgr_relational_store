@@ -544,5 +544,40 @@ export default function PerfStatEtsTest() {
       await rdbStore?.batchInsert("test", valueBuckets);
       console.log(TAG + "************* testRdbStorePerfStat_0020 end *************");
     })
+
+    /**
+     * @tc.name Normal case for perfStat batchInsert data execution time
+     * @tc.number testRdbStorePerfStat_0021
+     * @tc.desc 1. Register callback for perfStat
+     */
+    it('testRdbStorePerfStat_0021',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0021 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        expect('INSERT OR REPLACE INTO test (age,id,name) VALUES (?,?,?),...,3').assertEqual(sqlExecutionInfo.sql[1]);
+        expect(3).assertEqual(sqlExecutionInfo.sql.length);
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+      const rdbTrans = await rdbStore?.createTransaction();
+      const valueBucket1: relationalStore.ValuesBucket = {
+        'id': 1,
+        'name': 'zhangsan',
+        'age': 13,
+      };
+      const valueBucket2: relationalStore.ValuesBucket = {
+        'id': 2,
+        'name': 'zhangsan',
+        'age': 13,
+      };
+      const valueBucket3: relationalStore.ValuesBucket = {
+        'id': 5,
+        'name': 'zhangsan',
+        'age': 13,
+      };
+      let valueBuckets = new Array(valueBucket1, valueBucket2, valueBucket3);
+      await rdbTrans?.batchInsert("test", valueBuckets);
+      await rdbTrans?.commit();
+      console.log(TAG + "************* testRdbStorePerfStat_0021 end *************");
+    })
   })
 }
