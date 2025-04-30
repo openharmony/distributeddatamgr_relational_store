@@ -152,6 +152,199 @@ const std::string SCHEMA_STR = R"({
         }]
     }]})";
 
+const std::string INVALID_SCHEMA_STR_1 = R"({
+	"knowledgeSource": [{
+		"version": 0,
+		"dbName": "test.db",
+		"tables": []
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_2 = R"({
+	"knowledgeSource": [{
+		"version": 2147483648,
+		"dbName": "test.db",
+		"tables": []
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_3 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "",
+		"tables": []
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_4 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "tese,db",
+		"tables": []
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_5 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_6 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "invalid-table-name",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_7 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id2", "id2"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_8 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["'id2'"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_9 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_10 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "%subject",
+                "type": ["Text"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_11 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": [""]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_12 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Text", "File"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_13 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["ScalarScalarScalarScalarScalarScalarScalarScalarScalarScalarScalarScalarScalarScalarScalar"]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_14 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "subject",
+                "type": ["Scalar"],
+                "description": ""
+            }]
+		}]
+	}]
+})";
+
 /**
  * @tc.name: KnowledgeSchemaHelperTest001
  * @tc.desc: test unmarshall schema
@@ -247,4 +440,109 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest006, TestSize.Level
             EXPECT_EQ(parser.path, "$[*].localPath");
         }
     }
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest001
+ * @tc.desc: test invalid version
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest001, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_1, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_2, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest002
+ * @tc.desc: test invalid db name
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest002, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_3, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_4, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest003
+ * @tc.desc: test invalid table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest003, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_5, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_6, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest004
+ * @tc.desc: test invalid reference field
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest004, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_7, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_8, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest005
+ * @tc.desc: test invalid column field
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest005, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_9, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_10, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest006
+ * @tc.desc: test invalid column type
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest006, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema1 = {};
+    bool ret1 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_11, DB_NAME, schema1);
+    EXPECT_FALSE(ret1);
+    RdbKnowledgeSchema schema2 = {};
+    bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_12, DB_NAME, schema2);
+    EXPECT_FALSE(ret2);
+    RdbKnowledgeSchema schema3 = {};
+    bool ret3 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_13, DB_NAME, schema3);
+    EXPECT_FALSE(ret3);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest007
+ * @tc.desc: test invalid column description
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest007, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_14, DB_NAME, schema);
+    EXPECT_FALSE(ret);
 }
