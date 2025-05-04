@@ -16,6 +16,7 @@
 #ifndef NATIVE_RDB_SQLITE_UTILS_H
 #define NATIVE_RDB_SQLITE_UTILS_H
 
+#include <sys/types.h>
 #include <map>
 #include <string>
 
@@ -90,6 +91,7 @@ public:
     static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
+    static std::string StModeToString(mode_t st_mode);
 
 private:
     struct SqlType {
