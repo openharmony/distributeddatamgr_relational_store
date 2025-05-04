@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef RDDBREPAIR_FUZZER_H
-#define RDDBREPAIR_FUZZER_H
+#ifndef SHAREDBLOCK_FUZZER_H
+#define SHAREDBLOCK_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "rddbrepair_fuzzer"
+#define FUZZ_PROJECT_NAME "sharedblock_fuzzer"
 
-#endif // RDDBREPAIR_FUZZER_H
+#endif // RDSTATEMENT_FUZZER_H

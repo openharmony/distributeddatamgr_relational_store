@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TRANSFER_GRD_FUZZER_H
-#define TRANSFER_GRD_FUZZER_H
+#ifndef DATAVALUE_FUZZER_H
+#define DATAVALUE_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "transfergrderrno_fuzzer"
+#define FUZZ_PROJECT_NAME "datavalue_fuzzer"
 
-#endif // TRANSFER_GRD_FUZZER_H
+#endif // DATAVALUE_FUZZER_H

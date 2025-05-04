@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <fuzzer/FuzzedDataProvider.h>
+
+#include "rdstatement_fuzzer.h"
 
 #include "rd_statement.h"
 #include "rdb_errno.h"
@@ -22,8 +25,9 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 void RdStatementPrepareFuzz(const uint8_t *data, size_t size)
 {
+    FuzzedDataProvider provider(data, size);
     auto stmt = std::make_shared<RdStatement>();
-    std::string sqlString(reinterpret_cast<const char *>(data), size);
+    std::string sqlString = provider.ConsumeRandomLengthString();
     stmt->Prepare(sqlString);
 }
 } // namespace OHOS
