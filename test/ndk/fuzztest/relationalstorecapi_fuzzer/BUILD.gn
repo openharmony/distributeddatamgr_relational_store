@@ -52,6 +52,7 @@ ohos_fuzztest("RelationalStoreCAPIFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:datamgr_common",
     "sqlite:sqlite",
   ]
 }
