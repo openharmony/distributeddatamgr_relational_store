@@ -285,8 +285,17 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
 {
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
-        LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
-            errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
+        struct stat st;
+        if (stat(dbPath.c_str(), &st) == 0) {
+            LOG_ERROR(
+                "fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d, stat:[%{public}" PRIu64
+                ",%{public}d,%{public}d,%{public}o]",
+                errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno, st.st_ino, st.st_uid, st.st_gid,
+                st.st_mode);
+        } else {
+            LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
+                errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
+        }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
         if (pos != std::string::npos) {
@@ -299,6 +308,13 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
 #endif
         if (errCode == SQLITE_NOTADB) {
             Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_NOT_DB, config_, "", true));
+        }
+        if (errCode == E_SQLITE_CANTOPEN) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
+                "failed to openDB errno[ " + std::to_string(errno) + "]," + "ino:" + std::to_string(st.st_ino) +
+                    "uid:" + std::to_string(st.st_uid) + "gid:" + std::to_string(st.st_gid) +
+                    SqliteUtils::StModeToString(st.st_mode),
+                true));
         }
         return SQLiteError::ErrNo(errCode);
     }

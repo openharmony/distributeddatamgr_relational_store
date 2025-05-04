@@ -50,14 +50,27 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     directories.push_back(tempDirectory);
 
     std::string databaseDirectory;
+    struct stat stats[2];
+    int32_t cur = 0;
+    int32_t prev = cur;
     for (const std::string &directory : directories) {
+        if (directory.empty()) {
+            continue;
+        }
         databaseDirectory = databaseDirectory + "/" + directory;
-        if (access(databaseDirectory.c_str(), F_OK) != 0) {
+        prev = cur;
+        // (cur + 1) % 2 Switch the two positions of stats
+        cur = (cur + 1) % 2;
+        if (stat(databaseDirectory.c_str(), &stats[cur]) != 0) {
             if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
-                    SqliteUtils::Anonymous(databaseDirectory).c_str());
+                LOG_ERROR("failed to mkdir errno:%{public}d %{public}s prev:[%{public}" PRIu64
+                          ",%{public}d,%{public}d,%{public}o]",
+                    errno, SqliteUtils::Anonymous(databaseDirectory).c_str(), stats[prev].st_ino, stats[prev].st_uid,
+                    stats[prev].st_gid, stats[prev].st_mode);
                 RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
-                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory));
+                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
+                        "ino:" + std::to_string(stats[prev].st_ino) + "uid:" + std::to_string(stats[prev].st_uid) +
+                        "gid:" + std::to_string(stats[prev].st_gid) + SqliteUtils::StModeToString(stats[prev].st_mode)));
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server

@@ -583,5 +583,13 @@ std::string SqliteUtils::FormatDfxInfo(const DfxInfo &dfxInfo)
     oss << "LastOpen:" << dfxInfo.lastOpenTime_ << "," << "CUR_USER:" << dfxInfo.curUserId_;
     return oss.str();
 }
+
+std::string SqliteUtils::StModeToString(mode_t st_mode)
+{
+    mode_t permissions = st_mode & 0777;
+    std::ostringstream oss;
+    oss << "mode:" << std::oct << permissions;
+    return oss.str();
+}
 } // namespace NativeRdb
 } // namespace OHOS
