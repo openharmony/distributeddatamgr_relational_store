@@ -41,9 +41,10 @@ GRD_DB *CreateDBHandle(FuzzedDataProvider &provider)
 GRD_SqlStmt *CreateSqlStmt(GRD_DB *dbHandle, FuzzedDataProvider &provider)
 {
     GRD_SqlStmt *stmtHandle = nullptr;
-
     std::string str = provider.ConsumeRandomLengthString();
     RdUtils::RdSqlPrepare(dbHandle, str.c_str(), str.size(), &stmtHandle, nullptr);
+    RdUtils::RdSqlReset(stmtHandle);
+    RdUtils::RdSqlFinalize(stmtHandle);
     return stmtHandle;
 }
 
@@ -78,8 +79,6 @@ void RdbRdUtilsFuzzer(FuzzedDataProvider &provider)
     }
 
     GRD_SqlStmt *stmtHandle = CreateSqlStmt(dbHandle, provider);
-    RdUtils::RdSqlReset(stmtHandle);
-    RdUtils::RdSqlFinalize(stmtHandle);
     RdSqlBindBlobFuzzTest(stmtHandle, provider);
 
     {
@@ -118,10 +117,8 @@ void RdbRdUtilsFuzzer(FuzzedDataProvider &provider)
         RdUtils::RdSqlBindFloatVector(stmtHandle, idx, ftVec, 1, nullptr);
     }
 
-    {
-        uint32_t flags = provider.ConsumeIntegral<uint32_t>();
-        RdUtils::RdDbClose(dbHandle, flags);
-    }
+    uint32_t flags = provider.ConsumeIntegral<uint32_t>();
+    RdUtils::RdDbClose(dbHandle, flags);
 }
 } // namespace OHOS
 

@@ -21,7 +21,6 @@ ohos_fuzztest("RelationalStoreCAPIFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [
-    "${kvstore_path}/common",
     "${relational_store_base_path}/interfaces/ndk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/appdatafwk/include",
