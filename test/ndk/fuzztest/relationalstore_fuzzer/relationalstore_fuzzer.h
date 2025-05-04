@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
-#define TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
+#ifndef RELATIONALSTORE_FUZZER_H
+#define RELATIONALSTORE_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "transfergrdtypetocoltype_fuzzer"
+#define FUZZ_PROJECT_NAME "relationalstore_fuzzer"
 
-#endif // TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
+#endif // RELATIONALSTORE_FUZZER_H

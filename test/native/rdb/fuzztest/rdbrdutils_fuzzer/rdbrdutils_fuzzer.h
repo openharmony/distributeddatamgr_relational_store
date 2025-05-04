@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
-#define TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
+#ifndef RDBRDUTILS_FUZZER_H
+#define RDBRDUTILS_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "transfergrdtypetocoltype_fuzzer"
+#define FUZZ_PROJECT_NAME "rdutils_fuzzer"
 
-#endif // TRANSFERGRDTYPETOCOLTYPE_FUZZER_H
+#endif // RDBRDUTILS_FUZZER_H
