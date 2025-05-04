@@ -73,7 +73,7 @@ void OHValuePutUnlimitedIntFuzzTest(FuzzedDataProvider &provider, OH_Data_Value 
     OH_Value_PutUnlimitedInt(value, sign, trueForm.data(), unlimitedIntSize);
 }
 
-DataValuePutFuzzTest(FuzzedDataProvider &provider, OH_Data_Value *value)
+void DataValuePutFuzzTest(FuzzedDataProvider &provider, OH_Data_Value *value)
 {
     if (value == nullptr) {
         return;
@@ -203,7 +203,7 @@ void DataValueGetFuzzTestPartOne(OH_Data_Value *value)
     }
 
     // Test OH_Value_GetAssets
-    OHValueGetAssetsFuzzTest(provider, value);
+    OHValueGetAssetsFuzzTest(value);
 
     // Test OH_Value_GetFloatVectorCount
     {
@@ -212,7 +212,7 @@ void DataValueGetFuzzTestPartOne(OH_Data_Value *value)
     }
 }
 
-DataValueGetFuzzTestPartTwo(OH_Data_Value *value)
+void DataValueGetFuzzTestPartTwo(OH_Data_Value *value)
 {
     if (value == nullptr) {
         return;
@@ -257,7 +257,7 @@ void DataValueFuzzTest(FuzzedDataProvider &provider)
     if (value == nullptr) {
         return;
     }
-    DataValuePutFuzzTest(value, provider);
+    DataValuePutFuzzTest(provider, value);
     DataValueGetFuzzTestPartOne(value);
     DataValueGetFuzzTestPartTwo(value);
     // Destroy the OH_Data_Value instance

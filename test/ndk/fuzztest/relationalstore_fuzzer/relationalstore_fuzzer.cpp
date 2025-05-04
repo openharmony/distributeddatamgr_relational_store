@@ -45,11 +45,13 @@ struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
     int dbType = provider.ConsumeIntegral<int>();
     OH_Rdb_SetDbType(configV2, dbType);
 
-    Rdb_Tokenizer tokenizer = provider.ConsumeEnum<Rdb_Tokenizer>();
+    Rdb_Tokenizer tokenizer =
+        static_cast<Rdb_Tokenizer>(provider.ConsumeIntegralInRange<int>(RDB_NONE_TOKENIZER, RDB_CUSTOM_TOKENIZER));
     bool isSupported = false;
     OH_Rdb_IsTokenizerSupported(tokenizer, &isSupported);
     {
-        Rdb_Tokenizer tokenizer = provider.ConsumeEnum<Rdb_Tokenizer>();
+        Rdb_Tokenizer tokenizer =
+            static_cast<Rdb_Tokenizer>(provider.ConsumeIntegralInRange<int>(RDB_NONE_TOKENIZER, RDB_CUSTOM_TOKENIZER));
         OH_Rdb_SetTokenizer(configV2, tokenizer);
     }
     bool isPersistent = provider.ConsumeBool();
@@ -119,7 +121,8 @@ void RelationalStoreCAPIFuzzTest(FuzzedDataProvider &provider)
     OH_VBuckets_PutRow(list, valueBucket);
     {
         std::string table = provider.ConsumeRandomLengthString();
-        Rdb_ConflictResolution resolution = provider.ConsumeEnum<Rdb_ConflictResolution>();
+        Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
+            provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
         int64_t changes = 0;
         OH_Rdb_BatchInsert(OHRdbStore, table.c_str(), list, resolution, &changes);
     }

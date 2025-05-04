@@ -82,8 +82,8 @@ void RdbStoreImplFuzz(const uint8_t *data, size_t size)
     distributedConfig.asyncDownloadAsset = provider.ConsumeBool();
     distributedConfig.enableCloud = provider.ConsumeBool();
 
-    DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE type =
-        provider.ConsumeEnum<DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE>();
+    DistributedRdb::DistributedTableType type = static_cast<DistributedRdb::DistributedTableType>(
+        provider.ConsumeIntegralInRange<int>(DistributedRdb::DISTRIBUTED_DEVICE, DistributedRdb::DISTRIBUTED_SEARCH));
     store->SetDistributedTables(tables, type, distributedConfig);
 }
 } // namespace OHOS
