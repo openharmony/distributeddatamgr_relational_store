@@ -37,8 +37,8 @@ OH_Rdb_Config *CreateRandomConfig(FuzzedDataProvider &provider)
     config->bundleName = strdup(provider.ConsumeRandomLengthString().c_str());
     config->moduleName = strdup(provider.ConsumeRandomLengthString().c_str());
     config->isEncrypt = provider.ConsumeBool();
-    config->securityLevel = static_cast<int>(provider.ConsumeEnum<OH_Rdb_SecurityLevel>());
-    config->area = static_cast<int>(provider.ConsumeEnum<Rdb_SecurityArea>());
+    config->securityLevel = provider.ConsumeIntegralInRange<int>(S1, S4);
+    config->area = provider.ConsumeIntegralInRange<int>(RDB_SECURITY_AREA_EL1, RDB_SECURITY_AREA_EL5);
     return config;
 }
 
@@ -84,13 +84,13 @@ OH_Rdb_ConfigV2 *CreateRandomConfigV2(FuzzedDataProvider &provider)
     int dbType = provider.ConsumeIntegral<int>();
     OH_Rdb_SetDbType(configV2, dbType);
 
-    Rdb_Tokenizer tokenizer = provider.ConsumeEnum<Rdb_Tokenizer>();
+    Rdb_Tokenizer tokenizer =
+        static_cast<Rdb_Tokenizer>(provider.ConsumeIntegralInRange<int>(RDB_NONE_TOKENIZER, RDB_CUSTOM_TOKENIZER));
     bool isSupported = false;
     OH_Rdb_IsTokenizerSupported(tokenizer, &isSupported);
-    if (isSupported) {
-    }
     {
-        Rdb_Tokenizer tokenizer = provider.ConsumeEnum<Rdb_Tokenizer>();
+        Rdb_Tokenizer tokenizer =
+            static_cast<Rdb_Tokenizer>(provider.ConsumeIntegralInRange<int>(RDB_NONE_TOKENIZER, RDB_CUSTOM_TOKENIZER));
         OH_Rdb_SetTokenizer(configV2, tokenizer);
     }
     bool isPersistent = provider.ConsumeBool();
@@ -143,7 +143,8 @@ OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
 OH_RDB_TransOptions *CreateRandomTransOptions(FuzzedDataProvider &provider)
 {
     OH_RDB_TransOptions *options = OH_RdbTrans_CreateOptions();
-    OH_RDB_TransType type = provider.ConsumeIntegralInRange<OH_RDB_TransType>();
+    OH_RDB_TransType type =
+        static_cast<OH_RDB_TransType>(provider.ConsumeIntegralInRange<int>(RDB_TRANS_DEFERRED, RDB_TRANS_BUTT));
     OH_RdbTransOption_SetType(options, type);
     return options;
 }
@@ -265,7 +266,8 @@ void OHRdbBatchInsertFuzzTest(FuzzedDataProvider &provider)
             OH_VBuckets_PutRow(list, CreateRandomVBucket(provider));
         }
         int64_t changes;
-        Rdb_ConflictResolution resolution = provider.ConsumeEnum<Rdb_ConflictResolution>();
+        Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
+            provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
         OH_Rdb_BatchInsert(store, table.c_str(), list, resolution, &changes);
         OH_VBuckets_Destroy(list);
         OH_Rdb_CloseStore(store);
@@ -365,7 +367,8 @@ void OHRdbUnsubscribeFuzzTest(FuzzedDataProvider &provider)
     int errCode;
     OH_Rdb_Store *store = OH_Rdb_GetOrOpen(config, &errCode);
     if (store != nullptr) {
-        Rdb_SubscribeType type = provider.ConsumeEnum<Rdb_SubscribeType>();
+        Rdb_SubscribeType type = static_cast<Rdb_SubscribeType>(
+            provider.ConsumeIntegralInRange<int>(RDB_SUBSCRIBE_TYPE_CLOUD, RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS));
         Rdb_DataObserver *observer = nullptr; // Simplified for fuzzing
         OH_Rdb_Unsubscribe(store, type, observer);
         OH_Rdb_CloseStore(store);
