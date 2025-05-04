@@ -221,6 +221,10 @@ void DataValueGetFuzzTestPartTwo(OH_Data_Value *value)
     {
         size_t floatVectorSize;
         OH_Value_GetFloatVectorCount(value, &floatVectorSize);
+        const size_t maxMallocSize = 100;
+        if (floatVectorSize > maxMallocSize) {
+            floatVectorSize = maxMallocSize;
+        }
         float *floatVector = (float *)malloc(floatVectorSize * sizeof(float));
         if (floatVector == nullptr) {
             return;
@@ -240,12 +244,16 @@ void DataValueGetFuzzTestPartTwo(OH_Data_Value *value)
     {
         size_t unlimitedIntSize;
         OH_Value_GetUnlimitedIntBand(value, &unlimitedIntSize);
-        int sign;
+        const size_t maxMallocSize = 100;
+        if (unlimitedIntSize > maxMallocSize) {
+            unlimitedIntSize = maxMallocSize;
+        }
         uint64_t *trueForm = (uint64_t *)malloc(unlimitedIntSize * sizeof(uint64_t));
         if (trueForm == nullptr) {
             return;
         }
         size_t unlimitedIntOutLen;
+        int sign;
         OH_Value_GetUnlimitedInt(value, &sign, trueForm, unlimitedIntSize, &unlimitedIntOutLen);
         free(trueForm);
     }
