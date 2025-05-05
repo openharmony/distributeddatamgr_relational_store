@@ -28,6 +28,9 @@ using namespace OHOS::RdbNdk;
 struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
 {
     struct OH_Rdb_ConfigV2 *configV2 = OH_Rdb_CreateConfig();
+    if (configV2 == nullptr) {
+        return nullptr;
+    }
     std::string databaseDir = provider.ConsumeRandomLengthString();
     OH_Rdb_SetDatabaseDir(configV2, databaseDir.c_str());
     std::string storeName = provider.ConsumeRandomLengthString();
