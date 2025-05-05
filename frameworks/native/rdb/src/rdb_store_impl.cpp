@@ -2279,7 +2279,8 @@ int RdbStoreImpl::Commit()
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
         LOG_WARN("id: %{public}zu, storeName: %{public}s, sql: %{public}s", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), sqlStr.c_str());
+            SqliteUtils::Anonymous(name_).c_str(),
+            SqliteUtils::Anonymous(sqlStr).c_str());
         pool->GetTransactionStack().pop();
         return E_OK;
     }

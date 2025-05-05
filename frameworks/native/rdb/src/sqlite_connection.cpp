@@ -273,7 +273,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
                     SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
-                    sql);
+                    SqliteUtils::Anonymous(sql).c_str());
                 Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
             }
         }

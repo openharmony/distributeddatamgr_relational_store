@@ -344,7 +344,8 @@ int32_t RdConnection::Restore(
 
     if (ret != E_OK) {
         LOG_ERROR("Restore failed, original datapath:%{public}s, restorepath:%{public}s, errcode:%{public}d",
-            config_.GetPath().c_str(), databasePath.c_str(), ret);
+            SqliteUtils::Anonymous(config_.GetPath()).c_str(),
+            SqliteUtils::Anonymous(databasePath).c_str(), ret);
         return ret;
     }
 
