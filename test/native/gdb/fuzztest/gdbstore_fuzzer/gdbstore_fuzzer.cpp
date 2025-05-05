@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "gdbstore_fuzzer.h"
+
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "gdb_helper.h"
 
@@ -32,24 +33,24 @@ std::shared_ptr<DBStore> GetStore()
     return store;
 }
 
-void GdbQueryFuzz(const uint8_t *data, size_t size)
+void GdbQueryFuzz(FuzzedDataProvider &provider)
 {
-    std::string gql(data, data + size);
     auto store = GetStore();
     if (store == nullptr) {
         return;
     }
+    std::string gql = provider.ConsumeRandomLengthString();
     store->QueryGql(gql);
     GDBHelper::DeleteDBStore(config_);
 }
 
-void GdbExecuteFuzz(const uint8_t *data, size_t size)
+void GdbExecuteFuzz(FuzzedDataProvider &provider)
 {
-    std::string gql(data, data + size);
     auto store = GetStore();
     if (store == nullptr) {
         return;
     }
+    std::string gql = provider.ConsumeRandomLengthString();
     store->ExecuteGql(gql);
     GDBHelper::DeleteDBStore(config_);
 }
@@ -59,10 +60,8 @@ void GdbExecuteFuzz(const uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-    OHOS::GdbQueryFuzz(data, size);
-    OHOS::GdbExecuteFuzz(data, size);
+    FuzzedDataProvider provider(data, size);
+    OHOS::GdbQueryFuzz(provider);
+    OHOS::GdbExecuteFuzz(provider);
     return 0;
 }

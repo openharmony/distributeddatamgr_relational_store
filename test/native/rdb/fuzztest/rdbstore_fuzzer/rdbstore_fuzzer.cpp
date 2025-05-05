@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "rdbstore_fuzzer.h"
 
@@ -23,14 +24,19 @@
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
+static const int MIN_BLOB_SIZE = 1;
+static const int MAX_BLOB_SIZE = 200;
+static const int MIN_ROWS_SIZE = 1;
+static const int MAX_ROWS_SIZE = 50;
+
 namespace OHOS {
 class RdbStoreFuzzTest {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
 
-    static bool InsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size);
-    static bool BatchInsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size);
+    static bool InsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider);
+    static bool BatchInsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider);
 
     static std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
@@ -77,35 +83,37 @@ void RdbStoreFuzzTest::TearDownTestCase(void)
     }
 }
 
-bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size)
+bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider)
 {
-    if (data == nullptr || store == nullptr) {
+    if (store == nullptr) {
         return false;
     }
+    
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string valName = provider.ConsumeRandomLengthString();
+    int valAge = provider.ConsumeIntegral<int>();
+    double valSalary = provider.ConsumeFloatingPoint<double>();
 
-    int64_t id;
     ValuesBucket values;
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
-
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
 
+    size_t blobSize = provider.ConsumeIntegralInRange<size_t>(MIN_BLOB_SIZE, MAX_BLOB_SIZE);
+    std::vector<uint8_t> blobData = provider.ConsumeBytes<uint8_t>(blobSize);
+    values.PutBlob("blobType", blobData);
+
+    int64_t id;
     return store->Insert(id, tableName, values);
 }
 
-bool RdbInsertFuzz(const uint8_t *data, size_t size)
+bool RdbInsertFuzz(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
     bool result = true;
-    if (!RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size)) {
+    if (!RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider)) {
         result = false;
     }
 
@@ -113,36 +121,42 @@ bool RdbInsertFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
-bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> store, const uint8_t *data, size_t size)
+bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider)
 {
-    if (data == nullptr || store == nullptr) {
+    if (store == nullptr) {
         return false;
     }
+    
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string valName = provider.ConsumeRandomLengthString();
+    int valAge = provider.ConsumeIntegral<int>();
+    double valSalary = provider.ConsumeFloatingPoint<double>();
 
     ValuesBuckets rows;
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(size);
-    double valSalary = static_cast<double>(size);
     ValuesBucket value;
     value.PutString("name", valName);
     value.PutInt("age", valAge);
     value.PutDouble("salary", valSalary);
-    value.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
-    for (auto i = 0; i < static_cast<uint32_t>(data[0]); i++) {
+
+    size_t blobSize = provider.ConsumeIntegralInRange<size_t>(MIN_BLOB_SIZE, MAX_BLOB_SIZE);
+    std::vector<uint8_t> blobData = provider.ConsumeBytes<uint8_t>(blobSize);
+    value.PutBlob("blobType", blobData);
+
+    uint32_t loopTimes = provider.ConsumeIntegralInRange<uint32_t>(MIN_ROWS_SIZE, MAX_ROWS_SIZE);
+    for (uint32_t i = 0; i < loopTimes; i++) {
         rows.Put(value);
     }
     auto [code, num] = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     return code == E_OK;
 }
 
-bool RdbBatchInsertFuzz(const uint8_t *data, size_t size)
+bool RdbBatchInsertFuzz(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
     bool result = true;
-    if (!RdbStoreFuzzTest::BatchInsertData(RdbStoreFuzzTest::store_, data, size)) {
+    if (!RdbStoreFuzzTest::BatchInsertData(RdbStoreFuzzTest::store_, provider)) {
         result = false;
     }
 
@@ -150,20 +164,21 @@ bool RdbBatchInsertFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
-bool RdbDeleteFuzz(const uint8_t *data, size_t size)
+bool RdbDeleteFuzz(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
     bool result = true;
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         result = false;
     }
+    
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string whereClause = provider.ConsumeRandomLengthString();
 
     int deletedRows;
-    std::string tableName(data, data + size);
-    std::string whereClause(data, data + size);
     errCode = RdbStoreFuzzTest::store_->Delete(deletedRows, tableName, whereClause);
     if (errCode != E_OK) {
         result = false;
@@ -173,29 +188,32 @@ bool RdbDeleteFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
-bool RdbUpdateFuzz(const uint8_t *data, size_t size)
+bool RdbUpdateFuzz(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
     bool result = true;
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         result = false;
     }
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string whereClause = provider.ConsumeRandomLengthString();
+    int valAge = provider.ConsumeIntegral<int>();
+    double valSalary = provider.ConsumeFloatingPoint<double>();
 
     int changedRows;
     ValuesBucket values;
-    std::string valName(data, data + size);
-    int valAge = static_cast<int>(*data);
-    double valSalary = static_cast<double>(*data);
-    std::string whereClause(data, data + size);
-    std::string tableName(data, data + size);
-
     values.PutString("name", valName);
     values.PutInt("age", valAge);
     values.PutDouble("salary", valSalary);
-    values.PutBlob("blobType", std::vector<uint8_t>(data, data + size));
+
+    size_t blobSize = provider.ConsumeIntegralInRange<size_t>(MIN_BLOB_SIZE, MAX_BLOB_SIZE);
+    std::vector<uint8_t> blobData = provider.ConsumeBytes<uint8_t>(blobSize);
+    values.PutBlob("blobType", blobData);
 
     errCode = RdbStoreFuzzTest::store_->Update(
         changedRows, tableName, values, whereClause, std::vector<std::string>{ valName });
@@ -206,19 +224,19 @@ bool RdbUpdateFuzz(const uint8_t *data, size_t size)
     return result;
 }
 
-int RdbDoLockRowFuzz(const uint8_t *data, size_t size, bool isLock)
+int RdbDoLockRowFuzz(FuzzedDataProvider &provider, bool isLock)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return false;
     }
     bool result = true;
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         result = false;
     }
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
     AbsRdbPredicates predicates(tableName);
     predicates.EqualTo("name", ValueObject(valName));
     errCode = RdbStoreFuzzTest::store_->ModifyLockStatus(predicates, isLock);
@@ -230,14 +248,14 @@ int RdbDoLockRowFuzz(const uint8_t *data, size_t size, bool isLock)
     return result;
 }
 
-bool RdbLockRowFuzz(const uint8_t *data, size_t size)
+bool RdbLockRowFuzz(FuzzedDataProvider &provider)
 {
-    return RdbDoLockRowFuzz(data, size, true);
+    return RdbDoLockRowFuzz(provider, true);
 }
 
-bool RdbUnlockRowFuzz(const uint8_t *data, size_t size)
+bool RdbUnlockRowFuzz(FuzzedDataProvider &provider)
 {
-    return RdbDoLockRowFuzz(data, size, false);
+    return RdbDoLockRowFuzz(provider, false);
 }
 
 void RdbSetLockedRowPredicates(AbsRdbPredicates &predicates)
@@ -250,19 +268,19 @@ void RdbSetLockedRowPredicates(AbsRdbPredicates &predicates)
     predicates.EndWrap();
 }
 
-void RdbQueryLockedRowFuzz1(const uint8_t *data, size_t size)
+void RdbQueryLockedRowFuzz1(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         return;
     }
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    std::string vectorElem(data, data + size);
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string vectorElem = provider.ConsumeRandomLengthString();
     AbsRdbPredicates predicates(tableName);
     RdbSetLockedRowPredicates(predicates);
     predicates.EqualTo("name", ValueObject(valName));
@@ -294,22 +312,22 @@ void RdbQueryLockedRowFuzz1(const uint8_t *data, size_t size)
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
-void RdbQueryLockedRowFuzz2(const uint8_t *data, size_t size)
+void RdbQueryLockedRowFuzz2(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         return;
     }
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    ValueObject valAge(std::string(data, data + size));
-    ValueObject valAgeChange(std::string(data, data + size));
-    std::vector<std::string> bindaArgs({ std::string(data, data + size) });
-    std::vector<ValueObject> vectorElem({ std::string(data, data + size) });
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    ValueObject valAge(provider.ConsumeIntegral<int>());
+    ValueObject valAgeChange(provider.ConsumeIntegral<int>());
+    std::vector<std::string> bindaArgs({ provider.ConsumeRandomLengthString() });
+    std::vector<ValueObject> vectorElem({ provider.ConsumeRandomLengthString() });
     AbsRdbPredicates predicates(tableName);
     RdbSetLockedRowPredicates(predicates);
     predicates.Between("age", valAge, valAgeChange);
@@ -345,19 +363,19 @@ void RdbQueryLockedRowFuzz2(const uint8_t *data, size_t size)
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
-void RdbQueryFuzz1(const uint8_t *data, size_t size)
+void RdbQueryFuzz1(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         return;
     }
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    std::string vectorElem(data, data + size);
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string vectorElem = provider.ConsumeRandomLengthString();
     AbsRdbPredicates predicates(tableName);
 
     predicates.EqualTo("name", ValueObject(valName));
@@ -397,22 +415,22 @@ void RdbQueryFuzz1(const uint8_t *data, size_t size)
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
-void RdbQueryFuzz2(const uint8_t *data, size_t size)
+void RdbQueryFuzz2(FuzzedDataProvider &provider)
 {
-    if (data == nullptr || RdbStoreFuzzTest::store_ == nullptr) {
+    if (RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, data, size);
+    int errCode = RdbStoreFuzzTest::InsertData(RdbStoreFuzzTest::store_, provider);
     if (errCode != E_OK) {
         return;
     }
-
-    std::string tableName(data, data + size);
-    std::string valName(data, data + size);
-    ValueObject valAge(std::string(data, data + size));
-    ValueObject valAgeChange(std::string(data, data + size));
-    std::vector<std::string> bindaArgs({ std::string(data, data + size) });
-    std::vector<ValueObject> vectorElem({ std::string(data, data + size) });
+    
+    std::string valName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    ValueObject valAge(provider.ConsumeIntegral<int>());
+    ValueObject valAgeChange(provider.ConsumeIntegral<int>());
+    std::vector<std::string> bindaArgs({ provider.ConsumeRandomLengthString() });
+    std::vector<ValueObject> vectorElem({ provider.ConsumeRandomLengthString() });
 
     AbsRdbPredicates predicates(tableName);
 
@@ -449,33 +467,23 @@ void RdbQueryFuzz2(const uint8_t *data, size_t size)
     RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
-
-void RdbCleanLogFuzz(const uint8_t *data, size_t size)
-{
-    if (data == nullptr) {
-        return;
-    }
-    std::string tableName(data, data + size);
-    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
-    store->CleanDirtyLog(tableName, 0);
-}
 } // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
+    FuzzedDataProvider provider(data, size);
     OHOS::RdbStoreFuzzTest::SetUpTestCase();
-    OHOS::RdbInsertFuzz(data, size);
-    OHOS::RdbDeleteFuzz(data, size);
-    OHOS::RdbUpdateFuzz(data, size);
-    OHOS::RdbQueryFuzz1(data, size);
-    OHOS::RdbQueryFuzz2(data, size);
-    OHOS::RdbLockRowFuzz(data, size);
-    OHOS::RdbUnlockRowFuzz(data, size);
-    OHOS::RdbQueryLockedRowFuzz1(data, size);
-    OHOS::RdbQueryLockedRowFuzz2(data, size);
-    OHOS::RdbCleanLogFuzz(data, size);
+    OHOS::RdbInsertFuzz(provider);
+    OHOS::RdbDeleteFuzz(provider);
+    OHOS::RdbUpdateFuzz(provider);
+    OHOS::RdbQueryFuzz1(provider);
+    OHOS::RdbQueryFuzz2(provider);
+    OHOS::RdbLockRowFuzz(provider);
+    OHOS::RdbUnlockRowFuzz(provider);
+    OHOS::RdbQueryLockedRowFuzz1(provider);
+    OHOS::RdbQueryLockedRowFuzz2(provider);
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }
