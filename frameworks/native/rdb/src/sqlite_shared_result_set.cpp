@@ -64,8 +64,8 @@ SqliteSharedResultSet::SqliteSharedResultSet(
         int64_t countCost = duration_cast<milliseconds>(endTime - countBegin).count();
         LOG_WARN("total[%{public}" PRId64 "]<%{public}" PRId64 ",%{public}" PRId64 ",%{public}" PRId64
                  "> rowCount[%{public}d] sql[%{public}s] path[%{public}s]",
-            totalCost, acquireCost, prepareCost, countCost, rowCount_, qrySql_.c_str(),
-            SqliteUtils::Anonymous(path).c_str());
+            totalCost, acquireCost, prepareCost, countCost, rowCount_,
+            SqliteUtils::Anonymous(qrySql_).c_str(), SqliteUtils::Anonymous(path).c_str());
     }
 }
 
@@ -84,7 +84,7 @@ std::pair<std::shared_ptr<Statement>, int> SqliteSharedResultSet::PrepareStep()
 
     auto type = SqliteUtils::GetSqlStatementType(qrySql_);
     if (type == SqliteUtils::STATEMENT_ERROR) {
-        LOG_ERROR("invalid sql_ %{public}s!", qrySql_.c_str());
+        LOG_ERROR("invalid sql_ %{public}s!", SqliteUtils::Anonymous(qrySql_).c_str());
         lastErr_ = E_INVALID_ARGS;
         return { nullptr, E_INVALID_ARGS };
     }
@@ -117,8 +117,8 @@ SqliteSharedResultSet::~SqliteSharedResultSet() {}
 std::pair<int, std::vector<std::string>> SqliteSharedResultSet::GetColumnNames()
 {
     if (isClosed_) {
-        LOG_ERROR(
-            "fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, qrySql_.c_str());
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
+            E_ALREADY_CLOSED, SqliteUtils::Anonymous(qrySql_).c_str());
         return { E_ALREADY_CLOSED, {} };
     }
 
@@ -155,8 +155,8 @@ int SqliteSharedResultSet::Close()
 int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
 {
     if (isClosed_) {
-        LOG_ERROR(
-            "fail, result set has been closed, ret %{public}d, sql %{public}s", E_ALREADY_CLOSED, qrySql_.c_str());
+        LOG_ERROR("fail, result set has been closed, ret %{public}d, sql %{public}s",
+            E_ALREADY_CLOSED, SqliteUtils::Anonymous(qrySql_).c_str());
         return E_ALREADY_CLOSED;
     }
     auto sharedBlock = GetBlock();
