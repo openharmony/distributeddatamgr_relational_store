@@ -289,9 +289,9 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
         if (stat(dbPath.c_str(), &st) == 0) {
             LOG_ERROR(
                 "fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d, stat:[%{public}" PRIu64
-                ",%{public}d,%{public}d,%{public}o]",
+                ",%{public}d,%{public}d,%{public}s]",
                 errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno, st.st_ino, st.st_uid, st.st_gid,
-                st.st_mode);
+                SqliteUtils::StModeToString(st.st_mode).c_str());
         } else {
             LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
                 errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
