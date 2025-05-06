@@ -28,6 +28,9 @@ using namespace OHOS::RdbNdk;
 struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
 {
     struct OH_Rdb_ConfigV2 *configV2 = OH_Rdb_CreateConfig();
+    if (configV2 == nullptr) {
+        return nullptr;
+    }
     std::string databaseDir = provider.ConsumeRandomLengthString();
     OH_Rdb_SetDatabaseDir(configV2, databaseDir.c_str());
     std::string storeName = provider.ConsumeRandomLengthString();
@@ -64,6 +67,9 @@ struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
 OH_VObject *CreateOHVObject(FuzzedDataProvider &provider)
 {
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    if (valueObject == nullptr) {
+        return nullptr;
+    }
     std::string value = provider.ConsumeRandomLengthString();
     valueObject->putText(valueObject, value.c_str());
     return valueObject;
@@ -72,6 +78,9 @@ OH_VObject *CreateOHVObject(FuzzedDataProvider &provider)
 OH_VBucket *CreateOHVBucket(FuzzedDataProvider &provider)
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    if (valueBucket == nullptr) {
+        return nullptr;
+    }
     {
         std::string key = provider.ConsumeRandomLengthString();
         int64_t value = provider.ConsumeIntegral<int64_t>();
@@ -101,15 +110,27 @@ OH_VBucket *CreateOHVBucket(FuzzedDataProvider &provider)
 void RelationalStoreCAPIFuzzTest(FuzzedDataProvider &provider)
 {
     struct OH_Rdb_ConfigV2 *configV2 = CreateOHRdbConfigV2(provider);
+    if (configV2 == nullptr) {
+        return;
+    }
     OH_VObject *valueObject = CreateOHVObject(provider);
+    if (valueObject == nullptr) {
+        return;
+    }
     std::string table = provider.ConsumeRandomLengthString();
     OH_Predicates *predicates = OH_Rdb_CreatePredicates(table.c_str());
+    if (predicates == nullptr) {
+        return;
+    }
     {
         std::string value = provider.ConsumeRandomLengthString();
         predicates->equalTo(predicates, value.c_str(), valueObject);
     }
 
     OH_VBucket *valueBucket = CreateOHVBucket(provider);
+    if (valueBucket == nullptr) {
+        return;
+    }
 
     int errCode = 0;
     static OH_Rdb_Store *OHRdbStore = OH_Rdb_CreateOrOpen(configV2, &errCode);
@@ -127,6 +148,9 @@ void RelationalStoreCAPIFuzzTest(FuzzedDataProvider &provider)
         OH_Rdb_BatchInsert(OHRdbStore, table.c_str(), list, resolution, &changes);
     }
     OH_Rdb_Update(OHRdbStore, valueBucket, predicates);
+    valueBucket->destroy(valueBucket);
+    predicates->destroy(predicates);
+    valueObject->destroy(valueObject);
     OH_VBuckets_Destroy(list);
     OH_Rdb_CloseStore(OHRdbStore);
     OH_Rdb_DeleteStoreV2(configV2);
