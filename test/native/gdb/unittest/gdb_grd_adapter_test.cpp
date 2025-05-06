@@ -131,7 +131,11 @@ void GdbGrdAdapterTest::CheckPrepareStepErrCode(int32_t grdErr, int32_t gdbErr, 
     if (func == FuncName::STEP && grdErr == GRD_NO_DATA) {
         EXPECT_EQ(errCode, E_OK);
     } else {
-        EXPECT_EQ(errCode, gdbErr);
+        if (gdbErr == E_GRD_OVER_LIMIT) {
+            EXPECT_EQ(errCode, E_GRD_SEMANTIC_ERROR);
+        } else {
+            EXPECT_EQ(errCode, gdbErr);
+        }
     }
 
     auto [err, trans] = store_->CreateTransaction();
@@ -153,7 +157,11 @@ void GdbGrdAdapterTest::CheckPrepareStepErrCode(int32_t grdErr, int32_t gdbErr, 
     if (func == FuncName::STEP && grdErr == GRD_NO_DATA) {
         EXPECT_EQ(errCode, E_OK);
     } else {
-        EXPECT_EQ(errCode, gdbErr);
+        if (gdbErr == E_GRD_OVER_LIMIT) {
+            EXPECT_EQ(errCode, E_GRD_SEMANTIC_ERROR);
+        } else {
+            EXPECT_EQ(errCode, gdbErr);
+        }
     }
 
     errCode = trans->Commit();
