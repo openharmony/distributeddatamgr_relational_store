@@ -42,12 +42,18 @@ std::pair<int32_t, std::shared_ptr<Result>> TransDB::QueryGql(const std::string 
 
     auto [errCode, statement] = GetStatement(gql);
     if (errCode != E_OK || statement == nullptr) {
+        if (errCode == E_GRD_OVER_LIMIT) {
+            errCode = E_GRD_SEMANTIC_ERROR;
+        }
         return { errCode, std::make_shared<FullResult>() };
     }
 
     auto result = std::make_shared<FullResult>();
     errCode = result->InitData(statement);
     if (errCode != E_OK) {
+        if (errCode == E_GRD_OVER_LIMIT) {
+            errCode = E_GRD_SEMANTIC_ERROR;
+        }
         LOG_ERROR("Get FullResult failed, errCode=%{public}d", errCode);
         return { errCode, std::make_shared<FullResult>() };
     }
