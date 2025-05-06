@@ -64,9 +64,9 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
         if (stat(databaseDirectory.c_str(), &stats[cur]) != 0) {
             if (MkDir(databaseDirectory)) {
                 LOG_ERROR("failed to mkdir errno:%{public}d %{public}s prev:[%{public}" PRIu64
-                          ",%{public}d,%{public}d,%{public}o]",
+                          ",%{public}d,%{public}d,%{public}s]",
                     errno, SqliteUtils::Anonymous(databaseDirectory).c_str(), stats[prev].st_ino, stats[prev].st_uid,
-                    stats[prev].st_gid, stats[prev].st_mode);
+                    stats[prev].st_gid, SqliteUtils::StModeToString(stats[prev].st_mode).c_str());
                 RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
                     "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
                         "ino:" + std::to_string(stats[prev].st_ino) + "uid:" + std::to_string(stats[prev].st_uid) +
