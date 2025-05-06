@@ -621,4 +621,10 @@ int RdbStore::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unu
 {
     return E_NOT_SUPPORT;
 }
+
+int RdbStore::ConfigLocale(const std::string &localeStr)
+{
+    (void)localeStr;
+    return E_NOT_SUPPORT;
+}
 } // namespace OHOS::NativeRdb
