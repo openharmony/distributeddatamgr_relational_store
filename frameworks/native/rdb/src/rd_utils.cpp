@@ -300,7 +300,7 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (GRD_KVApiInfo.DBSqlBindText == nullptr) {
         return E_NOT_SUPPORT;
     }
-    if (len <= 0) {
+    if (len < 0) {
         LOG_ERROR("Invalid len %{public}d", len);
         return E_INVALID_ARGS;
     }
