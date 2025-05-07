@@ -35,6 +35,7 @@ __attribute__((used))
 const int32_t RdConnection::regRepairer_ = Connection::RegisterRepairer(DB_VECTOR, RdConnection::Repair);
 __attribute__((used))
 const int32_t RdConnection::regDeleter_ = Connection::RegisterDeleter(DB_VECTOR, RdConnection::Delete);
+constexpr int CONFIG_SIZE_EXCEPT_ENCRYPT = 167;  // When modifying config, this item needs to be modified
 
 std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
@@ -140,12 +141,13 @@ std::string RdConnection::GetConfigStr(const std::vector<uint8_t> &keys, bool is
     std::string config = "{";
     if (isEncrypt) {
         const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
+        config.reserve(CONFIG_SIZE_EXCEPT_ENCRYPT + keyBuffSize);
         char keyBuff[keyBuffSize];
         config += "\"isEncrypted\":1,";
         config += "\"hexPassword\":\"";
         config += RdUtils::GetEncryptKey(keys, keyBuff, keyBuffSize);
         config += "\",";
-        (void)memset_s(keyBuff, keyBuffSize, 0, keyBuffSize);
+        std::fill(keyBuff, keyBuff + keyBuffSize, 0);
     }
     config += RdConnection::GRD_OPEN_CONFIG_STR;
     config += "}";
