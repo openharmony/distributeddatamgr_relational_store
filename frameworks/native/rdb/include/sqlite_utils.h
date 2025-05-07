@@ -92,6 +92,7 @@ public:
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
     static std::string StModeToString(mode_t st_mode);
+    static std::string GetParentModes(const std::string &path);
 
 private:
     struct SqlType {

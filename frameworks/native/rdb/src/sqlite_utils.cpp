@@ -42,7 +42,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
+namespace fs = std::filesystem;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -53,6 +53,7 @@ constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t DISPLAY_BYTE = 2;
 constexpr int32_t PREFIX_LENGTH = 3;
 constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
+constexpr int PATH_DEPTH = 3;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -586,10 +587,49 @@ std::string SqliteUtils::FormatDfxInfo(const DfxInfo &dfxInfo)
 
 std::string SqliteUtils::StModeToString(mode_t st_mode)
 {
-    mode_t permissions = st_mode & 0777;
     std::ostringstream oss;
-    oss << "mode:" << std::oct << permissions;
+
+    oss << "mode:";
+    if (S_ISDIR(st_mode))
+        oss << 'd';
+    else
+        oss << '-';
+
+    oss << std::setw(PREFIX_LENGTH) << std::setfill('0') << std::oct << (st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
+
     return oss.str();
+}
+
+std::string SqliteUtils::GetParentModes(const std::string &path)
+{
+    std::vector<std::pair<std::string, std::string>> dir_modes;
+    fs::path p(path);
+
+    for (int i = 0; i < PATH_DEPTH; ++i) {
+        p = p.parent_path();
+        if (p == p.root_path() || p.empty()) {
+            break;
+        }
+
+        std::string dir_name = p.filename().string();
+        if (dir_name.empty()) {
+            dir_name = p.root_path().string();
+            dir_name.erase(remove(dir_name.begin(), dir_name.end(), '/'), dir_name.end());
+        }
+
+        struct stat st {};
+        dir_modes.emplace_back(
+            dir_name, (stat(p.c_str(), &st) == 0) ? SqliteUtils::StModeToString(st.st_mode) : "access_fail");
+    }
+
+    std::string result;
+    for (auto it = dir_modes.rbegin(); it != dir_modes.rend(); ++it) {
+        if (!result.empty()) {
+            result += " <- ";
+        }
+        result += it->first + ":" + it->second;
+    }
+    return result.empty() ? "no_parent" : result;
 }
 } // namespace NativeRdb
 } // namespace OHOS
