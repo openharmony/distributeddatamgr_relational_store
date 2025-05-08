@@ -60,7 +60,6 @@
 #include "values_buckets.h"
 #if !defined(CROSS_PLATFORM)
 #include "raw_data_parser.h"
-#include "rdb_device_manager_adapter.h"
 #include "rdb_manager_impl.h"
 #include "relational_store_manager.h"
 #include "runtime_config.h"
@@ -498,21 +497,14 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
     if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
         return "";
     }
-    std::string uuid;
-    DeviceManagerAdaptor::RdbDeviceManagerAdaptor &deviceManager =
-        DeviceManagerAdaptor::RdbDeviceManagerAdaptor::GetInstance(syncerParam_.bundleName_);
-    errCode = deviceManager.GetEncryptedUuidByNetworkId(device, uuid);
-    if (errCode != E_OK) {
-        LOG_ERROR("GetUuid is failed.");
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (err != E_OK || service == nullptr) {
+        errCode = err;
         return "";
     }
-
-    auto translateCall = [uuid](const std::string &oriDevId, const DistributedDB::StoreInfo &info) {
-        return uuid;
-    };
-    DistributedDB::RuntimeConfig::SetTranslateToDeviceIdCallback(translateCall);
-
-    return DistributedDB::RelationalStoreManager::GetDistributedTableName(uuid, table);
+    auto tableName = service->ObtainDistributedTableName(syncerParam_, device, table);
+    errCode = tableName.empty() ? E_ERROR : E_OK;
+    return tableName;
 }
 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)

@@ -56,9 +56,18 @@ RdbServiceProxy::RdbServiceProxy(const sptr<IRemoteObject> &object)
     remote_ = Remote();
 }
 
-std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
+std::string RdbServiceProxy::ObtainDistributedTableName(
+    const RdbSyncerParam &param, const std::string &device, const std::string &table)
 {
-    return "";
+    MessageParcel reply;
+    int32_t status =
+        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_TABLE), reply, param, device, table);
+    std::string distributedTableName;
+    if (status != RDB_OK || !ITypesUtil::Unmarshal(reply, distributedTableName)) {
+        LOG_ERROR("status:%{public}d, device:%{public}s, table:%{public}s", status,
+            SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
+    }
+    return distributedTableName;
 }
 
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)

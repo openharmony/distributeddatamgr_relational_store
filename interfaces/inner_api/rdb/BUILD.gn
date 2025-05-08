@@ -74,7 +74,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
-      "${relational_store_native_path}/rdb_device_manager_adapter/include",
     ]
 
     defines = [
@@ -143,7 +142,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
     public_deps = [
@@ -156,7 +154,6 @@ if (is_ohos && !build_ohos_sdk) {
       "ability_runtime:dataobs_manager",
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
@@ -216,7 +213,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
     public_deps = [
@@ -229,7 +225,6 @@ if (is_ohos && !build_ohos_sdk) {
       "ability_runtime:dataobs_manager",
       "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
