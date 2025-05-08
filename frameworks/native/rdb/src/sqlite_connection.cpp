@@ -294,6 +294,13 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
                   " flags=%{public}d, errno=%{public}d, stat:[%{public}s]",
             errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno,
             SqliteUtils::StModeToString(st.st_mode).c_str());
+        if (errCode == E_SQLITE_CANTOPEN) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
+                "failed to openDB errno[ " + std::to_string(errno) + "]," + "ino:" + std::to_string(st.st_ino) +
+                    "uid:" + std::to_string(st.st_uid) + "gid:" + std::to_string(st.st_gid) +
+                    SqliteUtils::StModeToString(st.st_mode) + "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
+                true));
+        }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
         if (pos != std::string::npos) {
@@ -306,13 +313,6 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
 #endif
         if (errCode == SQLITE_NOTADB) {
             Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_NOT_DB, config_, "", true));
-        }
-        if (errCode == E_SQLITE_CANTOPEN) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
-                "failed to openDB errno[ " + std::to_string(errno) + "]," + "ino:" + std::to_string(st.st_ino) +
-                    "uid:" + std::to_string(st.st_uid) + "gid:" + std::to_string(st.st_gid) +
-                    SqliteUtils::StModeToString(st.st_mode) + "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
-                true));
         }
         return SQLiteError::ErrNo(errCode);
     }

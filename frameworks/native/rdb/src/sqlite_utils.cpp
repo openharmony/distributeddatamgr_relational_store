@@ -574,7 +574,8 @@ std::string SqliteUtils::FormatDebugInfoBrief(const std::map<std::string, DebugI
     std::stringstream oss;
     oss << header << ":";
     for (auto &[name, debugInfo] : debugs) {
-        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ">";
+        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ","
+            << std::oct << debugInfo.mode_ << ">";
     }
     return oss.str();
 }
@@ -602,7 +603,7 @@ std::string SqliteUtils::StModeToString(mode_t st_mode)
 
 std::string SqliteUtils::GetParentModes(const std::string &path)
 {
-    std::vector<std::pair<std::string, std::string>> dir_modes;
+    std::vector<std::pair<std::string, std::string>> dirModes;
     fs::path p(path);
 
     for (int i = 0; i < PATH_DEPTH; ++i) {
@@ -611,19 +612,20 @@ std::string SqliteUtils::GetParentModes(const std::string &path)
             break;
         }
 
-        std::string dir_name = p.filename().string();
-        if (dir_name.empty()) {
-            dir_name = p.root_path().string();
-            dir_name.erase(remove(dir_name.begin(), dir_name.end(), '/'), dir_name.end());
+        std::string dirName = p.filename().string();
+        std::string dirPath = p.string();
+        if (dirName.empty()) {
+            dirName = p.root_path().string();
+            dirName.erase(remove(dirName.begin(), dirName.end(), '/'), dirName.end());
         }
 
         struct stat st {};
-        dir_modes.emplace_back(
-            dir_name, (stat(p.c_str(), &st) == 0) ? SqliteUtils::StModeToString(st.st_mode) : "access_fail");
+        dirModes.emplace_back(
+            dirName, (stat(dirPath.c_str(), &st) == 0) ? SqliteUtils::StModeToString(st.st_mode) : "access_fail");
     }
 
     std::string result;
-    for (auto it = dir_modes.rbegin(); it != dir_modes.rend(); ++it) {
+    for (auto it = dirModes.rbegin(); it != dirModes.rend(); ++it) {
         if (!result.empty()) {
             result += " <- ";
         }
