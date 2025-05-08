@@ -38,7 +38,8 @@ public:
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 
-    virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const RdbSyncerParam &param, const std::string &device, const std::string &table) = 0;
 
     virtual int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;
