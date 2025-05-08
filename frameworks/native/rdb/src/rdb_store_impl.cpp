@@ -502,7 +502,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
         errCode = err;
         return "";
     }
-    auto tableName = service->ObtainDistributedTableName(device, table);
+    auto tableName = service->ObtainDistributedTableName(syncerParam_, device, table);
     errCode = tableName.empty() ? E_ERROR : E_OK;
     return tableName;
 }
