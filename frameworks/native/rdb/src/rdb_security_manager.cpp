@@ -252,19 +252,22 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
     LOG_INFO("begin keyPath:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-    std::vector<uint8_t> distributedInByte = { &keyData.distributed, &keyData.distributed + sizeof(uint8_t) };
-    std::vector<uint8_t> timeInByte = { reinterpret_cast<uint8_t *>(&keyData.timeValue),
-        reinterpret_cast<uint8_t *>(&keyData.timeValue) + sizeof(time_t) };
 
-    std::vector<char> secretKeyInChar;
-    secretKeyInChar.insert(secretKeyInChar.end(), distributedInByte.begin(), distributedInByte.end());
-    secretKeyInChar.insert(secretKeyInChar.end(), timeInByte.begin(), timeInByte.end());
-    secretKeyInChar.insert(secretKeyInChar.end(), keyData.secretKey.begin(), keyData.secretKey.end());
+    std::string secretKeyInString;
+    secretKeyInString.append(reinterpret_cast<const char *>(&keyData.distributed), sizeof(uint8_t));
+    secretKeyInString.append(reinterpret_cast<const char *>(&keyData.timeValue), sizeof(time_t));
+    secretKeyInString.append(reinterpret_cast<const char *>(keyData.secretKey.data()), keyData.secretKey.size());
 
     bool ret;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        ret = SaveBufferToFile(keyPath, secretKeyInChar);
+        auto fd = open(keyPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        if (fd > 0) {
+            ret = SaveStringToFd(fd, secretKeyInString);
+            close(fd);
+        } else {
+            ret = false;
+        }
     }
     if (!ret) {
         Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
@@ -742,7 +745,7 @@ RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
     if (!openFile) {
         return;
     }
-    lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRWXU | S_IRWXG);
+    lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (lockFd_ < 0) {
         LOG_WARN("open failed, errno:%{public}d, file:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
     }

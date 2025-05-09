@@ -73,6 +73,7 @@ public:
     int32_t GetErrCode() const { return errorCode_; }
     std::string GetLogInfo() const { return custLog_; };
     virtual void Report() const;
+    virtual ~RdbFaultEvent() = default;
 
 protected:
     void SetBundleName(const std::string &name) { bundleName_ = name; };

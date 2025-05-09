@@ -50,6 +50,7 @@ public:
     virtual std::pair<int32_t, GraphValue> GetColumnValue(int32_t index) const = 0;
 
     virtual bool IsReady() const = 0;
+    virtual ~Statement() = default;
 };
 } // namespace OHOS::DistributedDataAip
 #endif //ARKDATA_INTELLIGENCE_PLATFORM_STATEMENT_H
