@@ -443,6 +443,32 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest006, TestSize.Level
 }
 
 /**
+ * @tc.name: KnowledgeSchemaHelperTest007
+ * @tc.desc: test unmarshall schema with no db name
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest007, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    const std::string missingDbName = R"({
+        "knowledgeSource": [{
+            "version": 1,
+            "tables": [{
+                "tableName": "test",
+                "referenceFields": ["id"],
+                "knowledgeFields": [
+                {
+                    "columnName": "subject",
+                    "type": ["Text"]
+                }]
+            }]
+        }]})";
+    bool ret = helper_->ParseRdbKnowledgeSchema(missingDbName, DB_NAME, schema);
+    ASSERT_TRUE(ret);
+    ASSERT_EQ(schema.dbName, DB_NAME);
+}
+
+/**
  * @tc.name: KnowledgeInvalidSchemaTest001
  * @tc.desc: test invalid version
  * @tc.type: FUNC
