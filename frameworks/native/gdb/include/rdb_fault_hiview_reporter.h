@@ -31,6 +31,7 @@ class RdbFaultEvent {
 public:
     RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog) {};
+    virtual ~RdbFaultEvent() = default;
 };
 
 class RdbFaultDbFileEvent : public RdbFaultEvent {

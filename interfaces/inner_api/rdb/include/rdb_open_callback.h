@@ -75,6 +75,11 @@ public:
     {
         return 0;
     }
+
+    /**
+     * @brief Virtual destructor to ensure proper cleanup of derived class objects.
+     */
+    virtual ~RdbOpenCallback() = default;
 };
 
 } // namespace NativeRdb
