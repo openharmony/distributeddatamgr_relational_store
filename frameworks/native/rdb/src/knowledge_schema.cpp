@@ -122,9 +122,9 @@ bool KnowledgeSchema::Marshal(json &node) const
 
 bool KnowledgeSchema::Unmarshal(const json &node)
 {
+    isDefaultName_ = !GetValue(node, GET_NAME(dbName), dbName_);
     bool isUnmarshalSuccess = true;
     isUnmarshalSuccess = GetValue(node, GET_NAME(version), version_) && isUnmarshalSuccess;
-    isUnmarshalSuccess = GetValue(node, GET_NAME(dbName), dbName_) && isUnmarshalSuccess;
     isUnmarshalSuccess = GetValue(node, GET_NAME(tables), tables_) && isUnmarshalSuccess;
     return isUnmarshalSuccess;
 }
@@ -137,6 +137,11 @@ int64_t KnowledgeSchema::GetVersion() const
 std::string KnowledgeSchema::GetDBName() const
 {
     return dbName_;
+}
+
+bool KnowledgeSchema::IsDefaultName() const
+{
+    return isDefaultName_;
 }
 
 std::vector<KnowledgeTable> KnowledgeSchema::GetTables() const
