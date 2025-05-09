@@ -2037,7 +2037,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, true);
     if (statement == nullptr) {
         return errCode;
     }
