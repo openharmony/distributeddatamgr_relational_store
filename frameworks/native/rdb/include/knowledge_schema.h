@@ -77,10 +77,12 @@ public:
     int64_t GetVersion() const;
     std::string GetDBName() const;
     std::vector<KnowledgeTable> GetTables() const;
+    bool IsDefaultName() const;
 private:
     int64_t version_ = 0;
     std::string dbName_;
     std::vector<KnowledgeTable> tables_;
+    bool isDefaultName_;
 };
 
 class KnowledgeSource final : public Serializable {
