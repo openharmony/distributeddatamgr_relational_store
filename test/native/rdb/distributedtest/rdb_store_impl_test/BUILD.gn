@@ -51,6 +51,7 @@ ohos_distributedtest("DistributedTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
   ]
 
   deps = [
@@ -75,6 +76,7 @@ ohos_distributedtest("DistributedTestAgent") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
   ]
 
   deps = [
