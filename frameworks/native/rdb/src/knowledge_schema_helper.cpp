@@ -81,7 +81,7 @@ bool KnowledgeSchemaHelper::CheckKnowledgeSchema(const KnowledgeSchema &schema)
         LOG_ERROR("Wrong schema version: %{public}" PRId64, schema.GetVersion());
         return false;
     }
-    if (!CheckSchemaTableName(schema.GetDBName())) {
+    if (!schema.IsDefaultName() && !CheckSchemaTableName(schema.GetDBName())) {
         LOG_ERROR("Wrong schema db name: %{public}s", SqliteUtils::Anonymous(schema.GetDBName()).c_str());
         return false;
     }
@@ -112,7 +112,7 @@ bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, con
     }
     auto sourceSchema = source.GetKnowledgeSchema();
     auto find = std::find_if(sourceSchema.begin(), sourceSchema.end(), [&dbName](const KnowledgeSchema &item) {
-        return item.GetDBName() == dbName;
+        return item.IsDefaultName() || item.GetDBName() == dbName;
     });
     if (find == sourceSchema.end()) {
         LOG_WARN("Not found same db:%{public}s schema.", SqliteUtils::Anonymous(dbName).c_str());
@@ -123,7 +123,7 @@ bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, con
         LOG_WARN("Check knowledge schema failed.");
         return false;
     }
-    schema.dbName = knowledgeSchema.GetDBName();
+    schema.dbName = knowledgeSchema.IsDefaultName() ? dbName : knowledgeSchema.GetDBName();
     auto tables = knowledgeSchema.GetTables();
     for (const auto &table : tables) {
         DistributedRdb::RdbKnowledgeTable knowledgeTable;
