@@ -126,5 +126,121 @@ std::string RdbSqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, co
 {
     return SqliteSqlBuilder::BuildQueryString(predicates, columns);
 }
+
+std::pair<int, SqlInfo> RdbSqlUtils::GetInsertSqlInfo(const std::string &table, const Row &row, Resolution resolution)
+{
+    SqlInfo sqlInfo;
+    if (table.empty()) {
+        return std::make_pair(E_EMPTY_TABLE_NAME, sqlInfo);
+    }
+
+    if (row.IsEmpty()) {
+        return std::make_pair(E_EMPTY_VALUES_BUCKET, sqlInfo);
+    }
+
+    auto conflictClause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    if (conflictClause == nullptr) {
+        return std::make_pair(E_INVALID_CONFLICT_FLAG, sqlInfo);
+    }
+    std::string sql;
+    sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
+    size_t bindArgsSize = row.values_.size();
+    std::vector<ValueObject> bindArgs;
+    bindArgs.reserve(bindArgsSize);
+    const char *split = "";
+    for (const auto &[key, val] : row.values_) {
+        sql.append(split).append(key);
+        if (val.GetType() == ValueObject::TYPE_ASSETS && resolution == ConflictResolution::ON_CONFLICT_REPLACE) {
+            return std::make_pair(E_INVALID_ARGS, sqlInfo);
+        }
+        SqliteSqlBuilder::UpdateAssetStatus(val, AssetValue::STATUS_INSERT);
+        bindArgs.push_back(val); // columnValue
+        split = ",";
+    }
+
+    sql.append(") VALUES (");
+    if (bindArgsSize > 0) {
+        sql.append(SqliteSqlBuilder::GetSqlArgs(bindArgsSize));
+    }
+
+    sql.append(")");
+    sqlInfo.sql = std::move(sql);
+    sqlInfo.valueObjectArray = std::move(bindArgs);
+    return std::make_pair(E_OK, sqlInfo);
+}
+
+std::pair<int, SqlInfo> RdbSqlUtils::GetUpdateSqlInfo(
+    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
+{
+    SqlInfo sqlInfo;
+    if (table.empty()) {
+        return std::make_pair(E_EMPTY_TABLE_NAME, sqlInfo);
+    }
+
+    if (row.IsEmpty()) {
+        return std::make_pair(E_EMPTY_VALUES_BUCKET, sqlInfo);
+    }
+
+    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    if (clause == nullptr) {
+        return std::make_pair(E_INVALID_CONFLICT_FLAG, sqlInfo);
+    }
+    std::string sql;
+    sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
+    std::vector<ValueObject> tmpBindArgs;
+    size_t tmpBindSize = row.values_.size() + args.size();
+    tmpBindArgs.reserve(tmpBindSize);
+    const char *split = "";
+    for (auto &[key, val] : row.values_) {
+        sql.append(split);
+        if (val.GetType() == ValueObject::TYPE_ASSETS) {
+            sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
+        } else if (val.GetType() == ValueObject::TYPE_ASSET) {
+            sql.append(key).append("=merge_asset(").append(key).append(", ?)"); // columnName
+        } else {
+            sql.append(key).append("=?"); // columnName
+        }
+        tmpBindArgs.push_back(val); // columnValue
+        split = ",";
+    }
+
+    if (!where.empty()) {
+        sql.append(" WHERE ").append(where);
+    }
+
+    tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
+
+    sqlInfo.sql = std::move(sql);
+    sqlInfo.valueObjectArray = std::move(tmpBindArgs);
+    return std::make_pair(E_OK, sqlInfo);
+}
+
+std::pair<int, SqlInfo> RdbSqlUtils::GetDeleteSqlInfo(
+    const std::string &table, const std::string &whereClause, const Values &args)
+{
+    SqlInfo sqlInfo;
+
+    if (table.empty()) {
+        return std::make_pair(E_EMPTY_TABLE_NAME, sqlInfo);
+    }
+    std::string sql;
+    sql.append("DELETE FROM ").append(table);
+    if (!whereClause.empty()) {
+        sql.append(" WHERE ").append(whereClause);
+    }
+
+    sqlInfo.sql = std::move(sql);
+    sqlInfo.valueObjectArray = std::move(args);
+    return std::make_pair(E_OK, sqlInfo);
+}
+
+std::pair<int, SqlInfo> RdbSqlUtils::GetQuerySqlInfo(const AbsRdbPredicates &predicates, const Fields &columns)
+{
+    SqlInfo sqlInfo;
+    std::string sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
+    sqlInfo.sql = std::move(sql);
+    sqlInfo.valueObjectArray = predicates.GetBindArgs();
+    return std::make_pair(E_OK, sqlInfo);
+}
 } // namespace NativeRdb
 } // namespace OHOS
