@@ -16,7 +16,6 @@
 #ifndef NATIVE_RDB_SQLITE_UTILS_H
 #define NATIVE_RDB_SQLITE_UTILS_H
 
-#include <sys/types.h>
 #include <map>
 #include <string>
 
@@ -124,7 +123,7 @@ private:
 
     static std::string GetAnonymousName(const std::string &fileName);
     static std::string AnonyDigits(const std::string &fileName);
-    static std::string GetModeInfo(mode_t st_mode);
+    static std::string GetModeInfo(uint32_t st_mode);
 };
 
 } // namespace NativeRdb

@@ -584,17 +584,17 @@ std::string SqliteUtils::FormatDfxInfo(const DfxInfo &dfxInfo)
     return oss.str();
 }
 
-std::string SqliteUtils::GetModeInfo(mode_t st_mode)
+std::string SqliteUtils::GetModeInfo(uint32_t st_mode)
 {
     std::ostringstream oss;
-
+    const uint32_t permission = 0777;
     oss << "mode:";
     if (S_ISDIR(st_mode))
         oss << 'd';
     else
         oss << '-';
 
-    oss << std::setw(PREFIX_LENGTH) << std::setfill('0') << std::oct << (st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
+    oss << std::setw(PREFIX_LENGTH) << std::setfill('0') << std::oct << (st_mode & permission);
 
     return oss.str();
 }
