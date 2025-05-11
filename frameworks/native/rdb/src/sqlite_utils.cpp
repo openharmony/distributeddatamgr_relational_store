@@ -419,14 +419,13 @@ std::string SqliteUtils::ReadFileHeader(const std::string &filePath)
 std::string SqliteUtils::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
-    const uint32_t permission = 0777;
     oss << " dev:0x" << std::hex << debugInfo.dev_ << " ino:0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
-    oss << " mode:" << std::setw(PREFIX_LENGTH) << std::setfill('0') << std::oct << (debugInfo.mode_ & permission)
-        << " size:" << std::dec << debugInfo.size_ << " uid:" << std::dec << debugInfo.uid_ << " gid:" << std::dec
-        << debugInfo.gid_ << " atim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
+    oss << " " << GetModeInfo(debugInfo.mode_) << " size:" << std::dec << debugInfo.size_ << " uid:" << std::dec
+        << debugInfo.uid_ << " gid:" << std::dec << debugInfo.gid_
+        << " atim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
         << " mtim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
         << " ctim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
     return oss.str();
@@ -585,7 +584,7 @@ std::string SqliteUtils::FormatDfxInfo(const DfxInfo &dfxInfo)
     return oss.str();
 }
 
-std::string StModeToString(mode_t st_mode)
+std::string SqliteUtils::GetModeInfo(mode_t st_mode)
 {
     std::ostringstream oss;
 
@@ -619,7 +618,7 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
         }
 
         struct stat st {};
-        dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? StModeToString(st.st_mode) : "access_fail");
+        dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
     }
 
     std::string result;
