@@ -41,7 +41,9 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     SqliteGlobalConfig::InitSqliteGlobalConfig();
     auto rdb = RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
     if (errCode != E_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "LOG:RdbHelper::GetRdbStore", true));
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config,
+            SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())),
+            true));
     }
 
     return rdb;

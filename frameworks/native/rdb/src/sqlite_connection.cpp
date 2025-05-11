@@ -829,17 +829,12 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     if (isReadOnly_ || config.IsMemoryRdb()) {
         return E_OK;
     }
+
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
-        std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(config.GetPath() + "-wal");
-        if (fileInfo.first != E_OK) {
-            LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
-                SqliteUtils::GetParentModes(config.GetPath()).c_str());
-        }
         LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_GET_JOURNAL_FAIL, config_.GetBundleName(),
-            "PRAGMA journal_mode get fail: " + std::to_string(errCode) + "," + std::to_string(errno) + "," +
-                SqliteUtils::GetFileStatInfo(fileInfo.second)));
+            "PRAGMA journal_mode get fail: " + std::to_string(errCode) + "," + std::to_string(errno)));
         // errno: 28 No space left on device
         return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
