@@ -19,6 +19,7 @@
 #include "napi_async_call.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
+#include "rdb_store.h"
 #include "transaction.h"
 #include "values_buckets.h"
 
@@ -27,12 +28,7 @@ namespace RelationalStoreJsKit {
 class ResultSetProxy;
 using namespace OHOS::NativeRdb;
 struct RdbStoreContextBase : public ContextBase {
-    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
-    {
-        auto rdb = std::move(rdbStore);
-        rdbStore = nullptr;
-        return rdb;
-    }
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore();
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
 };
 
@@ -89,6 +85,56 @@ struct CreateTransactionContext : public RdbStoreContextBase {
     AppDataMgrJsKit::JSUtils::TransactionOptions transactionOptions;
     std::shared_ptr<Transaction> transaction;
 };
+
+int ParseTransactionOptions(
+    const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context);
+int ParseTableName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCursor(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCryptoParam(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParsePrimaryKey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseTablesName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseDistributedTypeArg(
+    const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context);
+
+int ParseDistributedConfigArg(
+    const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCloudSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseColumns(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseBindArgs(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseSql(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context);
+
+int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
 #endif // NAPI_RDB_CONTEXT_H
