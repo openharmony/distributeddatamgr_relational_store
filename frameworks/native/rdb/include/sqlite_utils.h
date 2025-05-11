@@ -91,8 +91,8 @@ public:
     static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
-    static std::string StModeToString(mode_t st_mode);
     static std::string GetParentModes(const std::string &path);
+    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
 
 private:
     struct SqlType {
@@ -121,9 +121,8 @@ private:
     static constexpr const char *ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT] = { "", " OR ROLLBACK", " OR ABORT",
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
 
-    static std::string GetAnonymousName(const std::string& fileName);
-    static std::string AnonyDigits(const std::string& fileName);
-    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
+    static std::string GetAnonymousName(const std::string &fileName);
+    static std::string AnonyDigits(const std::string &fileName);
 };
 
 } // namespace NativeRdb

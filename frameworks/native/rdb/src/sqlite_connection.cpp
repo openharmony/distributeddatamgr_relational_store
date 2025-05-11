@@ -285,20 +285,18 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
 {
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
-        struct stat st;
-        if (stat(dbPath.c_str(), &st) < 0) {
+        std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(dbPath);
+        if (fileInfo.first != E_OK) {
             LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
                 SqliteUtils::GetParentModes(dbPath).c_str());
         }
-        LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s,"
-                  " flags=%{public}d, errno=%{public}d, stat:[%{public}s]",
-            errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno,
-            SqliteUtils::StModeToString(st.st_mode).c_str());
+        LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
+            errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
         if (errCode == E_SQLITE_CANTOPEN) {
             Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
-                "failed to openDB errno[ " + std::to_string(errno) + "]," + "ino:" + std::to_string(st.st_ino) +
-                    "uid:" + std::to_string(st.st_uid) + "gid:" + std::to_string(st.st_gid) +
-                    SqliteUtils::StModeToString(st.st_mode) + "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
+                "failed to openDB errno[ " + std::to_string(errno) + "]," +
+                    SqliteUtils::GetFileStatInfo(fileInfo.second) +
+                    "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
                 true));
         }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -831,19 +829,17 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     if (isReadOnly_ || config.IsMemoryRdb()) {
         return E_OK;
     }
-
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
-        struct stat st;
-        if (stat((config.GetPath() + "-wal").c_str(), &st) < 0) {
+        std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(config.GetPath() + "-wal");
+        if (fileInfo.first != E_OK) {
             LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
                 SqliteUtils::GetParentModes(config.GetPath()).c_str());
         }
-        LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d, stat:[%{public}s]", errCode,
-            errno, SqliteUtils::StModeToString(st.st_mode).c_str());
+        LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_GET_JOURNAL_FAIL, config_.GetBundleName(),
             "PRAGMA journal_mode get fail: " + std::to_string(errCode) + "," + std::to_string(errno) + "," +
-                SqliteUtils::StModeToString(st.st_mode)));
+                SqliteUtils::GetFileStatInfo(fileInfo.second)));
         // errno: 28 No space left on device
         return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
     }
