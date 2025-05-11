@@ -142,6 +142,70 @@ napi_value ToSendableAsset(napi_env env, napi_callback_info info)
     return Convert2Sendable(env, args[0]);
 }
 
+napi_value FromSendableValues(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
+  
+    bool isArray = false;
+    status = napi_is_array(env, args[0], &isArray);
+    RDB_NAPI_ASSERT(env, status == napi_ok && isArray,
+        std::make_shared<ParamError>("values is invalid" + std::to_string(status)));
+
+    uint32_t length = 0;
+    status = napi_get_array_length(env, args[0], &length);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_get_array_length failed."));
+    napi_value outArray;
+    status = napi_create_array(env, &outArray);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_create_array failed."));
+    for (uint32_t i = 0; i < length; ++i) {
+        napi_value item = nullptr;
+        status = napi_get_element(env, args[0], i, &item);
+        RDB_NAPI_ASSERT(env, status == napi_ok,
+            std::make_shared<InnerError>("napi_get_element failed."));
+        napi_value jsvalue = Convert2JSValue(env, item);
+        status = napi_set_element(env, outArray, i, jsvalue);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_set_element failed."));
+    }
+    return outArray;
+}
+
+napi_value ToSendableValues(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = { nullptr };
+    napi_status status = napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    RDB_NAPI_ASSERT(env, status == napi_ok && argc == 1, std::make_shared<ParamNumError>("1"));
+
+    bool isArray = false;
+    status = napi_is_array(env, args[0], &isArray);
+    RDB_NAPI_ASSERT(env, status == napi_ok && isArray,
+        std::make_shared<ParamError>("values is invalid" + std::to_string(status)));
+
+    uint32_t length = 0;
+    status = napi_get_array_length(env, args[0], &length);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_get_array_length failed."));
+
+    napi_value outArray;
+    status = napi_create_sendable_array(env, &outArray);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_create_sendable_array failed."));
+    for (uint32_t i = 0; i < length; ++i) {
+        napi_value item = nullptr;
+        status = napi_get_element(env, args[0], i, &item);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
+        ValueObject object;
+        status = (napi_status)Convert2Value(env, item, object);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("Convert2Value failed."));
+        napi_value sendablevalue = Convert2Sendable(env, object);
+
+        status = napi_set_element(env, outArray, i, sendablevalue);
+        RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<InnerError>("napi_set_element failed."));
+    }
+    return outArray;
+}
+
 napi_value InitRdbStoreUtils(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
@@ -149,6 +213,8 @@ napi_value InitRdbStoreUtils(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("toSendableValuesBucket", ToSendableValuesBucket),
         DECLARE_NAPI_FUNCTION("fromSendableAsset", FromSendableAsset),
         DECLARE_NAPI_FUNCTION("toSendableAsset", ToSendableAsset),
+        DECLARE_NAPI_FUNCTION("fromSendableValues", FromSendableValues),
+        DECLARE_NAPI_FUNCTION("toSendableValues", ToSendableValues),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;

@@ -43,6 +43,7 @@
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_log.h"
+#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -1142,45 +1143,15 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    if (table.empty()) {
-        return { E_EMPTY_TABLE_NAME, -1 };
-    }
-
-    if (row.IsEmpty()) {
-        return { E_EMPTY_VALUES_BUCKET, -1 };
-    }
-
-    auto conflictClause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
-    if (conflictClause == nullptr) {
-        return { E_INVALID_CONFLICT_FLAG, -1 };
-    }
     RdbStatReporter reportStat(RDB_PERF, INSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
-    size_t bindArgsSize = row.values_.size();
-    std::vector<ValueObject> bindArgs;
-    bindArgs.reserve(bindArgsSize);
-    const char *split = "";
-    for (const auto &[key, val] : row.values_) {
-        sql.append(split).append(key);
-        if (val.GetType() == ValueObject::TYPE_ASSETS && resolution == ConflictResolution::ON_CONFLICT_REPLACE) {
-            return { E_INVALID_ARGS, -1 };
-        }
-        SqliteSqlBuilder::UpdateAssetStatus(val, AssetValue::STATUS_INSERT);
-        bindArgs.push_back(val); // columnValue
-        split = ",";
+    auto result = RdbSqlUtils::GetInsertSqlInfo(table, row, resolution);
+    if (result.first != E_OK) {
+        return { result.first, -1 };
     }
-
-    sql.append(") VALUES (");
-    if (bindArgsSize > 0) {
-        sql.append(SqliteSqlBuilder::GetSqlArgs(bindArgsSize));
-    }
-
-    sql.append(")");
     int64_t rowid = -1;
-    auto errCode = ExecuteForLastInsertedRowId(rowid, sql, bindArgs);
+    auto errCode = ExecuteForLastInsertedRowId(rowid, result.second.sql, result.second.valueObjectArray);
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1312,48 +1283,15 @@ std::pair<int, int> RdbStoreImpl::Update(
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    if (table.empty()) {
-        return { E_EMPTY_TABLE_NAME, -1 };
-    }
-
-    if (row.IsEmpty()) {
-        return { E_EMPTY_VALUES_BUCKET, -1 };
-    }
-
-    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
-    if (clause == nullptr) {
-        return { E_INVALID_CONFLICT_FLAG, -1 };
-    }
     RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
-    std::vector<ValueObject> tmpBindArgs;
-    size_t tmpBindSize = row.values_.size() + args.size();
-    tmpBindArgs.reserve(tmpBindSize);
-    const char *split = "";
-    for (auto &[key, val] : row.values_) {
-        sql.append(split);
-        if (val.GetType() == ValueObject::TYPE_ASSETS) {
-            sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
-        } else if (val.GetType() == ValueObject::TYPE_ASSET) {
-            sql.append(key).append("=merge_asset(").append(key).append(", ?)"); // columnName
-        } else {
-            sql.append(key).append("=?"); // columnName
-        }
-        tmpBindArgs.push_back(val); // columnValue
-        split = ",";
+    auto result = RdbSqlUtils::GetUpdateSqlInfo(table, row, where, args, resolution);
+    if (result.first != E_OK) {
+        return { result.first, -1 };
     }
-
-    if (!where.empty()) {
-        sql.append(" WHERE ").append(where);
-    }
-
-    tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
-
     int64_t changes = 0;
-    auto errCode = ExecuteForChangedRowCount(changes, sql, tmpBindArgs);
+    auto errCode = ExecuteForChangedRowCount(changes, result.second.sql, result.second.valueObjectArray);
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1366,20 +1304,16 @@ int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
-    if (table.empty()) {
-        return E_EMPTY_TABLE_NAME;
-    }
-
     RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("DELETE FROM ").append(table);
-    if (!whereClause.empty()) {
-        sql.append(" WHERE ").append(whereClause);
+    auto result = RdbSqlUtils::GetDeleteSqlInfo(table, whereClause, args);
+    if (result.first != E_OK) {
+        return result.first;
     }
+
     int64_t changes = 0;
-    auto errCode = ExecuteForChangedRowCount(changes, sql, args);
+    auto errCode = ExecuteForChangedRowCount(changes, result.second.sql, args);
     if (errCode != E_OK) {
         return errCode;
     }
