@@ -285,14 +285,14 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
 {
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
     if (errCode != SQLITE_OK) {
-        std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(dbPath);
-        if (fileInfo.first != E_OK) {
-            LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
-                SqliteUtils::GetParentModes(dbPath).c_str());
-        }
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
             errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
-        if (errCode == E_SQLITE_CANTOPEN) {
+        if (errCode == SQLITE_CANTOPEN) {
+            std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(dbPath);
+            if (fileInfo.first != E_OK) {
+                LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
+                    SqliteUtils::GetParentModes(dbPath).c_str());
+            }
             Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
                 "failed to openDB errno[ " + std::to_string(errno) + "]," +
                     SqliteUtils::GetFileStatInfo(fileInfo.second) +

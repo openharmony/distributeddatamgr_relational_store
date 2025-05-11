@@ -53,7 +53,6 @@ constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t DISPLAY_BYTE = 2;
 constexpr int32_t PREFIX_LENGTH = 3;
 constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
-constexpr int PATH_DEPTH = 3;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -601,12 +600,12 @@ std::string StModeToString(mode_t st_mode)
     return oss.str();
 }
 
-std::string SqliteUtils::GetParentModes(const std::string &path)
+std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
 {
     std::vector<std::pair<std::string, std::string>> dirModes;
     fs::path p(path);
 
-    for (int i = 0; i < PATH_DEPTH; ++i) {
+    for (int i = 0; i < pathDepth; ++i) {
         p = p.parent_path();
         if (p == p.root_path() || p.empty()) {
             break;
@@ -628,7 +627,8 @@ std::string SqliteUtils::GetParentModes(const std::string &path)
         if (!result.empty()) {
             result += " <- ";
         }
-        result += it->first + ":" + it->second;
+        result += (it->first.size() > PREFIX_LENGTH ? it->first.substr(0, PREFIX_LENGTH) + "***" : it->first) + ":" +
+                  it->second;
     }
     return result.empty() ? "no_parent" : result;
 }
