@@ -124,6 +124,7 @@ private:
 
     static std::string GetAnonymousName(const std::string &fileName);
     static std::string AnonyDigits(const std::string &fileName);
+    static std::string GetModeInfo(mode_t st_mode);
 };
 
 } // namespace NativeRdb
