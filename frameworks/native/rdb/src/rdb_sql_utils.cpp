@@ -54,10 +54,12 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
         databaseDirectory = databaseDirectory + "/" + directory;
         if (access(databaseDirectory.c_str(), F_OK) != 0) {
             if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
-                    SqliteUtils::Anonymous(databaseDirectory).c_str());
+                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s, parent dir modes: %{public}s", errno,
+                    SqliteUtils::Anonymous(databaseDirectory).c_str(),
+                    SqliteUtils::GetParentModes(databaseDirectory).c_str());
                 RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
-                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory));
+                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
+                        "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server
