@@ -50,26 +50,18 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     directories.push_back(tempDirectory);
 
     std::string databaseDirectory;
-    struct stat sts[2];
-    int32_t cur = 0;
-    int32_t prev = cur;
     for (const std::string &directory : directories) {
-        if (directory.empty()) {
-            continue;
-        }
         databaseDirectory = databaseDirectory + "/" + directory;
-        prev = cur;
-        // (cur + 1) % 2 Switch the two positions of sts
-        cur = (cur + 1) % 2;
-        if (stat(databaseDirectory.c_str(), &sts[cur]) != 0) {
+        std::pair<int32_t, DebugInfo> fileInfo = SqliteUtils::Stat(databaseDirectory);
+        if (access(databaseDirectory.c_str(), F_OK) != 0 || fileInfo.first != E_OK) {
+            LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
+                SqliteUtils::GetParentModes(databaseDirectory).c_str());
             if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno:%{public}d %{public}s prev:[%{public}s]", errno,
-                    SqliteUtils::Anonymous(databaseDirectory).c_str(),
-                    SqliteUtils::StModeToString(sts[prev].st_mode).c_str());
+                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
+                    SqliteUtils::Anonymous(databaseDirectory).c_str());
                 RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
                     "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
-                        "ino:" + std::to_string(sts[prev].st_ino) + "uid:" + std::to_string(sts[prev].st_uid) +
-                        "gid:" + std::to_string(sts[prev].st_gid) + SqliteUtils::StModeToString(sts[prev].st_mode)));
+                        "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
                 return E_CREATE_FOLDER_FAIL;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server
