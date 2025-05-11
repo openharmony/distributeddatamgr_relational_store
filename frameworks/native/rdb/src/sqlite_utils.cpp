@@ -612,10 +612,6 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
 
         std::string dirName = p.filename().string();
         std::string dirPath = p.string();
-        if (dirName.empty()) {
-            dirName = p.root_path().string();
-            dirName.erase(remove(dirName.begin(), dirName.end(), '/'), dirName.end());
-        }
 
         struct stat st {};
         dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
