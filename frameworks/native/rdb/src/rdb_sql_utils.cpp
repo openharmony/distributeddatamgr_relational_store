@@ -52,13 +52,11 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     std::string databaseDirectory;
     for (const std::string &directory : directories) {
         databaseDirectory = databaseDirectory + "/" + directory;
-        std::pair<int32_t, DebugInfo> fileInfo = SqliteUtils::Stat(databaseDirectory);
-        if (access(databaseDirectory.c_str(), F_OK) != 0 || fileInfo.first != E_OK) {
-            LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
-                SqliteUtils::GetParentModes(databaseDirectory).c_str());
+        if (access(databaseDirectory.c_str(), F_OK) != 0) {
             if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s", errno,
-                    SqliteUtils::Anonymous(databaseDirectory).c_str());
+                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s, parent dir modes:%{public}s", errno,
+                    SqliteUtils::Anonymous(databaseDirectory).c_str(),
+                    SqliteUtils::GetParentModes(databaseDirectory).c_str());
                 RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
                     "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
                         "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
