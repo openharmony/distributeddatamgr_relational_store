@@ -821,7 +821,7 @@ int RelationalStore::DoSubScribe(Rdb_SubscribeType type, const Rdb_DataObserver 
     auto ndkObserver = std::make_shared<NDKStoreObserver>(observer, type);
     int subscribeResult = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS)
                               ? store_->SubscribeObserver(subscribeOption, ndkObserver)
-                              : store_->Subscribe(subscribeOption, ndkObserver.get());
+                              : store_->Subscribe(subscribeOption, ndkObserver);
     if (subscribeResult != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed.");
     } else {
@@ -843,7 +843,7 @@ int RelationalStore::DoUnsubScribe(Rdb_SubscribeType type, const Rdb_DataObserve
         }
         auto subscribeOption = SubscribeOption{ .mode = NDKUtils::GetSubscribeType(type), .event = "data_change" };
         int errCode = (type == RDB_SUBSCRIBE_TYPE_LOCAL_DETAILS) ? store_->UnsubscribeObserver(subscribeOption, *it)
-                                                                 : store_->UnSubscribe(subscribeOption, it->get());
+                                                                 : store_->UnSubscribe(subscribeOption, *it);
         if (errCode != NativeRdb::E_OK) {
             LOG_ERROR("unsubscribe failed.");
             return ConvertorErrorCode::NativeToNdk(errCode);

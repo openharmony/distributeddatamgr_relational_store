@@ -35,9 +35,11 @@ public:
         (const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async),
         (override));
     MOCK_METHOD(int32_t, Subscribe,
-        (const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer), (override));
+        (const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer),
+        (override));
     MOCK_METHOD(int32_t, UnSubscribe,
-        (const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer), (override));
+        (const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer),
+        (override));
     MOCK_METHOD(int32_t, RegisterAutoSyncCallback,
         (const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer), (override));
     MOCK_METHOD(int32_t, UnregisterAutoSyncCallback,

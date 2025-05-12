@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <list>
+#include <memory>
 
 #include "concurrent_map.h"
 #include "irdb_service.h"
@@ -29,7 +30,7 @@ namespace OHOS::DistributedRdb {
 class RdbServiceProxy : public IRemoteProxy<IRdbService> {
 public:
     struct ObserverParam {
-        RdbStoreObserver *observer = nullptr;
+        std::weak_ptr<RdbStoreObserver> observer;
         std::string bundleName;
         SubscribeOption subscribeOption{ SubscribeMode::REMOTE };
     };
@@ -53,10 +54,11 @@ public:
     int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) override;
 
-    int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) override;
+    int32_t Subscribe(const RdbSyncerParam &param, const SubscribeOption &option,
+        std::shared_ptr<RdbStoreObserver> observer) override;
 
-    int32_t UnSubscribe(
-        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) override;
+    int32_t UnSubscribe(const RdbSyncerParam &param, const SubscribeOption &option,
+        std::shared_ptr<RdbStoreObserver> observer) override;
 
     int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) override;
