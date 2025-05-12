@@ -47,10 +47,10 @@ public:
         const AsyncDetail &async) = 0;
 
     virtual int32_t Subscribe(
-        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
+        const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;
 
     virtual int32_t UnSubscribe(
-        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
+        const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;
 
     virtual int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;

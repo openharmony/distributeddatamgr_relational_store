@@ -209,7 +209,7 @@ std::string RdbServiceProxy::RemoveSuffix(const std::string &name)
 }
 
 int32_t RdbServiceProxy::Subscribe(
-    const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer)
+    const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     if (observer == nullptr) {
         return RDB_ERROR;
@@ -224,7 +224,7 @@ int32_t RdbServiceProxy::Subscribe(
     auto name = RemoveSuffix(param.storeName_);
     observers_.Compute(name, [observer, &param, &option](const auto &key, std::list<ObserverParam> &value) {
         for (const auto &element : value) {
-            if (element.observer == observer) {
+            if (element.observer.lock() == observer) {
                 LOG_ERROR("duplicate observer, storeName:%{public}s", SqliteUtils::Anonymous(key).c_str());
                 return true;
             }
@@ -247,7 +247,7 @@ int32_t RdbServiceProxy::DoSubscribe(const RdbSyncerParam &param, const Subscrib
 }
 
 int32_t RdbServiceProxy::UnSubscribe(
-    const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer)
+    const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     if (observer == nullptr) {
         LOG_ERROR("observer is null.");
@@ -259,7 +259,7 @@ int32_t RdbServiceProxy::UnSubscribe(
     auto name = RemoveSuffix(param.storeName_);
     observers_.ComputeIfPresent(name, [observer](const auto &key, std::list<ObserverParam> &value) {
         LOG_INFO("before remove size=%{public}d", static_cast<int>(value.size()));
-        value.remove_if([observer](const ObserverParam &param) { return param.observer == observer; });
+        value.remove_if([observer](const ObserverParam &param) { return param.observer.lock() == observer; });
         LOG_INFO("after  remove size=%{public}d", static_cast<int>(value.size()));
         return !(value.empty());
     });
@@ -323,7 +323,7 @@ void RdbServiceProxy::ImportObservers(Observers &observers)
         for (const auto &param : value) {
             syncerParam.bundleName_ = param.bundleName;
             syncerParam.storeName_ = key;
-            Subscribe(syncerParam, param.subscribeOption, param.observer);
+            Subscribe(syncerParam, param.subscribeOption, param.observer.lock());
         }
         return false;
     });
@@ -504,7 +504,11 @@ void RdbServiceProxy::OnDataChange(
                                           const auto &key, const std::list<ObserverParam> &value) mutable {
         auto size = value.size();
         for (const auto &params : value) {
-            params.observer->OnChange(origin, primaries, --size > 0 ? ChangeInfo(info) : std::move(info));
+            auto obs = params.observer.lock();
+            size--;
+            if (obs != nullptr) {
+                obs->OnChange(origin, primaries, size > 0 ? ChangeInfo(info) : std::move(info));
+            }
         }
         return !value.empty();
     });
