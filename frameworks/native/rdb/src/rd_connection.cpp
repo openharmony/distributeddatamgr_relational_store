@@ -54,31 +54,10 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdConnection::Create(const RdbSt
         errCode = connection->InnerOpen(config);
         if (errCode == E_OK) {
             conn = connection;
-            CheckConfig(connection, config);
             break;
         }
     }
     return result;
-}
-
-void RdConnection::CheckConfig(std::shared_ptr<Connection> conn, const RdbStoreConfig &config)
-{
-    if (config.GetNcandidates() != NCANDIDATES_DEFAULT_NUM) {
-        ExecuteSet(conn, "diskann_probe_ncandidates", config.GetNcandidates());
-    }
-}
-
-void RdConnection::ExecuteSet(std::shared_ptr<Connection> conn, const std::string &paramName, int num)
-{
-    std::string sql = "PRAGMA " + paramName + " = " + std::to_string(num);
-    auto [errCode, stmt] = conn->CreateStatement(sql, conn);
-    if (errCode != E_OK || stmt == nullptr) {
-        LOG_ERROR("Create statement failed, paramName: %{public}s, errCode: %{public}d",
-            paramName.c_str(), errCode);
-        return;
-    }
-    stmt->Step();
-    stmt->Finalize();
 }
 
 int32_t RdConnection::Repair(const RdbStoreConfig &config)

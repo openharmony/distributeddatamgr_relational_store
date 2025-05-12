@@ -326,8 +326,6 @@ public:
     CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
     void EnableRekey(bool enable);
-    int GetNcandidates() const;
-    void SetNcandidates(int ncandidates);
     std::string ToString() const;
     static std::string FormatCfg(const RdbStoreConfig &first, const RdbStoreConfig &second);
     void SetRegisterInfo(RegisterType type, bool state) const;
@@ -385,7 +383,6 @@ private:
     mutable std::vector<uint8_t> newEncryptKey_{};
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     std::vector<std::string> pluginLibs_{};
-    int ncandidates_ = 128;
 
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds

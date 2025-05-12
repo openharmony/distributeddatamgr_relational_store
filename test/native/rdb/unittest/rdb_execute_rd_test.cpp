@@ -13,7 +13,6 @@ limitations under the License.
 */
 #include <gtest/gtest.h>
 
-#include <random>
 #include <string>
 
 #include "common.h"
@@ -80,8 +79,6 @@ void RdbExecuteRdTest::SetUp(void)
     RdbStoreConfig config(RdbExecuteRdTest::databaseName);
     config.SetIsVector(true);
     config.SetEncryptStatus(GetParam());
-    int num = 300;
-    config.SetNcandidates(num);
     ExecuteTestOpenRdCallback helper;
     RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(RdbExecuteRdTest::store, nullptr);
@@ -93,10 +90,6 @@ void RdbExecuteRdTest::TearDown(void)
     RdbExecuteRdTest::store = nullptr;
     RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
 }
-
-std::random_device g_rd;
-std::mt19937 g_gen(g_rd());
-std::uniform_real_distribution<> dis(-1.0, 1.0);
 
 /**
 @tc.name: RdbStore_Execute_001
@@ -931,46 +924,6 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_018, TestSize.Level1)
         RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
         EXPECT_EQ(store, nullptr);
     }
-}
-
-/**
- * @tc.name: RdbStore_Execute_019
- * @tc.desc: test RdbStore Execute in vector mode
- * @tc.type: FUNC
- */
-HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_019, TestSize.Level1)
-{
-    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
-    const char *sqlCreateTable = "CREATE TABLE vecTable(inode int primary key, embedding floatvector(4));";
-    auto res = store->Execute(sqlCreateTable);
-    EXPECT_EQ(E_OK, res.first);
-
-    const char *sqlCreateIndex = "CREATE INDEX diskann_cos_idx ON vecTable USING GSDISKANN(embedding COSINE);";
-    res = store->Execute(sqlCreateIndex);
-    EXPECT_EQ(E_OK, res.first);
-
-    std::string sqlInsert = "INSERT INTO vecTable VALUES(1, '[1,2,-3,4]'), (2, '[2,2,-3,4]'), (3, '[3,2,3,4]'), (4, "
-                            "'[4,2,3,4]'), (5, '[5,2,-3,4]')";
-    for (int i = 6; i <= 1000; i++) {
-        std::string tmpStr = ", (" + std::to_string(i) + ", '[" + std::to_string(dis(g_gen)) + "," +
-                         std::to_string(dis(g_gen)) + "," + std::to_string(dis(g_gen)) + "," +
-                         std::to_string(dis(g_gen)) + "]')";
-        sqlInsert.append(tmpStr);
-    }
-    sqlInsert.append(";");
-    res = store->Execute(sqlInsert);
-    EXPECT_EQ(E_OK, res.first);
-
-    const char *sqlSelect = "SELECT inode, embedding, embedding<=>'[1,1,1,1]' AS score FROM vecTable ORDER BY "
-                            "embedding<=>'[1,1,1,1]' LIMIT 501;";
-    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sqlSelect, std::vector<ValueObject>());
-    EXPECT_NE(resultSet, nullptr);
-    int count = 0;
-    resultSet->GetRowCount(count);
-    EXPECT_EQ(count, 299);
-    const char *sqlDelete = "DELETE FROM vecTable";
-    res = store->Execute(sqlDelete);
-    EXPECT_EQ(E_OK, res.first);
 }
 
 /* *
