@@ -40,6 +40,32 @@ public:
     static int RdSqlFinalize(GRD_SqlStmt *stmt);
 
     static int RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
+    /**
+    * @brief Binds a text buffer to a parameter in a prepared SQL statement
+    * 
+    * This function binds a text data buffer to a parameter placeholder in a SQL prepared statement.
+    * Typically used to replace "?" placeholders in SQL statements with actual values before execution.
+    * 
+    * @param stmt      Pointer to the prepared statement object. Must be properly initialized.
+    * @param idx       1-based parameter index (SQL parameter numbering starts at 1).
+    * @param val       Pointer to the data buffer to bind. Can be text.
+    * @param len       The actual length of the val cannot be greater than the actual length of the val.
+    * @param freeFunc  Memory disposal callback:
+    *                  - SQL_STATIC (0): Caller retains ownership of buffer
+    *                  - SQL_TRANSIENT: Function may copy the buffer internally
+    *                  - Custom function: Called to release buffer when done
+    * 
+    * @return int      Operation status code:
+    *                  - 0: Success
+    *                  - Non-zero: Error code (see implementation-specific definitions)
+    * 
+    * @note The prepared statement must be in a state that accepts parameter binding.
+    *       Bound data remains valid until either:
+    *       - Statement execution completes (for SQL_STATIC)
+    *       - Explicitly rebound with new values
+    *       - Statement is finalized
+    *       For temporary data, use SQL_TRANSIENT to avoid lifetime management issues.
+    */
     static int RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
     static int RdSqlBindInt(GRD_SqlStmt *stmt, uint32_t idx, int32_t val);
     static int RdSqlBindInt64(GRD_SqlStmt *stmt, uint32_t idx, int64_t val);
