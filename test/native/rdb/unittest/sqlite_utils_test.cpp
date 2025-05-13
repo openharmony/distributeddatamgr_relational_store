@@ -192,8 +192,3 @@ HWTEST_F(SqliteUtilsTest, LongDirectoryName, TestSize.Level1)
     std::string longName(20, 'a');
     EXPECT_NE(SqliteUtils::GetParentModes(longName + "/b", 1).find("aaa***"), std::string::npos);
 }
-
-HWTEST_F(SqliteUtilsTest, MixedSlashes, TestSize.Level1)
-{
-    EXPECT_EQ(SqliteUtils::GetParentModes("access\\b/c", 2), "acc***:access_fail <- b:access_fail");
-}

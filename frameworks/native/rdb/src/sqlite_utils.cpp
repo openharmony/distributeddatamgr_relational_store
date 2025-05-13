@@ -603,36 +603,13 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
     std::vector<std::pair<std::string, std::string>> dirModes;
     std::string currentPath = path;
 
-    auto getParentPath = [](const std::string &p) -> std::string {
-        size_t pos = p.find_last_of("/\\");
-        if (pos == std::string::npos) {
-            return "";
-        }
-        if (pos == 0) {
-            return "/";
-        }
-        return p.substr(0, pos);
-    };
-
-    auto getFileName = [](const std::string &p) -> std::string {
-        size_t pos = p.find_last_of("/\\");
-        if (pos == std::string::npos) {
-            return p;
-        }
-        return (pos == p.length() - 1) ? "" : p.substr(pos + 1);
-    };
-
-    auto isRootPath = [](const std::string &p) -> bool {
-        return (p == "/" || p.find(':') != std::string::npos);
-    };
-
     for (int i = 0; i < pathDepth; ++i) {
-        std::string parent = getParentPath(currentPath);
-        if (isRootPath(currentPath) || parent.empty()) {
+        std::string parent = StringUtils::GetParentPath(currentPath);
+        if (StringUtils::IsRootPath(currentPath) || parent.empty()) {
             break;
         }
 
-        std::string dirName = getFileName(parent);
+        std::string dirName = StringUtils::ExtractFileName(parent);
         std::string dirPath = parent;
 
         struct stat st {};
