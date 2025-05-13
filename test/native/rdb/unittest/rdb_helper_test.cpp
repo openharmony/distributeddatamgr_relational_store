@@ -616,7 +616,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
 
 /**
  * @tc.name: DeleteDatabase_024
- * @tc.desc: BatchInsertWithConflictResolution after deleteRdbStore
+ * @tc.desc: BatchInsert after deleteRdbStore
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, DeleteDatabase_024, TestSize.Level0)
@@ -633,7 +633,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_024, TestSize.Level0)
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = store->BatchInsertWithConflictResolution("test", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(result.first, E_ALREADY_CLOSED);
 }
 

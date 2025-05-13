@@ -538,7 +538,7 @@ int OH_Rdb_BatchInsert(OH_Rdb_Store *store, const char *table,
         }
         datas.Put(valuesBucket->Get());
     }
-    auto [errCode, count] = rdbStore->GetStore()->BatchInsertWithConflictResolution(table,
+    auto [errCode, count] = rdbStore->GetStore()->BatchInsert(table,
         datas, Utils::ConvertConflictResolution(resolution));
     *changes = count;
     if (errCode != OHOS::NativeRdb::E_OK) {
