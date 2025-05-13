@@ -1312,7 +1312,6 @@ RdbStore::ResultType RdbStoreImpl::Update(const RdbStore::Row &row, const AbsRdb
     }
     tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
 
-    int64_t changes = 0;
     auto result = ExecuteForChangedRow(sql, tmpBindArgs);
     if (result.count > 0) {
         DoCloudSync(table);
