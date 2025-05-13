@@ -1203,6 +1203,7 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
             "BatchInsert executeSqlArgs size[ " + std::to_string(argsSize) + "]"));
     }
 }
+
 RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
     const std::string &table, const RefRows &rows, RdbStore::Resolution resolution, const std::string &returningFiled)
 {
@@ -1318,33 +1319,6 @@ RdbStore::ResultType RdbStoreImpl::Update(const RdbStore::Row &row, const AbsRdb
     }
     return result;
 }
-
-//int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
-//{
-//    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-//    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
-//        return E_NOT_SUPPORT;
-//    }
-//    if (table.empty()) {
-//        return E_EMPTY_TABLE_NAME;
-//    }
-//
-//    RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
-//    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
-//    std::string sql;
-//    sql.append("DELETE FROM ").append(table);
-//    if (!whereClause.empty()) {
-//        sql.append(" WHERE ").append(whereClause);
-//    }
-//    int64_t changes = 0;
-//    auto errCode = ExecuteForChangedRowCount(changes, sql, args);
-//    if (errCode != E_OK) {
-//        return errCode;
-//    }
-//    deletedRows = changes;
-//    DoCloudSync(table);
-//    return E_OK;
-//}
 
 RdbStore::ResultType RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
 {

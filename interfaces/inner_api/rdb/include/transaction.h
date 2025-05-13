@@ -132,31 +132,33 @@ public:
     }
 
     /**
-    * @brief Inserts a batch of data into the target table.
-    *
-    * @param table Indicates the target table.
-    * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-    * @param returningFiled Indicates the fieldName of result. If not needed, set to empty
-    * @return Return the inserted result. Contains error codes, affected rows, and returningFiled values for inserting data
-    * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-    * This will result in returned results that do not match expectations
-    */
+     * @brief Inserts a batch of data into the target table.
+     *
+     * @param table Indicates the target table.
+     * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
+     * @param returningFiled Indicates the fieldName of result. If not needed, set to empty
+     * @return Return the inserted result. Contains error codes, affected rows,
+     * and returningFiled values for inserting data
+     * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
+     * This will result in returned results that do not match expectations
+     */
     virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningFiled)
     {
         return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
     }
 
     /**
-    * @brief Inserts a batch of data into the target table.
-    *
-    * @param table Indicates the target table.
-    * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-    * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
-    * @param returningFiled Indicates the fieldName of result. If not needed, set to empty
-    * @return Return the inserted result. Contains error codes, affected rows, and returningFiled values for inserting data
-    * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-    * This will result in returned results that do not match expectations
-    */
+     * @brief Inserts a batch of data into the target table.
+     *
+     * @param table Indicates the target table.
+     * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
+     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
+     * @param returningFiled Indicates the fieldName of result. If not needed, set to empty
+     * @return Return the inserted result. Contains error codes, affected rows,
+     * and returningFiled values for inserting data
+     * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
+     * This will result in returned results that do not match expectations
+     */
     virtual ResultType BatchInsert(
         const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled) = 0;
 
@@ -199,7 +201,8 @@ public:
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      * @param returningFiled Indicates the fieldName of result.
-     * @return Return the updated result. Contains error code, number of affected rows, and value of returningFiled after update
+     * @return Return the updated result. Contains error code, number of affected rows,
+     * and value of returningFiled after update
      * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
      * This will result in returned returning values that do not match expectations
      */
@@ -216,7 +219,8 @@ public:
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      * @param resolution Indicates the {@link ConflictResolution} to update data into the table.
      * @param returningFiled Indicates the fieldName of result.
-     * @return Return the updated result. Contains error code, number of affected rows, and value of returningFiled after update
+     * @return Return the updated result. Contains error code, number of affected rows,
+     * and value of returningFiled after update
      * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
      * This will result in returned returning values that do not match expectations
      */
@@ -254,7 +258,8 @@ public:
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      * @param returningFiled Indicates the fieldName of result.
-     * @return Return the deleted result. Contains error code, number of affected rows, and value of returningFiled before delete
+     * @return Return the deleted result. Contains error code, number of affected rows,
+     * and value of returningFiled before delete
      */
     virtual ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) = 0;
 

@@ -85,8 +85,8 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    ResultType BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled) override;
+    ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
+        const std::string &returningFiled) override;
     ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
         const std::string &returningField) override;
     ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
