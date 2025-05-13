@@ -87,11 +87,6 @@ std::string StringUtils::GetParentPath(const std::string &path)
     return path.substr(0, pos);
 }
 
-bool StringUtils::IsRootPath(const std::string &path)
-{
-    return (path == "/" || path.find(':') != std::string::npos);
-}
-
 StringUtils::StringUtils()
 {
 }

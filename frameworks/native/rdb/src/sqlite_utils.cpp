@@ -604,17 +604,14 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
     std::string currentPath = path;
 
     for (int i = 0; i < pathDepth; ++i) {
-        std::string parent = StringUtils::GetParentPath(currentPath);
-        if (StringUtils::IsRootPath(currentPath) || parent.empty()) {
+        currentPath = StringUtils::GetParentPath(currentPath);
+        if (currentPath == "/" || currentPath.empty()) {
             break;
         }
 
-        std::string dirName = StringUtils::ExtractFileName(parent);
-        std::string dirPath = parent;
-
+        std::string dirName = StringUtils::ExtractFileName(currentPath);
         struct stat st {};
-        dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
-        currentPath = parent;
+        dirModes.emplace_back(dirName, (stat(currentPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
     }
     std::string result;
     for (auto it = dirModes.rbegin(); it != dirModes.rend(); ++it) {

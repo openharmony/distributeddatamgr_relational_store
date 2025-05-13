@@ -177,11 +177,6 @@ HWTEST_F(SqliteUtilsTest, UnixRootPath, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::GetParentModes("/", 1), "no_parent");
 }
 
-HWTEST_F(SqliteUtilsTest, WindowsStylePath, TestSize.Level1)
-{
-    EXPECT_EQ(SqliteUtils::GetParentModes("C:\\ProgramFiles\\App", 1), "no_parent");
-}
-
 HWTEST_F(SqliteUtilsTest, AccessFailureCase, TestSize.Level1)
 {
     EXPECT_NE(SqliteUtils::GetParentModes("a/non_existing_path", 1).find("access_fail"), std::string::npos);
