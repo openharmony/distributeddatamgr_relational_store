@@ -303,7 +303,7 @@ int SharedBlock::PutBigInt(uint32_t row, uint32_t column, const void *value, siz
 
 int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *value, size_t size, int32_t type)
 {
-    if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums || value != nullptr)) {
+    if (UNLIKELY(row >= mHeader->rowNums || column >= mHeader->columnNums)) {
         LOG_ERROR("Failed to read row %{public}" PRIu32 ", column %{public}" PRIu32 " from a SharedBlock"
                   " which has %{public}" PRIu32 " rows, %{public}" PRIu32 " columns.",
             row, column, mHeader->rowNums, mHeader->columnNums);
