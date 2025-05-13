@@ -345,6 +345,38 @@ const std::string INVALID_SCHEMA_STR_14 = R"({
 	}]
 })";
 
+const std::string INVALID_SCHEMA_STR_15 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "$[*].localPath"
+                }
+                ]
+            },
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
 /**
  * @tc.name: KnowledgeSchemaHelperTest001
  * @tc.desc: test unmarshall schema
@@ -570,5 +602,17 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest007, TestSize.Leve
 {
     RdbKnowledgeSchema schema = {};
     bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_14, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest009
+ * @tc.desc: test invalid column description, duplicate column name
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest008, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_15, DB_NAME, schema);
     EXPECT_FALSE(ret);
 }
