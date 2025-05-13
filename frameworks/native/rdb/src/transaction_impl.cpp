@@ -206,25 +206,25 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
 }
 
 Transaction::ResultType TransactionImpl::BatchInsert(
-    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled)
+    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->BatchInsert(table, rows, resolution, returningFiled);
+    return store->BatchInsert(table, rows, resolution, returningField);
 }
 
 Transaction::ResultType TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    Resolution resolution, const std::string &returningFiled)
+    Resolution resolution, const std::string &returningField)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(row, predicates, resolution, returningFiled);
+    return store->Update(row, predicates, resolution, returningField);
 }
 
 Transaction::ResultType TransactionImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
