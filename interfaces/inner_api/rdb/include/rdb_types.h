@@ -23,6 +23,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include "value_object.h"
 
 namespace OHOS::DistributedRdb {
 enum RdbStatus {
@@ -389,6 +390,12 @@ public:
     };
     virtual ~SqlObserver() = default;
     virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
+};
+
+struct ResultType {
+    int32_t status;
+    int32_t count;
+    std::vector<NativeRdb::ValueObject> results;
 };
 } // namespace OHOS::DistributedRdb
 #endif

@@ -138,6 +138,12 @@ int RdbStore::Replace(int64_t &outRowId, const std::string &table, const Row &ro
     return errCode;
 }
 
+// Old version implementation, cannot be modified
+std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
+
 int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const Rows &rows)
 {
     ValuesBuckets refRows;
@@ -151,26 +157,32 @@ int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const
     return errCode;
 }
 
-std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows)
+std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    return { E_NOT_SUPPORT, -1 };
+    ResultType Result = BatchInsert(table, rows, resolution, "");
+    return { Result.status, Result.count };
 }
 
-std::pair<int, int64_t> RdbStore::BatchInsertWithConflictResolution(
-    const std::string &table, const RdbStore::RefRows &rows, RdbStore::Resolution resolution)
+RdbStore::ResultType RdbStore::BatchInsert(
+    const std::string &table, const RefRows &rows, const std::string &returningFiled)
 {
-    return { E_NOT_SUPPORT, -1 };
+    return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+}
+
+RdbStore::ResultType RdbStore::BatchInsert(
+    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled)
+{
+    return { E_NOT_SUPPORT, -1, {} };
 }
 
 std::pair<int, int> RdbStore::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
-    (void)table;
-    (void)row;
-    (void)where;
-    (void)args;
-    (void)resolution;
-    return { E_NOT_SUPPORT, 0 };
+    AbsRdbPredicates predicates(table);
+    predicates.SetWhereClause(where);
+    predicates.SetBindArgs(args);
+    auto result = Update(row, predicates, resolution);
+    return { result.status, result.count };
 }
 
 int RdbStore::Update(
@@ -193,6 +205,18 @@ int RdbStore::Update(
 {
     return Update(changedRows, table, row, whereClause, ToValues(args));
 };
+
+RdbStore::ResultType RdbStore::Update(
+    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution, const std::string &returningField)
+{
+    return { E_NOT_SUPPORT, -1, {} };
+}
+
+RdbStore::ResultType RdbStore::Update(
+    const RdbStore::Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled)
+{
+    return Update(row, predicates, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+}
 
 int RdbStore::UpdateWithConflictResolution(int &changedRows, const std::string &table, const Row &row,
     const std::string &whereClause, const Olds &args, Resolution resolution)
@@ -222,6 +246,22 @@ int RdbStore::Delete(int &deletedRows, const std::string &table, const std::stri
 int RdbStore::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
 {
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
+}
+
+int RdbStore::Delete(
+    int &deletedRows, const std::string &table, const std::string &whereClause, const RdbStore::Values &args)
+{
+    AbsRdbPredicates predicates(table);
+    predicates.SetWhereClause(whereClause);
+    predicates.SetBindArgs(args);
+    auto res = Delete(predicates);
+    deletedRows = res.count;
+    return res.status;
+}
+
+RdbStore::ResultType RdbStore::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+{
+    return RdbStore::ResultType();
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStore::Query(int &errCode, bool distinct, const std::string &table,

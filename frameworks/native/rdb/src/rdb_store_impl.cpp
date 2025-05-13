@@ -1203,9 +1203,8 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
             "BatchInsert executeSqlArgs size[ " + std::to_string(argsSize) + "]"));
     }
 }
-
-std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
-    const std::string &table, const ValuesBuckets &rows, Resolution resolution)
+RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
+    const std::string &table, const RefRows &rows, RdbStore::Resolution resolution, const std::string &returningFiled)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1234,10 +1233,14 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
+    if (!returningFiled.empty()) {
+        sql.append(" returning ").append(returningFiled);
+    }
     auto [errCode, statement] = GetStatement(sql, conn);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
-                  "app self can check the SQL", errCode, bindArgs.size(), table.c_str());
+                  "app self can check the SQL",
+            errCode, bindArgs.size(), table.c_str());
         return { errCode, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
@@ -1247,23 +1250,36 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsertWithConflictResolution(
         pool->Dump(true, "BATCH");
         return { errCode, -1 };
     }
+    ResultType result{ errCode, -1 };
+    if (errCode == E_OK) {
+        // the Changes must after GetValues, otherwise the result will be inaccurate
+        result.results = GetValues(statement);
+        result.count = statement->Changes();
+    }
+    if (errCode == E_SQLITE_CONSTRAINT) {
+        result.count = statement->Changes();
+    }
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
             table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
-        return { errCode, errCode == E_SQLITE_CONSTRAINT ? int64_t(statement->Changes()) : -1 };
     }
     conn = nullptr;
-    DoCloudSync(table);
-    return { E_OK, int64_t(statement->Changes()) };
+    if (result.count > 0) {
+        DoCloudSync(table);
+    } else {
+        result.results.clear();
+    }
+    return result;
 }
 
-std::pair<int, int> RdbStoreImpl::Update(
-    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
+RdbStore::ResultType RdbStoreImpl::Update(const RdbStore::Row &row, const AbsRdbPredicates &predicates,
+    Resolution resolution, const std::string &returningField)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
+    auto table = predicates.GetTableName();
     if (table.empty()) {
         return { E_EMPTY_TABLE_NAME, -1 };
     }
@@ -1281,6 +1297,7 @@ std::pair<int, int> RdbStoreImpl::Update(
     std::string sql;
     sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
     std::vector<ValueObject> tmpBindArgs;
+    auto args = predicates.GetBindArgs();
     size_t tmpBindSize = row.values_.size() + args.size();
     tmpBindArgs.reserve(tmpBindSize);
     const char *split = "";
@@ -1296,46 +1313,78 @@ std::pair<int, int> RdbStoreImpl::Update(
         tmpBindArgs.push_back(val); // columnValue
         split = ",";
     }
-
+    auto where = predicates.GetWhereClause();
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-
+    if (!returningField.empty()) {
+        sql.append(" returning ").append(returningField);
+    }
     tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
 
     int64_t changes = 0;
-    auto errCode = ExecuteForChangedRowCount(changes, sql, tmpBindArgs);
-    if (errCode == E_OK) {
+    auto result = ExecuteForChangedRow(sql, tmpBindArgs);
+    if (result.count > 0) {
         DoCloudSync(table);
     }
-    return { errCode, int32_t(changes) };
+    return result;
 }
 
-int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
+//int RdbStoreImpl::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
+//{
+//    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+//    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+//        return E_NOT_SUPPORT;
+//    }
+//    if (table.empty()) {
+//        return E_EMPTY_TABLE_NAME;
+//    }
+//
+//    RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
+//    SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+//    std::string sql;
+//    sql.append("DELETE FROM ").append(table);
+//    if (!whereClause.empty()) {
+//        sql.append(" WHERE ").append(whereClause);
+//    }
+//    int64_t changes = 0;
+//    auto errCode = ExecuteForChangedRowCount(changes, sql, args);
+//    if (errCode != E_OK) {
+//        return errCode;
+//    }
+//    deletedRows = changes;
+//    DoCloudSync(table);
+//    return E_OK;
+//}
+
+RdbStore::ResultType RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
-        return E_NOT_SUPPORT;
+        return { E_NOT_SUPPORT, -1 };
     }
+    auto table = predicates.GetTableName();
     if (table.empty()) {
-        return E_EMPTY_TABLE_NAME;
+        return { E_EMPTY_TABLE_NAME, -1 };
     }
 
     RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     std::string sql;
     sql.append("DELETE FROM ").append(table);
+    auto whereClause = predicates.GetWhereClause();
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
-    int64_t changes = 0;
-    auto errCode = ExecuteForChangedRowCount(changes, sql, args);
-    if (errCode != E_OK) {
-        return errCode;
+    if (!returningField.empty()) {
+        sql.append(" returning ").append(returningField);
     }
-    deletedRows = changes;
-    DoCloudSync(table);
-    return E_OK;
+    auto args = predicates.GetBindArgs();
+    auto res = ExecuteForChangedRow(sql, args);
+    if (res.count > 0) {
+        DoCloudSync(table);
+    }
+    return res;
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql, const Values &bindArgs)
@@ -1617,27 +1666,42 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return E_OK;
 }
 
-int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
+RdbStoreImpl::ResultType RdbStoreImpl::ExecuteForChangedRow(const std::string &sql, const Values &args)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
-        return E_NOT_SUPPORT;
+        return { E_NOT_SUPPORT, -1 };
     }
     auto [errCode, statement] = GetStatement(sql, false);
     if (statement == nullptr) {
-        return errCode;
+        return { errCode, -1 };
     }
     errCode = statement->Execute(args);
-    if (errCode == E_OK) {
-        outValue = statement->Changes();
-        return E_OK;
-    }
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         auto pool = GetPool();
         if (pool != nullptr) {
             pool->Dump(true, "UPG DEL");
         }
     }
-    return errCode;
+    ResultType result{ errCode, -1 };
+    // There are no data changes in other scenarios
+    if (errCode == E_OK) {
+        result.results = GetValues(statement);
+        result.count = statement->Changes();
+    }
+    if (errCode == E_SQLITE_CONSTRAINT) {
+        result.count = statement->Changes();
+    }
+    if (result.count <= 0) {
+        result.results.clear();
+    }
+    return result;
+}
+
+int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
+{
+    auto result = ExecuteForChangedRow(sql, args);
+    outValue = result.count;
+    return result.status;
 }
 
 int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &backupFilePath)
@@ -2678,6 +2742,30 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
         return errCode;
     }
     return conn->CleanDirtyLog(table, cursor);
+}
+
+std::vector<ValueObject> RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
+{
+    if (statement == nullptr) {
+        return {};
+    }
+    auto colCount = statement->GetColumnCount();
+    std::vector<ValueObject> values;
+    if (colCount <= 0) {
+        return values;
+    }
+    // The correct number of changed rows can only be obtained after completing the step
+    do {
+        if (values.size() < MAX_RETURNING_ROWS) {
+            auto [code, val] = statement->GetColumn(0);
+            if (code != E_OK) {
+                LOG_ERROR("GetColumn failed,errCode:%{public}d", code);
+                break;
+            }
+            values.push_back(std::move(val));
+        }
+    } while (statement->Step() == E_OK);
+    return values;
 }
 
 int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)
