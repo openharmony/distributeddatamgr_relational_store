@@ -164,13 +164,13 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
 }
 
 RdbStore::ResultType RdbStore::BatchInsert(
-    const std::string &table, const RefRows &rows, const std::string &returningFiled)
+    const std::string &table, const RefRows &rows, const std::string &returningField)
 {
-    return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+    return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningField);
 }
 
 RdbStore::ResultType RdbStore::BatchInsert(
-    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled)
+    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
 {
     return { E_NOT_SUPPORT, -1, {} };
 }
@@ -213,9 +213,9 @@ RdbStore::ResultType RdbStore::Update(
 }
 
 RdbStore::ResultType RdbStore::Update(
-    const RdbStore::Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled)
+    const RdbStore::Row &row, const AbsRdbPredicates &predicates, const std::string &returningField)
 {
-    return Update(row, predicates, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+    return Update(row, predicates, ConflictResolution::ON_CONFLICT_NONE, returningField);
 }
 
 int RdbStore::UpdateWithConflictResolution(int &changedRows, const std::string &table, const Row &row,

@@ -1205,7 +1205,7 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 }
 
 RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
-    const std::string &table, const RefRows &rows, RdbStore::Resolution resolution, const std::string &returningFiled)
+    const std::string &table, const RefRows &rows, RdbStore::Resolution resolution, const std::string &returningField)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1234,8 +1234,8 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
-    if (!returningFiled.empty()) {
-        sql.append(" returning ").append(returningFiled);
+    if (!returningField.empty()) {
+        sql.append(" returning ").append(returningField);
     }
     auto [errCode, statement] = GetStatement(sql, conn);
     if (statement == nullptr) {
