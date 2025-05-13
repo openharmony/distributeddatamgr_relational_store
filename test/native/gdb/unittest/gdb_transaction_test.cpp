@@ -76,6 +76,8 @@ static constexpr int32_t MAX_DATA_CNT = 200;
 static constexpr int32_t EXECUTE_INTERVAL = 3;
 static constexpr int32_t READ_INTERVAL = 100;
 
+static constexpr int32_t UT_MAX_CONST_STRING_LEN = (64 * 1024);
+
 void GdbTransactionTest::SetUpTestCase()
 {
     if (!IsSupportArkDataDb()) {
@@ -664,7 +666,7 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest017_TransactionMultiThread, TestS
 
 /**
  * @tc.name: GdbTransactionTest018_TransactionMultiThread
- * @tc.desc: test Transaction MultiThread Trasaction.write and Transaction.read
+ * @tc.desc: test Transaction MultiThread Transaction.write and Transaction.read
  * @tc.type: FUNC
  */
 HWTEST_F(GdbTransactionTest, GdbTransactionTest018_TransactionMultiThread, TestSize.Level1)
@@ -735,7 +737,7 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest019_TransactionMultiThread, TestS
 
 /**
  * @tc.name: GdbTransactionTest020_TransactionMultiThread
- * @tc.desc: test Transaction MultiThread Trasaction.write and GraphStore.read
+ * @tc.desc: test Transaction MultiThread Transaction.write and GraphStore.read
  * @tc.type: FUNC
  */
 HWTEST_F(GdbTransactionTest, GdbTransactionTest020_TransactionMultiThread, TestSize.Level1)
@@ -768,7 +770,7 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest020_TransactionMultiThread, TestS
 
 /**
  * @tc.name: GdbTransactionTest021_TransactionMultiThread
- * @tc.desc: test Transaction MultiThread Trasaction.write and GraphStore.write
+ * @tc.desc: test Transaction MultiThread Transaction.write and GraphStore.write
  * @tc.type: FUNC
  */
 HWTEST_F(GdbTransactionTest, GdbTransactionTest021_TransactionMultiThread, TestSize.Level1)
@@ -801,4 +803,39 @@ HWTEST_F(GdbTransactionTest, GdbTransactionTest021_TransactionMultiThread, TestS
         MatchAndVerifyPerson("name_trans_" + std::to_string(i), i);
         MatchAndVerifyPerson("name_" + std::to_string(i), i);
     }
+}
+
+/**
+ * @tc.name: GdbTransactionTest022
+ * @tc.desc: test subset_of through Transaction.read and GraphStore.read
+ * @tc.type: FUNC
+ */
+HWTEST_F(GdbTransactionTest, GdbTransactionTest022, TestSize.Level1)
+{
+    std::string overLimitName(UT_MAX_CONST_STRING_LEN, 'a');
+    ASSERT_NE(store_, nullptr);
+    InsertPerson("name_1", 1);
+    InsertPerson("name_2", 2);
+
+    auto [errTrans, trans] = store_->CreateTransaction();
+    ASSERT_EQ(errTrans, E_OK);
+    ASSERT_NE(trans, nullptr);
+
+    std::string gql = "MATCH (p:Person) WHERE subset_of('" + overLimitName + "', 'aa,11', ',') RETURN p.name";
+    auto [err, result] = store_->QueryGql(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
+    std::tie(err, result) = trans->Query(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
+
+    gql = "MATCH (p:Person) WHERE subset_of('b', '" + overLimitName + "', ',') RETURN p.name";
+    std::tie(err, result) = store_->QueryGql(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
+    std::tie(err, result) = trans->Query(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
+
+    gql = "MATCH (p:Person) WHERE subset_of('" + overLimitName + "', '" + overLimitName + "', ',') RETURN p.name";
+    std::tie(err, result) = store_->QueryGql(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
+    std::tie(err, result) = trans->Query(gql);
+    EXPECT_EQ(err, E_GRD_SEMANTIC_ERROR);
 }
