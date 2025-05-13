@@ -1483,7 +1483,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_039, TestSize.Level1)
     AbsRdbPredicates predicates("test");
     auto result = transaction->Update(row, predicates, "notExist");
     EXPECT_EQ(result.status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.count, -1);
     EXPECT_EQ(result.results.size(), 0);
 
     ret = transaction->Rollback();
@@ -1524,7 +1524,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_040, TestSize.Level1)
     AbsRdbPredicates predicates("test");
     result = transaction->Update(row, predicates, "id");
     EXPECT_EQ(result.status, E_SQLITE_BUSY);
-    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.count, -1);
     EXPECT_EQ(result.results.size(), 0);
 
     ret = transaction->Rollback();

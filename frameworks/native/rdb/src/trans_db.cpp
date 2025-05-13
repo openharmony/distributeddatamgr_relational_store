@@ -175,8 +175,8 @@ ResultType TransDB::Update(
 
     totalArgs.insert(totalArgs.end(), args.begin(), args.end());
     auto [errCode, statement] = GetStatement(sql);
-    if (statement == nullptr) {
-        return { errCode, 0 };
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
     return GenerateResult(statement->Execute(totalArgs), statement);
 }
@@ -303,7 +303,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(const std::
 
 ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement)
 {
-    ResultType result{ code, 0 };
+    ResultType result{ code, -1 };
     if (statement == nullptr) {
         return result;
     }
@@ -333,7 +333,7 @@ std::vector<ValueObject> TransDB::GetValues(std::shared_ptr<Statement> statement
     }
     // The correct number of changed rows can only be obtained after completing the step
     do {
-        if (values.size() < 1024) {
+        if (values.size() < MAX_RETURNING_ROWS) {
             auto [code, val] = statement->GetColumn(0);
             if (code != E_OK) {
                 LOG_ERROR("GetColumn failed,errCode:%{public}d", code);

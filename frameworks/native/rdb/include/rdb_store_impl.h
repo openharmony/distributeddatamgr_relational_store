@@ -230,7 +230,8 @@ private:
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     ResultType ExecuteForChangedRow(const std::string &sql, const Values &args);
-    std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
+    static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement);
+    static std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
     void HandleSchemaDDL(std::shared_ptr<Statement> statement,
         std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
     void BatchInsertArgsDfx(int argsSize);
