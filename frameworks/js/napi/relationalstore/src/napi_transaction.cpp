@@ -596,7 +596,7 @@ napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, nap
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        auto [code, insertRows] = context->StealTransaction()->BatchInsertWithConflictResolution(
+        auto [code, insertRows] = context->StealTransaction()->BatchInsert(
             context->tableName, context->valuesBuckets, context->conflictResolution);
         context->insertRows = insertRows;
         return code;

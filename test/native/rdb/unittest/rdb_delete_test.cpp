@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <numeric>
 #include <string>
 
 #include "common.h"
@@ -92,6 +93,7 @@ void RdbDeleteTest::TearDownTestCase(void)
 void RdbDeleteTest::SetUp(void)
 {
     store_ = *GetParam();
+    ASSERT_NE(store_, nullptr);
     store_->ExecuteSql("DELETE FROM test");
 }
 
@@ -106,36 +108,34 @@ void RdbDeleteTest::TearDown(void)
  */
 HWTEST_P(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int64_t id;
     int deletedRows;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->Delete(deletedRows, "test", "id = 1");
+    ret = store_->Delete(deletedRows, "test", "id = 1");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, deletedRows);
 
     std::shared_ptr<ResultSet> resultSet =
-        store->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "1" });
+        store_->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "1" });
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
-    resultSet = store->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "2" });
+    resultSet = store_->QuerySql("SELECT * FROM test WHERE id = ?", std::vector<std::string>{ "2" });
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
@@ -144,7 +144,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
     ret = resultSet->Close();
     EXPECT_EQ(ret, E_OK);
 
-    resultSet = store->QuerySql("SELECT * FROM test WHERE id = 3", std::vector<std::string>());
+    resultSet = store_->QuerySql("SELECT * FROM test WHERE id = 3", std::vector<std::string>());
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
@@ -161,8 +161,6 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_001, TestSize.Level1)
  */
 HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int64_t id;
     ValuesBucket values;
     int deletedRows;
@@ -172,7 +170,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -182,7 +180,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
     values.PutInt("age", 19);
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Insert(id, "test", values);
+    ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -192,15 +190,15 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->Insert(id, "test", values);
+    ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
-    ret = store->Delete(deletedRows, "test");
+    ret = store_->Delete(deletedRows, "test");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, deletedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -215,8 +213,6 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_002, TestSize.Level1)
  */
 HWTEST_P(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int64_t id;
     ValuesBucket values;
     int deletedRows;
@@ -226,22 +222,185 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_003, TestSize.Level1)
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Delete(deletedRows, "", "id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Delete(deletedRows, "", "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
-    ret = store->Delete(deletedRows, "wrongTable", "id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Delete(deletedRows, "wrongTable", "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_SQLITE_ERROR);
 
-    ret = store->Delete(deletedRows, "test", "wrong sql id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Delete(deletedRows, "test", "wrong sql id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_SQLITE_ERROR);
 
-    ret = store->Delete(deletedRows, "test", "id = 1", std::vector<std::string>());
+    ret = store_->Delete(deletedRows, "test", "id = 1", std::vector<std::string>());
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(deletedRows, 1);
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_001
+ * @tc.desc: normal test
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_001, TestSize.Level1)
+{
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store_->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    AbsRdbPredicates predicates("test");
+    auto res = store_->Delete(predicates, "id");
+    EXPECT_EQ(res.status, E_OK);
+    EXPECT_EQ(res.count, 1);
+    ASSERT_EQ(res.results.size(), 1);
+    EXPECT_EQ(int(res.results[0]), 1);
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_002
+ * @tc.desc: abnormal test, delete over returning limit
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_002, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 1124; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto ret = store_->BatchInsert("test", rows);
+    EXPECT_EQ(ret.first, E_OK);
+    EXPECT_EQ(ret.second, 1124);
+
+    AbsRdbPredicates predicates("test");
+    auto res = store_->Delete(predicates, "id");
+    EXPECT_EQ(res.status, E_OK);
+    EXPECT_EQ(res.count, 1124);
+    EXPECT_EQ(res.results.size(), 1024);
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_003
+ * @tc.desc: abnormal test, delete with returning field is string
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_003, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 15; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim" + std::to_string(i));
+        rows.Put(row);
+    }
+    auto ret = store_->BatchInsert("test", rows);
+    EXPECT_EQ(ret.first, E_OK);
+    EXPECT_EQ(ret.second, 15);
+
+    AbsRdbPredicates predicates("test");
+    auto res = store_->Delete(predicates, "name");
+    EXPECT_EQ(res.status, E_OK);
+    EXPECT_EQ(res.count, 15);
+    EXPECT_EQ(res.results.size(), 15);
+    for (int i = 0; i < 15; i++) {
+        EXPECT_EQ(std::string(res.results[i]), "Jim" + std::to_string(i));
+    }
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_004
+ * @tc.desc: abnormal test, delete with returning field is blob
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_004, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 15; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim" + std::to_string(i));
+        std::vector<uint8_t> blob(i);
+        std::iota(blob.begin(), blob.end(), 1);
+        row.PutBlob("blobType", blob);
+        rows.Put(row);
+    }
+    auto ret = store_->BatchInsert("test", rows);
+    EXPECT_EQ(ret.first, E_OK);
+    EXPECT_EQ(ret.second, 15);
+
+    AbsRdbPredicates predicates("test");
+    auto res = store_->Delete(predicates, "blobType");
+    EXPECT_EQ(res.status, E_OK);
+    EXPECT_EQ(res.count, 15);
+    EXPECT_EQ(res.results.size(), 15);
+    for (int i = 0; i < 15; i++) {
+        std::vector<uint8_t> blob(i);
+        std::iota(blob.begin(), blob.end(), 1);
+        EXPECT_EQ(std::vector<uint8_t>(res.results[i]), blob);
+    }
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_005
+ * @tc.desc: abnormal test, delete with returning field is not exist
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_005, TestSize.Level1)
+{
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store_->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    AbsRdbPredicates predicates("test");
+    auto res = store_->Delete(predicates, "notExist");
+    EXPECT_EQ(res.status, E_SQLITE_ERROR);
+    EXPECT_EQ(res.count, -1);
+    ASSERT_EQ(res.results.size(), 0);
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_006
+ * @tc.desc: abnormal test, delete with returning field is not exist
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_006, TestSize.Level1)
+{
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store_->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 100);
+    auto res = store_->Delete(predicates, "notExist");
+    EXPECT_EQ(res.status, E_SQLITE_ERROR);
+    EXPECT_EQ(res.count, -1);
+    ASSERT_EQ(res.results.size(), 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(DeleteTest, RdbDeleteTest, testing::Values(&g_store, &g_memDb));

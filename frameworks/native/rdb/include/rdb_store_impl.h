@@ -85,11 +85,11 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int, int64_t> BatchInsertWithConflictResolution(
-        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
+    ResultType BatchInsert(
+        const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled) override;
+    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
+        const std::string &returningField) override;
+    ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> RemoteQuery(
@@ -229,6 +229,8 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
+    ResultType ExecuteForChangedRow(const std::string &sql, const Values &args);
+    std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
     void HandleSchemaDDL(std::shared_ptr<Statement> statement,
         std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
     void BatchInsertArgsDfx(int argsSize);
@@ -240,13 +242,14 @@ private:
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
+    static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     bool isOpen_ = false;
     bool isReadOnly_ = false;
-    bool isMemoryRdb_;
+    bool isMemoryRdb_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;

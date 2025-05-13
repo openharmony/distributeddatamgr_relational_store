@@ -26,11 +26,11 @@ public:
     TransDB(std::shared_ptr<Connection> conn, const std::string &name);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
-    std::pair<int, int64_t> BatchInsertWithConflictResolution(
-        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
+    ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
+        const std::string &returningFiled) override;
+    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
+        const std::string &returningField) override;
+    ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
@@ -40,6 +40,8 @@ public:
 
 private:
     std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql) const;
+    static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement);
+    static std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
 
     int32_t maxArgs_ = 0;
     int64_t vSchema_ = 0;

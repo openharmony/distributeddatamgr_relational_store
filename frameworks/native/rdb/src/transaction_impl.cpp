@@ -205,7 +205,7 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
-std::pair<int32_t, int64_t> TransactionImpl::BatchInsertWithConflictResolution(
+std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
     auto store = GetStore();
@@ -213,7 +213,29 @@ std::pair<int32_t, int64_t> TransactionImpl::BatchInsertWithConflictResolution(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->BatchInsertWithConflictResolution(table, rows, resolution);
+    return store->BatchInsert(table, rows, resolution);
+}
+
+Transaction::ResultType TransactionImpl::BatchInsert(
+    const std::string &table, const RefRows &rows, const std::string &returningFiled)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->BatchInsert(table, rows, returningFiled);
+}
+
+Transaction::ResultType TransactionImpl::BatchInsert(
+    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningFiled)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->BatchInsert(table, rows, resolution, returningFiled);
 }
 
 std::pair<int, int> TransactionImpl::Update(
@@ -239,6 +261,28 @@ std::pair<int32_t, int32_t> TransactionImpl::Update(
         predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs(), resolution);
 }
 
+Transaction::ResultType TransactionImpl::Update(
+    const Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->Update(row, predicates, returningFiled);
+}
+
+Transaction::ResultType TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
+    Resolution resolution, const std::string &returningFiled)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->Update(row, predicates, resolution, returningFiled);
+}
+
 std::pair<int32_t, int32_t> TransactionImpl::Delete(
     const std::string &table, const std::string &whereClause, const Values &args)
 {
@@ -262,6 +306,16 @@ std::pair<int32_t, int32_t> TransactionImpl::Delete(const AbsRdbPredicates &pred
     int deletedRows{};
     auto errorCode = store->Delete(deletedRows, predicates);
     return { errorCode, deletedRows };
+}
+
+Transaction::ResultType TransactionImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->Delete(predicates, returningField);
 }
 
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)

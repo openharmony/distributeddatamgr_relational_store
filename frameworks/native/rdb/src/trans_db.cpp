@@ -104,8 +104,8 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
-    const std::string &table, const ValuesBuckets &rows, Resolution resolution)
+TransDB::ResultType TransDB::BatchInsert(
+    const std::string &table, const ValuesBuckets &rows, Resolution resolution, const std::string &returningFiled)
 {
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
@@ -119,6 +119,9 @@ std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
+    if (!returningFiled.empty()) {
+        sql.append(" returning ").append(returningFiled);
+    }
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s.", errCode,
@@ -130,16 +133,16 @@ std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
             table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
-        return { errCode, errCode == E_SQLITE_CONSTRAINT ? int64_t(statement->Changes()) : -1 };
     }
-    return { E_OK, int64_t(statement->Changes()) };
+    return GenerateResult(errCode, statement);
 }
 
-std::pair<int, int> TransDB::Update(
-    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
+ResultType TransDB::Update(
+    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution, const std::string &returningField)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    auto table = predicates.GetTableName();
     if (table.empty() || row.IsEmpty() || clause == nullptr) {
         return { E_INVALID_ARGS, 0 };
     }
@@ -147,6 +150,7 @@ std::pair<int, int> TransDB::Update(
     std::string sql("UPDATE");
     sql.append(clause).append(" ").append(table).append(" SET ");
     std::vector<ValueObject> totalArgs;
+    auto args = predicates.GetBindArgs();
     totalArgs.reserve(row.values_.size() + args.size());
     const char *split = "";
     for (auto &[key, val] : row.values_) {
@@ -161,9 +165,12 @@ std::pair<int, int> TransDB::Update(
         totalArgs.push_back(val);
         split = ",";
     }
-
+    auto where = predicates.GetWhereClause();
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
+    }
+    if (!returningField.empty()) {
+        sql.append(" returning ").append(returningField);
     }
 
     totalArgs.insert(totalArgs.end(), args.begin(), args.end());
@@ -171,36 +178,31 @@ std::pair<int, int> TransDB::Update(
     if (statement == nullptr) {
         return { errCode, 0 };
     }
-
-    errCode = statement->Execute(totalArgs);
-    if (errCode != E_OK) {
-        return { errCode, 0 };
-    }
-    return { errCode, int32_t(statement->Changes()) };
+    return GenerateResult(statement->Execute(totalArgs), statement);
 }
 
-int TransDB::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
+ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto table = predicates.GetTableName();
     if (table.empty()) {
-        return E_INVALID_ARGS;
+        return { E_INVALID_ARGS, -1 };
     }
 
     std::string sql;
     sql.append("DELETE FROM ").append(table);
+    auto whereClause = predicates.GetWhereClause();
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
+    if (!returningField.empty()) {
+        sql.append(" returning ").append(returningField);
+    }
     auto [errCode, statement] = GetStatement(sql);
-    if (statement == nullptr) {
-        return errCode;
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
-    errCode = statement->Execute(args);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    deletedRows = statement->Changes();
-    return E_OK;
+    return GenerateResult(statement->Execute(predicates.GetBindArgs()), statement);
 }
 
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
@@ -297,5 +299,49 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(const std::
         return { E_ALREADY_CLOSED, nullptr };
     }
     return connection->CreateStatement(sql, connection);
+}
+
+ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement)
+{
+    ResultType result{ code, 0 };
+    if (statement == nullptr) {
+        return result;
+    }
+    // There are no data changes in other scenarios
+    if (code == E_OK) {
+        result.results = GetValues(statement);
+        result.count = statement->Changes();
+    }
+    if (code == E_SQLITE_CONSTRAINT) {
+        result.count = statement->Changes();
+    }
+    if (result.count <= 0) {
+        result.results.clear();
+    }
+    return result;
+}
+
+std::vector<ValueObject> TransDB::GetValues(std::shared_ptr<Statement> statement)
+{
+    if (statement == nullptr) {
+        return {};
+    }
+    auto colCount = statement->GetColumnCount();
+    std::vector<ValueObject> values;
+    if (colCount <= 0) {
+        return values;
+    }
+    // The correct number of changed rows can only be obtained after completing the step
+    do {
+        if (values.size() < 1024) {
+            auto [code, val] = statement->GetColumn(0);
+            if (code != E_OK) {
+                LOG_ERROR("GetColumn failed,errCode:%{public}d", code);
+                break;
+            }
+            values.push_back(std::move(val));
+        }
+    } while (statement->Step() == E_OK);
+    return values;
 }
 } // namespace OHOS::NativeRdb

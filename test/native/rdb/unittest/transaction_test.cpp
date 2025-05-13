@@ -64,7 +64,7 @@ void TransactionTest::SetUpTestCase()
     RdbStoreConfig config(DATABASE_NAME);
     TransactionTestOpenCallback helper;
     TransactionTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(TransactionTest::store_, nullptr);
+    ASSERT_NE(TransactionTest::store_, nullptr);
     EXPECT_EQ(errCode, E_OK);
 }
 
@@ -76,6 +76,7 @@ void TransactionTest::TearDownTestCase()
 
 void TransactionTest::SetUp()
 {
+    ASSERT_NE(store_, nullptr);
     store_->Execute("DELETE FROM test");
 }
 
@@ -527,7 +528,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_011, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
     ASSERT_EQ(transaction->Commit(), E_SQLITE_ERROR);
@@ -568,7 +569,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_012, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
     ASSERT_EQ(transaction->Commit(), E_OK);
@@ -609,7 +610,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_013, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 2);
     ASSERT_EQ(transaction->Commit(), E_OK);
@@ -650,7 +651,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_014, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 4);
     ASSERT_EQ(transaction->Commit(), E_OK);
@@ -699,7 +700,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_015, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
     ASSERT_EQ(transaction->Commit(), E_OK);
@@ -748,7 +749,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_016, TestSize.Level1)
     auto result = transaction->Insert("test1", row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     // ON_CONFLICT_REPLACE is equivalent to ON_CONFLICT_ABORT after failure
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
@@ -790,27 +791,27 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_017, TestSize.Level1)
         row.Put("name", "Jim_batchInsert");
         rows.Put(row);
     }
-    auto result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 }
@@ -841,34 +842,34 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_018, TestSize.Level1)
         row.Put("name", "Jim_batchInsert");
         rows.Put(row);
     }
-    auto result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 }
 
 /**
  * @tc.name: RdbStore_Transaction_019
- * @tc.desc: Normal BatchInsertWithConflictResolution
+ * @tc.desc: Normal BatchInsert
  * @tc.type: FUNC
  */
 HWTEST_F(TransactionTest, RdbStore_Transaction_019, TestSize.Level1)
@@ -882,13 +883,13 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_019, TestSize.Level1)
     ASSERT_NE(transaction, nullptr);
 
     ValuesBuckets rows;
-    auto result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
     for (int i = 0; i < 2; i++) {
@@ -896,13 +897,13 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_019, TestSize.Level1)
         row.Put("name", "Jim_batchInsert");
         rows.Put(row);
     }
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
 
@@ -1032,7 +1033,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_023, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Transaction_024
- * @tc.desc: Abnormal testcase of BatchInsertWithConflictResolution after commit.
+ * @tc.desc: Abnormal testcase of BatchInsert after commit.
  * @tc.type: FUNC
  */
 HWTEST_F(TransactionTest, RdbStore_Transaction_024, TestSize.Level1)
@@ -1053,7 +1054,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_024, TestSize.Level1)
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = transaction->BatchInsertWithConflictResolution(
+    auto result = transaction->BatchInsert(
         "test", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 }
@@ -1193,4 +1194,472 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_030, TestSize.Level1)
 
     ret = transaction->Rollback();
     EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_031
+ * @tc.desc: normal testcase of batch insert with returning 1.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_031, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+    ValuesBuckets rows;
+    for (int i = 0; i < 1; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1);
+    EXPECT_EQ(result.results.size(), 1);
+    for (int i = 0; i < 1; i++) {
+        int val = -1;
+        std::cout << std::string(result.results[i]) << std::endl;
+        EXPECT_EQ(result.results[i].GetInt(val), E_OK);
+        EXPECT_EQ(val, i);
+    }
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_032
+ * @tc.desc: normal testcase of batch insert with returning 0.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_032, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("id", 2);
+    row.Put("name", "Jim");
+    auto res = transaction->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    ASSERT_EQ(res.second, 2);
+    rows.Put(row);
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_IGNORE, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.results.size(), 0);
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_033
+ * @tc.desc: normal testcase of batch insert with returning overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_033, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 1025; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    ASSERT_EQ(result.results.size(), 1024);
+    for (size_t i = 0; i < 1024; i++) {
+        EXPECT_EQ(int(result.results[i]), i);
+    }
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_034
+ * @tc.desc: normal testcase of batch insert with not exist returning field.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_034, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "notExist");
+    EXPECT_EQ(result.status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.count, -1);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Commit();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_035
+ * @tc.desc: normal testcase of batch insert with Busy.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_035, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [res, transactionImme] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transactionImme, nullptr);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    EXPECT_EQ(result.status, E_SQLITE_BUSY);
+    EXPECT_EQ(result.count, -1);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_036
+ * @tc.desc: normal testcase of update with returning 1.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_036, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto res = transaction->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    ASSERT_EQ(res.second, 1);
+
+    row.Put("name", "Bob");
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+    auto result = transaction->Update(row, predicates, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1);
+    ASSERT_EQ(result.results.size(), 1);
+    EXPECT_EQ(int(result.results[0]), 1);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_037
+ * @tc.desc: abnormal testcase of update with returning 0.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_037, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto res = transaction->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    ASSERT_EQ(res.second, 1);
+
+    row.Put("name", "Bob");
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 2);
+    auto result = transaction->Update(row, predicates, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_038
+ * @tc.desc: abnormal testcase of update with returning overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_038, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 1025; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto res = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(res.first, E_OK);
+    EXPECT_EQ(res.second, 1025);
+
+    ValuesBucket row;
+    row.Put("name", "Tom");
+
+    AbsRdbPredicates predicates("test");
+    auto result = transaction->Update(row, predicates, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    EXPECT_EQ(result.results.size(), 1024);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_039
+ * @tc.desc: abnormal testcase of update with returning not exist field.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_039, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 2; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto res = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(res.first, E_OK);
+    EXPECT_EQ(res.second, 2);
+
+    ValuesBucket row;
+    row.Put("name", "Tom");
+
+    AbsRdbPredicates predicates("test");
+    auto result = transaction->Update(row, predicates, "notExist");
+    EXPECT_EQ(result.status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_040
+ * @tc.desc: abnormal testcase of update with Busy.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_040, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [res, transactionImme] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transactionImme, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transactionImme->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 5);
+    EXPECT_EQ(result.results.size(), 5);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBucket row;
+    row.Put("name", "Tom");
+    AbsRdbPredicates predicates("test");
+    result = transaction->Update(row, predicates, "id");
+    EXPECT_EQ(result.status, E_SQLITE_BUSY);
+    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_041
+ * @tc.desc: normal testcase of delete with returning 1.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_041, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto res = transaction->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    ASSERT_EQ(res.second, 1);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 1);
+    auto result = transaction->Delete(predicates, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1);
+    ASSERT_EQ(result.results.size(), 1);
+    EXPECT_EQ(int(result.results[0]), 1);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_042
+ * @tc.desc: normal testcase of delete with returning 0.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_042, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    Transaction::Row row;
+    row.Put("id", 1);
+    row.Put("name", "Jim");
+    auto res = transaction->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    ASSERT_EQ(res.second, 1);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 2);
+    auto result = transaction->Delete(predicates, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 0);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_043
+ * @tc.desc: abnormal testcase of delete with returning over limit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_043, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 1025; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    EXPECT_EQ(result.results.size(), 1024);
+
+    AbsRdbPredicates predicates("test");
+    result = transaction->Delete(predicates, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    EXPECT_EQ(result.results.size(), 1024);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_044
+ * @tc.desc: abnormal testcase of delete with returning no exist field.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_044, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 2; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(row);
+    }
+    auto result = transaction->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_ROLLBACK, "id");
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 2);
+    EXPECT_EQ(result.results.size(), 2);
+
+    AbsRdbPredicates predicates("test");
+    result = transaction->Delete(predicates, "noExist");
+    EXPECT_EQ(result.status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.count, -1);
+    EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
 }

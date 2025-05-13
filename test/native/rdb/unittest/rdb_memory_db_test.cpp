@@ -400,27 +400,27 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_003, TestSize.Level1)
         row.Put("name", "Jim_batchInsert");
         rows.Put(row);
     }
-    auto result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 
-    result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     ASSERT_EQ(result.second, -1);
 }
