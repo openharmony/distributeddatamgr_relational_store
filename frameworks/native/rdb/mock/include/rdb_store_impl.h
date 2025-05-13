@@ -41,11 +41,11 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int, int64_t> BatchInsertWithConflictResolution(
-        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
+    ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
+        const std::string &returningFiled) override;
+    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
+        const std::string &returningField) override;
+    ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
