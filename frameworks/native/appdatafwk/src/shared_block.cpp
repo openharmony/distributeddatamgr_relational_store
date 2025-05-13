@@ -320,7 +320,7 @@ int SharedBlock::PutBlobOrString(uint32_t row, uint32_t column, const void *valu
     }
     mHeader->unusedOffset = end;
 
-    if (size != 0) {
+    if (size != 0 && value != nullptr) {
         errno_t result = memcpy_s(mData + offset, size, value, size);
         if (UNLIKELY(result != EOK)) {
             return SHARED_BLOCK_NO_MEMORY;

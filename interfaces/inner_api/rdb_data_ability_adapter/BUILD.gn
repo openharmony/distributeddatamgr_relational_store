@@ -20,7 +20,6 @@ config("rdb_data_ability_adapter_config") {
   }
   include_dirs = [
     "include",
-    "${datashare_path}/common/include/",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/rdb/include",
     "${common_tool_path}/",
@@ -29,7 +28,10 @@ config("rdb_data_ability_adapter_config") {
 
 config("rdb_data_ability_adapter_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [ 
+    "include",
+    "${datashare_path}/common/include/",
+  ]
 }
 
 ohos_shared_library("rdb_data_ability_adapter") {
