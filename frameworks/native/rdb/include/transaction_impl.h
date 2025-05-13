@@ -36,21 +36,10 @@ public:
     std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
-    std::pair<int32_t, int64_t> BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution) override;
-    ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningFiled) override;
     ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
         const std::string &returningFiled) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    std::pair<int32_t, int32_t> Update(
-        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution) override;
-    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled) override;
     ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
         const std::string &returningFiled) override;
-    std::pair<int32_t, int32_t> Delete(
-        const std::string &table, const std::string &whereClause, const Values &args) override;
-    std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) override;
     ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,

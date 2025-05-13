@@ -40,6 +40,7 @@ public:
 
 private:
     std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql) const;
+    static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
     static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement);
     static std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
 

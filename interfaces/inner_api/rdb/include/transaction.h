@@ -125,7 +125,11 @@ public:
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
     virtual std::pair<int32_t, int64_t> BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution) = 0;
+        const std::string &table, const RefRows &rows, Resolution resolution)
+    {
+        auto result = BatchInsert(table, rows, resolution, "");
+        return { result.status, result.count };
+    }
 
     /**
     * @brief Inserts a batch of data into the target table.
@@ -137,8 +141,10 @@ public:
     * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
     * This will result in returned results that do not match expectations
     */
-    virtual ResultType BatchInsert(
-        const std::string &table, const RefRows &rows, const std::string &returningFiled) = 0;
+    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningFiled)
+    {
+        return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+    }
 
     /**
     * @brief Inserts a batch of data into the target table.
@@ -164,7 +170,13 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where = "",
-        const Values &args = {}, Resolution resolution = NO_ACTION) = 0;
+        const Values &args = {}, Resolution resolution = NO_ACTION)
+    {
+        AbsRdbPredicates predicates(table);
+        predicates.SetWhereClause(where);
+        predicates.SetBindArgs(args);
+        return Update(row, predicates, resolution);
+    }
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -174,7 +186,11 @@ public:
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
     virtual std::pair<int32_t, int32_t> Update(
-        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION) = 0;
+        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION)
+    {
+        auto result = Update(row, predicates, resolution, "");
+        return { result.status, result.count };
+    }
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -187,8 +203,10 @@ public:
      * @warning When using returningFiled, it is not recommended to use the ON_CONFLICT_FAIL strategy.
      * This will result in returned returning values that do not match expectations
      */
-    virtual ResultType Update(
-        const Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled) = 0;
+    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const std::string &returningFiled)
+    {
+        return Update(row, predicates, ConflictResolution::ON_CONFLICT_NONE, returningFiled);
+    }
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -212,14 +230,24 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual std::pair<int32_t, int32_t> Delete(
-        const std::string &table, const std::string &whereClause = "", const Values &args = {}) = 0;
+        const std::string &table, const std::string &whereClause = "", const Values &args = {})
+    {
+        AbsRdbPredicates predicates(table);
+        predicates.SetWhereClause(whereClause);
+        predicates.SetBindArgs(args);
+        return Delete(predicates);
+    }
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
-    virtual std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) = 0;
+    virtual std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates)
+    {
+        auto result = Delete(predicates, "");
+        return { result.status, result.count };
+    }
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.

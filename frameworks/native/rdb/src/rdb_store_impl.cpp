@@ -1250,24 +1250,14 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
         pool->Dump(true, "BATCH");
         return { errCode, -1 };
     }
-    ResultType result{ errCode, -1 };
-    if (errCode == E_OK) {
-        // the Changes must after GetValues, otherwise the result will be inaccurate
-        result.results = GetValues(statement);
-        result.count = statement->Changes();
-    }
-    if (errCode == E_SQLITE_CONSTRAINT) {
-        result.count = statement->Changes();
-    }
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
             table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
     }
+    auto result = GenerateResult(errCode, statement);
     conn = nullptr;
     if (result.count > 0) {
         DoCloudSync(table);
-    } else {
-        result.results.clear();
     }
     return result;
 }
@@ -1682,19 +1672,7 @@ RdbStoreImpl::ResultType RdbStoreImpl::ExecuteForChangedRow(const std::string &s
             pool->Dump(true, "UPG DEL");
         }
     }
-    ResultType result{ errCode, -1 };
-    // There are no data changes in other scenarios
-    if (errCode == E_OK) {
-        result.results = GetValues(statement);
-        result.count = statement->Changes();
-    }
-    if (errCode == E_SQLITE_CONSTRAINT) {
-        result.count = statement->Changes();
-    }
-    if (result.count <= 0) {
-        result.results.clear();
-    }
-    return result;
+    return GenerateResult(errCode, statement);
 }
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
@@ -2766,6 +2744,26 @@ std::vector<ValueObject> RdbStoreImpl::GetValues(std::shared_ptr<Statement> stat
         }
     } while (statement->Step() == E_OK);
     return values;
+}
+
+ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement)
+{
+    ResultType result{ code, -1 };
+    if (statement == nullptr) {
+        return result;
+    }
+    // There are no data changes in other scenarios
+    if (code == E_OK) {
+        result.results = GetValues(statement);
+        result.count = statement->Changes();
+    }
+    if (code == E_SQLITE_CONSTRAINT) {
+        result.count = statement->Changes();
+    }
+    if (result.count <= 0) {
+        result.results.clear();
+    }
+    return result;
 }
 
 int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)
