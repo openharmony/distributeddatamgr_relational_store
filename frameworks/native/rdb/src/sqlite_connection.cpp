@@ -1627,7 +1627,7 @@ void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg)
     SqliteUtils::SetSlaveInvalid(conn->config_.GetPath());
 }
 
-int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *dbHandle, bool isMemoryRdb)
+int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb)
 {
     int openFileFlags = (SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX);
     if (isMemoryRdb) {

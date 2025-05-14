@@ -132,7 +132,7 @@ private:
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg);
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
-    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *dbHandle, bool isMemoryRdb);
+    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
     static void BinlogSetConfig(sqlite3 *dbHandle);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount);
     static int AsyncReplayBinlog(sqlite3 *dbHandle, sqlite3 *slaveDbHandle);
