@@ -70,13 +70,28 @@ std::string StringUtils::ExtractFileName(const std::string &fileFullName)
     return std::string(fileFullName).substr(fileFullName.rfind("/") + 1, fileFullName.size());
 }
 
-std::string StringUtils::TruncateAfterFirstParen(const std::string& str)
+std::string StringUtils::TruncateAfterFirstParen(const std::string &str)
 {
     size_t pos = str.find('(');
     return (pos != std::string::npos) ? str.substr(0, pos) : str;
 }
+std::string StringUtils::GetParentPath(const std::string &path)
+{
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return "";
+    }
+    if (pos == 0) {
+        return "/";
+    }
+    return path.substr(0, pos);
+}
 
-StringUtils::StringUtils() {}
-StringUtils::~StringUtils() {}
+StringUtils::StringUtils()
+{
+}
+StringUtils::~StringUtils()
+{
+}
 } // namespace NativeRdb
 } // namespace OHOS
