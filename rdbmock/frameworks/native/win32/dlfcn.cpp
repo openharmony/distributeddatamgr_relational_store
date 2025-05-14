@@ -24,3 +24,8 @@ void *dlsym(void *handle, const char *funcName)
 {
     return nullptr;
 };
+
+void *dlclose(void *handle)
+{
+    return nullptr;
+};

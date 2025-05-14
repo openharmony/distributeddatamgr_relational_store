@@ -37,6 +37,7 @@ ohos_shared_library("native_graphstore") {
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
   ]
   sources = [
     "${relational_store_native_path}/gdb/adapter/src/grd_adapter.cpp",
@@ -71,7 +72,6 @@ ohos_shared_library("native_graphstore") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
     "json:nlohmann_json_static",
   ]
   if (arkdata_db_core_is_exists) {
