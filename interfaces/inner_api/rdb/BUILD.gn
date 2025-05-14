@@ -71,6 +71,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/rdb_device_manager_adapter/include",
     ]
 
@@ -98,6 +99,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
@@ -151,13 +153,11 @@ if (is_ohos && !build_ohos_sdk) {
     external_deps = [
       "ability_base:zuri",
       "ability_runtime:dataobs_manager",
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
       "kv_store:distributeddb",
@@ -224,13 +224,11 @@ if (is_ohos && !build_ohos_sdk) {
     external_deps = [
       "ability_base:zuri",
       "ability_runtime:dataobs_manager",
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "device_manager:devicemanagersdk",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
       "kv_store:distributeddb",
@@ -258,6 +256,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
       "//third_party/libuv/src/win",
     ]
@@ -351,6 +350,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
     ]
 
@@ -438,6 +438,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
     ]
 
@@ -456,6 +457,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
@@ -502,6 +504,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/mock/include",
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
     ]
 
@@ -519,6 +522,7 @@ if (is_ohos && !build_ohos_sdk) {
       "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",

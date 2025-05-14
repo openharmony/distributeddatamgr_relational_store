@@ -28,6 +28,7 @@ extern "C" {
 
 void *dlopen(const char *pathName, int mode);
 void *dlsym(void *handle, const char *funcName);
+void *dlclose(void *handle);
 #ifdef __cplusplus
 }
 #endif

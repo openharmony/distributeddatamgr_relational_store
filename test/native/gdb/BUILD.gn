@@ -54,6 +54,7 @@ ohos_unittest("NativeGdbTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = base_sources
@@ -74,7 +75,6 @@ ohos_unittest("NativeGdbTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
     "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
   ]
@@ -93,6 +93,7 @@ ohos_unittest("NativeGdbAdaptTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = base_sources
@@ -125,6 +126,7 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = [
@@ -163,7 +165,6 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
     "json:nlohmann_json_static",
   ]
 
