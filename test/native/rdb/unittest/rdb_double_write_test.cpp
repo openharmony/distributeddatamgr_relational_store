@@ -1943,6 +1943,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_017, TestSize.Level0)
     Insert(id, count);
     store = nullptr;
 
+    config.SetHaMode(HAMode::MAIN_REPLICA);
     int errCode = E_OK;
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -1964,6 +1965,51 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_017, TestSize.Level0)
     store = nullptr;
     id = 13;
     for (int i = 0; i < count; i++) {
+        config.SetHaMode(HAMode::MAIN_REPLICA);
+        RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+        EXPECT_NE(store, nullptr);
+        PutValue(store, data, id, CHECKAGE);
+        store = nullptr;
+        id++;
+    }
+    free(data);
+}
+
+HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_018, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    if (!SqliteConnection::IsSupportBinlog(config)) {
+        return;
+    }
+    if (CheckFolderExist(BINLOG_DATABASE_NAME)) {
+        RemoveFolder(BINLOG_DATABASE_NAME);
+    }
+    InitDb();
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
+    ASSERT_TRUE(isBinlogExist);
+
+    size_t bigSize = 1024 * 1024 * 13;
+    char *data = (char *)malloc(bigSize);
+    if (data == nullptr) {
+        return;
+    }
+    memset_s(data, bigSize - 1, 'a', bigSize - 1);
+
+    store = nullptr;
+    id = 11;
+    for (int i = 0; i < count; i++) {
+        config.SetHaMode(HAMode::MAIN_REPLICA);
         RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
         EXPECT_NE(store, nullptr);
         PutValue(store, data, id, CHECKAGE);
