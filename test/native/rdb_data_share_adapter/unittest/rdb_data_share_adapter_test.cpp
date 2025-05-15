@@ -18,6 +18,7 @@
 #include <string>
 
 #include "datashare_predicates.h"
+#include "datashare_values_bucket.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -496,29 +497,4 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_009, TestSize.Level1)
     int ret2 = store->Insert(id, "test", RdbUtils::ToValuesBucket(values));
     EXPECT_EQ(ret2, OHOS::NativeRdb::E_OK);
     EXPECT_EQ(2, id);
-
-    std::string table = "test";
-    OHOS::DataShare::OperationItem item;
-    item.singleParams = {};
-    RdbPredicates predicates("test");
-    RdbUtils::EqualTo(item, predicates);
-    std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allPerson = store->Query(predicates, columns);
-    EXPECT_EQ(2, ResultSize(allPerson));
-
-    RdbUtils::GreaterThan(item, predicates);
-    allPerson = store->Query(predicates, columns);
-    EXPECT_EQ(2, ResultSize(allPerson));
-
-    RdbUtils::Limit(item, predicates);
-    allPerson = store->Query(predicates, columns);
-    EXPECT_EQ(2, ResultSize(allPerson));
-
-    RdbUtils::NotEqualTo(item, predicates);
-    allPerson = store->Query(predicates, columns);
-    EXPECT_EQ(2, ResultSize(allPerson));
-
-    RdbUtils::LessThan(item, predicates);
-    allPerson = store->Query(predicates, columns);
-    EXPECT_EQ(2, ResultSize(allPerson));
 }

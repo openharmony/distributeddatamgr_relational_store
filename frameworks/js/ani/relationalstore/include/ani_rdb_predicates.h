@@ -13,24 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef ANI_RESULT_SET_H
-#define ANI_RESULT_SET_H
+#ifndef ANI_RDB_PREDICATES_H
+#define ANI_RDB_PREDICATES_H
 
+#include "abs_rdb_predicates.h"
 #include "ani_utils.h"
-#include "rdb_helper.h"
+#include "rdb_predicates.h"
 
 namespace OHOS {
 namespace RelationalStoreAniKit {
 
-class ResultSetProxy : public NativeObject {
+class PredicatesProxy : public NativeObject {
 public:
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultset;
+    std::shared_ptr<OHOS::NativeRdb::AbsRdbPredicates> predicates;
 };
 
-ani_status ResultSetInit(ani_env *env);
+ani_status PredicatesInit(ani_env *env);
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
 
-#endif //ANI_RESULT_SET_H
+#endif // ANI_RDB_PREDICATES_H
 
