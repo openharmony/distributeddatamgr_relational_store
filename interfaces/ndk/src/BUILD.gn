@@ -37,6 +37,7 @@ ohos_shared_library("native_rdb_ndk") {
     "oh_data_value.cpp",
     "oh_data_values.cpp",
     "oh_data_values_buckets.cpp",
+    "oh_rdb_crypto_param.cpp",
     "oh_rdb_transaction.cpp",
     "relational_asset.cpp",
     "relational_cursor.cpp",
