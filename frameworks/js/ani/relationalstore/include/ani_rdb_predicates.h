@@ -17,12 +17,13 @@
 #define ANI_RDB_PREDICATES_H
 
 #include "abs_rdb_predicates.h"
+#include "ani_utils.h"
 #include "rdb_predicates.h"
 
 namespace OHOS {
 namespace RelationalStoreAniKit {
 
-class PredicatesProxy {
+class PredicatesProxy : public NativeObject {
 public:
     std::shared_ptr<OHOS::NativeRdb::AbsRdbPredicates> predicates;
 };

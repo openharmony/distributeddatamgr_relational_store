@@ -330,13 +330,26 @@ bool UnionAccessor::GetObjectStringPropertyByName(std::string clsName, const cha
     return true;
 }
 
-bool UnionAccessor::GetObjectEnumValuePropertyByName(std::string clsName, const char *name, ani_int &val)
+bool UnionAccessor::GetObjectEnumValuePropertyByName(
+    std::string clsName, const char *name, ani_int &val, bool optional)
 {
     ani_ref ref;
     auto isOk = GetObjectRefPropertyByName(clsName, name, ref);
     if (!isOk) {
         LOG_ERROR("GetObjectRefPropertyByName failed");
         return false;
+    }
+    if (optional) {
+        ani_boolean isUndefined;
+        auto err = env_->Reference_IsUndefined(ref, &isUndefined);
+        if (err != ANI_OK) {
+            LOG_ERROR("Reference_IsUndefined fail.");
+            return false;
+        }
+        if (isUndefined) {
+            LOG_DEBUG("Optional enum item undefined.");
+            return true;
+        }
     }
     ani_int enumValue;
     auto status = env_->EnumItem_GetValue_Int(static_cast<ani_enum_item>(ref), &enumValue);
@@ -380,11 +393,15 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
         return false;
     }
     ani_int enumVal;
-    isOk = GetObjectEnumValuePropertyByName(clsName, "status", enumVal);
+    isOk = GetObjectEnumValuePropertyByName(clsName, "status", enumVal, true);
     if (!isOk) {
         return false;
     }
     value.status = static_cast<AssetValue::Status>(enumVal);
+    if (value.status != AssetValue::STATUS_DELETE) {
+        value.status = AssetValue::STATUS_UNKNOWN;
+    }
+    value.hash = value.modifyTime + "_" + value.size;
     LOG_DEBUG("convert asset ok.");
     return true;
 }
@@ -573,3 +590,47 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
     return content;
 }
 
+static void CleanNativePtr(ani_env *env, ani_object object)
+{
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
+    ani_long ptr = 0;
+    if (ANI_OK != env->Object_GetFieldByName_Long(object, "targetPtr", &ptr)) {
+        LOG_ERROR("Can not get targetPtr.");
+        return;
+    }
+    delete reinterpret_cast<NativeObject *>(ptr);
+}
+
+ani_status CleanerInit(ani_env *env)
+{
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
+
+    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
+    ani_namespace ns;
+    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
+        LOG_ERROR("Not found '%{public}s", namespaceName);
+        return ANI_ERROR;
+    }
+
+    ani_class cls;
+    const char *className = "LCleaner;";
+    if (ANI_OK != env->Namespace_FindClass(ns, className, &cls)) {
+        LOG_ERROR("Not found '%{public}s", className);
+        return ANI_ERROR;
+    }
+
+    std::array methods = {
+        ani_native_function {"clean", nullptr, reinterpret_cast<void *>(CleanNativePtr)},
+    };
+    if (ANI_OK != env->Class_BindNativeMethods(cls, methods.data(), methods.size())) {
+        LOG_ERROR("Cannot bind native methods to '%{public}s", className);
+        return ANI_ERROR;
+    }
+    return ANI_OK;
+}

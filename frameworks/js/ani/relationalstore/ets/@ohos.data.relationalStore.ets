@@ -47,10 +47,51 @@ export default namespace relationalStore {
 
   export type ValuesBucket = Record<string, ValueType>;
 
+  class Cleaner {
+    static callback(cleaner: Cleaner): void {
+      cleaner.clean()
+    }
+
+    constructor(targetPtr: long) {
+      this.targetPtr = targetPtr
+    }
+
+    native clean(): void
+    private targetPtr: long = 0
+  }
+
+  class FinalizationAgent<T extends Object> {
+    constructor(obj: T, ptr: long) {
+      this.register(obj, ptr);
+    }
+
+    register(obj: T, ptr: long): void {
+      this.unregisterToken = {};
+      this.cleaner = new Cleaner(ptr);
+      finalizer.register(obj, this.cleaner!, this.unregisterToken);
+    }
+
+    unregister(): void {
+      finalizer.unregister(this.unregisterToken);
+    }
+
+    private cleaner: Cleaner | null = null;
+    private unregisterToken: object;
+  }
+
+  let finalizer = new FinalizationRegistry<Cleaner>(Cleaner.callback)
+
   export class RdbPredicates {
     private nativePtr: long = 0
+    private fzAgent: FinalizationAgent<RdbPredicates>
+
     constructor(name: string) {
       this.initNativePredicates(name)
+      this.initFinalizer()
+    }
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<RdbPredicates>(this, this.nativePtr)
     }
     private native initNativePredicates(name: string): void;
   }
@@ -64,6 +105,11 @@ export default namespace relationalStore {
 
   class ResultSetInner implements ResultSet {
     private nativePtr: long = 0;
+    private fzAgent: FinalizationAgent<ResultSetInner>
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<ResultSetInner>(this, this.nativePtr)
+    }
 
     native getColumnIndex(columnName: string): number;
     native getString(columnIndex: number): string;
@@ -149,6 +195,11 @@ export default namespace relationalStore {
 
   class RdbStoreInner implements RdbStore {
     private nativePtr: long = 0;
+    private fzAgent: FinalizationAgent<RdbStoreInner>
+
+    private initFinalizer() :void {
+      this.fzAgent = new FinalizationAgent<RdbStoreInner>(this, this.nativePtr)
+    }
 
     batchInsert(table: string, values: Array<ValuesBucket>, callback: AsyncCallback<number>): void {
       let cb = (): Object => {

@@ -67,8 +67,7 @@
                 "sqlite",
                 "file_api",
                 "json",
-                "runtime_core",
-                "data_share"
+                "runtime_core"
             ],
             "third_party": [
                 "sqlite"
