@@ -28,3 +28,4 @@ ani_status RdbStoreHelperInit(ani_env *env);
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
 #endif // ANI_RDB_STORE_HELPER_H
+

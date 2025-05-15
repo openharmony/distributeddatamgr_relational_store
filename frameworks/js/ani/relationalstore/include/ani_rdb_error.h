@@ -42,8 +42,10 @@ struct JsErrorCode {
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
 ani_object GetAniBusinessError(ani_env *env, int32_t errorCode);
 void ThrowBusinessError(ani_env *env, int32_t status);
+void ThrowBusinessError(ani_env *env, int32_t status, std::string message);
 
 } // namespace RelationalStoreAniKit
 } // namespace OHOS
 
 #endif // ANI_RDB_ERROR_H
+
