@@ -281,4 +281,14 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql,
     }
     return store->Execute(sql, args);
 }
+
+Transaction::ResultType TransactionImpl::ExecuteForResult(const std::string &sql, const Values &args)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->ExecuteForResult(sql, args);
+}
 } // namespace OHOS::NativeRdb

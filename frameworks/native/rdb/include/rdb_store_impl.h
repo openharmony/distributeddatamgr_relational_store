@@ -86,7 +86,7 @@ public:
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
-        const std::string &returningFiled) override;
+        const std::string &returningField) override;
     ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
         const std::string &returningField) override;
     ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
@@ -98,6 +98,7 @@ public:
         const AbsRdbPredicates &predicates, const Fields &columns) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
+    ResultType ExecuteForResult(const std::string &sql, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
     int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args) override;
@@ -188,8 +189,8 @@ private:
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
-    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(
-        std::shared_ptr<Statement> statement, const std::string &sql, const ValueObject &object, int sqlType);
+    ResultType HandleDifferentSqlTypes(
+        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
@@ -232,8 +233,7 @@ private:
     ResultType ExecuteForChangedRow(const std::string &sql, const Values &args);
     static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement);
     static std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
-    void HandleSchemaDDL(std::shared_ptr<Statement> statement,
-        std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
+    int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
