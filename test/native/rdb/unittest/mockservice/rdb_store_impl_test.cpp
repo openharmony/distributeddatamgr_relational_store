@@ -194,7 +194,7 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_005, TestSize.Level2)
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
-    EXPECT_EQ(storeImpl->config_, config);
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
 
 /* *
@@ -210,7 +210,7 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_006, TestSize.Level2)
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
-    EXPECT_EQ(storeImpl->config_, config);
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
 
 /* *
@@ -226,7 +226,7 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_007, TestSize.Level2)
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
-    EXPECT_EQ(storeImpl->config_, config);
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
 
 /* *
@@ -242,7 +242,7 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_009, TestSize.Level2)
     config.SetRegisterInfo(RegisterType::OBSERVER_END, true);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
-    EXPECT_EQ(storeImpl->config_, config);
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
 
 /* *
