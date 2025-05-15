@@ -877,7 +877,7 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_015, TestSize.Level1)
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = OH_VBucket_PutUnlimitedInt(valueBucket, "data1", 0, nullptr, 0);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-    ret =valueBucket->destroy(valueBucket);
+    ret = valueBucket->destroy(valueBucket);
     EXPECT_EQ(ret, RDB_OK);
     ret = OH_RdbTrans_Destroy(trans);
     EXPECT_EQ(ret, RDB_OK);
