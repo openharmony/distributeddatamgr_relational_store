@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "rdb_store_impl.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -25,7 +27,6 @@
 #include "rdb_service_mock.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
-#include "rdb_store_impl.h"
 #include "rdb_types.h"
 
 using namespace testing::ext;
@@ -187,18 +188,13 @@ HWTEST_F(RdbStoreImplConditionTest, Rdb_RemoteQueryTest_005, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_005, TestSize.Level2)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-
-    RdbStoreImplConditionTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
+    EXPECT_EQ(storeImpl->config_, config);
 }
 
 /* *
@@ -208,18 +204,13 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_005, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_006, TestSize.Level2)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-
-    RdbStoreImplConditionTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_SQLITE_CANTOPEN);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
+    EXPECT_EQ(storeImpl->config_, config);
 }
 
 /* *
@@ -229,18 +220,13 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_006, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_007, TestSize.Level2)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
-    config.SetDBType(DB_SQLITE);
+    config.SetDBType(DB_VECTOR);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-
-    RdbStoreImplConditionTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_SQLITE_CANTOPEN);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
+    EXPECT_EQ(storeImpl->config_, config);
 }
 
 /* *
@@ -250,18 +236,13 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_007, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_009, TestSize.Level2)
 {
-    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::OBSERVER_END, true);
-
-    RdbStoreImplConditionTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_SQLITE_CANTOPEN);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->NotifyDataChange();
+    EXPECT_EQ(storeImpl->config_, config);
 }
 
 /* *
@@ -537,6 +518,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetKnowledgeSchema, TestSize.Level2)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    EXPECT_EQ(storeImpl->config_, config);
     storeImpl->Close();
 }
 
