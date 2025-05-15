@@ -102,6 +102,17 @@ bool KnowledgeSchemaHelper::CheckKnowledgeSchema(const KnowledgeSchema &schema)
     return true;
 }
 
+bool IsContainsColumnName(const std::vector<DistributedRdb::RdbKnowledgeField> &KnowledgeFields,
+    const std::string &colName)
+{
+    for (const auto &field : KnowledgeFields) {
+        if (field.columnName == colName) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
     DistributedRdb::RdbKnowledgeSchema &schema)
 {
@@ -130,6 +141,11 @@ bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, con
         knowledgeTable.tableName = table.GetTableName();
         auto fields = table.GetKnowledgeFields();
         for (const auto &item : fields) {
+            auto colName = item.GetColumnName();
+            if (IsContainsColumnName(knowledgeTable.knowledgeFields, colName)) {
+                LOG_ERROR("Duplicate field column name:%{public}s.", SqliteUtils::Anonymous(colName).c_str());
+                return false;
+            }
             DistributedRdb::RdbKnowledgeField field;
             field.columnName = item.GetColumnName();
             field.type = item.GetType();
