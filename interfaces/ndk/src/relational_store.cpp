@@ -44,6 +44,10 @@ constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
+constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
+constexpr int RDB_ATTACH_WAIT_TIME_MAX = 300;
+constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
+constexpr int RDB_CONFIG_CUST_DIR_MAX_LEN = 128;
 
 static int g_supportDbTypes[] = { RDB_SQLITE, RDB_CAYLEY };
 
@@ -59,6 +63,10 @@ struct OH_Rdb_ConfigV2 {
     int area = 0;
     int dbType = RDB_SQLITE;
     int token = RDB_NONE_TOKENIZER;
+    std::string customDir = "";
+    bool readOnly = false;
+    std::vector<std::string> pluginLibs{};
+    OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
 };
 
 OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
@@ -177,6 +185,47 @@ int OH_Rdb_SetDbType(OH_Rdb_ConfigV2 *config, int dbType)
         return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
     }
     config->dbType = dbType;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetCustomDir(OH_Rdb_ConfigV2 *config, const char *customDir)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) || customDir == nullptr ||
+        strlen(customDir) > RDB_CONFIG_CUST_DIR_MAX_LEN) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->customDir = customDir;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetReadOnly(OH_Rdb_ConfigV2 *config, bool readOnly)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->readOnly = readOnly;
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetPlugins(OH_Rdb_ConfigV2 *config, const char **plugins, int32_t length)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) || plugins == nullptr ||
+        length > RDB_CONFIG_PLUGINS_MAX) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    for (int i = 0; i < length; i++) {
+        config->pluginLibs.push_back(plugins[i]);
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_SetCryptoParam(OH_Rdb_ConfigV2 *config, const OH_Rdb_CryptoParam *cryptoParam)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
+        cryptoParam == nullptr || !cryptoParam->IsValid()) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    config->cryptoParam = cryptoParam->cryptoParam;
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
@@ -380,13 +429,21 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
         (config->token < RDB_NONE_TOKENIZER || config->token > RDB_CUSTOM_TOKENIZER)) {
         *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
         LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
-                  "dbType %{public}d token %{public}d ret %{public}d persist %{public}d",
+                  " dbType %{public}d token %{public}d errCode %{public}d persist %{public}d"
+                  " readOnly %{public}d",
             config->magicNum, config->securityLevel, config->area, config->dbType, config->token, *errCode,
-            config->persist);
+            config->persist, config->readOnly);
         return OHOS::NativeRdb::RdbStoreConfig("");
     }
-    std::string realPath = !config->persist ? config->dataBaseDir:
-        OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir, config->storeName, *errCode);
+
+    std::string realPath;
+    if (config->persist) {
+        std::tie(realPath, *errCode) = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir,
+            config->storeName, config->customDir);
+    } else {
+        realPath = config->dataBaseDir;
+    }
+
     if (*errCode != 0) {
         *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
         LOG_ERROR("Get database path failed from new config, ret %{public}d ", *errCode);
@@ -405,6 +462,10 @@ static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *
     rdbStoreConfig.SetTokenizer(ConvertTokenizer2Native(static_cast<Rdb_Tokenizer>(config->token)));
     rdbStoreConfig.SetStorageMode(
         config->persist ? OHOS::NativeRdb::StorageMode::MODE_DISK : OHOS::NativeRdb::StorageMode::MODE_MEMORY);
+    rdbStoreConfig.SetCustomDir(config->customDir);
+    rdbStoreConfig.SetReadOnly(config->readOnly);
+    rdbStoreConfig.SetPluginLibs(config->pluginLibs);
+    rdbStoreConfig.SetCryptoParam(config->cryptoParam);
     return rdbStoreConfig;
 }
 
@@ -1286,4 +1347,68 @@ bool NDKStoreObserver::operator==(const Rdb_DataObserver *other)
         return false;
     }
     return other->context == observer_->context && &(other->callback) == &(observer_->callback);
+}
+
+int OH_Rdb_InsertWithConflictResolution(OH_Rdb_Store *store, const char *table, OH_VBucket *row,
+    Rdb_ConflictResolution resolution, int64_t *rowId)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto bucket = RelationalValuesBucket::GetSelf(row);
+    if (rdbStore == nullptr || table == nullptr || bucket == nullptr || rowId == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto [errCode, count] = rdbStore->GetStore()->Insert(table, bucket->Get(),
+        Utils::ConvertConflictResolution(resolution));
+    *rowId = count;
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_UpdateWithConflictResolution(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicates *predicates,
+    Rdb_ConflictResolution resolution, int64_t *changes)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto bucket = RelationalValuesBucket::GetSelf(row);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || bucket == nullptr || predicate == nullptr || changes == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    int changedRows = 0;
+    auto errCode = rdbStore->GetStore()->UpdateWithConflictResolution(changedRows,
+        predicate->Get().GetTableName(), bucket->Get(), predicate->Get().GetWhereClause(),
+        predicate->Get().GetBindArgs(), Utils::ConvertConflictResolution(resolution));
+    *changes = changedRows;
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_Attach(OH_Rdb_Store *store, const OH_Rdb_ConfigV2 *config, const char *attachName, int64_t waitTime,
+    size_t *attachedNumber)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) ||
+        attachName == nullptr || waitTime < RDB_ATTACH_WAIT_TIME_MIN || waitTime > RDB_ATTACH_WAIT_TIME_MAX ||
+        attachedNumber == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    int ret = OH_Rdb_ErrCode::RDB_OK;
+    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig = GetRdbStoreConfig(config, &ret);
+    if (ret != OH_Rdb_ErrCode::RDB_OK) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto [errCode, size] = rdbStore->GetStore()->Attach(rdbStoreConfig, attachName, static_cast<int32_t>(waitTime));
+    *attachedNumber = size;
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_Detach(OH_Rdb_Store *store, const char *attachName, int64_t waitTime, size_t *attachedNumber)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || attachName == nullptr ||
+        waitTime < RDB_ATTACH_WAIT_TIME_MIN || waitTime > RDB_ATTACH_WAIT_TIME_MAX || attachedNumber == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto [errCode, size] = rdbStore->GetStore()->Detach(attachName, static_cast<int32_t>(waitTime));
+    *attachedNumber = size;
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
 }

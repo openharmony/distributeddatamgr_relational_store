@@ -410,6 +410,48 @@ typedef struct OH_Predicates {
  * @since 20
 */
 int OH_Predicates_Having(OH_Predicates *predicates, const char *conditions, const OH_Data_Values *values);
+
+/**
+ * @brief Sets the OH_Predicates to match the field whose data type is string and value is not like the specified value.
+ * This method is similar to "Not like" of the SQL statement.
+ *
+ * @param predicates Represents a pointer to an instance of OH_Predicates.
+ * @param field Indicates the column name in the database table.
+ * @param pattern Indicates the value to compare against.
+ * @return Returns the error code.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ * @since 20
+*/
+int OH_Predicates_NotLike(OH_Predicates *predicates, const char *field, const char *pattern);
+
+/**
+ * @brief Sets the OH_Predicates to match the specified field whose data type is string and the value contains
+ * a wildcard. Different from like, the input parameters of this method are case-sensitive.
+ *
+ * @param predicates Represents a pointer to an instance of OH_Predicates.
+ * @param field Indicates the column name in the database table.
+ * @param pattern Indicates the value to match with the predicate.
+ * @return Returns the error code.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ * @since 20
+*/
+int OH_Predicates_Glob(OH_Predicates *predicates, const char *field, const char *pattern);
+
+/**
+ * @brief Sets the OH_Predicates to not match the specified field whose data type is string and the value contains
+ * a wildcard. Different from not like, the input parameters of this method are case-sensitive.
+ *
+ * @param predicates Represents a pointer to an instance of OH_Predicates.
+ * @param field Indicates the column name in the database table.
+ * @param pattern Indicates the value to compare against.
+ * @return Returns the error code.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ * @since 20
+*/
+int OH_Predicates_NotGlob(OH_Predicates *predicates, const char *field, const char *pattern);
 #ifdef __cplusplus
 };
 #endif

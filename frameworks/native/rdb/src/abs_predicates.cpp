@@ -256,6 +256,20 @@ AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &
 }
 
 /**
+ * Configures to match the specified field whose data type is String and the value not contains a wildcard.
+ */
+AbsPredicates *AbsPredicates::NotGlob(const std::string &field, const std::string &value)
+{
+    if (!CheckParameter("notGlob", field, { value })) {
+        return this;
+    }
+    CheckIsNeedAnd();
+    whereClause += field + " NOT GLOB ? ";
+    bindArgs.push_back(ValueObject(value));
+    return this;
+}
+
+/**
  * Restricts the value of the field to be unequal to the specified value.
  */
 AbsPredicates *AbsPredicates::Between(const std::string &field, const ValueObject &low, const ValueObject &high)
