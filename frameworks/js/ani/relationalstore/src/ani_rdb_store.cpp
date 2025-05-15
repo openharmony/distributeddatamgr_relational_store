@@ -33,8 +33,20 @@ namespace RelationalStoreAniKit {
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
 
-bool ConvertBindArgs(ani_env *env, ani_object args, std::vector<ValueObject> &bindArgs)
+bool ConvertBindArgs(ani_env *env, ani_object args, std::vector<ValueObject> &bindArgs, bool isOptional)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return false;
+    }
+    if (isOptional) {
+        ani_boolean isUndefined = true;
+        env->Reference_IsUndefined(args, &isUndefined);
+        if (isUndefined) {
+            bindArgs.clear();
+            return true;
+        }
+    }
     std::vector<ani_ref> valRefs;
     UnionAccessor array2Ref(env, args);
     bool convertArrayOk = array2Ref.TryConvert(valRefs);
@@ -60,19 +72,18 @@ bool ConvertBindArgs(ani_env *env, ani_object args, std::vector<ValueObject> &bi
 
 void ExecuteSqlSync(ani_env *env, ani_object object, ani_string sql, ani_object args)
 {
-    ani_boolean isUndefined = true;
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
+
     std::vector<ValueObject> bindArgs;
 
-    env->Reference_IsUndefined(args, &isUndefined);
-    if (false == isUndefined) {
-        bool convertOk = ConvertBindArgs(env, args, bindArgs);
-        if (!convertOk) {
-            LOG_ERROR("args conver fail");
-            ThrowBusinessError(env, E_PARAM_ERROR, "Unknown parameters.");
-            return;
-        }
-    } else {
-        bindArgs.clear();
+    bool convertOk = ConvertBindArgs(env, args, bindArgs, true);
+    if (!convertOk) {
+        LOG_ERROR("args conver fail");
+        ThrowBusinessError(env, E_PARAM_ERROR, "Unknown parameters.");
+        return;
     }
 
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
@@ -88,6 +99,10 @@ void ExecuteSqlSync(ani_env *env, ani_object object, ani_string sql, ani_object 
 
 void BeginTransaction(ani_env *env, ani_object object)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -100,6 +115,10 @@ void BeginTransaction(ani_env *env, ani_object object)
 
 void Commit(ani_env *env, ani_object object)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -112,6 +131,10 @@ void Commit(ani_env *env, ani_object object)
 
 void RollBack(ani_env *env, ani_object object)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -124,6 +147,10 @@ void RollBack(ani_env *env, ani_object object)
 
 ani_double BatchInsert(ani_env *env, ani_object object, ani_string tableName, ani_object values)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return 0;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -149,6 +176,10 @@ ani_double BatchInsert(ani_env *env, ani_object object, ani_string tableName, an
 
 ani_double DeleteSync(ani_env *env, ani_object object, ani_object predicates)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return 0;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -169,6 +200,10 @@ ani_double DeleteSync(ani_env *env, ani_object object, ani_object predicates)
 
 ani_double DeleteShareSync(ani_env *env, ani_object object, ani_string tableName, ani_object dataSharePredicates)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return 0;
+    }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
         LOG_ERROR("RdbStore should be initialized properly.");
@@ -193,19 +228,17 @@ ani_double DeleteShareSync(ani_env *env, ani_object object, ani_string tableName
 
 ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_object args)
 {
-    ani_boolean isUndefined = true;
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return nullptr;
+    }
     std::vector<ValueObject> bindArgs;
     auto sqlStr = AniStringUtils::ToStd(env, sql);
 
-    env->Reference_IsUndefined(args, &isUndefined);
-    if (false == isUndefined) {
-        bool convertOk = ConvertBindArgs(env, args, bindArgs);
-        if (!convertOk) {
-            LOG_ERROR("args conver fail");
-            return nullptr;
-        }
-    } else {
-        bindArgs.clear();
+    bool convertOk = ConvertBindArgs(env, args, bindArgs, true);
+    if (!convertOk) {
+        LOG_ERROR("args conver fail");
+        return nullptr;
     }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
@@ -223,6 +256,7 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
 
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     static const char *className = "LResultSetInner;";
+    static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
         LOG_ERROR("[ANI] Failed to create class '%{public}s' object.", className);
@@ -235,11 +269,21 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
         ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet failed.");
         return nullptr;
     }
+    status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
+    if (ANI_OK != status) {
+        LOG_ERROR("[ANI] Failed to initFinalizer for class '%{public}s'.", className);
+        ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.");
+        return nullptr;
+    }
     return obj;
 }
 
 ani_status RdbStoreInit(ani_env *env)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return ANI_ERROR;
+    }
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
