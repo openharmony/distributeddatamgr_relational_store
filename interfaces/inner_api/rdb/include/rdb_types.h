@@ -396,6 +396,7 @@ struct ResultType {
     int32_t status;
     int32_t count;
     std::vector<NativeRdb::ValueObject> results;
+    int32_t rowId;
 };
 } // namespace OHOS::DistributedRdb
 #endif

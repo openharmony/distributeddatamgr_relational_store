@@ -301,6 +301,39 @@ public:
      */
     virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args = {}) = 0;
 
+    /**
+     * @brief Executes an SQL statement that contains specified parameters and
+     *        get two values of type int and ValueObject.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param returningField Indicates the fieldName of result.
+     * @return Return the deleted result. Contains error code, number of affected rows, and value of returningField.
+     */
+    virtual ResultType Execute(const std::string &sql, const std::string &returningField, const Values &args = {})
+    {
+        if (!returningField.empty()) {
+            std::string executeSql = sql;
+            executeSql.append(" returning ").append(returningField);
+            return ExecuteForResult(executeSql, args);
+        }
+        return ExecuteForResult(sql, args);
+    }
+
+    /**
+     * @brief Executes an SQL statement that contains specified parameters and
+     *        get two values of type int and ValueObject.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
+     * @return Return the result. Contains error code, number of affected rows(If it is a non returning single
+     * insertion statement, it is the rowId of the inserted data), and value of result¡£ If it is a pragma
+     * sql or is a returning sql, results is the first column value of the result set.
+     */
+    virtual ResultType ExecuteForResult(const std::string &sql, const Values &args)
+    {
+        return { E_NOT_SUPPORT, -1 };
+    }
+
 private:
     static inline Creator creator_;
 };

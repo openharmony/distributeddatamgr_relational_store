@@ -65,7 +65,7 @@ void TransactionTest::SetUpTestCase()
     TransactionTestOpenCallback helper;
     TransactionTest::store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(TransactionTest::store_, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    ASSERT_EQ(errCode, E_OK);
 }
 
 void TransactionTest::TearDownTestCase()
@@ -1659,6 +1659,162 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_044, TestSize.Level1)
     EXPECT_EQ(result.status, E_SQLITE_ERROR);
     EXPECT_EQ(result.count, -1);
     EXPECT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_045
+ * @tc.desc: normal testcase of execute with returning over limit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_045, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    std::vector<ValueObject> args = { "tt", 28, 50000.0, "ttt", 58, 500080.0 };
+    auto result = transaction->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)", "name", args);
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 2);
+    ASSERT_EQ(result.results.size(), 2);
+    EXPECT_EQ(std::string(result.results[0]), "tt");
+    EXPECT_EQ(std::string(result.results[1]), "ttt");
+
+    result = transaction->Execute("update test set name = ? where name = ?", "name", { "update", "tt" });
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1);
+    ASSERT_EQ(result.results.size(), 1);
+    EXPECT_EQ(std::string(result.results[0]), "update");
+
+    result = transaction->Execute("delete from test", "name", {});
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 2);
+    ASSERT_EQ(result.results.size(), 2);
+    EXPECT_EQ(std::string(result.results[0]), "update");
+    EXPECT_EQ(std::string(result.results[1]), "ttt");
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_046
+ * @tc.desc: abnormal testcase of execute with returning.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_046, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    std::vector<ValueObject> args = { "0", 0 };
+    std::string sql = "INSERT INTO test(name, age) VALUES (?, ?)";
+    for (int32_t i = 1; i < 1025; i++) {
+        sql.append(", (?, ?)");
+        args.push_back(std::to_string(i));
+        args.push_back(i);
+    }
+    auto result = transaction->Execute(sql, "name", args);
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    ASSERT_EQ(result.results.size(), 1024);
+    EXPECT_EQ(std::string(result.results[0]), "0");
+    EXPECT_EQ(std::string(result.results[1000]), "1000");
+
+    result = transaction->Execute("update test set name = ?", "name", { "update" });
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    ASSERT_EQ(result.results.size(), 1024);
+    EXPECT_EQ(std::string(result.results[0]), "update");
+
+    result = transaction->Execute("delete from test", "name", {});
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1025);
+    ASSERT_EQ(result.results.size(), 1024);
+    EXPECT_EQ(std::string(result.results[0]), "update");
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_047
+ * @tc.desc: normal testcase of execute with returning 0 rows.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_047, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    std::vector<ValueObject> args = { 1, "tt", 28, 50000.0 };
+    auto result = transaction->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "id", args);
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 1);
+    ASSERT_EQ(result.results.size(), 1);
+    EXPECT_EQ(int(result.results[0]), 1);
+    result = transaction->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "id", args);
+    EXPECT_EQ(result.status, E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(result.count, 0);
+    ASSERT_EQ(result.results.size(), 0);
+
+    result = transaction->Execute("update test set name = ? where name = ?", "name", { "update", "noExist" });
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 0);
+    ASSERT_EQ(result.results.size(), 0);
+
+    result = transaction->Execute("delete from test where name = ?", "name", {"noExist"});
+    EXPECT_EQ(result.status, E_OK);
+    EXPECT_EQ(result.count, 0);
+    ASSERT_EQ(result.results.size(), 0);
+
+    ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_048
+ * @tc.desc: abnormal testcase of execute busy with returning.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [res, immeTrans] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(immeTrans, nullptr);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    std::vector<ValueObject> args = { 1, "tt", 28, 50000.0 };
+    auto result = transaction->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "id", args);
+    EXPECT_EQ(result.status, E_SQLITE_BUSY);
+    EXPECT_EQ(result.count, -1);
+    ASSERT_EQ(result.results.size(), 0);
+
+    result = transaction->Execute("update test set name = ? where name = ?", "name", { "update", "noExist" });
+    EXPECT_EQ(result.status, E_SQLITE_BUSY);
+    EXPECT_EQ(result.count, -1);
+    ASSERT_EQ(result.results.size(), 0);
+
+    result = transaction->Execute("delete from test where name = ?", "name", {"noExist"});
+    EXPECT_EQ(result.status, E_SQLITE_BUSY);
+    EXPECT_EQ(result.count, -1);
+    ASSERT_EQ(result.results.size(), 0);
 
     ret = transaction->Rollback();
     EXPECT_EQ(ret, E_OK);

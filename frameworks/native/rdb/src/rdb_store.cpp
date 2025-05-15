@@ -166,7 +166,7 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
 RdbStore::ResultType RdbStore::BatchInsert(
     const std::string &table, const RefRows &rows, const std::string &returningField)
 {
-    return BatchInsert(table, rows, ConflictResolution::ON_CONFLICT_NONE, returningField);
+    return BatchInsert(table, rows, NO_ACTION, returningField);
 }
 
 RdbStore::ResultType RdbStore::BatchInsert(
@@ -215,7 +215,7 @@ RdbStore::ResultType RdbStore::Update(
 RdbStore::ResultType RdbStore::Update(
     const RdbStore::Row &row, const AbsRdbPredicates &predicates, const std::string &returningField)
 {
-    return Update(row, predicates, ConflictResolution::ON_CONFLICT_NONE, returningField);
+    return Update(row, predicates, NO_ACTION, returningField);
 }
 
 int RdbStore::UpdateWithConflictResolution(int &changedRows, const std::string &table, const Row &row,
@@ -342,6 +342,21 @@ int RdbStore::ExecuteSql(const std::string &sql, const Values &args)
 std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
     return { E_NOT_SUPPORT, ValueObject() };
+}
+
+RdbStore::ResultType RdbStore::Execute(const std::string &sql, const std::string &returningField, const Values &args)
+{
+    if (!returningField.empty()) {
+        std::string executeSql = sql;
+        executeSql.append(" returning ").append(returningField);
+        return ExecuteForResult(executeSql, args);
+    }
+    return ExecuteForResult(sql, args);
+}
+
+RdbStore::ResultType RdbStore::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
+{
+    return { E_NOT_SUPPORT, -1 };
 }
 
 int RdbStore::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args)

@@ -226,38 +226,44 @@ std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Va
 std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
     (void)trxId;
+    auto result = ExecuteForResult(sql, args);
+    auto sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
+        return { result.status, result.rowId };
+    }
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        return { result.status, ValueObject() };
+    }
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        return { result.status, result.results.empty() ? ValueObject() : result.results[0] };
+    }
+    return { result.status, result.count };
+}
+
+ResultType TransDB::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
+{
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
         LOG_ERROR("Not support the sql:app self can check the SQL");
-        return { E_INVALID_ARGS, object };
+        return { E_INVALID_ARGS, -1 };
     }
 
     auto [errCode, statement] = GetStatement(sql);
     if (errCode != E_OK) {
-        return { errCode, object };
+        return { errCode, -1 };
     }
 
     errCode = statement->Execute(args);
+    auto result = GenerateResult(errCode, statement);
     if (errCode != E_OK) {
         LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
-        return { errCode, object };
+        return result;
     }
 
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        int64_t outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
-        return { errCode, ValueObject(outValue) };
-    }
-
-    if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
-        int outValue = statement->Changes();
-        return { errCode, ValueObject(outValue) };
-    }
-
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        if (statement->GetColumnCount() == 1) {
-            return statement->GetColumn(0);
-        }
+        result.rowId = result.count > 0 ? statement->LastInsertRowId() : -1;
+        return result;
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
@@ -271,7 +277,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
             vSchema_ = version;
         }
     }
-    return { errCode, object };
+    return result;
 }
 
 int TransDB::GetVersion(int &version)
