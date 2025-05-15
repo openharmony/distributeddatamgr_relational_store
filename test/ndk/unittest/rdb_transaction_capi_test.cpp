@@ -841,3 +841,44 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_014, TestSize.Level1)
     EXPECT_EQ(ret, RDB_OK);
     valueBucket->destroy(valueBucket);
 }
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_015
+ * @tc.desc: invalid args test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_015, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_CreateTransaction(g_transStore, nullptr, &trans);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_CreateTransaction(nullptr, g_options, &trans);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    EXPECT_NE(valueBucket, nullptr);
+    float floatArr[] = { 1.0, 2.0, 3.0 };
+    ret = OH_VBucket_PutFloatVector(nullptr, "data1", floatArr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutFloatVector(valueBucket, nullptr, floatArr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutFloatVector(valueBucket, "data1", nullptr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    uint64_t trueForm[] = { 1, 2, 3 };
+    ret = OH_VBucket_PutUnlimitedInt(nullptr, "data1", 0, trueForm, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutUnlimitedInt(valueBucket, nullptr, 0, trueForm, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutUnlimitedInt(valueBucket, "data1", 0, nullptr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret =valueBucket->destroy(valueBucket);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
