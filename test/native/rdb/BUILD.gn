@@ -168,6 +168,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
     "../../../frameworks/native/rdb/src/rdb_service_proxy.cpp",
     "../../../frameworks/native/rdb/src/rdb_sql_statistic.cpp",
+    "../../../frameworks/native/rdb/src/rdb_time_utils.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",
     "../../../frameworks/native/rdb/src/share_block.cpp",
     "../../../frameworks/native/rdb/src/shared_block_serializer_info.cpp",
