@@ -219,8 +219,7 @@ public:
      * @param returningField Indicates the fieldName of result. If not needed, set to empty
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned results that do not match expectations
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned
      */
     virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningField);
 
@@ -233,8 +232,9 @@ public:
      * @param returningField Indicates the fieldName of result. If not needed, set to empty
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned results that do not match expectations
+     * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
+     * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
+     * only the first 1024 returningFields will be returned
      */
     virtual ResultType BatchInsert(
         const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField);
@@ -281,8 +281,7 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned returning values that do not match expectations
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned
      */
     virtual ResultType Update(
         const Row &row, const AbsRdbPredicates &predicates, const std::string &returningField = "");
@@ -297,8 +296,9 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned returning values that do not match expectations
+     * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
+     * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
+     * only the first 1024 returningFields will be returned
      */
     virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION,
         const std::string &returningField = "");
@@ -378,6 +378,7 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the deleted result. Contains error code, number of affected rows,
      * and value of returningField before delete
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
     virtual ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField = "");
 

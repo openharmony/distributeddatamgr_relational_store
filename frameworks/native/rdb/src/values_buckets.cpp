@@ -24,6 +24,22 @@ ValuesBuckets::ValuesBuckets()
     values_ = std::make_shared<std::set<ValueObject>>();
 }
 
+ValuesBuckets::ValuesBuckets(const std::vector<ValuesBucket> &rows) : ValuesBuckets()
+{
+    buckets_.reserve(rows.size());
+    for (const auto &bucket : rows) {
+        Put(bucket);
+    }
+}
+
+ValuesBuckets::ValuesBuckets(std::vector<ValuesBucket> &&rows) : ValuesBuckets()
+{
+    buckets_.reserve(rows.size());
+    for (auto &bucket : rows) {
+        Put(std::move(bucket));
+    }
+}
+
 size_t ValuesBuckets::RowSize() const
 {
     return buckets_.size();
@@ -34,12 +50,29 @@ std::pair<ValuesBuckets::FieldsType, ValuesBuckets::ValuesType> ValuesBuckets::G
     return { fields_, values_ };
 }
 
+void ValuesBuckets::Reserve(int32_t size)
+{
+    buckets_.reserve(size);
+}
+
 void ValuesBuckets::Put(const ValuesBucket &bucket)
 {
     BucketType row;
     for (const auto &[field, value] : bucket.values_) {
         auto fieldResult = fields_->insert(field);
         auto valueResult = values_->insert(value);
+        row.insert(std::make_pair(std::ref(const_cast<std::string &>(*fieldResult.first)),
+            std::ref(const_cast<ValueObject &>(*valueResult.first))));
+    }
+    buckets_.push_back(std::move(row));
+}
+
+void ValuesBuckets::Put(ValuesBucket &&bucket)
+{
+    BucketType row;
+    for (auto &[field, value] : bucket.values_) {
+        auto fieldResult = fields_->insert(std::move(field));
+        auto valueResult = values_->insert(std::move(value));
         row.insert(std::make_pair(std::ref(const_cast<std::string &>(*fieldResult.first)),
             std::ref(const_cast<ValueObject &>(*valueResult.first))));
     }

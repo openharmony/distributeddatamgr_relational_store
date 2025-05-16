@@ -872,12 +872,12 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_002, TestSize.Level1)
 */
 HWTEST_P(RdbStoreInsertTest, BatchInsert_003, TestSize.Level1)
 {
-    ValuesBuckets rows;
+    std::vector<ValuesBucket> rows;
     for (int i = 0; i < 5; i++) {
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim");
-        rows.Put(row);
+        rows.push_back(std::move(row));
     }
     ValuesBucket row;
     row.Put("id", 2);
@@ -900,12 +900,12 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_003, TestSize.Level1)
 */
 HWTEST_P(RdbStoreInsertTest, BatchInsert_004, TestSize.Level1)
 {
-    ValuesBuckets rows;
+    std::vector<ValuesBucket> rows;
     for (int i = 0; i < 5; i++) {
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim");
-        rows.Put(row);
+        rows.push_back(std::move(row));
     }
     ValuesBucket row;
     row.Put("id", 2);
@@ -913,7 +913,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_004, TestSize.Level1)
     auto res = store_->Insert("test", row);
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
-    auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    auto result = store_->BatchInsert("test", ValuesBuckets(std::move(rows)), ConflictResolution::ON_CONFLICT_REPLACE, "id");
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 5);
     ASSERT_EQ(result.results.size(), 5);
@@ -935,11 +935,12 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_004, TestSize.Level1)
 HWTEST_P(RdbStoreInsertTest, BatchInsert_005, TestSize.Level1)
 {
     ValuesBuckets rows;
+    rows.Reserve(1025);
     for (int i = 0; i < 1025; i++) {
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim");
-        rows.Put(row);
+        rows.Put(std::move(row));
     }
     auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
     EXPECT_EQ(result.status, E_OK);
@@ -964,7 +965,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_006, TestSize.Level1)
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim");
-        rows.Put(row);
+        rows.Put(std::move(row));
     }
     auto result = store_->BatchInsert("test", rows, "notExist");
     EXPECT_EQ(result.status, E_SQLITE_ERROR);
@@ -988,11 +989,12 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_007, TestSize.Level1)
     auto res = store_->Insert("test", row);
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
-    rows.Put(row);
+    rows.Put(std::move(row));
     auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_IGNORE, "id");
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 0);
     EXPECT_EQ(result.results.size(), 0);
 }
+
 INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreInsertTest
