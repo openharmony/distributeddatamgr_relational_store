@@ -156,8 +156,9 @@ public:
      * @param returningField Indicates the fieldName of result. If not needed, set to empty
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned results that do not match expectations
+     * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
+     * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
+     * only the first 1024 returningFields will be returned
      */
     virtual ResultType BatchInsert(
         const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
@@ -224,8 +225,9 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned returning values that do not match expectations
+     * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
+     * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
+     * only the first 1024 returningFields will be returned
      */
     virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
         const std::string &returningField)
@@ -266,6 +268,7 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the deleted result. Contains error code, number of affected rows,
      * and value of returningField before delete
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
     virtual ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
     {
@@ -326,7 +329,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      * @return Return the result. Contains error code, number of affected rows(If it is a non returning single
-     * insertion statement, it is the rowId of the inserted data), and value of result¡£ If it is a pragma
+     * insertion statement, it is the rowId of the inserted data), and value of result? If it is a pragma
      * sql or is a returning sql, results is the first column value of the result set.
      */
     virtual ResultType ExecuteForResult(const std::string &sql, const Values &args)

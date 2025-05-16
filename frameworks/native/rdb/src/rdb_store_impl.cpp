@@ -1245,18 +1245,16 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
         return { errCode, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-    auto args = std::ref(bindArgs.front());
-    errCode = statement->Execute(args);
+    errCode = statement->Execute(std::ref(bindArgs.front()));
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         pool->Dump(true, "BATCH");
         return { errCode, -1 };
     }
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
-            table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
+            table.c_str(), bindArgs.front().size(), static_cast<int32_t>(resolution));
     }
     auto result = GenerateResult(errCode, statement);
-    conn = nullptr;
     if (result.count > 0) {
         DoCloudSync(table);
     }
@@ -1521,16 +1519,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         return { errCode, object };
     }
     auto result = HandleDifferentSqlTypes(statement, sql, errCode, sqlType);
-    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        return { result.status, result.rowId };
-    }
-    if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        return { result.status, ValueObject() };
-    }
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        return { result.status, result.results.empty() ? ValueObject() : result.results[0] };
-    }
-    return { result.status, result.count };
+    return HandleDifferentSqlTypes(result, sqlType);
 }
 
 ResultType RdbStoreImpl::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
@@ -2765,6 +2754,20 @@ ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement>
         result.results.clear();
     }
     return result;
+}
+
+std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(const ResultType &result, int sqlType)
+{
+    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
+        return { result.status, result.rowId };
+    }
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        return { result.status, ValueObject() };
+    }
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        return { result.status, result.results.empty() ? ValueObject() : result.results[0] };
+    }
+    return { result.status, result.count };
 }
 
 int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)

@@ -34,11 +34,15 @@ public:
     using BucketType = std::map<FieldType, ValueType, std::less<std::string>>;
 
     API_EXPORT ValuesBuckets();
+    API_EXPORT ValuesBuckets(const std::vector<ValuesBucket> &rows);
+    API_EXPORT ValuesBuckets(std::vector<ValuesBucket> &&rows);
 
     API_EXPORT size_t RowSize() const;
     API_EXPORT std::pair<FieldsType, ValuesType> GetFieldsAndValues() const;
 
+    API_EXPORT void Reserve(int32_t size);
     API_EXPORT void Put(const ValuesBucket &bucket);
+    API_EXPORT void Put(ValuesBucket &&bucket);
     API_EXPORT std::pair<int, ValueType> Get(size_t row, const FieldType &field) const;
 
 private:

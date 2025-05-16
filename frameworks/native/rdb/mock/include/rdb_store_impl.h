@@ -113,6 +113,7 @@ private:
         const std::vector<ValueObject> &bindArgs = {});
     ResultType HandleDifferentSqlTypes(
         std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
+    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(const ResultType &result, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
