@@ -52,6 +52,7 @@
                 "access_token",
                 "common_event_service",
                 "c_utils",
+                "data_share",
                 "device_manager",
                 "eventhandler",
                 "hilog",
