@@ -59,7 +59,7 @@ ohos_shared_library("rdb_data_ability_adapter") {
   external_deps = [
     "c_utils:utils",
     "data_share:datashare_common",
-    ]
+  ]
 
   public_configs = [ ":rdb_data_ability_adapter_public_config" ]
 
