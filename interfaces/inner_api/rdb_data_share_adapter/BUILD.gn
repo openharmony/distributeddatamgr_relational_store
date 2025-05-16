@@ -34,7 +34,6 @@ config("rdb_data_share_adapter_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${datashare_path}/common/include/",
     "${datashare_path}/provider/include",
   ]
 }
@@ -63,6 +62,7 @@ ohos_shared_library("rdb_data_share_adapter") {
 
   external_deps = [
     "c_utils:utils",
+    "data_share:datashare_common",
     "hilog:libhilog",
   ]
 
