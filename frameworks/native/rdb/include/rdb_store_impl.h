@@ -44,38 +44,45 @@ class ExecutorPool;
 namespace OHOS::NativeRdb {
 class DelayNotify;
 class RdbStoreLocalDbObserver;
+using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
 class RdbStoreLocalObserver {
 public:
-    explicit RdbStoreLocalObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
+    explicit RdbStoreLocalObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer) {};
     virtual ~RdbStoreLocalObserver() {};
     void OnChange()
     {
-        observer_->OnChange();
+        auto obs = observer_.lock();
+        if (obs != nullptr) {
+            obs->OnChange();
+        }
     }
-    DistributedRdb::RdbStoreObserver *getObserver()
+    std::shared_ptr<RdbStoreObserver> getObserver()
     {
-        return observer_;
+        return observer_.lock();
     }
 
 private:
-    DistributedRdb::RdbStoreObserver *observer_ = nullptr;
+    std::weak_ptr<RdbStoreObserver> observer_;
 };
 
 class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
 public:
-    explicit RdbStoreLocalSharedObserver(DistributedRdb::RdbStoreObserver *observer) : observer_(observer) {};
+    explicit RdbStoreLocalSharedObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer) {};
     virtual ~RdbStoreLocalSharedObserver() {};
-    void OnChange() override
+    void OnChange()
     {
-        observer_->OnChange();
+        auto obs = observer_.lock();
+        if (obs != nullptr) {
+            obs->OnChange();
+        }
     }
-    DistributedRdb::RdbStoreObserver *getObserver()
+    std::shared_ptr<RdbStoreObserver> getObserver()
     {
-        return observer_;
+        return observer_.lock();
     }
 
 private:
-    DistributedRdb::RdbStoreObserver *observer_ = nullptr;
+    std::weak_ptr<RdbStoreObserver> observer_;
 };
 
 class RdbStoreImpl : public RdbStore {
@@ -126,8 +133,8 @@ public:
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
-    int Subscribe(const SubscribeOption &option, RdbStoreObserver *observer) override;
-    int UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer) override;
+    int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
+    int UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
     int SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
     int UnsubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
     int RegisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
@@ -200,14 +207,14 @@ private:
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
     Uri GetUri(const std::string &event);
-    int SubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer);
-    int SubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer);
+    int SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
+    int SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int32_t SubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int SubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
-    int UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer);
-    int UnSubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer);
+    int SubscribeRemote(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
+    int UnSubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
+    int UnSubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int32_t UnsubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
-    int UnSubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer);
+    int UnSubscribeRemote(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();

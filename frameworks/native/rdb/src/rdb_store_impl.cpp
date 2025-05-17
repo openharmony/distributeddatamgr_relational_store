@@ -528,7 +528,7 @@ Uri RdbStoreImpl::GetUri(const std::string &event)
     return Uri(rdbUri);
 }
 
-int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     localObservers_.try_emplace(option.event);
@@ -544,7 +544,7 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, RdbStoreObserver
     return E_OK;
 }
 
-int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     localSharedObservers_.try_emplace(option.event);
@@ -600,7 +600,7 @@ int32_t RdbStoreImpl::SubscribeLocalDetail(
     return E_OK;
 }
 
-int RdbStoreImpl::SubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::SubscribeRemote(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
@@ -609,7 +609,7 @@ int RdbStoreImpl::SubscribeRemote(const SubscribeOption &option, RdbStoreObserve
     return service->Subscribe(syncerParam_, option, observer);
 }
 
-int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
@@ -626,7 +626,7 @@ int RdbStoreImpl::Subscribe(const SubscribeOption &option, RdbStoreObserver *obs
     return SubscribeRemote(option, observer);
 }
 
-int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto obs = localObservers_.find(option.event);
@@ -652,7 +652,7 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, RdbStoreObserv
     return E_OK;
 }
 
-int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto obs = localSharedObservers_.find(option.event);
@@ -715,7 +715,7 @@ int32_t RdbStoreImpl::UnsubscribeLocalDetail(
     return E_OK;
 }
 
-int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
@@ -724,7 +724,7 @@ int RdbStoreImpl::UnSubscribeRemote(const SubscribeOption &option, RdbStoreObser
     return service->UnSubscribe(syncerParam_, option, observer);
 }
 
-int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStoreImpl::UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
