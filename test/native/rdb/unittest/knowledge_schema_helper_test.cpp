@@ -377,6 +377,197 @@ const std::string INVALID_SCHEMA_STR_15 = R"({
 	}]
 })";
 
+const std::string INVALID_SCHEMA_STR_16 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["xxx"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_17 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "xxx",
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_18 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_19 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_20 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"]
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_21 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "path": "$[*].localPath"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_22 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_23 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": ""
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
+const std::string INVALID_SCHEMA_STR_24 = R"({
+	"knowledgeSource": [{
+		"version": 1,
+		"dbName": "test.db",
+		"tables": [{
+			"tableName": "test",
+			"referenceFields": ["id"],
+            "knowledgeFields": [
+            {
+                "columnName": "inline_files",
+                "type": ["Json"],
+                "parser": [
+                {
+                    "type": "File",
+                    "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+                ]
+            }]
+		}]
+	}]
+})";
+
 /**
  * @tc.name: KnowledgeSchemaHelperTest001
  * @tc.desc: test unmarshall schema
@@ -614,5 +805,113 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest008, TestSize.Leve
 {
     RdbKnowledgeSchema schema = {};
     bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_15, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest009
+ * @tc.desc: test invalid schema when field type wrong
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest009, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_16, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest010
+ * @tc.desc: test invalid schema when parser type wrong
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest010, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_17, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest011
+ * @tc.desc: test invalid schema when no columnName
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest011, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_18, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest012
+ * @tc.desc: test invalid schema when no field type
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest012, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_19, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest013
+ * @tc.desc: test invalid schema when json field no parser
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest013, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_20, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest014
+ * @tc.desc: test invalid schema when parser no type
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest014, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_21, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest015
+ * @tc.desc: test invalid schema when parser no path
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest015, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_22, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest016
+ * @tc.desc: test invalid schema when parser path emtpy
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest016, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_23, DB_NAME, schema);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest017
+ * @tc.desc: test invalid schema when parser path too long
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest017, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_24, DB_NAME, schema);
     EXPECT_FALSE(ret);
 }

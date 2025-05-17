@@ -1365,8 +1365,11 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
+        if (status != DistributedDB::DBStatus::OK) {
+            return E_ERROR;
+        }
     }
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return E_OK;
 }
 
 int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
