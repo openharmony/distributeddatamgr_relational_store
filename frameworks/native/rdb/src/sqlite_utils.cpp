@@ -42,7 +42,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -419,13 +418,12 @@ std::string SqliteUtils::ReadFileHeader(const std::string &filePath)
 std::string SqliteUtils::GetFileStatInfo(const DebugInfo &debugInfo)
 {
     std::stringstream oss;
-    const uint32_t permission = 0777;
     oss << " dev:0x" << std::hex << debugInfo.dev_ << " ino:0x" << std::hex << debugInfo.inode_;
     if (debugInfo.inode_ != debugInfo.oldInode_ && debugInfo.oldInode_ != 0) {
         oss << "<>0x" << std::hex << debugInfo.oldInode_;
     }
-    oss << " mode:0" << std::oct << (debugInfo.mode_ & permission) << " size:" << std::dec << debugInfo.size_
-        << " uid:" << std::dec << debugInfo.uid_ << " gid:" << std::dec << debugInfo.gid_
+    oss << " " << GetModeInfo(debugInfo.mode_) << " size:" << std::dec << debugInfo.size_ << " uid:" << std::dec
+        << debugInfo.uid_ << " gid:" << std::dec << debugInfo.gid_
         << " atim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.atime_.sec_, debugInfo.atime_.nsec_)
         << " mtim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.mtime_.sec_, debugInfo.mtime_.nsec_)
         << " ctim:" << RdbTimeUtils::GetTimeWithMs(debugInfo.ctime_.sec_, debugInfo.ctime_.nsec_);
@@ -573,7 +571,8 @@ std::string SqliteUtils::FormatDebugInfoBrief(const std::map<std::string, DebugI
     std::stringstream oss;
     oss << header << ":";
     for (auto &[name, debugInfo] : debugs) {
-        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ">";
+        oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ","
+            << std::oct << debugInfo.mode_ << ">";
     }
     return oss.str();
 }
@@ -582,6 +581,47 @@ std::string SqliteUtils::FormatDfxInfo(const DfxInfo &dfxInfo)
     std::stringstream oss;
     oss << "LastOpen:" << dfxInfo.lastOpenTime_ << "," << "CUR_USER:" << dfxInfo.curUserId_;
     return oss.str();
+}
+
+std::string SqliteUtils::GetModeInfo(uint32_t st_mode)
+{
+    std::ostringstream oss;
+    const uint32_t permission = 0777;
+    oss << "mode:";
+    if (S_ISDIR(st_mode))
+        oss << 'd';
+    else
+        oss << '-';
+
+    oss << std::setw(PREFIX_LENGTH) << std::setfill('0') << std::oct << (st_mode & permission);
+
+    return oss.str();
+}
+
+std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
+{
+    std::vector<std::pair<std::string, std::string>> dirModes;
+    std::string currentPath = path;
+
+    for (int i = 0; i < pathDepth; ++i) {
+        currentPath = StringUtils::GetParentPath(currentPath);
+        if (currentPath == "/" || currentPath.empty()) {
+            break;
+        }
+
+        std::string dirName = StringUtils::ExtractFileName(currentPath);
+        struct stat st {};
+        dirModes.emplace_back(dirName, (stat(currentPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
+    }
+    std::string result;
+    for (auto it = dirModes.rbegin(); it != dirModes.rend(); ++it) {
+        if (!result.empty()) {
+            result += " <- ";
+        }
+        result += (it->first.size() > PREFIX_LENGTH ? it->first.substr(0, PREFIX_LENGTH) + "***" : it->first) + ":" +
+                  it->second;
+    }
+    return result.empty() ? "no_parent" : result;
 }
 } // namespace NativeRdb
 } // namespace OHOS
