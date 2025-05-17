@@ -25,8 +25,8 @@ namespace OHOS {
 namespace DistributedRdb {
 class MockRdbService : public RdbService {
 public:
-    MOCK_METHOD(
-        std::string, ObtainDistributedTableName, (const std::string &device, const std::string &table), (override));
+    MOCK_METHOD(std::string, ObtainDistributedTableName,
+        (const RdbSyncerParam &param, const std::string &device, const std::string &table), (override));
     MOCK_METHOD(int32_t, SetDistributedTables,
         (const RdbSyncerParam &param, const std::vector<std::string> &tables, const std::vector<Reference> &references,
             bool isRebuild, int32_t type),
