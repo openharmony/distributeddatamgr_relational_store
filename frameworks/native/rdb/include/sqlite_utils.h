@@ -51,6 +51,7 @@ public:
     static constexpr int DISABLE_LOAD_EXTENSION = 0;
     static constexpr int ENABLE_LOAD_EXTENSION = 1;
     static constexpr int MAX_LOAD_EXTENSION_COUNT = 16;
+    static constexpr int PATH_DEPTH = 3;
     static constexpr const char *REP = "#_";
     static constexpr const char *SLAVE_FAILURE = "-slaveFailure";
     static constexpr const char *SLAVE_INTERRUPT = "-syncInterrupt";
@@ -90,6 +91,8 @@ public:
     static std::string FormatDebugInfo(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
+    static std::string GetParentModes(const std::string &path, int pathDepth = PATH_DEPTH);
+    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
 
 private:
     struct SqlType {
@@ -118,9 +121,9 @@ private:
     static constexpr const char *ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT] = { "", " OR ROLLBACK", " OR ABORT",
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
 
-    static std::string GetAnonymousName(const std::string& fileName);
-    static std::string AnonyDigits(const std::string& fileName);
-    static std::string GetFileStatInfo(const DebugInfo &debugInfo);
+    static std::string GetAnonymousName(const std::string &fileName);
+    static std::string AnonyDigits(const std::string &fileName);
+    static std::string GetModeInfo(uint32_t st_mode);
 };
 
 } // namespace NativeRdb

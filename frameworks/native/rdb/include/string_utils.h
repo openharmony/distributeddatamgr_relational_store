@@ -31,6 +31,7 @@ public:
     static std::string ExtractFilePath(const std::string &fileFullName);
     static std::string ExtractFileName(const std::string &fileFullName);
     static std::string TruncateAfterFirstParen(const std::string& str);
+    static std::string GetParentPath(const std::string &path);
     static bool IsEmpty(std::string source)
     {
         return (source.empty());
