@@ -1144,7 +1144,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
-    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+    if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
 
