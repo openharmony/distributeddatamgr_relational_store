@@ -185,7 +185,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level2)
     EXPECT_NE(nullptr, rdbStore);
     int errCode;
     EXPECT_EQ("", rdbStore->ObtainDistributedTableName("", "employee", errCode));
-    EXPECT_EQ(-1, errCode);
+    EXPECT_EQ(E_ERROR, errCode);
 }
 
 /**
@@ -198,7 +198,7 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_003, TestSize.Level2)
     EXPECT_NE(nullptr, rdbStore);
     int errCode;
     EXPECT_EQ("", rdbStore->ObtainDistributedTableName("123456", "employee", errCode));
-    EXPECT_EQ(-1, errCode);
+    EXPECT_EQ(E_ERROR, errCode);
 }
 
 /**
