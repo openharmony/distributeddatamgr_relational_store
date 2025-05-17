@@ -475,9 +475,9 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_001, TestSize.Level2
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_NOT_SUPPORT);
-    status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
+    status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_NOT_SUPPORT);
 }
 
@@ -496,9 +496,9 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_002, TestSize.Level2
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
+    auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_NOT_SUPPORT);
-    status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_.get());
+    status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_NOT_SUPPORT);
 }
 

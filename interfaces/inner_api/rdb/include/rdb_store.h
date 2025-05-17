@@ -597,12 +597,12 @@ public:
     /**
      * @brief Subscribe to event changes.
      */
-    virtual int Subscribe(const SubscribeOption &option, RdbStoreObserver *observer);
+    virtual int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
 
     /**
      * @brief UnSubscribe to event changes.
      */
-    virtual int UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer);
+    virtual int UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
 
     /**
      * @brief SubscribeObserver to event changes.

@@ -476,14 +476,14 @@ int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, 
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStore::Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     (void)option;
     (void)observer;
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStore::UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     (void)option;
     (void)observer;
