@@ -180,6 +180,9 @@ public:
      */
     API_EXPORT const char *GetCellUnitValueString(CellUnit *cellUnit, size_t *outSizeIncludingNull)
     {
+        if (cellUnit == nullptr || outSizeIncludingNull == nullptr) {
+            return nullptr;
+        }
         *outSizeIncludingNull = cellUnit->cell.stringOrBlobValue.size;
         return static_cast<char *>(
             OffsetToPtr(cellUnit->cell.stringOrBlobValue.offset, cellUnit->cell.stringOrBlobValue.size));
