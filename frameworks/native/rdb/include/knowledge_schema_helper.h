@@ -42,13 +42,15 @@ private:
     void LoadKnowledgeSchemaManager(void *handle);
     bool IsLoadLib() const;
     void StartTask();
+    bool CheckSchemaFieldParsers(const KnowledgeField &field);
     bool CheckSchemaField(const std::string &fieldStr);
-    bool CheckSchemaTableName(const std::string &fieldStr);
+    bool CheckSchemaDBName(const std::string &fieldStr);
     bool CheckKnowledgeFields(const std::vector<KnowledgeField> &fields);
     bool CheckKnowledgeSchema(const KnowledgeSchema &schema);
 
     mutable std::shared_mutex libMutex_;
     DistributedRdb::IKnowledgeSchemaManager *schemaManager_ = nullptr;
+    bool inited_ = false;
 #ifndef CROSS_PLATFORM
     void *dlHandle_ = nullptr;
 #endif
