@@ -33,12 +33,16 @@ using Json = nlohmann::json;
 
 constexpr uint16_t SCHEMA_FIELD_MIN_LEN = 1;
 constexpr uint16_t SCHEMA_FIELD_MAX_LEN = 255;
+constexpr uint16_t SCHEMA_DB_NAME_MAX_LEN = 120;
 constexpr uint16_t SCHEMA_TYPE_MAX_LEN = 64;
 constexpr int64_t SCHEMA_VERSION_MAX = 0x7fffffff;
 
+constexpr char const *TYPE_TEXT = "Text";
 constexpr char const *TYPE_SCALAR = "Scalar";
+constexpr char const *TYPE_JSON = "Json";
+constexpr char const *TYPE_FILE = "File";
 const std::regex SCHEMA_FIELD_PATTERN("^[0-9a-zA-Z_]{1,}$");
-const std::regex SCHEMA_TABLE_NAME_PATTERN("^[0-9a-zA-Z_.]{1,}$");
+const std::regex SCHEMA_DB_NAME_PATTERN("^[0-9a-zA-Z_\\.]{1,}$");
 
 bool KnowledgeSchemaHelper::CheckSchemaField(const std::string &fieldStr)
 {
@@ -46,10 +50,38 @@ bool KnowledgeSchemaHelper::CheckSchemaField(const std::string &fieldStr)
         std::regex_match(fieldStr, SCHEMA_FIELD_PATTERN);
 }
 
-bool KnowledgeSchemaHelper::CheckSchemaTableName(const std::string &fieldStr)
+bool KnowledgeSchemaHelper::CheckSchemaDBName(const std::string &fieldStr)
 {
-    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_FIELD_MAX_LEN &&
-        std::regex_match(fieldStr, SCHEMA_TABLE_NAME_PATTERN);
+    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_DB_NAME_MAX_LEN &&
+        std::regex_match(fieldStr, SCHEMA_DB_NAME_PATTERN);
+}
+
+bool KnowledgeSchemaHelper::CheckSchemaFieldParsers(const KnowledgeField &field)
+{
+    const auto &parsers = field.GetParser();
+    const auto &fields = field.GetType();
+    auto find = std::find(fields.begin(), fields.end(), std::string(TYPE_JSON));
+    if (find != fields.end() && parsers.empty()) {
+        LOG_ERROR("No parser for json field.");
+        return false;
+    }
+
+    for (const KnowledgeParser &parser : parsers) {
+        const std::string &type = parser.GetType();
+        if (type != std::string(TYPE_FILE)) {
+            LOG_ERROR("Wrong field parser type: %{public}s", SqliteUtils::Anonymous(type).c_str());
+            return false;
+        }
+        if (parser.GetPath().empty()) {
+            LOG_ERROR("No parser path.");
+            return false;
+        }
+        if (parser.GetPath().length() > SCHEMA_FIELD_MAX_LEN) {
+            LOG_ERROR("Wrong field parser path length: %{public}zu", parser.GetPath().length());
+            return false;
+        }
+    }
+    return true;
 }
 
 bool KnowledgeSchemaHelper::CheckKnowledgeFields(const std::vector<KnowledgeField> &fields)
@@ -63,6 +95,16 @@ bool KnowledgeSchemaHelper::CheckKnowledgeFields(const std::vector<KnowledgeFiel
         if (fieldType.size() != 1 || fieldType.front().size() < SCHEMA_FIELD_MIN_LEN ||
             fieldType.front().size() > SCHEMA_TYPE_MAX_LEN) {
             LOG_ERROR("Wrong column type, size: %{public}zu", fieldType.size());
+            return false;
+        }
+        for (auto &type : fieldType) {
+            if (type != std::string(TYPE_TEXT) && type != std::string(TYPE_SCALAR) &&
+                type != std::string(TYPE_JSON) && type != std::string(TYPE_FILE)) {
+                LOG_ERROR("Wrong field type: %{public}s", SqliteUtils::Anonymous(type).c_str());
+                return false;
+            }
+        }
+        if (!CheckSchemaFieldParsers(field)) {
             return false;
         }
         std::string description = field.GetDescription();
@@ -81,7 +123,7 @@ bool KnowledgeSchemaHelper::CheckKnowledgeSchema(const KnowledgeSchema &schema)
         LOG_ERROR("Wrong schema version: %{public}" PRId64, schema.GetVersion());
         return false;
     }
-    if (!schema.IsDefaultName() && !CheckSchemaTableName(schema.GetDBName())) {
+    if (!schema.IsDefaultName() && !CheckSchemaDBName(schema.GetDBName())) {
         LOG_ERROR("Wrong schema db name: %{public}s", SqliteUtils::Anonymous(schema.GetDBName()).c_str());
         return false;
     }
@@ -190,6 +232,7 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
         return;
     }
     schemaManager_->Init(config, schema);
+    inited_ = true;
 }
 
 std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdbKnowledgeSchema(
@@ -212,7 +255,8 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
     errCode = E_OK;
     auto jsons = schemaManager_->GetJsonSchema();
     for (const auto &json : jsons) {
-        if (ParseRdbKnowledgeSchema(json, dbName, schema)) {
+        if (!ParseRdbKnowledgeSchema(json, dbName, schema)) {
+            errCode = E_ERROR;
             return res;
         }
     }
@@ -222,6 +266,10 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
 
 void KnowledgeSchemaHelper::DonateKnowledgeData()
 {
+    if (!inited_) {
+        LOG_WARN("knowledge schema helper not init.");
+        return;
+    }
     LoadKnowledgeLib();
     if (!IsLoadLib()) {
         LOG_WARN("skip donate data by miss lib");
