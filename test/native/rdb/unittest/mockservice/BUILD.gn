@@ -48,6 +48,7 @@ ohos_unittest("NativeRdbConditionTest") {
   sources = [ "rdb_store_impl_test.cpp" ]
 
   sources += [
+    "${relational_store_mock_test_path}/dataobs_mgr_client_mock.cpp",
     "${relational_store_mock_test_path}/rdb_manager_impl_mock.cpp",
     "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
     "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
