@@ -240,7 +240,7 @@ public:
     }
 
     void Close() {
-        TH_THROW(std::runtime_error, "close not implemented");
+        nativeResultSet_ = nullptr;
     }
 
 protected:

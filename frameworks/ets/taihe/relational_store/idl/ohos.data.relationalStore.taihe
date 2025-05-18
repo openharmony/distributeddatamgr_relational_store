@@ -45,16 +45,70 @@ struct Asset {
   status: Optional<AssetStatus>;
 }
 
-enum SecurityLevel: i32 {
-    S1 = 1,
-    S2 = 2,
-    S3 = 3,
-    S4 = 4
+union ValueType {
+    @null EMPTY;
+    INT64: i64;
+    F64: f64;
+    STRING: String;
+    BOOL: bool;
+    Uint8Array: @typedarray Array<u8>;
+    ASSET: Asset;
+    ASSETS: Array<Asset>;
+    Float32Array: @typedarray Array<f32>;
+    bigint: @bigint Array<u64>;
+}
+
+union ValuesBucket {
+    VALUESBUCKET : @record Map<String, ValueType>;
+}
+
+union ValuesBucket2 {
+    VALUESBUCKET_NON_SENDABLE : ValuesBucket;
+    VALUESBUCKET_SENDABLE : sendableRelationalStore.ValuesBucket;
+}
+
+union PRIKeyType {
+    INT64: i64;
+    F64: f64;
+    STRING: String;
+}
+
+union ModifyTime {
+    MODIFYTIME : @record Map<PRIKeyType, UTCTime>;
+}
+
+union UTCTime {
+    UTCTIIME : @sts_type("Date") Opaque;
+}
+
+struct StoreConfig {
+    name: String;
+    securityLevel: SecurityLevel;
+    encrypt: Optional<bool>;
+    dataGroupId: Optional<String>;
+    customDir: Optional<String>;
+    autoCleanDirtyData: Optional<bool>;
+    isSearchable: Optional<bool>;
+    allowRebuild: Optional<bool>;
+    vector: Optional<bool>;
+    isReadOnly: Optional<bool>;
+    pluginLibs: Optional<Array<String>>;
+    haMode: Optional<HAMode>;
+    cryptoParam: Optional<CryptoParam>;
 }
 
 enum HAMode: i32 {
     SINGLE = 0,
     MAIN_REPLICA
+}
+
+struct CryptoParam {
+    encryptionKey: @typedarray Array<u8>;
+    iterationCount: Optional<i32>;
+    encryptionAlgo: Optional<EncryptionAlgo>;
+    hmacAlgo: Optional<HmacAlgo>;
+    kdfAlgo: Optional<KdfAlgo>;
+    cryptoPageSize: Optional<u32>;
 }
 
 enum EncryptionAlgo: i32 {
@@ -74,19 +128,22 @@ enum KdfAlgo: i32 {
     KDF_SHA512
 }
 
-struct CryptoParam {
-    encryptionKey: @typedarray Array<u8>;
-    iterationCount: Optional<i32>;
-    encryptionAlgo: Optional<EncryptionAlgo>;
-    hmacAlgo: Optional<HmacAlgo>;
-    kdfAlgo: Optional<KdfAlgo>;
-    cryptoPageSize: Optional<u32>;
-}
-
 enum Progress: i32 {
     SYNC_BEGIN,
     SYNC_IN_PROGRESS,
     SYNC_FINISH
+}
+
+struct Statistic {
+    total: u32;
+    successful: u32;
+    failed: u32;
+    remained: u32;
+}
+
+struct TableDetails {
+    upload: Statistic;
+    download: Statistic;
 }
 
 enum ProgressCode: i32 {
@@ -98,6 +155,27 @@ enum ProgressCode: i32 {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY
+}
+
+struct ProgressDetails {
+    schedule: Progress;
+    code: ProgressCode;
+    details: @record Map<String, TableDetails>;
+}
+
+struct SqlExecutionInfo {
+    sql: Array<String>;
+    totalTime: i64;
+    waitTime: i64;
+    prepareTime: i64;
+    executeTime: i64;
+}
+
+enum SecurityLevel: i32 {
+    S1 = 1,
+    S2 = 2,
+    S3 = 3,
+    S4 = 4
 }
 
 enum SyncMode : i32 {
@@ -118,99 +196,6 @@ enum SubscribeType : i32 {
 enum ChangeType : i32 {
     DATA_CHANGE,
     ASSET_CHANGE
-}
-
-union ValueType {
-    @null EMPTY;
-    INT64: i64;
-    F64: f64;
-    STRING: String;
-    BOOL: bool;
-    Uint8Array: @typedarray Array<u8>;
-    ASSET: Asset;
-    ASSETS: Array<Asset>;
-    Float32Array: @typedarray Array<f32>;
-    bigint: @bigint Array<u64>;
-}
-
-union PRIKeyType {
-    INT64: i64;
-    F64: f64;
-    STRING: String;
-}
-
-union ValuesBucket {
-    VALUESBUCKET : @record Map<String, ValueType>;
-}
-
-union ValuesBucket2 {
-    VALUESBUCKET_NON_SENDABLE : ValuesBucket;
-    VALUESBUCKET_SENDABLE : sendableRelationalStore.ValuesBucket;
-}
-
-union ModifyTime {
-    MODIFYTIME : @record Map<PRIKeyType, UTCTime>;
-}
-
-union UTCTime {
-    UTCTIIME : @sts_type("Date") Opaque;
-}
-
-//type ValueType = null | number | string | boolean | Uint8Array | Asset | Assets | Float32Array | bigint;
-//type PRIKeyType = number | string;
-//type UTCTime = Date;
-//type ModifyTime = Map<PRIKeyType, UTCTime>;
-
-struct StoreConfig {
-    name: String;
-    securityLevel: SecurityLevel;
-    encrypt: Optional<bool>;
-    dataGroupId: Optional<String>;
-    customDir: Optional<String>;
-    autoCleanDirtyData: Optional<bool>;
-    isSearchable: Optional<bool>;
-    allowRebuild: Optional<bool>;
-    vector: Optional<bool>;
-    isReadOnly: Optional<bool>;
-    pluginLibs: Optional<Array<String>>;
-    haMode: Optional<HAMode>;
-    cryptoParam: Optional<CryptoParam>;
-}
-
-struct Statistic {
-    total: u32;
-    successful: u32;
-    failed: u32;
-    remained: u32;
-}
-
-struct TableDetails {
-    upload: Statistic;
-    download: Statistic;
-}
-
-struct ProgressDetails {
-    schedule: Progress;
-    code: ProgressCode;
-    details: @record Map<String, TableDetails>;
-}
-
-struct SqlExecutionInfo {
-    sql: Array<String>;
-    totalTime: i64;
-    waitTime: i64;
-    prepareTime: i64;
-    executeTime: i64;
-}
-
-struct SqlInfo {
-    sql: String;
-    args: Array<ValueType>;
-}
-
-union StringOrNumberArray {
-    STRINGARRAY : Array<String>;
-    Int32Array : Array<i32>;
 }
 
 struct ChangeInfo {
@@ -276,6 +261,16 @@ enum TransactionType : i32  {
 
 struct TransactionOptions {
     transactionType: Optional<TransactionType>;
+}
+
+struct SqlInfo {
+    sql: String;
+    args: Array<ValueType>;
+}
+
+union StringOrNumberArray {
+    STRINGARRAY : Array<String>;
+    Int32Array : Array<i32>;
 }
 
  interface ResultSet {
@@ -662,6 +657,10 @@ interface RdbStore {
         executeSync(sql: string): ValueType
         {
             return this.executeSync(sql, undefined);
+        }
+        createTransactionSync(): Transaction
+        {
+            return this.createTransactionSync(undefined);
         }
 
         on(event: string, type: SubscribeType, cb: Object) : void {
