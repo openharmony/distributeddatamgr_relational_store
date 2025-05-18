@@ -910,8 +910,7 @@ int RdbStoreImpl::GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::
     sql.append(table).append(".ROWID = ").append(logTable).append(".data_key");
     auto whereClause = predicates.GetWhereClause();
     if (!whereClause.empty()) {
-        SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + ".");
-        sql.append(" WHERE ").append(whereClause);
+        sql.append(" WHERE ").append(SqliteUtils::Replace(whereClause, SqliteUtils::REP, logTable + "."));
     }
 
     auto result = QuerySql(sql, predicates.GetBindArgs());

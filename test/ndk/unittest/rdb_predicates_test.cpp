@@ -20,10 +20,10 @@
 #include <string>
 
 #include "common.h"
+#include "oh_data_define.h"
 #include "oh_value_object.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
-
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
@@ -48,6 +48,12 @@ public:
 
 OH_Rdb_Store *predicatesTestRdbStore_;
 OH_Rdb_Config RdbNativePredicatesTest::config_ = { 0 };
+const char HAVING_CREATE_SQL[] =
+    "CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER, amount INTEGER)";
+const char HAVING_INSERT_SQL[] =
+    "INSERT INTO orders (customer_id, amount) VALUES (1, 1500), (1, 2000), (1, 3000), (2, 800), (2, 1200), (3, 1500),"
+    " (3, 2000), (3, 2500), (3, 1000)";
+const char HAVING_DROP_SQL[] = "DROP TABLE IF EXISTS orders";
 void RdbNativePredicatesTest::SetUpTestCase(void)
 {
     InitRdbConfig();
@@ -769,4 +775,214 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_021, TestSize.Level
     errCode = valueObject->destroy(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     valueObject->destroy(valueObject);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_025
+ * @tc.desc: Normal testCase of Predicates for having check params.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_025, TestSize.Level1)
+{
+    OH_Data_Values wrongValues;
+    OH_Predicates wrongPredicates;
+    wrongPredicates.id = 1;
+
+    auto ret = OH_Predicates_Having(nullptr, "data5", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_Having(&wrongPredicates, "data5", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    EXPECT_NE(predicates, nullptr);
+
+    // test missing group by clause.
+    ret = OH_Predicates_Having(predicates, "data5", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    const char *columnNames[] = { "data1"};
+    predicates->groupBy(predicates, columnNames, 1);
+
+    ret = OH_Predicates_Having(predicates, nullptr, &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_Having(predicates, "", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Predicates_Having(predicates, "data5", nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    OH_Data_Value value;
+    value.id = 1;
+    wrongValues.values_.push_back(value);
+    ret = OH_Predicates_Having(predicates, "data5", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    wrongValues.id = 1;
+    ret = OH_Predicates_Having(predicates, "data5", &wrongValues);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    predicates->destroy(predicates);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_026
+ * @tc.desc: Verify scenarios without placeholders and without passing values
+ * 1.Execute OH_Predicates_Having(predicates, "total > 5000 AND count >= 3")
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_026, TestSize.Level1)
+{
+    auto errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_CREATE_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_INSERT_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("orders");
+    EXPECT_NE(predicates, nullptr);
+    const char *columnNames[] = { "customer_id"};
+    predicates->groupBy(predicates, columnNames, 1);
+    errCode = OH_Predicates_Having(predicates, "total > 5000 AND count >= 3", nullptr);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    const char *columnNames1[] = { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total"};
+    // 3 represents the number of columns.
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, columnNames1, 3);
+
+    EXPECT_EQ(cursor->goToNextRow(cursor), RDB_OK);
+    int64_t value;
+    EXPECT_EQ(cursor->getInt64(cursor, 0, &value), E_OK);
+    EXPECT_EQ(value, 1);
+    EXPECT_EQ(cursor->getInt64(cursor, 2, &value), E_OK); // 2 represents the total in the third column.
+    EXPECT_EQ(value, 6500); // 6500 means total price.
+
+    EXPECT_EQ(cursor->goToNextRow(cursor), RDB_OK);
+    EXPECT_EQ(cursor->getInt64(cursor, 0, &value), E_OK);
+    EXPECT_EQ(value, 3);
+    EXPECT_EQ(cursor->getInt64(cursor, 2, &value), E_OK); // 2 represents the total in the third column.
+    EXPECT_EQ(value, 7000); // 7000 means total price.
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_DROP_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+}
+
+ /**
+ * @tc.name: RDB_Native_predicates_test_028
+ * @tc.desc: Test conditions for passing in illegal SQL
+ * 1.Execute OH_Predicates_Having(predicates, "SALARY == 1.2")
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_028, TestSize.Level1)
+{
+    auto errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_CREATE_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_INSERT_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("orders");
+    EXPECT_NE(predicates, nullptr);
+    const char *columnNames[] = { "customer_id"};
+    predicates->groupBy(predicates, columnNames, 1);
+    errCode = OH_Predicates_Having(predicates, "SALARY == 1.2", nullptr);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    const char *columnNames1[] = { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total"};
+    // 3 represents the number of columns.
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, columnNames1, 3);
+    int count;
+    EXPECT_EQ(cursor->getRowCount(cursor, &count), RDB_E_ERROR);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_DROP_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_029
+ * @tc.desc: Verify scenarios without placeholders and without passing values
+ * 1.Execute OH_Predicates_Having(predicates, total > ? AND count >= ?", {5000})
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_029, TestSize.Level1)
+{
+    auto errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_CREATE_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_INSERT_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("orders");
+    EXPECT_NE(predicates, nullptr);
+    const char *columnNames[] = { "customer_id"};
+    predicates->groupBy(predicates, columnNames, 1);
+
+    auto values = OH_Values_Create();
+    OH_Values_PutInt(values, 5000);
+
+    errCode = OH_Predicates_Having(predicates, "total > ? AND count >= ?", values);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    const char *columnNames1[] = { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total"};
+    // 3 represents the number of columns.
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, columnNames1, 3);
+    int count = -1;
+    EXPECT_EQ(cursor->getRowCount(cursor, &count), RDB_OK);
+    EXPECT_EQ(count, 0);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_DROP_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Native_predicates_test_030
+ * @tc.desc: Test using placeholder scenarios.
+ * 1.Execute OH_Predicates_Having(predicates, total > ? AND count >= ?", {5000, 3})
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_030, TestSize.Level1)
+{
+    auto errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_CREATE_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_INSERT_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("orders");
+    EXPECT_NE(predicates, nullptr);
+    const char *columnNames[] = { "customer_id"};
+    predicates->groupBy(predicates, columnNames, 1);
+    auto values = OH_Values_Create();
+    OH_Values_PutInt(values, 5000);
+    OH_Values_PutInt(values, 3);
+    errCode = OH_Predicates_Having(predicates, "total > ? AND count >= ?", values);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    const char *columnNames1[] = { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total"};
+    // 3 represents the number of columns.
+    OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, columnNames1, 3);
+
+    EXPECT_EQ(cursor->goToNextRow(cursor), RDB_OK);
+    int64_t value;
+    EXPECT_EQ(cursor->getInt64(cursor, 0, &value), E_OK);
+    EXPECT_EQ(value, 1);
+    EXPECT_EQ(cursor->getInt64(cursor, 2, &value), E_OK); // 2 represents the total in the third column.
+    EXPECT_EQ(value, 6500); // 6500 means total price.
+
+    EXPECT_EQ(cursor->goToNextRow(cursor), RDB_OK);
+    EXPECT_EQ(cursor->getInt64(cursor, 0, &value), E_OK);
+    EXPECT_EQ(value, 3);
+    EXPECT_EQ(cursor->getInt64(cursor, 2, &value), E_OK); // 2 represents the total in the third column.
+    EXPECT_EQ(value, 7000); // 7000 means total price.
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+    errCode = OH_Rdb_Execute(predicatesTestRdbStore_, HAVING_DROP_SQL);
+    EXPECT_EQ(errCode, RDB_OK);
 }

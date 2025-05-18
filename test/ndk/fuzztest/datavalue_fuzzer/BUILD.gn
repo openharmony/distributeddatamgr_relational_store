@@ -36,7 +36,8 @@ ohos_fuzztest("DataValueFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  fuzz_config_file = "${relational_store_base_path}/test/ndk/fuzztest/datavalue_fuzzer"
+  fuzz_config_file =
+      "${relational_store_base_path}/test/ndk/fuzztest/datavalue_fuzzer"
 
   sources = [ "datavalue_fuzzer.cpp" ]
 

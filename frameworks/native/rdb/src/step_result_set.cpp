@@ -101,6 +101,7 @@ int StepResultSet::PrepareStep()
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
         lastErr_ = errCode;
+        LOG_ERROR("CreateStatement failed. sql_ %{public}s!", SqliteUtils::Anonymous(sql_).c_str());
         return E_STATEMENT_NOT_PREPARED;
     }
 

@@ -353,7 +353,12 @@ const std::string ALL_DATA_TYPE_INSERT_SQL =
     "primShortValue, primFloatValue, primDoubleValue, "
     "primBooleanValue, primByteValue, primCharValue, `orderr`) "
     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
-
+const std::string HAVING_CREATE_SQL =
+    "CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER, amount INTEGER)";
+const std::string HAVING_INSERT_SQL =
+    "INSERT INTO orders (customer_id, amount) VALUES (1, 1500), (1, 2000), (1, 3000), (2, 800), (2, 1200), (3, 1500),"
+    " (3, 2000), (3, 2500), (3, 1000)";
+const std::string HAVING_DROP_SQL = "DROP TABLE IF EXISTS orders";
 class PredicateTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
@@ -2483,7 +2488,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
     store->ExecuteSql("DELETE FROM person");
 }
 
-/* *
+/**
  * @tc.name: RdbStore_GetString_002
  * @tc.desc: Normal testCase of RdbPredicates for GetString
  * @tc.type: FUNC
@@ -2518,4 +2523,125 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
     resultSet->Close();
 
     store->ExecuteSql("DELETE FROM person");
+}
+
+/**
+ * @tc.name: RdbStore_Having_001
+ * @tc.desc: Verify scenarios without placeholders and without passing values
+ * 1.Execute Having("total > 5000 AND count >= 3")
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_Having_001, TestSize.Level1)
+{
+    store->Execute(HAVING_CREATE_SQL);
+    store->Execute(HAVING_INSERT_SQL);
+    RdbPredicates predicates("orders");
+    predicates.GroupBy({ "customer_id" });
+    predicates.Having("total > 5000 AND count >= 3");
+    auto resultSet = store->Query(predicates, { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total" });
+    EXPECT_EQ(resultSet->GoToNextRow(), E_OK);
+    RowEntity rowEntity;
+    EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
+    EXPECT_TRUE(rowEntity.Get("customer_id") == ValueObject(1));
+    EXPECT_TRUE(rowEntity.Get("total") == ValueObject(6500)); // 6500 means total price.
+
+    EXPECT_EQ(resultSet->GoToNextRow(), E_OK);
+    RowEntity rowEntity1;
+    EXPECT_EQ(resultSet->GetRow(rowEntity1), E_OK);
+    EXPECT_TRUE(rowEntity1.Get("customer_id") == ValueObject(3)); // 3 means customer id.
+    EXPECT_TRUE(rowEntity1.Get("total") == ValueObject(7000)); // 7000 means total price.
+    store->ExecuteSql(HAVING_DROP_SQL);
+}
+
+/**
+ * @tc.name: RdbStore_Having_002
+ * @tc.desc: Verify scenarios without placeholders and without passing args.
+ * 1.Execute having("")
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_Having_002, TestSize.Level1)
+{
+    store->Execute(HAVING_CREATE_SQL);
+    store->Execute(HAVING_INSERT_SQL);
+    RdbPredicates predicates("orders");
+    predicates.GroupBy({ "customer_id" });
+    // When conditions are passed empty, 'having' does not take effect.
+    predicates.Having("");
+    auto resultSet = store->Query(predicates, { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total" });
+    int count;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(count, 3); // 3 means row count.
+    store->ExecuteSql(HAVING_DROP_SQL);
+}
+
+ /**
+ * @tc.name: RdbStore_Having_003
+ * @tc.desc: Test conditions for passing in illegal SQL
+ * 1.Execute Having("SALARY == 1.2")
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_Having_003, TestSize.Level1)
+{
+    store->Execute(HAVING_CREATE_SQL);
+    store->Execute(HAVING_INSERT_SQL);
+    RdbPredicates predicates("orders");
+    predicates.GroupBy({ "customer_id" });
+    predicates.Having("SALARY == 1.2");
+    auto resultSet = store->Query(predicates, { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total" });
+    int count;
+    EXPECT_EQ(resultSet->GetRowCount(count), E_SQLITE_ERROR);
+    store->ExecuteSql(HAVING_DROP_SQL);
+}
+
+/**
+ * @tc.name: RdbStore_Having_004
+ * @tc.desc: Verify scenarios without placeholders and without passing values
+ * 1.Execute Having(total > ? AND count >= ?", {5000})
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_Having_004, TestSize.Level1)
+{
+    store->Execute(HAVING_CREATE_SQL);
+    store->Execute(HAVING_INSERT_SQL);
+    RdbPredicates predicates("orders");
+    predicates.GroupBy({ "customer_id" });
+    predicates.Having("total > ? AND count >= ?", { 5000 });
+    auto resultSet = store->Query(predicates, { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total" });
+    int count = -1;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(count, 0);
+    store->ExecuteSql(HAVING_DROP_SQL);
+}
+
+/**
+ * @tc.name: RdbStore_Having_005
+ * @tc.desc: Test using placeholder scenarios.
+ * 1.Execute Having(total > ? AND count >= ?", {5000, 3})
+ * 2.Query data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_Having_005, TestSize.Level1)
+{
+    store->Execute(HAVING_CREATE_SQL);
+    store->Execute(HAVING_INSERT_SQL);
+    RdbPredicates predicates("orders");
+    predicates.GroupBy({ "customer_id" });
+    predicates.Having("total > ? AND count >= ?", {5000, 3}); // 5000 means lower limit of total price.
+    auto resultSet = store->Query(predicates, { "customer_id", "COUNT(*) AS count", "SUM(amount) AS total" });
+    EXPECT_EQ(resultSet->GoToNextRow(), E_OK);
+    RowEntity rowEntity;
+    EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
+    EXPECT_TRUE(rowEntity.Get("customer_id") == ValueObject(1));
+    EXPECT_TRUE(rowEntity.Get("total") == ValueObject(6500)); // 6500 means total price.
+
+    EXPECT_EQ(resultSet->GoToNextRow(), E_OK);
+    RowEntity rowEntity1;
+    EXPECT_EQ(resultSet->GetRow(rowEntity1), E_OK);
+    EXPECT_TRUE(rowEntity1.Get("customer_id") == ValueObject(3)); // 3 means customer id.
+    EXPECT_TRUE(rowEntity1.Get("total") == ValueObject(7000)); // 7000 means total price.
+    store->ExecuteSql(HAVING_DROP_SQL);
 }
