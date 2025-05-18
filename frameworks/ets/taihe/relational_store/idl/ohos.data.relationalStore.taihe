@@ -426,6 +426,29 @@ interface Transaction {
 
     @gen_promise("execute")
     ExecuteSync(sql: String, args: Optional<Array<ValueType>>): ValueType;
+
+@!sts_inject_into_class("""
+    insertSync(table: string, values: Record<string, ValueType>) : long
+    {
+        return this.insertSync(table, values, undefined);
+    }
+    updateSync(values: Record<string, ValueType>, predicates: RdbPredicates): long
+    {
+        return this.updateSync(values, predicates, undefined);
+    }
+    querySync(predicates: RdbPredicates): ResultSet
+    {
+        return this.querySync(predicates, undefined);
+    }
+    querySqlSync(sql: string): ResultSet
+    {
+        return this.querySqlSync(sql, undefined);
+    }
+    executeSync(sql: string): ValueType
+    {
+        return this.executeSync(sql, undefined);
+    }
+""")
   }
 
 @class
@@ -616,6 +639,31 @@ interface RdbStore {
     RemoteQuerySync(device: String, table: String, predicates: RdbPredicates, columns: Array<String>): ResultSet;
 
     @!sts_inject_into_class("""
+        insertSync(table: string, values: Record<string, ValueType>): long
+        {
+            return this.insertSync(table, values, undefined);
+        }
+        updateSync(values: Record<string, ValueType>, predicates: RdbPredicates): long
+        {
+            return this.updateSync(values, predicates, undefined);
+        }
+        querySync(predicates: RdbPredicates): ResultSet
+        {
+            return this.querySync(predicates, undefined);
+        }
+        querySqlSync(sql: string): ResultSet
+        {
+            return this.querySqlSync(sql, undefined);
+        }
+        executeWithTxId(sql: string, txId: long): ValueType
+        {
+           return this.executeWithTxId(sql, txId, undefined);
+        }
+        executeSync(sql: string): ValueType
+        {
+            return this.executeSync(sql, undefined);
+        }
+
         on(event: string, type: SubscribeType, cb: Object) : void {
             switch (event) {
                 case "dataChange": return this.onDataChange(type, cb as (info: Array<String> | Array<ChangeInfo>) => void, cb);

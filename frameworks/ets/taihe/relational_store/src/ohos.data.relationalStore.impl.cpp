@@ -64,6 +64,9 @@ public:
     ResultSetImpl() {
         // Don't forget to implement the constructor.
     }
+    ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) {
+        nativeResultSet_ = resultSet;
+    }
 
     array<string> GetColumnNames() {
         TH_THROW(std::runtime_error, "getColumnNames not implemented");
@@ -82,7 +85,10 @@ public:
     }
 
     int32_t GetRowCount() {
-        TH_THROW(std::runtime_error, "getRowCount not implemented");
+        //TH_THROW(std::runtime_error, "getRowCount not implemented");
+        int32_t rowCount = 0;
+        nativeResultSet_->GetRowCount(rowCount);
+        return rowCount;
     }
 
     void SetRowCount(int32_t count) {
@@ -114,7 +120,10 @@ public:
     }
 
     bool GetIsEnded() {
-        TH_THROW(std::runtime_error, "getIsEnded not implemented");
+        //TH_THROW(std::runtime_error, "getIsEnded not implemented");
+        bool isEnded = false;
+        nativeResultSet_->IsEnded(isEnded);
+        return isEnded;
     }
 
     void SetIsEnded(bool end) {
@@ -154,15 +163,21 @@ public:
     }
 
     bool GoToFirstRow() {
-        TH_THROW(std::runtime_error, "goToFirstRow not implemented");
+        //TH_THROW(std::runtime_error, "goToFirstRow not implemented");
+        int status = nativeResultSet_->GoToFirstRow();
+        return status == ANI_OK;
     }
 
     bool GoToLastRow() {
-        TH_THROW(std::runtime_error, "goToLastRow not implemented");
+        //TH_THROW(std::runtime_error, "goToLastRow not implemented");
+        int status = nativeResultSet_->GoToLastRow();
+        return status == ANI_OK;
     }
 
     bool GoToNextRow() {
-        TH_THROW(std::runtime_error, "goToNextRow not implemented");
+        //TH_THROW(std::runtime_error, "goToNextRow not implemented");
+        int status = nativeResultSet_->GoToNextRow();
+        return status == ANI_OK;
     }
 
     bool GoToPreviousRow() {
@@ -174,11 +189,17 @@ public:
     }
 
     string GetString(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getString not implemented");
+        //TH_THROW(std::runtime_error, "getString not implemented");
+        std::string result;
+        nativeResultSet_->GetString(columnIndex, result);
+        return string(result);
     }
 
     int64_t GetLong(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getLong not implemented");
+        //TH_THROW(std::runtime_error, "getLong not implemented");
+        int64_t result;
+        nativeResultSet_->GetLong(columnIndex, result);
+        return result;
     }
 
     double GetDouble(int32_t columnIndex) {
@@ -194,7 +215,12 @@ public:
     }
 
     ValueType GetValue(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getValue not implemented");
+        //TH_THROW(std::runtime_error, "getValue not implemented");
+        ValueType result = ValueType::make_EMPTY();
+        OHOS::NativeRdb::ValueObject obj;
+        nativeResultSet_->Get(columnIndex, obj);
+        ani_rdbutils::ValueObjectToAni(obj, result);
+        return result;
     }
 
     array<float> GetFloat32Array(int32_t columnIndex) {
@@ -216,6 +242,9 @@ public:
     void Close() {
         TH_THROW(std::runtime_error, "close not implemented");
     }
+
+protected:
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
 };
 
 class RdbPredicatesImpl {
@@ -614,7 +643,7 @@ public:
             int temp = nativeResultSet->GetRowCount(rowcnt);
             LOG_INFO("QuerySync ret %{public}d, rowcnt %{public}d", temp, rowcnt);
         }
-        return make_holder<ResultSetImpl, ResultSet>();
+        return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
     ResultSet QuerySqlSync(string_view sql, optional_view<array<ValueType>> args) {
@@ -637,7 +666,7 @@ public:
             int temp = nativeResultSet->GetRowCount(rowcnt);
             LOG_INFO("QuerySqlSync, ret %{public}d, rowcnt %{public}d", temp, rowcnt);
         }
-        return make_holder<ResultSetImpl, ResultSet>();
+        return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
     ValueType ExecuteSync(string_view sql, optional_view<array<ValueType>> args) {
@@ -938,7 +967,7 @@ public:
             int err = nativeResultSet->GetRowCount(rowcnt);
             LOG_INFO("QuerySync, err %{public}d, rowcnt %{public}d", err, rowcnt);
         }
-        return make_holder<ResultSetImpl, ResultSet>();
+        return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
     ResultSet QueryDataShareSync(::taihe::string_view table, uintptr_t predicates) {
@@ -971,7 +1000,7 @@ public:
             int err = nativeResultSet->GetRowCount(rowcnt);
             LOG_INFO("QueryDataShareSync, err %{public}d, rowcnt %{public}d", err, rowcnt);
         }
-        return taihe::make_holder<ResultSetImpl, ResultSet>();
+        return taihe::make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
     ResultSet QuerySqlWithSql(string_view sql) {
@@ -1013,7 +1042,7 @@ public:
             int err = nativeResultSet->GetRowCount(rowcnt);
             LOG_INFO("QuerySqlSync, err %{public}d, rowcnt %{public}d", err, rowcnt);
         }
-        return make_holder<ResultSetImpl, ResultSet>();
+        return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
     map<PRIKeyType, uintptr_t> GetModifyTimeSync(string_view table, string_view columnName,
