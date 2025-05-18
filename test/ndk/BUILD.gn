@@ -36,6 +36,7 @@ ohos_unittest("NativeRdbNdkTest") {
   sources = [
     "unittest/rdb_asset_test.cpp",
     "unittest/rdb_cursor_test.cpp",
+    "unittest/rdb_predicates_pref_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_store_configv2_test.cpp",
     "unittest/rdb_store_test.cpp",
@@ -70,11 +71,11 @@ group("fuzztest") {
   testonly = true
   deps = []
   deps += [
-    "fuzztest/relationalstore_fuzzer:fuzztest",
-    "fuzztest/valueobject_fuzzer:fuzztest",
-    "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/datavalue_fuzzer:fuzztest",
-    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
     "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
+    "fuzztest/relationalstore_fuzzer:fuzztest",
+    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
+    "fuzztest/valuebucket_fuzzer:fuzztest",
+    "fuzztest/valueobject_fuzzer:fuzztest",
   ]
 }

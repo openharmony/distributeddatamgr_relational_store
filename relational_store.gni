@@ -28,7 +28,8 @@ relational_store_base_path = "//foundation/distributeddatamgr/relational_store"
 
 relational_store_mock_path = "${relational_store_base_path}/rdbmock"
 
-relational_store_mock_test_path = "${relational_store_base_path}/test/native/rdb/mock"
+relational_store_mock_test_path =
+    "${relational_store_base_path}/test/native/rdb/mock"
 
 relational_store_js_common_path =
     "${relational_store_base_path}/frameworks/js/napi/common"
