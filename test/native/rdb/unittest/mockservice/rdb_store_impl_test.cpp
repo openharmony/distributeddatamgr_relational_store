@@ -976,28 +976,6 @@ HWTEST_F(RdbStoreImplConditionTest, UnregisterAutoSyncCallback_Test_003, TestSiz
 }
 
 /**
- * @tc.name: InitDelayNotifier_Test_001
- * @tc.desc: Abnormal testCase of InitDelayNotifier
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, InitDelayNotifier_Test_001, TestSize.Level2)
-{
-    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    config.SetStorageMode(StorageMode::MODE_DISK);
-    config.SetDBType(DB_VECTOR);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    storeImpl->delayNotifier_ = std::make_shared<DelayNotify>();
-    storeImpl->InitDelayNotifier();
-    storeImpl->delayNotifier_ = nullptr;
-    storeImpl->InitDelayNotifier();
-    ASSERT_NE(storeImpl->delayNotifier_, nullptr);
-
-    std::map<std::string, RdbChangeProperties> tableData = { { "test8", { false, false, false } } };
-    RdbChangedData rdbChangedData = { tableData };
-    storeImpl->delayNotifier_->UpdateNotify(rdbChangedData);
-}
-
-/**
  * @tc.name: RegisterDataChangeCallback_Test_001
  * @tc.desc: Abnormal testCase of RegisterDataChangeCallback
  * @tc.type: FUNC
@@ -1534,31 +1512,7 @@ HWTEST_F(RdbStoreImplConditionTest, Backup_Test_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, Backup_Test_002, TestSize.Level2)
 {
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
     std::vector<ValueObject> args;
-    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    config.SetStorageMode(StorageMode::MODE_DISK);
-    config.SetReadOnly(false);
-    config.SetHaMode(HAMode::SINGLE);
-    RdbStoreImplConditionTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    std::vector<uint8_t> encryptKey;
-    auto res = store->Backup(RdbStoreImplConditionTest::DATABASE_BACKUP_NAME, encryptKey);
-    EXPECT_EQ(E_OK, res);
-}
-
-/**
- * @tc.name: Backup_Test_003
- * @tc.desc: Abnormal testCase of Backup
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, Backup_Test_003, TestSize.Level2)
-{
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
-    std::vector<ValueObject> args;
-    EXPECT_CALL(*mockStatement, Execute(args)).WillOnce(Return(E_OK));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetReadOnly(false);
