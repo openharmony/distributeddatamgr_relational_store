@@ -274,8 +274,6 @@ union StringOrNumberArray {
 }
 
  interface ResultSet {
-    @get GetColumnNames() : Array<String>;
-
     @get GetColumnCount() : i32;
 
     @get GetRowCount() : i32;
@@ -295,6 +293,8 @@ union StringOrNumberArray {
     GetColumnIndex(columnName: String): i32;
 
     GetColumnName(columnIndex: i32): String;
+
+    GetColumnNames() : Array<String>;
 
     GoTo(offset: i32): bool;
 
