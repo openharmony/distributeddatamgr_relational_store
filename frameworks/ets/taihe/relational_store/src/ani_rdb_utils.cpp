@@ -79,38 +79,34 @@ void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OH
     auto tag = value.get_tag();
     switch (tag) {
         case TaiheValueType::tag_t::INT64: {
-            int64_t tmp = value.get_INT64_ref();
-            valueObj.value = tmp;
+            valueObj.value = value.get_INT64_ref();
         }
-        break;
+            break;
         case TaiheValueType::tag_t::F64: {
-            double tmp = value.get_F64_ref();
-            valueObj.value = tmp;
+            valueObj.value = value.get_F64_ref();
         }
-        break;
+            break;
         case TaiheValueType::tag_t::STRING: {
-            std::string tmp = std::string(value.get_STRING_ref());
-            valueObj.value = tmp;
+            valueObj.value = std::string(value.get_STRING_ref());
         }
-        break;
+            break;
         case TaiheValueType::tag_t::BOOL: {
-            bool tmp = value.get_BOOL_ref();
-            valueObj.value = tmp;
+            valueObj.value = value.get_BOOL_ref();
         }
-        break;
+            break;
         case TaiheValueType::tag_t::Uint8Array: {
             ::taihe::array<uint8_t> tmp = value.get_Uint8Array_ref();
             std::vector<uint8_t> stdvector(tmp.data(), tmp.data() + tmp.size());
             valueObj.value = stdvector;
         }
-        break;
+            break;
         case TaiheValueType::tag_t::ASSET: {
             ::ohos::data::relationalStore::Asset const &tmp = value.get_ASSET_ref();
             OHOS::NativeRdb::AssetValue value;
             AssetToNative(tmp, value);
             valueObj.value = value;
         }
-        break;
+            break;
         case TaiheValueType::tag_t::ASSETS: {
             ::taihe::array<::ohos::data::relationalStore::Asset> const &tmp = value.get_ASSETS_ref();
             std::vector<OHOS::NativeRdb::AssetValue> para(tmp.size());
@@ -121,19 +117,19 @@ void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OH
             });
             valueObj.value = para;
         }
-        break;
+            break;
         case TaiheValueType::tag_t::Float32Array: {
             ::taihe::array<float> const &tmp = value.get_Float32Array_ref();
             std::vector<float> stdvector(tmp.begin(), tmp.end());
             valueObj.value = stdvector;
         }
-        break;
+            break;
         case TaiheValueType::tag_t::bigint: {
             ::taihe::array<uint64_t> const &tmp = value.get_bigint_ref();
             valueObj.value = OHOS::NativeRdb::BigInteger(false, std::vector<uint64_t>(tmp.begin(), tmp.end()));
         }
         break;
-            default:
+        default:
             break;
     }
 }
@@ -142,41 +138,34 @@ void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data
 {
     OHOS::NativeRdb::ValueObject::TypeId typeId = valueObj.GetType();
     switch (typeId) {
-        case OHOS::NativeRdb::ValueObject::TypeId::TYPE_NULL: {
-        }
-        break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_INT: {
-            int64_t temp = (int64_t)valueObj;
-            value = ::ohos::data::relationalStore::ValueType::make_INT64(temp);
+            value = ::ohos::data::relationalStore::ValueType::make_INT64((int64_t)valueObj);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_DOUBLE: {
-            double temp = (double)valueObj;
-            value = ::ohos::data::relationalStore::ValueType::make_F64(temp);
+            value = ::ohos::data::relationalStore::ValueType::make_F64((double)valueObj);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_STRING: {
-            std::string temp = (std::string)valueObj;
-            value = ::ohos::data::relationalStore::ValueType::make_STRING(temp);
+            value = ::ohos::data::relationalStore::ValueType::make_STRING((std::string)valueObj);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BOOL: {
-            bool temp = (bool)valueObj;
-            value = ::ohos::data::relationalStore::ValueType::make_BOOL(temp);
+            value = ::ohos::data::relationalStore::ValueType::make_BOOL((bool)valueObj);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BLOB: {
             OHOS::NativeRdb::ValueObject::Blob temp = (OHOS::NativeRdb::ValueObject::Blob)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Uint8Array(temp);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSET: {
             OHOS::NativeRdb::ValueObject::Asset temp = (OHOS::NativeRdb::ValueObject::Asset)valueObj;
             ::ohos::data::relationalStore::Asset aniAsset = {};
             AssetToAni(temp, aniAsset);
             value = ::ohos::data::relationalStore::ValueType::make_ASSET(aniAsset);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSETS: {
             OHOS::NativeRdb::ValueObject::Assets temp = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
             std::vector<::ohos::data::relationalStore::Asset> aniAssets;
@@ -188,19 +177,19 @@ void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data
             }
             value = ::ohos::data::relationalStore::ValueType::make_ASSETS(aniAssets);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_VECS: {
             OHOS::NativeRdb::ValueObject::FloatVector temp = (OHOS::NativeRdb::ValueObject::FloatVector)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Float32Array(temp);
         }
-        break;
+            break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BIGINT: {
             OHOS::NativeRdb::ValueObject::BigInt temp = (OHOS::NativeRdb::ValueObject::BigInt)valueObj;
             std::vector<uint64_t> array = temp.Value();
             value = ::ohos::data::relationalStore::ValueType::make_bigint(array);
         }
-        break;
-            default:
+            break;
+        default:
             break;
     }
 }

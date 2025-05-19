@@ -35,7 +35,8 @@ void MapValuesToNative(taihe::map_view<taihe::string, ::ohos::data::relationalSt
     OHOS::NativeRdb::ValuesBucket &bucket);
 void ArrayValuesToNative(taihe::array_view<::ohos::data::relationalStore::ValueType> const &values,
     std::vector<OHOS::NativeRdb::ValueObject> &nativeValues);
-void BucketValuesToNative(taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values,
+void BucketValuesToNative(
+    taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values,
     OHOS::NativeRdb::ValuesBuckets &buckets);
 void CryptoParamToNative(::ohos::data::relationalStore::CryptoParam const &param,
     OHOS::NativeRdb::RdbStoreConfig::CryptoParam &value);

@@ -39,7 +39,7 @@ namespace {
 }
 
 ::ohos::data::sendableRelationalStore::Asset ToSendableAsset(
-    ::ohos::data::sendableRelationalStore::NonSendableAsset const &asset) 
+    ::ohos::data::sendableRelationalStore::NonSendableAsset const &asset)
 {
     TH_THROW(std::runtime_error, "ToSendableAsset not implemented");
 }

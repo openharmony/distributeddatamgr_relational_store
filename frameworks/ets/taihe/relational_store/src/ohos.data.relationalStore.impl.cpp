@@ -776,11 +776,6 @@ public:
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, stdcolumns);
-        if (nativeResultSet != nullptr) {
-            int rowcnt = 0;
-            int temp = nativeResultSet->GetRowCount(rowcnt);
-            LOG_INFO("QuerySync ret %{public}d, rowcnt %{public}d", temp, rowcnt);
-        }
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
@@ -799,11 +794,6 @@ public:
             });
         }
         auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
-        if (nativeResultSet != nullptr) {
-            int rowcnt = 0;
-            int temp = nativeResultSet->GetRowCount(rowcnt);
-            LOG_INFO("QuerySqlSync, ret %{public}d, rowcnt %{public}d", temp, rowcnt);
-        }
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
@@ -1100,11 +1090,6 @@ public:
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         auto nativeResultSet = nativeRdbStore_->Query(*rdbPredicateNative, stdcolumns);
-        if (nativeResultSet != nullptr) {
-            int rowcnt = 0;
-            int err = nativeResultSet->GetRowCount(rowcnt);
-            LOG_INFO("QuerySync, err %{public}d, rowcnt %{public}d", err, rowcnt);
-        }
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
@@ -1133,11 +1118,6 @@ public:
         }
         auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
         auto nativeResultSet = nativeRdbStore_->Query(rdbPredicates, stdcolumns);
-        if (nativeResultSet != nullptr) {
-            int rowcnt = 0;
-            int err = nativeResultSet->GetRowCount(rowcnt);
-            LOG_INFO("QueryDataShareSync, err %{public}d, rowcnt %{public}d", err, rowcnt);
-        }
         return taihe::make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
@@ -1167,18 +1147,12 @@ public:
         std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet = nullptr;
         if (nativeRdbStore_->GetDbType() == OHOS::NativeRdb::DB_VECTOR) {
             nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para);
-            //return (context->resultSet != nullptr) ? E_OK : E_ERROR;
         } else {
 #if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
             nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para);
 #else
             nativeResultSet = nativeRdbStore_->QuerySql(std::string(sql), para);
 #endif
-        }
-        if (nativeResultSet != nullptr) {
-            int rowcnt = 0;
-            int err = nativeResultSet->GetRowCount(rowcnt);
-            LOG_INFO("QuerySqlSync, err %{public}d, rowcnt %{public}d", err, rowcnt);
         }
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
@@ -1537,7 +1511,6 @@ public:
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
-
 };
 
 RdbPredicates CreateRdbPredicates(string_view name) {
