@@ -41,13 +41,6 @@ static constexpr int ERR = -1;
 static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
 #define API_VERSION_MOD 100
-#define ASSERT(condition, message, retVal)                       \
-    do {                                                         \
-        if (!(condition)) {                                      \
-            LOG_ERROR("test (" #condition ") failed: " message); \
-            return retVal;                                       \
-        }                                                        \
-    } while (0)
 
 void AssetToNative(::ohos::data::relationalStore::Asset const &asset, OHOS::NativeRdb::AssetValue &value)
 {
@@ -95,7 +88,7 @@ void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OH
         }
             break;
         case TaiheValueType::tag_t::Uint8Array: {
-            ::taihe::array<uint8_t> tmp = value.get_Uint8Array_ref();
+            ::taihe::array<uint8_t> const &tmp = value.get_Uint8Array_ref();
             std::vector<uint8_t> stdvector(tmp.data(), tmp.data() + tmp.size());
             valueObj.value = stdvector;
         }
@@ -128,7 +121,7 @@ void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OH
             ::taihe::array<uint64_t> const &tmp = value.get_bigint_ref();
             valueObj.value = OHOS::NativeRdb::BigInteger(false, std::vector<uint64_t>(tmp.begin(), tmp.end()));
         }
-        break;
+            break;
         default:
             break;
     }
@@ -155,22 +148,22 @@ void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BLOB: {
-            OHOS::NativeRdb::ValueObject::Blob temp = (OHOS::NativeRdb::ValueObject::Blob)valueObj;
+            auto temp = (OHOS::NativeRdb::ValueObject::Blob)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Uint8Array(temp);
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSET: {
-            OHOS::NativeRdb::ValueObject::Asset temp = (OHOS::NativeRdb::ValueObject::Asset)valueObj;
+            auto temp = (OHOS::NativeRdb::ValueObject::Asset)valueObj;
             ::ohos::data::relationalStore::Asset aniAsset = {};
             AssetToAni(temp, aniAsset);
             value = ::ohos::data::relationalStore::ValueType::make_ASSET(aniAsset);
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSETS: {
-            OHOS::NativeRdb::ValueObject::Assets temp = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
+            auto temp = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
             std::vector<::ohos::data::relationalStore::Asset> aniAssets;
             for (auto it = temp.begin(); it != temp.end(); ++it) {
-                OHOS::NativeRdb::ValueObject::Asset assetItem;
+                auto const &assetItem = *it;
                 ::ohos::data::relationalStore::Asset aniAsset = {};
                 AssetToAni(assetItem, aniAsset);
                 aniAssets.emplace_back(aniAsset);
@@ -179,12 +172,12 @@ void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_VECS: {
-            OHOS::NativeRdb::ValueObject::FloatVector temp = (OHOS::NativeRdb::ValueObject::FloatVector)valueObj;
+            auto temp = (OHOS::NativeRdb::ValueObject::FloatVector)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Float32Array(temp);
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BIGINT: {
-            OHOS::NativeRdb::ValueObject::BigInt temp = (OHOS::NativeRdb::ValueObject::BigInt)valueObj;
+            auto temp = (OHOS::NativeRdb::ValueObject::BigInt)valueObj;
             std::vector<uint64_t> array = temp.Value();
             value = ::ohos::data::relationalStore::ValueType::make_bigint(array);
         }
@@ -389,7 +382,10 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *e
         return std::make_pair(false, empty);
     }
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam contextParam;
-    ani_abilityutils::AniGetContext(aniValue, contextParam);
+    int32_t ret = ani_abilityutils::AniGetContext(aniValue, contextParam);
+    if (ret != ANI_OK) {
+        return std::make_pair(false, empty);
+    }
     auto [code, err] = AniGetRdbRealPath(env, aniValue, rdbConfig, contextParam);
     if (!rdbConfig.rootDir.empty()) {
         rdbConfig.isReadOnly = true;

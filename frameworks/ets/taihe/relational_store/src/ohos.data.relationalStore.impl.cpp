@@ -27,6 +27,7 @@
 #include "rdb_store_config.h"
 #include "rdb_open_callback.h"
 #include "rdb_result_set_bridge.h"
+#include "rdb_sql_utils.h"
 #include "rdb_helper.h"
 #include "rdb_predicates.h"
 #include "rdb_utils.h"
@@ -185,7 +186,7 @@ public:
 
     bool GoToFirstRow() {
         int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-         if (nativeResultSet_ != nullptr) {
+        if (nativeResultSet_ != nullptr) {
             errCode = nativeResultSet_->GoToFirstRow();
         }
         if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
@@ -823,7 +824,6 @@ public:
 
 protected:
     std::shared_ptr<OHOS::NativeRdb::Transaction> nativeTransaction_ = nullptr;
-
 };
 
 class DefaultOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
@@ -847,15 +847,18 @@ public:
         ani_env *env = get_env();
         OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
         auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
-        if (!configRet.first) {
-            LOG_ERROR("AniGetRdbStoreConfig failed");
-            return;
-        }
-        OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
-
         DefaultOpenCallback callback;
         int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
-        nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
+        if (!configRet.first) {
+            LOG_ERROR("AniGetRdbStoreConfig failed");
+            std::string dir = "/data/storage/el2/database/rdb";
+            std::string path = dir + "/" + std::string(config.name);
+            OHOS::NativeRdb::RdbStoreConfig storeConfig(path.c_str());
+            OHOS::NativeRdb::RdbSqlUtils::CreateDirectory(dir);
+            nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
+        } else {
+            nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
+        }
         if (errCode != OHOS::AppDataMgrJsKit::JSUtils::OK) {
             ThrowInnerError(errCode);
             nativeRdbStore_ = nullptr;
@@ -1208,7 +1211,10 @@ public:
             return;
         }
         if (!bindArgs.has_value()) {
-            nativeRdbStore_->ExecuteSql(std::string(sql));
+            int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
+            if (errcode != OHOS::NativeRdb::E_OK) {
+                ThrowInnerError(errcode);
+            }
             return;
         }
         array<ValueType> const &value = bindArgs.value();
