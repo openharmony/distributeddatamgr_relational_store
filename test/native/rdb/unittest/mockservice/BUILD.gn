@@ -103,7 +103,6 @@ ohos_unittest("NativeRdbConditionTest") {
     "${relational_store_native_path}/rdb/src/value_object.cpp",
     "${relational_store_native_path}/rdb/src/values_bucket.cpp",
     "${relational_store_native_path}/rdb/src/values_buckets.cpp",
-    "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
   ]
 
   configs = [ ":module_private_config" ]
@@ -113,7 +112,6 @@ ohos_unittest("NativeRdbConditionTest") {
     "ability_runtime:dataobs_manager",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "file_api:securitylabel",
     "googletest:gmock",
     "googletest:gtest",
