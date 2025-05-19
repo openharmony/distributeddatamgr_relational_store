@@ -391,7 +391,7 @@ int SharedBlock::PutNull(uint32_t row, uint32_t column)
 
 size_t SharedBlock::SetRawData(const void *rawData, size_t size)
 {
-    if (UNLIKELY(size <= 0) || rawData == nullptr) {
+    if (UNLIKELY(size <= 0 || rawData == nullptr)) {
         LOG_ERROR("SharedBlock rawData is less than or equal to 0M");
         return SHARED_BLOCK_INVALID_OPERATION;
     }
