@@ -277,3 +277,40 @@ bool OH_RDB_TransOptions::IsValid() const
     }
     return id == OH_TRANS_OPTION_ID;
 }
+
+int OH_RdbTrans_InsertWithConflictResolution(OH_Rdb_Transaction *trans, const char *table, const OH_VBucket *row,
+    Rdb_ConflictResolution resolution, int64_t *rowId)
+{
+    auto valuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(row));
+    if (!IsValidRdbTrans(trans) || table == nullptr || valuesBucket == nullptr || rowId == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
+        return RDB_E_INVALID_ARGS;
+    }
+
+    auto [err, id] = trans->trans_->Insert(table, valuesBucket->Get(), Utils::ConvertConflictResolution(resolution));
+    *rowId = id;
+    if (err != E_OK) {
+        LOG_ERROR("insert with conflict resolution fail,errCode=%{public}x,resolution=%{public}d,id=%{public}" PRId64,
+            err, resolution, id);
+    }
+    return ConvertorErrorCode::GetInterfaceCode(err);
+}
+
+int OH_RdbTrans_UpdateWithConflictResolution(OH_Rdb_Transaction *trans, const OH_VBucket *row,
+    const OH_Predicates *predicates, Rdb_ConflictResolution resolution, int64_t *changes)
+{
+    auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
+    auto rdbValuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(row));
+    if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr || changes == nullptr ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE) {
+        return RDB_E_INVALID_ARGS;
+    }
+    auto [err, count] = trans->trans_->Update(rdbValuesBucket->Get(), rdbPredicate->Get(),
+        Utils::ConvertConflictResolution(resolution));
+    *changes = count;
+    if (err != E_OK) {
+        LOG_ERROR("update with conflict resolution fail, errCode=%{public}x,resolution=%{public}d,count=%{public}d",
+            err, resolution, count);
+    }
+    return ConvertorErrorCode::GetInterfaceCode(err);
+}
