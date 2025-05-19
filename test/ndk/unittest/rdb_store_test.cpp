@@ -1688,3 +1688,56 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
     cursor->destroy(cursor);
     valueBucket->destroy(valueBucket);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_038
+ * @tc.desc: invalid args test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
+{
+    constexpr int TABLE_COUNT = 1;
+    const char *table[TABLE_COUNT];
+    table[0] = "store_test";
+    auto errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, nullptr, 1, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    errorCode = OH_Rdb_CloudSync(storeTestRdbStore_,
+        static_cast<Rdb_SyncMode>(Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST - 1), table, TABLE_COUNT, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    errorCode = OH_Rdb_CloudSync(storeTestRdbStore_,
+        static_cast<Rdb_SyncMode>(Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST + 1), table, TABLE_COUNT, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("lock_test");
+    EXPECT_EQ(OH_Rdb_LockRow(nullptr, predicates), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_LockRow(storeTestRdbStore_, nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnlockRow(nullptr, predicates), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnlockRow(storeTestRdbStore_, nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_QueryLockedRow(nullptr, predicates, nullptr, 0), nullptr);
+    EXPECT_EQ(OH_Rdb_QueryLockedRow(storeTestRdbStore_, nullptr, nullptr, 0), nullptr);
+    predicates->destroy(predicates);
+
+    errorCode = OH_Rdb_IsTokenizerSupported(RDB_CUSTOM_TOKENIZER, nullptr);
+    EXPECT_EQ(RDB_E_INVALID_ARGS, errorCode);
+
+    OH_Data_VBuckets *rows = OH_VBuckets_Create();
+    int64_t changes = -1;
+    EXPECT_EQ(OH_Rdb_BatchInsert(nullptr, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows,
+                  static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_NONE - 1), &changes),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows,
+                  static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_REPLACE + 1), &changes),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_VBuckets_Destroy(rows);
+}

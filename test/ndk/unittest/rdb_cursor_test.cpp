@@ -728,3 +728,29 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetAssets_test_011, TestSize.Level
     OH_Data_Asset_DestroyOne(asset);
     cursor->destroy(cursor);
 }
+
+/**
+ * @tc.name: Abnormal_cursor_GetColumnName_test_012
+ * @tc.desc: invalid args test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetColumnName_test_012, TestSize.Level1)
+{
+    size_t count = 0;
+    size_t outLen;
+    char querySql[] = "select * from test where id = ?;";
+    OH_Data_Values *values = OH_Values_Create();
+    float test[count];
+    OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(cursorTestRdbStore_, querySql, values);
+
+    auto errCode = OH_Cursor_GetFloatVectorCount(nullptr, 1, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Cursor_GetFloatVectorCount(cursor, 1, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(nullptr, 1, nullptr, count, &outLen));
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, nullptr, count, &outLen));
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, 0, &outLen));
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, count, nullptr));
+}

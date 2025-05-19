@@ -23,7 +23,6 @@ namespace OHOS {
 namespace NativeRdb {
 
 struct RDBCryptFault{
-    std::string faultType;
     int32_t errorCode;
     std::string custLog;
 };
@@ -36,8 +35,7 @@ public:
         const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
     static std::vector<uint8_t> Decrypt(const std::vector<uint8_t>& rootKeyAlias,
         const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
-    static RDBCryptFault GetDfxFault(const std::string &faultType, int32_t errorCode,
-        const std::string &custLog); 
+    static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog); 
 };
 } // namespace OHOS::NativeRdb
 }   // OHOS

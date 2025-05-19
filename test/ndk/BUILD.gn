@@ -76,5 +76,6 @@ group("fuzztest") {
     "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/datavalue_fuzzer:fuzztest",
     "fuzztest/relationalstorecapi_fuzzer:fuzztest",
+    "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
   ]
 }
