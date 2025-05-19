@@ -38,7 +38,8 @@ int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, s
 int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result, bool optional)
 {
     ani_boolean ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Boolean(ani_obj, property, reinterpret_cast<ani_boolean*>(&ani_field_value));
+    ani_status status = env->Object_GetPropertyByName_Boolean(
+        ani_obj, property, reinterpret_cast<ani_boolean*>(&ani_field_value));
     if (status != ANI_OK) {
         if (optional) {
             status = ANI_OK;
@@ -52,7 +53,8 @@ int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, b
 int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result, bool optional)
 {
     ani_int ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Int(ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
+    ani_status status = env->Object_GetPropertyByName_Int(
+        ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
     if (status != ANI_OK) {
         if (optional) {
             status = ANI_OK;
@@ -66,7 +68,8 @@ int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, i
 int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result, bool optional)
 {
     ani_int ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Int(ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
+    ani_status status = env->Object_GetPropertyByName_Int(
+        ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
     if (status != ANI_OK) {
         if (optional) {
             status = ANI_OK;

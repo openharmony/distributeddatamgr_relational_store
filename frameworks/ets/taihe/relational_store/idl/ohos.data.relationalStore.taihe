@@ -275,40 +275,22 @@ union StringOrNumberArray {
 
  interface ResultSet {
     @get GetColumnNames() : Array<String>;
-    @set SetColumnNames(names : Array<String>);
-    //columnNames: Array<String>;
 
     @get GetColumnCount() : i32;
-    @set SetColumnCount(count : i32);
-    //columnCount: i32;
 
     @get GetRowCount() : i32;
-    @set SetRowCount(count : i32);
-    //rowCount: i32;
 
     @get GetRowIndex() : i32;
-    @set SetRowIndex(index : i32);
-    //rowIndex: i32;
 
     @get GetIsAtFirstRow() : bool;
-    @set SetIsAtFirstRow(first : i32);
-    //isAtFirstRow: bool;
 
     @get GetIsAtLastRow() : bool;
-    @set SetIsAtLastRow(last : bool);
-    //isAtLastRow: bool;
 
     @get GetIsEnded() : bool;
-    @set SetIsEnded(end : bool);
-    //isEnded: bool;
 
     @get GetIsStarted() : bool;
-    @set SetIsStarted(start : bool);
-    //isStarted: bool;
 
     @get GetIsClosed() : bool;
-    @set SetIsClosed(close : bool);
-    //isClosed: bool;
 
     GetColumnIndex(columnName: String): i32;
 
@@ -446,7 +428,6 @@ interface Transaction {
 """)
   }
 
-@class
 interface RdbStore {
     @get GetVersion() : i32;
     @set SetVersion(veriosn : i32);

@@ -64,7 +64,7 @@ public:
     ResultSetImpl() {
         // Don't forget to implement the constructor.
     }
-    ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) {
+    explicit ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) {
         nativeResultSet_ = resultSet;
     }
 
@@ -72,78 +72,40 @@ public:
         TH_THROW(std::runtime_error, "getColumnNames not implemented");
     }
 
-    void SetColumnNames(array_view<string> names) {
-        TH_THROW(std::runtime_error, "setColumnNames not implemented");
-    }
-
     int32_t GetColumnCount() {
         TH_THROW(std::runtime_error, "getColumnCount not implemented");
     }
 
-    void SetColumnCount(int32_t count) {
-        TH_THROW(std::runtime_error, "setColumnCount not implemented");
-    }
-
     int32_t GetRowCount() {
-        //TH_THROW(std::runtime_error, "getRowCount not implemented");
         int32_t rowCount = 0;
         nativeResultSet_->GetRowCount(rowCount);
         return rowCount;
-    }
-
-    void SetRowCount(int32_t count) {
-        TH_THROW(std::runtime_error, "setRowCount not implemented");
     }
 
     int32_t GetRowIndex() {
         TH_THROW(std::runtime_error, "getRowIndex not implemented");
     }
 
-    void SetRowIndex(int32_t index) {
-        TH_THROW(std::runtime_error, "setRowIndex not implemented");
-    }
-
     bool GetIsAtFirstRow() {
         TH_THROW(std::runtime_error, "getIsAtFirstRow not implemented");
-    }
-
-    void SetIsAtFirstRow(int32_t first) {
-        TH_THROW(std::runtime_error, "setIsAtFirstRow not implemented");
     }
 
     bool GetIsAtLastRow() {
         TH_THROW(std::runtime_error, "getIsAtLastRow not implemented");
     }
 
-    void SetIsAtLastRow(bool last) {
-        TH_THROW(std::runtime_error, "setIsAtLastRow not implemented");
-    }
-
     bool GetIsEnded() {
-        //TH_THROW(std::runtime_error, "getIsEnded not implemented");
         bool isEnded = false;
         nativeResultSet_->IsEnded(isEnded);
         return isEnded;
-    }
-
-    void SetIsEnded(bool end) {
-        TH_THROW(std::runtime_error, "setIsEnded not implemented");
     }
 
     bool GetIsStarted() {
         TH_THROW(std::runtime_error, "getIsStarted not implemented");
     }
 
-    void SetIsStarted(bool start) {
-        TH_THROW(std::runtime_error, "setIsStarted not implemented");
-    }
-
     bool GetIsClosed() {
         TH_THROW(std::runtime_error, "getIsClosed not implemented");
-    }
-
-    void SetIsClosed(bool close) {
-        TH_THROW(std::runtime_error, "setIsClosed not implemented");
     }
 
     int32_t GetColumnIndex(string_view columnName) {
@@ -163,19 +125,16 @@ public:
     }
 
     bool GoToFirstRow() {
-        //TH_THROW(std::runtime_error, "goToFirstRow not implemented");
         int status = nativeResultSet_->GoToFirstRow();
         return status == ANI_OK;
     }
 
     bool GoToLastRow() {
-        //TH_THROW(std::runtime_error, "goToLastRow not implemented");
         int status = nativeResultSet_->GoToLastRow();
         return status == ANI_OK;
     }
 
     bool GoToNextRow() {
-        //TH_THROW(std::runtime_error, "goToNextRow not implemented");
         int status = nativeResultSet_->GoToNextRow();
         return status == ANI_OK;
     }
@@ -189,14 +148,12 @@ public:
     }
 
     string GetString(int32_t columnIndex) {
-        //TH_THROW(std::runtime_error, "getString not implemented");
         std::string result;
         nativeResultSet_->GetString(columnIndex, result);
         return string(result);
     }
 
     int64_t GetLong(int32_t columnIndex) {
-        //TH_THROW(std::runtime_error, "getLong not implemented");
         int64_t result;
         nativeResultSet_->GetLong(columnIndex, result);
         return result;
@@ -215,7 +172,6 @@ public:
     }
 
     ValueType GetValue(int32_t columnIndex) {
-        //TH_THROW(std::runtime_error, "getValue not implemented");
         ValueType result = ValueType::make_EMPTY();
         OHOS::NativeRdb::ValueObject obj;
         nativeResultSet_->Get(columnIndex, obj);
@@ -252,7 +208,7 @@ public:
     RdbPredicatesImpl() {
     }
 
-    RdbPredicatesImpl(std::string name) {
+    explicit RdbPredicatesImpl(std::string name) {
         nativeRdbPredicates_ = std::make_shared<OHOS::NativeRdb::RdbPredicates>(name);
     }
 
@@ -528,7 +484,7 @@ class TransactionImpl {
 public:
     TransactionImpl() {
     }
-    TransactionImpl(std::shared_ptr<OHOS::NativeRdb::Transaction> transaction) {
+    explicit TransactionImpl(std::shared_ptr<OHOS::NativeRdb::Transaction> transaction) {
         nativeTransaction_ = transaction;
     }
 
@@ -576,7 +532,7 @@ public:
         }
         OHOS::NativeRdb::ValuesBuckets buckets;
         ani_rdbutils::BucketValuesToNative(values, buckets);
-        if(ani_rdbutils::HasDuplicateAssets(buckets)) {
+        if (ani_rdbutils::HasDuplicateAssets(buckets)) {
             ThrowParamError("Duplicate assets are not allowed");
             return ERR_NULL;
         }
@@ -715,7 +671,7 @@ public:
     RdbStoreImpl() {
     }
 
-    RdbStoreImpl(ani_object context, StoreConfig const &config) {
+    explicit RdbStoreImpl(ani_object context, StoreConfig const &config) {
         ani_env *env = get_env();
         OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
         auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
@@ -787,7 +743,7 @@ public:
         int64_t int64Output = 0;
         OHOS::NativeRdb::ValuesBucket bucket;
         ani_rdbutils::MapValuesToNative(values, bucket);
-        if(ani_rdbutils::HasDuplicateAssets(bucket)) {
+        if (ani_rdbutils::HasDuplicateAssets(bucket)) {
             ThrowParamError("Duplicate assets are not allowed");
             return ERR_NULL;
         }
@@ -821,7 +777,7 @@ public:
         }
         OHOS::NativeRdb::ValuesBuckets buckets;
         ani_rdbutils::BucketValuesToNative(values, buckets);
-        if(ani_rdbutils::HasDuplicateAssets(buckets)) {
+        if (ani_rdbutils::HasDuplicateAssets(buckets)) {
             ThrowParamError("Duplicate assets are not allowed");
             return ERR_NULL;
         }
@@ -1106,7 +1062,7 @@ public:
             ani_rdbutils::ValueTypeToNative(c, obj);
             return obj;
         });
-        if(ani_rdbutils::HasDuplicateAssets(para)) {
+        if (ani_rdbutils::HasDuplicateAssets(para)) {
             ThrowParamError("Duplicate assets are not allowed");
             return;
         }
@@ -1136,7 +1092,7 @@ public:
             array_view<ValueType> const &arrayView = args.value();
             ani_rdbutils::ArrayValuesToNative(arrayView, nativeValues);
         }
-        if(ani_rdbutils::HasDuplicateAssets(nativeValues)) {
+        if (ani_rdbutils::HasDuplicateAssets(nativeValues)) {
             ThrowParamError("Duplicate assets are not allowed");
             return aniValue;
         }
