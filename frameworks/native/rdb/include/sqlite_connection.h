@@ -124,16 +124,18 @@ private:
     int RegisterStoreObs();
     int RegisterClientObs();
     int RegisterHookIfNecessary();
+    int ReplayBinlog(const RdbStoreConfig &config);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite);
-    static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg);
+    static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
     static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
     static void BinlogSetConfig(sqlite3 *dbHandle);
-    static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount);
-    static int AsyncReplayBinlog(sqlite3 *dbHandle, sqlite3 *slaveDbHandle);
-    static int ReplayBinlog(const RdbStoreConfig &config);
+    static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
+    static int AsyncReplayBinlog(const std::string &dbPath, bool isMemoryRdb);
+    static std::string GetBinlogFolderPath(const std::string &dbPath);
+    static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr }, { "-compare", nullptr } };
