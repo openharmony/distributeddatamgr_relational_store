@@ -82,6 +82,7 @@ public:
     API_EXPORT virtual AbsPredicates *Like(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *NotLike(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Glob(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *NotGlob(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Between(
         const std::string &field, const ValueObject &low, const ValueObject &high);
     API_EXPORT virtual AbsPredicates *NotBetween(
