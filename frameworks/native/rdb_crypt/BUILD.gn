@@ -39,8 +39,6 @@ cflags_cc = [ "-fvisibility=hidden" ]
 
 external_deps = [
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
     "huks:libhukssdk",
 ]
 subsystem_name = "distributeddatamgr"

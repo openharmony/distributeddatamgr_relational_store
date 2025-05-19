@@ -54,7 +54,6 @@ ohos_unittest("NativeGdbTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = base_sources
@@ -93,7 +92,6 @@ ohos_unittest("NativeGdbAdaptTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = base_sources
@@ -126,7 +124,6 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_native_path}/rdb_crypt",
   ]
 
   sources = [

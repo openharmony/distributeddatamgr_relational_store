@@ -27,7 +27,6 @@ config("module_private_config") {
     "${relational_store_base_path}/interfaces/ndk/src",
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_native_path}/rdb_crypt",
   ]
 }
 

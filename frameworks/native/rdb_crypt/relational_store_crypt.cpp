@@ -26,13 +26,13 @@
 #include "logger.h"
 
 using RDBCryptFault = OHOS::NativeRdb::RDBCryptFault;
-API_EXPORT int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias) asm("CheckRootKeyExists");
+API_EXPORT int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias) asm("checkRootKeyExists");
 API_EXPORT int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias,
-    RDBCryptFault &rdbFault) asm("GenerateRootKey");
+    RDBCryptFault &rdbFault) asm("generateRootKey");
 API_EXPORT std::vector<uint8_t> Encrypt(const std::vector<uint8_t> &rootKeyAlias,
-    const std::vector<uint8_t> &key, RDBCryptFault &rdbFault) asm("Encrypt");
+    const std::vector<uint8_t> &key, RDBCryptFault &rdbFault) asm("encrypt");
 API_EXPORT std::vector<uint8_t> Decrypt(const std::vector<uint8_t> &rootKeyAlias,
-    const std::vector<uint8_t> &key, RDBCryptFault &rdbFault) asm("Decrypt");
+    const std::vector<uint8_t> &key, RDBCryptFault &rdbFault) asm("decrypt");
 int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
 {
     return OHOS::NativeRdb::RDBCrypt::CheckRootKeyExists(rootKeyAlias);

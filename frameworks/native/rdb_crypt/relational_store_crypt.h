@@ -19,13 +19,10 @@
 #include <string>
 #include <vector>
 
+#include "rdb_security_manager.h"
+
 namespace OHOS {
 namespace NativeRdb {
-
-struct RDBCryptFault{
-    int32_t errorCode;
-    std::string custLog;
-};
 
 class RDBCrypt {
 public:
