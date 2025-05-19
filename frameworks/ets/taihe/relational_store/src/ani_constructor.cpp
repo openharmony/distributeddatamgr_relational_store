@@ -12,15 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "AniRdbUtils"
-#include "logger.h"
 #include "ohos.data.relationalStore.ani.hpp"
 #include "ohos.data.sendableRelationalStore.ani.hpp"
 
-using namespace OHOS::Rdb;
-
-ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result) {
-    LOG_INFO("ANI_Constructor");
+ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result) 
+{
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         return ANI_ERROR;
