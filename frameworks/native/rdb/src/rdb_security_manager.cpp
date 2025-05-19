@@ -162,9 +162,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     RdbSecretKeyData keyData;
     keyData.timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::system_clock::now());
     keyData.distributed = 0;
-    RDBCryptFault rdbFault;
-    keyData.secretKey = EncryptWorkKey(key, rdbFault);
-    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    keyData.secretKey = EncryptWorkKey(key);
     if (keyData.secretKey.empty()) {
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
@@ -213,11 +211,6 @@ void RdbSecurityManager::ReportCryptFault(const int32_t &errorCode, const std::s
 
 int32_t RdbSecurityManager::Init(const std::string &bundleName)
 {
-    handle_ = dlopen("librelational_store_crypt.z.so", RTLD_LAZY);
-    if (handle_ == nullptr) {
-        LOG_ERROR("crypt dlopen failed errno is %{public}d", errno);
-        return E_NOT_SUPPORT;
-    }
     std::vector<uint8_t> rootKeyAlias = GenerateRootKeyAlias(bundleName);
     constexpr uint32_t RETRY_MAX_TIMES = 5;
     constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000;
@@ -227,9 +220,7 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
         ret = CheckRootKeyExists(rootKeyAlias);
         if (ret == HKS_ERROR_NOT_EXIST) {
             hasRootKey_ = false;
-            RDBCryptFault rdbFault;
-            ret = GenerateRootKey(rootKeyAlias, rdbFault);
-            ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+            ret = GenerateRootKey(rootKeyAlias);
         }
         if (ret == HKS_SUCCESS) {
             if (!HasRootKey()) {
@@ -247,7 +238,11 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
 
 int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
 {
-    auto creatorCheck = reinterpret_cast<CheckRootKeyExistsFunc>(dlsym(handle_, "CheckRootKeyExists"));
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_NOT_SUPPORT;
+    }
+    auto creatorCheck = reinterpret_cast<CheckRootKeyExistsFunc>(dlsym(handle, "checkRootKeyExists"));
     if (creatorCheck == nullptr) {
         LOG_ERROR("CheckRootKeyExists failed(%{public}d)!", errno);
         return E_NOT_SUPPORT;
@@ -255,36 +250,57 @@ int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlia
     return creatorCheck(rootKeyAlias);
 }
 
-int32_t RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptFault &rdbFault)
+int32_t RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias)
 {
-    auto creatorGenerate = reinterpret_cast<GenerateRootKeyFunc>(dlsym(handle_, "GenerateRootKey"));
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_NOT_SUPPORT;
+    }
+    RDBCryptFault rdbFault;
+    auto creatorGenerate = reinterpret_cast<GenerateRootKeyFunc>(dlsym(handle, "generateRootKey"));
     if (creatorGenerate == nullptr) {
         LOG_ERROR("dlsym GenerateRootKey failed(%{public}d)!", errno);
         return E_NOT_SUPPORT;
     }
-    return creatorGenerate(rootKeyAlias, rdbFault);
+    auto ret = creatorGenerate(rootKeyAlias, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    return ret;
 }
 
-std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault)
+std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key)
 {
-    auto creatorEncrypt = reinterpret_cast<EncryptFunc>(dlsym(handle_, "Encrypt"));
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return {};
+    }
+    RDBCryptFault rdbFault;
+    auto creatorEncrypt = reinterpret_cast<EncryptFunc>(dlsym(handle, "encrypt"));
     if (creatorEncrypt == nullptr) {
         LOG_ERROR("dlsym Encrypt failed(%{public}d)!", errno);
         return {};
     }
     auto rootKeyAlias = GetRootKeyAlias();
-    return creatorEncrypt(rootKeyAlias, key, rdbFault);
+    auto encryKey = creatorEncrypt(rootKeyAlias, key, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    return encryKey;
 }
 
-std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault)
+std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &key)
 {
-    auto creatorDecrypt = reinterpret_cast<DecryptFunc>(dlsym(handle_, "Decrypt"));
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return {};
+    }
+    RDBCryptFault rdbFault;
+    auto creatorDecrypt = reinterpret_cast<DecryptFunc>(dlsym(handle, "decrypt"));
     if (creatorDecrypt == nullptr) {
         LOG_ERROR("dlsym Decrypt failed(%{public}d)!", errno);
         return {};
     }
     auto rootKeyAlias = GetRootKeyAlias();
-    return creatorDecrypt(rootKeyAlias, key, rdbFault);
+    auto decryptKey = creatorDecrypt(rootKeyAlias, key, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    return decryptKey;
 }
 
 bool RdbSecurityManager::InitPath(const std::string &fileDir)
@@ -325,9 +341,7 @@ RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile
         return {};
     }
 
-    RDBCryptFault rdbFault;
-    std::vector<uint8_t> key = DecryptWorkKey(keyData.secretKey, rdbFault);
-    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    std::vector<uint8_t> key = DecryptWorkKey(keyData.secretKey);
     if (key.empty()) {
         LOG_ERROR("Decrypt key failed!");
         return {};
@@ -482,6 +496,18 @@ void RdbSecurityManager::ChangeKeyFile(const std::string &dbPath)
 bool RdbSecurityManager::HasRootKey()
 {
     return hasRootKey_;
+}
+
+void* RdbSecurityManager::GetHandle()
+{
+    std::lock_guard<std::mutex> lock(handleMutex_);
+    if (handle_ == nullptr) {
+        handle_ = dlopen("librelational_store_crypt.z.so", RTLD_LAZY);
+        if (handle_ == nullptr) {
+            LOG_ERROR("crypt dlopen failed errno is %{public}d", errno);
+        }
+    }
+    return handle_;
 }
 
 bool RdbSecurityManager::IsKeyFileEmpty(const std::string &keyFile)
