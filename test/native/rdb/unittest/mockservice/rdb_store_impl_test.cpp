@@ -301,7 +301,7 @@ HWTEST_F(RdbStoreImplConditionTest, GetUriTest_001, TestSize.Level2)
     config.SetDataGroupId("123");
     auto storeImlp = std::make_shared<RdbStoreImpl>(config);
     auto uri = storeImlp->GetUri("test");
-    EXPECT_EQ(uri.ToString(), "rdb://123//data/test/rdb_store_impl_condition_test.db/test");
+    EXPECT_EQ(uri, "rdb://123//data/test/rdb_store_impl_condition_test.db/test");
 }
 
 /* *
