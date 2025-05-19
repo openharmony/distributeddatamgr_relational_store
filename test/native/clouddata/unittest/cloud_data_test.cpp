@@ -528,4 +528,49 @@ HWTEST_F(CloudDataTest, SetCloudStrategy001, TestSize.Level1)
     ret = proxy->SetCloudStrategy(strategy, values);
     EXPECT_EQ(ret, CloudService::SUCCESS);
 }
+
+/* *
+ * @tc.name: CloudSync001
+ * @tc.desc: Test the system application permissions of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync001, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
+    EXPECT_EQ(ret, CloudService::PERMISSION_DENIED);
+}
+
+/* *
+ * @tc.name: CloudSync002
+ * @tc.desc: Test the permissions of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync002, TestSize.Level1)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+}
+
+/* *
+ * @tc.name: CloudSync003
+ * @tc.desc: Test the permissions of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync003, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
+    EXPECT_EQ(status, CloudService::ERROR);
+}
 } // namespace OHOS::CloudData

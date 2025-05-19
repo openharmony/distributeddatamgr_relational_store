@@ -56,6 +56,10 @@ public:
     static napi_value QueryStatistics(napi_env env, napi_callback_info info);
     static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
     static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
+    static napi_value CloudSync(napi_env env, napi_callback_info info);
+private:
+    static uint32_t GetSeqNum();
+    static std::atomic<uint32_t> seqNum_;
 };
 
 } // namespace OHOS::CloudData
