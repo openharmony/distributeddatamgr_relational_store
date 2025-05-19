@@ -271,4 +271,81 @@ std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
     ITypesUtil::Unmarshal(reply, results);
     return { status, results };
 }
+
+int32_t CloudServiceProxy::DoAsync(const std::string &bundleName, const std::string &storeId, Option option)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_CLOUD_SYNC, reply, bundleName, storeId, option);
+    if (status != SUCCESS) {
+        LOG_ERROR(
+            "Status:0x%{public}x bundleName:%{public}s storeId:%{public}.3s syncMode:%{public}d seqNum:%{public}u",
+            status, bundleName.c_str(), storeId.c_str(), option.syncMode, option.seqNum);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName, sptr<IRemoteOnject> notifier)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_INIT_NOTIFIER, reply, bundleName, notifier);
+    if (status != SUCCESS) {
+        LOG_ERROR("Status:0x%{public}x bundleName:%{public}s", status, bundleName.c_str());
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName)
+{
+    if (notifiers_.find(bundleName) != notifiers_end()) {
+        return SUCCESS;
+    }
+    sptr<RdbNotifierStub> notifier = new (std::nothrow) RdbNotifierStub(
+        [this](uint32_t seqNum, Details &&result) {
+            OnSyncComplete(seqNum, std::moveI(result));
+        }, nullptr, nullptr);
+    if (notifier == nullptr) {
+        LOG_ERROR("create notifier failed, bundleName = %{public}s", bundleName.c_str());
+        return ERROR;
+    }
+    // todo return InitNotifier(bundleName, notifier->AsObject())??
+    if (InitNotifier(bundleName, notifier->AsObject()) !=SUCCESS) {
+        LOG_ERROR("init notifier failed, bundleName = %{public}s", bundleName.c_str());
+        return ERROR;
+    }
+    notifier_.emplace(bundleName, notifier);
+    return SUCCESS;
+}
+
+void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
+{
+    syncCallbacks_.ComputeIfPresent(seqNum, [&result](const auto &key, const AsyncDetail &callback) {
+        auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
+        if (callback != nullptr) {
+            callback(std::move(result));
+        }
+        return !finished;
+    });
+}
+
+int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::string &storeId,
+    const Option &option, const AsyncDetail &async)
+{
+    if(async == nullptr) {
+        LOG_ERROR("no async, bundleName = %{public}s", bundleName.c_str());
+        return INVALID_ARGUMENT;
+    }
+    if (InitNotifier(bundleName) != SUCCESS) {
+        LOG_ERROR("init notifier failed, bundleName = %{public}s", bundleName.c_str());
+        return ERROR;
+    }
+    if (!syncCallbacks_.Insert(option.seqNum, async)) {
+        LOG_ERROR("register progress failed, bundleName = %{public}s", bundleName.c_str());
+        return ERROR;
+    }
+    auto result = DoAsync(bundleName, storeId, option);
+    if (result != SUCCESS) {
+        syncCallbacks_.Erase(option.seqNum);
+    }
+    return result;
+}
 } // namespace OHOS::CloudData

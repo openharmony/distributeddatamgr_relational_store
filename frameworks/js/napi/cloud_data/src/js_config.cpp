@@ -25,12 +25,14 @@
 #include "js_error_utils.h"
 #include "js_strategy_context.h"
 #include "js_utils.h"
+#include "js_uv_queue.h"
 #include "logger.h"
 #include "napi_queue.h"
 
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 using namespace OHOS::AppDataMgrJsKit;
+std::atomic<uint32_t> JsConfig::seqNum_{};
 JsConfig::JsConfig()
 {
 }
@@ -510,6 +512,102 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
 }
 
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *   cloudSync(bundleName: string, storeId: string, mode: relationalStore.SyncMode,
+ * progress: Callback<relationalStore.ProgressDetails>: Promise<void>;
+ */
+napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
+{
+    struct CloudSyncContext : public ContextBase {
+        std::string bundleName;
+        std::string storeId;
+        int32_t syncMode;
+        napi_ref asyncHolder = nullptr;
+        std::shared_ptr<UvQueue> queue;
+    }
+    auto ctxt = std::make_shared<CloudSyncContext>();
+    ctxt->queue = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // less required 4 arguments :: <bundleName> <storeId> <mode> <progress>
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 4, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        // 0 is the index of argument bundleName
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
+        ASSERT_BUSINESS_ERR(
+            ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(), Status::INVALID_ARGUMENT,
+            "The type of bundleName must be string and not empty.");
+        // 1 is the index of argument storeId
+        status = JSUtils::Convert2Value(env, argv[1], ctxt->storeId);
+        ASSERT_BUSINESS_ERR(
+            ctxt, status == JSUtils::OK && && !ctxt->storeId.empty(), Status::INVALID_ARGUMENT,
+            "The type of storeId must be string and not empty.");
+        // 2 is the index of argument syncMode
+        status = JSUtils::Convert2Value(env, argv[2], ctxt->syncMode);
+        ASSERT_BUSINESS_ERR(
+            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of syncMode must be number.");
+        bool checked = (status == napi_ok && ctxt->syncMode >= DistributedRdb::TIME_FIRST &&
+            ctxt->syncMode <= DistributedRdb::CLOUD_FIRST);
+        ASSERT_BUSINESS_ERR(
+            ctxt, checked, Status::INVALID_ARGUMENT, "The syncMode is invalid.");
+        // 3 is the index of argument progress, it should be a founction
+        napi_valuetype ValueType = napi_undefined;
+        napi_status ret = napi_typeof(env, argv[3], &valueType);
+        ASSERT_BUSINESS_ERR(
+            ctxt, ret == napi_ok && valueType == napi_function, Status::INVALID_ARGUMENT,
+            "The type of progress should be function.");
+        ASSERT_BUSINESS_ERR(
+            ctxt, napi_create_refrence(env, argv[3], 1, &ctxt->asyncHolder) == napi_ok,
+            Status::INVALID_ARGUMENT, "create refrence failed.");
+    }, true);
+    ASSERT_NULL(!ctxt->isThrowError, "CloudSync exit");
+
+    auto execute = [ctxt]() {
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (state != CloudService::SERVER_UNAVAILABLE) {
+                state = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(state, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            return;
+        }
+        auto async = [ctxt, queue = ctxt->queue, callback = ctxt->asyncHolder](const DistributedRdb::Details & details) {
+            if (queue == nullptr || callback == nullptr) {
+                return;
+            }
+            bool repeate = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
+            queue->AsyncCallInOrder({ callback, repeate }, [details](napi_ebv env, int &argc, napi_value *argv) -> void {
+                argc = 1;
+                argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
+            });
+        };
+        CloudService::Option option;
+        option.syncMode = ctxt->syncMode;
+        option.seqNum = GetSeqNum();
+        auto status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
+        ctxt->status =
+            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
+    };
+    auto output = [env, ctxt](napi_value &result) {
+        if (ctxt->status != napi_ok && ctxt->asyncHolder != nullptr) {
+            napi_delete_refrence(env, ctxt->asyncHolder);
+        }
+        napi_get_undefined(env, &result);
+    };
+    return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
+}
+
+uint32_t JsConfig::GetSeqNum()
+{
+    uint32_tvalue== ++seqNum_;
+    if (value == 0) {
+        value = ++seqNum_;
+    }
+    return value;
+}
+
 napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
 {
     auto lambda = []() -> std::vector<napi_property_descriptor> {
@@ -523,6 +621,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("queryStatistics", JsConfig::QueryStatistics),
             DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
             DECLARE_NAPI_STATIC_FUNCTION("queryLastSyncInfo", JsConfig::QueryLastSyncInfo),
+            DECLARE_NAPI_STATIC_FUNCTION("cloudSync", JsConfig::CloudSync),
         };
         return properties;
     };

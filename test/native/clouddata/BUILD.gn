@@ -35,6 +35,7 @@ ohos_unittest("NativeCloudDataTest") {
     "${cloud_data_native_path}/src/cloud_manager.cpp",
     "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
     "${cloud_data_native_path}/src/cloud_types_util.cpp",
+    "${relational_store_frameworks_path}/native/rdb/src/rdb_notifier_stub.cpp",
     "unittest/cloud_data_test.cpp",
   ]
 

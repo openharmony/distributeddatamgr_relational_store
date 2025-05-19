@@ -16,11 +16,14 @@
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_PROXY_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_PROXY_H
 
+#include "concurrent_map.h"
 #include "icloud_service.h"
 #include "iremote_object.h"
 #include "iremote_proxy.h"
+#include "rdb_notifier_stub.h"
 
 namespace OHOS::CloudData {
+using namespace DistributedRdb;
 class CloudServiceProxy : public IRemoteProxy<ICloudService> {
 public:
     explicit CloudServiceProxy(const sptr<IRemoteObject> &object);
@@ -52,9 +55,17 @@ public:
     int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) override;
     std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) override;
+    int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
+        const AsyncDetail &async) override;
+    int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteOnject> notifier) override;
 
 private:
+    int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option) override;
+    int32_t InitNotifier(const std::string &bundleName);
+    void OnSyncComplete(uint32_t seqNum, Details &&result);
     sptr<IRemoteObject> remote_;
+    std::map<std::string, sptr<RdbNotifierStub>> notifiers_;
+    ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_PROXY_H
