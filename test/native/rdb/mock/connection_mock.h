@@ -26,6 +26,16 @@ class RdbStoreConfig;
 class Statement;
 class MockConnection : public Connection {
 public:
+    using Info = DistributedRdb::RdbDebugInfo;
+    using SConn = std::shared_ptr<Connection>;
+    using Stmt = std::shared_ptr<Statement>;
+    using Notifier = std::function<void(const DistributedRdb::RdbChangedData &rdbChangedData)>;
+    using Creator = std::pair<int32_t, SConn> (*)(const RdbStoreConfig &config, bool isWriter);
+    using Repairer = int32_t (*)(const RdbStoreConfig &config);
+    using Deleter = int32_t (*)(const RdbStoreConfig &config);
+    using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
+    using Restorer = int32_t (*)(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
+	
     MOCK_METHOD(int32_t, VerifyAndRegisterHook, (const RdbStoreConfig &config), (override));
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateStatement, (const std::string &sql, SConn conn), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));
