@@ -1,0 +1,145 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+module_output_path = "relational_store/relational_store/native_rdb"
+
+###############################################################################
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+    "${relational_store_native_path}/rdb/src",
+    "${relational_store_native_path}/rdb_crypt",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_native_path}/rdb_device_manager_adapter/include",
+    "${relational_store_base_path}/test/native/rdb/unittest",
+    "${relational_store_mock_test_path}/",
+    "${relational_store_mock_path}/frameworks/native/rdb/common",
+  ]
+
+  defines = [
+    "RELATIONAL_STORE",
+    "private=public",
+  ]
+}
+
+ohos_unittest("NativeRdbConditionTest") {
+  module_out_path = module_output_path
+
+  cflags = [
+    "-fno-access-control",  # Ignore Private Member Access Control
+  ]
+
+  sources = [ "rdb_store_impl_test.cpp" ]
+
+  sources += [
+    "${relational_store_mock_test_path}/rdb_manager_impl_mock.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
+    "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
+    "${relational_store_native_path}/rdb/mock/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/base_transaction.cpp",
+    "${relational_store_native_path}/rdb/src/big_integer.cpp",
+    "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/connection.cpp",
+    "${relational_store_native_path}/rdb/src/connection_pool.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
+    "${relational_store_native_path}/rdb/src/knowledge_schema.cpp",
+    "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
+    "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
+    "${relational_store_native_path}/rdb/src/rd_connection.cpp",
+    "${relational_store_native_path}/rdb/src/rd_statement.cpp",
+    "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
+    "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
+    "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    "${relational_store_native_path}/rdb/src/share_block.cpp",
+    "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/step_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
+    "${relational_store_native_path}/rdb/src/task_executor.cpp",
+    "${relational_store_native_path}/rdb/src/trans_db.cpp",
+    "${relational_store_native_path}/rdb/src/transaction.cpp",
+    "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
+    "${relational_store_native_path}/rdb/src/value_object.cpp",
+    "${relational_store_native_path}/rdb/src/values_bucket.cpp",
+    "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "file_api:securitylabel",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "huks:libhukssdk",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+    "kv_store:database_utils",
+    "kv_store:distributeddata_inner",
+    "kv_store:distributeddb",
+    "samgr:samgr_proxy",
+    "sqlite:sqlite",
+    "sqlite:sqliteicu",
+  ]
+
+  deps = [
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+  ]
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [ ":NativeRdbConditionTest" ]
+}
+###############################################################################

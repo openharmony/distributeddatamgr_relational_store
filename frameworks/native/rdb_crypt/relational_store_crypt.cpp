@@ -56,16 +56,14 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
 constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-constexpr const char *FT_EX_HUKS = "EX_HUKS";
 constexpr uint32_t TIMES = 4;
 constexpr uint32_t MAX_UPDATE_SIZE = 64;
 constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 constexpr uint8_t AEAD_LEN = 16;
 
-RDBCryptFault RDBCrypt::GetDfxFault(const std::string &faultType, int32_t errorCode, const std::string &custLog)
+RDBCryptFault RDBCrypt::GetDfxFault(int32_t errorCode, const std::string &custLog)
 {
     RDBCryptFault rdbDfxFault;
-    rdbDfxFault.faultType = faultType;
     rdbDfxFault.errorCode = errorCode;
     rdbDfxFault.custLog = custLog;
     return rdbDfxFault;
@@ -76,7 +74,7 @@ int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *pa
 {
     if (outData->size < inData->size * TIMES) {
         HksAbort(handle, paramSet);
-        rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_FAIL,  "HksLoopUpdate out size not enough");
+        rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_FAIL,  "HksLoopUpdate out size not enough");
         return HKS_ERROR_INVALID_ARGUMENT;
     }
 
@@ -91,7 +89,7 @@ int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *pa
         }
         auto result = HksUpdate(handle, paramSet, &input, &output);
         if (result != HKS_SUCCESS) {
-            rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_FAIL, "HksUpdate ret=" + std::to_string(result));
+            rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_FAIL, "HksUpdate ret=" + std::to_string(result));
             LOG_ERROR("HksUpdate Failed.");
             return HKS_FAILURE;
         }
@@ -103,7 +101,7 @@ int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *pa
     output.size = input.size * TIMES;
     auto result = HksFinish(handle, paramSet, &input, &output);
     if (result != HKS_SUCCESS) {
-        rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_FAIL, "HksFinish ret=" + std::to_string(result));
+        rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_FAIL, "HksFinish ret=" + std::to_string(result));
         LOG_ERROR("HksFinish Failed.");
         return HKS_FAILURE;
     }
@@ -119,13 +117,13 @@ int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksPar
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
-        rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL,
+        rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_DECRYPT_FAIL,
             "Decrypt HksInit ret=" + std::to_string(result));
         return result;
     }
     result = HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText, rdbFault);
     if (result != HKS_SUCCESS) {
-        rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL,
+        rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_DECRYPT_FAIL,
             "Decrypt HksLoopUpdate ret=" + std::to_string(result));
     }
     return result;
@@ -138,7 +136,7 @@ int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksPar
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
-        rdbFault = RDBCrypt::GetDfxFault(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
+        rdbFault = RDBCrypt::GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL,
             "Decrypt HksInit ret=" + std::to_string(result));
         LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
@@ -194,7 +192,7 @@ int32_t RDBCrypt::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBC
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_ROOT_KEY_FAULT,
+        rdbFault = GetDfxFault(E_ROOT_KEY_FAULT,
             "generator root key, HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet()-client failed with error %{public}d", ret);
         return ret;
@@ -212,7 +210,7 @@ int32_t RDBCrypt::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBC
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_ROOT_KEY_FAULT, "HksAddParams ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_ROOT_KEY_FAULT, "HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams-client failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return ret;
@@ -220,7 +218,7 @@ int32_t RDBCrypt::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBC
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_ROOT_KEY_FAULT, "HksBuildParamSet ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_ROOT_KEY_FAULT, "HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet-client failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return ret;
@@ -229,7 +227,7 @@ int32_t RDBCrypt::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBC
     ret = HksGenerateKey(&rootKeyName, params, nullptr);
     HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_ROOT_KEY_FAULT, "HksGenerateKey ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_ROOT_KEY_FAULT, "HksGenerateKey ret=" + std::to_string(ret));
         LOG_ERROR("HksGenerateKey-client failed with error %{public}d", ret);
     }
     return ret;
@@ -249,7 +247,7 @@ std::vector<uint8_t> RDBCrypt::Encrypt(const std::vector<uint8_t> &rootKeyAlias,
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
+        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL,
             "Encrypt HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
@@ -265,7 +263,7 @@ std::vector<uint8_t> RDBCrypt::Encrypt(const std::vector<uint8_t> &rootKeyAlias,
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksAddParams ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -273,7 +271,7 @@ std::vector<uint8_t> RDBCrypt::Encrypt(const std::vector<uint8_t> &rootKeyAlias,
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
+        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL,
             "Encrypt HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
@@ -306,7 +304,7 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, "HksInitParamSet ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL, "HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
     }
@@ -323,7 +321,7 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
     };
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, "HksAddParams ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL, "HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -331,7 +329,7 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL,
+        rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL,
             "HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);

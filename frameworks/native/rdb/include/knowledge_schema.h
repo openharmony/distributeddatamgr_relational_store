@@ -19,6 +19,20 @@
 #include "serializable.h"
 
 namespace OHOS::NativeRdb {
+class KnowledgeParser final : public Serializable {
+public:
+    KnowledgeParser() = default;
+
+    bool Marshal(json &node) const override;
+    bool Unmarshal(const json &node) override;
+
+    std::string GetType() const;
+    std::string GetPath() const;
+private:
+    std::string type_;
+    std::string path_;
+};
+
 class KnowledgeField final : public Serializable {
 public:
     KnowledgeField() = default;
@@ -28,12 +42,12 @@ public:
 
     std::string GetColumnName() const;
     std::vector<std::string> GetType() const;
-    std::string GetParser() const;
+    std::vector<KnowledgeParser> GetParser() const;
     std::string GetDescription() const;
 private:
     std::string columnName_;
     std::vector<std::string> type_;
-    std::string parser_;
+    std::vector<KnowledgeParser> parser_;
     std::string description_;
 };
 
@@ -63,10 +77,12 @@ public:
     int64_t GetVersion() const;
     std::string GetDBName() const;
     std::vector<KnowledgeTable> GetTables() const;
+    bool IsDefaultName() const;
 private:
     int64_t version_ = 0;
     std::string dbName_;
     std::vector<KnowledgeTable> tables_;
+    bool isDefaultName_;
 };
 
 class KnowledgeSource final : public Serializable {

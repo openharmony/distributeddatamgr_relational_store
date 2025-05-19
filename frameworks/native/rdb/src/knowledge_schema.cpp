@@ -16,6 +16,31 @@
 #include "knowledge_schema.h"
 
 namespace OHOS::NativeRdb {
+bool KnowledgeParser::Marshal(json &node) const
+{
+    SetValue(node[GET_NAME(type)], type_);
+    SetValue(node[GET_NAME(path)], path_);
+    return true;
+}
+
+bool KnowledgeParser::Unmarshal(const json &node)
+{
+    bool isUnmarshalSuccess = true;
+    isUnmarshalSuccess = GetValue(node, GET_NAME(type), type_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = GetValue(node, GET_NAME(path), path_) && isUnmarshalSuccess;
+    return isUnmarshalSuccess;
+}
+
+std::string KnowledgeParser::GetType() const
+{
+    return type_;
+}
+
+std::string KnowledgeParser::GetPath() const
+{
+    return path_;
+}
+
 bool KnowledgeField::Marshal(json &node) const
 {
     SetValue(node[GET_NAME(columnName)], columnName_);
@@ -45,7 +70,7 @@ std::vector<std::string> KnowledgeField::GetType() const
     return type_;
 }
 
-std::string KnowledgeField::GetParser() const
+std::vector<KnowledgeParser> KnowledgeField::GetParser() const
 {
     return parser_;
 }
@@ -97,9 +122,9 @@ bool KnowledgeSchema::Marshal(json &node) const
 
 bool KnowledgeSchema::Unmarshal(const json &node)
 {
+    isDefaultName_ = !GetValue(node, GET_NAME(dbName), dbName_);
     bool isUnmarshalSuccess = true;
     isUnmarshalSuccess = GetValue(node, GET_NAME(version), version_) && isUnmarshalSuccess;
-    isUnmarshalSuccess = GetValue(node, GET_NAME(dbName), dbName_) && isUnmarshalSuccess;
     isUnmarshalSuccess = GetValue(node, GET_NAME(tables), tables_) && isUnmarshalSuccess;
     return isUnmarshalSuccess;
 }
@@ -112,6 +137,11 @@ int64_t KnowledgeSchema::GetVersion() const
 std::string KnowledgeSchema::GetDBName() const
 {
     return dbName_;
+}
+
+bool KnowledgeSchema::IsDefaultName() const
+{
+    return isDefaultName_;
 }
 
 std::vector<KnowledgeTable> KnowledgeSchema::GetTables() const

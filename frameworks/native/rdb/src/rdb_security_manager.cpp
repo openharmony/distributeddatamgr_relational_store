@@ -30,7 +30,6 @@
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_sql_utils.h"
-#include "relational_store_crypt.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -163,17 +162,9 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     RdbSecretKeyData keyData;
     keyData.timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::system_clock::now());
     keyData.distributed = 0;
-    auto creatorEncrypt = reinterpret_cast<std::vector<uint8_t> (*)(
-        const std::vector<uint8_t> &rootKeyAlias, const std::vector<uint8_t> &key,
-        RDBCryptFault &rdbCryptFault)>(dlsym(handle_, "Encrypt"));
-    if (creatorEncrypt == nullptr) {
-        LOG_ERROR("dlsym Encrypt failed(%{public}d)!", errno);
-        return false;
-    }
     RDBCryptFault rdbFault;
-    auto rootKeyAlias = GetRootKeyAlias();
-    keyData.secretKey = creatorEncrypt(rootKeyAlias, key, rdbFault);
-    ReportCryptFault(rdbFault.faultType, rdbFault.errorCode, rdbFault.custLog);
+    keyData.secretKey = EncryptWorkKey(key, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
     if (keyData.secretKey.empty()) {
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
@@ -212,13 +203,12 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
     return ret;
 }
 
-void RdbSecurityManager::ReportCryptFault(
-    const std::string &faultType, const int32_t &errorCode, const std::string &custLog)
+void RdbSecurityManager::ReportCryptFault(const int32_t &errorCode, const std::string &custLog)
 {
-    if (faultType.empty()) {
+    if (custLog.empty()) {
         return;
     }
-    Reportor::ReportFault(RdbFaultEvent(faultType, errorCode, GetBundleNameByAlias(), custLog));
+    Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, errorCode, GetBundleNameByAlias(), custLog));
 }
 
 int32_t RdbSecurityManager::Init(const std::string &bundleName)
@@ -226,6 +216,7 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
     handle_ = dlopen("librelational_store_crypt.z.so", RTLD_LAZY);
     if (handle_ == nullptr) {
         LOG_ERROR("crypt dlopen failed errno is %{public}d", errno);
+        return E_NOT_SUPPORT;
     }
     std::vector<uint8_t> rootKeyAlias = GenerateRootKeyAlias(bundleName);
     constexpr uint32_t RETRY_MAX_TIMES = 5;
@@ -233,23 +224,12 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
     int32_t ret = HKS_FAILURE;
     uint32_t retryCount = 0;
     while (retryCount < RETRY_MAX_TIMES) {
-        auto creatorCheck = reinterpret_cast<int32_t (*)(std::vector<uint8_t> &rootKeyAlias)>(dlsym(handle_, "CheckRootKeyExists"));
-        if (creatorCheck == nullptr) {
-            LOG_ERROR("CheckRootKeyExists failed(%{public}d)!", errno);
-            continue;
-        }
-        ret = creatorCheck(rootKeyAlias);
+        ret = CheckRootKeyExists(rootKeyAlias);
         if (ret == HKS_ERROR_NOT_EXIST) {
             hasRootKey_ = false;
             RDBCryptFault rdbFault;
-            auto creatorGenerate = reinterpret_cast<int32_t (*)(const std::vector<uint8_t> &rootKeyAlias,
-                RDBCryptFault &rdbCryptFault)>(dlsym(handle_, "GenerateRootKey"));
-            if (creatorGenerate == nullptr) {
-                LOG_ERROR("dlsym GenerateRootKey failed(%{public}d)!", errno);
-                continue;
-            }
-            ret = creatorGenerate(rootKeyAlias, rdbFault);
-            ReportCryptFault(rdbFault.faultType, rdbFault.errorCode, rdbFault.custLog);
+            ret = GenerateRootKey(rootKeyAlias, rdbFault);
+            ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
         }
         if (ret == HKS_SUCCESS) {
             if (!HasRootKey()) {
@@ -263,6 +243,48 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
     }
     LOG_INFO("bundleName:%{public}s, retry:%{public}u, error:%{public}d", bundleName.c_str(), retryCount, ret);
     return ret;
+}
+
+int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
+{
+    auto creatorCheck = reinterpret_cast<CheckRootKeyExistsFunc>(dlsym(handle_, "CheckRootKeyExists"));
+    if (creatorCheck == nullptr) {
+        LOG_ERROR("CheckRootKeyExists failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
+    }
+    return creatorCheck(rootKeyAlias);
+}
+
+int32_t RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptFault &rdbFault)
+{
+    auto creatorGenerate = reinterpret_cast<GenerateRootKeyFunc>(dlsym(handle_, "GenerateRootKey"));
+    if (creatorGenerate == nullptr) {
+        LOG_ERROR("dlsym GenerateRootKey failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
+    }
+    return creatorGenerate(rootKeyAlias, rdbFault);
+}
+
+std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault)
+{
+    auto creatorEncrypt = reinterpret_cast<EncryptFunc>(dlsym(handle_, "Encrypt"));
+    if (creatorEncrypt == nullptr) {
+        LOG_ERROR("dlsym Encrypt failed(%{public}d)!", errno);
+        return {};
+    }
+    auto rootKeyAlias = GetRootKeyAlias();
+    return creatorEncrypt(rootKeyAlias, key, rdbFault);
+}
+
+std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault)
+{
+    auto creatorDecrypt = reinterpret_cast<DecryptFunc>(dlsym(handle_, "Decrypt"));
+    if (creatorDecrypt == nullptr) {
+        LOG_ERROR("dlsym Decrypt failed(%{public}d)!", errno);
+        return {};
+    }
+    auto rootKeyAlias = GetRootKeyAlias();
+    return creatorDecrypt(rootKeyAlias, key, rdbFault);
 }
 
 bool RdbSecurityManager::InitPath(const std::string &fileDir)
@@ -303,19 +325,12 @@ RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile
         return {};
     }
 
-    auto creatorDecrypt = reinterpret_cast<std::vector<uint8_t> (*)(
-        const std::vector<uint8_t> &rootKeyAlias, const std::vector<uint8_t> &key,
-        RDBCryptFault &rdbCryptFault)>(dlsym(handle_, "Decrypt"));
-    if (creatorDecrypt == nullptr) {
-        LOG_ERROR("dlsym Decrypt failed(%{public}d)!", errno);
-        return{};
-    }
     RDBCryptFault rdbFault;
-    auto rootKeyAlias = GetRootKeyAlias();
-    std::vector<uint8_t> key = creatorDecrypt(rootKeyAlias, keyData.secretKey, rdbFault);
+    std::vector<uint8_t> key = DecryptWorkKey(keyData.secretKey, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
     if (key.empty()) {
         LOG_ERROR("Decrypt key failed!");
-        ReportCryptFault(rdbFault.faultType, rdbFault.errorCode, rdbFault.custLog);
+        return {};
     }
 
     RdbPassword rdbPasswd;

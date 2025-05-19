@@ -42,7 +42,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-namespace fs = std::filesystem;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -602,21 +601,18 @@ std::string SqliteUtils::GetModeInfo(uint32_t st_mode)
 std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
 {
     std::vector<std::pair<std::string, std::string>> dirModes;
-    fs::path p(path);
+    std::string currentPath = path;
 
     for (int i = 0; i < pathDepth; ++i) {
-        p = p.parent_path();
-        if (p == p.root_path() || p.empty()) {
+        currentPath = StringUtils::GetParentPath(currentPath);
+        if (currentPath == "/" || currentPath.empty()) {
             break;
         }
 
-        std::string dirName = p.filename().string();
-        std::string dirPath = p.string();
-
+        std::string dirName = StringUtils::ExtractFileName(currentPath);
         struct stat st {};
-        dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
+        dirModes.emplace_back(dirName, (stat(currentPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
     }
-
     std::string result;
     for (auto it = dirModes.rbegin(); it != dirModes.rend(); ++it) {
         if (!result.empty()) {

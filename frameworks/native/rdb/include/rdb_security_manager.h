@@ -26,6 +26,8 @@
 #include <random>
 #include <vector>
 
+#include "relational_store_crypt.h"
+
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
     uint8_t distributed = 0;
@@ -61,6 +63,10 @@ private:
 
 class RdbSecurityManager {
 public:
+    using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
+    using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t>&, RDBCryptFault&);
+    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
+    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
     enum HksErrCode {
         HKS_SUCCESS = 0,
         HKS_FAILURE = -1,
@@ -102,7 +108,11 @@ private:
     ~RdbSecurityManager();
 
     bool HasRootKey();
-    void ReportCryptFault(const std::string &faultType, const int32_t &errorCode, const std::string &custLog);
+    int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptFault &rdbFault);
+    int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
+    std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault);
+    std::vector<uint8_t> DecryptWorkKey(std::vector<uint8_t> &key, RDBCryptFault &rdbFault);
+    void ReportCryptFault(const int32_t &errorCode, const std::string &custLog);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
     static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
