@@ -62,7 +62,7 @@ public:
     static bool IsSpecial(int sqlType);
     static const char *GetConflictClause(int conflictResolution);
     static std::string StrToUpper(const std::string &s);
-    static void Replace(std::string &src, const std::string &rep, const std::string &dst);
+    static std::string Replace(const std::string &src, const std::string &rep, const std::string &dst);
     static bool DeleteFile(const std::string &filePath);
     static bool RenameFile(const std::string &srcFile, const std::string &destFile);
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);

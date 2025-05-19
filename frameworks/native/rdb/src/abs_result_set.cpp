@@ -392,8 +392,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
         return E_OK;
     }
 
-    std::string lowerName = columnName;
-    SqliteUtils::Replace(lowerName, SqliteUtils::REP, "");
+    std::string lowerName = SqliteUtils::Replace(columnName, SqliteUtils::REP, "");
     auto periodIndex = lowerName.rfind('.');
     if (periodIndex != std::string::npos) {
         lowerName = lowerName.substr(periodIndex + 1);
