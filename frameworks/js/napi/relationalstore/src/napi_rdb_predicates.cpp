@@ -12,10 +12,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 #define LOG_TAG "NapiRdbPredicates"
 #include "napi_rdb_predicates.h"
 
+#include <cstdint>
+
 #include "js_df_manager.h"
+#include "js_native_api.h"
+#include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
@@ -68,6 +73,7 @@ void RdbPredicatesProxy::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", On),
         DECLARE_NAPI_FUNCTION("clear", Clear),
         DECLARE_NAPI_FUNCTION("crossJoin", CrossJoin),
+        DECLARE_NAPI_FUNCTION("having", Having),
         DECLARE_NAPI_GETTER_SETTER("joinCount", GetJoinCount, SetJoinCount),
         DECLARE_NAPI_GETTER_SETTER("joinConditions", GetJoinConditions, SetJoinConditions),
         DECLARE_NAPI_GETTER_SETTER("joinNames", GetJoinTableNames, SetJoinTableNames),
@@ -856,6 +862,36 @@ napi_value RdbPredicatesProxy::InAllDevices(napi_env env, napi_callback_info inf
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
     predicatesProxy->GetInstance()->InAllDevices();
+    return thiz;
+}
+
+napi_value RdbPredicatesProxy::Having(napi_env env, napi_callback_info info)
+{
+    napi_value thiz = nullptr;
+    // There may be 2 parameters.
+    size_t argc = 2;
+    napi_value args[2] = { 0 };
+    napi_status status = napi_get_cb_info(env, info, &argc, args, &thiz, nullptr);
+    RDB_NAPI_ASSERT(env, status == napi_ok && thiz != nullptr, std::make_shared<ParamError>("predicates", "null"));
+    // Ensure that argc contains 1 or 2 parameters
+    RDB_NAPI_ASSERT(env, argc >= 1 && argc <= 2, std::make_shared<ParamNumError>("1 or 2"));
+    RdbPredicatesProxy *proxy = nullptr;
+    status = napi_unwrap(env, thiz, reinterpret_cast<void **>(&proxy));
+    RDB_NAPI_ASSERT(
+        env, status == napi_ok && proxy && proxy->GetInstance(), std::make_shared<ParamError>("predicates", "null"));
+    std::string conditions;
+    int32_t res = JSUtils::Convert2Value(env, args[0], conditions);
+    RDB_NAPI_ASSERT(env, res == OK && !conditions.empty(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "conditions cannot be empty"));
+    std::vector<ValueObject> values;
+    // 2 represents the number of parameters.
+    if (argc == 2 && !JSUtils::IsNull(env, args[1])) {
+        int32_t ret = JSUtils::Convert2Value(env, args[1], values);
+        RDB_NAPI_ASSERT(env, ret == napi_ok, std::make_shared<ParamError>("ags", "a ValueType array."));
+    }
+    RDB_NAPI_ASSERT(env, !proxy->GetInstance()->GetGroup().empty(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Missing GROUP BY clause."));
+    proxy->GetInstance()->Having(conditions, values);
     return thiz;
 }
 } // namespace RelationalStoreJsKit
