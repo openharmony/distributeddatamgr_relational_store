@@ -69,122 +69,296 @@ public:
     }
 
     array<string> GetColumnNames() {
-        TH_THROW(std::runtime_error, "getColumnNames not implemented");
+        std::vector<std::string> colNames;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->GetAllColumnNames(colNames);
+        }
+        return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
     }
 
     int32_t GetColumnCount() {
-        TH_THROW(std::runtime_error, "getColumnCount not implemented");
+        int32_t count = 0;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->GetColumnCount(count);
+        }
+        return count;
     }
 
     int32_t GetRowCount() {
+        if (nativeResultSet_ == nullptr) {
+            return -1;
+        }
         int32_t rowCount = 0;
         nativeResultSet_->GetRowCount(rowCount);
         return rowCount;
     }
 
     int32_t GetRowIndex() {
-        TH_THROW(std::runtime_error, "getRowIndex not implemented");
+        int32_t rowIndex = -1;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->GetRowIndex(rowIndex);
+        }
+        return rowIndex;
     }
 
     bool GetIsAtFirstRow() {
-        TH_THROW(std::runtime_error, "getIsAtFirstRow not implemented");
+        bool isAtFirstRow = false;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->IsAtFirstRow(isAtFirstRow);
+        }
+        return isAtFirstRow;
     }
 
     bool GetIsAtLastRow() {
-        TH_THROW(std::runtime_error, "getIsAtLastRow not implemented");
+        bool isAtLastRow = false;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->IsAtLastRow(isAtLastRow);
+        }
+        return isAtLastRow;
     }
 
     bool GetIsEnded() {
-        bool isEnded = false;
-        nativeResultSet_->IsEnded(isEnded);
+        bool isEnded = true;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->IsEnded(isEnded);
+        }
         return isEnded;
     }
 
     bool GetIsStarted() {
-        TH_THROW(std::runtime_error, "getIsStarted not implemented");
+        bool isStarted = false;
+        if (nativeResultSet_ != nullptr) {
+            nativeResultSet_->IsStarted(isStarted);
+        }
+        return isStarted;
     }
 
     bool GetIsClosed() {
-        TH_THROW(std::runtime_error, "getIsClosed not implemented");
+        return nativeResultSet_ == nullptr;
     }
 
     int32_t GetColumnIndex(string_view columnName) {
-        TH_THROW(std::runtime_error, "getColumnIndex not implemented");
+        int32_t result = -1;
+        int errCode = OHOS::NativeRdb::E_OK;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetColumnIndex(std::string(columnName), result);
+        }
+        if (errCode != OHOS::NativeRdb::E_INVALID_ARGS && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return result;
     }
 
     string GetColumnName(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getColumnName not implemented");
+        std::string result;
+        int errCode = OHOS::NativeRdb::E_OK;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetColumnName(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return string(result);
     }
 
     bool GoTo(int32_t offset) {
-        TH_THROW(std::runtime_error, "goTo not implemented");
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoTo(offset);
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     bool GoToRow(int32_t position) {
-        TH_THROW(std::runtime_error, "goToRow not implemented");
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToRow(position);
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     bool GoToFirstRow() {
-        int status = nativeResultSet_->GoToFirstRow();
-        return status == ANI_OK;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+         if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToFirstRow();
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     bool GoToLastRow() {
-        int status = nativeResultSet_->GoToLastRow();
-        return status == ANI_OK;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToLastRow();
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     bool GoToNextRow() {
-        int status = nativeResultSet_->GoToNextRow();
-        return status == ANI_OK;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToNextRow();
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     bool GoToPreviousRow() {
-        TH_THROW(std::runtime_error, "goToPreviousRow not implemented");
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToPreviousRow();
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
     }
 
     array<uint8_t> GetBlob(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getBlob not implemented");
+        std::vector<uint8_t> result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetBlob(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return array<uint8_t>(::taihe::copy_data_t{}, result.data(), result.size());
     }
 
     string GetString(int32_t columnIndex) {
         std::string result;
-        nativeResultSet_->GetString(columnIndex, result);
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetString(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
         return string(result);
     }
 
     int64_t GetLong(int32_t columnIndex) {
-        int64_t result;
-        nativeResultSet_->GetLong(columnIndex, result);
+        int64_t result = 0;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetLong(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
         return result;
     }
 
     double GetDouble(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getDouble not implemented");
-    }
-
-    Asset GetAsset(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getAsset not implemented");
-    }
-
-    array<Asset> GetAssets(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getAssets not implemented");
-    }
-
-    ValueType GetValue(int32_t columnIndex) {
-        ValueType result = ValueType::make_EMPTY();
-        OHOS::NativeRdb::ValueObject obj;
-        nativeResultSet_->Get(columnIndex, obj);
-        ani_rdbutils::ValueObjectToAni(obj, result);
+        double result = 0.0;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetDouble(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
         return result;
     }
 
+    ohos::data::relationalStore::Asset GetAsset(int32_t columnIndex) {
+        OHOS::NativeRdb::AssetValue result;
+        ohos::data::relationalStore::Asset aniret = {};
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetAsset(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
+            return aniret;
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        ani_rdbutils::AssetToAni(result, aniret);
+        return aniret;
+    }
+
+    array<ohos::data::relationalStore::Asset> GetAssets(int32_t columnIndex) {
+        std::vector<OHOS::NativeRdb::AssetValue> result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetAssets(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT || result.size() == 0) {
+            return {};
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        ohos::data::relationalStore::Asset aniempty = {};
+        std::vector<ohos::data::relationalStore::Asset> resultTemp(result.size(), aniempty);
+        std::transform(result.begin(), result.end(), resultTemp.begin(), [](OHOS::NativeRdb::AssetValue c) {
+            ohos::data::relationalStore::Asset anitemp = {};
+            ani_rdbutils::AssetToAni(c, anitemp);
+            return anitemp;
+        });
+        return array<ohos::data::relationalStore::Asset>(::taihe::copy_data_t{}, resultTemp.data(), resultTemp.size());
+    }
+
+    ValueType GetValue(int32_t columnIndex) {
+        OHOS::NativeRdb::ValueObject object;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->Get(columnIndex, object);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        ValueType aniresult = ValueType::make_EMPTY();
+        ani_rdbutils::ValueObjectToAni(object, aniresult);
+        return aniresult;
+    }
+
     array<float> GetFloat32Array(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "getFloat32Array not implemented");
+        std::vector<float> result = {};
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetFloat32Array(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
+            return {};
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
     }
 
     map<string, ValueType> GetRow() {
         TH_THROW(std::runtime_error, "getRow not implemented");
+        OHOS::NativeRdb::RowEntity rowEntity;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetRow(rowEntity);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        map<string, ValueType> aniMap;
+        std::map<std::string, OHOS::NativeRdb::ValueObject> rowMap = rowEntity.Get();
+        for (auto it = rowMap.begin(); it != rowMap.end(); ++it) {
+            auto const &[key, value] = *it;
+            ValueType aniTemp = ValueType::make_EMPTY();
+            ani_rdbutils::ValueObjectToAni(value, aniTemp);
+            aniMap.emplace(string(key), aniTemp);
+        }
+        return aniMap;
     }
 
     ::ohos::data::sendableRelationalStore::ValuesBucket GetSendableRow() {
@@ -192,7 +366,15 @@ public:
     }
 
     bool IsColumnNull(int32_t columnIndex) {
-        TH_THROW(std::runtime_error, "isColumnNull not implemented");
+        bool result = false;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->IsColumnNull(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return result;
     }
 
     void Close() {
