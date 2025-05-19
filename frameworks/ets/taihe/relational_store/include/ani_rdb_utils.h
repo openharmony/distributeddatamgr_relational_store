@@ -31,13 +31,19 @@ void AssetToNative(::ohos::data::relationalStore::Asset const &asset, OHOS::Nati
 void AssetToAni(OHOS::NativeRdb::AssetValue const &value, ::ohos::data::relationalStore::Asset &asset);
 void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OHOS::NativeRdb::ValueObject &valueObj);
 void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data::relationalStore::ValueType &value);
-void MapValuesToNative(taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values, OHOS::NativeRdb::ValuesBucket &bucket);
-void ArrayValuesToNative(taihe::array_view<::ohos::data::relationalStore::ValueType> const &values, std::vector<OHOS::NativeRdb::ValueObject> &nativeValues);
-void BucketValuesToNative(taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values, OHOS::NativeRdb::ValuesBuckets &buckets);
-void CryptoParamToNative(::ohos::data::relationalStore::CryptoParam const &param, OHOS::NativeRdb::RdbStoreConfig::CryptoParam &value);
+void MapValuesToNative(taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values,
+    OHOS::NativeRdb::ValuesBucket &bucket);
+void ArrayValuesToNative(taihe::array_view<::ohos::data::relationalStore::ValueType> const &values,
+    std::vector<OHOS::NativeRdb::ValueObject> &nativeValues);
+void BucketValuesToNative(taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values,
+    OHOS::NativeRdb::ValuesBuckets &buckets);
+void CryptoParamToNative(::ohos::data::relationalStore::CryptoParam const &param,
+    OHOS::NativeRdb::RdbStoreConfig::CryptoParam &value);
 
-OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(::ohos::data::relationalStore::StoreConfig const &storeConfig);
-std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
+OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
+    ::ohos::data::relationalStore::StoreConfig const &storeConfig);
+std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniValue,
+    OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
 
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValueObject &value);
 bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValueObject> &values);

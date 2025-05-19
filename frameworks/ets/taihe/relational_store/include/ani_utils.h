@@ -28,11 +28,16 @@
 #include <iostream>
 
 namespace ani_utils {
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result, bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result, bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result, bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result, bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, ani_object &result, bool optional = false);
+int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result,
+    bool optional = false);
+int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result,
+    bool optional = false);
+int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result,
+    bool optional = false);
+int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result,
+    bool optional = false);
+int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, ani_object &result,
+    bool optional = false);
 
 class AniObjectUtils {
 public:
