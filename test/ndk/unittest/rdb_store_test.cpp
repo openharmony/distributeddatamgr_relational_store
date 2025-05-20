@@ -20,6 +20,7 @@
 
 #include "accesstoken_kit.h"
 #include "common.h"
+#include "oh_data_value.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -849,6 +850,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 
     // key is nullptr
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "data_key", nullptr);
+    EXPECT_EQ(cursor, nullptr);
+
+    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", nullptr, values);
     EXPECT_EQ(cursor, nullptr);
 
     // table name is ""
@@ -1741,8 +1745,19 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
                   static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_REPLACE + 1), &changes),
         OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     OH_VBuckets_Destroy(rows);
-}
 
+    OH_Data_Value *dataValue = OH_Value_Create();
+    EXPECT_EQ(OH_Value_PutText(dataValue, nullptr), RDB_OK);
+    EXPECT_EQ(OH_Value_PutText(nullptr, "test"), RDB_E_INVALID_ARGS);
+
+    Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
+    EXPECT_EQ(
+        OH_Rdb_SetDistributedTables(storeTestRdbStore_, table, 0, Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD, &config),
+        RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_SetDistributedTables(
+                  storeTestRdbStore_, table, TABLE_COUNT, Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD, nullptr),
+        RDB_E_INVALID_ARGS);
+}
 /**
  * @tc.name: RDB_Native_store_test_039
  * @tc.desc: normal testCase for OH_Rdb_InsertWithConflictResolution.
