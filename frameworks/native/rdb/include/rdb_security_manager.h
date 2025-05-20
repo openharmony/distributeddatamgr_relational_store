@@ -38,7 +38,7 @@ struct RdbSecretKeyData {
     }
 };
 
-struct RDBCryptFault{
+struct RDBCryptFault {
     int32_t errorCode;
     std::string custLog;
 };
@@ -105,8 +105,10 @@ public:
 private:
     using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
     using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t>&, RDBCryptFault&);
-    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
-    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
+    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
+        const std::vector<uint8_t>&, RDBCryptFault&);
+    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
+        const std::vector<uint8_t>&, RDBCryptFault&);
     RdbSecurityManager();
     ~RdbSecurityManager();
 

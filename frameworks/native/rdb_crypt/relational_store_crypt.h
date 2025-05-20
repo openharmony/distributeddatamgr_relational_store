@@ -32,9 +32,9 @@ public:
         const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
     static std::vector<uint8_t> Decrypt(const std::vector<uint8_t>& rootKeyAlias,
         const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
-    static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog); 
+    static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog);
 };
 } // namespace OHOS::NativeRdb
-}   // OHOS
+} // OHOS
 
 #endif // RELATIONAL_STORE_CRYPT_H
