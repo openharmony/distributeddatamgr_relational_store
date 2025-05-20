@@ -60,6 +60,8 @@ constexpr uint32_t TIMES = 4;
 constexpr uint32_t MAX_UPDATE_SIZE = 64;
 constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 constexpr uint8_t AEAD_LEN = 16;
+static std::vector<uint8_t> g_nonce(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
+static std::vector<uint8_t> g_add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
 RDBCryptFault RDBCrypt::GetDfxFault(int32_t errorCode, const std::string &custLog)
 {
@@ -80,7 +82,7 @@ int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *pa
 
     struct HksBlob input = { MAX_UPDATE_SIZE, inData->data };
     uint8_t *end = inData->data + inData->size - 1;
-    outData->size = 0; 
+    outData->size = 0;
     struct HksBlob output = { MAX_OUTDATA_SIZE, outData->data };
     while (input.data <= end) {
         if (input.data + MAX_UPDATE_SIZE > end) {
@@ -142,6 +144,22 @@ int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksPar
         return result;
     }
     return HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText, rdbFault);
+}
+
+std::vector<HksParam> CreateHksParams(const HksBlob &blobNonce,
+    const HksBlob &blobAad, const HksBlob &blobAead)
+{
+    return {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DECRYPT },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
+        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
+        { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }
+    };
 }
 
 int32_t RDBCrypt::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
@@ -238,17 +256,14 @@ std::vector<uint8_t> RDBCrypt::Encrypt(const std::vector<uint8_t> &rootKeyAlias,
 {
     std::vector<uint8_t> tempRootKeyAlias(rootKeyAlias);
     std::vector<uint8_t> tempKey(key);
-    std::vector<uint8_t> nonce(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
-    std::vector<uint8_t> add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
-    struct HksBlob blobAad = { uint32_t(add.size()), add.data() };
-    struct HksBlob blobNonce = { uint32_t(nonce.size()), nonce.data() };
+    struct HksBlob blobAad = { uint32_t(g_add.size()), g_add.data() };
+    struct HksBlob blobNonce = { uint32_t(g_nonce.size()), g_nonce.data() };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksBlob plainKey = { uint32_t(tempKey.size()), tempKey.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL,
-            "Encrypt HksInitParamSet ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
     }
@@ -271,8 +286,7 @@ std::vector<uint8_t> RDBCrypt::Encrypt(const std::vector<uint8_t> &rootKeyAlias,
 
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL,
-            "Encrypt HksBuildParamSet ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
@@ -294,10 +308,8 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
 {
     std::vector<uint8_t> tempRootKeyAlias(rootKeyAlias);
     std::vector<uint8_t> source(key);
-    std::vector<uint8_t> nonce(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
-    std::vector<uint8_t> add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
-    struct HksBlob blobAad = { uint32_t(add.size()), &(add[0]) };
-    struct HksBlob blobNonce = { uint32_t(nonce.size()), &(nonce[0]) };
+    struct HksBlob blobAad = { uint32_t(g_add.size()), &(g_add[0]) };
+    struct HksBlob blobNonce = { uint32_t(g_nonce.size()), &(g_nonce[0]) };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), &(tempRootKeyAlias[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size() - AEAD_LEN), source.data() };
     struct HksBlob blobAead = { AEAD_LEN, source.data() + source.size() - AEAD_LEN };
@@ -308,35 +320,22 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
         return {};
     }
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
-        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
-        { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
-    };
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
+    auto hksParams = CreateHksParams(blobNonce, blobAad, blobAead);
+    ret = HksAddParams(params, hksParams.data(), hksParams.size());
     if (ret != HKS_SUCCESS) {
         rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL, "HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
     }
-
     ret = HksBuildParamSet(&params);
     if (ret != HKS_SUCCESS) {
-        rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL,
-            "HksBuildParamSet ret=" + std::to_string(ret));
+        rdbFault = GetDfxFault(E_WORK_KEY_DECRYPT_FAIL, "HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
         return {};
     }
-    std::vector<uint8_t> decryptKey;
-    decryptKey.resize(encryptedKeyBlob.size * TIMES + 1);
+    std::vector<uint8_t> decryptKey(encryptedKeyBlob.size * TIMES + 1);
     struct HksBlob plainKeyBlob = { uint32_t(decryptKey.size()), decryptKey.data() };
     ret = HksDecryptThreeStage(&rootKeyName, params, &encryptedKeyBlob, &plainKeyBlob, rdbFault);
     (void)HksFreeParamSet(&params);
@@ -349,4 +348,4 @@ std::vector<uint8_t> RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
     return decryptKey;
 }
 } // namespace OHOS::NativeRdb
-}// OHOS
+} // OHOS
