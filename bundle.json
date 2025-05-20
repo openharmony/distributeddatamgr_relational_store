@@ -89,6 +89,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
+                "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb_crypt:relational_store_crypt",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore"
             ],

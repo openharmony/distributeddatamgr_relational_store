@@ -74,7 +74,6 @@ ohos_unittest("NativeGdbTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
     "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
   ]
@@ -163,7 +162,6 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
     "json:nlohmann_json_static",
   ]
 

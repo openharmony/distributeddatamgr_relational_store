@@ -26,8 +26,6 @@
 #include <random>
 #include <vector>
 
-#include "hks_type.h"
-
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
     uint8_t distributed = 0;
@@ -38,6 +36,11 @@ struct RdbSecretKeyData {
     {
         secretKey.assign(secretKey.size(), 0);
     }
+};
+
+struct RDBCryptFault{
+    int32_t errorCode;
+    std::string custLog;
 };
 
 class RdbPassword final {
@@ -63,6 +66,12 @@ private:
 
 class RdbSecurityManager {
 public:
+    enum HksErrCode {
+        HKS_SUCCESS = 0,
+        HKS_FAILURE = -1,
+        HKS_ERROR_NOT_EXIST = -13,
+    };
+
     enum KeyFileType : int32_t {
         PUB_KEY_FILE = 0,
         PUB_KEY_FILE_NEW_KEY,
@@ -94,14 +103,20 @@ public:
     bool IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType);
 
 private:
+    using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
+    using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t>&, RDBCryptFault&);
+    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
+    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&, RDBCryptFault&);
     RdbSecurityManager();
     ~RdbSecurityManager();
 
     bool HasRootKey();
-    int GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
+    void* GetHandle();
+    int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
-    bool DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key);
+    std::vector<uint8_t> DecryptWorkKey(std::vector<uint8_t> &key);
+    void ReportCryptFault(const int32_t &errorCode, const std::string &custLog);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
     static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
@@ -115,19 +130,11 @@ private:
     std::string GetBundleNameByAlias();
     std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
     void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
-    int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
-        const struct HksBlob *inData, struct HksBlob *outData);
-    int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
-        const struct HksBlob *plainText, struct HksBlob *cipherText);
-    int32_t HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
-        const struct HksBlob *cipherText, struct HksBlob *plainText);
 
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
-    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
-    static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
     static constexpr uint32_t TIMES = 4;
     static constexpr uint32_t MAX_UPDATE_SIZE = 64;
     static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
@@ -140,10 +147,10 @@ private:
 
     std::mutex rootKeyMutex_;
     std::vector<uint8_t> rootKeyAlias_{};
-    std::vector<uint8_t> nonce_;
-    std::vector<uint8_t> aad_;
     std::mutex mutex_;
     std::atomic<bool> hasRootKey_ = false;
+    void *handle_;
+    std::mutex handleMutex_;
 };
 
 } // namespace OHOS::NativeRdb
