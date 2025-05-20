@@ -33,6 +33,7 @@
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
 #include "rdb_security_manager.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
@@ -41,6 +42,7 @@
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "suspender.h"
 #include "value_object.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_manager_impl.h"
@@ -578,6 +580,7 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
     }
 
     int targetValue = config.GetPageSize();
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, object] = ExecuteForValue("PRAGMA page_size");
     if (errCode != E_OK) {
         LOG_ERROR("SetPageSize fail to get page size : %{public}d", errCode);
@@ -762,7 +765,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
     if (errCode != SQLITE_OK) {
         return SQLiteError::ErrNo(errCode);
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     errCode = SetEncryptAgo(config);
     if (errCode != E_OK) {
         return errCode;
@@ -912,6 +915,7 @@ int SqliteConnection::SetWalFile(const RdbStoreConfig &config)
     if (!IsWriter()) {
         return E_OK;
     }
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, version] = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
     if (errCode != E_OK) {
         return errCode;
@@ -925,7 +929,7 @@ int SqliteConnection::SetWalSyncMode(const std::string &syncMode)
     if (syncMode.length() != 0) {
         targetValue = syncMode;
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, object] = ExecuteForValue("PRAGMA synchronous");
     if (errCode != E_OK) {
         LOG_ERROR("get wal sync mode fail, errCode:%{public}d", errCode);
@@ -1522,7 +1526,7 @@ int SqliteConnection::VeritySlaveIntegrity()
     if (SqliteUtils::IsSlaveInterrupted(config_.GetPath())) {
         return E_SQLITE_CORRUPT;
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     std::string sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     auto [err, obj] = slaveConnection_->ExecuteForValue(sql);
     auto val = std::get_if<int64_t>(&obj.value);
@@ -1560,7 +1564,7 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     if (slaveConnection_ == nullptr) {
         return false;
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     auto [cRet, cObj] = ExecuteForValue("SELECT COUNT(*) FROM sqlite_master WHERE type='table';");
     auto cVal = std::get_if<int64_t>(&cObj.value);
     if (cRet == E_SQLITE_CORRUPT || (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L))) {

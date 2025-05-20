@@ -391,5 +391,16 @@ public:
     virtual ~SqlObserver() = default;
     virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
 };
+
+class SqlErrorObserver {
+public:
+    struct ExceptionMessage {
+        int32_t code = 0;
+        std::string message;
+        std::string sql;
+    };
+    virtual ~SqlErrorObserver() = default;
+    virtual void OnErrorLog(const ExceptionMessage &message) = 0;
+};
 } // namespace OHOS::DistributedRdb
 #endif
