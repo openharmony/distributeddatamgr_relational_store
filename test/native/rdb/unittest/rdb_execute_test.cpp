@@ -581,7 +581,7 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0019, TestSize.Level1)
 HWTEST_P(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
 {
     auto [ret, outValue] = store_->Execute("PRAGMA table_info(test)");
-    EXPECT_EQ(0, ret);
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
 }
 
 /**

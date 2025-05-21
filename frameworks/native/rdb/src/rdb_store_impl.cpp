@@ -2778,9 +2778,13 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(const Resu
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
         ValueObject val;
         auto [field, value] = result.results.GetFieldsAndValues();
-        if (!result.results.Empty() && field != nullptr && !field->empty()) {
+        if (!result.results.Empty() && field != nullptr && field->size() == 1) {
             auto [code, valueType] = result.results.Get(0, *field->begin());
             val = valueType.get();
+        }
+        if (field != nullptr && field->size() > 1) {
+            LOG_ERROR("Not support the sql:app self can check the SQL, column count more than 1");
+            return { E_NOT_SUPPORT_THE_SQL, ValueObject() };
         }
         return { result.status, val };
     }
