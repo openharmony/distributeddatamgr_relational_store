@@ -18,8 +18,11 @@
 
 #include "cloud_manager.h"
 #include "js_const_properties.h"
+#include "js_uv_queue.h"
+#include "napi_queue.h"
 
 namespace OHOS::CloudData {
+using namespace OHOS::AppDataMgrJsKit;
 class JsConfig {
 public:
     JsConfig();
@@ -58,6 +61,14 @@ public:
     static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);
 private:
+    struct CloudSyncContext : public ContextBase {
+        std::string bundleName;
+        std::string storeId;
+        int32_t syncMode;
+        napi_ref asyncHolder = nullptr;
+        std::shared_ptr<UvQueue> queue;
+    };
+    static void HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::shared_ptr<CloudSyncContext> ctxt);
     static uint32_t GetSeqNum();
     static std::atomic<uint32_t> seqNum_;
 };

@@ -99,7 +99,7 @@ public:
     struct Option {
         int32_t syncMode;
         uint32_t seqNum = 0;
-    }
+    };
 
     static const int INVALID_USER_ID = -1;
 
@@ -133,8 +133,8 @@ public:
     virtual std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
     virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
-        const AsyncDetail &async) = 0;
-    virtual int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteOnject> notifier) = 0;
+        const DistributedRdb::AsyncDetail &async) = 0;
+    virtual int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteObject> notifier) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };

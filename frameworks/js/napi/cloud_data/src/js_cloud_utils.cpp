@@ -273,7 +273,7 @@ napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value)
 template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value)
 {
-    std::vector<napi_property_descriptor> descriptiors = {
+    std::vector<napi_property_descriptor> descriptors = {
         DECLARE_JS_PROPERTY(env, "total", value.total),
         DECLARE_JS_PROPERTY(env, "success", value.success),
         DECLARE_JS_PROPERTY(env, "successful", value.success),
