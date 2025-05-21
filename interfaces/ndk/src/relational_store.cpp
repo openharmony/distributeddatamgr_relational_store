@@ -969,7 +969,10 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
             if (detailsV0 == nullptr) {
                 return nullptr;
             }
-            (void)memset_s(detailsV0, length, 0, length);
+            auto result = memset_s(detailsV0, length, 0, length);
+            if (result != EOK) {
+                LOG_ERROR("memset_s failed, error code is %{public}d", result);
+            }
             int index = 0;
             for (const auto &pair : tableDetails_) {
                 detailsV0[index].table = pair.first.c_str();
