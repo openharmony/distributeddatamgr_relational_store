@@ -237,7 +237,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
     return { result.status, result.count };
 }
 
-ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions, const RdbStore::Values &args)
+ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
 {
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
@@ -248,7 +248,7 @@ ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions
     int32_t errCode = E_ERROR;
     std::shared_ptr<Statement> statement = nullptr;
     if (sqlOptions.returningFields.empty() ||
-        (sqlType != SqliteUtils::STATEMENT_INSERT && SqliteUtils::STATEMENT_UPDATE)) {
+        (sqlType != SqliteUtils::STATEMENT_INSERT && sqlType != SqliteUtils::STATEMENT_UPDATE)) {
         std::tie(errCode, statement) = GetStatement(sql);
     } else {
         std::string executeSql = sql;
