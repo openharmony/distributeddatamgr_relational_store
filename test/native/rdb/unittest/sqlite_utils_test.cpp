@@ -161,6 +161,11 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
         "file /***/el2/***/linker_reborn.db-wal");
 }
 
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
+{
+    EXPECT_EQ(0, SqliteUtils::DeleteFolder("random123"));
+}
+
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::GetParentModes("/data/service/el1/public/database/distributeddata/meta", 3),

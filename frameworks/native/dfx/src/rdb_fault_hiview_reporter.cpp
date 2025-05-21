@@ -26,10 +26,8 @@
 #include <unordered_map>
 #include <limits>
 
-#include "accesstoken_kit.h"
 #include "connection.h"
 #include "hisysevent_c.h"
-#include "ipc_skeleton.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
@@ -38,7 +36,6 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-using namespace Security::AccessToken;
 static constexpr const char *CORRUPTED_EVENT = "DATABASE_CORRUPTED";
 static constexpr const char *FAULT_EVENT = "DISTRIBUTED_DATA_RDB_FAULT";
 static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
@@ -242,14 +239,6 @@ std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName,
 {
     if (!bundleName.empty()) {
         return bundleName;
-    }
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
-        NativeTokenInfo tokenInfo;
-        if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
-            return tokenInfo.processName;
-        }
     }
     return SqliteUtils::Anonymous(storeName);
 }
