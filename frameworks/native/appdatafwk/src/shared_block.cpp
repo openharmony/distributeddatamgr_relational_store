@@ -155,7 +155,10 @@ int SharedBlock::Clear()
         mHeader->startPos_ = 0;
         mHeader->lastPos_ = 0;
         mHeader->blockPos_ = 0;
-        memset_s(mHeader->groupOffset, sizeof(mHeader->groupOffset), 0, sizeof(mHeader->groupOffset));
+        auto result = memset_s(mHeader->groupOffset, sizeof(mHeader->groupOffset), 0, sizeof(mHeader->groupOffset));
+        if (result != EOK) {
+            LOG_ERROR("memset_s failed, error code is %{public}d", result);
+        }
         mHeader->groupOffset[0] = sizeof(SharedBlockHeader);
         return SHARED_BLOCK_OK;
     }
