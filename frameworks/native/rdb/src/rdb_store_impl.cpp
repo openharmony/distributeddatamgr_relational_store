@@ -41,6 +41,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -51,6 +52,7 @@
 #include "sqlite_statement.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "suspender.h"
 #include "task_executor.h"
 #include "traits.h"
 #include "transaction.h"
@@ -937,6 +939,7 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
         LOG_ERROR("GetHashKeyForLockRow failed, err is %{public}d.", ret);
         return ret;
     }
+    Suspender suspender(Suspender::SQL_LOG);
     auto [err, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION);
     if (statement == nullptr || err != E_OK) {
         return err;
@@ -1792,7 +1795,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
         auto [errCode, conn] = GetConn(false);
         return errCode != E_OK ? errCode : conn->Backup(databasePath, {}, false, slaveStatus_);
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     auto [result, conn] = CreateWritableConn();
     if (result != E_OK) {
         return result;
@@ -1895,6 +1898,7 @@ int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, 
     std::string sql = std::string(GlobalExpr::CIPHER_DEFAULT_ATTACH_CIPHER_PREFIX) +
                       SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
                       std::string(GlobalExpr::ALGO_SUFFIX);
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, statement] = conn->CreateStatement(sql, conn);
     errCode = SetDefaultEncryptSql(statement, sql, config);
     if (errCode != E_OK) {
@@ -1936,6 +1940,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;
     }
+    Suspender suspender(Suspender::SQL_LOG);
     auto [conn, readers] = pool->AcquireAll(waitTime);
     if (conn == nullptr) {
         return E_DATABASE_BUSY;
@@ -2033,7 +2038,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     if (!attachedInfo_.Contains(attachName)) {
         return { E_OK, attachedInfo_.Size() };
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     auto pool = GetPool();
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, 0 };
@@ -2077,6 +2082,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
  */
 int RdbStoreImpl::GetVersion(int &version)
 {
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, true);
     if (statement == nullptr) {
         return errCode;
@@ -2098,6 +2104,7 @@ int RdbStoreImpl::SetVersion(int version)
     if (isReadOnly_) {
         return E_NOT_SUPPORT;
     }
+    Suspender suspender(Suspender::SQL_LOG);
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
@@ -2365,7 +2372,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     if (sqlType != "ATT") {
         return E_OK;
     }
-
+    Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     if (statement == nullptr) {
         return errCode;
