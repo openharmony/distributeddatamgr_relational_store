@@ -358,7 +358,7 @@ namespace Relational {
         observers.try_emplace(option.event);
         if (!HasRegisteredObserver(callback, observers[option.event])) {
             auto localObserver = std::make_shared<RdbStoreObserverImpl>(callback, callbackRef);
-            int32_t errCode = rdbStore_->Subscribe(option, localObserver.get());
+            int32_t errCode = rdbStore_->Subscribe(option, localObserver);
             if (errCode != NativeRdb::E_OK) {
                 return errCode;
             }
@@ -381,7 +381,7 @@ namespace Relational {
         if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
             errCode = rdbStore_->SubscribeObserver(option, observer);
         } else {
-            errCode = rdbStore_->Subscribe(option, observer.get());
+            errCode = rdbStore_->Subscribe(option, observer);
         }
         if (errCode == NativeRdb::E_OK) {
             observers_[mode].push_back(observer);
@@ -401,7 +401,7 @@ namespace Relational {
         if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
             errCode = rdbStore_->SubscribeObserver(option, observer);
         } else {
-            errCode = rdbStore_->Subscribe(option, observer.get());
+            errCode = rdbStore_->Subscribe(option, observer);
         }
         if (errCode == NativeRdb::E_OK) {
             observers_[mode].push_back(observer);
@@ -446,7 +446,7 @@ namespace Relational {
         auto &list = obs->second;
         for (auto it = list.begin(); it != list.end(); it++) {
             if (isSameFunction(callback, (*it)->GetCallBack())) {
-                int errCode = rdbStore_->UnSubscribe(option, it->get());
+                int errCode = rdbStore_->UnSubscribe(option, *it);
                 if (errCode != RelationalStoreJsKit::OK) {
                     return errCode;
                 }
@@ -510,7 +510,7 @@ namespace Relational {
             if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
                 errCode = rdbStore_->UnsubscribeObserver(option, *it);
             } else {
-                errCode = rdbStore_->UnSubscribe(option, it->get());
+                errCode = rdbStore_->UnSubscribe(option, *it);
             }
             if (errCode != NativeRdb::E_OK) {
                 return errCode;
@@ -535,7 +535,7 @@ namespace Relational {
             if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
                 errCode = rdbStore_->UnsubscribeObserver(option, *it);
             } else {
-                errCode = rdbStore_->UnSubscribe(option, it->get());
+                errCode = rdbStore_->UnSubscribe(option, *it);
             }
             if (errCode != NativeRdb::E_OK) {
                 return errCode;

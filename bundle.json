@@ -52,6 +52,7 @@
                 "access_token",
                 "common_event_service",
                 "c_utils",
+                "data_share",
                 "device_manager",
                 "eventhandler",
                 "hilog",
@@ -88,6 +89,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
+                "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb_crypt:relational_store_crypt",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore"
             ],
@@ -218,12 +220,14 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/mockservice:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
                 "//foundation/distributeddatamgr/relational_store/test/native/gdb:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest"
+                "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest"
             ]
         }
     }

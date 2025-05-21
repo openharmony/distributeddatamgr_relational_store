@@ -256,6 +256,20 @@ AbsPredicates *AbsPredicates::Glob(const std::string &field, const std::string &
 }
 
 /**
+ * Configures to match the specified field whose data type is String and the value not contains a wildcard.
+ */
+AbsPredicates *AbsPredicates::NotGlob(const std::string &field, const std::string &value)
+{
+    if (!CheckParameter("notGlob", field, { value })) {
+        return this;
+    }
+    CheckIsNeedAnd();
+    whereClause += field + " NOT GLOB ? ";
+    bindArgs.push_back(ValueObject(value));
+    return this;
+}
+
+/**
  * Restricts the value of the field to be unequal to the specified value.
  */
 AbsPredicates *AbsPredicates::Between(const std::string &field, const ValueObject &low, const ValueObject &high)
@@ -481,6 +495,16 @@ AbsPredicates *AbsPredicates::NotIn(const std::string &field, const std::vector<
     return NotIn(field, bindArgs);
 }
 
+AbsPredicates *AbsPredicates::Having(const std::string &conditions, const std::vector<ValueObject> &values)
+{
+    if (!CheckParameter("having", conditions, {})) {
+        return this;
+    }
+    havingClause = conditions;
+    bindArgs.insert(bindArgs.end(), values.begin(), values.end());
+    return this;
+}
+
 /**
  * Configures to match the specified field whose data type is String array and values are out of a given range.
  */
@@ -561,7 +585,7 @@ void AbsPredicates::AppendWhereClauseWithInOrNotIn(
 
 std::string AbsPredicates::GetStatement() const
 {
-    return SqliteSqlBuilder::BuildSqlStringFromPredicates(*this);
+    return "";
 }
 
 std::string AbsPredicates::GetWhereClause() const
@@ -652,6 +676,11 @@ std::string AbsPredicates::GetGroup() const
 std::string AbsPredicates::GetIndex() const
 {
     return index;
+}
+
+std::string AbsPredicates::GetHaving() const
+{
+    return havingClause;
 }
 } // namespace NativeRdb
 } // namespace OHOS

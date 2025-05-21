@@ -21,10 +21,15 @@
 #include "rdb_store_config.h"
 
 namespace OHOS::DistributedRdb {
+struct RdbKnowledgeParser {
+    std::string type;
+    std::string path;
+};
+
 struct RdbKnowledgeField {
     std::string columnName;
     std::vector<std::string> type;
-    std::string parser;
+    std::vector<RdbKnowledgeParser> parser;
     std::string description;
 };
 

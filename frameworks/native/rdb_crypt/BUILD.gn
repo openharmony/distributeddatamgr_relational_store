@@ -1,0 +1,45 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+ohos_shared_library("relational_store_crypt") {
+part_name = "relational_store"
+sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+}
+
+sources = [
+    "${relational_store_native_path}/rdb_crypt/relational_store_crypt.cpp",
+]
+include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+]
+ldflags = [ "-Wl,--exclude-libs,ALL" ]
+cflags_cc = [ "-fvisibility=hidden" ]
+
+external_deps = [
+    "hilog:libhilog",
+    "huks:libhukssdk",
+]
+subsystem_name = "distributeddatamgr"
+}

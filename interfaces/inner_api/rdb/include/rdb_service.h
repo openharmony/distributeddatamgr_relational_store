@@ -38,7 +38,8 @@ public:
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 
-    virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const RdbSyncerParam &param, const std::string &device, const std::string &table) = 0;
 
     virtual int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;
@@ -47,10 +48,10 @@ public:
         const AsyncDetail &async) = 0;
 
     virtual int32_t Subscribe(
-        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
+        const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;
 
     virtual int32_t UnSubscribe(
-        const RdbSyncerParam &param, const SubscribeOption &option, RdbStoreObserver *observer) = 0;
+        const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;
 
     virtual int32_t RegisterAutoSyncCallback(
         const RdbSyncerParam &param, std::shared_ptr<DetailProgressObserver> observer) = 0;

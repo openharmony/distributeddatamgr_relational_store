@@ -20,6 +20,7 @@
 
 #include "accesstoken_kit.h"
 #include "common.h"
+#include "oh_data_value.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -851,6 +852,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "data_key", nullptr);
     EXPECT_EQ(cursor, nullptr);
 
+    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", nullptr, values);
+    EXPECT_EQ(cursor, nullptr);
+
     // table name is ""
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "", "data_key", values);
     int rowCount = 0;
@@ -1056,6 +1060,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
     predicates->clear(predicates);
     errCode = OH_Rdb_UnlockRow(storeTestRdbStore_, predicates);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_NO_ROW_IN_QUERY);
+    cursor->destroy(cursor);
 
     predicates->clear(predicates);
     cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
@@ -1687,4 +1692,236 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
     EXPECT_EQ(rowCount, 1);
     cursor->destroy(cursor);
     valueBucket->destroy(valueBucket);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_038
+ * @tc.desc: invalid args test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
+{
+    constexpr int TABLE_COUNT = 1;
+    const char *table[TABLE_COUNT];
+    table[0] = "store_test";
+    auto errorCode =
+        OH_Rdb_CloudSync(storeTestRdbStore_, Rdb_SyncMode::RDB_SYNC_MODE_NATIVE_FIRST, nullptr, 1, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    errorCode = OH_Rdb_CloudSync(storeTestRdbStore_,
+        static_cast<Rdb_SyncMode>(Rdb_SyncMode::RDB_SYNC_MODE_TIME_FIRST - 1), table, TABLE_COUNT, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    errorCode = OH_Rdb_CloudSync(storeTestRdbStore_,
+        static_cast<Rdb_SyncMode>(Rdb_SyncMode::RDB_SYNC_MODE_CLOUD_FIRST + 1), table, TABLE_COUNT, &observer);
+    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
+
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("lock_test");
+    EXPECT_EQ(OH_Rdb_LockRow(nullptr, predicates), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_LockRow(storeTestRdbStore_, nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnlockRow(nullptr, predicates), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_UnlockRow(storeTestRdbStore_, nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_QueryLockedRow(nullptr, predicates, nullptr, 0), nullptr);
+    EXPECT_EQ(OH_Rdb_QueryLockedRow(storeTestRdbStore_, nullptr, nullptr, 0), nullptr);
+    predicates->destroy(predicates);
+
+    errorCode = OH_Rdb_IsTokenizerSupported(RDB_CUSTOM_TOKENIZER, nullptr);
+    EXPECT_EQ(RDB_E_INVALID_ARGS, errorCode);
+
+    OH_Data_VBuckets *rows = OH_VBuckets_Create();
+    int64_t changes = -1;
+    EXPECT_EQ(OH_Rdb_BatchInsert(nullptr, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", nullptr, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_NONE, nullptr),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows,
+                  static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_NONE - 1), &changes),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows,
+                  static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_REPLACE + 1), &changes),
+        OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    OH_VBuckets_Destroy(rows);
+
+    OH_Data_Value *dataValue = OH_Value_Create();
+    EXPECT_EQ(OH_Value_PutText(dataValue, nullptr), RDB_OK);
+    EXPECT_EQ(OH_Value_PutText(nullptr, "test"), RDB_E_INVALID_ARGS);
+
+    Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
+    EXPECT_EQ(
+        OH_Rdb_SetDistributedTables(storeTestRdbStore_, table, 0, Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD, &config),
+        RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_SetDistributedTables(
+                  storeTestRdbStore_, table, TABLE_COUNT, Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD, nullptr),
+        RDB_E_INVALID_ARGS);
+}
+/**
+ * @tc.name: RDB_Native_store_test_039
+ * @tc.desc: normal testCase for OH_Rdb_InsertWithConflictResolution.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_039, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Rdb_Store *store = storeTestRdbStore_;
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 2);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
+    int64_t rowId = 0;
+    errCode = OH_Rdb_InsertWithConflictResolution(nullptr, "store_test", valueBucket, RDB_CONFLICT_ROLLBACK, &rowId);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, nullptr, valueBucket, RDB_CONFLICT_ROLLBACK, &rowId);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, "store_test", nullptr, RDB_CONFLICT_ROLLBACK, &rowId);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, "store_test", valueBucket,
+        static_cast<Rdb_ConflictResolution>(0), &rowId);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, "store_test", valueBucket,
+        static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_REPLACE + 1), &rowId);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, "store_test", valueBucket, RDB_CONFLICT_ROLLBACK, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_InsertWithConflictResolution(store, "store_test", valueBucket, RDB_CONFLICT_ROLLBACK, &rowId);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(rowId, 2);
+
+    valueBucket->destroy(valueBucket);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_040
+ * @tc.desc: normal testCase for OH_Rdb_UpdateWithConflictResolution.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
+{
+    int errCode = 0;
+    OH_Rdb_Store *store = storeTestRdbStore_;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    EXPECT_NE(predicates, NULL);
+
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    EXPECT_NE(valueObject, NULL);
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+
+    predicates->equalTo(predicates, "data1", valueObject);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    EXPECT_NE(valueBucket, NULL);
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putNull(valueBucket, "data5");
+
+    int64_t chgs = 0;
+    errCode = OH_Rdb_UpdateWithConflictResolution(nullptr, valueBucket, predicates, RDB_CONFLICT_ROLLBACK, &chgs);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_UpdateWithConflictResolution(store, nullptr, predicates, RDB_CONFLICT_ROLLBACK, &chgs);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_UpdateWithConflictResolution(store, valueBucket, nullptr, RDB_CONFLICT_ROLLBACK, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Rdb_UpdateWithConflictResolution(store, valueBucket, predicates, RDB_CONFLICT_ROLLBACK, &chgs);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(chgs, 1);
+
+    predicates->clear(predicates);
+    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, NULL, 0);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    errCode = cursor->goToNextRow(cursor);
+    EXPECT_EQ(errCode, 0);
+
+    size_t size = 0;
+    cursor->getSize(cursor, 1, &size);
+    EXPECT_EQ(size, 5);
+    char data1Value1[size];
+    cursor->getText(cursor, 1, data1Value1, size);
+    EXPECT_STREQ(data1Value1, "liSi");
+
+    valueObject->destroy(valueObject);
+    valueBucket->destroy(valueBucket);
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+static OH_Rdb_ConfigV2 *g_attachConfig = nullptr;
+static void CreateAttachDatabase()
+{
+    g_attachConfig = OH_Rdb_CreateConfig();
+    ASSERT_NE(g_attachConfig, nullptr);
+    OH_Rdb_SetDatabaseDir(g_attachConfig, RDB_TEST_PATH);
+    OH_Rdb_SetStoreName(g_attachConfig, "rdb_attach_store_test.db");
+    OH_Rdb_SetBundleName(g_attachConfig, "com.ohos.example.distributedndk");
+    OH_Rdb_SetEncrypted(g_attachConfig, false);
+    OH_Rdb_SetSecurityLevel(g_attachConfig, OH_Rdb_SecurityLevel::S1);
+    OH_Rdb_SetArea(g_attachConfig, RDB_SECURITY_AREA_EL1);
+
+    int errCode = 0;
+    auto tmpStore = OH_Rdb_CreateOrOpen(g_attachConfig, &errCode);
+    EXPECT_NE(tmpStore, NULL);
+    OH_Rdb_CloseStore(tmpStore);
+}
+
+static void DeleteAttachDatabase()
+{
+    EXPECT_EQ(OH_Rdb_DeleteStoreV2(g_attachConfig), 0);
+    OH_Rdb_DestroyConfig(g_attachConfig);
+    g_attachConfig = nullptr;
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_041
+ * @tc.desc: normal testCase for OH_Rdb_Attach、OH_Rdb_Detach.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_041, TestSize.Level1)
+{
+    CreateAttachDatabase();
+
+    size_t attachedNumber = 0;
+    auto ret = OH_Rdb_Attach(nullptr, g_attachConfig, "rdb_attach_test", 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Attach(storeTestRdbStore_, nullptr, "rdb_attach_test", 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Attach(storeTestRdbStore_, g_attachConfig, nullptr, 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Attach(storeTestRdbStore_, g_attachConfig, "rdb_attach_test", 0, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Attach(storeTestRdbStore_, g_attachConfig, "rdb_attach_test", 3, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Attach(storeTestRdbStore_, g_attachConfig, "rdb_attach_test", 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(attachedNumber, 1);
+
+    ret = OH_Rdb_Detach(nullptr, "rdb_attach_test", 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Detach(storeTestRdbStore_, nullptr, 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Detach(storeTestRdbStore_, "rdb_attach_test", 0, &attachedNumber);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Detach(storeTestRdbStore_, "rdb_attach_test", 3, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_Detach(storeTestRdbStore_, "rdb_attach_test", 3, &attachedNumber);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(attachedNumber, 0);
+
+    DeleteAttachDatabase();
 }

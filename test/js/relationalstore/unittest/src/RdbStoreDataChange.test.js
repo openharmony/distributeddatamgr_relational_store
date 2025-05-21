@@ -546,5 +546,25 @@ describe('RdbStoreDataChangeTest', function () {
         console.info(TAG + "************* testRdbStoreDataChange0011 end *************");
     })
 
+    /**
+     * @tc.name Normal case for multi observer
+     * @tc.number testRdbStoreOn0001
+     * @tc.desc 1. Register and cancel registration concurrent testing
+     *
+     */
+    it('testRdbStoreDataChange0011', 0, async function (done) {
+        console.info(TAG + "************* testRdbStoreOn0001 start *************");
+        function observer() {
+            console.info(TAG + "observer1");
+        };
+        for (let i = 0; i < 500; ++i) {
+            rdbStore.on("concurrencyTest", true, observer)
+            rdbStore.emit("concurrencyTest");
+            rdbStore.off("concurrencyTest", true, observer);
+        }
+        done();
+        console.info(TAG + "************* testRdbStoreOn0001 end *************");
+    })
+
     console.info(TAG + "*************Unit Test End*************");
 })
