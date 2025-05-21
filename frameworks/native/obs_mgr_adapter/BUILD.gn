@@ -39,6 +39,7 @@ ohos_shared_library("rdb_obs_mgr_adapter") {
   sources = [ "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp" ]
 
   external_deps = [
+    "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "hilog:libhilog",
