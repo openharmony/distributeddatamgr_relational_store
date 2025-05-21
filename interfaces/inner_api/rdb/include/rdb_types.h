@@ -412,7 +412,9 @@ struct SqlOptions {
     }
     SqlOptions(const char *returningField)
     {
-        returningFields.push_back(returningField);
+        if (returningField != nullptr) {
+            returningFields.push_back(returningField);
+        }
     }
     SqlOptions(ConflictResolution conflictResolution, const std::string &returningField)
         : SqlOptions(returningField, conflictResolution)
@@ -426,13 +428,17 @@ struct SqlOptions {
         ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE)
         : resolution(conflictResolution)
     {
-        returningFields.push_back(returningField);
+        if (!returningField.empty()) {
+            returningFields.push_back(returningField);
+        }
     }
     SqlOptions(
         std::string &&returningField, ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE)
         : resolution(conflictResolution)
     {
-        returningFields.push_back(std::move(returningField));
+        if (!returningField.empty()) {
+            returningFields.push_back(std::move(returningField));
+        }
     }
     ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
     std::vector<std::string> returningFields;

@@ -263,9 +263,9 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_001, TestSize.Level1)
     EXPECT_EQ(res.status, E_OK);
     EXPECT_EQ(res.count, 1);
     ASSERT_EQ(res.results.RowSize(), 1);
-    auto [code, val] = res.results.GetColumnValues("name");
+    auto [code, val] = res.results.GetColumnValues("id");
     ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(val.size(), 15);
+    ASSERT_EQ(val.size(), 1);
     EXPECT_EQ(int(val[0]), 1);
 }
 

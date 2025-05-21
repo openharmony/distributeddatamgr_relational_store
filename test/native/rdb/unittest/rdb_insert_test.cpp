@@ -825,7 +825,6 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_001, TestSize.Level1)
     ASSERT_EQ(values.size(), 5);
     for (int i = 0; i < 5; i++) {
         int val = -1;
-        std::cout << std::string(values[i]) << std::endl;
         EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i);
     }
@@ -863,7 +862,6 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_002, TestSize.Level1)
     ASSERT_EQ(values.size(), 4);
     for (size_t i = 0; i < values.size(); i++) {
         int val = -1;
-        std::cout << std::string(values[i]) << std::endl;
         EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i + (i >= 2));
     }
@@ -928,10 +926,9 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_004, TestSize.Level1)
     ASSERT_EQ(result.results.RowSize(), 5);
     auto [code, values] = result.results.GetColumnValues(returningField);
     ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(values.size(), 4);
+    ASSERT_EQ(values.size(), 5);
     for (size_t i = 0; i < 5; i++) {
         int val = -1;
-        std::cout << std::string(values[i]) << std::endl;
         EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i);
     }

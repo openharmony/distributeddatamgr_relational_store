@@ -92,11 +92,9 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    ResultType BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution,
-        const std::string &returningField) override;
-    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
-        const std::string &returningField) override;
-    ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField) override;
+    ResultType BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions) override;
+    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions) override;
+    ResultType Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> RemoteQuery(
@@ -105,7 +103,7 @@ public:
         const AbsRdbPredicates &predicates, const Fields &columns) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
-    ResultType ExecuteForResult(const std::string &sql, const Values &args) override;
+    ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
     int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args) override;
@@ -240,7 +238,7 @@ private:
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     ResultType ExecuteForChangedRow(const std::string &sql, const Values &args);
     static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement);
-    static std::vector<ValueObject> GetValues(std::shared_ptr<Statement> statement);
+    static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();

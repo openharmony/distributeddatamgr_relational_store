@@ -1689,7 +1689,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_045, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 2);
     ASSERT_EQ(result.results.RowSize(), 2);
-    auto [code, val] = result.results.GetColumnValues("id");
+    auto [code, val] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 2);
     EXPECT_EQ(std::string(val[0]), "tt");
@@ -1699,16 +1699,16 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_045, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
-    std::tie(code, val) = result.results.GetColumnValues("id");
+    std::tie(code, val) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(val.size(), 2);
+    ASSERT_EQ(val.size(), 1);
     EXPECT_EQ(std::string(val[0]), "update");
 
     result = transaction->Execute("delete from test", "name", {});
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 2);
     ASSERT_EQ(result.results.RowSize(), 2);
-    std::tie(code, val) = result.results.GetColumnValues("update");
+    std::tie(code, val) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 2);
     EXPECT_EQ(std::string(val[0]), "update");
@@ -1742,7 +1742,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_046, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
-    auto [code, val] = result.results.GetColumnValues("id");
+    auto [code, val] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 1024);
     EXPECT_EQ(std::string(val[0]), "0");
@@ -1752,7 +1752,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_046, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
-    std::tie(code, val) = result.results.GetColumnValues("update");
+    std::tie(code, val) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 1024);
     EXPECT_EQ(std::string(val[0]), "update");
@@ -1761,7 +1761,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_046, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
-    std::tie(code, val) = result.results.GetColumnValues("update");
+    std::tie(code, val) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 1024);
     EXPECT_EQ(std::string(val[0]), "update");
@@ -1788,7 +1788,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_047, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
-    auto [code, val] = result.results.GetColumnValues("update");
+    auto [code, val] = result.results.GetColumnValues("id");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 1);
     EXPECT_EQ(int(val[0]), 1);

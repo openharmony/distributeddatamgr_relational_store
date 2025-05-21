@@ -899,7 +899,7 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_002, TestSize.Level1)
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
-    auto [code, val] = result.results.GetColumnValues("id");
+    auto [code, val] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(val.size(), 1);
     EXPECT_EQ(std::string(val[0]), "Jim_3");
