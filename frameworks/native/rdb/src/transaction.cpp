@@ -33,8 +33,9 @@ int32_t Transaction::RegisterCreator(Creator creator)
 std::pair<int32_t, int64_t> Transaction::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    auto result = BatchInsert(table, rows, { resolution });
-    return std::pair<int32_t, int64_t>();
+    SqlOptions options(resolution);
+    auto result = BatchInsert(table, rows, options);
+    return { result.status, result.count };
 }
 
 ResultType Transaction::BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions)
@@ -74,7 +75,7 @@ std::pair<int32_t, int32_t> Transaction::Delete(
 
 std::pair<int32_t, int32_t> Transaction::Delete(const AbsRdbPredicates &predicates)
 {
-    auto result = Delete(predicates, { "" });
+    auto result = Delete(predicates, {});
     return { result.status, result.count };
 }
 

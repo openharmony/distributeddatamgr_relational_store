@@ -465,7 +465,7 @@ public:
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      * @return Return the result. Contains error code, number of affected rows, and value of returningField
      */
-    virtual ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args = {});
+    virtual ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args);
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and get a long integer value.
