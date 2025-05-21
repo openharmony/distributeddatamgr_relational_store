@@ -41,21 +41,23 @@ ResultType Transaction::BatchInsert(const std::string &table, const RefRows &row
 {
     return { E_NOT_SUPPORT, -1 };
 }
+
 std::pair<int, int> Transaction::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
-
 {
     AbsRdbPredicates predicates(table);
     predicates.SetWhereClause(where);
     predicates.SetBindArgs(args);
     return Update(row, predicates, resolution);
 }
+
 std::pair<int32_t, int32_t> Transaction::Update(
     const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
 {
     auto result = Update(row, predicates, { resolution, "" });
     return { result.status, result.count };
 }
+
 ResultType Transaction::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     return { E_NOT_SUPPORT, -1 };
@@ -81,11 +83,12 @@ ResultType Transaction::Delete(const AbsRdbPredicates &predicates, const SqlOpti
     return { E_NOT_SUPPORT, -1 };
 }
 
-ResultType Transaction::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Transaction::Values &args)
+ResultType Transaction::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
 {
     return { E_NOT_SUPPORT, -1 };
 }
-std::pair<int32_t, ValueObject> Transaction::Execute(const std::string &sql, const Transaction::Values &args)
+
+std::pair<int32_t, ValueObject> Transaction::Execute(const std::string &sql, const Values &args)
 {
     return { E_NOT_SUPPORT, -1 };
 }
