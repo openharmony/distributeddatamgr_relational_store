@@ -1360,7 +1360,9 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
-    SqliteConnection::AsyncReplayBinlog(config_.GetPath(), config_.IsMemoryRdb());
+    if (IsSupportBinlog(config_)) {
+        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), config_.IsMemoryRdb());
+    }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
     if (sRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
@@ -1426,9 +1428,11 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
         return ret;
     }
     connection->slaveConnection_ = conn;
-    ret = SqliteConnection::AsyncReplayBinlog(config.GetPath(), config.IsMemoryRdb());
-    if (ret != E_OK) {
-        return ret;
+    if (IsSupportBinlog(config)) {
+        ret = SqliteConnection::AsyncReplayBinlog(config.GetPath(), config.IsMemoryRdb());
+        if (ret != E_OK) {
+            return ret;
+        }
     }
     ret = connection->VeritySlaveIntegrity();
     if (ret != E_OK) {
