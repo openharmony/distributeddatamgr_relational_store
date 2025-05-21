@@ -45,6 +45,11 @@ size_t ValuesBuckets::RowSize() const
     return buckets_.size();
 }
 
+bool ValuesBuckets::Empty() const
+{
+    return buckets_.empty();
+}
+
 std::pair<ValuesBuckets::FieldsType, ValuesBuckets::ValuesType> ValuesBuckets::GetFieldsAndValues() const
 {
     return { fields_, values_ };
@@ -53,6 +58,13 @@ std::pair<ValuesBuckets::FieldsType, ValuesBuckets::ValuesType> ValuesBuckets::G
 void ValuesBuckets::Reserve(int32_t size)
 {
     buckets_.reserve(size);
+}
+
+void ValuesBuckets::Clear()
+{
+    buckets_.clear();
+    fields_->clear();
+    values_->clear();
 }
 
 void ValuesBuckets::Put(const ValuesBucket &bucket)
@@ -94,6 +106,20 @@ std::pair<int, ValuesBuckets::ValueType> ValuesBuckets::Get(size_t row, const Fi
     }
 
     return { E_OK, it->second };
+}
+
+std::pair<int, std::vector<ValueObject>> ValuesBuckets::GetColumnValues(const std::string &field) const
+{
+    std::vector<ValueObject> res;
+    res.reserve(buckets_.size());
+    for (const auto &bucket : buckets_) {
+        auto it = bucket.find(field);
+        if (it == bucket.end()) {
+            return { E_INVALID_ARGS, {} };
+        }
+        res.push_back(it->second);
+    }
+    return { E_OK, res };
 }
 } // namespace NativeRdb
 } // namespace OHOS

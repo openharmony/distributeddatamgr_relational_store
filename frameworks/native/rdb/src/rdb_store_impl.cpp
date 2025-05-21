@@ -1225,7 +1225,7 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
         return { E_DATABASE_BUSY, -1 };
     }
 
-    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), sqlOptions.resolution);
     // To ensure atomicity, execute SQL only once
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
         auto [fields, values] = rows.GetFieldsAndValues();
@@ -1234,9 +1234,7 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
-    if (!returningField.empty()) {
-        sql.append(" returning ").append(returningField);
-    }
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     auto [errCode, statement] = GetStatement(sql, conn);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
@@ -1252,7 +1250,7 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
     }
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
-            table.c_str(), bindArgs.front().size(), static_cast<int32_t>(resolution));
+            table.c_str(), bindArgs.front().size(), static_cast<int32_t>(sqlOptions.resolution));
     }
     auto result = GenerateResult(errCode, statement);
     if (result.count > 0) {
@@ -1261,8 +1259,7 @@ RdbStoreImpl::ResultType RdbStoreImpl::BatchInsert(
     return result;
 }
 
-RdbStore::ResultType RdbStoreImpl::Update(
-    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution, const std::string &returningField)
+ResultType RdbStoreImpl::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1277,7 +1274,7 @@ RdbStore::ResultType RdbStoreImpl::Update(
         return { E_EMPTY_VALUES_BUCKET, -1 };
     }
 
-    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(sqlOptions.resolution));
     if (clause == nullptr) {
         return { E_INVALID_CONFLICT_FLAG, -1 };
     }
@@ -1306,9 +1303,7 @@ RdbStore::ResultType RdbStoreImpl::Update(
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-    if (!returningField.empty()) {
-        sql.append(" returning ").append(returningField);
-    }
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
 
     auto result = ExecuteForChangedRow(sql, tmpBindArgs);
@@ -1318,7 +1313,7 @@ RdbStore::ResultType RdbStoreImpl::Update(
     return result;
 }
 
-RdbStore::ResultType RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+ResultType RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1337,9 +1332,7 @@ RdbStore::ResultType RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, co
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
-    if (!returningField.empty()) {
-        sql.append(" returning ").append(returningField);
-    }
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     auto args = predicates.GetBindArgs();
     auto res = ExecuteForChangedRow(sql, args);
     if (res.count > 0) {
@@ -1522,7 +1515,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     return HandleDifferentSqlTypes(result, sqlType);
 }
 
-ResultType RdbStoreImpl::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
+ResultType RdbStoreImpl::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
 {
     if (isReadOnly_ || config_.IsVector()) {
         return { E_NOT_SUPPORT, -1 };
@@ -1544,8 +1537,16 @@ ResultType RdbStoreImpl::ExecuteForResult(const std::string &sql, const RdbStore
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, -1 };
     }
-
-    auto [errCode, statement] = GetStatement(sql, conn);
+    int32_t errCode = E_ERROR;
+    std::shared_ptr<Statement> statement = nullptr;
+    if (sqlOptions.returningFields.empty() ||
+        (sqlType != SqliteUtils::STATEMENT_INSERT && SqliteUtils::STATEMENT_UPDATE)) {
+        std::tie(errCode, statement) = GetStatement(sql, conn);
+    } else {
+        std::string executeSql = sql;
+        SqliteSqlBuilder::AppendReturning(executeSql, sqlOptions.returningFields);
+        std::tie(errCode, statement) = GetStatement(executeSql, conn);
+    }
     if (errCode != E_OK) {
         return { errCode, -1 };
     }
@@ -1646,7 +1647,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return E_OK;
 }
 
-RdbStoreImpl::ResultType RdbStoreImpl::ExecuteForChangedRow(const std::string &sql, const Values &args)
+ResultType RdbStoreImpl::ExecuteForChangedRow(const std::string &sql, const Values &args)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -2712,25 +2713,39 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return conn->CleanDirtyLog(table, cursor);
 }
 
-std::vector<ValueObject> RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
+ValuesBuckets RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
 {
     if (statement == nullptr) {
         return {};
     }
     auto colCount = statement->GetColumnCount();
-    std::vector<ValueObject> values;
     if (colCount <= 0) {
-        return values;
+        return {};
+    }
+    ValuesBuckets values;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = statement->GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return {};
+        }
+        colNames.push_back(std::move(colName));
     }
     // The correct number of changed rows can only be obtained after completing the step
     do {
-        if (values.size() < MAX_RETURNING_ROWS) {
-            auto [code, val] = statement->GetColumn(0);
-            if (code != E_OK) {
-                LOG_ERROR("GetColumn failed,errCode:%{public}d", code);
-                break;
+        if (values.RowSize() < MAX_RETURNING_ROWS) {
+            ValuesBucket value;
+            for (int32_t i = 0; i < colCount; i++) {
+                auto [code, val] = statement->GetColumn(i);
+                if (code != E_OK) {
+                    LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+                    break;
+                }
+                value.Put(colNames[i], std::move(val));
             }
-            values.push_back(std::move(val));
+            values.Put(std::move(value));
         }
     } while (statement->Step() == E_OK);
     return values;
@@ -2751,7 +2766,7 @@ ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement>
         result.count = statement->Changes();
     }
     if (result.count <= 0) {
-        result.results.clear();
+        result.results.Clear();
     }
     return result;
 }
@@ -2765,7 +2780,13 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(const Resu
         return { result.status, ValueObject() };
     }
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        return { result.status, result.results.empty() ? ValueObject() : result.results[0] };
+        ValueObject val;
+        auto [field, value] = result.results.GetFieldsAndValues();
+        if (!result.results.Empty() && field != nullptr && !field->empty()) {
+            auto [code, valueType] = result.results.Get(0, *field->begin());
+            val = valueType.get();
+        }
+        return { result.status, val };
     }
     return { result.status, result.count };
 }

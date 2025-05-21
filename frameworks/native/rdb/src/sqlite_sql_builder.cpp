@@ -398,5 +398,17 @@ void SqliteSqlBuilder::UpdateAssetStatus(const ValueObject &val, int32_t status)
         }
     }
 }
+
+void SqliteSqlBuilder::AppendReturning(std::string &sql, const std::vector<std::string> fields)
+{
+    if (fields.empty()) {
+        return;
+    }
+    sql.append(" returning ");
+    for (const auto &field : fields) {
+        sql.append(field).append(",");
+    }
+    sql.pop_back();
+}
 } // namespace NativeRdb
 } // namespace OHOS

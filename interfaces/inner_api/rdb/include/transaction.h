@@ -64,11 +64,6 @@ public:
      */
     using Resolution = ConflictResolution;
 
-    /**
-     * @brief Use ResultType replace DistributedRdb::ResultType.
-     */
-    using ResultType = DistributedRdb::ResultType;
-
     static constexpr Resolution NO_ACTION = ConflictResolution::ON_CONFLICT_NONE;
 
     enum TransactionType : int32_t {
@@ -125,47 +120,21 @@ public:
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
     virtual std::pair<int32_t, int64_t> BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution)
-    {
-        auto result = BatchInsert(table, rows, resolution, "");
-        return { result.status, result.count };
-    }
+        const std::string &table, const RefRows &rows, Resolution resolution);
 
     /**
      * @brief Inserts a batch of data into the target table.
      *
      * @param table Indicates the target table.
      * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param returningField Indicates the fieldName of result. If not needed, set to empty
-     * @return Return the inserted result. Contains error codes, affected rows,
-     * and returningField values for inserting data
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned results that do not match expectations
-     */
-    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningField)
-    {
-        return BatchInsert(table, rows, NO_ACTION, returningField);
-    }
-
-    /**
-     * @brief Inserts a batch of data into the target table.
-     *
-     * @param table Indicates the target table.
-     * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
-     * @param returningField Indicates the fieldName of result. If not needed, set to empty
+     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
-    {
-        return { E_NOT_SUPPORT, -1 };
-    }
-
+    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions);
     /**
      * @brief Updates data in the database based on specified conditions.
      *
@@ -176,13 +145,7 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where = "",
-        const Values &args = {}, Resolution resolution = NO_ACTION)
-    {
-        AbsRdbPredicates predicates(table);
-        predicates.SetWhereClause(where);
-        predicates.SetBindArgs(args);
-        return Update(row, predicates, resolution);
-    }
+        const Values &args = {}, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -192,11 +155,7 @@ public:
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
     virtual std::pair<int32_t, int32_t> Update(
-        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION)
-    {
-        auto result = Update(row, predicates, resolution, "");
-        return { result.status, result.count };
-    }
+        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
@@ -204,36 +163,15 @@ public:
      * @param row Indicates the row of data to be updated in the database.
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param returningField Indicates the fieldName of result.
-     * @return Return the updated result. Contains error code, number of affected rows,
-     * and value of returningField after update
-     * @warning When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy.
-     * This will result in returned returning values that do not match expectations
-     */
-    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const std::string &returningField)
-    {
-        return Update(row, predicates, NO_ACTION, returningField);
-    }
-
-    /**
-     * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
-     *
-     * @param row Indicates the row of data to be updated in the database.
-     * The key-value pairs are associated with column names of the database table.
-     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param resolution Indicates the {@link ConflictResolution} to update data into the table.
-     * @param returningField Indicates the fieldName of result.
+     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution,
-        const std::string &returningField)
-    {
-        return { E_NOT_SUPPORT, -1 };
-    }
+    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions);
+
     /**
      * @brief Deletes data from the database based on specified conditions.
      *
@@ -242,38 +180,25 @@ public:
      * @param args Indicates the where arguments.
      */
     virtual std::pair<int32_t, int32_t> Delete(
-        const std::string &table, const std::string &whereClause = "", const Values &args = {})
-    {
-        AbsRdbPredicates predicates(table);
-        predicates.SetWhereClause(whereClause);
-        predicates.SetBindArgs(args);
-        return Delete(predicates);
-    }
+        const std::string &table, const std::string &whereClause = "", const Values &args = {});
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      */
-    virtual std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates)
-    {
-        auto result = Delete(predicates, "");
-        return { result.status, result.count };
-    }
+    virtual std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates);
 
     /**
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param returningField Indicates the fieldName of result.
+     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
      * @return Return the deleted result. Contains error code, number of affected rows,
      * and value of returningField before delete
      * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
-    virtual ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
-    {
-        return { E_NOT_SUPPORT, -1 };
-    }
+    virtual ResultType Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions);
 
     /**
      * @brief Queries data in the database based on SQL statement.
@@ -302,7 +227,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
-    virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args = {}) = 0;
+    virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args = {});
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and
@@ -312,30 +237,7 @@ public:
      * @param returningField Indicates the fieldName of result.
      * @return Return the deleted result. Contains error code, number of affected rows, and value of returningField.
      */
-    virtual ResultType Execute(const std::string &sql, const std::string &returningField, const Values &args = {})
-    {
-        if (!returningField.empty()) {
-            std::string executeSql = sql;
-            executeSql.append(" returning ").append(returningField);
-            return ExecuteForResult(executeSql, args);
-        }
-        return ExecuteForResult(sql, args);
-    }
-
-    /**
-     * @brief Executes an SQL statement that contains specified parameters and
-     *        get two values of type int and ValueObject.
-     *
-     * @param sql Indicates the SQL statement to execute.
-     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
-     * @return Return the result. Contains error code, number of affected rows(If it is a non returning single
-     * insertion statement, it is the rowId of the inserted data), and value of result? If it is a pragma
-     * sql or is a returning sql, results is the first column value of the result set.
-     */
-    virtual ResultType ExecuteForResult(const std::string &sql, const Values &args)
-    {
-        return { E_NOT_SUPPORT, -1 };
-    }
+    virtual ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args = {});
 
 private:
     static inline Creator creator_;
