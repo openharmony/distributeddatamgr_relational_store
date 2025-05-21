@@ -30,12 +30,14 @@
 #include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
+#include "napi_rdb_log_observer.h"
 #include "napi_rdb_statistics_observer.h"
 #include "napi_rdb_store_observer.h"
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "napi_transaction.h"
 #include "rdb_errno.h"
+#include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "securec.h"
 
@@ -102,6 +104,9 @@ void RdbStoreProxy::UnregisterAll()
     }
     for (const auto &obs : statisticses_) {
         DistributedRdb::SqlStatistic::Unsubscribe(obs);
+    }
+    for (const auto &obs : logObservers_) {
+        NativeRdb::SqlLog::Unsubscribe(GetInstance()->GetPath(), obs);
     }
 #endif
 }
@@ -1954,6 +1959,53 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         (*it)->Clear();
         it = statisticses_.erase(it);
+    }
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("sqliteErrorOccurred", "function"));
+    bool result = std::any_of(logObservers_.begin(), logObservers_.end(),
+        [argv](std::shared_ptr<NapiLogObserver> obs) { return obs && *obs == argv[0]; });
+    if (result) {
+        LOG_DEBUG("Duplicate subscribe.");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiLogObserver>(env, argv[0], queue_);
+    std::string dbPath = this->GetInstance()->GetPath();
+    int errCode = NativeRdb::SqlLog::Subscribe(dbPath, observer);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    logObservers_.push_back(std::move(observer));
+    LOG_DEBUG("sqliteErrorOccurred subscribe success.");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffErrorLog(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
+        std::make_shared<ParamError>("sqliteErrorOccurred", "function"));
+
+    auto it = logObservers_.begin();
+    while (it != logObservers_.end()) {
+        if (*it == nullptr) {
+            it = logObservers_.erase(it);
+            LOG_WARN("logObserver is nullptr.");
+            continue;
+        }
+        if (type == napi_function && !(**it == argv[0])) {
+            ++it;
+            continue;
+        }
+        std::string dbPath = this->GetInstance()->GetPath();
+        int errCode = NativeRdb::SqlLog::Unsubscribe(dbPath, *it);
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = logObservers_.erase(it);
     }
     return nullptr;
 }
