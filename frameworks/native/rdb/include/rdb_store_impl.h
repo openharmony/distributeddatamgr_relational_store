@@ -67,15 +67,15 @@ class ObsManger {
 public:
     ObsManger() = default;
     virtual ~ObsManger();
-    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
-    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
-    int32_t Notify(const std::string &uri);
+    static int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    static int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    static int32_t Notify(const std::string &uri);
 
 private:
-    void *GetHandle();
-    std::mutex mutex_;
-    void *handle_;
-    ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;
+    static void *GetHandle();
+    static std::mutex mutex_;
+    static void *handle_;
+    static ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;
 };
 
 class RdbStoreImpl : public RdbStore {
@@ -265,7 +265,7 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
-    ObsManger obsManger_;
+    // ObsManger obsManger_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;

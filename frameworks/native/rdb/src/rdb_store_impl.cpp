@@ -90,6 +90,9 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
+std::mutex ObsManger::mutex_;
+void *ObsManger::handle_;
+ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> ObsManger::obs_;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -542,14 +545,14 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, std::shared_ptr<
 
 ObsManger::~ObsManger()
 {
-    if (handle_ == nullptr || obs_.Empty()) {
+    if (handle_ == nullptr) {
         return;
     }
     auto func = reinterpret_cast<int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>)>(
         dlsym(handle_, "Unregister"));
     if (func == nullptr) {
         LOG_ERROR("dlsym(Unregister) failed(%{public}d)!", errno);
-        dlclose(handle_);
+        // dlclose(handle_);
         return;
     }
     obs_.ForEach([func](const auto &key, auto &value) {
@@ -558,7 +561,7 @@ ObsManger::~ObsManger()
         }
         return !value.empty();
     });
-    dlclose(handle_);
+    // dlclose(handle_);
 }
 
 void *ObsManger::GetHandle()
@@ -640,7 +643,7 @@ int32_t ObsManger::Notify(const std::string &uri)
 
 int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
-    return obsManger_.Register(GetUri(option.event), observer);
+    return ObsManger::Register(GetUri(option.event), observer);
 }
 
 int32_t RdbStoreImpl::SubscribeLocalDetail(
@@ -726,7 +729,7 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, std::shared_pt
 
 int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
-    return obsManger_.Unregister(GetUri(option.event), observer);
+    return ObsManger::Unregister(GetUri(option.event), observer);
 }
 
 int32_t RdbStoreImpl::UnsubscribeLocalDetail(
@@ -817,7 +820,7 @@ int RdbStoreImpl::Notify(const std::string &event)
     if (isMemoryRdb_) {
         return E_OK;
     }
-    int32_t err = obsManger_.Notify(GetUri(event));
+    int32_t err = ObsManger::Notify(GetUri(event));
     if (err != 0) {
         LOG_ERROR("Notify failed.");
     }
