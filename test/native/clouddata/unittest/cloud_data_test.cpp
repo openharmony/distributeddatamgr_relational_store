@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "CloudDataTest"
+
 #include <gtest/gtest.h>
 #include <unistd.h>
 
@@ -21,12 +23,14 @@
 #include "cloud_types.h"
 #include "cloud_types_util.h"
 #include "logger.h"
+#include "rdb_notifier_stub.h"
 #include "token_setproc.h"
 
 namespace OHOS::CloudData {
 using namespace testing::ext;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::Rdb;
+using namespace DistributedRdb;
 uint64_t g_selfTokenID = 0;
 static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
 static constexpr const char *TEST_ACCOUNT_ID = "testId";
@@ -150,11 +154,13 @@ public:
 
 void CloudDataTest::SetUpTestCase(void)
 {
+    LOG_INFO("SetUpTestCase in.");
     g_selfTokenID = GetSelfTokenID();
 }
 
 void CloudDataTest::TearDownTestCase(void)
 {
+    LOG_INFO("TearDownTestCase in.");
     SetSelfTokenID(g_selfTokenID);
 }
 
@@ -531,7 +537,7 @@ HWTEST_F(CloudDataTest, SetCloudStrategy001, TestSize.Level1)
 
 /* *
  * @tc.name: CloudSync001
- * @tc.desc: Test the system application permissions of the CloudSync API
+ * @tc.desc: Test the invalid param of the CloudSync API
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -540,23 +546,26 @@ HWTEST_F(CloudDataTest, CloudSync001, TestSize.Level1)
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
-    EXPECT_EQ(ret, CloudService::PERMISSION_DENIED);
+    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);  // no progress
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT);
+    LOG_INFO("CloudSync001 test end.");
 }
 
 /* *
  * @tc.name: CloudSync002
- * @tc.desc: Test the permissions of the CloudSync API
+ * @tc.desc: Test the hap permission of the CloudSync API
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(CloudDataTest, CloudSync002, TestSize.Level1)
 {
-    AllocSystemHapToken(g_notPermissonPolicy);
+    AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
-    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+    auto progress = [](DistributedRdb::Details &&) {};
+    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
+    EXPECT_EQ(ret, CloudService::PERMISSION_DENIED);
+    LOG_INFO("CloudSync002 test end.");
 }
 
 /* *
@@ -567,10 +576,104 @@ HWTEST_F(CloudDataTest, CloudSync002, TestSize.Level1)
  */
 HWTEST_F(CloudDataTest, CloudSync003, TestSize.Level1)
 {
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+    LOG_INFO("CloudSync003 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync004
+ * @tc.desc: Test the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync004, TestSize.Level1)
+{
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, nullptr);
-    EXPECT_EQ(status, CloudService::ERROR);
+    auto progress = [](DistributedRdb::Details &&) {};
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
+    EXPECT_EQ(status, CloudService::INVALID_ARGUMENT);  // invalid syncMode
+    LOG_INFO("CloudSync004 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync005
+ * @tc.desc: Test the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync005, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 10;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+    LOG_INFO("CloudSync005 test end.");
+}
+
+/* *
+ * @tc.name: InitNotifier001
+ * @tc.desc: Test the InitNotifier API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, InitNotifier001, TestSize.Level1)
+{
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    sptr<RdbNotifierStub> notifier = nullptr;
+    auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);  // can not Marshalling a 'nullptr'
+    EXPECT_EQ(status, CloudService::IPC_PARCEL_ERROR);
+    LOG_INFO("InitNotifier001 test end.");
+}
+
+/* *
+ * @tc.name: InitNotifier002
+ * @tc.desc: Test the InitNotifier API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, InitNotifier002, TestSize.Level1)
+{
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    sptr<RdbNotifierStub> notifier = new (std::nothrow) RdbNotifierStub(nullptr, nullptr, nullptr);
+    auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+    LOG_INFO("InitNotifier002 test end.");
+}
+
+/* *
+ * @tc.name: MarshallingOptionTest
+ * @tc.desc: Test the Marshalling interface
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, MarshallingOptionTest, TestSize.Level1)
+{
+    LOG_INFO("MarshallingOptionTest test in.");
+    CloudData::CloudService::Option input;
+    input.syncMode = 4;
+    input.seqNum = 10;
+    MessageParcel parcel;
+    bool ret = ITypesUtil::Marshalling(input, parcel);
+    EXPECT_TRUE(ret);
+
+    CloudData::CloudService::Option output;
+    ret = ITypesUtil::Unmarshalling(output, parcel);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(output.syncMode, input.syncMode);
+    EXPECT_EQ(output.seqNum, input.seqNum);
+    LOG_INFO("MarshallingOptionTest test end.");
 }
 } // namespace OHOS::CloudData

@@ -57,10 +57,10 @@ public:
         const std::string &id, const std::string &bundleName, const std::string &storeId) override;
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
-    int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteOnject> notifier) override;
+    int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteObject> notifier) override;
 
 private:
-    int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option) override;
+    int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);
     int32_t InitNotifier(const std::string &bundleName);
     void OnSyncComplete(uint32_t seqNum, Details &&result);
     sptr<IRemoteObject> remote_;
