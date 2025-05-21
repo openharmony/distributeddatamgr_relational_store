@@ -197,7 +197,6 @@ ohos_unittest("NativeRdbTest") {
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "hilog:libhilog",
-    "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",

@@ -27,6 +27,9 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#if !defined(CROSS_PLATFORM)
+#include <filesystem>
+#endif
 #include <fstream>
 #include <regex>
 #include <string>
@@ -171,6 +174,23 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     src.close();
     dst.close();
     return true;
+}
+
+size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
+{
+#if !defined(CROSS_PLATFORM)
+    std::error_code ec;
+    size_t count = std::filesystem::remove_all(folderPath, ec);
+    auto errorCount = static_cast<std::uintmax_t>(-1);
+    if (count == errorCount) {
+        LOG_WARN("remove folder, %{public}d, %{public}s, %{public}s", ec.value(),
+            ec.message().c_str(), Anonymous(folderPath).c_str());
+        count = 0;
+    }
+    return count;
+#else
+    return 0;
+#endif
 }
 
 std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
