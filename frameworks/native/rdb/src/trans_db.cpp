@@ -264,7 +264,8 @@ ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions
     }
 
     errCode = statement->Execute(args);
-    auto result = GenerateResult(errCode, statement);
+    auto result = GenerateResult(
+        errCode, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
     if (errCode != E_OK) {
         LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
         return result;
@@ -316,7 +317,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(const std::
     return connection->CreateStatement(sql, connection);
 }
 
-ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement)
+ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
 {
     ResultType result{ code, -1 };
     if (statement == nullptr) {
@@ -325,12 +326,12 @@ ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> stat
     // There are no data changes in other scenarios
     if (code == E_OK) {
         result.results = GetValues(statement);
-        result.count = statement->Changes();
+        result.count = isDML ? statement->Changes() : 0;
     }
     if (code == E_SQLITE_CONSTRAINT) {
         result.count = statement->Changes();
     }
-    if (result.count <= 0) {
+    if (isDML && result.count <= 0) {
         result.results.Clear();
     }
     return result;

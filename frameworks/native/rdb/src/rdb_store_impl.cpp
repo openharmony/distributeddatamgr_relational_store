@@ -1556,7 +1556,8 @@ ResultType RdbStoreImpl::Execute(const std::string &sql, const SqlOptions &sqlOp
 ResultType RdbStoreImpl::HandleDifferentSqlTypes(
     std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType)
 {
-    ResultType result = GenerateResult(code, statement);
+    ResultType result = GenerateResult(
+        code, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         result.rowId = result.count > 0 ? statement->LastInsertRowId() : -1;
         return result;
@@ -2747,7 +2748,7 @@ ValuesBuckets RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
     return values;
 }
 
-ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement)
+ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
 {
     ResultType result{ code, -1 };
     if (statement == nullptr) {
@@ -2756,12 +2757,12 @@ ResultType RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement>
     // There are no data changes in other scenarios
     if (code == E_OK) {
         result.results = GetValues(statement);
-        result.count = statement->Changes();
+        result.count = isDML ? statement->Changes() : 0;
     }
     if (code == E_SQLITE_CONSTRAINT) {
         result.count = statement->Changes();
     }
-    if (result.count <= 0) {
+    if (isDML && result.count <= 0) {
         result.results.Clear();
     }
     return result;
