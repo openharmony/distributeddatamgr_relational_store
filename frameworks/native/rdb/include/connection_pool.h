@@ -125,7 +125,8 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans = false);
     void ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse = true);
-    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
+    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
+    int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
 

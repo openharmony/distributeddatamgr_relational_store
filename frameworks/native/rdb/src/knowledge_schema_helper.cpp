@@ -20,7 +20,7 @@
 #endif
 #include <fstream>
 #include <sstream>
-#include "knowledge_schema.h"
+#include <regex>
 #include "logger.h"
 #include "nlohmann/json.hpp"
 #include "rdb_errno.h"
@@ -30,8 +30,132 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using Json = nlohmann::json;
-namespace {
-bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+
+constexpr uint16_t SCHEMA_FIELD_MIN_LEN = 1;
+constexpr uint16_t SCHEMA_FIELD_MAX_LEN = 255;
+constexpr uint16_t SCHEMA_DB_NAME_MAX_LEN = 120;
+constexpr uint16_t SCHEMA_TYPE_MAX_LEN = 64;
+constexpr int64_t SCHEMA_VERSION_MAX = 0x7fffffff;
+
+constexpr char const *TYPE_TEXT = "Text";
+constexpr char const *TYPE_SCALAR = "Scalar";
+constexpr char const *TYPE_JSON = "Json";
+constexpr char const *TYPE_FILE = "File";
+const std::regex SCHEMA_FIELD_PATTERN("^[0-9a-zA-Z_]{1,}$");
+const std::regex SCHEMA_DB_NAME_PATTERN("^[0-9a-zA-Z_\\.]{1,}$");
+
+bool KnowledgeSchemaHelper::CheckSchemaField(const std::string &fieldStr)
+{
+    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_FIELD_MAX_LEN &&
+        std::regex_match(fieldStr, SCHEMA_FIELD_PATTERN);
+}
+
+bool KnowledgeSchemaHelper::CheckSchemaDBName(const std::string &fieldStr)
+{
+    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_DB_NAME_MAX_LEN &&
+        std::regex_match(fieldStr, SCHEMA_DB_NAME_PATTERN);
+}
+
+bool KnowledgeSchemaHelper::CheckSchemaFieldParsers(const KnowledgeField &field)
+{
+    const auto &parsers = field.GetParser();
+    const auto &fields = field.GetType();
+    auto find = std::find(fields.begin(), fields.end(), std::string(TYPE_JSON));
+    if (find != fields.end() && parsers.empty()) {
+        LOG_ERROR("No parser for json field.");
+        return false;
+    }
+
+    for (const KnowledgeParser &parser : parsers) {
+        const std::string &type = parser.GetType();
+        if (type != std::string(TYPE_FILE)) {
+            LOG_ERROR("Wrong field parser type: %{public}s", SqliteUtils::Anonymous(type).c_str());
+            return false;
+        }
+        if (parser.GetPath().empty()) {
+            LOG_ERROR("No parser path.");
+            return false;
+        }
+        if (parser.GetPath().length() > SCHEMA_FIELD_MAX_LEN) {
+            LOG_ERROR("Wrong field parser path length: %{public}zu", parser.GetPath().length());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool KnowledgeSchemaHelper::CheckKnowledgeFields(const std::vector<KnowledgeField> &fields)
+{
+    for (const KnowledgeField &field : fields) {
+        if (!CheckSchemaField(field.GetColumnName())) {
+            LOG_ERROR("Wrong column name: %{public}s", SqliteUtils::Anonymous(field.GetColumnName()).c_str());
+            return false;
+        }
+        std::vector<std::string> fieldType = field.GetType();
+        if (fieldType.size() != 1 || fieldType.front().size() < SCHEMA_FIELD_MIN_LEN ||
+            fieldType.front().size() > SCHEMA_TYPE_MAX_LEN) {
+            LOG_ERROR("Wrong column type, size: %{public}zu", fieldType.size());
+            return false;
+        }
+        for (auto &type : fieldType) {
+            if (type != std::string(TYPE_TEXT) && type != std::string(TYPE_SCALAR) &&
+                type != std::string(TYPE_JSON) && type != std::string(TYPE_FILE)) {
+                LOG_ERROR("Wrong field type: %{public}s", SqliteUtils::Anonymous(type).c_str());
+                return false;
+            }
+        }
+        if (!CheckSchemaFieldParsers(field)) {
+            return false;
+        }
+        std::string description = field.GetDescription();
+        if (fieldType.front() == std::string(TYPE_SCALAR) && (description.size() < SCHEMA_FIELD_MIN_LEN ||
+            description.size() > SCHEMA_FIELD_MAX_LEN)) {
+            LOG_ERROR("Wrong description: %{public}s", SqliteUtils::Anonymous(description).c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool KnowledgeSchemaHelper::CheckKnowledgeSchema(const KnowledgeSchema &schema)
+{
+    if (schema.GetVersion() < 1 || schema.GetVersion() > SCHEMA_VERSION_MAX) {
+        LOG_ERROR("Wrong schema version: %{public}" PRId64, schema.GetVersion());
+        return false;
+    }
+    if (!schema.IsDefaultName() && !CheckSchemaDBName(schema.GetDBName())) {
+        LOG_ERROR("Wrong schema db name: %{public}s", SqliteUtils::Anonymous(schema.GetDBName()).c_str());
+        return false;
+    }
+    for (const KnowledgeTable &table : schema.GetTables()) {
+        if (!CheckSchemaField(table.GetTableName())) {
+            LOG_ERROR("Wrong table name: %{public}s", SqliteUtils::Anonymous(table.GetTableName()).c_str());
+            return false;
+        }
+        if (table.GetReferenceFields().size() != 1 || !CheckSchemaField(table.GetReferenceFields().front())) {
+            LOG_ERROR("Wrong reference field, size: %{public}zu", table.GetReferenceFields().size());
+            return false;
+        }
+        if (!CheckKnowledgeFields(table.GetKnowledgeFields())) {
+            LOG_ERROR("Wrong knowledge field");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsContainsColumnName(const std::vector<DistributedRdb::RdbKnowledgeField> &KnowledgeFields,
+    const std::string &colName)
+{
+    for (const auto &field : KnowledgeFields) {
+        if (field.columnName == colName) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
     DistributedRdb::RdbKnowledgeSchema &schema)
 {
     KnowledgeSource source;
@@ -41,32 +165,42 @@ bool ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
     }
     auto sourceSchema = source.GetKnowledgeSchema();
     auto find = std::find_if(sourceSchema.begin(), sourceSchema.end(), [&dbName](const KnowledgeSchema &item) {
-        return item.GetDBName() == dbName;
+        return item.IsDefaultName() || item.GetDBName() == dbName;
     });
     if (find == sourceSchema.end()) {
         LOG_WARN("Not found same db:%{public}s schema.", SqliteUtils::Anonymous(dbName).c_str());
         return false;
     }
     KnowledgeSchema knowledgeSchema = *find;
-    schema.dbName = knowledgeSchema.GetDBName();
+    if (!CheckKnowledgeSchema(knowledgeSchema)) {
+        LOG_WARN("Check knowledge schema failed.");
+        return false;
+    }
+    schema.dbName = knowledgeSchema.IsDefaultName() ? dbName : knowledgeSchema.GetDBName();
     auto tables = knowledgeSchema.GetTables();
     for (const auto &table : tables) {
         DistributedRdb::RdbKnowledgeTable knowledgeTable;
         knowledgeTable.tableName = table.GetTableName();
         auto fields = table.GetKnowledgeFields();
         for (const auto &item : fields) {
+            auto colName = item.GetColumnName();
+            if (IsContainsColumnName(knowledgeTable.knowledgeFields, colName)) {
+                LOG_ERROR("Duplicate field column name:%{public}s.", SqliteUtils::Anonymous(colName).c_str());
+                return false;
+            }
             DistributedRdb::RdbKnowledgeField field;
             field.columnName = item.GetColumnName();
             field.type = item.GetType();
             field.description = item.GetDescription();
-            field.parser = item.GetParser();
+            for (const auto &parser : item.GetParser()) {
+                field.parser.push_back({parser.GetType(), parser.GetPath()});
+            }
             knowledgeTable.knowledgeFields.push_back(std::move(field));
         }
         knowledgeTable.referenceFields = table.GetReferenceFields();
         schema.tables.push_back(std::move(knowledgeTable));
     }
     return true;
-}
 }
 
 KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
@@ -98,6 +232,7 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
         return;
     }
     schemaManager_->Init(config, schema);
+    inited_ = true;
 }
 
 std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdbKnowledgeSchema(
@@ -120,7 +255,8 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
     errCode = E_OK;
     auto jsons = schemaManager_->GetJsonSchema();
     for (const auto &json : jsons) {
-        if (ParseRdbKnowledgeSchema(json, dbName, schema)) {
+        if (!ParseRdbKnowledgeSchema(json, dbName, schema)) {
+            errCode = E_ERROR;
             return res;
         }
     }
@@ -130,6 +266,10 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
 
 void KnowledgeSchemaHelper::DonateKnowledgeData()
 {
+    if (!inited_) {
+        LOG_WARN("knowledge schema helper not init.");
+        return;
+    }
     LoadKnowledgeLib();
     if (!IsLoadLib()) {
         LOG_WARN("skip donate data by miss lib");

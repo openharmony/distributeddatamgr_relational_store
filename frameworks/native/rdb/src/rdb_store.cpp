@@ -12,12 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "rdb_store.h"
 
+#include "logger.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "traits.h"
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
 RdbStore::ModifyTime::ModifyTime(
     std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys, bool isFromRowId)
     : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
@@ -268,8 +271,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStore::Query(const AbsRdbPredicates &pred
     std::string sql;
     std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
     if (queryStatus.first || queryStatus.second) {
-        std::string table = predicates.GetTableName();
-        std::string logTable = GetLogTableName(table);
+        std::string logTable = GetLogTableName(predicates.GetTableName());
         sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     } else {
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -291,7 +293,8 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
     bool preCount)
 {
     std::string sql;
-    if (predicates.HasSpecificField()) {
+    std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
+    if (queryStatus.first || queryStatus.second) {
         std::string table = predicates.GetTableName();
         std::string logTable = GetLogTableName(table);
         sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
@@ -507,14 +510,14 @@ int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, 
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::Subscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStore::Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     (void)option;
     (void)observer;
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::UnSubscribe(const SubscribeOption &option, RdbStoreObserver *observer)
+int RdbStore::UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     (void)option;
     (void)observer;

@@ -841,3 +841,131 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_014, TestSize.Level1)
     EXPECT_EQ(ret, RDB_OK);
     valueBucket->destroy(valueBucket);
 }
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_015
+ * @tc.desc: invalid args test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_015, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_CreateTransaction(g_transStore, nullptr, &trans);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Rdb_CreateTransaction(nullptr, g_options, &trans);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    EXPECT_NE(valueBucket, nullptr);
+    float floatArr[] = { 1.0, 2.0, 3.0 };
+    ret = OH_VBucket_PutFloatVector(nullptr, "data1", floatArr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutFloatVector(valueBucket, nullptr, floatArr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutFloatVector(valueBucket, "data1", nullptr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    uint64_t trueForm[] = { 1, 2, 3 };
+    ret = OH_VBucket_PutUnlimitedInt(nullptr, "data1", 0, trueForm, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutUnlimitedInt(valueBucket, nullptr, 0, trueForm, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_VBucket_PutUnlimitedInt(valueBucket, "data1", 0, nullptr, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = valueBucket->destroy(valueBucket);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_016
+ * @tc.desc: Normal testCase of store transaction for OH_RdbTrans_InsertWithConflictResolution
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_016, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    const char *table = "test";
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    // new row
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putText(valueBucket, "data1", "liSi");
+    // init data2 value is 13800
+    valueBucket->putInt64(valueBucket, "data2", 13800);
+    // init data3 value is 200.1
+    valueBucket->putReal(valueBucket, "data3", 200.1);
+    valueBucket->putNull(valueBucket, "data5");
+
+    // create predicates
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates(table);
+    // create match data
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+
+    // update
+    int64_t changes = -1;
+    ret = OH_RdbTrans_InsertWithConflictResolution(trans, table, valueBucket,
+        static_cast<Rdb_ConflictResolution>(0), &changes);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_RdbTrans_UpdateWithConflictResolution(trans, valueBucket, predicates, RDB_CONFLICT_REPLACE, &changes);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(changes, 1);
+
+    // destroy
+    valueObject->destroy(valueObject);
+    valueBucket->destroy(valueBucket);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_017
+ * @tc.desc: Normal testCase of store transaction for OH_RdbTrans_InsertWithConflictResolution and OH_RdbTrans_Rollback
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_017, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    const char *table = "test";
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putText(valueBucket, "data1", "test_name4");
+    // init is data2 is 14800
+    valueBucket->putInt64(valueBucket, "data2", 14800);
+    // init is data2 is 300.1
+    valueBucket->putReal(valueBucket, "data3", 300.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFGHI");
+    int64_t rowId = -1;
+    ret = OH_RdbTrans_InsertWithConflictResolution(trans, table, valueBucket,
+        static_cast<Rdb_ConflictResolution>(0), &rowId);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_RdbTrans_InsertWithConflictResolution(trans, table, valueBucket, RDB_CONFLICT_ROLLBACK, &rowId);
+    EXPECT_EQ(ret, RDB_OK);
+    // expect value is 4
+    EXPECT_EQ(rowId, 4);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    valueBucket->destroy(valueBucket);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}

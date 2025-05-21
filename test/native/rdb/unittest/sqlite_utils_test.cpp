@@ -27,8 +27,8 @@ class SqliteUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void SqliteUtilsTest::SetUpTestCase(void)
@@ -159,4 +159,36 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::Anonymous("file /data/stage/el2/database/rdb/ddddddd/linker_reborn.db-wal"),
         "file /***/el2/***/linker_reborn.db-wal");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
+{
+    EXPECT_EQ(0, SqliteUtils::DeleteFolder("random123"));
+}
+
+HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::GetParentModes("/data/service/el1/public/database/distributeddata/meta", 3),
+        "pub***:mode:d711 <- dat***:mode:d711 <- dis***:mode:d770");
+}
+
+HWTEST_F(SqliteUtilsTest, ExceedPathDepth, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::GetParentModes("a/backup/c", 5), "a:access_fail <- bac***:access_fail");
+}
+
+HWTEST_F(SqliteUtilsTest, UnixRootPath, TestSize.Level1)
+{
+    EXPECT_EQ(SqliteUtils::GetParentModes("/", 1), "no_parent");
+}
+
+HWTEST_F(SqliteUtilsTest, AccessFailureCase, TestSize.Level1)
+{
+    EXPECT_NE(SqliteUtils::GetParentModes("a/non_existing_path", 1).find("access_fail"), std::string::npos);
+}
+
+HWTEST_F(SqliteUtilsTest, LongDirectoryName, TestSize.Level1)
+{
+    std::string longName(20, 'a');
+    EXPECT_NE(SqliteUtils::GetParentModes(longName + "/b", 1).find("aaa***"), std::string::npos);
 }

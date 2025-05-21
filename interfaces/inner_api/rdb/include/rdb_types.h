@@ -236,6 +236,7 @@ enum RdbPredicateOperator {
     NOT_CONTAINS,
     NOT_LIKE,
     ASSETS_ONLY,
+    NOT_GLOB,
     OPERATOR_MAX
 };
 

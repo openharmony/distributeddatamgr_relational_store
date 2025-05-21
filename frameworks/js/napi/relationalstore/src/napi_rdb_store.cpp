@@ -87,7 +87,7 @@ void RdbStoreProxy::UnregisterAll()
             if (obs == nullptr) {
                 continue;
             }
-            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(mode) }, obs.get());
+            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(mode) }, obs);
         }
     }
     rdbStore->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL }, nullptr);
@@ -1632,7 +1632,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     if (option.mode == SubscribeMode::LOCAL_DETAIL) {
         errCode = GetInstance()->SubscribeObserver(option, observer);
     } else {
-        errCode = GetInstance()->Subscribe(option, observer.get());
+        errCode = GetInstance()->Subscribe(option, observer);
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers_[mode].push_back(observer);
@@ -1655,7 +1655,7 @@ napi_value RdbStoreProxy::RegisteredObserver(
 
     auto uvQueue = std::make_shared<UvQueue>(env);
     auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
-    int errCode = GetInstance()->Subscribe(option, localObserver.get());
+    int errCode = GetInstance()->Subscribe(option, localObserver);
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers[option.event].push_back(localObserver);
     LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
@@ -1695,7 +1695,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
         if (option.mode == SubscribeMode::LOCAL_DETAIL) {
             errCode = GetInstance()->UnsubscribeObserver(option, *it);
         } else {
-            errCode = GetInstance()->UnSubscribe(option, it->get());
+            errCode = GetInstance()->UnSubscribe(option, *it);
         }
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         (*it)->Clear();
@@ -1719,7 +1719,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(
         auto &list = obs->second;
         for (auto it = list.begin(); it != list.end(); it++) {
             if (**it == callback) {
-                int errCode = GetInstance()->UnSubscribe(option, it->get());
+                int errCode = GetInstance()->UnSubscribe(option, *it);
                 RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
                 list.erase(it);
                 break;

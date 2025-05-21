@@ -214,6 +214,13 @@ public:
     API_EXPORT AbsRdbPredicates *Glob(const std::string &field, const std::string &value) override;
 
     /**
+     * @brief Adds an Glob condition to the remote AbsRdbPredicates.
+     *
+     * This method is similar to glob of the SQL statement.
+     */
+    API_EXPORT AbsRdbPredicates *NotGlob(const std::string &field, const std::string &value) override;
+
+    /**
      * @brief Adds an Distinct condition to the remote AbsRdbPredicates.
      *
      * This method is similar to distinct of the SQL statement.
@@ -312,6 +319,8 @@ public:
      * @brief Sets the number of joins in the predicates.
      */
     API_EXPORT virtual void SetJoinCount(int joinCount);
+
+    API_EXPORT std::string GetStatement() const override;
 
     static constexpr const char *LOCK_STATUS = "#_status";
     static constexpr int LOCKED = 2;

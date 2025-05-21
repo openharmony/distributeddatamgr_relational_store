@@ -108,6 +108,10 @@ int OH_Value_PutText(OH_Data_Value *value, const char *val)
     if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
+    if (val == nullptr) {
+        value->value_.value = std::string();
+        return RDB_OK;
+    }
     value->value_.value = std::string(val);
     return RDB_OK;
 }

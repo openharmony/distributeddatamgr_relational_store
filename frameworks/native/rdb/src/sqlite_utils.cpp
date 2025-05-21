@@ -27,6 +27,9 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#if !defined(CROSS_PLATFORM)
+#include <filesystem>
+#endif
 #include <fstream>
 #include <regex>
 #include <string>
@@ -42,7 +45,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-namespace fs = std::filesystem;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -89,16 +91,18 @@ std::string SqliteUtils::StrToUpper(const std::string &s)
     return str;
 }
 
-void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::string &dst)
+std::string SqliteUtils::Replace(const std::string &src, const std::string &rep, const std::string &dst)
 {
     if (src.empty() || rep.empty()) {
-        return;
+        return "";
     }
+    auto res = src;
     size_t pos = 0;
-    while ((pos = src.find(rep, pos)) != std::string::npos) {
-        src.replace(pos, rep.length(), dst);
+    while ((pos = res.find(rep, pos)) != std::string::npos) {
+        res.replace(pos, rep.length(), dst);
         pos += dst.length();
     }
+    return res;
 }
 
 bool SqliteUtils::IsSupportSqlForExecute(int sqlType)
@@ -170,6 +174,23 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     src.close();
     dst.close();
     return true;
+}
+
+size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
+{
+#if !defined(CROSS_PLATFORM)
+    std::error_code ec;
+    size_t count = std::filesystem::remove_all(folderPath, ec);
+    auto errorCount = static_cast<std::uintmax_t>(-1);
+    if (count == errorCount) {
+        LOG_WARN("remove folder, %{public}d, %{public}s, %{public}s", ec.value(),
+            ec.message().c_str(), Anonymous(folderPath).c_str());
+        count = 0;
+    }
+    return count;
+#else
+    return 0;
+#endif
 }
 
 std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
@@ -602,21 +623,18 @@ std::string SqliteUtils::GetModeInfo(uint32_t st_mode)
 std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
 {
     std::vector<std::pair<std::string, std::string>> dirModes;
-    fs::path p(path);
+    std::string currentPath = path;
 
     for (int i = 0; i < pathDepth; ++i) {
-        p = p.parent_path();
-        if (p == p.root_path() || p.empty()) {
+        currentPath = StringUtils::GetParentPath(currentPath);
+        if (currentPath == "/" || currentPath.empty()) {
             break;
         }
 
-        std::string dirName = p.filename().string();
-        std::string dirPath = p.string();
-
+        std::string dirName = StringUtils::ExtractFileName(currentPath);
         struct stat st {};
-        dirModes.emplace_back(dirName, (stat(dirPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
+        dirModes.emplace_back(dirName, (stat(currentPath.c_str(), &st) == 0) ? GetModeInfo(st.st_mode) : "access_fail");
     }
-
     std::string result;
     for (auto it = dirModes.rbegin(); it != dirModes.rend(); ++it) {
         if (!result.empty()) {

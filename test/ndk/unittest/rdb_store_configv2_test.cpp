@@ -316,6 +316,28 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_007, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RDB_Native_store_test_008
+ * @tc.desc: invalid args test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_008, TestSize.Level1)
+{
+    int errCode = 0;
+    auto config = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_DeleteStoreV2(nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_CreateOrOpen(nullptr, &errCode), nullptr);
+    EXPECT_EQ(OH_Rdb_CreateOrOpen(config, nullptr), nullptr);
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetPersistent(nullptr, true));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetTokenizer(nullptr, Rdb_Tokenizer::RDB_NONE_TOKENIZER));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(nullptr, false));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetEncrypted(nullptr, false));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(nullptr, RDB_SQLITE));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(nullptr, S1));
+    OH_Rdb_DestroyConfig(config);
+}
+/**
  * @tc.name: RDB_ICU_TEST001
  * @tc.desc: test apis of icu
  * @tc.type: FUNC
@@ -411,4 +433,117 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(storeConfigV2TestRdbStore));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config));
     OH_Rdb_DestroyConfig(config);
+}
+
+/**
+  * @tc.name: RDB_Native_store_test_009
+  * @tc.desc: test apis of config interface OH_Rdb_SetCustomDir.
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_009, TestSize.Level1)
+{
+    const char *customDir = "test";
+    auto ret =  OH_Rdb_SetCustomDir(nullptr, customDir);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret =  OH_Rdb_SetCustomDir(nullptr, "12345678901234567890123456789012345678901234567890"
+        "12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
+    EXPECT_NE(confg, nullptr);
+    ret =  OH_Rdb_SetCustomDir(confg, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetCustomDir(confg, customDir);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_DestroyConfig(confg);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+  * @tc.name: RDB_Native_store_test_010
+  * @tc.desc: test apis of config interface OH_Rdb_SetReadOnly.
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_010, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
+    EXPECT_NE(confg, nullptr);
+
+    auto ret =  OH_Rdb_SetReadOnly(nullptr, true);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetReadOnly(confg, true);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_SetReadOnly(confg, false);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_DestroyConfig(confg);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+  * @tc.name: RDB_Native_store_test_011
+  * @tc.desc: test apis of config interface OH_Rdb_SetPlugins.
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
+    EXPECT_NE(confg, nullptr);
+
+    const char *plugins[] = {"1"};
+    auto ret =  OH_Rdb_SetPlugins(nullptr, plugins, 1);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetPlugins(confg, nullptr, 1);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetPlugins(confg, plugins, 0);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_SetPlugins(confg, plugins, 1);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *pluginsNew[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "0", "x"};
+    ret = OH_Rdb_SetPlugins(confg, pluginsNew, sizeof(pluginsNew) / sizeof(pluginsNew[0]) - 1);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_SetPlugins(confg, pluginsNew, sizeof(pluginsNew) / sizeof(pluginsNew[0]));
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_DestroyConfig(confg);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+  * @tc.name: RDB_Native_store_test_012
+  * @tc.desc: test apis of config interface OH_Rdb_SetCryptoParam.
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_012, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
+    EXPECT_NE(confg, nullptr);
+
+    OH_Rdb_CryptoParam *crypto = OH_Rdb_CreateCryptoParam();
+    EXPECT_NE(crypto, NULL);
+
+    auto ret = OH_Rdb_SetCryptoParam(nullptr, crypto);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetCryptoParam(confg, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Rdb_SetCryptoParam(confg, crypto);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_DestroyCryptoParam(crypto);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_DestroyConfig(confg);
+    EXPECT_EQ(ret, RDB_OK);
 }
