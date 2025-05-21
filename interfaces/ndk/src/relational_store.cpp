@@ -787,6 +787,9 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
 static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedConfig *config)
 {
     std::pair<int32_t, Rdb_DistributedConfig> result = { OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, {} };
+    if (config == nullptr) {
+        return result;
+    }
     auto &[errCode, cfg] = result;
     switch (config->version) {
         case DISTRIBUTED_CONFIG_V0: {
@@ -806,7 +809,8 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
     const Rdb_DistributedConfig *config)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD || (count > 0 && tables == nullptr)) {
+    if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD ||
+        (count > 0 && tables == nullptr) || config == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
@@ -830,7 +834,7 @@ OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, con
 {
     auto rdbStore = GetRelationalStore(store);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(values);
-    if (rdbStore == nullptr || selfObjects == nullptr || tableName == nullptr) {
+    if (rdbStore == nullptr || selfObjects == nullptr || tableName == nullptr || columnName == nullptr) {
         return nullptr;
     }
     std::vector<ValueObject> objects = selfObjects->Get();

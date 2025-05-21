@@ -149,12 +149,10 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     external_deps = [
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
       "kv_store:distributeddb",
@@ -218,12 +216,10 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     external_deps = [
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
       "kv_store:distributeddb",

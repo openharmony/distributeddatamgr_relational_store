@@ -195,9 +195,9 @@ void RdbDoubleWriteTest::Update(int64_t start, int count, bool isSlave, int data
         values.PutDouble("salary", CHECKCOLUMN);
         values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
         if (isSlave) {
-            ret = slaveStore->Insert(id, "test", values);
+            ret = slaveStore->Replace(id, "test", values);
         } else {
-            ret = store->Insert(id, "test", values);
+            ret = store->Replace(id, "test", values);
         }
         EXPECT_EQ(ret, E_OK);
         id++;
@@ -368,7 +368,7 @@ static pid_t GtFork(GtForkCallbackT callback, const char *arg)
     pid_t pid = fork();
     if (pid == 0) {
         int ret = callback(arg);
-        exit(ret);
+        _exit(ret);
     }
     return pid;
 }
@@ -404,7 +404,6 @@ static int InsertTwoProcess(const char *arg)
     int count = 10;
     for (int i = 0; i < count; i++) {
         errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
-        RdbDoubleWriteTest::WaitForBackupFinish(BACKUP_FINISHED);
     }
     return 0;
 }
@@ -418,8 +417,6 @@ static int InsertManualProcess(const char *arg)
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
-    errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
-    EXPECT_EQ(errCode, E_OK);
     int64_t id = 11;
     int count = 1000;
     RdbDoubleWriteTest::Insert(id, count);
@@ -437,14 +434,11 @@ static int InsertManualTwoProcess(const char *arg)
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
-    errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
-    EXPECT_EQ(errCode, E_OK);
     bool isBinlogExist = RdbDoubleWriteTest::CheckFolderExist(RdbDoubleWriteTest::BINLOG_DATABASE_NAME);
     EXPECT_TRUE(isBinlogExist);
     int count = 10;
     for (int i = 0; i < count; i++) {
         errCode = RdbDoubleWriteTest::store->Backup(std::string(""), {});
-        RdbDoubleWriteTest::WaitForBackupFinish(BACKUP_FINISHED);
     }
     return 0;
 }
@@ -1423,8 +1417,9 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_001, TestSize.Level0)
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-    bool isBinlogExist = CheckFolderExist(BINLOG_DATABASE_NAME);
-    ASSERT_TRUE(isBinlogExist);
+    ASSERT_TRUE(CheckFolderExist(BINLOG_DATABASE_NAME));
+    RdbHelper::DeleteRdbStore(config);
+    ASSERT_FALSE(CheckFolderExist(BINLOG_DATABASE_NAME));
 }
 
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_002, TestSize.Level0)
@@ -1889,8 +1884,9 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_015, TestSize.Level0)
     std::string test = "lisi";
     pid_t pid1 = GtFork(InsertProcess, test.c_str());
     ASSERT_GT(pid1, 0);
-    pid_t pid2 = GtFork(InsertTwoProcess, test.c_str());
-    ASSERT_GT(pid2, 0);
+    InsertTwoProcess(test.c_str());
+    int status;
+    waitpid(pid1, &status, 0);
 }
 
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_016, TestSize.Level0)
@@ -1907,25 +1903,25 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_016, TestSize.Level0)
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    ASSERT_TRUE(CheckFolderExist(BINLOG_DATABASE_NAME));
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
     EXPECT_NE(slaveStore, nullptr);
-    store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
 
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    Insert(id, count, true);
     store = nullptr;
-    slaveStore = nullptr;
     std::string test = "lisi";
     pid_t pid1 = GtFork(InsertManualProcess, test.c_str());
     ASSERT_GT(pid1, 0);
-    pid_t pid2 = GtFork(InsertManualTwoProcess, test.c_str());
-    ASSERT_GT(pid2, 0);
+    InsertManualTwoProcess(test.c_str());
+    int status;
+    waitpid(pid1, &status, 0);
 }
 
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_017, TestSize.Level0)

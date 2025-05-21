@@ -138,7 +138,7 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value
 int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **value, uint32_t count)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
-    if (self == nullptr || field == nullptr) {
+    if (self == nullptr || field == nullptr || value == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<AssetValue> assets;

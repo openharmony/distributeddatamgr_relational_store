@@ -15,14 +15,10 @@
 
 #include "rdb_radar_reporter.h"
 
-#include "accesstoken_kit.h"
 #include "hisysevent_c.h"
-#include "ipc_skeleton.h"
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
-
-using namespace Security::AccessToken;
 
 static constexpr const char *ORG_PKG_VALUE = "distributeddata";
 static constexpr const char *EVENT_NAME = "DISTRIBUTED_RDB_BEHAVIOR";
@@ -91,16 +87,7 @@ std::string RdbRadar::GetHostPkgInfo()
     if (!hostPkg_.empty()) {
         return hostPkg_;
     }
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
-        NativeTokenInfo tokenInfo;
-        if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
-            hostPkg_ = tokenInfo.processName;
-        }
-    } else {
-        hostPkg_ = bundleName_;
-    }
+    hostPkg_ = bundleName_;
     return hostPkg_;
 }
 } // namespace OHOS::NativeRdb
