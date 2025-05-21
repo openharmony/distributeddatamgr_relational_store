@@ -120,11 +120,6 @@ public:
      */
     using Resolution = ConflictResolution;
 
-    /**
-     * @brief Use ResultType replace DistributedRdb::ResultType.
-     */
-    using ResultType = DistributedRdb::ResultType;
-
     class API_EXPORT ModifyTime {
     public:
         ModifyTime() = default;
@@ -216,28 +211,14 @@ public:
      *
      * @param table Indicates the target table.
      * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param returningField Indicates the fieldName of result. If not needed, set to empty
-     * @return Return the inserted result. Contains error codes, affected rows,
-     * and returningField values for inserting data
-     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned
-     */
-    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const std::string &returningField);
-
-    /**
-     * @brief Inserts a batch of data into the target table.
-     *
-     * @param table Indicates the target table.
-     * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
-     * @param returningField Indicates the fieldName of result. If not needed, set to empty
+     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType BatchInsert(
-        const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField);
+    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions);
 
     /**
      * @brief Updates data in the database based on specified conditions.
@@ -278,30 +259,14 @@ public:
      * @param row Indicates the row of data to be updated in the database.
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param returningField Indicates the fieldName of result.
-     * @return Return the updated result. Contains error code, number of affected rows,
-     * and value of returningField after update
-     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned
-     */
-    virtual ResultType Update(
-        const Row &row, const AbsRdbPredicates &predicates, const std::string &returningField = "");
-
-    /**
-     * @brief Updates data in the database based on a a specified instance object of AbsRdbPredicates.
-     *
-     * @param row Indicates the row of data to be updated in the database.
-     * The key-value pairs are associated with column names of the database table.
-     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param resolution Indicates the {@link ConflictResolution} to update data into the table.
-     * @param returningField Indicates the fieldName of result.
+     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, Resolution resolution = NO_ACTION,
-        const std::string &returningField = "");
+    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions);
 
     /**
      * @brief Updates data in the database based on specified conditions.
@@ -380,8 +345,7 @@ public:
      * and value of returningField before delete
      * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
-    virtual ResultType Delete(const AbsRdbPredicates &predicates, const std::string &returningField = "");
-
+    virtual ResultType Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions = {});
     /**
      * @brief Queries data in the database based on specified conditions.
      *
@@ -501,19 +465,7 @@ public:
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      * @return Return the result. Contains error code, number of affected rows, and value of returningField
      */
-    virtual ResultType Execute(const std::string &sql, const std::string &returningField, const Values &args);
-
-    /**
-     * @brief Executes an SQL statement that contains specified parameters and
-     *        get two values of type int and ValueObject.
-     *
-     * @param sql Indicates the SQL statement to execute.
-     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
-     * @return Return the result. Contains error code, number of affected rows(If it is a non returning single
-     * insertion statement, it is the rowId of the inserted data), and value of result¡£ If it is a pragma
-     * sql or is a returning sql, results is the first column value of the result set.
-     */
-    virtual ResultType ExecuteForResult(const std::string &sql, const Values &args);
+    virtual ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args = {});
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and get a long integer value.

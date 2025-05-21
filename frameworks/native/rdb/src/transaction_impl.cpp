@@ -205,36 +205,34 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
-Transaction::ResultType TransactionImpl::BatchInsert(
-    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
+ResultType TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->BatchInsert(table, rows, resolution, returningField);
+    return store->BatchInsert(table, rows, sqlOptions);
 }
 
-Transaction::ResultType TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    Resolution resolution, const std::string &returningField)
+ResultType TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(row, predicates, resolution, returningField);
+    return store->Update(row, predicates, sqlOptions);
 }
 
-Transaction::ResultType TransactionImpl::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+ResultType TransactionImpl::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Delete(predicates, returningField);
+    return store->Delete(predicates, sqlOptions);
 }
 
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
@@ -282,13 +280,13 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql,
     return store->Execute(sql, args);
 }
 
-Transaction::ResultType TransactionImpl::ExecuteForResult(const std::string &sql, const Values &args)
+ResultType TransactionImpl::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->ExecuteForResult(sql, args);
+    return store->Execute(sql, sqlOptions, args);
 }
 } // namespace OHOS::NativeRdb

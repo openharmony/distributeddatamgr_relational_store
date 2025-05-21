@@ -159,20 +159,13 @@ int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const
 
 std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    ResultType Result = BatchInsert(table, rows, resolution, "");
+    ResultType Result = BatchInsert(table, rows, { resolution, "" });
     return { Result.status, Result.count };
 }
 
-RdbStore::ResultType RdbStore::BatchInsert(
-    const std::string &table, const RefRows &rows, const std::string &returningField)
+ResultType RdbStore::BatchInsert(const std::string &table, const RdbStore::RefRows &rows, const SqlOptions &sqlOptions)
 {
-    return BatchInsert(table, rows, NO_ACTION, returningField);
-}
-
-RdbStore::ResultType RdbStore::BatchInsert(
-    const std::string &table, const RefRows &rows, Resolution resolution, const std::string &returningField)
-{
-    return { E_NOT_SUPPORT, -1, {} };
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int, int> RdbStore::Update(
@@ -206,16 +199,9 @@ int RdbStore::Update(
     return Update(changedRows, table, row, whereClause, ToValues(args));
 };
 
-RdbStore::ResultType RdbStore::Update(
-    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution, const std::string &returningField)
+ResultType RdbStore::Update(const RdbStore::Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
-    return { E_NOT_SUPPORT, -1, {} };
-}
-
-RdbStore::ResultType RdbStore::Update(
-    const RdbStore::Row &row, const AbsRdbPredicates &predicates, const std::string &returningField)
-{
-    return Update(row, predicates, NO_ACTION, returningField);
+    return { E_NOT_SUPPORT, -1 };
 }
 
 int RdbStore::UpdateWithConflictResolution(int &changedRows, const std::string &table, const Row &row,
@@ -259,9 +245,9 @@ int RdbStore::Delete(
     return res.status;
 }
 
-RdbStore::ResultType RdbStore::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+ResultType RdbStore::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
-    return RdbStore::ResultType();
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::shared_ptr<AbsSharedResultSet> RdbStore::Query(int &errCode, bool distinct, const std::string &table,
@@ -344,17 +330,7 @@ std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const 
     return { E_NOT_SUPPORT, ValueObject() };
 }
 
-RdbStore::ResultType RdbStore::Execute(const std::string &sql, const std::string &returningField, const Values &args)
-{
-    if (!returningField.empty()) {
-        std::string executeSql = sql;
-        executeSql.append(" returning ").append(returningField);
-        return ExecuteForResult(executeSql, args);
-    }
-    return ExecuteForResult(sql, args);
-}
-
-RdbStore::ResultType RdbStore::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
+ResultType RdbStore::Execute(const std::string &sql, const SqlOptions &sqlOptions, const RdbStore::Values &args)
 {
     return { E_NOT_SUPPORT, -1 };
 }

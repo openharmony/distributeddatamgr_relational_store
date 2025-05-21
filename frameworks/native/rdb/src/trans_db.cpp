@@ -104,14 +104,13 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-TransDB::ResultType TransDB::BatchInsert(
-    const std::string &table, const ValuesBuckets &rows, Resolution resolution, const std::string &returningFiled)
+ResultType TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows, const SqlOptions &sqlOptions)
 {
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
 
-    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_, resolution);
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_, sqlOptions.resolution);
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid args, table=%{public}s, rows:%{public}zu, fields:%{public}zu, max:%{public}d.",
@@ -119,9 +118,7 @@ TransDB::ResultType TransDB::BatchInsert(
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
-    if (!returningFiled.empty()) {
-        sql.append(" returning ").append(returningFiled);
-    }
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s.", errCode,
@@ -132,16 +129,15 @@ TransDB::ResultType TransDB::BatchInsert(
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
-            table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
+            table.c_str(), args.get().size(), static_cast<int32_t>(sqlOptions.resolution));
     }
     return GenerateResult(errCode, statement);
 }
 
-ResultType TransDB::Update(
-    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution, const std::string &returningField)
+ResultType TransDB::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(sqlOptions.resolution));
     auto table = predicates.GetTableName();
     if (table.empty() || row.IsEmpty() || clause == nullptr) {
         return { E_INVALID_ARGS, 0 };
@@ -169,10 +165,7 @@ ResultType TransDB::Update(
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-    if (!returningField.empty()) {
-        sql.append(" returning ").append(returningField);
-    }
-
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     totalArgs.insert(totalArgs.end(), args.begin(), args.end());
     auto [errCode, statement] = GetStatement(sql);
     if (errCode != E_OK || statement == nullptr) {
@@ -181,7 +174,7 @@ ResultType TransDB::Update(
     return GenerateResult(statement->Execute(totalArgs), statement);
 }
 
-ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const std::string &returningField)
+ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto table = predicates.GetTableName();
@@ -195,9 +188,7 @@ ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const std::string
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
-    if (!returningField.empty()) {
-        sql.append(" returning ").append(returningField);
-    }
+    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
     auto [errCode, statement] = GetStatement(sql);
     if (errCode != E_OK || statement == nullptr) {
         return { errCode != E_OK ? errCode : E_ERROR, -1 };
@@ -226,7 +217,7 @@ std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Va
 std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
     (void)trxId;
-    auto result = ExecuteForResult(sql, args);
+    auto result = Execute(sql, {}, args);
     auto sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         return { result.status, result.rowId };
@@ -235,12 +226,18 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
         return { result.status, ValueObject() };
     }
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        return { result.status, result.results.empty() ? ValueObject() : result.results[0] };
+        ValueObject val;
+        auto [field, value] = result.results.GetFieldsAndValues();
+        if (!result.results.Empty() && field != nullptr && !field->empty()) {
+            auto [code, valueType] = result.results.Get(0, *field->begin());
+            val = valueType.get();
+        }
+        return { result.status, val };
     }
     return { result.status, result.count };
 }
 
-ResultType TransDB::ExecuteForResult(const std::string &sql, const RdbStore::Values &args)
+ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions, const RdbStore::Values &args)
 {
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
@@ -248,8 +245,16 @@ ResultType TransDB::ExecuteForResult(const std::string &sql, const RdbStore::Val
         LOG_ERROR("Not support the sql:app self can check the SQL");
         return { E_INVALID_ARGS, -1 };
     }
-
-    auto [errCode, statement] = GetStatement(sql);
+    int32_t errCode = E_ERROR;
+    std::shared_ptr<Statement> statement = nullptr;
+    if (sqlOptions.returningFields.empty() ||
+        (sqlType != SqliteUtils::STATEMENT_INSERT && SqliteUtils::STATEMENT_UPDATE)) {
+        std::tie(errCode, statement) = GetStatement(sql);
+    } else {
+        std::string executeSql = sql;
+        SqliteSqlBuilder::AppendReturning(executeSql, sqlOptions.returningFields);
+        std::tie(errCode, statement) = GetStatement(executeSql);
+    }
     if (errCode != E_OK) {
         return { errCode, -1 };
     }
@@ -322,30 +327,44 @@ ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> stat
         result.count = statement->Changes();
     }
     if (result.count <= 0) {
-        result.results.clear();
+        result.results.Clear();
     }
     return result;
 }
 
-std::vector<ValueObject> TransDB::GetValues(std::shared_ptr<Statement> statement)
+ValuesBuckets TransDB::GetValues(std::shared_ptr<Statement> statement)
 {
     if (statement == nullptr) {
         return {};
     }
     auto colCount = statement->GetColumnCount();
-    std::vector<ValueObject> values;
     if (colCount <= 0) {
-        return values;
+        return {};
+    }
+    ValuesBuckets values;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = statement->GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return {};
+        }
+        colNames.push_back(std::move(colName));
     }
     // The correct number of changed rows can only be obtained after completing the step
     do {
-        if (values.size() < MAX_RETURNING_ROWS) {
-            auto [code, val] = statement->GetColumn(0);
-            if (code != E_OK) {
-                LOG_ERROR("GetColumn failed,errCode:%{public}d", code);
-                break;
+        if (values.RowSize() < MAX_RETURNING_ROWS) {
+            ValuesBucket value;
+            for (int32_t i = 0; i < colCount; i++) {
+                auto [code, val] = statement->GetColumn(i);
+                if (code != E_OK) {
+                    LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+                    break;
+                }
+                value.Put(colNames[i], std::move(val));
             }
-            values.push_back(std::move(val));
+            values.Put(std::move(value));
         }
     } while (statement->Step() == E_OK);
     return values;

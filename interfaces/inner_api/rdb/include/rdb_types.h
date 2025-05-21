@@ -23,9 +23,13 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include "value_object.h"
 
-namespace OHOS::DistributedRdb {
+#include "rdb_common.h"
+#include "value_object.h"
+#include "values_buckets.h"
+
+namespace OHOS {
+namespace DistributedRdb {
 enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
@@ -391,12 +395,47 @@ public:
     virtual ~SqlObserver() = default;
     virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
 };
-
+} // namespace DistributedRdb
+namespace NativeRdb {
 struct ResultType {
     int32_t status;
     int32_t count;
-    std::vector<NativeRdb::ValueObject> results;
+    NativeRdb::ValuesBuckets results;
     int32_t rowId;
 };
-} // namespace OHOS::DistributedRdb
+
+struct SqlOptions {
+    SqlOptions() = default;
+    SqlOptions(ConflictResolution conflictResolution) : resolution(conflictResolution)
+    {
+    }
+    SqlOptions(const char *returningField)
+    {
+        returningFields.push_back(returningField);
+    }
+    SqlOptions(ConflictResolution conflictResolution, const std::string &returningField)
+        : SqlOptions(returningField, conflictResolution)
+    {
+    }
+    SqlOptions(ConflictResolution conflictResolution, std::string &&returningField)
+        : SqlOptions(std::move(returningField), conflictResolution)
+    {
+    }
+    SqlOptions(const std::string &returningField,
+        ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE)
+        : resolution(conflictResolution)
+    {
+        returningFields.push_back(returningField);
+    }
+    SqlOptions(
+        std::string &&returningField, ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE)
+        : resolution(conflictResolution)
+    {
+        returningFields.push_back(std::move(returningField));
+    }
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+    std::vector<std::string> returningFields;
+};
+} // namespace NativeRdb
+} // namespace OHOS
 #endif

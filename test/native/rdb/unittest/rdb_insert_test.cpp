@@ -816,14 +816,17 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_001, TestSize.Level1)
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = store_->BatchInsert("test", rows, "id");
+    auto result = store_->BatchInsert("test", rows, { "id" });
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 5);
-    EXPECT_EQ(result.results.size(), 5);
+    ASSERT_EQ(result.results.RowSize(), 5);
+    auto [code, values] = result.results.GetColumnValues("id");
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(values.size(), 5);
     for (int i = 0; i < 5; i++) {
         int val = -1;
-        std::cout << std::string(result.results[i]) << std::endl;
-        EXPECT_EQ(result.results[i].GetInt(val), E_OK);
+        std::cout << std::string(values[i]) << std::endl;
+        EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i);
     }
 }
@@ -850,14 +853,18 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_002, TestSize.Level1)
     auto res = store_->Insert("test", row);
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
-    auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_IGNORE, "id");
+    std::string returningField = "id";
+    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_IGNORE, returningField });
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 4);
-    EXPECT_EQ(result.results.size(), 4);
-    for (size_t i = 0; i < result.results.size(); i++) {
+    ASSERT_EQ(result.results.RowSize(), 4);
+    auto [code, values] = result.results.GetColumnValues(returningField);
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(values.size(), 4);
+    for (size_t i = 0; i < values.size(); i++) {
         int val = -1;
-        std::cout << std::string(result.results[i]) << std::endl;
-        EXPECT_EQ(result.results[i].GetInt(val), E_OK);
+        std::cout << std::string(values[i]) << std::endl;
+        EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i + (i >= 2));
     }
 }
@@ -885,10 +892,10 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_003, TestSize.Level1)
     auto res = store_->Insert("test", row);
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
-    auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_FAIL, "id");
+    auto result = store_->BatchInsert("test", rows, { "id", ConflictResolution::ON_CONFLICT_FAIL });
     EXPECT_EQ(result.status, E_SQLITE_CONSTRAINT);
     EXPECT_EQ(result.count, 2);
-    ASSERT_EQ(result.results.size(), 0);
+    ASSERT_EQ(result.results.RowSize(), 0);
 }
 
 /**
@@ -913,14 +920,19 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_004, TestSize.Level1)
     auto res = store_->Insert("test", row);
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
-    auto result = store_->BatchInsert("test", ValuesBuckets(std::move(rows)), ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    std::string returningField = "id";
+    auto result = store_->BatchInsert(
+        "test", ValuesBuckets(std::move(rows)), { returningField, ConflictResolution::ON_CONFLICT_REPLACE });
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 5);
-    ASSERT_EQ(result.results.size(), 5);
+    ASSERT_EQ(result.results.RowSize(), 5);
+    auto [code, values] = result.results.GetColumnValues(returningField);
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(values.size(), 4);
     for (size_t i = 0; i < 5; i++) {
         int val = -1;
-        std::cout << std::string(result.results[i]) << std::endl;
-        EXPECT_EQ(result.results[i].GetInt(val), E_OK);
+        std::cout << std::string(values[i]) << std::endl;
+        EXPECT_EQ(values[i].GetInt(val), E_OK);
         EXPECT_EQ(val, i);
     }
 }
@@ -942,12 +954,15 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_005, TestSize.Level1)
         row.Put("name", "Jim");
         rows.Put(std::move(row));
     }
-    auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_REPLACE, "id");
+    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_REPLACE, "id" });
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 1025);
-    ASSERT_EQ(result.results.size(), 1024);
+    ASSERT_EQ(result.results.RowSize(), 1024);
+    auto [code, values] = result.results.GetColumnValues("id");
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(values.size(), 1024);
     for (size_t i = 0; i < 1024; i++) {
-        EXPECT_EQ(int(result.results[i]), i);
+        EXPECT_EQ(int(values[i]), i);
     }
 }
 
@@ -967,10 +982,11 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_006, TestSize.Level1)
         row.Put("name", "Jim");
         rows.Put(std::move(row));
     }
-    auto result = store_->BatchInsert("test", rows, "notExist");
+    std::string returningField = "notExist";
+    auto result = store_->BatchInsert("test", rows, returningField);
     EXPECT_EQ(result.status, E_SQLITE_ERROR);
     EXPECT_EQ(result.count, -1);
-    EXPECT_EQ(result.results.size(), 0);
+    EXPECT_EQ(result.results.RowSize(), 0);
 }
 
 /**
@@ -990,10 +1006,10 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_007, TestSize.Level1)
     ASSERT_EQ(res.first, E_OK);
     ASSERT_EQ(res.second, 2);
     rows.Put(std::move(row));
-    auto result = store_->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_IGNORE, "id");
+    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_IGNORE, "id" });
     EXPECT_EQ(result.status, E_OK);
     EXPECT_EQ(result.count, 0);
-    EXPECT_EQ(result.results.size(), 0);
+    EXPECT_EQ(result.results.RowSize(), 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
