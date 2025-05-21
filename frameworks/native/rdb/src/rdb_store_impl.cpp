@@ -1449,7 +1449,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        errCode = HandleSchemaDDL(statement, sql);
+        HandleSchemaDDL(statement, sql);
     }
     statement = nullptr;
     if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
@@ -1532,7 +1532,7 @@ ResultType RdbStoreImpl::Execute(const std::string &sql, const SqlOptions &sqlOp
     int32_t errCode = E_ERROR;
     std::shared_ptr<Statement> statement = nullptr;
     if (sqlOptions.returningFields.empty() ||
-        (sqlType != SqliteUtils::STATEMENT_INSERT && SqliteUtils::STATEMENT_UPDATE)) {
+        (sqlType != SqliteUtils::STATEMENT_INSERT && sqlType != SqliteUtils::STATEMENT_UPDATE)) {
         std::tie(errCode, statement) = GetStatement(sql, conn);
     } else {
         std::string executeSql = sql;
@@ -1562,7 +1562,7 @@ ResultType RdbStoreImpl::HandleDifferentSqlTypes(
         return result;
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        result.status = HandleSchemaDDL(statement, sql);
+        HandleSchemaDDL(statement, sql);
     }
     return result;
 }
