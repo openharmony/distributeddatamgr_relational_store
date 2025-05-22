@@ -857,9 +857,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_001, TestSize.Level1)
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     AbsRdbPredicates predicates("test");
-    auto result = store_->Update(values, predicates, { "id" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1);
+    auto [status, result] = store_->Update(values, predicates, { "id" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
     auto [code, val] = result.results.GetColumnValues("id");
     ASSERT_EQ(code, E_OK);
@@ -883,9 +883,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_002, TestSize.Level1)
         row.Put("name", "Jim_" + std::to_string(i));
         rows.Put(row);
     }
-    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_REPLACE, "" });
-    ASSERT_EQ(result.status, E_OK);
-    ASSERT_EQ(result.count, 5);
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 5);
     ASSERT_TRUE(result.results.Empty());
 
     ValuesBucket row;
@@ -895,9 +895,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_002, TestSize.Level1)
     row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     AbsRdbPredicates predicates("test");
     predicates.In("id", { 1, 2, 3 });
-    result = store_->Update(row, predicates, { ConflictResolution::ON_CONFLICT_IGNORE, "name" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1);
+    std::tie(status, result) = store_->Update(row, predicates, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
     auto [code, val] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
@@ -921,9 +921,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_003, TestSize.Level1)
         row.Put("name", "Jim_" + std::to_string(i));
         rows.Put(row);
     }
-    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_REPLACE, "" });
-    ASSERT_EQ(result.status, E_OK);
-    ASSERT_EQ(result.count, 5);
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 5);
     ASSERT_TRUE(result.results.Empty());
 
     ValuesBucket row;
@@ -933,9 +933,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_003, TestSize.Level1)
     row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     AbsRdbPredicates predicates("test");
     predicates.In("id", { 1, 2, 3 });
-    result = store_->Update(row, predicates, { ConflictResolution::ON_CONFLICT_ABORT, "blobType" });
-    EXPECT_EQ(result.status, E_SQLITE_CONSTRAINT);
-    EXPECT_EQ(result.count, 0);
+    std::tie(status, result) = store_->Update(row, predicates, { "blobType" }, ConflictResolution::ON_CONFLICT_ABORT);
+    EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(result.changed, 0);
     ASSERT_EQ(result.results.RowSize(), 0);
 }
 
@@ -955,9 +955,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_004, TestSize.Level1)
         row.Put("name", "Jim_" + std::to_string(i));
         rows.Put(row);
     }
-    auto result = store_->BatchInsert("test", rows, { ConflictResolution::ON_CONFLICT_REPLACE, "" });
-    ASSERT_EQ(result.status, E_OK);
-    ASSERT_EQ(result.count, 1124);
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 1124);
     ASSERT_TRUE(result.results.Empty());
 
     ValuesBucket row;
@@ -965,9 +965,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_004, TestSize.Level1)
     row.PutDouble("salary", 200.5);
     row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
     AbsRdbPredicates predicates("test");
-    result = store_->Update(row, predicates, { ConflictResolution::ON_CONFLICT_REPLACE, "age" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1124);
+    std::tie(status, result) = store_->Update(row, predicates, { "age" }, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1124);
     ASSERT_EQ(result.results.RowSize(), 1024);
 }
 
@@ -990,9 +990,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_005, TestSize.Level1)
     values.PutInt("age", 20);
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", 10000);
-    auto result = store_->Update(values, predicates, { "noExist" });
-    EXPECT_EQ(result.status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.count, -1);
+    auto [status, result] = store_->Update(values, predicates, { "noExist" });
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
     ASSERT_EQ(result.results.RowSize(), 0);
 }
 
@@ -1015,9 +1015,9 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_006, TestSize.Level1)
     values.PutInt("age", 20);
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", 10000);
-    auto result = store_->Update(values, predicates, { "id" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 0);
+    auto [status, result] = store_->Update(values, predicates, { "id" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 0);
     ASSERT_EQ(result.results.RowSize(), 0);
 }
 

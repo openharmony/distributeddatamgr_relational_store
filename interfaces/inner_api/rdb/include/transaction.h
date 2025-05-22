@@ -127,14 +127,16 @@ public:
      *
      * @param table Indicates the target table.
      * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
+     * @param returningFields Indicates the returning fields.
+     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions);
+    virtual std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const std::vector<std::string> &returningFields, Resolution resolution = NO_ACTION);
     /**
      * @brief Updates data in the database based on specified conditions.
      *
@@ -163,14 +165,16 @@ public:
      * @param row Indicates the row of data to be updated in the database.
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
+     * @param returningFields Indicates the returning fields.
+     * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
      * @warning 1. When using returningField, it is not recommended to use the ON_CONFLICT_FAIL strategy. This will
      * result in returned results that do not match expectations. 2.When the number of affected rows exceeds 1024,
      * only the first 1024 returningFields will be returned
      */
-    virtual ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions);
+    virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &returningFields, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Deletes data from the database based on specified conditions.
@@ -190,15 +194,16 @@ public:
     virtual std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates);
 
     /**
-     * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
-     *
-     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param sqlOptions Indicates the {@link SqlOptions} to Configure SQL.
-     * @return Return the deleted result. Contains error code, number of affected rows,
-     * and value of returningField before delete
-     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
-     */
-    virtual ResultType Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions);
+    * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
+    *
+    * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+    * @param returningFields Indicates the returning fields.
+    * @return Return the deleted result. Contains error code, number of affected rows,
+    * and value of returningField before delete
+    * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
+    */
+    virtual std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields);
 
     /**
      * @brief Queries data in the database based on SQL statement.
@@ -234,10 +239,10 @@ public:
      *        get two values of type int and ValueObject.
      *
      * @param sql Indicates the SQL statement to execute.
-     * @param returningField Indicates the fieldName of result.
-     * @return Return the deleted result. Contains error code, number of affected rows, and value of returningField.
+     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
-    virtual ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args = {});
+    virtual std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args = {});
 
 private:
     static inline Creator creator_;

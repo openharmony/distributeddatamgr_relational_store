@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "rdb_store.h"
 
 #include "logger.h"
@@ -162,11 +161,12 @@ int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const
 
 std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    ResultType Result = BatchInsert(table, rows, { resolution, "" });
-    return { Result.status, Result.count };
+    auto [code, result] = BatchInsert(table, rows, {}, resolution);
+    return { code, result.changed };
 }
 
-ResultType RdbStore::BatchInsert(const std::string &table, const RdbStore::RefRows &rows, const SqlOptions &sqlOptions)
+std::pair<int, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -177,8 +177,8 @@ std::pair<int, int> RdbStore::Update(
     AbsRdbPredicates predicates(table);
     predicates.SetWhereClause(where);
     predicates.SetBindArgs(args);
-    auto result = Update(row, predicates, resolution);
-    return { result.status, result.count };
+    auto [code, result] = Update(row, predicates, {}, resolution);
+    return { code, result.changed };
 }
 
 int RdbStore::Update(
@@ -202,7 +202,8 @@ int RdbStore::Update(
     return Update(changedRows, table, row, whereClause, ToValues(args));
 };
 
-ResultType RdbStore::Update(const RdbStore::Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -243,12 +244,13 @@ int RdbStore::Delete(
     AbsRdbPredicates predicates(table);
     predicates.SetWhereClause(whereClause);
     predicates.SetBindArgs(args);
-    auto res = Delete(predicates);
-    deletedRows = res.count;
-    return res.status;
+    auto [code, result] = Delete(predicates);
+    deletedRows = result.changed;
+    return code;
 }
 
-ResultType RdbStore::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> RdbStore::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -333,7 +335,7 @@ std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const 
     return { E_NOT_SUPPORT, ValueObject() };
 }
 
-ResultType RdbStore::Execute(const std::string &sql, const SqlOptions &sqlOptions, const RdbStore::Values &args)
+std::pair<int32_t, Results> RdbStore::ExecuteExt(const std::string &sql, const Values &args)
 {
     return { E_NOT_SUPPORT, -1 };
 }

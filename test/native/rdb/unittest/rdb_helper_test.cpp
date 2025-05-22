@@ -428,6 +428,9 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_014, TestSize.Level0)
 
     auto [ret2, outValue] = store->Execute(RdbHelperTestOpenCallback::CREATE_TABLE_TEST);
     EXPECT_EQ(ret2, E_ALREADY_CLOSED);
+
+    auto [code, result] = store->ExecuteExt(RdbHelperTestOpenCallback::CREATE_TABLE_TEST);
+    EXPECT_EQ(code, E_ALREADY_CLOSED);
 }
 
 /**

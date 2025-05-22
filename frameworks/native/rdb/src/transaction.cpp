@@ -33,12 +33,12 @@ int32_t Transaction::RegisterCreator(Creator creator)
 std::pair<int32_t, int64_t> Transaction::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    SqlOptions options(resolution);
-    auto result = BatchInsert(table, rows, options);
-    return { result.status, result.count };
+    auto [code, result] = BatchInsert(table, rows, {}, resolution);
+    return { code, result.changed };
 }
 
-ResultType Transaction::BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -55,11 +55,12 @@ std::pair<int, int> Transaction::Update(
 std::pair<int32_t, int32_t> Transaction::Update(
     const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
 {
-    auto result = Update(row, predicates, { resolution, "" });
-    return { result.status, result.count };
+    auto [code, result] = Update(row, predicates, {}, resolution);
+    return { code, result.changed };
 }
 
-ResultType Transaction::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -75,21 +76,22 @@ std::pair<int32_t, int32_t> Transaction::Delete(
 
 std::pair<int32_t, int32_t> Transaction::Delete(const AbsRdbPredicates &predicates)
 {
-    auto result = Delete(predicates, {});
-    return { result.status, result.count };
+    auto [code, result] = Delete(predicates, {});
+    return { code, result.changed };
 }
 
-ResultType Transaction::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
-{
-    return { E_NOT_SUPPORT, -1 };
-}
-
-ResultType Transaction::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
+std::pair<int32_t, Results> Transaction::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
 {
     return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, ValueObject> Transaction::Execute(const std::string &sql, const Values &args)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
+
+std::pair<int32_t, Results> Transaction::ExecuteExt(const std::string &sql, const Values &args)
 {
     return { E_NOT_SUPPORT, -1 };
 }

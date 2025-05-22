@@ -32,7 +32,7 @@ ValuesBuckets::ValuesBuckets(const std::vector<ValuesBucket> &rows) : ValuesBuck
     }
 }
 
-ValuesBuckets::ValuesBuckets(std::vector<ValuesBucket> &&rows) : ValuesBuckets()
+ValuesBuckets::ValuesBuckets(std::vector<ValuesBucket> &&rows) noexcept : ValuesBuckets()
 {
     buckets_.reserve(rows.size());
     for (auto &bucket : rows) {

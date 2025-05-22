@@ -340,6 +340,9 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0010, TestSize.Level1)
 {
     auto [ret, outValue] = store_->Execute("SELECT * FROM test");
     EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret);
+
+    auto [code, result] = store_->ExecuteExt("SELECT * FROM test");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, code);
 }
 
 /**
@@ -459,6 +462,9 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0015, TestSize.Level1)
 
     auto [ret5, outValue5] = store_->Execute("ROLLBACK");
     EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret5);
+
+    auto [ret6, outValue6] = store_->ExecuteExt("ROLLBACK");
+    EXPECT_EQ(E_NOT_SUPPORT_THE_SQL, ret6);
 }
 
 /**
@@ -491,9 +497,10 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0016, TestSize.Level1)
     EXPECT_EQ(1, intOutValue);
     resultSet->Close();
 
-    auto [ret2, outValue2] = store_->Execute(DROP_TABLE_TEST2);
+    auto [ret2, outValue2] = store_->ExecuteExt(DROP_TABLE_TEST2);
     EXPECT_EQ(E_OK, ret2);
-    EXPECT_EQ(ValueObjectType::TYPE_NULL, outValue2.GetType());
+    EXPECT_EQ(0, outValue2.changed);
+    EXPECT_TRUE(outValue2.results.Empty());
 
     resultSet = store_->QuerySql(TEST_TABLE_IS_EXIST);
     EXPECT_NE(nullptr, resultSet);
@@ -592,9 +599,9 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
 HWTEST_P(RdbExecuteTest, RdbStore_Execute_0021, TestSize.Level1)
 {
     std::vector<ValueObject> args = { "tt", 28, 50000.0, "ttt", 58, 500080.0 };
-    auto result = store_->Execute("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?)", "name", args);
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 2);
+    auto [status, result] = store_->ExecuteExt("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?) returning name", args);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 2);
     ASSERT_EQ(result.results.RowSize(), 2);
     auto [code, values] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
@@ -602,16 +609,16 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0021, TestSize.Level1)
     EXPECT_EQ(std::string(values[0]), "tt");
     EXPECT_EQ(std::string(values[1]), "ttt");
 
-    result = store_->Execute("update test set name = ? where name = ?", "name", { "update", "tt" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1);
+    std::tie(status, result) = store_->ExecuteExt("update test set name = ? where name = ? returning name", { "update", "tt" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
     std::tie(code, values) = result.results.GetColumnValues("name");
     EXPECT_EQ(std::string(values[0]), "update");
 
-    result = store_->Execute("delete from test", "name", {});
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 2);
+    std::tie(status, result) = store_->ExecuteExt("delete from test returning name");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 2);
     ASSERT_EQ(result.results.RowSize(), 2);
     std::tie(code, values) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
@@ -634,9 +641,9 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0022, TestSize.Level1)
         args.push_back(std::to_string(i));
         args.push_back(i);
     }
-    auto result = store_->Execute(sql, "name", args);
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1025);
+    auto [status, result] = store_->ExecuteExt(sql + " returning name", args);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
     auto [code, values] = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
@@ -644,18 +651,18 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0022, TestSize.Level1)
     EXPECT_EQ(std::string(values[0]), "0");
     EXPECT_EQ(std::string(values[1000]), "1000");
 
-    result = store_->Execute("update test set name = ?", "name", { "update" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1025);
+    std::tie(status, result) = store_->ExecuteExt("update test set name = ? returning name", { "update" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
     std::tie(code, values) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(values.size(), 1024);
     EXPECT_EQ(std::string(values[0]), "update");
 
-    result = store_->Execute("delete from test", "name", {});
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1025);
+    std::tie(status, result) = store_->ExecuteExt("delete from test returning name");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1025);
     ASSERT_EQ(result.results.RowSize(), 1024);
     std::tie(code, values) = result.results.GetColumnValues("name");
     ASSERT_EQ(code, E_OK);
@@ -671,27 +678,30 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0022, TestSize.Level1)
 HWTEST_P(RdbExecuteTest, RdbStore_Execute_0023, TestSize.Level1)
 {
     std::vector<ValueObject> args = { 1, "tt", 28, 50000.0 };
-    auto result = store_->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "id", args);
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 1);
+    auto [status, result] =
+        store_->ExecuteExt("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?) returning id", args);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
     auto [code, values] = result.results.GetColumnValues("id");
     ASSERT_EQ(code, E_OK);
     ASSERT_EQ(values.size(), 1);
     EXPECT_EQ(int(values[0]), 1);
-    result = store_->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "id", args);
-    EXPECT_EQ(result.status, E_SQLITE_CONSTRAINT);
-    EXPECT_EQ(result.count, 0);
+    std::tie(status, result) =
+        store_->ExecuteExt("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?) returning id", args);
+    EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(result.changed, 0);
     ASSERT_EQ(result.results.RowSize(), 0);
 
-    result = store_->Execute("update test set name = ? where name = ?", "name", { "update", "noExist" });
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 0);
+    std::tie(status, result) =
+        store_->ExecuteExt("update test set name = ? where name = ? returning name", { "update", "noExist" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 0);
     ASSERT_EQ(result.results.RowSize(), 0);
 
-    result = store_->Execute("delete from test where name = ?", "name", {"noExist"});
-    EXPECT_EQ(result.status, E_OK);
-    EXPECT_EQ(result.count, 0);
+    std::tie(status, result) = store_->ExecuteExt("delete from test where name = ? returning name", { "noExist" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 0);
     ASSERT_EQ(result.results.RowSize(), 0);
 }
 
@@ -703,19 +713,21 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0023, TestSize.Level1)
 HWTEST_P(RdbExecuteTest, RdbStore_Execute_0024, TestSize.Level1)
 {
     std::vector<ValueObject> args = { 1, "tt", 28, 50000.0 };
-    auto result = store_->Execute("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?)", "noExist", args);
-    EXPECT_EQ(result.status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.count, -1);
+    auto [status, result] =
+        store_->ExecuteExt("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?) returning noExist", args);
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
     ASSERT_EQ(result.results.RowSize(), 0);
 
-    result = store_->Execute("update test set name = ? where name = ?", "noExist", { "update", "noExist" });
-    EXPECT_EQ(result.status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.count, -1);
+    std::tie(status, result) =
+        store_->ExecuteExt("update test set name = ? where name = ? returning noExist", { "update", "noExist" });
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
     ASSERT_EQ(result.results.RowSize(), 0);
 
-    result = store_->Execute("delete from test where name = ?", "noExist", { "noExist" });
-    EXPECT_EQ(result.status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.count, -1);
+    std::tie(status, result) = store_->ExecuteExt("delete from test where name = ? returning noExist", { "noExist" });
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
     ASSERT_EQ(result.results.RowSize(), 0);
 }
 

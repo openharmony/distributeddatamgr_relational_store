@@ -82,7 +82,8 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
 
     auto batchInfo = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_);
     if (table.empty() || batchInfo.empty()) {
-        LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", table.c_str(), rows.RowSize(), maxArgs_);
+        LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", SqliteUtils::Anonymous(table).c_str(),
+            rows.RowSize(), maxArgs_);
         return { E_INVALID_ARGS, -1 };
     }
 
@@ -97,47 +98,49 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
                 continue;
             }
             LOG_ERROR("failed(0x%{public}x) db:%{public}s table:%{public}s args:%{public}zu", errCode,
-                SqliteUtils::Anonymous(name_).c_str(), table.c_str(), args.size());
+                SqliteUtils::Anonymous(name_).c_str(), SqliteUtils::Anonymous(table).c_str(), args.size());
             return { errCode, -1 };
         }
     }
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-ResultType TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
 
-    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_, sqlOptions.resolution);
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_, resolution);
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid args, table=%{public}s, rows:%{public}zu, fields:%{public}zu, max:%{public}d.",
-            table.c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, maxArgs_);
+            SqliteUtils::Anonymous(table).c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, maxArgs_);
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
-    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s.", errCode,
-            bindArgs.size(), table.c_str());
+            bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
         return { errCode, -1 };
     }
     auto args = std::ref(bindArgs.front());
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
-            table.c_str(), args.get().size(), static_cast<int32_t>(sqlOptions.resolution));
+            SqliteUtils::Anonymous(table).c_str(), args.get().size(), static_cast<int32_t>(resolution));
     }
-    return GenerateResult(errCode, statement);
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
-ResultType TransDB::Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(sqlOptions.resolution));
+    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
     auto table = predicates.GetTableName();
     if (table.empty() || row.IsEmpty() || clause == nullptr) {
         return { E_INVALID_ARGS, 0 };
@@ -165,16 +168,23 @@ ResultType TransDB::Update(const Row &row, const AbsRdbPredicates &predicates, c
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     totalArgs.insert(totalArgs.end(), args.begin(), args.end());
     auto [errCode, statement] = GetStatement(sql);
     if (errCode != E_OK || statement == nullptr) {
         return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
-    return GenerateResult(statement->Execute(totalArgs), statement);
+
+    errCode = statement->Execute(totalArgs);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu,resolution:%{public}d.",
+            errCode, SqliteUtils::Anonymous(table).c_str(), returningFields.size(), static_cast<int32_t>(resolution));
+    }
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
-ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions)
+std::pair<int32_t, Results> TransDB::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto table = predicates.GetTableName();
@@ -188,12 +198,17 @@ ResultType TransDB::Delete(const AbsRdbPredicates &predicates, const SqlOptions 
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
-    SqliteSqlBuilder::AppendReturning(sql, sqlOptions.returningFields);
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     auto [errCode, statement] = GetStatement(sql);
     if (errCode != E_OK || statement == nullptr) {
         return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
-    return GenerateResult(statement->Execute(predicates.GetBindArgs()), statement);
+    errCode = statement->Execute(predicates.GetBindArgs());
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu.", errCode,
+            SqliteUtils::Anonymous(table).c_str(), returningFields.size());
+    }
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
@@ -217,27 +232,47 @@ std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Va
 std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
     (void)trxId;
-    auto result = Execute(sql, {}, args);
-    auto sqlType = SqliteUtils::GetSqlStatementType(sql);
+    ValueObject object;
+    int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
+        LOG_ERROR("Not support the sql:app self can check the SQL");
+        return { E_INVALID_ARGS, object };
+    }
+
+    auto [errCode, statement] = GetStatement(sql);
+    if (errCode != E_OK) {
+        return { errCode, object };
+    }
+
+    errCode = statement->Execute(args);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
+        return { errCode, object };
+    }
+
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        return { result.status, result.rowId };
+        int64_t outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+        return { errCode, ValueObject(outValue) };
     }
+
     if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
-        return { result.status, result.count };
+        int outValue = statement->Changes();
+        return { errCode, ValueObject(outValue) };
     }
+
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        ValueObject val;
-        auto [field, value] = result.results.GetFieldsAndValues();
-        if (!result.results.Empty() && field != nullptr && field->size() == 1) {
-            auto [code, valueType] = result.results.Get(0, *field->begin());
-            val = valueType.get();
+        if (statement->GetColumnCount() == 1) {
+            return statement->GetColumn(0);
         }
-        return { result.status, val };
     }
-    return { result.status, ValueObject() };
+
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        HandleSchemaDDL(statement);
+    }
+    return { errCode, object };
 }
 
-ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)
+std::pair<int32_t, Results> TransDB::ExecuteExt(const std::string &sql, const Values &args)
 {
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
@@ -245,18 +280,9 @@ ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions
         LOG_ERROR("Not support the sql:app self can check the SQL");
         return { E_INVALID_ARGS, -1 };
     }
-    int32_t errCode = E_ERROR;
-    std::shared_ptr<Statement> statement = nullptr;
-    if (sqlOptions.returningFields.empty() ||
-        (sqlType != SqliteUtils::STATEMENT_INSERT && sqlType != SqliteUtils::STATEMENT_UPDATE)) {
-        std::tie(errCode, statement) = GetStatement(sql);
-    } else {
-        std::string executeSql = sql;
-        SqliteSqlBuilder::AppendReturning(executeSql, sqlOptions.returningFields);
-        std::tie(errCode, statement) = GetStatement(executeSql);
-    }
-    if (errCode != E_OK) {
-        return { errCode, -1 };
+    auto [errCode, statement] = GetStatement(sql);
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
 
     errCode = statement->Execute(args);
@@ -264,26 +290,28 @@ ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions
         errCode, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
     if (errCode != E_OK) {
         LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
-        return result;
-    }
-
-    if (sqlType == SqliteUtils::STATEMENT_INSERT) {
-        result.rowId = result.count > 0 ? statement->LastInsertRowId() : -1;
-        return result;
+        return { errCode, result };
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        statement->Reset();
-        statement->Prepare("PRAGMA schema_version");
-        auto [err, version] = statement->ExecuteForValue();
-        if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
-                     "> app self can check the SQL.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
-            vSchema_ = version;
-        }
+        HandleSchemaDDL(statement);
     }
-    return result;
+    return { errCode, result };
+}
+
+void TransDB::HandleSchemaDDL(std::shared_ptr<Statement> statement)
+{
+    if (statement == nullptr) {
+        return;
+    }
+    statement->Reset();
+    statement->Prepare("PRAGMA schema_version");
+    auto [err, version] = statement->ExecuteForValue();
+    if (vSchema_ < static_cast<int64_t>(version)) {
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
+            SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
+        vSchema_ = version;
+    }
 }
 
 int TransDB::GetVersion(int &version)
@@ -313,21 +341,21 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(const std::
     return connection->CreateStatement(sql, connection);
 }
 
-ResultType TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
+Results TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
 {
-    ResultType result{ code, -1 };
+    Results result{ -1 };
     if (statement == nullptr) {
         return result;
     }
     // There are no data changes in other scenarios
     if (code == E_OK) {
         result.results = GetValues(statement);
-        result.count = isDML ? statement->Changes() : 0;
+        result.changed = isDML ? statement->Changes() : 0;
     }
     if (code == E_SQLITE_CONSTRAINT) {
-        result.count = statement->Changes();
+        result.changed = statement->Changes();
     }
-    if (isDML && result.count <= 0) {
+    if (isDML && result.changed <= 0) {
         result.results.Clear();
     }
     return result;
