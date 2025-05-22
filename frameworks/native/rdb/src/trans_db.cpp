@@ -222,8 +222,8 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         return { result.status, result.rowId };
     }
-    if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        return { result.status, ValueObject() };
+    if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
+        return { result.status, result.count };
     }
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
         ValueObject val;
@@ -232,13 +232,9 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
             auto [code, valueType] = result.results.Get(0, *field->begin());
             val = valueType.get();
         }
-        if (field != nullptr && field->size() > 1) {
-            LOG_ERROR("Not support the sql:app self can check the SQL, column count more than 1");
-            return { E_NOT_SUPPORT_THE_SQL, ValueObject() };
-        }
         return { result.status, val };
     }
-    return { result.status, result.count };
+    return { result.status, ValueObject() };
 }
 
 ResultType TransDB::Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args)

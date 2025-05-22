@@ -2773,8 +2773,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(const Resu
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         return { result.status, result.rowId };
     }
-    if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        return { result.status, ValueObject() };
+    if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
+        return { result.status, result.count };
     }
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
         ValueObject val;
@@ -2789,7 +2789,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(const Resu
         }
         return { result.status, val };
     }
-    return { result.status, result.count };
+
+    return { result.status, ValueObject() };
 }
 
 int32_t RdbStoreImpl::CloudTables::AddTables(const std::vector<std::string> &tables)
