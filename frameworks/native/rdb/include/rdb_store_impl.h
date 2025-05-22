@@ -92,11 +92,12 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int, int64_t> BatchInsertWithConflictResolution(
-        const std::string &table, const ValuesBuckets &rows, Resolution resolution) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    int Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> RemoteQuery(
@@ -105,6 +106,7 @@ public:
         const AbsRdbPredicates &predicates, const Fields &columns) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
+    std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
     int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args) override;
@@ -195,8 +197,10 @@ private:
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
+    std::pair<int32_t, Results> HandleResults(
+        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(
-        std::shared_ptr<Statement> statement, const std::string &sql, const ValueObject &object, int sqlType);
+        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
@@ -217,6 +221,7 @@ private:
     int UnSubscribeRemote(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
+    void TryDump(int32_t code, const char *dumpHeader);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
@@ -236,8 +241,10 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
-    void HandleSchemaDDL(std::shared_ptr<Statement> statement,
-        std::shared_ptr<ConnectionPool> pool, const std::string &sql, int32_t &errCode);
+    std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
+    static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
+    static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
+    int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
@@ -247,13 +254,14 @@ private:
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 10;
+    static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
 
     bool isOpen_ = false;
     bool isReadOnly_ = false;
-    bool isMemoryRdb_;
+    bool isMemoryRdb_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;

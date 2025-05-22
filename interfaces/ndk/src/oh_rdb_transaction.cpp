@@ -138,8 +138,7 @@ int OH_RdbTrans_BatchInsert(OH_Rdb_Transaction *trans, const char *table, const 
         }
         datas.Put(valuesBucket->Get());
     }
-    auto [errCode, count] =
-        trans->trans_->BatchInsertWithConflictResolution(table, datas, Utils::ConvertConflictResolution(resolution));
+    auto [errCode, count] = trans->trans_->BatchInsert(table, datas, Utils::ConvertConflictResolution(resolution));
     *changes = count;
     if (errCode != E_OK) {
         LOG_ERROR("batch insert fail, errCode=%{public}d count=%{public}" PRId64, errCode, count);

@@ -36,20 +36,17 @@ public:
     std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
-    std::pair<int32_t, int64_t> BatchInsertWithConflictResolution(
-        const std::string &table, const RefRows &rows, Resolution resolution) override;
-    std::pair<int, int> Update(const std::string &table, const Row &row, const std::string &where, const Values &args,
-        Resolution resolution) override;
-    std::pair<int32_t, int32_t> Update(
-        const Row &row, const AbsRdbPredicates &predicates, Resolution resolution) override;
-    std::pair<int32_t, int32_t> Delete(
-        const std::string &table, const std::string &whereClause, const Values &args) override;
-    std::pair<int32_t, int32_t> Delete(const AbsRdbPredicates &predicates) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
         bool preCount) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
-
+    std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &name);
 

@@ -82,7 +82,8 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
 
     auto batchInfo = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_);
     if (table.empty() || batchInfo.empty()) {
-        LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", table.c_str(), rows.RowSize(), maxArgs_);
+        LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", SqliteUtils::Anonymous(table).c_str(),
+            rows.RowSize(), maxArgs_);
         return { E_INVALID_ARGS, -1 };
     }
 
@@ -97,15 +98,15 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
                 continue;
             }
             LOG_ERROR("failed(0x%{public}x) db:%{public}s table:%{public}s args:%{public}zu", errCode,
-                SqliteUtils::Anonymous(name_).c_str(), table.c_str(), args.size());
+                SqliteUtils::Anonymous(name_).c_str(), SqliteUtils::Anonymous(table).c_str(), args.size());
             return { errCode, -1 };
         }
     }
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
-    const std::string &table, const ValuesBuckets &rows, Resolution resolution)
+std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
@@ -115,31 +116,32 @@ std::pair<int, int64_t> TransDB::BatchInsertWithConflictResolution(
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid args, table=%{public}s, rows:%{public}zu, fields:%{public}zu, max:%{public}d.",
-            table.c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, maxArgs_);
+            SqliteUtils::Anonymous(table).c_str(), rows.RowSize(), fields != nullptr ? fields->size() : 0, maxArgs_);
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s.", errCode,
-            bindArgs.size(), table.c_str());
+            bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
         return { errCode, -1 };
     }
     auto args = std::ref(bindArgs.front());
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
-            table.c_str(), args.get().size(), static_cast<int32_t>(resolution));
-        return { errCode, errCode == E_SQLITE_CONSTRAINT ? int64_t(statement->Changes()) : -1 };
+            SqliteUtils::Anonymous(table).c_str(), args.get().size(), static_cast<int32_t>(resolution));
     }
-    return { E_OK, int64_t(statement->Changes()) };
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
-std::pair<int, int> TransDB::Update(
-    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
+std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
+    auto table = predicates.GetTableName();
     if (table.empty() || row.IsEmpty() || clause == nullptr) {
         return { E_INVALID_ARGS, 0 };
     }
@@ -147,6 +149,7 @@ std::pair<int, int> TransDB::Update(
     std::string sql("UPDATE");
     sql.append(clause).append(" ").append(table).append(" SET ");
     std::vector<ValueObject> totalArgs;
+    auto args = predicates.GetBindArgs();
     totalArgs.reserve(row.values_.size() + args.size());
     const char *split = "";
     for (auto &[key, val] : row.values_) {
@@ -161,46 +164,51 @@ std::pair<int, int> TransDB::Update(
         totalArgs.push_back(val);
         split = ",";
     }
-
+    auto where = predicates.GetWhereClause();
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     totalArgs.insert(totalArgs.end(), args.begin(), args.end());
     auto [errCode, statement] = GetStatement(sql);
-    if (statement == nullptr) {
-        return { errCode, 0 };
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
 
     errCode = statement->Execute(totalArgs);
     if (errCode != E_OK) {
-        return { errCode, 0 };
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu,resolution:%{public}d.",
+            errCode, SqliteUtils::Anonymous(table).c_str(), returningFields.size(), static_cast<int32_t>(resolution));
     }
-    return { errCode, int32_t(statement->Changes()) };
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
-int TransDB::Delete(int &deletedRows, const std::string &table, const std::string &whereClause, const Values &args)
+std::pair<int32_t, Results> TransDB::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto table = predicates.GetTableName();
     if (table.empty()) {
-        return E_INVALID_ARGS;
+        return { E_INVALID_ARGS, -1 };
     }
 
     std::string sql;
     sql.append("DELETE FROM ").append(table);
+    auto whereClause = predicates.GetWhereClause();
     if (!whereClause.empty()) {
         sql.append(" WHERE ").append(whereClause);
     }
+    SqliteSqlBuilder::AppendReturning(sql, returningFields);
     auto [errCode, statement] = GetStatement(sql);
-    if (statement == nullptr) {
-        return errCode;
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
     }
-    errCode = statement->Execute(args);
+    errCode = statement->Execute(predicates.GetBindArgs());
     if (errCode != E_OK) {
-        return errCode;
+        LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu.", errCode,
+            SqliteUtils::Anonymous(table).c_str(), returningFields.size());
     }
-    deletedRows = statement->Changes();
-    return E_OK;
+    return { errCode, GenerateResult(errCode, statement) };
 }
 
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
@@ -259,17 +267,51 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        statement->Reset();
-        statement->Prepare("PRAGMA schema_version");
-        auto [err, version] = statement->ExecuteForValue();
-        if (vSchema_ < static_cast<int64_t>(version)) {
-            LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64
-                     "> app self can check the SQL.",
-                SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
-            vSchema_ = version;
-        }
+        HandleSchemaDDL(statement);
     }
     return { errCode, object };
+}
+
+std::pair<int32_t, Results> TransDB::ExecuteExt(const std::string &sql, const Values &args)
+{
+    ValueObject object;
+    int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
+        LOG_ERROR("Not support the sql:app self can check the SQL");
+        return { E_INVALID_ARGS, -1 };
+    }
+    auto [errCode, statement] = GetStatement(sql);
+    if (errCode != E_OK || statement == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, -1 };
+    }
+
+    errCode = statement->Execute(args);
+    auto result = GenerateResult(
+        errCode, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
+        return { errCode, result };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        HandleSchemaDDL(statement);
+    }
+    return { errCode, result };
+}
+
+void TransDB::HandleSchemaDDL(std::shared_ptr<Statement> statement)
+{
+    if (statement == nullptr) {
+        return;
+    }
+    statement->Reset();
+    statement->Prepare("PRAGMA schema_version");
+    auto [err, version] = statement->ExecuteForValue();
+    if (vSchema_ < static_cast<int64_t>(version)) {
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
+            SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
+        vSchema_ = version;
+    }
 }
 
 int TransDB::GetVersion(int &version)
@@ -297,5 +339,63 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(const std::
         return { E_ALREADY_CLOSED, nullptr };
     }
     return connection->CreateStatement(sql, connection);
+}
+
+Results TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
+{
+    Results result{ -1 };
+    if (statement == nullptr) {
+        return result;
+    }
+    // There are no data changes in other scenarios
+    if (code == E_OK) {
+        result.results = GetValues(statement);
+        result.changed = isDML ? statement->Changes() : 0;
+    }
+    if (code == E_SQLITE_CONSTRAINT) {
+        result.changed = statement->Changes();
+    }
+    if (isDML && result.changed <= 0) {
+        result.results.Clear();
+    }
+    return result;
+}
+
+ValuesBuckets TransDB::GetValues(std::shared_ptr<Statement> statement)
+{
+    if (statement == nullptr) {
+        return {};
+    }
+    auto colCount = statement->GetColumnCount();
+    if (colCount <= 0) {
+        return {};
+    }
+    ValuesBuckets values;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = statement->GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return {};
+        }
+        colNames.push_back(std::move(colName));
+    }
+    // The correct number of changed rows can only be obtained after completing the step
+    do {
+        if (values.RowSize() < MAX_RETURNING_ROWS) {
+            ValuesBucket value;
+            for (int32_t i = 0; i < colCount; i++) {
+                auto [code, val] = statement->GetColumn(i);
+                if (code != E_OK) {
+                    LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+                    break;
+                }
+                value.Put(colNames[i], std::move(val));
+            }
+            values.Put(std::move(value));
+        }
+    } while (statement->Step() == E_OK);
+    return values;
 }
 } // namespace OHOS::NativeRdb

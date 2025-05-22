@@ -693,8 +693,8 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        auto [ret, output] = rdbStore->BatchInsertWithConflictResolution(
-            context->tableName, context->sharedValuesBuckets, context->conflictResolution);
+        auto [ret, output] =
+            rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets, context->conflictResolution);
         context->int64Output = output;
         return ret;
     };
