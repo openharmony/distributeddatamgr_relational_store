@@ -52,6 +52,7 @@ ohos_unittest("NativeRdbMultiThreadTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
   ]
 
   deps = [
@@ -88,6 +89,7 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 
@@ -121,6 +123,7 @@ ohos_unittest("NativeRdbLogTest") {
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 
@@ -235,6 +238,7 @@ ohos_unittest("NativeRdbTest") {
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "samgr:samgr_proxy",
   ]
 
