@@ -41,6 +41,7 @@
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
 constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
+constexpr uint32_t SIZE_LENGTH = 2147483647; // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
@@ -810,7 +811,7 @@ int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint3
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD ||
-        (count > 0 && tables == nullptr) || config == nullptr) {
+        (count > 0 && tables == nullptr) || config == nullptr || count > SIZE_LENGTH) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
@@ -1028,7 +1029,8 @@ int OH_Rdb_CloudSync(
 {
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || mode < RDB_SYNC_MODE_TIME_FIRST || mode > RDB_SYNC_MODE_CLOUD_FIRST ||
-        observer == nullptr || observer->callback == nullptr || (count > 0 && tables == nullptr)) {
+        observer == nullptr || observer->callback == nullptr || (count > 0 && tables == nullptr) ||
+        count > SIZE_LENGTH) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     SyncOption syncOption{ .mode = NDKUtils::TransformMode(mode), .isBlock = false };
