@@ -342,7 +342,6 @@ public:
     }
 
     map<string, ValueType> GetRow() {
-        TH_THROW(std::runtime_error, "getRow not implemented");
         OHOS::NativeRdb::RowEntity rowEntity;
         int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
         if (nativeResultSet_ != nullptr) {
@@ -360,10 +359,6 @@ public:
             aniMap.emplace(string(key), aniTemp);
         }
         return aniMap;
-    }
-
-    ::ohos::data::sendableRelationalStore::ValuesBucket GetSendableRow() {
-        TH_THROW(std::runtime_error, "GetSendableRow not implemented");
     }
 
     bool IsColumnNull(int32_t columnIndex) {
