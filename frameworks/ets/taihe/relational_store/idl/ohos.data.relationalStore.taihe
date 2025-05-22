@@ -24,8 +24,6 @@ import dataSharePredicates from '@ohos.data.dataSharePredicates';
 static { loadLibrary("relationalstore_ani.z"); }
 """)
 
-use ohos.data.sendableRelationalStore as sendableRelationalStore;
-
 enum AssetStatus: i32 {
     ASSET_NORMAL,
     ASSET_INSERT,
@@ -62,11 +60,6 @@ union ValuesBucket {
     VALUESBUCKET : @record Map<String, ValueType>;
 }
 
-union ValuesBucket2 {
-    VALUESBUCKET_NON_SENDABLE : ValuesBucket;
-    VALUESBUCKET_SENDABLE : sendableRelationalStore.ValuesBucket;
-}
-
 union PRIKeyType {
     INT64: i64;
     F64: f64;
@@ -88,12 +81,10 @@ struct StoreConfig {
     dataGroupId: Optional<String>;
     customDir: Optional<String>;
     autoCleanDirtyData: Optional<bool>;
-    isSearchable: Optional<bool>;
     allowRebuild: Optional<bool>;
     vector: Optional<bool>;
     isReadOnly: Optional<bool>;
     pluginLibs: Optional<Array<String>>;
-    haMode: Optional<HAMode>;
     cryptoParam: Optional<CryptoParam>;
 }
 
@@ -326,8 +317,6 @@ union StringOrNumberArray {
 
     GetRow(): @record Map<String, ValueType>;
 
-    GetSendableRow(): sendableRelationalStore.ValuesBucket;
-
     IsColumnNull(columnIndex: i32): bool;
 
     Close(): void;
@@ -382,9 +371,6 @@ interface Transaction {
 
     @gen_promise("insert")
     InsertSync(table: String, values: @record Map<String, ValueType>, conflict: Optional<ConflictResolution>): i64;
-
-    //@overload("insertSync")
-    //InsertSendableSync(table: String, values: sendableRelationalStore.ValuesBucket, conflict: Optional<ConflictResolution>): i64;
 
     @gen_promise("batchInsert")
     BatchInsertSync(table: String, values: Array<@record Map<String, ValueType>>): i64;
@@ -444,9 +430,6 @@ interface RdbStore {
     InsertWithValue(table: String, values: @record Map<String, ValueType>) : i64;
 
     InsertSync(table: String, values: @record Map<String, ValueType>, conflict: Optional<ConflictResolution>): i64;
-
-    //@overload("insertSync")
-    //InsertSendableSync(table: String, values: sendableRelationalStore.ValuesBucket, conflict: Optional<ConflictResolution>): i64;
 
     @gen_async("batchInsert")
     @gen_promise("batchInsert")

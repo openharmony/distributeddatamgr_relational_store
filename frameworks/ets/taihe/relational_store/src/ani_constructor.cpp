@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "ohos.data.relationalStore.ani.hpp"
-#include "ohos.data.sendableRelationalStore.ani.hpp"
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
@@ -23,10 +22,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
     if (ANI_OK != ohos::data::relationalStore::ANIRegister(env)) {
         std::cerr << "Error from ohos::data::relationalStore::ANIRegister" << std::endl;
-        return ANI_ERROR;
-    }
-    if (ANI_OK != ohos::data::sendableRelationalStore::ANIRegister(env)) {
-        std::cerr << "Error from ohos::data::sendableRelationalStore::ANIRegister" << std::endl;
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;

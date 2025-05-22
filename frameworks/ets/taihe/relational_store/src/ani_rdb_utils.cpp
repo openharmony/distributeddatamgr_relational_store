@@ -269,9 +269,6 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     if (storeConfig.customDir.has_value()) {
         rdbConfig.customDir = std::string(storeConfig.customDir.value());
     }
-    if (storeConfig.isSearchable.has_value()) {
-        rdbConfig.isSearchable = storeConfig.isSearchable.value();
-    }
     if (storeConfig.vector.has_value()) {
         rdbConfig.vector = storeConfig.vector.value();
     }
@@ -284,10 +281,6 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     if (storeConfig.pluginLibs.has_value()) {
         ::taihe::array<::taihe::string> libs = storeConfig.pluginLibs.value();
         rdbConfig.pluginLibs = std::vector<std::string>(libs.begin(), libs.end());
-    }
-    if (storeConfig.haMode.has_value()) {
-        ::ohos::data::relationalStore::HAMode mode = storeConfig.haMode.value();
-        rdbConfig.haMode = (int32_t)mode;
     }
     if (storeConfig.cryptoParam.has_value()) {
         ::ohos::data::relationalStore::CryptoParam param = storeConfig.cryptoParam.value();

@@ -21,10 +21,7 @@ part_name = "relational_store"
 taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
 
 copy_taihe_idl("copy_taihe") {
-  sources = [
-    "${relational_store_frameworks_path}/ets/taihe/relational_store/idl/ohos.data.relationalStore.taihe",
-    "${relational_store_frameworks_path}/ets/taihe/relational_store/idl/ohos.data.sendableRelationalStore.taihe",
-  ]
+  sources = [ "${relational_store_frameworks_path}/ets/taihe/relational_store/idl/ohos.data.relationalStore.taihe" ]
 }
 
 ohos_taihe("run_taihe") {
@@ -33,8 +30,6 @@ ohos_taihe("run_taihe") {
   outputs = [
     "$taihe_generated_file_path/src/ohos.data.relationalStore.ani.cpp",
     "$taihe_generated_file_path/src/ohos.data.relationalStore.abi.c",
-    "$taihe_generated_file_path/src/ohos.data.sendableRelationalStore.ani.cpp",
-    "$taihe_generated_file_path/src/ohos.data.sendableRelationalStore.abi.c",
   ]
 }
 
@@ -56,7 +51,6 @@ taihe_shared_library("relationalstore_ani") {
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_rdb_utils.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_utils.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ohos.data.relationalStore.impl.cpp",
-    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ohos.data.sendableRelationalStore.impl.cpp",
     "${relational_store_frameworks_path}/js/napi/relationalstore/src/napi_rdb_error.cpp",
     "${relational_store_js_common_path}/src/js_ability.cpp",
     "${relational_store_js_common_path}/src/js_utils.cpp",
@@ -107,24 +101,6 @@ ohos_prebuilt_etc("relationalstore_etc") {
   deps = [ ":relationalstore_abc" ]
 }
 
-generate_static_abc("sendablerelationalstore_abc") {
-  base_url = "$taihe_generated_file_path"
-  files =
-      [ "$taihe_generated_file_path/@ohos.data.sendableRelationalStore.ets" ]
-  dst_file = "$target_out_dir/sendableRelationalStore.abc"
-  is_boot_abc = "True"
-  device_dst_file = "/system/framework/sendableRelationalStore.abc"
-  dependencies = [ ":run_taihe" ]
-}
-
-ohos_prebuilt_etc("sendablerelationalstore_etc") {
-  source = "$target_out_dir/sendableRelationalStore.abc"
-  module_install_dir = "framework"
-  subsystem_name = "distributeddatamgr"
-  part_name = "relational_store"
-  deps = [ ":sendablerelationalstore_abc" ]
-}
-
 generate_static_abc("relationalstore_framework_test") {
   base_url =
       "${relational_store_frameworks_path}/ets/taihe/relational_store/test"
@@ -137,6 +113,5 @@ group("relationalstore_ani_pack") {
   deps = [
     ":relationalstore_ani",
     ":relationalstore_etc",
-    ":sendablerelationalstore_etc",
   ]
 }
