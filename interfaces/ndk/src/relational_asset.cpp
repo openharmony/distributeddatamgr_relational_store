@@ -23,6 +23,7 @@
 
 using namespace OHOS::RdbNdk;
 constexpr int ASSET_TRANSFORM_BASE = 10;
+constexpr uint32_t SIZE_LENGTH = 2147483647;  // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 int OH_Data_Asset_SetName(Data_Asset *asset, const char *name)
 {
     if (asset == nullptr || name == nullptr) {
@@ -226,6 +227,9 @@ int OH_Data_Asset_DestroyOne(Data_Asset *asset)
 
 Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 {
+    if (count == 0 || count > SIZE_LENGTH) {
+        return nullptr;
+    }
     auto assets = new Data_Asset *[count];
     for (uint32_t i = 0; i < count; ++i) {
         assets[i] = new Data_Asset();
@@ -237,6 +241,9 @@ int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count)
 {
     if (assets == nullptr) {
         return OH_Rdb_ErrCode::RDB_OK;
+    }
+    if (count > SIZE_LENGTH) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     for (uint32_t i = 0; i < count; ++i) {
         if (assets[i] != nullptr) {
