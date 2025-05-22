@@ -43,6 +43,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
     static std::string GetSqlArgs(size_t size);
 
+    static void AppendReturning(std::string &sql, const std::vector<std::string> &fields);
+
     static BatchRefSqls GenerateSqls(const std::string &table, const ValuesBuckets &buckets, int limit,
         ConflictResolution resolution = ConflictResolution::ON_CONFLICT_REPLACE);
     static void UpdateAssetStatus(const ValueObject &value, int32_t status);

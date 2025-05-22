@@ -223,7 +223,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog003, TestSize.Level1)
     SqlLog::Subscribe(g_databaseName, observer);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     observer->SetBlockData(block);
-    auto result = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     EXPECT_TRUE(block->GetValue());
     EXPECT_EQ(observer->GetLastMessage().code, 5);
@@ -268,7 +268,7 @@ HWTEST_F(RdbStoreLogSubTest, RdbStoreSubscribeLog003, TestSize.Level1)
     SqlLog::Subscribe(dbPath, observer);
     std::shared_ptr<OHOS::BlockData<bool>> block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     observer->SetBlockData(block);
-    auto result = transaction->BatchInsertWithConflictResolution("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = transaction->BatchInsert("test1", rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
     EXPECT_TRUE(block->GetValue());
     EXPECT_EQ(observer->GetLastMessage().code, 6);

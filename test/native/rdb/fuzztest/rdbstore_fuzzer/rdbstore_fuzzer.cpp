@@ -146,7 +146,7 @@ bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> store, FuzzedDa
     for (uint32_t i = 0; i < loopTimes; i++) {
         rows.Put(value);
     }
-    auto [code, num] = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto [code, num] = store->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     return code == E_OK;
 }
 

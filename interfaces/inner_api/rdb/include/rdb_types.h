@@ -24,7 +24,10 @@
 #include <variant>
 #include <vector>
 
-namespace OHOS::DistributedRdb {
+#include "values_buckets.h"
+
+namespace OHOS {
+namespace DistributedRdb {
 enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
@@ -402,5 +405,15 @@ public:
     virtual ~SqlErrorObserver() = default;
     virtual void OnErrorLog(const ExceptionMessage &message) = 0;
 };
-} // namespace OHOS::DistributedRdb
+} // namespace DistributedRdb
+namespace NativeRdb {
+struct Results {
+    Results(int32_t count) : changed(count)
+    {
+    }
+    int32_t changed = -1;
+    NativeRdb::ValuesBuckets results;
+};
+} // namespace NativeRdb
+} // namespace OHOS
 #endif
