@@ -692,6 +692,50 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest007, TestSize.Level
 }
 
 /**
+ * @tc.name: KnowledgeSchemaHelperTest008
+ * @tc.desc: test unmarshall schema with pipelineHandlers
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest008, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    const std::string validPipelineConfig = R"({
+        "knowledgeSource": [{
+            "version": 1,
+            "dbName": "test.db",
+            "tables":
+            [{
+                "tableName": "email",
+                "referenceFields": ["id"],
+                "knowledgeFields":
+                [{
+                    "columnName": "subject",
+                    "type": ["Text"]
+                }],
+                "pipelineHandlers":
+                {
+                    "FileParserHandler": ["SplitTextHandler"],
+                    "SplitTextHandler": ["TextEmbeddingHandler"],
+                    "TextEmbeddingHandler": [],
+                    "ImageEmbeddingHandler": []
+                }
+            }]
+        }]
+    })";
+
+    bool ret = helper_->ParseRdbKnowledgeSchema(validPipelineConfig, DB_NAME, schema);
+
+    ASSERT_TRUE(ret);
+    ASSERT_EQ(schema.dbName, "test.db");
+
+    ASSERT_EQ(schema.tables.size(), 1);
+    const auto& table = schema.tables[0];
+
+    const auto& handlers = table.pipelineHandlers;
+    ASSERT_EQ(handlers.size(), 4);
+}
+
+/**
  * @tc.name: KnowledgeInvalidSchemaTest001
  * @tc.desc: test invalid version
  * @tc.type: FUNC
