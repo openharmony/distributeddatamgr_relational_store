@@ -41,14 +41,17 @@ public:
     ~RdbStoreImpl() override;
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    ResultType BatchInsert(const std::string &table, const RefRows &rows, const SqlOptions &sqlOptions) override;
-    ResultType Update(const Row &row, const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions) override;
-    ResultType Delete(const AbsRdbPredicates &predicates, const SqlOptions &sqlOptions) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const std::vector<std::string> &returningFields, Resolution resolution) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
-    ResultType Execute(const std::string &sql, const SqlOptions &sqlOptions, const Values &args) override;
+    std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
     int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args) override;
@@ -109,9 +112,10 @@ private:
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
-    ResultType HandleDifferentSqlTypes(
+    std::pair<int32_t, Results> HandleResults(
         std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
-    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(const ResultType &result, int sqlType);
+    std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(
+        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
@@ -131,13 +135,14 @@ private:
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
+    void TryDump(int32_t code, const char *dumpHeader);
     int GetDestPath(const std::string &backupPath, std::string &destPath);
     std::shared_ptr<ConnectionPool> GetPool() const;
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
-    ResultType ExecuteForChangedRow(const std::string &sql, const Values &args);
-    static ResultType GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
+    std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
+    static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
     static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);

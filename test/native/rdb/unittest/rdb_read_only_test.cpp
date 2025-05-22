@@ -252,6 +252,9 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0008, TestSize.Level1)
 
     std::tie(ret, object) = store->Execute("PRAGMA user_version=2");
     EXPECT_EQ(E_NOT_SUPPORT, ret);
+
+    auto [code, result] = store->ExecuteExt("PRAGMA user_version=2");
+    EXPECT_EQ(E_NOT_SUPPORT, code);
 }
 
 /**
