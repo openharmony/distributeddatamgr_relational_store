@@ -12,10 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef HOS_NATIVE_RDB_OBS_MGR_ADAPTER_H
-#define HOS_NATIVE_RDB_OBS_MGR_ADAPTER_H
-#include <cstdint>
-namespace OHOS::NativeRdb {
-enum class DuplicateType : int32_t { DUPLICATE_SUB = -1 };
-} // namespace OHOS::NativeRdb
-#endif //HOS_NATIVE_RDB_OBS_MGR_ADAPTER_H
+
+#ifndef MOCK_DL_FUNCTIONS_H
+#define MOCK_DL_FUNCTIONS_H
+
+#include <dlfcn.h>
+#include <gmock/gmock.h>
+
+class MockDlFunctions {
+public:
+    MOCK_METHOD(void*, dlopen, (const char* filename, int flags));
+    MOCK_METHOD(void*, dlsym, (void* handle, const char* symbol));
+};
+
+extern MockDlFunctions* g_mockDlFunctions;
+
+#endif // MOCK_DL_FUNCTIONS_H
