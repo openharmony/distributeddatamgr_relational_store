@@ -62,18 +62,6 @@ static std::string Anonymous(const std::string &uri)
     return std::string(uri).substr(uri.rfind("/") + 1, uri.size());
 }
 
-// static void Wait(wptr<RdbStoreLocalSharedObserver> obs)
-// {
-//     static constexpr int32_t MEX_RETRY = 100;
-//     int32_t retry = 0;
-//     while (obs->GetSptrRefCount() && ++retry < MEX_RETRY) {
-//         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-//     }
-//     if (obs->GetSptrRefCount()) {
-//         LOG_WARN("Failed to release observer, which may cause a crash");
-//     }
-// }
-
 class ObsMgrAdapterImpl {
 public:
     ObsMgrAdapterImpl() = default;
@@ -126,7 +114,7 @@ int32_t ObsMgrAdapterImpl::RegisterObserver(const std::string &uri, std::shared_
     code = client->RegisterObserver(Uri(uri), localSharedObserver);
     if (code != 0) {
         RemoveObserver(uri, localSharedObserver);
-        LOG_ERROR("Subscribe failed. code:%{public}d, uri:%{public}.3s", code, Anonymous(uri).c_str());
+        LOG_ERROR("Subscribe failed. code:%{public}d, uri:%{public}s", code, Anonymous(uri).c_str());
         return E_ERROR;
     }
     return E_OK;
@@ -172,7 +160,6 @@ int32_t ObsMgrAdapterImpl::UnregisterObserver(const std::string &uri, std::share
         }
         wptr<RdbStoreLocalSharedObserver> obs(*it);
         it = localSharedObservers.erase(it);
-        // Wait(obs);
     }
     return E_OK;
 }
@@ -212,9 +199,6 @@ void ObsMgrAdapterImpl::Clean()
         }
         return true;
     });
-    // for (auto &obs : released) {
-    //     Wait(obs);
-    // }
 }
 
 void ObsMgrAdapterImpl::RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer)
