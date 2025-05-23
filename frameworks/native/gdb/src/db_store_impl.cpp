@@ -90,9 +90,6 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
     }
     auto [ret, stmt] = conn->CreateStatement(gql, conn);
     if (ret != E_OK || stmt == nullptr) {
-        if (ret == E_GRD_OVER_LIMIT) {
-            ret = E_GRD_SEMANTIC_ERROR;
-        }
         LOG_ERROR("Create stmt failed, ret=%{public}d", ret);
         return { ret, std::make_shared<FullResult>() };
     }
@@ -100,9 +97,6 @@ std::pair<int32_t, std::shared_ptr<Result>> DBStoreImpl::QueryGql(const std::str
     auto result = std::make_shared<FullResult>();
     ret = result->InitData(stmt);
     if (ret != E_OK) {
-        if (ret == E_GRD_OVER_LIMIT) {
-            ret = E_GRD_SEMANTIC_ERROR;
-        }
         LOG_ERROR("Get FullResult failed, ret=%{public}d", ret);
         return { ret, std::make_shared<FullResult>() };
     }
