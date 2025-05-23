@@ -34,13 +34,13 @@ enum AssetStatus: i32 {
 }
 
 struct Asset {
-  name: String;
-  uri: String;
-  path: String;
-  createTime: String;
-  modifyTime: String;
-  size: String;
-  status: Optional<AssetStatus>;
+    name: String;
+    uri: String;
+    path: String;
+    createTime: String;
+    modifyTime: String;
+    size: String;
+    status: Optional<AssetStatus>;
 }
 
 union ValueType {
@@ -419,7 +419,6 @@ interface RdbStore {
     @set SetVersion(veriosn : i32);
 
     @get GetRebuilt() : RebuildType;
-    //@set SetRebuilt(type : RebuildType);
 
     @gen_async("insert")
     @gen_promise("insert")

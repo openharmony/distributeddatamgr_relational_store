@@ -63,7 +63,6 @@ void ThrowParamError(const char* message)
 class ResultSetImpl {
 public:
     ResultSetImpl() {
-        // Don't forget to implement the constructor.
     }
     explicit ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet) {
         nativeResultSet_ = resultSet;
@@ -302,6 +301,7 @@ public:
             return {};
         } else if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errCode);
+            return {};
         }
         ohos::data::relationalStore::Asset aniempty = {};
         std::vector<ohos::data::relationalStore::Asset> resultTemp(result.size(), aniempty);
@@ -337,6 +337,7 @@ public:
             return {};
         } else if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errCode);
+            return {};
         }
         return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
     }
@@ -347,10 +348,11 @@ public:
         if (nativeResultSet_ != nullptr) {
             errCode = nativeResultSet_->GetRow(rowEntity);
         }
+        map<string, ValueType> aniMap;
         if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errCode);
+            return aniMap;
         }
-        map<string, ValueType> aniMap;
         std::map<std::string, OHOS::NativeRdb::ValueObject> rowMap = rowEntity.Get();
         for (auto it = rowMap.begin(); it != rowMap.end(); ++it) {
             auto const &[key, value] = *it;
@@ -734,6 +736,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return ERR_NULL;
+        }
         OHOS::NativeRdb::ValuesBucket bucket;
         ani_rdbutils::MapValuesToNative(values, bucket);
         auto [errcode, rows] = nativeTransaction_->Update(
@@ -752,6 +758,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return ERR_NULL;
+        }
         auto [errcode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
@@ -771,6 +781,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return make_holder<ResultSetImpl, ResultSet>();
+        }
         auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, stdcolumns);
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
@@ -971,6 +985,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return ERR_NULL;
+        }
         OHOS::NativeRdb::ValuesBucket bucket;
         ani_rdbutils::MapValuesToNative(values, bucket);
 
@@ -1030,7 +1048,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
-
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return ERR_NULL;
+        }
         int output = 0;
         int errcode = nativeRdbStore_->Delete(output, *rdbPredicateNative);
         if (errcode != OHOS::NativeRdb::E_OK) {
@@ -1087,6 +1108,10 @@ public:
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return make_holder<ResultSetImpl, ResultSet>();
+        }
         auto nativeResultSet = nativeRdbStore_->Query(*rdbPredicateNative, stdcolumns);
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
