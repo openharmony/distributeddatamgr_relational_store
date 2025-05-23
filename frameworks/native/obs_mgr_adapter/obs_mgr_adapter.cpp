@@ -32,7 +32,6 @@ using namespace OHOS::DistributedRdb;
 API_EXPORT int32_t Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer) asm("Register");
 API_EXPORT int32_t Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer) asm("Unregister");
 API_EXPORT int32_t NotifyChange(const std::string &uri) asm("NotifyChange");
-API_EXPORT void Destroy() asm("Destroy");
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
@@ -242,8 +241,4 @@ int32_t Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs
 int32_t NotifyChange(const std::string &uri)
 {
     return OHOS::NativeRdb::ObsMgrAdapterImpl::NotifyChange(uri);
-}
-
-void Destroy()
-{
 }

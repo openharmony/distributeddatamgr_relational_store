@@ -593,7 +593,7 @@ int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObse
             return !value.empty();
         });
     }
-    return code = DUPLICATE_SUB ? E_OK : code;
+    return code = static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
 }
 
 int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> obs)
@@ -609,18 +609,19 @@ int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<Distribute
         return E_ERROR;
     }
     auto code = func(uri, obs);
-    if (code == E_OK) {
-        obs_.Compute(uri, [obs](const auto &key, auto &value) {
-            for (auto it = value.begin(); it != value.end();) {
-                if (*it == obs) {
-                    value.erase(it);
-                    break;
-                }
-                ++it;
-            }
-            return !value.empty();
-        });
+    if (code != E_OK) {
+        return code;
     }
+    obs_.Compute(uri, [obs](const auto &key, auto &value) {
+        for (auto it = value.begin(); it != value.end();) {
+            if (*it == obs) {
+                value.erase(it);
+                break;
+            }
+            ++it;
+        }
+        return !value.empty();
+    });
     return code;
 }
 
@@ -632,7 +633,8 @@ int32_t ObsManger::Notify(const std::string &uri)
     }
     auto func = reinterpret_cast<int32_t (*)(const std::string &)>(dlsym(handle, "NotifyChange"));
     if (func == nullptr) {
-        LOG_ERROR("dlsym(NotifyChange) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
+        LOG_ERROR("dlsym(NotifyChange) failed(%{public}d)!, uri:%{public}s",
+            errno, SqliteUtils::Anonymous(uri).c_str());
         return E_ERROR;
     }
     return func(uri);

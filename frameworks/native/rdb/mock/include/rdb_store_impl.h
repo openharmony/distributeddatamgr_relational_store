@@ -34,6 +34,20 @@
 
 namespace OHOS::NativeRdb {
 class DelayNotify;
+class ObsManger {
+public:
+    ObsManger() = default;
+    virtual ~ObsManger();
+    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    int32_t Notify(const std::string &uri);
+
+private:
+    static void *GetHandle();
+    static std::mutex mutex_;
+    static void *handle_;
+    ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;
+};
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
