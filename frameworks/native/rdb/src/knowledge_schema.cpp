@@ -85,6 +85,7 @@ bool KnowledgeTable::Marshal(json &node) const
     SetValue(node[GET_NAME(tableName)], tableName_);
     SetValue(node[GET_NAME(referenceFields)], referenceFields_);
     SetValue(node[GET_NAME(knowledgeFields)], knowledgeFields_);
+    SetValue(node[GET_NAME(pipelineHandlers)], pipelineHandlers_);
     return true;
 }
 
@@ -94,6 +95,10 @@ bool KnowledgeTable::Unmarshal(const json &node)
     isUnmarshalSuccess = GetValue(node, GET_NAME(tableName), tableName_) && isUnmarshalSuccess;
     isUnmarshalSuccess = GetValue(node, GET_NAME(referenceFields), referenceFields_) && isUnmarshalSuccess;
     isUnmarshalSuccess = GetValue(node, GET_NAME(knowledgeFields), knowledgeFields_) && isUnmarshalSuccess;
+    if (node.contains(GET_NAME(pipelineHandlers))) {
+        isUnmarshalSuccess = GetValue(node, GET_NAME(pipelineHandlers), pipelineHandlers_) && isUnmarshalSuccess;
+    }
+
     return isUnmarshalSuccess;
 }
 
@@ -110,6 +115,11 @@ std::vector<KnowledgeField> KnowledgeTable::GetKnowledgeFields() const
 std::vector<std::string> KnowledgeTable::GetReferenceFields() const
 {
     return referenceFields_;
+}
+
+std::unordered_map<std::string, std::vector<std::string>> KnowledgeTable::GetPipelineHandlers() const
+{
+    return pipelineHandlers_;
 }
 
 bool KnowledgeSchema::Marshal(json &node) const
