@@ -61,10 +61,12 @@ public:
     std::string GetTableName() const;
     std::vector<std::string> GetReferenceFields() const;
     std::vector<KnowledgeField> GetKnowledgeFields() const;
+    std::unordered_map<std::string, std::vector<std::string>> GetPipelineHandlers() const;
 private:
     std::string tableName_;
     std::vector<std::string> referenceFields_;
     std::vector<KnowledgeField> knowledgeFields_;
+    std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers_;
 };
 
 class KnowledgeSchema final : public Serializable {

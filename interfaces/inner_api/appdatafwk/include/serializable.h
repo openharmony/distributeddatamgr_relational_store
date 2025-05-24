@@ -117,6 +117,30 @@ protected:
         return result;
     }
 
+    template<typename T>
+    static bool GetValue(const json &node, const std::string &name, std::unordered_map<std::string, T> &values)
+    {
+        auto &subNode = GetSubNode(node, name);
+        if (subNode.is_null() || !subNode.is_object()) {
+            return false;
+        }
+        bool result = true;
+        for (auto object = subNode.begin(); object != subNode.end(); ++object) {
+            result = GetValue(object.value(), "", values[object.key()]) && result;
+        }
+        return result;
+    }
+
+    template<typename T>
+    static bool SetValue(json &node, const std::unordered_map<std::string, T> &values)
+    {
+        bool result = true;
+        node = json::value_t::object;
+        for (const auto& kv : values) {
+            result = SetValue(node[kv.first], kv.second) && result;
+        }
+        return result;
+    }
     API_EXPORT static const json &GetSubNode(const json &node, const std::string &name);
 };
 } // namespace OHOS

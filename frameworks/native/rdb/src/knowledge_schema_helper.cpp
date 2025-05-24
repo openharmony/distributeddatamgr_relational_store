@@ -205,6 +205,7 @@ bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchemaInner(const std::string &json
             knowledgeTable.knowledgeFields.push_back(std::move(field));
         }
         knowledgeTable.referenceFields = table.GetReferenceFields();
+        knowledgeTable.pipelineHandlers = table.GetPipelineHandlers();
         schema.tables.push_back(std::move(knowledgeTable));
     }
     return true;
