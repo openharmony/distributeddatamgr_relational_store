@@ -413,8 +413,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "persist", rdbConfig.persist, true);
     ASSERT(OK == status, "get persist failed.", napi_invalid_arg);
 
-    status = GetNamedProperty(env, jsValue, "knowledgeProcessing", rdbConfig.knowledgeProcessing, true);
-    ASSERT(OK == status, "get knowledgeProcessing failed.", napi_invalid_arg);
+    status = GetNamedProperty(env, jsValue, "enableSemanticlndex", rdbConfig.enableSemanticlndex, true);
+    ASSERT(OK == status, "get enableSemanticlndex failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -563,7 +563,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
 
-    rdbStoreConfig.SetKnowledgeProcessing(rdbConfig.knowledgeProcessing);
+    rdbStoreConfig.SetEnableSemanticlndex(rdbConfig.enableSemanticlndex);
     return rdbStoreConfig;
 }
 

@@ -1279,8 +1279,8 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
 }
 
 /* *
- * @tc.name: RdbStoreConfigGetKnowledgeProcessing_001
- * @tc.desc: test RdbStoreConfigGetKnowledgeProcessing
+ * @tc.name: RdbStoreConfigGetEnableSemanticlndex_001
+ * @tc.desc: test RdbStoreConfigGetEnableSemanticlndex
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
@@ -1288,13 +1288,13 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    bool ret = config.GetKnowledgeProcessing();
+    bool ret = config.GetEnableSemanticlndex();
     EXPECT_EQ(ret, false);
 }
 
 /* *
- * @tc.name: RdbStoreConfigSetKnowledgeProcessing_001
- * @tc.desc: test RdbStoreConfigSetKnowledgeProcessing
+ * @tc.name: RdbStoreConfigSetEnableSemanticlndex_001
+ * @tc.desc: test RdbStoreConfigSetEnableSemanticlndex
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
@@ -1302,11 +1302,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    bool knowledgeProcessing = true;
-    config.SetKnowledgeProcessing(knowledgeProcessing);
-    EXPECT_EQ(knowledgeProcessing, config.GetKnowledgeProcessing());
+    bool enableSemanticlndex = true;
+    config.SetEnableSemanticlndex(enableSemanticlndex);
+    EXPECT_EQ(enableSemanticlndex, config.GetEnableSemanticlndex());
 
-    knowledgeProcessing = false;
-    config.SetKnowledgeProcessing(knowledgeProcessing);
-    EXPECT_EQ(knowledgeProcessing, config.GetKnowledgeProcessing());
+    enableSemanticlndex = false;
+    config.SetEnableSemanticlndex(enableSemanticlndex);
+    EXPECT_EQ(enableSemanticlndex, config.GetEnableSemanticlndex());
 }
