@@ -81,6 +81,11 @@ using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
+
+using RegisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+using UnregisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+using NotifyFunc = int32_t (*)(const std::string &);
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -547,8 +552,7 @@ ObsManger::~ObsManger()
     if (handle_ == nullptr) {
         return;
     }
-    auto func = reinterpret_cast<int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>)>(
-        dlsym(handle_, "Unregister"));
+    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle_, "Unregister"));
     if (func == nullptr) {
         LOG_ERROR("dlsym(Unregister) failed(%{public}d)!", errno);
         return;
@@ -580,8 +584,7 @@ int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObse
     if (handle == nullptr) {
         return E_ERROR;
     }
-    auto func = reinterpret_cast<int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>)>(
-        dlsym(handle, "Register"));
+    auto func = reinterpret_cast<RegisterFunc>(dlsym(handle, "Register"));
     if (func == nullptr) {
         LOG_ERROR("dlsym(Register) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
         return E_ERROR;
@@ -593,7 +596,7 @@ int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObse
             return !value.empty();
         });
     }
-    return code = static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
+    return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
 }
 
 int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> obs)
@@ -602,8 +605,7 @@ int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<Distribute
     if (handle == nullptr) {
         return E_ERROR;
     }
-    auto func = reinterpret_cast<int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>)>(
-        dlsym(handle, "Unregister"));
+    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle, "Unregister"));
     if (func == nullptr) {
         LOG_ERROR("dlsym(Unregister) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
         return E_ERROR;
@@ -631,7 +633,7 @@ int32_t ObsManger::Notify(const std::string &uri)
     if (handle == nullptr) {
         return E_ERROR;
     }
-    auto func = reinterpret_cast<int32_t (*)(const std::string &)>(dlsym(handle, "NotifyChange"));
+    auto func = reinterpret_cast<NotifyFunc>(dlsym(handle, "NotifyChange"));
     if (func == nullptr) {
         LOG_ERROR("dlsym(NotifyChange) failed(%{public}d)!, uri:%{public}s",
             errno, SqliteUtils::Anonymous(uri).c_str());
