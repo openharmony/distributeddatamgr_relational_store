@@ -63,6 +63,10 @@ SqliteGlobalConfig::SqliteGlobalConfig()
 
 SqliteGlobalConfig::~SqliteGlobalConfig()
 {
+    sqlite3_unregister_cksumvfs();
+    sqlite3_config(SQLITE_CONFIG_CORRUPTION, nullptr, nullptr);
+    sqlite3_config(SQLITE_CONFIG_LOG, nullptr, nullptr);
+    LOG_INFO("Destruct.");
 }
 
 void SqliteGlobalConfig::Corruption(void *arg, const void *msg)
