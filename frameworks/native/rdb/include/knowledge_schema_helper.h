@@ -47,6 +47,8 @@ private:
     bool CheckSchemaDBName(const std::string &fieldStr);
     bool CheckKnowledgeFields(const std::vector<KnowledgeField> &fields);
     bool CheckKnowledgeSchema(const KnowledgeSchema &schema);
+    bool ParseRdbKnowledgeSchemaInner(const std::string &json, const std::string &dbName,
+        DistributedRdb::RdbKnowledgeSchema &schema);
 
     mutable std::shared_mutex libMutex_;
     DistributedRdb::IKnowledgeSchemaManager *schemaManager_ = nullptr;
@@ -54,6 +56,7 @@ private:
 #ifndef CROSS_PLATFORM
     void *dlHandle_ = nullptr;
 #endif
+    std::string bundleName_ = "";
 };
 }
 #endif // DISTRIBUTED_RDB_KNOWLEDGE_SCHEMA_HELPER_H

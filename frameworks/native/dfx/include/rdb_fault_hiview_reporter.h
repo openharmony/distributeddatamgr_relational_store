@@ -113,6 +113,8 @@ public:
     static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static std::string GetBundleName(const std::string &bundleName, const std::string &storeName);
+    static void ReportRAGFault(const std::string &errMsg, const std::string &functionName,
+        const std::string &bundleName, const int faultType, const int errCode);
 
 private:
     static void Update(std::map<std::string, DebugInfo> &localInfos, const std::map<std::string, DebugInfo> &infos);
