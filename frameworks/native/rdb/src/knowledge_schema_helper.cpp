@@ -24,6 +24,7 @@
 #include "logger.h"
 #include "nlohmann/json.hpp"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
 
@@ -43,6 +44,12 @@ constexpr char const *TYPE_JSON = "Json";
 constexpr char const *TYPE_FILE = "File";
 const std::regex SCHEMA_FIELD_PATTERN("^[0-9a-zA-Z_]{1,}$");
 const std::regex SCHEMA_DB_NAME_PATTERN("^[0-9a-zA-Z_\\.]{1,}$");
+
+static constexpr int AIP_MODULE_ID = 13;
+constexpr ErrCode AIP_ERR_OFFSET = ErrCodeOffset(SUBSYS_DISTRIBUTEDDATAMNG, AIP_MODULE_ID);
+constexpr int32_t KNOWLEDGE_BASE_ERROR_CODE_OFFSET{ 20000 };
+constexpr ErrCode KNOWLEDGE_BASE_FAIL = AIP_ERR_OFFSET + KNOWLEDGE_BASE_ERROR_CODE_OFFSET;
+constexpr ErrCode KNOWLEDGE_SCHEMA_NOT_VALID = KNOWLEDGE_BASE_FAIL + 1;
 
 bool KnowledgeSchemaHelper::CheckSchemaField(const std::string &fieldStr)
 {
@@ -155,7 +162,7 @@ bool IsContainsColumnName(const std::vector<DistributedRdb::RdbKnowledgeField> &
     return false;
 }
 
-bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchemaInner(const std::string &json, const std::string &dbName,
     DistributedRdb::RdbKnowledgeSchema &schema)
 {
     KnowledgeSource source;
@@ -203,6 +210,18 @@ bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, con
     return true;
 }
 
+bool KnowledgeSchemaHelper::ParseRdbKnowledgeSchema(const std::string &json, const std::string &dbName,
+    DistributedRdb::RdbKnowledgeSchema &schema)
+{
+    bool isValid = ParseRdbKnowledgeSchemaInner(json, dbName, schema);
+    if (!isValid) {
+        LOG_WARN("Parse knowledge schema inner failed.");   // stay as warning as inside
+        RdbFaultHiViewReporter::ReportRAGFault("Parse knowledge schema failed", "ParseRdbKnowledgeSchema", bundleName_,
+            KNOWLEDGE_BASE_FAIL, KNOWLEDGE_SCHEMA_NOT_VALID);
+    }
+    return isValid;
+}
+
 KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
 {
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
@@ -226,12 +245,13 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
         LOG_WARN("skip init by miss lib");
         return;
     }
-    std::shared_lock<std::shared_mutex> readLock(libMutex_);
+    std::unique_lock<std::shared_mutex> writeLock(libMutex_);
     if (schemaManager_ == nullptr) {
         LOG_WARN("skip init by miss manager");
         return;
     }
     schemaManager_->Init(config, schema);
+    bundleName_ = config.GetBundleName();
     inited_ = true;
 }
 
