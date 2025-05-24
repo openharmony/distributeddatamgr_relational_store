@@ -38,6 +38,7 @@
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
+#include "rdb_perfStat.h"
 #include "rdb_radar_reporter.h"
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
@@ -76,6 +77,7 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1104,6 +1106,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     }
     RdbStatReporter reportStat(RDB_PERF, INSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     std::string sql;
     sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
     size_t bindArgsSize = row.values_.size();
@@ -1147,6 +1150,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
 
     RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
     auto pool = GetPool();
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, -1 };
@@ -1209,6 +1213,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     }
 
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
     auto pool = GetPool();
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, -1 };
@@ -1273,6 +1278,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
     }
     RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     std::string sql;
     sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
     std::vector<ValueObject> tmpBindArgs;
@@ -1320,6 +1326,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
 
     RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     std::string sql;
     sql.append("DELETE FROM ").append(table);
     auto whereClause = predicates.GetWhereClause();
@@ -1342,6 +1349,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         return nullptr;
     }
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto start = std::chrono::steady_clock::now();
     auto pool = GetPool();
@@ -1360,6 +1368,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     auto start = std::chrono::steady_clock::now();
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -1400,6 +1409,7 @@ void WriteToCompareFile(const std::string &dbPath, const std::string &bundleName
 int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql)
 {
     statement->Reset();
+    Suspender suspender(Suspender::SQL_STATISTIC);
     statement->Prepare("PRAGMA schema_version");
     auto [err, version] = statement->ExecuteForValue();
     statement = nullptr;
@@ -1433,6 +1443,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     RdbStatReporter reportStat(RDB_PERF, EXECUTESQL, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     auto [errCode, statement] = BeginExecuteSql(sql);
     if (statement == nullptr) {
         return errCode;
@@ -1463,6 +1474,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 
     RdbStatReporter reportStat(RDB_PERF, EXECUTE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
         LOG_ERROR("Not support the sqlType: %{public}d, app self can check the SQL", sqlType);
@@ -2146,7 +2158,6 @@ std::pair<int, int64_t> RdbStoreImpl::BeginTrans()
     if (!config_.IsVector() || isReadOnly_) {
         return { E_NOT_SUPPORT, 0 };
     }
-
     int64_t tmpTrxId = 0;
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2650,17 +2661,17 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, nullptr };
     }
-
     auto pool = GetPool();
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, nullptr };
     }
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     auto [errCode, conn] = pool->CreateTransConn();
     if (conn == nullptr) {
         return { errCode, nullptr };
     }
     std::shared_ptr<Transaction> trans;
-    std::tie(errCode, trans) = Transaction::Create(type, conn, config_.GetName());
+    std::tie(errCode, trans) = Transaction::Create(type, conn, config_.GetPath());
     if (trans == nullptr) {
         if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
             pool->Dump(true, "TRANS");

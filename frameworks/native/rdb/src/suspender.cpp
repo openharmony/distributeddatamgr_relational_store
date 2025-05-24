@@ -16,16 +16,23 @@
 #define LOG_TAG "Suspender"
 #include "suspender.h"
 #include "rdb_sql_log.h"
+#include "rdb_perfStat.h"
 
 namespace OHOS::NativeRdb {
 Suspender::Suspender(Flag flag) : flag_(flag)
 {
+    if ((flag_ & SQL_STATISTIC) != 0) {
+        DistributedRdb::PerfStat::Pause();
+    }
     if ((flag_ & SQL_LOG) != 0) {
         SqlLog::Pause();
     }
 }
 Suspender::~Suspender()
 {
+    if ((flag_ & SQL_STATISTIC) != 0) {
+        DistributedRdb::PerfStat::Resume();
+    }
     if ((flag_ & SQL_LOG) != 0) {
         SqlLog::Resume();
     }

@@ -29,6 +29,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
