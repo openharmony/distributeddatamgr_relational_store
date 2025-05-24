@@ -34,7 +34,7 @@ using Json = nlohmann::json;
 
 constexpr uint16_t SCHEMA_FIELD_MIN_LEN = 1;
 constexpr uint16_t SCHEMA_FIELD_MAX_LEN = 255;
-constexpr uint16_t SCHEMA_DB_NAME_MAX_LEN = 120;
+constexpr uint16_t SCHEMA_DB_TABLE_NAME_MAX_LEN = 120;
 constexpr uint16_t SCHEMA_TYPE_MAX_LEN = 64;
 constexpr int64_t SCHEMA_VERSION_MAX = 0x7fffffff;
 
@@ -59,8 +59,14 @@ bool KnowledgeSchemaHelper::CheckSchemaField(const std::string &fieldStr)
 
 bool KnowledgeSchemaHelper::CheckSchemaDBName(const std::string &fieldStr)
 {
-    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_DB_NAME_MAX_LEN &&
+    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_DB_TABLE_NAME_MAX_LEN &&
         std::regex_match(fieldStr, SCHEMA_DB_NAME_PATTERN);
+}
+
+bool KnowledgeSchemaHelper::CheckSchemaTableName(const std::string &fieldStr)
+{
+    return fieldStr.size() >= SCHEMA_FIELD_MIN_LEN && fieldStr.size() <= SCHEMA_DB_TABLE_NAME_MAX_LEN &&
+        std::regex_match(fieldStr, SCHEMA_FIELD_PATTERN);
 }
 
 bool KnowledgeSchemaHelper::CheckSchemaFieldParsers(const KnowledgeField &field)
@@ -104,7 +110,7 @@ bool KnowledgeSchemaHelper::CheckKnowledgeFields(const std::vector<KnowledgeFiel
             LOG_ERROR("Wrong column type, size: %{public}zu", fieldType.size());
             return false;
         }
-        for (auto &type : fieldType) {
+        for (const auto &type : fieldType) {
             if (type != std::string(TYPE_TEXT) && type != std::string(TYPE_SCALAR) &&
                 type != std::string(TYPE_JSON) && type != std::string(TYPE_FILE)) {
                 LOG_ERROR("Wrong field type: %{public}s", SqliteUtils::Anonymous(type).c_str());
@@ -135,7 +141,7 @@ bool KnowledgeSchemaHelper::CheckKnowledgeSchema(const KnowledgeSchema &schema)
         return false;
     }
     for (const KnowledgeTable &table : schema.GetTables()) {
-        if (!CheckSchemaField(table.GetTableName())) {
+        if (!CheckSchemaTableName(table.GetTableName())) {
             LOG_ERROR("Wrong table name: %{public}s", SqliteUtils::Anonymous(table.GetTableName()).c_str());
             return false;
         }
