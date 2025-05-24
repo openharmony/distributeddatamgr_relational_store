@@ -595,6 +595,7 @@ int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObse
             value.push_back(obs);
             return !value.empty();
         });
+        return E_OK;
     }
     return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
 }

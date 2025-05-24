@@ -67,7 +67,6 @@ public:
     static int32_t RegisterObserver(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer);
     static int32_t UnregisterObserver(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer);
     static int32_t NotifyChange(const std::string &uri);
-    static void Clean();
 
 private:
     static void RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer);
@@ -157,7 +156,6 @@ int32_t ObsMgrAdapterImpl::UnregisterObserver(const std::string &uri, std::share
             LOG_ERROR("UnregisterObserver failed. code:%{public}d, uri:%{public}s", err, Anonymous(uri).c_str());
             return err;
         }
-        wptr<RdbStoreLocalSharedObserver> obs(*it);
         it = localSharedObservers.erase(it);
     }
     return E_OK;
@@ -176,28 +174,6 @@ int32_t ObsMgrAdapterImpl::NotifyChange(const std::string &uri)
         return E_ERROR;
     }
     return E_OK;
-}
-
-void ObsMgrAdapterImpl::Clean()
-{
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient");
-        return;
-    }
-    std::list<wptr<RdbStoreLocalSharedObserver>> released;
-    obs_.EraseIf([client, &released](const auto &key, auto &observer) {
-        for (auto it = observer.begin(); it != observer.end();) {
-            if (*it == nullptr) {
-                it = observer.erase(it);
-                continue;
-            }
-            client->UnregisterObserver(Uri(key), *it);
-            released.push_back(*it);
-            it = observer.erase(it);
-        }
-        return true;
-    });
 }
 
 void ObsMgrAdapterImpl::RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer)
