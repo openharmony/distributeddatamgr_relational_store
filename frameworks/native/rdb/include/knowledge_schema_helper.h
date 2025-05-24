@@ -45,6 +45,7 @@ private:
     bool CheckSchemaFieldParsers(const KnowledgeField &field);
     bool CheckSchemaField(const std::string &fieldStr);
     bool CheckSchemaDBName(const std::string &fieldStr);
+    bool CheckSchemaTableName(const std::string &fieldStr);
     bool CheckKnowledgeFields(const std::vector<KnowledgeField> &fields);
     bool CheckKnowledgeSchema(const KnowledgeSchema &schema);
     bool ParseRdbKnowledgeSchemaInner(const std::string &json, const std::string &dbName,

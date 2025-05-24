@@ -588,10 +588,6 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest001, TestSize.Level
 HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeSchemaHelperTest002, TestSize.Level0)
 {
     RdbKnowledgeSchema schema = {};
-    RdbStoreConfig config(rdbStorePath);
-    helper_->Init(config, schema);
-
-    KnowledgeSource source;
     std::string jsonStr = R"({"wrong": []})";
     bool ret = helper_->ParseRdbKnowledgeSchema(jsonStr, DB_NAME, schema);
     ASSERT_FALSE(ret);
@@ -914,4 +910,31 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest017, TestSize.Leve
     RdbKnowledgeSchema schema = {};
     bool ret = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_24, DB_NAME, schema);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.name: KnowledgeInvalidSchemaTest018
+ * @tc.desc: test invalid schema when tableName too long
+ * @tc.type: FUNC
+ */
+HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest018, TestSize.Level0)
+{
+    RdbKnowledgeSchema schema = {};
+    const std::string jsonStr = R"({
+        "knowledgeSource": [{
+            "version": 1,
+            "dbName": "test.db",
+            "tables": [{
+                "tableName": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "referenceFields": ["id"],
+                "knowledgeFields": [
+                {
+                    "columnName": "subject",
+                    "type": ["Text"]
+                }]
+            }]
+        }]})";
+    bool ret = helper_->ParseRdbKnowledgeSchema(jsonStr, DB_NAME, schema);
+    ASSERT_FALSE(ret);
 }
