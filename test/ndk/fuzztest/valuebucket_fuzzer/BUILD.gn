@@ -53,6 +53,7 @@ ohos_fuzztest("ValueBucketFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 }
