@@ -55,6 +55,18 @@ void RdbHelper::ClearCache()
     RdbStoreManager::GetInstance().Clear();
 }
 
+bool RdbHelper::Init()
+{
+    // dlopen so that cannot be dlclose
+    return true;
+}
+
+bool RdbHelper::Destroy(int32_t flag)
+{
+    LOG_INFO("Destroy resource start, flag %{public}d", flag);
+    return RdbStoreManager::GetInstance().Destroy();
+}
+
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);

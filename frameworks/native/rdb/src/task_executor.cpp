@@ -13,9 +13,13 @@
 * limitations under the License.
 */
 
+#define LOG_TAG "TaskExecutor"
 #include "task_executor.h"
 
+#include "logger.h"
+
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
 TaskExecutor::TaskExecutor()
 {
     pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
@@ -42,6 +46,25 @@ void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     pool_ = executor;
+}
+
+bool TaskExecutor::Stop()
+{
+    std::shared_ptr<ExecutorPool> pool;
+    {
+        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+        pool = std::move(pool_);
+        pool_ = nullptr;
+    }
+    int32_t retry = 0;
+    while (pool.use_count() > 1 && retry++ < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (pool.use_count() > 1) {
+        LOG_WARN("There are other threads using the thread pool. count:%{public}ld", pool.use_count());
+        return false;
+    }
+    return true;
 };
 
 } // namespace OHOS::NativeRdb
