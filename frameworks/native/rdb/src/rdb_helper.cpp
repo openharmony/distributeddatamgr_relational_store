@@ -57,13 +57,14 @@ void RdbHelper::ClearCache()
 
 bool RdbHelper::Init()
 {
+    LOG_INFO("Init start");
     // dlopen so that cannot be dlclose
     return true;
 }
 
-bool RdbHelper::Destroy(int32_t flag)
+bool RdbHelper::Destroy()
 {
-    LOG_INFO("Destroy resource start, flag %{public}d", flag);
+    LOG_INFO("Destroy resource start");
     return RdbStoreManager::GetInstance().Destroy();
 }
 

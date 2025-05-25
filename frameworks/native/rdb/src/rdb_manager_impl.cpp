@@ -196,6 +196,7 @@ bool RdbManagerImpl::CleanUp()
         return false;
     }
     rdbService_ = nullptr;
+    return true;
 }
 
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
