@@ -57,21 +57,22 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
 
     sptr<IRemoteObject> observer = new (std::nothrow) DeathStubImpl();
     dataService->RegisterDeathObserver(bundleName, observer);
-    return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService, observer](const auto *) {});
+    return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService](const auto *) {});
 }
 
-static void LinkToDeath(const sptr<IRemoteObject> &remote)
+sptr<IRemoteObject::DeathRecipient> RdbManagerImpl::LinkToDeath(const sptr<IRemoteObject> &remote)
 {
     auto &manager = RdbManagerImpl::GetInstance();
     sptr<RdbManagerImpl::ServiceDeathRecipient> deathRecipient = new (std::nothrow)
         RdbManagerImpl::ServiceDeathRecipient(&manager);
     if (deathRecipient == nullptr) {
         LOG_ERROR("New ServiceDeathRecipient failed.");
-        return;
+        return nullptr;
     }
     if (!remote->AddDeathRecipient(deathRecipient)) {
         LOG_ERROR("Add death recipient failed.");
     }
+    return deathRecipient;
 }
 
 RdbManagerImpl::RdbManagerImpl()
@@ -129,9 +130,12 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     }
 
     sptr<IRdbService> serviceBase = rdbService;
-    LinkToDeath(serviceBase->AsObject());
+    auto deathRecipient = LinkToDeath(serviceBase->AsObject());
     // the rdbService is not null, so rdbService.GetRefPtr() is not null;
-    rdbService_ = std::shared_ptr<RdbService>(rdbService.GetRefPtr(), [rdbService](const auto *) {});
+    rdbService_ = std::shared_ptr<RdbService>(rdbService.GetRefPtr(), [rdbService, deathRecipient](const auto *) {
+        sptr<IRdbService> serviceBase = rdbService;
+        serviceBase->AsObject()->RemoveDeathRecipient(deathRecipient);
+    });
     param_ = param;
     return { E_OK, rdbService_ };
 }
@@ -172,6 +176,29 @@ void RdbManagerImpl::ResetServiceHandle()
     rdbService_ = nullptr;
 }
 
+bool RdbManagerImpl::CleanUp()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (distributedDataMgr_ != nullptr) {
+        auto code = distributedDataMgr_->Exit();
+        if (code != E_OK) {
+            LOG_ERROR("distributedDataMgr_ Exit:%{public}d!", code);
+            return false;
+        }
+    }
+    distributedDataMgr_ = nullptr;
+    int32_t retry = 0;
+    while (rdbService_ != nullptr && rdbService_.use_count() > 1 && retry++ < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (rdbService_.use_count() > 1) {
+        LOG_WARN("RdbService has other in use:%{public}ld!", rdbService_.use_count());
+        return false;
+    }
+    rdbService_ = nullptr;
+    return true;
+}
+
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<DistributedRdb::IKvStoreDataService>(impl)
 {
@@ -208,7 +235,8 @@ sptr<IRemoteObject> RdbStoreDataServiceProxy::GetFeatureInterface(const std::str
     return remoteObject;
 }
 
-int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer)
+int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(
+    const std::string &bundleName, sptr<IRemoteObject> observer, const std::string &featureName)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
@@ -216,7 +244,7 @@ int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundl
         return E_ERROR;
     }
 
-    if (!ITypesUtil::Marshal(data, bundleName, observer)) {
+    if (!ITypesUtil::Marshal(data, bundleName, observer, featureName)) {
         LOG_ERROR("Write descriptor failed.");
         return E_ERROR;
     }
@@ -232,6 +260,45 @@ int32_t RdbStoreDataServiceProxy::RegisterDeathObserver(const std::string &bundl
 
     int32_t status = E_ERROR;
     ITypesUtil::Unmarshal(reply, status);
+    if (status == E_OK) {
+        clientDeathObserver_ = observer;
+    }
+    return status;
+}
+
+int32_t RdbStoreDataServiceProxy::Exit(const std::string &featureName)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
+        LOG_ERROR("Write descriptor failed.");
+        return E_ERROR;
+    }
+
+    if (!ITypesUtil::Marshal(data, featureName)) {
+        LOG_ERROR("Write descriptor failed.");
+        return E_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t error = Remote()->SendRequest(static_cast<uint32_t>(KvStoreInterfaceCode::FEATURE_EXIT), data, reply, mo);
+    if (error != 0) {
+        LOG_ERROR("SendRequest returned %{public}d", error);
+        return E_ERROR;
+    }
+
+    int32_t status = E_ERROR;
+    ITypesUtil::Unmarshal(reply, status);
+    if (status == E_OK) {
+        int32_t retry = 0;
+        while (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1 && retry++ < 100) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        if (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1) {
+            LOG_WARN("observer still in use! count:%{public}d", clientDeathObserver_->GetSptrRefCount());
+            return E_ERROR;
+        }
+    }
     return status;
 }
 } // namespace OHOS::DistributedRdb
