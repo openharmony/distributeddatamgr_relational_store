@@ -73,6 +73,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     defines = [
@@ -100,6 +101,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
       "../common_type/include",
     ]
@@ -149,8 +151,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     external_deps = [
-      "ability_base:zuri",
-      "ability_runtime:dataobs_manager",
       "c_utils:utils",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
@@ -218,8 +218,6 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     external_deps = [
-      "ability_base:zuri",
-      "ability_runtime:dataobs_manager",
       "c_utils:utils",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
@@ -253,6 +251,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "//third_party/libuv/src/win",
     ]
 
@@ -347,6 +346,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -435,6 +435,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -453,6 +454,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
@@ -500,6 +502,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -517,6 +520,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
