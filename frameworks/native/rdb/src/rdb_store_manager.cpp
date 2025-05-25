@@ -224,12 +224,29 @@ bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param)
 
 void RdbStoreManager::Clear()
 {
+    configCache_.ResetCapacity(0);
+    configCache_.ResetCapacity(BUCKET_MAX_SIZE);
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
+        auto rdbStore = iter->second.lock();
+        if (rdbStore.use_count() > 1) {
+            LOG_WARN("store[%{public}s] in use by %{public}ld holders",
+                SqliteUtils::Anonymous(rdbStore->GetPath()).c_str(), rdbStore.use_count());
+        }
         iter = storeCache_.erase(iter);
     }
     storeCache_.clear();
+}
+
+bool RdbStoreManager::Destroy()
+{
+    Clear();
+    TaskExecutor::GetInstance().Stop();
+#if !defined(CROSS_PLATFORM)
+    return DistributedRdb::RdbManagerImpl::GetInstance().CleanUp();
+#endif
+    return true;
 }
 
 bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
@@ -239,7 +256,7 @@ bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
     auto it = storeCache_.find(path);
     if (it != storeCache_.end()) {
         auto rdbStore = it->second.lock();
-        LOG_INFO("store in use by %{public}ld holders", storeCache_[path].lock().use_count());
+        LOG_INFO("store in use by %{public}ld holders", rdbStore.use_count());
         if (rdbStore && shouldClose) {
             rdbStore->Close();
         }
