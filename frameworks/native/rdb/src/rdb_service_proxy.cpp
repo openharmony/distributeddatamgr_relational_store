@@ -709,7 +709,7 @@ RdbServiceProxy::~RdbServiceProxy()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1) {
-        LOG_WARN("notifier_ has other in use:%{public}ld!", notifier_->GetSptrRefCount());
+        LOG_WARN("notifier_ has other in use:%{public}d!", notifier_->GetSptrRefCount());
     }
 }
 } // namespace OHOS::DistributedRdb

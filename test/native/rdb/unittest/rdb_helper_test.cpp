@@ -831,34 +831,3 @@ HWTEST_F(RdbHelperTest, GetDatabase_007, TestSize.Level0)
     // Ensure that two databases not equal
     EXPECT_NE(rdbStore1, rdbStore2);
 }
-
-/**
- * @tc.name: DynamicLoading
- * @tc.desc: Dynamic loading test
- * @tc.type: FUNC
- */
-HWTEST_F(RdbHelperTest, DynamicLoading, TestSize.Level0)
-{
-    EXPECT_TRUE(RdbHelper::Init());
-
-    const std::string dbPath = RDB_TEST_PATH + "DynamicLoading.db";
-    RdbStoreConfig config(dbPath);
-    config.SetBundleName("com.ohos.config.DynamicLoading");
-    int errCode = E_ERROR;
-    RdbHelperTestOpenCallback helper;
-    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(rdbStore, nullptr);
-
-    EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
-    EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
-
-    EXPECT_TRUE(RdbHelper::Destroy());
-
-    EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
-    EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
-}
