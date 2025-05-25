@@ -15,6 +15,7 @@
 #define LOG_TAG "RdbServiceProxy"
 #include "rdb_service_proxy.h"
 
+#include <thread>
 #include "itypes_util.h"
 #include "logger.h"
 #include "result_set_proxy.h"
@@ -699,5 +700,16 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
+}
+
+RdbServiceProxy::~RdbServiceProxy()
+{
+    int32_t retry = 0;
+    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry++ < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1) {
+        LOG_WARN("notifier_ has other in use:%{public}d!", notifier_->GetSptrRefCount());
+    }
 }
 } // namespace OHOS::DistributedRdb
