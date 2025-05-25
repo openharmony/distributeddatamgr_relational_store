@@ -295,7 +295,7 @@ int32_t RdbStoreDataServiceProxy::Exit(const std::string &featureName)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         if (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1) {
-            LOG_WARN("observer still in use! count:%{public}ld", clientDeathObserver_->GetSptrRefCount());
+            LOG_WARN("observer still in use! count:%{public}d", clientDeathObserver_->GetSptrRefCount());
             return E_ERROR;
         }
     }
