@@ -92,7 +92,7 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     auto binlogFolder = GetBinlogFolderPath(path);
     size_t num = SqliteUtils::DeleteFolder(binlogFolder);
     if (num > 0 && sqlite3_is_support_binlog()) {
-        LOG_INFO("removed %zu binlog related items", num);
+        LOG_INFO("removed %{public}zu binlog related items", num);
     }
     auto slavePath = SqliteUtils::GetSlavePath(path);
     Delete(slavePath);
@@ -1284,9 +1284,9 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, Slav
         if (err != E_OK) {
             curStatus = SlaveStatus::BACKUP_INTERRUPT;
             LOG_WARN("reset binlog failed %{public}d", err);
-            return err;
+        } else {
+            LOG_INFO("reset binlog success");
         }
-        LOG_INFO("reset binlog success");
     }
     return E_OK;
 }
@@ -1361,7 +1361,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
     if (IsSupportBinlog(config_)) {
-        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), config_.IsMemoryRdb());
+        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), false);
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
     if (sRet == E_SQLITE_CORRUPT) {
@@ -1429,10 +1429,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     }
     connection->slaveConnection_ = conn;
     if (IsSupportBinlog(config)) {
-        ret = SqliteConnection::AsyncReplayBinlog(config.GetPath(), config.IsMemoryRdb());
-        if (ret != E_OK) {
-            return ret;
-        }
+        SqliteConnection::AsyncReplayBinlog(config.GetPath(), false);
     }
     ret = connection->VeritySlaveIntegrity();
     if (ret != E_OK) {
@@ -1459,11 +1456,8 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 int SqliteConnection::ExchangeVerify(bool isRestore)
 {
     if (isRestore) {
-        int err = SqliteConnection::ReplayBinlog(config_);
-        if (err != E_OK) {
-            return err;
-        }
-        err = VeritySlaveIntegrity();
+        SqliteConnection::ReplayBinlog(config_);
+        int err = VeritySlaveIntegrity();
         if (err != E_OK) {
             return err;
         }
@@ -1667,7 +1661,7 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
     }
     std::string dbPathStr(dbPath);
     pool->Execute([dbPathStr] {
-        (void)SqliteConnection::AsyncReplayBinlog(dbPathStr, false);
+        SqliteConnection::AsyncReplayBinlog(dbPathStr, true);
     });
 }
 
@@ -1693,60 +1687,63 @@ int SqliteConnection::SetBinlog()
     return E_OK;
 }
 
-int SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isMemoryRdb)
+void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedClean)
 {
     auto errCode = SqliteConnection::CheckPathExist(dbPath);
     if (errCode != E_OK) {
-        LOG_ERROR("main db does not exist");
-        return errCode;
+        LOG_WARN("main db does not exist, %{public}d", errCode);
+        return;
     }
     auto slavePath = SqliteUtils::GetSlavePath(dbPath);
     errCode = SqliteConnection::CheckPathExist(slavePath);
     if (errCode != E_OK) {
-        LOG_ERROR("backup db does not exist");
-        return errCode;
+        LOG_WARN("backup db does not exist, %{public}d", errCode);
+        return;
     }
     sqlite3 *dbFrom = nullptr;
-    errCode = SqliteConnection::BinlogOpenHandle(dbPath, dbFrom, isMemoryRdb);
+    errCode = SqliteConnection::BinlogOpenHandle(dbPath, dbFrom, false);
     if (errCode != E_OK) {
-        return errCode;
+        LOG_WARN("binlog db open failed, %{public}d", errCode);
+        return;
     }
     SqliteConnection::BinlogSetConfig(dbFrom);
     sqlite3 *dbTo = nullptr;
-    errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, isMemoryRdb);
+    errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, false);
     if (errCode != E_OK) {
         SqliteConnection::BinlogCloseHandle(dbFrom);
-        return errCode;
+        LOG_WARN("binlog db open failed, %{public}d", errCode);
+        return;
     }
     errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, dbTo));
     if (errCode != E_OK) {
-        LOG_ERROR("async replay err:%{public}d", errCode);
-    } else {
+        LOG_WARN("async replay err:%{public}d", errCode);
+    } else if (isNeedClean) {
         errCode = SQLiteError::ErrNo(sqlite3_clean_binlog(dbFrom, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_READ_MODE));
+        LOG_INFO("clean finished, %{public}d", errCode);
     }
     SqliteConnection::BinlogCloseHandle(dbFrom);
     SqliteConnection::BinlogCloseHandle(dbTo);
-    return errCode;
+    return;
 }
 
-int SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
+void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
 {
     if (!IsSupportBinlog(config)) {
-        return E_OK;
+        return;
     }
     if (slaveConnection_ == nullptr) {
-        return E_CANCEL;
+        LOG_WARN("back up does not exist");
+        return;
     }
     if (SqliteConnection::CheckPathExist(config.GetPath()) != E_OK) {
-        LOG_ERROR("main db does not exist");
-        return E_SQLITE_CORRUPT;
+        LOG_WARN("main db does not exist");
+        return;
     }
     int err = SQLiteError::ErrNo(sqlite3_replay_binlog(dbHandle_, slaveConnection_->dbHandle_));
     if (err != E_OK) {
-        LOG_ERROR("replay err:%{public}d", err);
-        return err;
+        LOG_WARN("replay err:%{public}d", err);
     }
-    return SQLiteError::ErrNo(sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_READ_MODE));
+    return;
 }
 
 bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)
