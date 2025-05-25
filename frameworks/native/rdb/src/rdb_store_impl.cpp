@@ -15,6 +15,8 @@
 #define LOG_TAG "RdbStoreImpl"
 #include "rdb_store_impl.h"
 
+#include <dlfcn.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -34,6 +36,7 @@
 #include "directory_ex.h"
 #include "knowledge_schema_helper.h"
 #include "logger.h"
+#include "obs_mgr_adapter.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -78,6 +81,11 @@ using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
+
+using RegisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+using UnregisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+using NotifyFunc = int32_t (*)(const std::string &);
+
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -87,6 +95,8 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
+std::mutex ObsManger::mutex_;
+void *ObsManger::handle_;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -510,7 +520,7 @@ int RdbStoreImpl::InnerSync(
     return E_OK;
 }
 
-Uri RdbStoreImpl::GetUri(const std::string &event)
+std::string RdbStoreImpl::GetUri(const std::string &event)
 {
     std::string rdbUri;
     if (config_.GetDataGroupId().empty()) {
@@ -518,7 +528,7 @@ Uri RdbStoreImpl::GetUri(const std::string &event)
     } else {
         rdbUri = SCHEME_RDB + config_.GetDataGroupId() + "/" + path_ + "/" + event;
     }
-    return Uri(rdbUri);
+    return rdbUri;
 }
 
 int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
@@ -537,31 +547,105 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, std::shared_ptr<
     return E_OK;
 }
 
+ObsManger::~ObsManger()
+{
+    if (handle_ == nullptr) {
+        return;
+    }
+    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle_, "Unregister"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(Unregister) failed(%{public}d)!", errno);
+        return;
+    }
+    obs_.ForEach([func](const auto &key, auto &value) {
+        for (auto &obs : value) {
+            func(key, obs);
+        }
+        return !value.empty();
+    });
+}
+
+void *ObsManger::GetHandle()
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (handle_ != nullptr) {
+        return handle_;
+    }
+    handle_ = dlopen("librdb_obs_mgr_adapter.z.so", RTLD_LAZY);
+    if (handle_ == nullptr) {
+        LOG_ERROR("dlopen(librdb_obs_mgr_adapter) failed(%{public}d)!", errno);
+    }
+    return handle_;
+}
+
+int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_ERROR;
+    }
+    auto func = reinterpret_cast<RegisterFunc>(dlsym(handle, "Register"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(Register) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
+        return E_ERROR;
+    }
+    auto code = func(uri, obs);
+    if (code == E_OK) {
+        obs_.Compute(uri, [obs](const auto &key, auto &value) {
+            value.push_back(obs);
+            return !value.empty();
+        });
+        return E_OK;
+    }
+    return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
+}
+
+int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> obs)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_ERROR;
+    }
+    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle, "Unregister"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(Unregister) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
+        return E_ERROR;
+    }
+    auto code = func(uri, obs);
+    if (code != E_OK) {
+        return code;
+    }
+    obs_.Compute(uri, [obs](const auto &key, auto &value) {
+        for (auto it = value.begin(); it != value.end();) {
+            if (*it == obs) {
+                value.erase(it);
+                break;
+            }
+            ++it;
+        }
+        return !value.empty();
+    });
+    return code;
+}
+
+int32_t ObsManger::Notify(const std::string &uri)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_ERROR;
+    }
+    auto func = reinterpret_cast<NotifyFunc>(dlsym(handle, "NotifyChange"));
+    if (func == nullptr) {
+        LOG_ERROR("dlsym(NotifyChange) failed(%{public}d)!, uri:%{public}s",
+            errno, SqliteUtils::Anonymous(uri).c_str());
+        return E_ERROR;
+    }
+    return func(uri);
+}
+
 int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    localSharedObservers_.try_emplace(option.event);
-    auto &list = localSharedObservers_.find(option.event)->second;
-    for (auto it = list.begin(); it != list.end(); it++) {
-        if ((*it)->getObserver() == observer) {
-            LOG_ERROR("Duplicate subscribe.");
-            return E_OK;
-        }
-    }
-
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient.");
-        return E_GET_DATAOBSMGRCLIENT_FAIL;
-    }
-    sptr<RdbStoreLocalSharedObserver> localSharedObserver(new (std::nothrow) RdbStoreLocalSharedObserver(observer));
-    int32_t err = client->RegisterObserver(GetUri(option.event), localSharedObserver);
-    if (err != 0) {
-        LOG_ERROR("Subscribe failed.");
-        return err;
-    }
-    localSharedObservers_[option.event].push_back(std::move(localSharedObserver));
-    return E_OK;
+    return obsManger_.Register(GetUri(option.event), observer);
 }
 
 int32_t RdbStoreImpl::SubscribeLocalDetail(
@@ -647,38 +731,7 @@ int RdbStoreImpl::UnSubscribeLocal(const SubscribeOption &option, std::shared_pt
 
 int RdbStoreImpl::UnSubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto obs = localSharedObservers_.find(option.event);
-    if (obs == localSharedObservers_.end()) {
-        return E_OK;
-    }
-
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient.");
-        return E_GET_DATAOBSMGRCLIENT_FAIL;
-    }
-
-    auto &list = obs->second;
-    for (auto it = list.begin(); it != list.end();) {
-        if (observer == nullptr || (*it)->getObserver() == observer) {
-            int32_t err = client->UnregisterObserver(GetUri(option.event), *it);
-            if (err != 0) {
-                LOG_ERROR("UnSubscribeLocalShared failed.");
-                return err;
-            }
-            it = list.erase(it);
-            if (observer != nullptr) {
-                break;
-            }
-        } else {
-            it++;
-        }
-    }
-    if (list.empty()) {
-        localSharedObservers_.erase(option.event);
-    }
-    return E_OK;
+    return obsManger_.Unregister(GetUri(option.event), observer);
 }
 
 int32_t RdbStoreImpl::UnsubscribeLocalDetail(
@@ -769,12 +822,7 @@ int RdbStoreImpl::Notify(const std::string &event)
     if (isMemoryRdb_) {
         return E_OK;
     }
-    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
-    if (client == nullptr) {
-        LOG_ERROR("Failed to get DataObsMgrClient.");
-        return E_GET_DATAOBSMGRCLIENT_FAIL;
-    }
-    int32_t err = client->NotifyChange(GetUri(event));
+    int32_t err = obsManger_.Notify(GetUri(event));
     if (err != 0) {
         LOG_ERROR("Notify failed.");
     }

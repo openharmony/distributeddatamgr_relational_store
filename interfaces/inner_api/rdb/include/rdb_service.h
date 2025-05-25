@@ -20,6 +20,7 @@
 #include <string>
 
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "iremote_object.h"
 #include "rdb_notifier.h"
 #include "rdb_types.h"
 #include "result_set.h"

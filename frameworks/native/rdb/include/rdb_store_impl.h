@@ -25,8 +25,6 @@
 
 #include "concurrent_map.h"
 #include "connection_pool.h"
-#include "data_ability_observer_stub.h"
-#include "dataobs_mgr_client.h"
 #include "knowledge_schema_helper.h"
 #include "rdb_errno.h"
 #include "rdb_service.h"
@@ -65,24 +63,19 @@ private:
     std::weak_ptr<RdbStoreObserver> observer_;
 };
 
-class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
+class ObsManger {
 public:
-    explicit RdbStoreLocalSharedObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer) {};
-    virtual ~RdbStoreLocalSharedObserver() {};
-    void OnChange()
-    {
-        auto obs = observer_.lock();
-        if (obs != nullptr) {
-            obs->OnChange();
-        }
-    }
-    std::shared_ptr<RdbStoreObserver> getObserver()
-    {
-        return observer_.lock();
-    }
+    ObsManger() = default;
+    virtual ~ObsManger();
+    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    int32_t Notify(const std::string &uri);
 
 private:
-    std::weak_ptr<RdbStoreObserver> observer_;
+    static void *GetHandle();
+    static std::mutex mutex_;
+    static void *handle_;
+    ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;
 };
 
 class RdbStoreImpl : public RdbStore {
@@ -210,7 +203,7 @@ private:
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
-    Uri GetUri(const std::string &event);
+    std::string GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
     int32_t SubscribeLocalDetail(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer);
@@ -280,8 +273,8 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
+    ObsManger obsManger_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
-    std::map<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> localSharedObservers_;
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
