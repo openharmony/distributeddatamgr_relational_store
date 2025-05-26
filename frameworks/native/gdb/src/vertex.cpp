@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "GdbElement"
+#define LOG_TAG "GdbVertex"
+#include "vertex.h"
+
 #include <utility>
 
 #include "gdb_errors.h"
@@ -26,14 +28,12 @@ Vertex::Vertex() : id_("0"), properties_()
 
 Vertex::Vertex(std::string id, std::string label) : id_(std::move(id)), label_(std::move(label))
 {
-    labels_.emplace_back(label_);
 }
 
 Vertex::Vertex(std::string id, std::string label,
     const std::unordered_map<std::string, PropType> &properties)
     : id_(std::move(id)), label_(std::move(label)), properties_(properties)
 {
-    labels_.emplace_back(label_);
 }
 
 std::string Vertex::GetId() const
@@ -51,15 +51,16 @@ const std::string &Vertex::GetLabel() const
     return label_;
 }
 
-const std::vector<std::string> &Vertex::GetLabels() const
+const std::vector<std::string> &Vertex::GetLabels()
 {
+    labels_.clear();
+    labels_.emplace_back(label_);
     return labels_;
 }
 
 void Vertex::SetLabel(const std::string &label)
 {
     label_ = label;
-    labels_.emplace_back(label);
 }
 
 const std::unordered_map<std::string, PropType> &Vertex::GetProperties() const
@@ -72,51 +73,85 @@ void Vertex::SetProperty(const std::string &key, PropType value)
     properties_[key] = std::move(value);
 }
 
-std::shared_ptr<Vertex> Vertex::Parse(const nlohmann::json &json, int32_t &errCode)
+bool Vertex::Marshal(json &node) const
 {
-    std::shared_ptr<Vertex> element = std::make_shared<Vertex>();
-    if (!json.contains(Vertex::LABEL) || !json.contains(Vertex::ID) ||
-        !json.contains(Vertex::PROPERTIES) || !json.at(Vertex::PROPERTIES).is_object()) {
-        LOG_ERROR("element format error.");
-        errCode = E_PARSE_JSON_FAILED;
-        return nullptr;
-    }
+    return false;
+}
 
-    if (json.at(Vertex::ID).is_number()) {
-        auto id = json.at(Vertex::ID).get<int32_t>();
-        element->SetId(std::to_string(id));
-    } else if (json.at(Vertex::ID).is_string()) {
-        auto id = json.at(Vertex::ID).get<std::string>();
-        element->SetId(id);
-    } else {
-        LOG_ERROR("element id is not number or string.");
-        errCode = E_PARSE_JSON_FAILED;
-        return nullptr;
-    }
-    if (!json.at(Vertex::LABEL).is_string()) {
-        LOG_ERROR("element label is not string.");
-        errCode = E_PARSE_JSON_FAILED;
-        return nullptr;
-    }
-    element->SetLabel(json.at(Vertex::LABEL).get<std::string>());
-    for (const auto &[key, value] : json.at(Vertex::PROPERTIES).items()) {
-        if (value.is_string()) {
-            element->SetProperty(key, value.get<std::string>());
-        } else if (value.is_number_integer()) {
-            element->SetProperty(key, value.get<int64_t>());
-        } else if (value.is_number_float()) {
-            element->SetProperty(key, value.get<double>());
-        } else if (value.is_boolean()) {
-            element->SetProperty(key, value.get<bool>());
-        } else if (value.is_null()) {
-            element->SetProperty(key, nullptr);
+bool Vertex::GetID(const json &node, const std::string &name, std::string &id)
+{
+    std::string strId;
+    const auto ret = GetValue(node, name, strId);
+    if (!ret) {
+        uint64_t intId;
+        if (GetValue(node, name, intId)) {
+            strId = std::to_string(intId);
         } else {
-            LOG_ERROR("element property value type is not supported.");
-            errCode = E_PARSE_JSON_FAILED;
-            return nullptr;
+            return false;
         }
     }
+    id = std::move(strId);
+    return true;
+}
+
+bool Vertex::GetPropsValue(const json &node, const std::string &name, std::unordered_map<std::string, PropType> &props)
+{
+    auto &propsNode = GetSubNode(node, name);
+    if (propsNode.is_discarded() || propsNode.is_null()) {
+        LOG_WARN("propsNode is discarded.");
+        return true;
+    }
+    if (!propsNode.is_object()) {
+        LOG_ERROR("propsNode is not object.");
+        return false;
+    }
+    auto keys = propsNode.Keys();
+    for (const auto &key : keys) {
+        auto &valueObj = GetSubNode(propsNode, key);
+        if (valueObj.is_boolean()) {
+            bool boolValue;
+            valueObj.get_to(boolValue);
+            props.emplace(key, boolValue);
+        } else if (valueObj.is_string()) {
+            std::string stringValue;
+            valueObj.get_to(stringValue);
+            props.emplace(key, stringValue);
+        } else if (valueObj.is_number_unsigned() || valueObj.is_number_integer()) {
+            int64_t int64Value;
+            valueObj.get_to(int64Value);
+            props.emplace(key, int64Value);
+        } else if (valueObj.is_number_float()) {
+            double doubleValue;
+            valueObj.get_to(doubleValue);
+            props.emplace(key, doubleValue);
+        } else if (valueObj.is_null()) {
+            LOG_WARN("element is null. key: %{public}s", key.c_str());
+        } else {
+            LOG_WARN("element type of properties not support. key: %{public}s", key.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Vertex::Unmarshal(const json &node)
+{
+    bool isUnmarshalSuccess = true;
+    isUnmarshalSuccess = GetID(node, ID, id_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = GetValue(node, LABEL, label_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = Vertex::GetPropsValue(node, PROPERTIES, properties_) && isUnmarshalSuccess;
+    return isUnmarshalSuccess;
+}
+
+std::shared_ptr<Vertex> Vertex::Parse(const std::string &jsonStr, int32_t &errCode)
+{
+    Vertex vertex;
+    if (!Serializable::Unmarshall(jsonStr, vertex)) {
+        LOG_WARN("Parse vertex failed.");
+        errCode = E_PARSE_JSON_FAILED;
+        return nullptr;
+    }
     errCode = E_OK;
-    return element;
+    return std::make_shared<Vertex>(vertex);
 }
 } // namespace OHOS::DistributedDataAip

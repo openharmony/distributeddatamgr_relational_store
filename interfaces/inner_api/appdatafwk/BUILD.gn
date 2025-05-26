@@ -98,6 +98,10 @@ if (is_android || is_ios) {
       ":common_public_config",
       ":appdatafwk_public_config",
     ]
+    external_deps = [
+      "cJSON:cjson",
+      "hilog:libhilog",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -127,6 +131,7 @@ ohos_shared_library("native_appdatafwk") {
 
   external_deps = [
     "c_utils:utils",
+    "cJSON:cjson",
     "hilog:libhilog",
     "ipc:ipc_single",
   ]

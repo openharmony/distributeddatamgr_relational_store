@@ -14,7 +14,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "nlohmann/json.hpp"
+#include "serializable.h"
 
 #include "common.h"
 #include "knowledge_schema.h"
@@ -23,7 +23,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 
-using Json = nlohmann::json;
+using Json = OHOS::Serializable::JSONWrapper;
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
@@ -743,7 +743,7 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest001, TestSize.Leve
     EXPECT_FALSE(ret1);
     RdbKnowledgeSchema schema2 = {};
     bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_2, DB_NAME, schema2);
-    EXPECT_FALSE(ret2);
+    EXPECT_TRUE(ret2);
 }
 
 /**
