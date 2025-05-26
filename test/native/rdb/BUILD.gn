@@ -102,6 +102,7 @@ ohos_unittest("NativeRdbLogTest") {
   sources = [
     "unittest/common.cpp",
     "unittest/rdb_error_log_test/rdb_error_log_test.cpp",
+    "unittest/rdb_error_log_test/rdb_perfStat_test.cpp",
   ]
   sources += [ "../../../frameworks/native/rdb/src/suspender.cpp" ]
   include_dirs = [
@@ -206,6 +207,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rdb_local_db_observer.cpp",
     "../../../frameworks/native/rdb/src/rdb_manager_impl.cpp",
     "../../../frameworks/native/rdb/src/rdb_notifier_stub.cpp",
+    "../../../frameworks/native/rdb/src/rdb_perfStat.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
     "../../../frameworks/native/rdb/src/rdb_service_proxy.cpp",
     "../../../frameworks/native/rdb/src/rdb_sql_log.cpp",

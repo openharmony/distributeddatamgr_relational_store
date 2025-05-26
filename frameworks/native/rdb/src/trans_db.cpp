@@ -27,7 +27,7 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace DistributedRdb;
-TransDB::TransDB(std::shared_ptr<Connection> conn, const std::string &name) : conn_(conn), name_(name)
+TransDB::TransDB(std::shared_ptr<Connection> conn, const std::string &path) : conn_(conn), path_(path)
 {
     maxArgs_ = conn->GetMaxVariable();
 }
@@ -98,7 +98,7 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
                 continue;
             }
             LOG_ERROR("failed(0x%{public}x) db:%{public}s table:%{public}s args:%{public}zu", errCode,
-                SqliteUtils::Anonymous(name_).c_str(), SqliteUtils::Anonymous(table).c_str(), args.size());
+                SqliteUtils::Anonymous(path_).c_str(), SqliteUtils::Anonymous(table).c_str(), args.size());
             return { errCode, -1 };
         }
     }
@@ -215,7 +215,7 @@ std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, co
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto start = std::chrono::steady_clock::now();
-    return std::make_shared<SqliteSharedResultSet>(start, conn_.lock(), sql, args, name_);
+    return std::make_shared<SqliteSharedResultSet>(start, conn_.lock(), sql, args, path_);
 #else
     (void)sql;
     (void)args;
@@ -309,7 +309,7 @@ void TransDB::HandleSchemaDDL(std::shared_ptr<Statement> statement)
     auto [err, version] = statement->ExecuteForValue();
     if (vSchema_ < static_cast<int64_t>(version)) {
         LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
-            SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
+            SqliteUtils::Anonymous(path_).c_str(), vSchema_, static_cast<int64_t>(version));
         vSchema_ = version;
     }
 }
