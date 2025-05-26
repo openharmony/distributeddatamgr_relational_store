@@ -14,7 +14,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "nlohmann/json.hpp"
+#include "serializable.h"
 
 #include "common.h"
 #include "knowledge_schema.h"
@@ -23,7 +23,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 
-using Json = nlohmann::json;
+using Json = OHOS::Serializable::JSONWrapper;
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
