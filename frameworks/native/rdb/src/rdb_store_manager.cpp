@@ -239,6 +239,11 @@ void RdbStoreManager::Clear()
     storeCache_.clear();
 }
 
+void RdbStoreManager::Init()
+{
+    TaskExecutor::GetInstance().Init();
+}
+
 bool RdbStoreManager::Destroy()
 {
     Clear();

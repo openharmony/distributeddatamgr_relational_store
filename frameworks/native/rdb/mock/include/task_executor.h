@@ -80,9 +80,12 @@ public:
     static TaskExecutor &GetInstance();
     std::shared_ptr<ExecutorPool> GetExecutor();
     void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+    void Init();
     bool Stop();
 
 private:
+    size_t MAX_THREADS = 2;
+    size_t MIN_THREADS = 0;
     TaskExecutor();
     ~TaskExecutor();
     mutable std::shared_mutex rwMutex_;
