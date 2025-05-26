@@ -383,18 +383,19 @@ ValuesBuckets TransDB::GetValues(std::shared_ptr<Statement> statement)
     }
     // The correct number of changed rows can only be obtained after completing the step
     do {
-        if (values.RowSize() < MAX_RETURNING_ROWS) {
-            ValuesBucket value;
-            for (int32_t i = 0; i < colCount; i++) {
-                auto [code, val] = statement->GetColumn(i);
-                if (code != E_OK) {
-                    LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
-                    break;
-                }
-                value.Put(colNames[i], std::move(val));
-            }
-            values.Put(std::move(value));
+        if (values.RowSize() >= MAX_RETURNING_ROWS) {
+            continue;
         }
+        ValuesBucket value;
+        for (int32_t i = 0; i < colCount; i++) {
+            auto [code, val] = statement->GetColumn(i);
+            if (code != E_OK) {
+                LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+                break;
+            }
+            value.Put(colNames[i], std::move(val));
+        }
+        values.Put(std::move(value));
     } while (statement->Step() == E_OK);
     return values;
 }
