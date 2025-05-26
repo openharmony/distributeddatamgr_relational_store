@@ -57,6 +57,17 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
     return value;
 }
 
+std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
+    ::taihe::array<::ohos::data::relationalStore::Asset> const &assets)
+{
+    std::vector<OHOS::NativeRdb::AssetValue> result(assets.size());
+    std::transform(assets.begin(), assets.end(), result.begin(), [](::ohos::data::relationalStore::Asset c) {
+        OHOS::NativeRdb::AssetValue value = AssetToNative(c);
+        return value;
+    });
+    return result;
+}
+
 ::ohos::data::relationalStore::Asset AssetToAni(OHOS::NativeRdb::AssetValue const &value)
 {
     ::ohos::data::relationalStore::Asset asset = {};
@@ -69,6 +80,23 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
     TaiheAssetStatus aniStatus((TaiheAssetStatus::key_t)(value.status));
     asset.status = ::taihe::optional<TaiheAssetStatus>::make(aniStatus);
     return asset;
+}
+
+std::vector<::ohos::data::relationalStore::Asset> AssetsToAni(OHOS::NativeRdb::ValueObject::Assets const &valueObj)
+{
+    std::vector<::ohos::data::relationalStore::Asset> aniAssets;
+    for (auto it = valueObj.begin(); it != valueObj.end(); ++it) {
+        auto const &assetItem = *it;
+        ::ohos::data::relationalStore::Asset aniAsset = AssetToAni(assetItem);
+        aniAssets.emplace_back(aniAsset);
+    }
+    return aniAssets;
+}
+
+std::vector<::ohos::data::relationalStore::Asset> AssetsToAni(OHOS::NativeRdb::ValueObject const &valueObj)
+{
+    auto nativeAseets = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
+    return AssetsToAni(nativeAseets);
 }
 
 OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value)
@@ -94,30 +122,20 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
             break;
         case TaiheValueType::tag_t::Uint8Array: {
             ::taihe::array<uint8_t> const &tmp = value.get_Uint8Array_ref();
-            std::vector<uint8_t> stdvector(tmp.data(), tmp.data() + tmp.size());
-            valueObj.value = stdvector;
+            valueObj.value = std::vector<uint8_t>(tmp.data(), tmp.data() + tmp.size());
         }
             break;
         case TaiheValueType::tag_t::ASSET: {
-            ::ohos::data::relationalStore::Asset const &tmp = value.get_ASSET_ref();
-            OHOS::NativeRdb::AssetValue value = AssetToNative(tmp);
-            valueObj.value = value;
+            valueObj.value = AssetToNative(value.get_ASSET_ref());
         }
             break;
         case TaiheValueType::tag_t::ASSETS: {
-            ::taihe::array<::ohos::data::relationalStore::Asset> const &tmp = value.get_ASSETS_ref();
-            std::vector<OHOS::NativeRdb::AssetValue> para(tmp.size());
-            std::transform(tmp.begin(), tmp.end(), para.begin(), [](::ohos::data::relationalStore::Asset c) {
-                OHOS::NativeRdb::AssetValue value = AssetToNative(c);
-                return value;
-            });
-            valueObj.value = para;
+            valueObj.value = AssetsToNative(value.get_ASSETS_ref());
         }
             break;
         case TaiheValueType::tag_t::Float32Array: {
             ::taihe::array<float> const &tmp = value.get_Float32Array_ref();
-            std::vector<float> stdvector(tmp.begin(), tmp.end());
-            valueObj.value = stdvector;
+            valueObj.value = std::vector<float>(tmp.begin(), tmp.end());
         }
             break;
         case TaiheValueType::tag_t::bigint: {
@@ -134,8 +152,7 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
 ::ohos::data::relationalStore::ValueType ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj)
 {
     ::ohos::data::relationalStore::ValueType value = ::ohos::data::relationalStore::ValueType::make_EMPTY();
-    OHOS::NativeRdb::ValueObject::TypeId typeId = valueObj.GetType();
-    switch (typeId) {
+    switch (valueObj.GetType()) {
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_INT: {
             value = ::ohos::data::relationalStore::ValueType::make_INT64((int64_t)valueObj);
         }
@@ -159,19 +176,12 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSET: {
             auto temp = (OHOS::NativeRdb::ValueObject::Asset)valueObj;
-            ::ohos::data::relationalStore::Asset aniAsset = AssetToAni(temp);
-            value = ::ohos::data::relationalStore::ValueType::make_ASSET(aniAsset);
+            value = ::ohos::data::relationalStore::ValueType::make_ASSET(AssetToAni(temp));
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSETS: {
-            auto temp = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
-            std::vector<::ohos::data::relationalStore::Asset> aniAssets;
-            for (auto it = temp.begin(); it != temp.end(); ++it) {
-                auto const &assetItem = *it;
-                ::ohos::data::relationalStore::Asset aniAsset = AssetToAni(assetItem);
-                aniAssets.emplace_back(aniAsset);
-            }
-            value = ::ohos::data::relationalStore::ValueType::make_ASSETS(aniAssets);
+            auto temp = AssetsToAni(valueObj);
+            value = ::ohos::data::relationalStore::ValueType::make_ASSETS(temp);
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_VECS: {
@@ -180,9 +190,8 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
         }
             break;
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BIGINT: {
-            auto temp = (OHOS::NativeRdb::ValueObject::BigInt)valueObj;
-            std::vector<uint64_t> array = temp.Value();
-            value = ::ohos::data::relationalStore::ValueType::make_bigint(array);
+            auto temp = ((OHOS::NativeRdb::ValueObject::BigInt)valueObj).Value();
+            value = ::ohos::data::relationalStore::ValueType::make_bigint(temp);
         }
             break;
         default:

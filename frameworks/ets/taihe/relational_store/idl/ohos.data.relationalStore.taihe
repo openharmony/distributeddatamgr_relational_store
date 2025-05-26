@@ -717,6 +717,3 @@ function DeleteRdbStoreWithName(context: @sts_type("BaseContext") Opaque, name: 
 @gen_async("deleteRdbStore")
 @gen_promise("deleteRdbStore")
 function DeleteRdbStoreWithConfig(context: @sts_type("BaseContext") Opaque, config: StoreConfig): void;
-
-
-

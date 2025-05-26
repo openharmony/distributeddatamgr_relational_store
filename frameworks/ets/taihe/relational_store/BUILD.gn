@@ -61,12 +61,12 @@ taihe_shared_library("relationalstore_ani") {
     "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
   ]
 
-  if (os_level == "standard") {
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
   }
   cflags = [
     "-DHILOG_ENABLE",
