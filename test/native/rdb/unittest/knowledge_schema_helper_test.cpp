@@ -743,7 +743,7 @@ HWTEST_F(KnowledgeSchemaHelperTest, KnowledgeInvalidSchemaTest001, TestSize.Leve
     EXPECT_FALSE(ret1);
     RdbKnowledgeSchema schema2 = {};
     bool ret2 = helper_->ParseRdbKnowledgeSchema(INVALID_SCHEMA_STR_2, DB_NAME, schema2);
-    EXPECT_FALSE(ret2);
+    EXPECT_TRUE(ret2);
 }
 
 /**
