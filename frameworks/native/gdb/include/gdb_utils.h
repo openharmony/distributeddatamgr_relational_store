@@ -16,6 +16,7 @@
 #ifndef OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GDB_UTILS_H
 #define OHOS_DISTRIBUTED_DATA_NATIVE_GDB_GDB_UTILS_H
 #include <string>
+#include <vector>
 
 #include "rdb_visibility.h"
 

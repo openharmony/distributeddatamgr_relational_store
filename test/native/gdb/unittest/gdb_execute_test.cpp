@@ -1113,53 +1113,44 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_ParseEdge, TestSize.Level1)
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     // no start, no end
-    nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
-    ASSERT_FALSE(json.is_discarded());
-    ASSERT_FALSE(json.is_null());
-    Edge::Parse(json, errCode);
+    std::string jsonStr = "{\"name\" : \"zhangsan\"}";
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // no identity
-    std::string jsonStr = "{\"start\" : 1, \"end\" : 2}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    jsonStr = "{\"start\" : 1, \"end\" : 2}";
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // ok
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // start is AA
     jsonStr = "{\"start\" : \"AA\", \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // end is B
     jsonStr = "{\"start\" : 1, \"end\" : \"B\", \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity is C
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":\"C\","
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // label is 222
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":222,'identity':3,\"properties\":{\"NAME\":\"myCompany3\","
               "\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // key4 is null
     jsonStr =
         "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":2,"
         "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, "
         "\"key4\": null}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
@@ -1168,50 +1159,36 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment, TestSize.Level1)
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     // NO start and end
-    nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
-    ASSERT_FALSE(json.is_discarded());
-    ASSERT_FALSE(json.is_null());
-    PathSegment::Parse(json, errCode);
+    std::string jsonStr = "{\"name\" : \"zhangsan\"}";
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
     // no relationship
-    std::string jsonStr = "{\"start\" : {}, \"end\" : {}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    jsonStr = "{\"start\" : {}, \"end\" : {}}";
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
-
     jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
-
     jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
-
     jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":\"C\","
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
-
     jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":222,\"identity\":2,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
-
     jsonStr = "{\"start\" : {}, \"end\" : {}, \"relationship\":{}, \"label\":\"COMPANY\",\"identity\":2,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], "
               "\"key3\":{}, \"key4\": null}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
-    json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(pathJsonString, errCode);
     ASSERT_EQ(errCode, E_OK);
 }
 
@@ -1219,8 +1196,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
 {
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(pathJsonString, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity:A, E_OK
     std::string jsonStr =
@@ -1230,8 +1206,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
 
     // label:2, E_PARSE_JSON_FAILED
@@ -1242,8 +1218,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     // relationship->start:B, E_OK
@@ -1254,8 +1230,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":\"B\",\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
 
     // relationship->end:C, E_OK
@@ -1266,8 +1242,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_OK);
 }
 
@@ -1275,8 +1251,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment03, TestSize.Level1)
 {
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(pathJsonString, errCode);
     ASSERT_EQ(errCode, E_OK);
     // end no label:PERSON and identity: A
     std::string jsonStr =
@@ -1286,41 +1261,40 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment03, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
     
     jsonStr = "{\"start\" : 1, \"end\" : {}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     jsonStr = "{\"start\" : {}, \"relationship\" : 1}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     jsonStr = "{\"start\" : {}, \"relationship\" : {}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     jsonStr = "{\"start\" : {}, \"relationship\" : {}, \"end\" : 1}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     jsonStr = "{\"start\" : {}, \"relationship\" : {}, \"end\" : {}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
 HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment04, TestSize.Level1)
 {
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    PathSegment::Parse(pathJsonString, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity:A, E_OK
     std::string jsonStr =
@@ -1330,8 +1304,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment04, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     std::shared_ptr<Vertex> sourceVertex;
     std::shared_ptr<Vertex> targetVertex;
@@ -1347,8 +1321,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_PathSegment04, TestSize.Level1)
         "\"end\":{\"label\":\"PERSON\",\"identity\":2,\"properties\":{\"AGE\":28,\"SALARY\":65000,"
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    PathSegment::Parse(json, errCode);
+    
+    PathSegment::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
@@ -1378,8 +1352,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path02, TestSize.Level1)
 {
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    Path::Parse(json, errCode);
+    Path::Parse(pathJsonString, errCode);
     // no length
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // identity:A, E_OK
@@ -1396,8 +1369,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}]}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Path::Parse(json, errCode);
+    
+    Path::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
 
     // label:2, E_PARSE_JSON_FAILED
@@ -1408,8 +1381,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path02, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{}]}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Path::Parse(json, errCode);
+    
+    Path::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
@@ -1417,8 +1390,7 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path03, TestSize.Level1)
 {
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
-    nlohmann::json json = nlohmann::json::parse(pathJsonString, nullptr, false);
-    Path::Parse(json, errCode);
+    Path::Parse(pathJsonString, errCode);
     // no length
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // relationship->start:B, E_OK
@@ -1429,8 +1401,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path03, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":\"B\",\"end\":2,\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}},\"segments\":[{}]}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Path::Parse(json, errCode);
+    
+    Path::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     // relationship->end:C, E_OK
@@ -1447,8 +1419,8 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Path03, TestSize.Level1)
         "\"NAME\":\"Bob\",\"GENDER\":\"Male\",\"PHONENUMBERS\":\"123456789\",\"EMAILS\":\" bob@example.com\"}},"
         "\"relationship\":{\"label\":\"tttt\",\"identity\":3,\"start\":1,\"end\":\"C\",\"properties\":{\"NUM\":4,"
         "\"PINYIN\":\"zhixiqinshu\"}}}]}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Path::Parse(json, errCode);
+    
+    Path::Parse(jsonStr, errCode);
     ASSERT_EQ(errCode, E_OK);
 }
 
@@ -1457,53 +1429,51 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_Vertex, TestSize.Level1)
     ASSERT_NE(store_, nullptr);
     int errCode = E_ERROR;
     // no start, no end
-    nlohmann::json json = nlohmann::json::parse("{\"name\" : \"zhangsan\"}", nullptr, false);
-    ASSERT_FALSE(json.is_discarded());
-    ASSERT_FALSE(json.is_null());
-    Vertex::Parse(json, errCode);
+    auto jsonStr = "{\"name\" : \"zhangsan\"}";
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // no identity
-    std::string jsonStr = "{\"start\" : 1, \"end\" : 2}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    jsonStr = "{\"start\" : 1, \"end\" : 2}";
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // ok
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // start is AA
     jsonStr = "{\"start\" : \"AA\", \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // end is B
     jsonStr = "{\"start\" : 1, \"end\" : \"B\", \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // identity is C
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":\"C\","
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
     // label is 222
     jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":222,'identity':3,\"properties\":{\"NAME\":\"myCompany3\","
               "\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
     // key4 is null
     jsonStr =
         "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":2,"
         "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":4.5,\"SEX\":true,\"key1\":true,\"key2\":[], \"key3\":{}, "
         "\"key4\": null}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Vertex::Parse(json, errCode);
+    
+    Vertex::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
@@ -1930,20 +1900,19 @@ HWTEST_F(GdbExecuteTest, GdbStore_Execute_EdgeTest, TestSize.Level1)
     
     auto jsonStr = "{\"start\" : 1, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    nlohmann::json json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_OK);
 
     jsonStr = "{\"start\" : {}, \"end\" : 2, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 
     jsonStr = "{\"start\" : 1, \"end\" : {}, \"label\":\"COMPANY\",\"identity\":3,"
               "\"properties\":{\"NAME\":\"myCompany3\",\"FOUNDED\":2011}}";
-    json = nlohmann::json::parse(jsonStr, nullptr, false);
-    Edge::Parse(json, errCode);
+    
+    Edge::Parse(jsonStr, errCode);
     EXPECT_EQ(errCode, E_PARSE_JSON_FAILED);
 }
 
