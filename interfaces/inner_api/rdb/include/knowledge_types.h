@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "rdb_store_config.h"
 
 namespace OHOS::DistributedRdb {
