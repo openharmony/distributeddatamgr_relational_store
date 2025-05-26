@@ -368,7 +368,7 @@ bool UnionAccessor::TryConvert<std::vector<uint8_t>>(std::vector<uint8_t> &value
     return TryConvertArray(value);
 }
 
-bool UnionAccessor::GetObjectRefPropertyByName(std::string clsName, const char *name, ani_ref &val)
+bool UnionAccessor::GetObjectRefPropertyByName(const std::string clsName, const char *name, ani_ref &val)
 {
     ani_class cls;
     env_->FindClass(clsName.c_str(), &cls);
@@ -386,7 +386,7 @@ bool UnionAccessor::GetObjectRefPropertyByName(std::string clsName, const char *
     return true;
 }
 
-bool UnionAccessor::GetObjectStringPropertyByName(std::string clsName, const char *name, std::string &val)
+bool UnionAccessor::GetObjectStringPropertyByName(const std::string clsName, const char *name, std::string &val)
 {
     ani_ref ref;
     auto isOk = GetObjectRefPropertyByName(clsName, name, ref);
@@ -398,7 +398,7 @@ bool UnionAccessor::GetObjectStringPropertyByName(std::string clsName, const cha
     return true;
 }
 
-bool UnionAccessor::GetObjectEnumValuePropertyByName(std::string clsName, const char *name, ani_int &val)
+bool UnionAccessor::GetObjectEnumValuePropertyByName(const std::string clsName, const char *name, ani_int &val)
 {
     ani_ref ref;
     auto isOk = GetObjectRefPropertyByName(clsName, name, ref);
@@ -639,6 +639,41 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
     utf8_buffer[bytes_written] = '\0';
     std::string content = std::string(utf8_buffer);
     return content;
+}
+
+std::string AniStringUtils::ToStd(ani_env *env, ani_string ani_str)
+{
+    ani_size strSize = 0;
+    auto status = env->String_GetUTF8Size(ani_str, &strSize);
+    if (ANI_OK != status) {
+        LOG_INFO("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        return std::string();
+    }
+
+    std::vector<char> buffer(strSize + 1); // +1 for null terminator
+    char *utf8Buffer = buffer.data();
+
+    // String_GetUTF8 Supportted by https://gitee.com/openharmony/arkcompiler_runtime_core/pulls/3416
+    ani_size bytesWritten = 0;
+    status = env->String_GetUTF8(ani_str, utf8Buffer, strSize + 1, &bytesWritten);
+    if (ANI_OK != status) {
+        LOG_INFO("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        return std::string();
+    }
+
+    utf8Buffer[bytesWritten] = '\0';
+    std::string content = std::string(utf8Buffer);
+    return content;
+}
+
+ani_string AniStringUtils::ToAni(ani_env *env, const std::string& str)
+{
+    ani_string aniStr = nullptr;
+    if (ANI_OK != env->String_NewUTF8(str.data(), str.size(), &aniStr)) {
+        LOG_INFO("[ANI] Unsupported ANI_VERSION_1");
+        return nullptr;
+    }
+    return aniStr;
 }
 
 } //namespace ani_utils

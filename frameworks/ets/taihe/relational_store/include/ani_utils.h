@@ -41,90 +41,6 @@ int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, a
 
 class AniObjectUtils {
 public:
-    static ani_object Create(ani_env *env, const char *nsName, const char *clsName, ...)
-    {
-        ani_object nullobj{};
-
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            std::cerr << "[ANI] Not found namespace " << nsName << std::endl;
-            return nullobj;
-        }
-
-        ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
-            return nullobj;
-        }
-
-        ani_method ctor;
-        if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            std::cerr << "[ANI] Not found <ctor> for class " << clsName << std::endl;
-            return nullobj;
-        }
-
-        ani_object obj;
-        va_list args;
-        va_start(args, clsName);
-        ani_status status = env->Object_New_V(cls, ctor, &obj, args);
-        va_end(args);
-        if (ANI_OK != status)  {
-            std::cerr << "[ANI] Failed to Object_New for class " << cls << std::endl;
-            return nullobj;
-        }
-        return obj;
-    }
-
-    static ani_object Create(ani_env *env, const char *clsName, ...)
-    {
-        ani_object nullobj{};
-
-        ani_class cls;
-        if (ANI_OK != env->FindClass(clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
-            return nullobj;
-        }
-
-        ani_method ctor;
-        if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            std::cerr << "[ANI] Not found <ctor> for class " << clsName << std::endl;
-            return nullobj;
-        }
-
-        ani_object obj;
-        va_list args;
-        va_start(args, clsName);
-        ani_status status = env->Object_New_V(cls, ctor, &obj, args);
-        va_end(args);
-        if (ANI_OK != status) {
-            std::cerr << "[ANI] Failed to Object_New for class " << cls << std::endl;
-            return nullobj;
-        }
-        return obj;
-    }
-
-    static ani_object Create(ani_env *env, ani_class cls, ...)
-    {
-        ani_object nullobj{};
-
-        ani_method ctor;
-        if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-            std::cerr << "[ANI] Not found <ctor> for class" << std::endl;
-            return nullobj;
-        }
-
-        ani_object obj;
-        va_list args;
-        va_start(args, cls);
-        ani_status status = env->Object_New_V(cls, ctor, &obj, args);
-        va_end(args);
-        if (ANI_OK != status) {
-            std::cerr << "[ANI] Failed to Object_New for class " << cls << std::endl;
-            return nullobj;
-        }
-        return obj;
-    }
-
     template<typename T>
     static ani_status Wrap(ani_env *env, ani_object object, T *nativePtr, const char *propName = "nativePtr")
     {
@@ -144,40 +60,8 @@ public:
 
 class AniStringUtils {
 public:
-    static std::string ToStd(ani_env *env, ani_string ani_str)
-    {
-        ani_size strSize = 0;
-        auto status = env->String_GetUTF8Size(ani_str, &strSize);
-        if (ANI_OK != status) {
-            std::cerr << "[ANI] String_GetUTF8Size failed errcode:" << status << std::endl;
-            return std::string();
-        }
-
-        std::vector<char> buffer(strSize + 1); // +1 for null terminator
-        char *utf8Buffer = buffer.data();
-
-        // String_GetUTF8 Supportted by https://gitee.com/openharmony/arkcompiler_runtime_core/pulls/3416
-        ani_size bytesWritten = 0;
-        status = env->String_GetUTF8(ani_str, utf8Buffer, strSize + 1, &bytesWritten);
-        if (ANI_OK != status) {
-            std::cerr << "[ANI] String_GetUTF8 failed errcode:" << status << std::endl;
-            return std::string();
-        }
-
-        utf8Buffer[bytesWritten] = '\0';
-        std::string content = std::string(utf8Buffer);
-        return content;
-    }
-
-    static ani_string ToAni(ani_env *env, const std::string& str)
-    {
-        ani_string aniStr = nullptr;
-        if (ANI_OK != env->String_NewUTF8(str.data(), str.size(), &aniStr)) {
-            std::cerr << "[ANI] Unsupported ANI_VERSION_1" << std::endl;
-            return nullptr;
-        }
-        return aniStr;
-    }
+    static std::string ToStd(ani_env *env, ani_string ani_str);
+    static ani_string ToAni(ani_env *env, const std::string& str);
 };
 
 class UnionAccessor {
@@ -229,9 +113,9 @@ public:
     template<typename T>
     bool TryConvertArray(std::vector<T> &value);
 
-    bool GetObjectRefPropertyByName(std::string clsName, const char *name, ani_ref &val);
-    bool GetObjectStringPropertyByName(std::string clsName, const char *name, std::string &val);
-    bool GetObjectEnumValuePropertyByName(std::string clsName, const char *name, ani_int &val);
+    bool GetObjectRefPropertyByName(const std::string clsName, const char *name, ani_ref &val);
+    bool GetObjectStringPropertyByName(const std::string clsName, const char *name, std::string &val);
+    bool GetObjectEnumValuePropertyByName(const std::string clsName, const char *name, ani_int &val);
     ani_ref AniIteratorNext(ani_ref interator, bool &isSuccess);
 
 private:

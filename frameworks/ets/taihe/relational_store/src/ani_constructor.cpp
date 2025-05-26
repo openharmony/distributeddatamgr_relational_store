@@ -12,7 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "AniUtils"
 #include "ohos.data.relationalStore.ani.hpp"
+#include "logger.h"
+using namespace OHOS::Rdb;
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
@@ -21,7 +24,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
     if (ANI_OK != ohos::data::relationalStore::ANIRegister(env)) {
-        std::cerr << "Error from ohos::data::relationalStore::ANIRegister" << std::endl;
+        LOG_INFO("Error from ohos::data::relationalStore::ANIRegister");
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;
