@@ -109,12 +109,12 @@ public:
     class iterator {
     public:
         iterator(std::vector<std::shared_ptr<JSONWrapper>>::iterator it);
-        iterator &operator++();
+        API_EXPORT iterator &operator++();
         API_EXPORT bool operator==(const iterator &iter) const;
         API_EXPORT bool operator!=(const iterator &iter) const;
-        const JSONWrapper &operator*() const;
-        std::string key() const;
-        const JSONWrapper &value() const;
+        API_EXPORT const JSONWrapper &operator*() const;
+        API_EXPORT std::string key() const;
+        API_EXPORT const JSONWrapper &value() const;
 
     private:
         std::vector<std::shared_ptr<JSONWrapper>>::iterator node_;
