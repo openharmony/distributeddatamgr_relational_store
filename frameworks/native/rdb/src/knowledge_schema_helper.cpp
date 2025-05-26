@@ -22,7 +22,7 @@
 #include <sstream>
 #include <regex>
 #include "logger.h"
-#include "nlohmann/json.hpp"
+#include "serializable.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "sqlite_utils.h"
@@ -30,7 +30,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-using Json = nlohmann::json;
+using Json = Serializable::JSONWrapper;
 
 constexpr uint16_t SCHEMA_FIELD_MIN_LEN = 1;
 constexpr uint16_t SCHEMA_FIELD_MAX_LEN = 255;

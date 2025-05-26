@@ -67,10 +67,11 @@
                 "icu",
                 "sqlite",
                 "file_api",
-                "json"
+                "cJSON"
             ],
             "third_party": [
-                "sqlite"
+                "sqlite",
+                "cJSON"
             ]
         },
         "build": {

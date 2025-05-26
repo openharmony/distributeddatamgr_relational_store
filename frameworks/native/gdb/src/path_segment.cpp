@@ -60,35 +60,40 @@ void PathSegment::SetTargetVertex(std::shared_ptr<Vertex> vertex)
     targetVertex_ = vertex;
 }
 
-std::shared_ptr<PathSegment> PathSegment::Parse(const nlohmann::json &json, int32_t &errCode)
+bool PathSegment::Marshal(json &node) const
 {
-    if (!json.contains(PathSegment::SOURCE_VERTEX) || !json.at(PathSegment::SOURCE_VERTEX).is_object() ||
-        !json.contains(PathSegment::EDGE) || !json.at(PathSegment::EDGE).is_object() ||
-        !json.contains(PathSegment::TARGET_VERTEX) || !json.at(PathSegment::TARGET_VERTEX).is_object()) {
-        LOG_ERROR("pathSegment format error. jsonStr=%{public}s", json.dump().c_str());
+    return true;
+}
+
+bool PathSegment::Unmarshal(const json &node)
+{
+    bool isUnmarshalSuccess = true;
+    if (sourceVertex_ == nullptr) {
+        sourceVertex_ = std::make_shared<Vertex>();
+    }
+    isUnmarshalSuccess = GetValue(node, SOURCE_VERTEX, sourceVertex_) && isUnmarshalSuccess;
+
+    if (targetVertex_ == nullptr) {
+        targetVertex_ = std::make_shared<Vertex>();
+    }
+    isUnmarshalSuccess = GetValue(node, TARGET_VERTEX, targetVertex_) && isUnmarshalSuccess;
+
+    if (edge_ == nullptr) {
+        edge_ = std::make_shared<Edge>();
+    }
+    isUnmarshalSuccess = GetValue(node, EDGE, edge_) && isUnmarshalSuccess;
+    return isUnmarshalSuccess;
+}
+
+std::shared_ptr<PathSegment> PathSegment::Parse(const std::string &jsonStr, int32_t &errCode)
+{
+    PathSegment pathSegment;
+    if (!Serializable::Unmarshall(jsonStr, pathSegment)) {
+        LOG_WARN("Parse pathSegment failed.");
         errCode = E_PARSE_JSON_FAILED;
         return nullptr;
     }
     errCode = E_OK;
-    std::shared_ptr<PathSegment> segment = std::make_shared<PathSegment>();
-    auto sourceVertex = Vertex::Parse(json.at(PathSegment::SOURCE_VERTEX), errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    segment->SetSourceVertex(sourceVertex);
-
-    auto edge = Edge::Parse(json.at(PathSegment::EDGE), errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    segment->SetEdge(edge);
-
-    auto targetVertex = Vertex::Parse(json.at(PathSegment::TARGET_VERTEX), errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    segment->SetTargetVertex(targetVertex);
-
-    return segment;
+    return std::make_shared<PathSegment>(pathSegment);
 }
 } // namespace OHOS::DistributedDataAip

@@ -23,30 +23,47 @@
 #include <variant>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "rdb_visibility.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
-class Edge : public Vertex {
+class Edge final : public Serializable {
 public:
     API_EXPORT Edge();
     API_EXPORT Edge(std::string id, std::string label, std::string sourceId, std::string targetId);
     API_EXPORT Edge(const std::shared_ptr<Vertex> &element, std::string sourceId, std::string targetId);
-    static std::shared_ptr<Edge> Parse(const nlohmann::json &json, int32_t &errCode);
+    static std::shared_ptr<Edge> Parse(const std::string &jsonStr, int32_t &errCode);
+
+    API_EXPORT std::string GetId() const;
+    API_EXPORT void SetId(std::string id);
+
+    API_EXPORT const std::string &GetLabel() const;
+    API_EXPORT void SetLabel(const std::string &label);
+
+    API_EXPORT const std::unordered_map<std::string, PropType> &GetProperties() const;
+    API_EXPORT void SetProperty(const std::string &key, PropType value);
+
     API_EXPORT std::string GetSourceId() const;
     API_EXPORT void SetSourceId(std::string sourceId);
 
     API_EXPORT std::string GetTargetId() const;
     API_EXPORT void SetTargetId(std::string targetId);
 
+    bool Marshal(json &node) const override;
+    bool Unmarshal(const json &node) override;
+
+    static constexpr const char *ID = "identity";
+    static constexpr const char *LABEL = "label";
+    static constexpr const char *PROPERTIES = "properties";
     static constexpr const char *SOURCEID = "start";
     static constexpr const char *TARGETID = "end";
 
 private:
+    std::string id_;
+    std::string label_;
+    std::unordered_map<std::string, PropType> properties_;
     std::string sourceId_;
     std::string targetId_;
-    static std::string GetIdFromJson(const std::string &key, const nlohmann::json &json, int32_t &errCode);
 };
 
 }
