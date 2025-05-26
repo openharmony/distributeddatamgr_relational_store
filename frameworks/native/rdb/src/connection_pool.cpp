@@ -634,6 +634,7 @@ int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
             continue;
         }
         conn->connect_->ConfigLocale(locale);
+        ++it;
     }
     return E_OK;
 }
