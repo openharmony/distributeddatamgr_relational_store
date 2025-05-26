@@ -1421,3 +1421,13 @@ int OH_Rdb_Detach(OH_Rdb_Store *store, const char *attachName, int64_t waitTime,
     *attachedNumber = size;
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
+
+int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || locale == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto errCode = rdbStore->GetStore()->ConfigLocale(locale);
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
