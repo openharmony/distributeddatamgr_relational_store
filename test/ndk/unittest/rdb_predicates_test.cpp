@@ -160,7 +160,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_002, TestSize.Level
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
     predicates->notEqualTo(predicates, "data1", valueObject);
-    
+
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
     EXPECT_NE(cursor, NULL);
     int rowCount = 0;
