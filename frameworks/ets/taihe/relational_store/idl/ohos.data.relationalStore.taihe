@@ -440,8 +440,6 @@ interface RdbStore {
 
     @gen_async("update")
     @gen_promise("update")
-    UpdateWithConflict(values: @record Map<String, ValueType>, predicates: RdbPredicates, conflict: ConflictResolution): i64;
-
     UpdateSync(values: @record Map<String, ValueType>, predicates: RdbPredicates, conflict: Optional<ConflictResolution>): i64;
 
     @gen_async("update")

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _OHOS_RELATION_STORE_ANI_RDB_UTILS_H_
-#define _OHOS_RELATION_STORE_ANI_RDB_UTILS_H_
+#ifndef OHOS_RELATION_STORE_ANI_RDB_UTILS_H_
+#define OHOS_RELATION_STORE_ANI_RDB_UTILS_H_
 
 #include <functional>
 #include <memory>
@@ -27,20 +27,19 @@
 
 namespace ani_rdbutils {
 
-void AssetToNative(::ohos::data::relationalStore::Asset const &asset, OHOS::NativeRdb::AssetValue &value);
-void AssetToAni(OHOS::NativeRdb::AssetValue const &value, ::ohos::data::relationalStore::Asset &asset);
-void ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value, OHOS::NativeRdb::ValueObject &valueObj);
-void ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj, ::ohos::data::relationalStore::ValueType &value);
-void MapValuesToNative(taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values,
-    OHOS::NativeRdb::ValuesBucket &bucket);
-void ArrayValuesToNative(taihe::array_view<::ohos::data::relationalStore::ValueType> const &values,
-    std::vector<OHOS::NativeRdb::ValueObject> &nativeValues);
-void BucketValuesToNative(
-    taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values,
-    OHOS::NativeRdb::ValuesBuckets &buckets);
-void CryptoParamToNative(::ohos::data::relationalStore::CryptoParam const &param,
-    OHOS::NativeRdb::RdbStoreConfig::CryptoParam &value);
+OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset);
+::ohos::data::relationalStore::Asset AssetToAni(OHOS::NativeRdb::AssetValue const &value);
+OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value);
+::ohos::data::relationalStore::ValueType ValueObjectToAni(OHOS::NativeRdb::ValueObject const &valueObj);
+OHOS::NativeRdb::ValuesBucket MapValuesToNative(
+    taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values);
+std::vector<OHOS::NativeRdb::ValueObject> ArrayValuesToNative(
+    taihe::array_view<::ohos::data::relationalStore::ValueType> const &values);
+OHOS::NativeRdb::ValuesBuckets BucketValuesToNative(
+    taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values);
 
+OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
+    ::ohos::data::relationalStore::CryptoParam const &param);
 OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     ::ohos::data::relationalStore::StoreConfig const &storeConfig);
 std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniValue,

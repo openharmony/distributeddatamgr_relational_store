@@ -48,23 +48,23 @@ int32_t GetHapVersion(ani_env *env, ani_object value)
 {
     auto stageContext = OHOS::AbilityRuntime::GetStageModeContext(env, value);
     if (stageContext == nullptr) {
-        LOG_ERROR("[rdb] GetStageModeContext failed.");
+        LOG_ERROR("GetStageModeContext failed.");
         return INVALID_HAP_VERSION ;
     }
     auto appInfo = stageContext->GetApplicationInfo();
     if (appInfo != nullptr) {
         return appInfo->apiTargetVersion % API_VERSION_MOD;
     }
-    LOG_WARN("[rdb] GetApplicationInfo failed.");
+    LOG_WARN("GetApplicationInfo failed.");
     return INVALID_HAP_VERSION ;
 }
 
 std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env, ani_object value)
 {
-    LOG_DEBUG("[rdb] Get context as stage mode.");
+    LOG_DEBUG("Get context as stage mode.");
     auto stageContext = OHOS::AbilityRuntime::GetStageModeContext(env, value);
     if (stageContext == nullptr) {
-        LOG_ERROR("[rdb] GetStageModeContext failed.");
+        LOG_ERROR("GetStageModeContext failed.");
         return nullptr;
     }
     return std::make_shared<OHOS::AppDataMgrJsKit::Context>(stageContext);
@@ -72,15 +72,15 @@ std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env
 
 std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetCurrentAbility(ani_env *env, ani_object value)
 {
-    LOG_DEBUG("[rdb] Get context as feature ability mode.");
+    LOG_DEBUG("Get context as feature ability mode.");
     auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
     if (ability == nullptr) {
-        LOG_ERROR("[rdb] GetCurrentAbility failed.");
+        LOG_ERROR("GetCurrentAbility failed.");
         return nullptr;
     }
     auto abilityContext = ability->GetAbilityContext();
     if (abilityContext == nullptr) {
-        LOG_ERROR("[rdb] GetAbilityContext failed.");
+        LOG_ERROR("GetAbilityContext failed.");
         return nullptr;
     }
     return std::make_shared<OHOS::AppDataMgrJsKit::Context>(abilityContext);
@@ -102,10 +102,10 @@ int32_t GetCurrentAbilityParam(ani_env *env, ani_object jsValue, OHOS::AppDataMg
 
 int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param)
 {
-    LOG_INFO("[rdb] AniGetContext");
+    LOG_INFO("AniGetContext");
     ani_env *env = taihe::get_env();
     if (jsValue == nullptr) {
-        LOG_INFO("[rdb] hasProp is false -> fa stage");
+        LOG_INFO("hasProp is false -> fa stage");
         param.isStageMode = false;
         return GetCurrentAbilityParam(env, jsValue, param);
     }
