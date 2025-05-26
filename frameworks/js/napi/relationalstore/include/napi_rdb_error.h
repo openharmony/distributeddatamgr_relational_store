@@ -99,7 +99,7 @@ public:
             msg_ = napiError.message + msg;
         } else {
             code_ = E_INNER_ERROR;
-            msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
+            msg_ = "Inner error.";
         }
     }
 

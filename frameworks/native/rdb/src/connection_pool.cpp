@@ -30,6 +30,7 @@
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_perfStat.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
@@ -43,6 +44,7 @@ using ConnPool = ConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
 using SharedConns = std::vector<std::shared_ptr<Connection>>;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 
@@ -231,6 +233,7 @@ void ConnPool::SetInTransaction(bool isInTransaction)
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     if (transCount_.load() >= MAX_TRANS && limited) {
         trans_.Dump("NO TRANS", transCount_ + isInTransaction_);
         writers_.Dump("NO TRANS WRITE", transCount_ + isInTransaction_);
@@ -246,12 +249,14 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool l
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     return Acquire(isReadOnly);
 }
 
 std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     using namespace std::chrono;
     std::pair<SharedConn, SharedConns> result;
     auto &[writer, readers] = result;
@@ -316,6 +321,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
 SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", SqlStatistic::Step::STEP_WAIT);
     if (maxReader_ != 0) {
         return Acquire(isReadOnly, ms);
     }
