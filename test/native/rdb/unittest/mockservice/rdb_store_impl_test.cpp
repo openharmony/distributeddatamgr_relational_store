@@ -135,9 +135,6 @@ void RdbStoreImplConditionTest::TearDownTestCase(void)
 
 void RdbStoreImplConditionTest::SetUp(void)
 {
-    if (!IsUsingArkData()) {
-        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
-    }
     int errCode;
     RdbStoreConfig config(RdbStoreImplConditionTest::DEFAULT_DATABASE_NAME);
     RdbStoreImplConditionTestOpenCallback helper;
@@ -254,6 +251,9 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_006, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_007, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
     config.SetDBType(DB_VECTOR);
@@ -392,6 +392,9 @@ HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_002, TestSize.Le
  */
 HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_003, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
@@ -414,6 +417,9 @@ HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_003, TestSize.Le
  */
 HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_006, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
@@ -436,6 +442,9 @@ HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_006, TestSize.Le
  */
 HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_007, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
@@ -458,6 +467,9 @@ HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_007, TestSize.Le
  */
 HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_009, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
@@ -502,6 +514,9 @@ HWTEST_F(RdbStoreImplConditionTest, Abnormal_CleanDirtyDataTest_010, TestSize.Le
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetDBType(DB_VECTOR);
     RdbStoreImplConditionTestOpenCallback helper;
@@ -875,6 +890,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
  */
 HWTEST_F(RdbStoreImplConditionTest, Notify_Test_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -953,6 +971,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -971,6 +992,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_002, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, RegisterAutoSyncCallback_Test_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1048,6 +1072,9 @@ HWTEST_F(RdbStoreImplConditionTest, UnregisterAutoSyncCallback_Test_001, TestSiz
  */
 HWTEST_F(RdbStoreImplConditionTest, UnregisterAutoSyncCallback_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1087,6 +1114,9 @@ HWTEST_F(RdbStoreImplConditionTest, UnregisterAutoSyncCallback_Test_003, TestSiz
  */
 HWTEST_F(RdbStoreImplConditionTest, RegisterDataChangeCallback_Test_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     int errCode;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1127,6 +1157,9 @@ HWTEST_F(RdbStoreImplConditionTest, ModifyLockStatusk_Test_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, ModifyLockStatusk_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1147,6 +1180,9 @@ HWTEST_F(RdbStoreImplConditionTest, ModifyLockStatusk_Test_002, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, ModifyLockStatusk_Test_003, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1269,6 +1305,9 @@ HWTEST_F(RdbStoreImplConditionTest, LockCloudContainer_Test_001, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, LockCloudContainer_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1291,6 +1330,9 @@ HWTEST_F(RdbStoreImplConditionTest, LockCloudContainer_Test_002, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, LockCloudContainer_Test_003, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
@@ -1358,6 +1400,9 @@ HWTEST_F(RdbStoreImplConditionTest, LockCloudContainer_Test_005, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, Vector_Test_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetDBType(DB_VECTOR);
     RdbStoreImplConditionTestOpenCallback helper;
@@ -1408,6 +1453,9 @@ HWTEST_F(RdbStoreImplConditionTest, ExecuteForChangedRowCount_Test_001, TestSize
  */
 HWTEST_F(RdbStoreImplConditionTest, ExecuteForChangedRowCount_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetDBType(DB_VECTOR);
     config.SetReadOnly(true);
@@ -1429,6 +1477,9 @@ HWTEST_F(RdbStoreImplConditionTest, ExecuteForChangedRowCount_Test_002, TestSize
  */
 HWTEST_F(RdbStoreImplConditionTest, ExecuteForChangedRowCount_Test_003, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetDBType(DB_VECTOR);
     config.SetReadOnly(false);
@@ -1652,4 +1703,260 @@ HWTEST_F(RdbStoreImplConditionTest, Attach_Test_001, TestSize.Level2)
     config1.SetEncryptStatus(false);
     auto res = store->Attach(config1, "test", 0);
     EXPECT_EQ(E_NOT_SUPPORT, res.first);
+}
+
+/**
+ * @tc.name: ExecuteByTrxId_Test_001
+ * @tc.desc: Abnormal testCase of ExecuteByTrxId
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, ExecuteByTrxId_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetIsVector(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::vector<ValueObject> bindArgs;
+    auto res = storeImpl->ExecuteByTrxId("sql", 0, false);
+    EXPECT_EQ(E_INVALID_ARGS, res);
+}
+
+/**
+ * @tc.name: ExecuteByTrxId_Test_002
+ * @tc.desc: Abnormal testCase of ExecuteByTrxId
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, ExecuteByTrxId_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetIsVector(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::vector<ValueObject> bindArgs;
+    auto res = storeImpl->ExecuteByTrxId("sql", 1, false);
+    EXPECT_EQ(E_INVALID_ARGS, res);
+}
+
+/**
+ * @tc.name: Restore_Test_001
+ * @tc.desc: Abnormal testCase of Restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Restore_Test_001, TestSize.Level2)
+{
+    std::vector<uint8_t> newKey;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(true);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto res = storeImpl->Restore("test.db", newKey);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: Restore_Test_002
+ * @tc.desc: Abnormal testCase of Restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Restore_Test_002, TestSize.Level2)
+{
+    std::vector<uint8_t> newKey;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto res = storeImpl->Restore("test.db", newKey);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: Restore_Test_003
+ * @tc.desc: Abnormal testCase of Restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Restore_Test_003, TestSize.Level2)
+{
+    std::vector<uint8_t> newKey;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(true);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto res = storeImpl->Restore("test.db", newKey);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: GetStatement_Test_001
+ * @tc.desc: Abnormal testCase of GetStatement
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, GetStatement_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    const std::string sql = "ATTACH DATABASE 'database.db';";
+    auto res = storeImpl->GetStatement(sql, nullptr);
+    EXPECT_EQ(E_DATABASE_BUSY, res.first);
+}
+
+/**
+ * @tc.name: InterruptBackup_Test_001
+ * @tc.desc: Abnormal testCase of InterruptBackup
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto res = storeImpl->InterruptBackup();
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: InterruptBackup_Test_002
+ * @tc.desc: Abnormal testCase of InterruptBackup
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->slaveStatus_ = DB_NOT_EXITS;
+    auto res = storeImpl->InterruptBackup();
+    EXPECT_EQ(E_CANCEL, res);
+}
+
+/**
+ * @tc.name: InterruptBackup_Test_003
+ * @tc.desc: Abnormal testCase of InterruptBackup
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->slaveStatus_ = BACKING_UP;
+    auto res = storeImpl->InterruptBackup();
+    EXPECT_EQ(E_OK, res);
+}
+
+/**
+ * @tc.name: GetBackupStatus_Test_001
+ * @tc.desc: Abnormal testCase of GetBackupStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, GetBackupStatus_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto res = storeImpl->GetBackupStatus();
+    EXPECT_EQ(UNDEFINED, res);
+}
+
+/**
+ * @tc.name: GetBackupStatus_Test_002
+ * @tc.desc: Abnormal testCase of GetBackupStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, GetBackupStatus_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->slaveStatus_ = BACKING_UP;
+    auto res = storeImpl->GetBackupStatus();
+    EXPECT_EQ(BACKING_UP, res);
+}
+
+/**
+ * @tc.name: CleanDirtyLog_Test_001
+ * @tc.desc: Abnormal testCase of CleanDirtyLog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, CleanDirtyLog_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->CleanDirtyLog("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: CleanDirtyLog_Test_002
+ * @tc.desc: Abnormal testCase of CleanDirtyLog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, CleanDirtyLog_Test_002, TestSize.Level2)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->CleanDirtyLog("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: CleanDirtyLog_Test_004
+ * @tc.desc: Abnormal testCase of CleanDirtyLog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, CleanDirtyLog_Test_004, TestSize.Level2)
+{
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(true);
+    store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->CleanDirtyLog("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: CloudTables::Change_Test_001
+ * @tc.desc: Abnormal testCase of CloudTables::Change
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, CloudTables_Change_Test_001, TestSize.Level2)
+{
+    auto cloudTables = std::make_shared<RdbStoreImpl::CloudTables>();
+    std::string table = "";
+    auto res = cloudTables->Change(table);
+    EXPECT_EQ(false, res);
+    cloudTables->AddTables({ "test1" });
+    std::string table1 = "test";
+    res = cloudTables->Change(table1);
+    EXPECT_EQ(false, res);
+    cloudTables->AddTables({ "test" });
+    std::string table2 = "test";
+    res = cloudTables->Change(table2);
+    EXPECT_EQ(true, res);
+    res = cloudTables->Change(table);
+    EXPECT_EQ(false, res);
 }
