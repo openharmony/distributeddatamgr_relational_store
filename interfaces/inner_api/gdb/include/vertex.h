@@ -22,28 +22,33 @@
 #include <variant>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "rdb_visibility.h"
+#include "serializable.h"
 
 namespace OHOS::DistributedDataAip {
 using PropType = std::variant<int64_t, double, std::string, bool, std::nullptr_t>;
-class Vertex {
+class Vertex final : public Serializable {
 public:
     API_EXPORT Vertex();
     API_EXPORT virtual ~Vertex() = default;
     API_EXPORT Vertex(std::string id, std::string label);
     API_EXPORT Vertex(std::string id, std::string label, const std::unordered_map<std::string, PropType> &properties);
-    static std::shared_ptr<Vertex> Parse(const nlohmann::json &json, int32_t &errCode);
+    static std::shared_ptr<Vertex> Parse(const std::string &jsonStr, int32_t &errCode);
 
     API_EXPORT std::string GetId() const;
     API_EXPORT void SetId(std::string id);
 
     API_EXPORT const std::string &GetLabel() const;
-    API_EXPORT const std::vector<std::string> &GetLabels() const;
+    API_EXPORT const std::vector<std::string> &GetLabels();
     API_EXPORT void SetLabel(const std::string &label);
 
     API_EXPORT const std::unordered_map<std::string, PropType> &GetProperties() const;
     API_EXPORT void SetProperty(const std::string &key, PropType value);
+
+    bool Marshal(json &node) const override;
+    bool Unmarshal(const json &node) override;
+    static bool GetPropsValue(const json &node, const std::string &name, std::unordered_map<std::string, PropType> &props);
+    static bool GetID(const json &node, const std::string &name, std::string &id);
 
     static constexpr const char *ID = "identity";
     static constexpr const char *LABEL = "label";

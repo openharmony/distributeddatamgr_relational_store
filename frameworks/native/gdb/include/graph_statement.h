@@ -21,7 +21,6 @@
 #endif
 #include "connection.h"
 #include "grd_adapter.h"
-#include "nlohmann/json.hpp"
 #include "statement.h"
 
 namespace OHOS::DistributedDataAip {

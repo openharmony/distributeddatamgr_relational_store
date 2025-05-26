@@ -24,7 +24,6 @@
 
 #include "edge.h"
 #include "gdb_store_config.h"
-#include "nlohmann/json.hpp"
 #include "path.h"
 #include "result.h"
 #include "vertex.h"
