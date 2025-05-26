@@ -25,7 +25,7 @@ namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 using SqliteUtils = OHOS::NativeRdb::SqliteUtils;
 using RdbServiceCode = OHOS::DistributedRdb::RelationalStore::RdbServiceInterfaceCode;
-
+constexpr int32_t MAX_RETRY = 100;
 #define IPC_SEND(code, reply, ...)                                          \
 ({                                                                          \
     int32_t __status = RDB_OK;                                              \
@@ -705,7 +705,7 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
 RdbServiceProxy::~RdbServiceProxy()
 {
     int32_t retry = 0;
-    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry++ < 100) {
+    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry++ < MAX_RETRY) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1) {

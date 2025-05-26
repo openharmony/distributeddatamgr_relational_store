@@ -58,7 +58,7 @@ void RdbHelper::ClearCache()
 bool RdbHelper::Init()
 {
     LOG_INFO("Init start");
-    // dlopen so that cannot be dlclose
+    RdbStoreManager::GetInstance().Init();
     return true;
 }
 
