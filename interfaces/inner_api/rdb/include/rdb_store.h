@@ -757,6 +757,15 @@ public:
     virtual int SetSearchable(bool isSearchable);
 
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor = 0);
+
+    /**
+     * @brief Support for collations in different languages.
+     *
+     * @param locale Represents Language related to the locale, for example, zh.
+     * The value complies with the ISO 639 standard.
+     */
+    virtual int ConfigLocale(const std::string &localeStr);
+
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };

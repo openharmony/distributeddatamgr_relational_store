@@ -1572,6 +1572,25 @@ int OH_Rdb_Attach(OH_Rdb_Store *store, const OH_Rdb_ConfigV2 *config, const char
  * @since 20
  */
 int OH_Rdb_Detach(OH_Rdb_Store *store, const char *attachName, int64_t waitTime, size_t *attachedNumber);
+
+/**
+ * @brief Support for collations in different languages.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param locale Language related to the locale, for example, zh. The value complies with the ISO 639 standard.
+ * @return Returns a specific error code.
+ *     {@link RDB_OK} if the execution is successful.
+ *     {@link RDB_ERR} - Indicates that the function execution exception.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_ALREADY_CLOSED} database already closed.
+ *     {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
+ *     {@link RDB_E_SQLITE_NOMEM} SQLite: The database is out of memory.
+ * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
+ * @see OH_Rdb_Store.
+ * @since 20
+ */
+int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale);
+
 #ifdef __cplusplus
 };
 #endif
