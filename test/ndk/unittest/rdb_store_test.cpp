@@ -682,7 +682,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_013, TestSize.Level1)
     constexpr int TABLE_COUNT = 1;
     const char *table[TABLE_COUNT];
     table[0] = "store_test";
-    EXPECT_EQ(table[0], "store_test");
     Rdb_ProgressObserver observer;
     void *context = nullptr;
     observer.context = &context;
