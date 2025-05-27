@@ -222,6 +222,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/dynamic_load_test:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/mockservice:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",

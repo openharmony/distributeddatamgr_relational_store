@@ -31,6 +31,11 @@ TaskExecutor &TaskExecutor::GetInstance()
     return instance;
 }
 
+void TaskExecutor::Init()
+{
+    pool_ = nullptr;
+};
+
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
     std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);

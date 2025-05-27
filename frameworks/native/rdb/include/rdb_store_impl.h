@@ -67,8 +67,8 @@ class ObsManger {
 public:
     ObsManger() = default;
     virtual ~ObsManger();
-    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
-    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver>);
+    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> rdbStoreObserver);
+    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> rdbStoreObserver);
     int32_t Notify(const std::string &uri);
 
 private:

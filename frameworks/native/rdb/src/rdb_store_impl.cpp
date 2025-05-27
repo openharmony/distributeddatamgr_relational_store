@@ -602,7 +602,7 @@ int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObse
     return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
 }
 
-int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> obs)
+int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)
 {
     auto handle = GetHandle();
     if (handle == nullptr) {
@@ -618,6 +618,9 @@ int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<Distribute
         return code;
     }
     obs_.Compute(uri, [obs](const auto &key, auto &value) {
+        if (obs == nullptr) {
+            value.clear();
+        }
         for (auto it = value.begin(); it != value.end();) {
             if (*it == obs) {
                 value.erase(it);
