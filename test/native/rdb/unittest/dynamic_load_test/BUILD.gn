@@ -34,7 +34,6 @@ config("module_private_config") {
 
   defines = [
     "RELATIONAL_STORE",
-    "private=public",
   ]
 }
 
