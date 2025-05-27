@@ -51,6 +51,8 @@ public:
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
     int32_t FillBlockInfo(SharedBlockInfo *info) const override;
+    std::pair<int32_t, ValuesBucket> GetRow() const override;
+    std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount) override;
     void GetProperties();
 
 private:
