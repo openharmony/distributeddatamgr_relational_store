@@ -43,7 +43,6 @@ ohos_shared_library("clouddata") {
     "${relational_store_js_common_path}/include",
     "${cloud_data_native_path}/include",
     "${datashare_path}/provider/include",
-    "${kvstore_path}/common",
     "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/cloud_data/include",
@@ -61,6 +60,7 @@ ohos_shared_library("clouddata") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
