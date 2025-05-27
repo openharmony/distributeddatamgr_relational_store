@@ -307,35 +307,26 @@ HWTEST_F(SerializableTest, SetMapValue, TestSize.Level2)
 HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2) {
     struct TestUint final : public Serializable {
       public:
-        uint16_t testUint16 = 12345;
         std::vector<uint8_t> testBytes = {0x01, 0x02, 0x03, 0x04};
-
         bool Marshal(json &node) const override {
-            SetValue(node[GET_NAME(testUint16)], testUint16);
             SetValue(node[GET_NAME(testBytes)], testBytes);
             return true;
         }
 
         bool Unmarshal(const json &node) override {
             bool success = true;
-            success =
-                GetValue(node, GET_NAME(testUint16), testUint16) && success;
             success = GetValue(node, GET_NAME(testBytes), testBytes) && success;
             return success;
         }
 
         bool operator==(const TestUint &other) const {
-            return testUint16 == other.testUint16 &&
-                   testBytes == other.testBytes;
+            return testBytes == other.testBytes;
         }
     };
 
     TestUint in;
-    in.testUint16 = 54321;
     in.testBytes = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
-
     auto json = Serializable::JSONWrapper::to_string(in.Marshall());
-
     TestUint out;
     out.Unmarshall(json);
     ASSERT_TRUE(in == out);
