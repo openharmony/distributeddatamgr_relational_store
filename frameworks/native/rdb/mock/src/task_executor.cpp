@@ -33,11 +33,7 @@ TaskExecutor &TaskExecutor::GetInstance()
 
 void TaskExecutor::Init()
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-    if (pool_ != nullptr) {
-        return;
-    }
-    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
+    pool_ = nullptr;
 };
 
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()

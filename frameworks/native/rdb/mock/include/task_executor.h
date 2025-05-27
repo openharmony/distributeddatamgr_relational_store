@@ -84,8 +84,6 @@ public:
     bool Stop();
 
 private:
-    size_t MAX_THREADS = 2;
-    size_t MIN_THREADS = 0;
     TaskExecutor();
     ~TaskExecutor();
     mutable std::shared_mutex rwMutex_;

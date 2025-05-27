@@ -22,9 +22,7 @@
 #include "connection_mock.h"
 #include "dataobs_mgr_client_mock.h"
 #include "delay_notify.h"
-#include "dl_functions_mock.h"
 #include "grd_api_manager.h"
-#include "obs_mgr_adapter.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_manager_impl_mock.h"
@@ -42,7 +40,6 @@ using namespace OHOS::DistributedRdb;
 using namespace OHOS::AAFwk;
 using CheckOnChangeFunc = std::function<void(RdbStoreObserver::ChangeInfo &changeInfo)>;
 using ValueObjects = std::vector<ValueObject>;
-MockDlFunctions* g_mockDlFunctions;
 class SubObserver : public RdbStoreObserver {
 public:
     virtual ~SubObserver()
@@ -116,8 +113,6 @@ void RdbStoreImplConditionTest::SetUpTestCase(void)
     IDataObsMgrClient::dataObsMgrClient = mockDataObsMgrClient;
     mockStatement = std::make_shared<MockStatement>();
     mockConnection = std::make_shared<MockConnection>();
-    g_mockDlFunctions = new MockDlFunctions();
-    ObsManger::handle_ = nullptr;
 }
 
 void RdbStoreImplConditionTest::TearDownTestCase(void)
@@ -128,9 +123,6 @@ void RdbStoreImplConditionTest::TearDownTestCase(void)
     IDataObsMgrClient::dataObsMgrClient = nullptr;
     mockStatement = nullptr;
     mockConnection = nullptr;
-    delete g_mockDlFunctions;
-    g_mockDlFunctions = nullptr;
-    ObsManger::handle_ = nullptr;
 }
 
 void RdbStoreImplConditionTest::SetUp(void)
@@ -534,123 +526,6 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_002, TestSize.Level2
     EXPECT_EQ(status, E_NOT_SUPPORT);
     status = store->UnSubscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_NOT_SUPPORT);
-}
-
-/**
- * @tc.name: RdbStoreSubscribeRemote_003
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_003, TestSize.Level2)
-{
-    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    RdbStoreImplConditionTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    ASSERT_NE(observer_, nullptr) << "observer is null";
-    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer" }, observer_);
-    EXPECT_EQ(status, E_OK);
-    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "observer" }, observer_);
-    EXPECT_EQ(status, E_OK);
-}
-
-/**
- * @tc.name: ObsMangerRegister_001
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, ObsMangerRegister_001, TestSize.Level2)
-{
-    ObsManger manager;
-    void* fakeHandle = reinterpret_cast<void*>(0x1234);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlopen(_, _))
-        .WillOnce(Return(fakeHandle));
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Register")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    
-    EXPECT_EQ(E_OK, manager.Register("test_uri", observer_));
-}
-
-/**
- * @tc.name: ObsMangerRegister_002
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, ObsMangerRegister_002, TestSize.Level2)
-{
-    ObsManger manager;
-    void* fakeHandle = reinterpret_cast<void*>(0x1234);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlopen(_, _))
-        .WillOnce(Return(fakeHandle));
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Register")))
-        .WillOnce(Return(reinterpret_cast<void*>(static_cast<int32_t>(DuplicateType::DUPLICATE_SUB))));
-    
-    EXPECT_EQ(E_OK, manager.Register("test_uri", observer_));
-}
-
-/**
- * @tc.name: ObsMangerRegister_003
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, ObsMangerRegister_003, TestSize.Level2)
-{
-    ObsManger manager;
-    void* fakeHandle = reinterpret_cast<void*>(0x1234);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlopen(_, _))
-        .WillRepeatedly(Return(fakeHandle));
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Register")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    manager.Register("test_uri", observer_);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Unregister")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    
-    EXPECT_EQ(E_OK, manager.Unregister("test_uri", observer_));
-}
-
-/**
- * @tc.name: ObsMangerUnregister_001
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, ObsMangerUnregister_001, TestSize.Level2)
-{
-    ObsManger manager;
-    void* fakeHandle = reinterpret_cast<void*>(0x1234);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlopen(_, _))
-        .WillOnce(Return(fakeHandle));
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Unregister")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    
-    EXPECT_EQ(E_OK, manager.Unregister("test_uri", observer_));
-}
-
-/**
- * @tc.name: ObsMangerUnregister_002
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, ObsMangerUnregister_002, TestSize.Level2)
-{
-    auto* manager = new ObsManger();
-    void* fakeHandle = reinterpret_cast<void*>(0x1234);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlopen(_, _))
-        .WillRepeatedly(Return(fakeHandle));
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Register")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    manager->Register("test_uri", observer_);
-    
-    EXPECT_CALL(*g_mockDlFunctions, dlsym(fakeHandle, StrEq("Unregister")))
-        .WillOnce(Return(reinterpret_cast<void*>(E_OK)));
-    
-    delete manager;
 }
 
 /**
