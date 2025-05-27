@@ -39,7 +39,6 @@ config("common_public_config") {
   include_dirs = [
     "include",
     "${relational_store_common_path}/include",
-    "//third_party/json/single_include",
   ]
 }
 
@@ -61,6 +60,11 @@ if (is_android || is_ios) {
     configs = [
       ":common_public_config",
       ":appdatafwk_public_config",
+    ]
+
+    external_deps = [
+      "cJSON:cjson",
+      "hilog:libhilog",
     ]
 
     subsystem_name = "distributeddatamgr"
