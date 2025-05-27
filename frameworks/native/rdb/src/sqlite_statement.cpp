@@ -630,6 +630,71 @@ std::pair<int32_t, ValueObject> SqliteStatement::GetColumn(int index) const
     return { E_OK, GetValueFromBlob(index, type) };
 }
 
+std::pair<int32_t, ValuesBucket> SqliteStatement::GetRow() const
+{
+    auto colCount = GetColumnCount();
+    if (colCount <= 0) {
+        return { E_INVALID_ARGS, {} };
+    }
+    ValuesBuckets valuesBuckets;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return { code, {} };
+        }
+        colNames.push_back(std::move(colName));
+    }
+    ValuesBucket value;
+    for (int32_t i = 0; i < colCount; i++) {
+        auto [code, val] = GetColumn(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+            return { code, {} };
+        }
+        value.Put(colNames[i], std::move(val));
+    }
+    return { E_OK, value };
+}
+
+
+std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(int32_t maxCount)
+{
+    auto colCount = GetColumnCount();
+    if (colCount <= 0) {
+        return {};
+    }
+    std::vector<ValuesBucket> valuesBuckets;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return {};
+        }
+        colNames.push_back(std::move(colName));
+    }
+    do {
+        if (valuesBuckets.size() >= maxCount) {
+            break;
+        }
+        ValuesBucket value;
+        for (int32_t i = 0; i < colCount; i++) {
+            auto [code, val] = GetColumn(i);
+            if (code != E_OK) {
+                LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
+                break;
+            }
+            value.Put(colNames[i], std::move(val));
+        }
+        valuesBuckets.push_back(std::move(value));
+    } while (Step() == E_OK);
+    return { E_OK, valuesBuckets };
+}
+
 ValueObject SqliteStatement::GetValueFromBlob(int32_t index, int32_t type) const
 {
     int size = sqlite3_column_bytes(stmt_, index);
