@@ -35,6 +35,7 @@ ohos_unittest("NativeAppDataFwkTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
+    "googletest:gtest_main",
     "hilog:libhilog",
     "relational_store:native_appdatafwk",
   ]
@@ -43,7 +44,6 @@ ohos_unittest("NativeAppDataFwkTest") {
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
   ]
 }
 
