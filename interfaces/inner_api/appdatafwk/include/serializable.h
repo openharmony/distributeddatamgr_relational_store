@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <unordered_map>
 #include "rdb_visibility.h"
 #ifndef JSON_NOEXCEPTION
 #define JSON_NOEXCEPTION
