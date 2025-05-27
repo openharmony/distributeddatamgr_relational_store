@@ -130,7 +130,7 @@ int32_t ObsMgrAdapterImpl::UnregisterObserver(const std::string &uri, std::share
             if ((**it) == observer || observer == nullptr) {
                 localSharedObservers.push_back(std::move(*it));
                 it = obs.erase(it);
-                break;
+                continue;
             }
             ++it;
         }

@@ -235,7 +235,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
-        LOG_ERROR("Not support the sql:app self can check the SQL");
+        LOG_ERROR("Not support the sql:app self can check the SQL, sqlType:%{public}d", sqlType);
         return { E_INVALID_ARGS, object };
     }
 

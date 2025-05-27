@@ -20,6 +20,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+constexpr int32_t MAX_RETRY = 100;
 TaskExecutor::TaskExecutor()
 {
     pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
@@ -35,6 +36,15 @@ TaskExecutor &TaskExecutor::GetInstance()
     static TaskExecutor instance;
     return instance;
 }
+
+void TaskExecutor::Init()
+{
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    if (pool_ != nullptr) {
+        return;
+    }
+    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
+};
 
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
@@ -57,7 +67,7 @@ bool TaskExecutor::Stop()
         pool_ = nullptr;
     }
     int32_t retry = 0;
-    while (pool.use_count() > 1 && retry++ < 100) {
+    while (pool.use_count() > 1 && retry++ < MAX_RETRY) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (pool.use_count() > 1) {
