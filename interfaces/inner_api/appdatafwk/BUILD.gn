@@ -62,9 +62,9 @@ if (is_android || is_ios) {
       ":appdatafwk_public_config",
     ]
 
-    external_deps = [
-      "cJSON:cjson",
-      "hilog:libhilog",
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${target_os}",
+      "//third_party/cJSON:cjson_static",
     ]
 
     subsystem_name = "distributeddatamgr"
