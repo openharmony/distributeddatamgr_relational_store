@@ -1557,7 +1557,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     config.SetBundleName("");
-    config.SetEnableSemanticlndex(true);
+    config.SetEnableSemanticIndex(true);
     RdbStoreImplTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(E_OK, errCode);

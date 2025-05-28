@@ -133,11 +133,11 @@ int RdbStoreImpl::InnerOpen()
     if (isReadOnly_ || isMemoryRdb_ || config_.IsLocalOnly()) {
         return E_OK;
     }
-    if (config_.GetEnableSemanticlndex()) {
+    if (config_.GetEnableSemanticIndex()) {
         SetKnowledgeSchema();
     }
     AfterOpen(syncerParam_);
-    if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetEnableSemanticlndex())) {
+    if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetEnableSemanticIndex())) {
         return E_OK;
     }
     int errCode = RegisterDataChangeCallback();
