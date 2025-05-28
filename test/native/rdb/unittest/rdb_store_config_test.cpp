@@ -1279,8 +1279,8 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
 }
 
 /* *
- * @tc.name: RdbStoreConfigGetEnableSemanticlndex_001
- * @tc.desc: test RdbStoreConfigGetEnableSemanticlndex
+ * @tc.name: RdbStoreConfigGetEnableSemanticIndex_001
+ * @tc.desc: test RdbStoreConfigGetEnableSemanticIndex
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
@@ -1288,13 +1288,13 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    bool ret = config.GetEnableSemanticlndex();
+    bool ret = config.GetEnableSemanticIndex();
     EXPECT_EQ(ret, false);
 }
 
 /* *
- * @tc.name: RdbStoreConfigSetEnableSemanticlndex_001
- * @tc.desc: test RdbStoreConfigSetEnableSemanticlndex
+ * @tc.name: RdbStoreConfigSetEnableSemanticIndex_001
+ * @tc.desc: test RdbStoreConfigSetEnableSemanticIndex
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
@@ -1302,11 +1302,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
     const std::string dbPath = RDB_TEST_PATH + "config_test.db";
     RdbStoreConfig config(dbPath);
 
-    bool enableSemanticlndex = true;
-    config.SetEnableSemanticlndex(enableSemanticlndex);
-    EXPECT_EQ(enableSemanticlndex, config.GetEnableSemanticlndex());
+    bool enableSemanticIndex = true;
+    config.SetEnableSemanticIndex(enableSemanticIndex);
+    EXPECT_EQ(enableSemanticIndex, config.GetEnableSemanticIndex());
 
-    enableSemanticlndex = false;
-    config.SetEnableSemanticlndex(enableSemanticlndex);
-    EXPECT_EQ(enableSemanticlndex, config.GetEnableSemanticlndex());
+    enableSemanticIndex = false;
+    config.SetEnableSemanticIndex(enableSemanticIndex);
+    EXPECT_EQ(enableSemanticIndex, config.GetEnableSemanticIndex());
 }

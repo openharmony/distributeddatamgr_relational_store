@@ -553,7 +553,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetKnowledgeSchema, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    config.SetEnableSemanticlndex(true);
+    config.SetEnableSemanticIndex(true);
     RdbStoreImplConditionTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
