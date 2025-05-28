@@ -916,10 +916,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_003, TestSize.Level0)
     auto [status, result] = store_->BatchInsert("test", rows, { "id" }, ConflictResolution::ON_CONFLICT_FAIL);
     EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
     EXPECT_EQ(result.changed, 2);
-    ASSERT_NE(result.results, nullptr);
-    int32_t count = 0;
-    ASSERT_EQ(result.results->GetRowCount(count), E_OK);
-    ASSERT_EQ(count, 0);
+    EXPECT_EQ(result.results, nullptr);
 }
 
 /**
@@ -1014,10 +1011,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_006, TestSize.Level0)
         store_->BatchInsert("test", rows, { returningField }, ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(result.changed, -1);
-    ASSERT_NE(result.results, nullptr);
-    int32_t count = 0;
-    ASSERT_EQ(result.results->GetRowCount(count), E_OK);
-    ASSERT_EQ(count, 0);
+    ASSERT_EQ(result.results, nullptr);
 }
 
 /**
@@ -1060,6 +1054,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_008, TestSize.Level0)
     row.Put("id", 2);
     row.Put("name", "Jim");
     rows.Put(std::move(row));
+    // rowId can use in retuning, but get column not include rowId
     auto [status, result] = store_->BatchInsert("test", rows, { "rowId", "rowid", "RowId", "id" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);
@@ -1069,9 +1064,6 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_008, TestSize.Level0)
     ASSERT_EQ(count, 1);
     RowEntity rowEntity;
     EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(int(rowEntity.Get("rowId")), 2);
-    EXPECT_EQ(int(rowEntity.Get("rowid")), 2);
-    EXPECT_EQ(int(rowEntity.Get("RowId")), 2);
     EXPECT_EQ(int(rowEntity.Get("id")), 2);
 }
 
@@ -1156,6 +1148,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_011, TestSize.Level1)
     row.Put("age", 18);
     row.PutDouble("salary", 110.5);
     rows.Put(std::move(row));
+    row.Clear();
     row.Put("id", 2);
     row.Put("name", "Bob");
     row.Put("age", 22);
@@ -1254,13 +1247,11 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_013, TestSize.Level1)
 */
 HWTEST_P(RdbStoreInsertTest, BatchInsert_014, TestSize.Level1)
 {
-    store_->Execute("CREATE TRIGGER after_name_insert "
-                    "AFTER INSERT ON demo"
-                    "BEGIN "
-                    "  UPDATE demo "
-                    "  SET name = 'after trigger' "
-                    "  WHERE name = 'BatchInsert_014';"
-                    "END");
+    auto [code, result1] = store_->Execute("CREATE TRIGGER after_name_insert AFTER INSERT ON test"
+                    " BEGIN UPDATE test SET name = 'after trigger' WHERE name = 'BatchInsert_014'; END");
+
+    EXPECT_EQ(code, E_OK);
+
     ValuesBuckets rows;
     ValuesBucket row;
     row.Put("id", 200);
@@ -1279,6 +1270,10 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_014, TestSize.Level1)
     EXPECT_EQ(std::string(rowEntity.Get("name")), "BatchInsert_014");
 
     auto resultSet = store_->QuerySql("select name from test where id = 200");
+    int rowCount = -1;
+    resultSet->GetRowCount(rowCount);
+    std::cout << "resultSet rowCount: " << rowCount << std::endl;
+    resultSet->GoToFirstRow();
     EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
     EXPECT_EQ(std::string(rowEntity.Get("name")), "after trigger");
     store_->Execute("DROP TRIGGER IF EXISTS after_name_insert");
@@ -1294,18 +1289,23 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_014, TestSize.Level1)
 HWTEST_P(RdbStoreInsertTest, BatchInsert_015, TestSize.Level1)
 {
     store_->Execute("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT);");
-    store_->Execute("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, name TEXT);");
+    store_->Execute("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, action TEXT);");
     ValuesBuckets rows;
     ValuesBucket row;
     row.Put("id", 200);
-    row.Put("name", "BatchInsert_015");
+    row.Put("action", "BatchInsert_015");
     rows.Put(std::move(row));
     auto [status, changed] = store_->BatchInsert("logs", rows);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(changed, 1);
     Results result{ -1 };
+    row.Clear();
+    rows.Clear();
+    row.Put("id", 1);
+    row.Put("name", "BatchInsert_015");
+    rows.Put(std::move(row));
     std::tie(status, result) = store_->BatchInsert("users", rows,
-        { "RETURNING (SELECT COUNT(*) FROM logs WHERE action = name) AS count" },
+        { "(SELECT COUNT(*) FROM logs WHERE action = name) AS count" },
         NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);

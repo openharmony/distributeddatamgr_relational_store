@@ -262,11 +262,16 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_001, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "id" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 1);
-    ASSERT_EQ(res.results.RowSize(), 1);
-    auto [code, val] = res.results.GetColumnValues("id");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(val.size(), 1);
-    EXPECT_EQ(int(val[0]), 1);
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    ASSERT_EQ(res.results->GoToNextRow(), E_OK);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("id", columnIndex), E_OK);
+    int64_t value;
+    ASSERT_EQ(res.results->GetLong(columnIndex, value), E_OK);
+    EXPECT_EQ(value, 1);
 }
 
 /**
@@ -291,7 +296,9 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_002, TestSize.Level1)
     auto [code, res] = store_->Delete(predicates, { "id" });
     EXPECT_EQ(code, E_OK);
     EXPECT_EQ(res.changed, 1124);
-    EXPECT_EQ(res.results.RowSize(), 1024);
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1024);
 }
 
 /**
@@ -316,12 +323,18 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_003, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "name" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 15);
-    EXPECT_EQ(res.results.RowSize(), 15);
-    auto [code, values] = res.results.GetColumnValues("name");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(values.size(), 15);
-    for (int i = 0; i < 15; i++) {
-        EXPECT_EQ(std::string(values[i]), "Jim" + std::to_string(i));
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 15);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    int i = 0;
+    while (i < 15) {
+        ASSERT_EQ(res.results->GoToNextRow(), E_OK);
+        ASSERT_EQ(res.results->GetString(columnIndex, value), E_OK);
+        EXPECT_EQ(value, "Jim" + std::to_string(i++));
     }
 }
 
@@ -350,14 +363,21 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_004, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "blobType" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 15);
-    EXPECT_EQ(res.results.RowSize(), 15);
-    auto [code, values] = res.results.GetColumnValues("blobType");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(values.size(), 15);
-    for (int i = 0; i < 15; i++) {
-        std::vector<uint8_t> blob(i);
-        std::iota(blob.begin(), blob.end(), 1);
-        EXPECT_EQ(std::vector<uint8_t>(values[i]), blob);
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 15);
+    ASSERT_EQ(res.results->GoToNextRow(), E_OK);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("blobType", columnIndex), E_OK);
+    int i = 0;
+    std::vector<uint8_t> blob;
+    while (i < 15) {
+        ASSERT_EQ(res.results->GetBlob(columnIndex, blob), E_OK);
+        std::vector<uint8_t> expectedBlob(i++);
+        std::iota(expectedBlob.begin(), expectedBlob.end(), 1);
+        EXPECT_EQ(blob, expectedBlob);
+        ASSERT_EQ(res.results->GoToNextRow(), E_OK);
     }
 }
 
@@ -383,7 +403,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_005, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "notExist" });
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(res.changed, -1);
-    ASSERT_EQ(res.results.RowSize(), 0);
+    ASSERT_EQ(res.results, nullptr);
 }
 
 /**
@@ -409,7 +429,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_006, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "notExist" });
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(res.changed, -1);
-    ASSERT_EQ(res.results.RowSize(), 0);
+    ASSERT_EQ(res.results, nullptr);
 }
 
 INSTANTIATE_TEST_SUITE_P(DeleteTest, RdbDeleteTest, testing::Values(&g_store, &g_memDb));

@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "value_object.h"
+#include "values_bucket.h"
 namespace OHOS::NativeRdb {
 struct SharedBlockInfo;
 class Statement {
@@ -51,7 +52,7 @@ public:
     virtual std::pair<int32_t, size_t> GetSize(int32_t index) const = 0;
     virtual std::pair<int32_t, ValueObject> GetColumn(int32_t index) const = 0;
     virtual std::pair<int32_t, ValuesBucket> GetRow() const = 0;
-    virtual std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount = 1024) = 0;
+    virtual std::pair<int32_t, std::vector<ValuesBucket>> GetRows(uint32_t maxCount = 1024) = 0;
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
     virtual int32_t FillBlockInfo(SharedBlockInfo *info) const = 0;

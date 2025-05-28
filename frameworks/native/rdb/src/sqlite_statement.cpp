@@ -660,7 +660,7 @@ std::pair<int32_t, ValuesBucket> SqliteStatement::GetRow() const
 }
 
 
-std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(int32_t maxCount)
+std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(uint32_t maxCount)
 {
     auto colCount = GetColumnCount();
     if (colCount <= 0) {
