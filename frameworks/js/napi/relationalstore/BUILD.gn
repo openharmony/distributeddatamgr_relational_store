@@ -47,7 +47,6 @@ if (is_ohos) {
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/relationalstore/include",
@@ -76,6 +75,7 @@ if (is_ohos) {
       "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
+      "kv_store:datamgr_common",
       "napi:ace_napi",
     ]
 
@@ -87,7 +87,6 @@ if (is_ohos) {
   ohos_shared_library("relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
@@ -115,7 +114,10 @@ if (is_ohos) {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "kv_store:datamgr_common",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -125,7 +127,6 @@ if (is_ohos) {
   ohos_shared_library("relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/relationalstore/mock/include",
@@ -153,7 +154,10 @@ if (is_ohos) {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "kv_store:datamgr_common",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -163,7 +167,6 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
@@ -196,7 +199,10 @@ if (is_ohos) {
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "kv_store:datamgr_common",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -205,7 +211,6 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
@@ -235,7 +240,10 @@ if (is_ohos) {
       "//plugins/libs/napi:napi_ios",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "kv_store:datamgr_common",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
