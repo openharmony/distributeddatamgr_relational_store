@@ -151,6 +151,7 @@ public:
     int32_t GetBackupStatus() const override;
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    void SetKnowledgeSchema() override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
@@ -239,7 +240,6 @@ private:
     static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
-    void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
