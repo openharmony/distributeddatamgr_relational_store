@@ -23,6 +23,7 @@
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 #include "ohrdbtransaction_fuzzer.h"
+#include <iostream>
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
@@ -105,8 +106,45 @@ OH_Data_VBuckets *CreateRandomVBuckets(FuzzedDataProvider &provider)
     return list;
 }
 
+OH_VObject *CreateTransVObject(FuzzedDataProvider &provider)
+{
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    if (valueObject == nullptr) {
+        return nullptr;
+    }
+    std::string value = provider.ConsumeRandomLengthString();
+    valueObject->putText(valueObject, value.c_str());
+    return valueObject;
+}
+
+OH_Predicates* GetCapiTransPredicates(FuzzedDataProvider &provider, std::string table)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates(table.c_str());
+    if (predicates == nullptr) {
+        return nullptr;
+    }
+    std::string value = provider.ConsumeRandomLengthString();
+    OH_VObject *valueObject = CreateTransVObject(provider);
+    if (valueObject == nullptr) {
+        predicates->destroy(predicates);
+        return nullptr;
+    }
+    predicates->equalTo(predicates, value.c_str(), valueObject);
+    valueObject->destroy(valueObject);
+    return predicates;
+}
+
+void DeleteCapiTransPredicates(OH_Predicates *predicates)
+{
+    if (predicates != nullptr) {
+        return;
+    }
+    predicates->destroy(predicates);
+}
+
 void TransactionFuzzTest(FuzzedDataProvider &provider)
 {
+    static bool runEndFlag = false;
     OH_Rdb_Config *config = CreateRandomConfig(provider);
     int errCode;
     OH_Rdb_Store *store = OH_Rdb_GetOrOpen(config, &errCode);
@@ -125,10 +163,18 @@ void TransactionFuzzTest(FuzzedDataProvider &provider)
     Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
         provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
     OH_RdbTrans_BatchInsert(trans, batchTable.c_str(), list, resolution, &changes);
+    OH_RdbTrans_InsertWithConflictResolution(trans, table.c_str(), valueBucket, resolution, &rowId);
+    OH_Predicates *predicate = GetCapiTransPredicates(provider, table);
+    OH_RdbTrans_UpdateWithConflictResolution(trans, valueBucket, predicate, resolution, &rowId);
+    DeleteCapiTransPredicates(predicate);
     OH_VBuckets_Destroy(list);
     OH_Rdb_CloseStore(store);
     ReleaseConfig(config);
     OH_RdbTrans_DestroyOptions(options);
+    if (!runEndFlag) {
+        runEndFlag = true;
+        std::cout << "TransactionFuzzTest end" << std::endl;
+    }
 }
 
 /* Fuzzer entry point */
