@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "../common.h"
+#include "common.h"
 #include "block_data.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"

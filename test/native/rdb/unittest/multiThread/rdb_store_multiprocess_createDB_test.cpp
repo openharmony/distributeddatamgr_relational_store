@@ -25,7 +25,7 @@
 #include <string>
 #include <thread>
 
-#include "../common.h"
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
