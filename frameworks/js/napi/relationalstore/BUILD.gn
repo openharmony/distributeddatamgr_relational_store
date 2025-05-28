@@ -47,6 +47,7 @@ if (is_ohos) {
     include_dirs = [
       "include",
       "${datashare_path}/common/include/",
+      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/relationalstore/include",
@@ -75,7 +76,6 @@ if (is_ohos) {
       "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
-      "kv_store:datamgr_common",
       "napi:ace_napi",
     ]
 
