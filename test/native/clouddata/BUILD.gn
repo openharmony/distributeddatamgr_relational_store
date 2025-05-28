@@ -54,16 +54,14 @@ ohos_unittest("NativeCloudDataTest") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddata_mgr",
     "samgr:samgr_proxy",
   ]
 
-  deps = [
-    "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 }
 
 ###############################################################################

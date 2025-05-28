@@ -52,13 +52,13 @@ ohos_unittest("NativeRdbNdkTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
   ]
 
   deps = [
     "${relational_store_base_path}/interfaces/ndk/src:native_rdb_ndk",
     "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
   ]
 }
 
