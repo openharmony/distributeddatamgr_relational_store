@@ -758,6 +758,8 @@ public:
 
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor = 0);
 
+    virtual void SetKnowledgeSchema();
+
     /**
      * @brief Support for collations in different languages.
      *

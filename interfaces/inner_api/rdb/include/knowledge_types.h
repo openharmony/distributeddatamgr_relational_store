@@ -71,6 +71,11 @@ public:
      * @brief Get knowledge schema from manager.
      */
     API_EXPORT virtual std::vector<std::string> GetJsonSchema() = 0;
+
+    /**
+     * @brief Get rdb knowledge schema.
+     */
+    API_EXPORT virtual std::shared_ptr<RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName) = 0;
 };
 }
 #endif // DISTRIBUTED_RDB_KNOWLEDGE_TYPES_H

@@ -654,4 +654,8 @@ int RdbStore::ConfigLocale(const std::string &localeStr)
     (void)localeStr;
     return E_NOT_SUPPORT;
 }
+
+void RdbStore::SetKnowledgeSchema()
+{
+}
 } // namespace OHOS::NativeRdb
