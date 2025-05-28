@@ -26,6 +26,8 @@ config("module_private_config") {
     "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
+    "${common_tool_path}/",
+    "${kvstore_interface_path}",
   ]
 
   defines = [ "RELATIONAL_STORE" ]
@@ -49,8 +51,6 @@ ohos_unittest("NativeRdbMultiThreadTest") {
     "hilog:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
-    "kv_store:datamgr_common",
-    "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
