@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include "rdb_store_config.h"
+#include <unordered_map>
 
 namespace OHOS::DistributedRdb {
 struct RdbKnowledgeParser {
