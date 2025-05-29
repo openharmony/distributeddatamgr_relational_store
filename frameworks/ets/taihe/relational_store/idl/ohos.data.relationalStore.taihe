@@ -1,0 +1,719 @@
+/*
+ * Copyright (c) 2025-2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.data.relationalStore", "relationalStore")
+
+@!sts_inject_into_module("""
+import BaseContext from 'application.BaseContext';
+import dataSharePredicates from '@ohos.data.dataSharePredicates';
+""")
+
+@!sts_inject("""
+static { loadLibrary("relationalstore_ani.z"); }
+""")
+
+enum AssetStatus: i32 {
+    ASSET_NORMAL,
+    ASSET_INSERT,
+    ASSET_UPDATE,
+    ASSET_DELETE,
+    ASSET_ABNORMAL,
+    ASSET_DOWNLOADING
+}
+
+struct Asset {
+    name: String;
+    uri: String;
+    path: String;
+    createTime: String;
+    modifyTime: String;
+    size: String;
+    status: Optional<AssetStatus>;
+}
+
+union ValueType {
+    @null EMPTY;
+    INT64: i64;
+    F64: f64;
+    STRING: String;
+    BOOL: bool;
+    Uint8Array: @typedarray Array<u8>;
+    ASSET: Asset;
+    ASSETS: Array<Asset>;
+    Float32Array: @typedarray Array<f32>;
+    bigint: @bigint Array<u64>;
+}
+
+union ValuesBucket {
+    VALUESBUCKET : @record Map<String, ValueType>;
+}
+
+union PRIKeyType {
+    INT64: i64;
+    F64: f64;
+    STRING: String;
+}
+
+union ModifyTime {
+    MODIFYTIME : @record Map<PRIKeyType, UTCTime>;
+}
+
+union UTCTime {
+    UTCTIIME : @sts_type("Date") Opaque;
+}
+
+struct StoreConfig {
+    name: String;
+    securityLevel: SecurityLevel;
+    encrypt: Optional<bool>;
+    dataGroupId: Optional<String>;
+    customDir: Optional<String>;
+    autoCleanDirtyData: Optional<bool>;
+    allowRebuild: Optional<bool>;
+    vector: Optional<bool>;
+    isReadOnly: Optional<bool>;
+    pluginLibs: Optional<Array<String>>;
+    cryptoParam: Optional<CryptoParam>;
+}
+
+enum HAMode: i32 {
+    SINGLE = 0,
+    MAIN_REPLICA
+}
+
+struct CryptoParam {
+    encryptionKey: @typedarray Array<u8>;
+    iterationCount: Optional<i32>;
+    encryptionAlgo: Optional<EncryptionAlgo>;
+    hmacAlgo: Optional<HmacAlgo>;
+    kdfAlgo: Optional<KdfAlgo>;
+    cryptoPageSize: Optional<u32>;
+}
+
+enum EncryptionAlgo: i32 {
+    AES_256_GCM = 0,
+    AES_256_CBC
+}
+
+enum HmacAlgo: i32 {
+    SHA1 = 0,
+    SHA256,
+    SHA512
+}
+
+enum KdfAlgo: i32 {
+    KDF_SHA1 = 0,
+    KDF_SHA256,
+    KDF_SHA512
+}
+
+enum Progress: i32 {
+    SYNC_BEGIN,
+    SYNC_IN_PROGRESS,
+    SYNC_FINISH
+}
+
+struct Statistic {
+    total: u32;
+    successful: u32;
+    failed: u32;
+    remained: u32;
+}
+
+struct TableDetails {
+    upload: Statistic;
+    download: Statistic;
+}
+
+enum ProgressCode: i32 {
+    SUCCESS,
+    UNKNOWN_ERROR,
+    NETWORK_ERROR,
+    CLOUD_DISABLED,
+    LOCKED_BY_OTHERS,
+    RECORD_LIMIT_EXCEEDED,
+    NO_SPACE_FOR_ASSET,
+    BLOCKED_BY_NETWORK_STRATEGY
+}
+
+struct ProgressDetails {
+    schedule: Progress;
+    code: ProgressCode;
+    details: @record Map<String, TableDetails>;
+}
+
+struct SqlExecutionInfo {
+    sql: Array<String>;
+    totalTime: i64;
+    waitTime: i64;
+    prepareTime: i64;
+    executeTime: i64;
+}
+
+enum SecurityLevel: i32 {
+    S1 = 1,
+    S2 = 2,
+    S3 = 3,
+    S4 = 4
+}
+
+enum SyncMode : i32 {
+    SYNC_MODE_PUSH = 0,
+    SYNC_MODE_PULL = 1,
+    SYNC_MODE_TIME_FIRST,
+    SYNC_MODE_NATIVE_FIRST,
+    SYNC_MODE_CLOUD_FIRST
+}
+
+enum SubscribeType : i32 {
+    SUBSCRIBE_TYPE_REMOTE = 0,
+    SUBSCRIBE_TYPE_CLOUD,
+    SUBSCRIBE_TYPE_CLOUD_DETAILS,
+    SUBSCRIBE_TYPE_LOCAL_DETAILS
+}
+
+enum ChangeType : i32 {
+    DATA_CHANGE,
+    ASSET_CHANGE
+}
+
+struct ChangeInfo {
+    table: String;
+    type: ChangeType;
+    inserted: StringOrNumberArray;
+    updated: StringOrNumberArray;
+    deleted: StringOrNumberArray;
+}
+
+enum DistributedType : i32 {
+    DISTRIBUTED_DEVICE,
+    DISTRIBUTED_CLOUD
+}
+
+struct Reference {
+    sourceTable: String;
+    targetTable: String;
+    refFields: @record Map<String, String>;
+}
+
+struct DistributedConfig {
+    autoSync: bool;
+    references: Optional<Array<Reference>>;
+}
+
+enum ConflictResolution  : i32 {
+    ON_CONFLICT_NONE = 0,
+    ON_CONFLICT_ROLLBACK = 1,
+    ON_CONFLICT_ABORT = 2,
+    ON_CONFLICT_FAIL = 3,
+    ON_CONFLICT_IGNORE = 4,
+    ON_CONFLICT_REPLACE = 5
+}
+
+enum Origin : i32 {
+    LOCAL,
+    CLOUD,
+    REMOTE,
+}
+
+enum Field : String {
+    CURSOR_FIELD = "#_cursor",
+    ORIGIN_FIELD = "#_origin",
+    DELETED_FLAG_FIELD = "#_deleted_flag",
+    DATA_STATUS_FIELD = "#_data_status",
+    OWNER_FIELD = "#_cloud_owner",
+    PRIVILEGE_FIELD = "#_cloud_privilege",
+    SHARING_RESOURCE_FIELD = "#_sharing_resource_field"
+}
+
+enum RebuildType : i32  {
+    NONE,
+    REBUILT,
+    REPAIRED
+}
+
+enum TransactionType : i32  {
+    DEFERRED,
+    IMMEDIATE,
+    EXCLUSIVE
+}
+
+struct TransactionOptions {
+    transactionType: Optional<TransactionType>;
+}
+
+struct SqlInfo {
+    sql: String;
+    args: Array<ValueType>;
+}
+
+union StringOrNumberArray {
+    STRINGARRAY : Array<String>;
+    Int32Array : Array<i32>;
+}
+
+ interface ResultSet {
+    @get GetColumnCount() : i32;
+
+    @get GetRowCount() : i32;
+
+    @get GetRowIndex() : i32;
+
+    @get GetIsAtFirstRow() : bool;
+
+    @get GetIsAtLastRow() : bool;
+
+    @get GetIsEnded() : bool;
+
+    @get GetIsStarted() : bool;
+
+    @get GetIsClosed() : bool;
+
+    GetColumnIndex(columnName: String): i32;
+
+    GetColumnName(columnIndex: i32): String;
+
+    GetColumnNames() : Array<String>;
+
+    GoTo(offset: i32): bool;
+
+    GoToRow(position: i32): bool;
+
+    GoToFirstRow(): bool;
+
+    GoToLastRow(): bool;
+
+    GoToNextRow(): bool;
+
+    GoToPreviousRow(): bool;
+
+    GetBlob(columnIndex: i32): @typedarray Array<u8>;
+
+    GetString(columnIndex: i32): String;
+
+    GetLong(columnIndex: i32): i64;
+
+    GetDouble(columnIndex: i32): f64;
+
+    GetAsset(columnIndex: i32): Asset;
+
+    GetAssets(columnIndex: i32): Array<Asset>;
+
+    GetValue(columnIndex: i32): ValueType;
+
+    GetFloat32Array(columnIndex: i32): @typedarray Array<f32>;
+
+    GetRow(): @record Map<String, ValueType>;
+
+    IsColumnNull(columnIndex: i32): bool;
+
+    Close(): void;
+  }
+
+@class
+interface RdbPredicates {
+    GetSpecificImplPtr (): i64;
+    InDevices(@sts_this thiz : RdbPredicates, devices: Array<String>): RdbPredicates;
+    InAllDevices(@sts_this thiz : RdbPredicates): RdbPredicates;
+    EqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    NotEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    BeginWrap(@sts_this thiz : RdbPredicates): RdbPredicates;
+    EndWrap(@sts_this thiz : RdbPredicates): RdbPredicates;
+    Or(@sts_this thiz : RdbPredicates): RdbPredicates;
+    And(@sts_this thiz : RdbPredicates): RdbPredicates;
+    Contains(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    BeginsWith(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    EndsWith(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    IsNull(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
+    IsNotNull(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
+    Like(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    Glob(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    Between(@sts_this thiz : RdbPredicates, field: String, low: ValueType, high: ValueType): RdbPredicates;
+    NotBetween(@sts_this thiz : RdbPredicates, field: String, low: ValueType, high: ValueType): RdbPredicates;
+    GreaterThan(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    LessThan(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    GreaterThanOrEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    LessThanOrEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
+    OrderByAsc(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
+    OrderByDesc(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
+    Distinct(@sts_this thiz : RdbPredicates): RdbPredicates;
+    LimitAs(@sts_this thiz : RdbPredicates, value:i32): RdbPredicates;
+    OffsetAs(@sts_this thiz : RdbPredicates, rowOffset: i32): RdbPredicates;
+    GroupBy(@sts_this thiz : RdbPredicates, fields: Array<String>): RdbPredicates;
+    IndexedBy(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
+    In(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
+    NotIn(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
+    NotContains(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    NotLike(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+}
+
+@ctor("RdbPredicates")
+function CreateRdbPredicates(name : String): RdbPredicates;
+
+interface Transaction {
+    @gen_promise("commit")
+    CommitSync(): void;
+
+    @gen_promise("rollback")
+    RollbackSync(): void;
+
+    @gen_promise("insert")
+    InsertSync(table: String, values: @record Map<String, ValueType>, conflict: Optional<ConflictResolution>): i64;
+
+    @gen_promise("batchInsert")
+    BatchInsertSync(table: String, values: Array<@record Map<String, ValueType>>): i64;
+
+    @gen_promise("update")
+    UpdateSync(values: @record Map<String, ValueType>, predicates: RdbPredicates, conflict: Optional<ConflictResolution>): i64;
+
+    @gen_promise("delete")
+    DeleteSync(predicates: RdbPredicates): i64;
+
+    @gen_promise("query")
+    QuerySync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+
+    @gen_promise("querySql")
+    QuerySqlSync(sql: String, args: Optional<Array<ValueType>>): ResultSet;
+
+    @gen_promise("execute")
+    ExecuteSync(sql: String, args: Optional<Array<ValueType>>): ValueType;
+
+@!sts_inject_into_class("""
+    insertSync(table: string, values: Record<string, ValueType>) : long
+    {
+        return this.insertSync(table, values, undefined);
+    }
+    updateSync(values: Record<string, ValueType>, predicates: RdbPredicates): long
+    {
+        return this.updateSync(values, predicates, undefined);
+    }
+    querySync(predicates: RdbPredicates): ResultSet
+    {
+        return this.querySync(predicates, undefined);
+    }
+    querySqlSync(sql: string): ResultSet
+    {
+        return this.querySqlSync(sql, undefined);
+    }
+    executeSync(sql: string): ValueType
+    {
+        return this.executeSync(sql, undefined);
+    }
+""")
+  }
+
+interface RdbStore {
+    @get GetVersion() : i32;
+    @set SetVersion(veriosn : i32);
+
+    @get GetRebuilt() : RebuildType;
+
+    @gen_async("insert")
+    @gen_promise("insert")
+    InsertWithConflict(table: String, values: @record Map<String, ValueType>, conflict: ConflictResolution): i64;
+
+    @gen_async("insert")
+    @gen_promise("insert")
+    InsertWithValue(table: String, values: @record Map<String, ValueType>) : i64;
+
+    InsertSync(table: String, values: @record Map<String, ValueType>, conflict: Optional<ConflictResolution>): i64;
+
+    @gen_async("batchInsert")
+    @gen_promise("batchInsert")
+    BatchInsertSync(table: String, values: Array<@record Map<String, ValueType>>): i64;
+
+    @gen_async("update")
+    @gen_promise("update")
+    UpdateWithPredicate(values: @record Map<String, ValueType>, predicates: RdbPredicates): i64;
+
+    @gen_async("update")
+    @gen_promise("update")
+    UpdateSync(values: @record Map<String, ValueType>, predicates: RdbPredicates, conflict: Optional<ConflictResolution>): i64;
+
+    @gen_async("update")
+    @gen_promise("update")
+    UpdateDataShareSync(
+      table: String,
+      values: ValuesBucket,
+      predicates: @sts_type("dataSharePredicates.DataSharePredicates") Opaque
+    ): i64;
+
+    @gen_async("delete")
+    @gen_promise("delete")
+    DeleteSync(predicates: RdbPredicates): i64;
+
+    @gen_async("delete")
+    @gen_promise("delete")
+    DeleteDataShareSync(table: String, predicates: @sts_type("dataSharePredicates.DataSharePredicates") Opaque): i64;
+
+    @gen_async("query")
+    QueryWithPredicate(predicates: RdbPredicates) : ResultSet;
+
+    @gen_async("query")
+    QueryWithColumn(predicates: RdbPredicates, columns: Array<String>) : ResultSet;
+
+    @gen_promise("query")
+    QueryWithOptionalColumn(predicates: RdbPredicates, columns: Optional<Array<String>>) : ResultSet;
+
+    @gen_async("query")
+    QueryDataShareSync(table: String, predicates: @sts_type("dataSharePredicates.DataSharePredicates") Opaque) : ResultSet;
+
+    @gen_async("query")
+    @gen_promise("query")
+    QueryDataShareWithColumnSync(
+      table: String,
+      predicates: @sts_type("dataSharePredicates.DataSharePredicates") Opaque,
+      columns: Optional<Array<String>>) : ResultSet;
+
+    QuerySync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+
+    @gen_async("querySql")
+    QuerySqlWithSql(sql: String) : ResultSet;
+
+    @gen_async("querySql")
+    QuerySqlWithArgs(sql: String, bindArgs: Array<ValueType>) : ResultSet;
+
+    @gen_promise("querySql")
+    QuerySqlSync(sql: String, bindArgs: Optional<Array<ValueType>>): ResultSet;
+
+    @gen_promise("getModifyTime")
+    @gen_async("getModifyTime")
+    GetModifyTimeSync(table: String, columnName: String, primaryKeys: Array<PRIKeyType>): @record Map<PRIKeyType, @sts_type("Date") Opaque>;
+
+    @gen_async("cleanDirtyData")
+    CleanDirtyDataWithCursor(table: String, cursor: u64): void;
+
+    @gen_async("cleanDirtyData")
+    CleanDirtyDataWithTable(table: String): void;
+
+    @gen_promise("cleanDirtyData")
+    CleanDirtyDataWithOptionCursor(table: String, cursor: Optional<u64>): void;
+
+    @gen_promise("querySharingResource")
+    QuerySharingResourceWithOptionColumn(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+
+    @gen_async("querySharingResource")
+    QuerySharingResourceWithPredicate(predicates: RdbPredicates): ResultSet;
+
+    @gen_async("querySharingResource")
+    QuerySharingResourceWithColumn(predicates: RdbPredicates, columns: Array<String>): ResultSet;
+
+    @gen_async("executeSql")
+    ExecuteSqlWithSql(sql: String): void;
+
+    @gen_async("executeSql")
+    ExecuteSqlWithArgs(sql: String, bindArgs: Array<ValueType>): void;
+
+    @gen_promise("executeSql")
+    ExecuteSqlWithOptionArgs(sql: String, bindArgs: Optional<Array<ValueType>>): void;
+
+    @gen_promise("execute")
+    ExecuteWithOptionArgs(sql: String, args: Optional<Array<ValueType>>): ValueType;
+
+    @gen_promise("execute")
+    ExecuteWithTxId(sql: String, txId: i64, args: Optional<Array<ValueType>>): ValueType;
+
+    ExecuteSync(sql: String, args: Optional<Array<ValueType>>): ValueType;
+
+    BeginTransaction(): void;
+
+    @gen_promise("beginTrans")
+    BeginTransSync(): i64;
+
+    Commit(): void;
+
+    @gen_promise("commit")
+    CommitWithTxId(txId : i64): void;
+
+    RollBack(): void;
+
+    @gen_promise("rollback")
+    RollbackSync(txId : i64): void;
+
+    @gen_async("backup")
+    @gen_promise("backup")
+    BackupSync(destName: String): void;
+
+    @gen_async("restore")
+    @gen_promise("restore")
+    RestoreWithSrcName(srcName: String): void;
+
+    @gen_promise("restore")
+    RestoreWithVoid(): void;
+
+    @gen_async("setDistributedTables")
+    @gen_promise("setDistributedTables")
+    SetDistributedTablesWithTables(tables: Array<String>): void;
+
+    @gen_async("setDistributedTables")
+    SetDistributedTablesWithType(tables: Array<String>, type: DistributedType): void;
+
+    @gen_async("setDistributedTables")
+    SetDistributedTablesWithConfig(
+      tables: Array<String>,
+      type: DistributedType,
+      config: DistributedConfig
+    ): void;
+
+    @gen_promise("setDistributedTables")
+    SetDistributedTablesWithOptionConfig(tables: Array<String>, type: Optional<DistributedType>, config: Optional<DistributedConfig>): void;
+
+    @gen_async("obtainDistributedTableName")
+    @gen_promise("obtainDistributedTableName")
+    ObtainDistributedTableNameSync(device: String, table: String): String;
+
+    @gen_async("sync")
+    @gen_promise("sync")
+    SyncSync(mode: SyncMode, predicates: RdbPredicates): Array<@record Map<String, i32>>;
+
+    @gen_async("cloudSync")
+    @gen_promise("cloudSync")
+    CloudSyncWithProgress(mode: SyncMode, progress: (p : ProgressDetails) => void): void;
+
+    @gen_async("cloudSync")
+    @gen_promise("cloudSync")
+    CloudSyncWithTable(mode: SyncMode, tables: Array<String>, progress: (p : ProgressDetails) => void): void;
+
+    @gen_async("cloudSync")
+    @gen_promise("cloudSync")
+    CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
+
+    @gen_async("remoteQuery")
+    @gen_promise("remoteQuery")
+    RemoteQuerySync(device: String, table: String, predicates: RdbPredicates, columns: Array<String>): ResultSet;
+
+    @!sts_inject_into_class("""
+        insertSync(table: string, values: Record<string, ValueType>): long
+        {
+            return this.insertSync(table, values, undefined);
+        }
+        updateSync(values: Record<string, ValueType>, predicates: RdbPredicates): long
+        {
+            return this.updateSync(values, predicates, undefined);
+        }
+        querySync(predicates: RdbPredicates): ResultSet
+        {
+            return this.querySync(predicates, undefined);
+        }
+        querySqlSync(sql: string): ResultSet
+        {
+            return this.querySqlSync(sql, undefined);
+        }
+        executeWithTxId(sql: string, txId: long): ValueType
+        {
+           return this.executeWithTxId(sql, txId, undefined);
+        }
+        executeSync(sql: string): ValueType
+        {
+            return this.executeSync(sql, undefined);
+        }
+        createTransactionSync(): Transaction
+        {
+            return this.createTransactionSync(undefined);
+        }
+
+        on(event: string, type: SubscribeType, cb: Object) : void {
+            switch (event) {
+                case "dataChange": return this.onDataChange(type, cb as (info: Array<String> | Array<ChangeInfo>) => void, cb);
+                case "autoSyncProgress":  return this.onAutoSyncProgress(type, cb as (info: Array<ProgressDetails>) => void, cb);
+                default: throw new Error(`Unknown event: ${event}`);
+            }
+        }
+        off(event: string, type: SubscribeType, cb?: Object) : void {
+            switch (event) {
+                case "dataChange": return this.offDataChange(type, cb);
+                case "autoSyncProgress":  return this.offAutoSyncProgress(type, cb);
+                default: throw new Error(`Unknown type: ${event}`);
+            }
+        }
+
+        on(event: string, cb: Object) : void {
+            switch (event) {
+                case "statistics": return this.onStatistics(cb as (info: Array<SqlExecutionInfo>) => void, cb);
+                default: throw new Error(`Unknown event: ${event}`);
+            }
+        }
+        off(event: string, cb?: Object) : void {
+            switch (event) {
+                case "statistics": return this.offStatistics(cb);
+                default: throw new Error(`Unknown type: ${event}`);
+            }
+        }
+
+        on(event: String, interProcess: boolean, cb: Object) : void {
+          return this.onCommon(interProcess, cb as () => void, cb);
+        }
+
+        off(event: String, interProcess: boolean, cb?: Object) : void {
+          return this.offCommon(interProcess, cb);
+        }
+    """)
+
+    OnDataChange(type: SubscribeType, f: (info: Array<String>) => void, opq: Opaque) : void;
+    OffDataChange(type: SubscribeType, opq: Optional<Opaque>) : void;
+
+    OnAutoSyncProgress(type: SubscribeType, f: (info: Array<ProgressDetails>) => void, opq: Opaque) : void;
+    OffAutoSyncProgress(type: SubscribeType, opq: Optional<Opaque>) : void;
+
+    OnStatistics(f: (info : Array<SqlExecutionInfo>) => void, opq: Opaque) : void;
+    OffStatistics(opq: Optional<Opaque>) : void;
+
+    OnCommon(interProcess: bool, f: () => void, opq: Opaque) : void;
+    OffCommon(interProcess: bool, opq: Optional<Opaque>) : void;
+
+    Emit(event: String): void;
+
+    @gen_promise("close")
+    CloseSync(): void;
+
+    @gen_promise("attach")
+    AttachWithWaitTime(fullPath: String, attachName: String, waitTime: i32) : i32;
+
+    @gen_promise("attach")
+    AttachWithContext(context: @sts_type("BaseContext") Opaque, config: StoreConfig, attachName: String, waitTime: Optional<i32>) : i32;
+
+    @gen_promise("detach")
+    DetachSync(attachName: String, waitTime: Optional<i32>) : i32;
+
+    @gen_promise("lockRow")
+    LockRowSync(predicates: RdbPredicates): void;
+
+    @gen_promise("unlockRow")
+    UnlockRowSync(predicates: RdbPredicates): void;
+
+    @gen_promise("queryLockedRow")
+    QueryLockedRowSync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+
+    @gen_promise("lockCloudContainer")
+    LockCloudContainerSync(): u32;
+
+    @gen_promise("unlockCloudContainer")
+    UnlockCloudContainerSync(): void;
+
+    @gen_promise("createTransaction")
+    CreateTransactionSync(options: Optional<TransactionOptions>): Transaction;
+}
+
+@gen_async("getRdbStore")
+@gen_promise("getRdbStore")
+function GetRdbStoreSync(context: @sts_type("BaseContext") Opaque, config: StoreConfig): RdbStore;
+
+@gen_async("deleteRdbStore")
+@gen_promise("deleteRdbStore")
+function DeleteRdbStoreWithName(context: @sts_type("BaseContext") Opaque, name: String): void;
+
+@gen_async("deleteRdbStore")
+@gen_promise("deleteRdbStore")
+function DeleteRdbStoreWithConfig(context: @sts_type("BaseContext") Opaque, config: StoreConfig): void;
