@@ -62,9 +62,12 @@ RdbStatReporter::~RdbStatReporter()
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool == nullptr) {
             LOG_WARN("task pool err when RdbStatReporter");
+            return;
         }
         pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)]() {
-            (*report)(statEvent);
+            if (!report) {
+                (*report)(statEvent);
+            }
         });
         reportTime_.store(std::chrono::steady_clock::now());
     }

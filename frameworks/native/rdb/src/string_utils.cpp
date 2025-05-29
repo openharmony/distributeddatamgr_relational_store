@@ -75,6 +75,7 @@ std::string StringUtils::TruncateAfterFirstParen(const std::string &str)
     size_t pos = str.find('(');
     return (pos != std::string::npos) ? str.substr(0, pos) : str;
 }
+
 std::string StringUtils::GetParentPath(const std::string &path)
 {
     size_t pos = path.find_last_of("/\\");

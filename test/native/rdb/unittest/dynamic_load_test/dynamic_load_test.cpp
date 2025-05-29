@@ -152,4 +152,6 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading, TestSize.Level0)
     EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
     EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
+    EXPECT_TRUE(RdbHelper::Init());
+    EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
 }

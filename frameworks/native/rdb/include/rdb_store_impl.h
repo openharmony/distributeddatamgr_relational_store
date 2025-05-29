@@ -72,7 +72,12 @@ public:
     int32_t Notify(const std::string &uri);
 
 private:
+    using RegisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+    using UnregisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
+    using NotifyFunc = int32_t (*)(const std::string &);
+    using CleanFunc = bool (*)();
     static void *GetHandle();
+    static int32_t CleanUp();
     static std::mutex mutex_;
     static void *handle_;
     ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;

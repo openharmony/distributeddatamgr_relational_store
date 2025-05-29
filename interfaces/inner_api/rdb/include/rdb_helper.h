@@ -73,6 +73,10 @@ public:
      */
     API_EXPORT static bool IsSupportedTokenizer(Tokenizer tokenizer);
 
+    struct DestroyOption {
+        bool cleanOpenSSL = false;
+        bool cleanICU = false;
+    };
     /**
      * @brief Clean up resources before dlclose.
      *
@@ -89,7 +93,7 @@ public:
      * actually uninstalling rdb. Please manually release all resources obtained from rdb (rdbStore, resultSet,
      * transaction, etc.) before calling, and then dlopen again to use them normally
      */
-    API_EXPORT static bool Destroy();
+    API_EXPORT static bool Destroy(const DestroyOption &option = { false, false });
 };
 } // namespace NativeRdb
 } // namespace OHOS

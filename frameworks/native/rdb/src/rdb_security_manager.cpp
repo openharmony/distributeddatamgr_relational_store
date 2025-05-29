@@ -136,6 +136,7 @@ RdbSecurityManager::~RdbSecurityManager()
 {
     if (handle_ != nullptr) {
         dlclose(handle_);
+        handle_ = nullptr;
     }
 }
 

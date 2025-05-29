@@ -248,9 +248,6 @@ bool RdbStoreManager::Destroy()
 {
     Clear();
     TaskExecutor::GetInstance().Stop();
-#if !defined(CROSS_PLATFORM)
-    return DistributedRdb::RdbManagerImpl::GetInstance().CleanUp();
-#endif
     return true;
 }
 
