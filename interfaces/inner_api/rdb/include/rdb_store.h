@@ -28,6 +28,7 @@
 #include "rdb_errno.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
+#include "knowledge_types.h"
 #include "result_set.h"
 #include "transaction.h"
 #include "value_object.h"
@@ -79,6 +80,11 @@ public:
      * @brief Use RdbSyncObserver replace DistributedRdb::RdbSyncObserver namespace.
      */
     using DetailProgressObserver = DistributedRdb::DetailProgressObserver;
+
+    /**
+     * @brief Use RdbKnowledgeSchema replace DistributedRdb::RdbKnowledgeSchema namespace.
+     */
+    using RdbKnowledgeSchema = DistributedRdb::RdbKnowledgeSchema;
 
     /**
      * @brief Use Date replace DistributedRdb::Date namespace.
@@ -758,7 +764,7 @@ public:
 
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor = 0);
 
-    virtual void SetKnowledgeSchema();
+    virtual int InitKnowledgeSchema(const RdbKnowledgeSchema &schema);
 
     /**
      * @brief Support for collations in different languages.

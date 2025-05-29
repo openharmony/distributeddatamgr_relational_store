@@ -68,11 +68,6 @@ public:
     API_EXPORT virtual void StopTask() = 0;
 
     /**
-     * @brief Get knowledge schema from manager.
-     */
-    API_EXPORT virtual std::vector<std::string> GetJsonSchema() = 0;
-
-    /**
      * @brief Get rdb knowledge schema.
      */
     API_EXPORT virtual std::shared_ptr<RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName) = 0;
