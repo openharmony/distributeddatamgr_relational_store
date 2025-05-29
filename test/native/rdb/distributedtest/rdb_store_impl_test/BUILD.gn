@@ -24,7 +24,6 @@ config("module_private_config") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
-    "${common_tool_path}/",
   ]
 }
 
@@ -43,6 +42,7 @@ ohos_distributedtest("DistributedTest") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
@@ -71,6 +71,7 @@ ohos_distributedtest("DistributedTestAgent") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
