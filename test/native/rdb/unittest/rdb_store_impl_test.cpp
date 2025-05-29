@@ -1569,3 +1569,24 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
     errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
 }
+
+/**
+ * @tc.name: RdbStore_InitKnowledgeSchema_001
+ * @tc.desc: test RdbStore InitKnowledgeSchema
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    config.SetEnableSemanticIndex(true);
+    OHOS::DistributedRdb::RdbKnowledgeSchema schema;
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+
+    errCode = store->InitKnowledgeSchema(schema);
+    EXPECT_EQ(errCode, E_OK);
+}
