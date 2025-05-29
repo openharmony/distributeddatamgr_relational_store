@@ -17,6 +17,7 @@
 
 #include <sqlite3sym.h>
 #include <unicode/ucol.h>
+#include <unicode/uclean.h>
 
 #include "ohos/init_data.h"
 #include "logger.h"
@@ -25,9 +26,16 @@
 #include "sqlite3.h"
 
 API_EXPORT int32_t ConfigICULocal(sqlite3 *, const std::string &str) asm("ConfigICULocal");
+API_EXPORT int32_t CleanUp() asm("CleanUp");
 int32_t ConfigICULocal(sqlite3 *handle, const std::string &str)
 {
     return OHOS::NativeRdb::ICUCollect::Local(handle, str);
+}
+
+int32_t CleanUp()
+{
+    u_cleanup();
+    return OHOS::NativeRdb::E_OK;
 }
 
 namespace OHOS::NativeRdb {

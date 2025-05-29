@@ -25,8 +25,9 @@
 
 namespace OHOS::NativeRdb {
 ConcurrentMap<std::string, std::set<std::shared_ptr<SqlErrorObserver>>> SqlLog::observerSets_;
-thread_local int32_t SqlLog::suspenders_ = 0;
 std::atomic<bool> SqlLog::enabled_ = false;
+std::shared_mutex SqlLog::mutex_;
+std::map<uint64_t, int32_t> SqlLog::suspenders_;
 int SqlLog::Subscribe(const std::string storeId, std::shared_ptr<SqlErrorObserver> observer)
 {
     observerSets_.Compute(storeId, [observer](const std::string& key, auto& observers) {
@@ -52,10 +53,7 @@ int SqlLog::Unsubscribe(const std::string storeId, std::shared_ptr<SqlErrorObser
 
 void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptionMessage)
 {
-    if (!enabled_) {
-        return;
-    }
-    if (suspenders_ > 0) {
+    if (!enabled_ || IsPause()) {
         return;
     }
     if (!observerSets_.Contains(storeId)) {
@@ -80,14 +78,20 @@ void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptio
 
 void SqlLog::Pause()
 {
-    ++suspenders_;
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    ++suspenders_[GetThreadId()];
 }
 
 void SqlLog::Resume()
 {
-    if (suspenders_ > 0) {
-        --suspenders_;
-    }
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    --suspenders_[GetThreadId()];
+}
+
+bool SqlLog::IsPause()
+{
+    std::shared_lock<decltype(mutex_)> lock(mutex_);
+    return suspenders_[GetThreadId()] > 0;
 }
 
 SqlLog::SqlLog()

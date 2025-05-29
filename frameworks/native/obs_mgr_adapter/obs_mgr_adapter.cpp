@@ -25,15 +25,17 @@
 #include "dataobs_mgr_client.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_visibility.h"
 #include "rdb_types.h"
+#include "rdb_visibility.h"
 
 using namespace OHOS::DistributedRdb;
 API_EXPORT int32_t Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer) asm("Register");
 API_EXPORT int32_t Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer) asm("Unregister");
 API_EXPORT int32_t NotifyChange(const std::string &uri) asm("NotifyChange");
+API_EXPORT bool CleanUp() asm("CleanUp");
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+constexpr int32_t MAX_RETRY = 100;
 class RdbStoreLocalSharedObserver : public AAFwk::DataAbilityObserverStub {
 public:
     explicit RdbStoreLocalSharedObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer){};
@@ -67,14 +69,21 @@ public:
     static int32_t RegisterObserver(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer);
     static int32_t UnregisterObserver(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer);
     static int32_t NotifyChange(const std::string &uri);
+    static bool Clean();
 
 private:
     static void RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer);
     static void AddObserver(const std::string &uri, const std::list<sptr<RdbStoreLocalSharedObserver>> &observers);
+    static void PushReleaseObs(wptr<RdbStoreLocalSharedObserver> obs);
+    static bool CleanReleaseObs(bool force = false);
     static ConcurrentMap<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> obs_;
+    static std::mutex mutex_;
+    static std::list<wptr<RdbStoreLocalSharedObserver>> releaseObs_;
 };
 
 ConcurrentMap<std::string, std::list<sptr<RdbStoreLocalSharedObserver>>> ObsMgrAdapterImpl::obs_;
+std::mutex ObsMgrAdapterImpl::mutex_;
+std::list<wptr<RdbStoreLocalSharedObserver>> ObsMgrAdapterImpl::releaseObs_;
 int32_t ObsMgrAdapterImpl::RegisterObserver(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer)
 {
     sptr<RdbStoreLocalSharedObserver> localSharedObserver;
@@ -156,8 +165,10 @@ int32_t ObsMgrAdapterImpl::UnregisterObserver(const std::string &uri, std::share
             LOG_ERROR("UnregisterObserver failed. code:%{public}d, uri:%{public}s", err, Anonymous(uri).c_str());
             return err;
         }
+        PushReleaseObs(*it);
         it = localSharedObservers.erase(it);
     }
+    CleanReleaseObs();
     return E_OK;
 }
 
@@ -174,6 +185,33 @@ int32_t ObsMgrAdapterImpl::NotifyChange(const std::string &uri)
         return E_ERROR;
     }
     return E_OK;
+}
+
+bool ObsMgrAdapterImpl::Clean()
+{
+    auto client = OHOS::AAFwk::DataObsMgrClient::GetInstance();
+    if (client == nullptr) {
+        LOG_ERROR("Failed to get DataObsMgrClient");
+        return obs_.Empty() && CleanReleaseObs(true);
+    }
+    obs_.EraseIf([client](const auto &key, auto &observer) {
+        for (auto it = observer.begin(); it != observer.end();) {
+            if (*it == nullptr) {
+                it = observer.erase(it);
+                continue;
+            }
+            int32_t err = client->UnregisterObserver(Uri(key), *it);
+            if (err != 0) {
+                LOG_ERROR("UnregisterObserver failed. code:%{public}d, uri:%{public}s", err, Anonymous(key).c_str());
+                ++it;
+                continue;
+            }
+            PushReleaseObs(*it);
+            it = observer.erase(it);
+        }
+        return true;
+    });
+    return CleanReleaseObs(true);
 }
 
 void ObsMgrAdapterImpl::RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer)
@@ -202,6 +240,33 @@ void ObsMgrAdapterImpl::AddObserver(
         return !obs.empty();
     });
 }
+
+void ObsMgrAdapterImpl::PushReleaseObs(wptr<RdbStoreLocalSharedObserver> obs)
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    releaseObs_.push_back(obs);
+}
+
+bool ObsMgrAdapterImpl::CleanReleaseObs(bool force)
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    int32_t retry = 0;
+    do {
+        auto it = releaseObs_.begin();
+        while (it != releaseObs_.end()) {
+            if (it->promote()) {
+                ++it;
+            } else {
+                it = releaseObs_.erase(it);
+            }
+        }
+    } while (force && retry++ < MAX_RETRY && !releaseObs_.empty());
+    if (!releaseObs_.empty()) {
+        LOG_ERROR("Failed to release obs, size:%{public}zu", releaseObs_.size());
+        return false;
+    }
+    return true;
+}
 } // namespace OHOS::NativeRdb
 
 int32_t Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> observer)
@@ -217,4 +282,9 @@ int32_t Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs
 int32_t NotifyChange(const std::string &uri)
 {
     return OHOS::NativeRdb::ObsMgrAdapterImpl::NotifyChange(uri);
+}
+
+bool CleanUp()
+{
+    return OHOS::NativeRdb::ObsMgrAdapterImpl::Clean();
 }

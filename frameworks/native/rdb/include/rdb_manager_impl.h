@@ -40,8 +40,6 @@ public:
 
     std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
 
-    bool CleanUp();
-
     void OnRemoteDied();
 
     class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -64,6 +62,8 @@ private:
     ~RdbManagerImpl();
 
     void ResetServiceHandle();
+
+    int32_t CleanUp();
 
     static sptr<IRemoteObject::DeathRecipient> LinkToDeath(const sptr<IRemoteObject> &remote);
 

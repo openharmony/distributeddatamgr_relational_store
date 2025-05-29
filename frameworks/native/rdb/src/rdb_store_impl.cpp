@@ -34,6 +34,7 @@
 #include "connection_pool.h"
 #include "delay_notify.h"
 #include "directory_ex.h"
+#include "global_resource.h"
 #include "knowledge_schema_helper.h"
 #include "logger.h"
 #include "obs_mgr_adapter.h"
@@ -83,10 +84,6 @@ using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
-
-using RegisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
-using UnregisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
-using NotifyFunc = int32_t (*)(const std::string &);
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
@@ -576,8 +573,26 @@ void *ObsManger::GetHandle()
     handle_ = dlopen("librdb_obs_mgr_adapter.z.so", RTLD_LAZY);
     if (handle_ == nullptr) {
         LOG_ERROR("dlopen(librdb_obs_mgr_adapter) failed(%{public}d)!", errno);
+    } else {
+        GlobalResource::RegisterClean(GlobalResource::OBS, CleanUp);
     }
     return handle_;
+}
+
+int32_t ObsManger::CleanUp()
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    auto cleanUp = reinterpret_cast<CleanFunc>(dlsym(handle_, "CleanUp"));
+    if (cleanUp == nullptr) {
+        LOG_ERROR("dlsym(CleanUp) failed!");
+        return E_OK;
+    }
+    if (!cleanUp()) {
+        return E_ERROR;
+    }
+    dlclose(handle_);
+    handle_ = nullptr;
+    return E_OK;
 }
 
 int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)
