@@ -1248,7 +1248,7 @@ public:
         if (nativeRdbStore_->GetDbType() == OHOS::NativeRdb::DB_VECTOR) {
             nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para);
         } else {
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#if defined(CROSS_PLATFORM)
             nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para);
 #else
             nativeResultSet = nativeRdbStore_->QuerySql(std::string(sql), para);
