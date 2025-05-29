@@ -126,9 +126,9 @@ void TransDbFuzzTest(FuzzedDataProvider &provider)
 
 } // namespace OHOS
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    FuzzedDataProvider provider(Data, Size);
+    FuzzedDataProvider provider(data, size);
     OHOS::TransDbFuzzTest(provider);
     return 0;
 }
