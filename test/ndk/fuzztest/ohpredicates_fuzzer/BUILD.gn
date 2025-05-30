@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RelationalStoreFuzzTest") {
+ohos_fuzztest("OHPredicatesFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [
@@ -37,9 +37,9 @@ ohos_fuzztest("RelationalStoreFuzzTest") {
   ]
 
   fuzz_config_file =
-      "${relational_store_base_path}/test/ndk/fuzztest/relationalstore_fuzzer"
+      "${relational_store_base_path}/test/ndk/fuzztest/ohpredicates_fuzzer"
 
-  sources = [ "relationalstore_fuzzer.cpp" ]
+  sources = [ "ohpredicates_fuzzer.cpp" ]
 
   deps = [
     "${relational_store_base_path}/interfaces/ndk/src:native_rdb_ndk",
@@ -49,13 +49,10 @@ ohos_fuzztest("RelationalStoreFuzzTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libtoken_setproc",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
-    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 }
@@ -66,7 +63,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":RelationalStoreFuzzTest",
+    ":OHPredicatesFuzzTest",
   ]
 }
 ###############################################################################

@@ -79,5 +79,6 @@ group("fuzztest") {
     "fuzztest/relationalstorecapi_fuzzer:fuzztest",
     "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/valueobject_fuzzer:fuzztest",
+    "fuzztest/ohpredicates_fuzzer:fuzztest",
   ]
 }
