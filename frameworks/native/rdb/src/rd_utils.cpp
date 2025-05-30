@@ -639,17 +639,28 @@ int RdUtils::RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version)
     return TransferGrdErrno(GRD_KVApiInfo.DBSetConfigApi(db, type, value));
 }
 
-static void Schedule(void *func, void *param)
+static uint64_t Schedule(void *func, void *param)
 {
     auto pool = TaskExecutor::GetInstance().GetExecutor();
     if (pool == nullptr) {
-        LOG_ERROR("pool is nullptr");
-        return;
+        LOG_ERROR("|Schedule| pool is nullptr");
+        return static_cast<uint64_t>(TaskExecutor::INVALID_TASK_ID);
     }
-    pool->Execute([func, param]() {
+    TaskExecutor::TaskId taskId = pool->Execute([func, param]() {
         void (*funcPtr)(void *) = reinterpret_cast<void (*)(void *)>(func);
         funcPtr(param);
     });
+    return static_cast<uint64_t>(taskId);
+}
+
+static bool Remove(uint64_t taskId, bool wait)
+{
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    if (pool == nullptr) {
+        LOG_ERROR("|Remove| pool is nullptr");
+        return false;
+    }
+    return pool->Remove(taskId, wait);
 }
 
 int RdUtils::RdSqlRegistryThreadPool(GRD_DB *db)
@@ -662,6 +673,7 @@ int RdUtils::RdSqlRegistryThreadPool(GRD_DB *db)
         return E_NOT_SUPPORT;
     }
     RdUtils::threadPool_.schedule = reinterpret_cast<GRD_ScheduleFunc>(Schedule);
+    RdUtils::threadPool_.remove = reinterpret_cast<GRD_RemoveFunc>(Remove);
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlRegistryThreadPool(db, &threadPool_));
 }
 
