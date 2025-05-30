@@ -2895,6 +2895,23 @@ void RdbStoreImpl::SetKnowledgeSchema()
     helper->DonateKnowledgeData();
 }
 
+int RdbStoreImpl::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
+{
+    auto [ret, conn] = GetConn(false);
+    if (ret != E_OK) {
+        LOG_ERROR("The database is busy or closed when set knowledge schema ret %{public}d.", ret);
+        return ret;
+    }
+    ret = conn->SetKnowledgeSchema(schema);
+    if (ret != E_OK) {
+        LOG_ERROR("Set knowledge schema failed %{public}d.", ret);
+        return ret;
+    }
+    auto helper = GetKnowledgeSchemaHelper();
+    helper->Init(config_, schema);
+    return E_OK;
+}
+
 std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> RdbStoreImpl::GetKnowledgeSchemaHelper()
 {
     std::lock_guard<std::mutex> autoLock(helperMutex_);
