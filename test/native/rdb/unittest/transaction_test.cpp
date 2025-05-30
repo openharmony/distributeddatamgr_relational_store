@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "abs_rdb_predicates.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -1928,5 +1929,221 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
     ASSERT_EQ(rowCount, 0);
 
     ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_049
+ * @tc.desc: abnormal testcase of virtual table with returning in transaction.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+    auto [createTableStatus, createTableresult] = store->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("title", "fts5");
+    row.Put("content", "test virtual tables");
+    rows.Put(std::move(row));
+    auto [status, result] =
+        transaction->BatchInsert("articles", rows, {"title"}, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    ASSERT_NE(result.results, nullptr);
+    int rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("title")), "fts5");
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("title", "fts5");
+    ValuesBucket values;
+    values.PutString("title", "fts5 updated");
+
+    std::tie(status, result) = transaction->Update(values, predicates, { "title" });
+    // UPDATE RETURNING is not available on virtual tables
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    EXPECT_EQ(result.results, nullptr);
+
+    std::tie(status, result) = store_->Delete(predicates, { "title" });
+    // DELETE RETURNING is not available on virtual tables
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    
+    transaction->Execute("Drop TABLE articles");
+    EXPECT_EQ(transaction->Rollback(), E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_050
+ * @tc.desc: abnormal testcase of trigger delete with returning in trans.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+    
+    auto [code, result1] = transaction->Execute(
+        "CREATE TRIGGER before_update BEFORE UPDATE ON test"
+        " BEGIN DELETE FROM test WHERE name = 'wang'; END");
+    EXPECT_EQ(code, E_OK);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("id", 200);
+    row.Put("name", "wang");
+    rows.Put(std::move(row));
+    row.Put("id", 201);
+    row.Put("name", "zhang");
+    rows.Put(std::move(row));
+    row.Put("id", 202);
+    row.Put("name", "zhao");
+    rows.Put(std::move(row));
+
+    auto [status, result] =
+        transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 3);
+    ASSERT_NE(result.results, nullptr);
+    int rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 3);
+    RowEntity rowEntity;
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "wang");
+    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhang");
+    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhao");
+
+    auto predicates = AbsRdbPredicates("test");
+    predicates.EqualTo("name", "zhang");
+    ValuesBucket values;
+    values.PutString("name", "liu");
+
+    std::tie(status, result) = transaction->Update(values, predicates, { "name" });
+
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(result.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    ASSERT_EQ(result.results->GetString(columnIndex, value), E_OK);
+    EXPECT_EQ(value, "liu");
+
+    // Check the trigger effect
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+
+    rowCount = -1;
+    resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(rowCount, 2);
+
+    transaction->Execute("DROP TRIGGER IF EXISTS before_update");
+
+    int ret = transaction->Rollback();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_051
+ * @tc.desc: abnormal testcase of trigger update with returning in trans.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+    
+    auto [code, result1] = transaction->Execute(
+        "CREATE TRIGGER before_delete BEFORE DELETE ON test"
+        " BEGIN UPDATE test SET name = 'li' WHERE name = 'zhao'; END");
+    EXPECT_EQ(code, E_OK);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("id", 200);
+    row.Put("name", "wang");
+    rows.Put(std::move(row));
+    row.Put("id", 201);
+    row.Put("name", "zhang");
+    rows.Put(std::move(row));
+    row.Put("id", 202);
+    row.Put("name", "zhao");
+    rows.Put(std::move(row));
+
+    auto [status, result] =
+        transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 3);
+    ASSERT_NE(result.results, nullptr);
+    int rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 3);
+    RowEntity rowEntity;
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "wang");
+    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhang");
+    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhao");
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("name", "zhang");
+    std::tie(status, result) = transaction->Delete(predicates, { "name" });
+
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(result.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    ASSERT_EQ(result.results->GetString(columnIndex, value), E_OK);
+    EXPECT_EQ(value, "zhang");
+
+    
+    // Check the trigger effect
+    AbsRdbPredicates predicates1("test");
+    predicates1.EqualTo("id", 202);
+    auto [queryResult, queryStatus] = transaction->QueryByStep("select name from test where id = 202");
+
+    rowCount = -1;
+    queryResult->GetRowCount(rowCount);
+    ASSERT_EQ(rowCount, 1);
+    ASSERT_EQ(queryResult->GoToNextRow(), E_OK);
+    columnIndex = -1;
+    queryResult->GetColumnIndex("name", columnIndex);
+
+    value.clear();
+    EXPECT_EQ(E_OK, queryResult->GetString(columnIndex, value));
+    EXPECT_EQ(value, "li");
+
+    transaction->Execute("DROP TRIGGER IF EXISTS before_update");
+
+    int ret = transaction->Rollback();
     EXPECT_EQ(ret, E_OK);
 }

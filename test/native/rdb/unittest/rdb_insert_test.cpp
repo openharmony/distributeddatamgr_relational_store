@@ -1272,7 +1272,6 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_014, TestSize.Level1)
     auto resultSet = store_->QuerySql("select name from test where id = 200");
     int rowCount = -1;
     resultSet->GetRowCount(rowCount);
-    std::cout << "resultSet rowCount: " << rowCount << std::endl;
     resultSet->GoToFirstRow();
     EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
     EXPECT_EQ(std::string(rowEntity.Get("name")), "after trigger");
