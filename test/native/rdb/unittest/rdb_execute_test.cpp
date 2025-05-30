@@ -21,6 +21,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "value_object.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -761,6 +762,99 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0024, TestSize.Level1)
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(result.changed, -1);
     ASSERT_EQ(result.results, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0025
+ * @tc.desc: normal test. batch insert into virtual table with returning
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0025, TestSize.Level1)
+{
+    store_->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+
+    std::vector<ValueObject> args = { "title", "content" };
+    auto [status, result] =
+        store_->ExecuteExt("INSERT INTO articles(title, content) VALUES (?, ?) returning title", args);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    int rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(result.results->GetColumnIndex("title", columnIndex), E_OK);
+    std::string value;
+    ASSERT_EQ(result.results->GetString(columnIndex, value), E_OK);
+    EXPECT_EQ(value, "title");
+    
+    std::vector<ValueObject> args2 = { "title2", "title" };
+    std::tie(status, result) =
+        store_->ExecuteExt("UPDATE articles set title = ? where title = ? returning title", args2);
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    ASSERT_EQ(result.results, nullptr);
+
+    // DELETE RETURNING is not available on virtual tables
+    std::tie(status, result) = store_->ExecuteExt("DELETE FROM articles where title = ? returning title", { "title" });
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    ASSERT_EQ(result.results, nullptr);
+    store_->Execute("Drop TABLE articles");
+}
+
+/**
+ * @tc.name: RdbStore_Execute_0026
+ * @tc.desc: normal test. create trigger before update, delete data in trigger, then update data
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbExecuteTest, RdbStore_Execute_0026, TestSize.Level1)
+{
+    auto [code, result1] = store_->Execute(
+        "CREATE TRIGGER before_update BEFORE UPDATE ON test"
+        " BEGIN DELETE FROM test WHERE name = 'wang'; END");
+
+    EXPECT_EQ(code, E_OK);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("id", 200);
+    row.Put("name", "wang");
+    rows.Put(std::move(row));
+    row.Put("id", 201);
+    row.Put("name", "zhang");
+    rows.Put(std::move(row));
+
+    auto [insertStatus, insertResult] =
+        store_->BatchInsert("test", rows, { "name" }, NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(insertStatus, E_OK);
+    EXPECT_EQ(insertResult.changed, 2);
+
+    std::vector<ValueObject> args2 = { "liu", "zhang" };
+    auto [status, res] =
+        store_->ExecuteExt("UPDATE test set name = ? where name = ? returning name", args2);
+
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(res.changed, 1);
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    ASSERT_EQ(res.results->GetString(columnIndex, value), E_OK);
+    EXPECT_EQ(value, "liu");
+
+    // Check the trigger effect
+    auto resultSet = store_->QuerySql("select name from test where id = 200");
+
+    rowCount = -1;
+    resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(rowCount, 0);
+    store_->Execute("DROP TRIGGER IF EXISTS before_update");
 }
 
 INSTANTIATE_TEST_SUITE_P(ExecuteTest, RdbExecuteTest, testing::Values(&g_store, &g_memDb));
