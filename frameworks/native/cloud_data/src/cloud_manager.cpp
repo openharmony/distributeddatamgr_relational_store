@@ -15,11 +15,14 @@
 #define LOG_TAG "CloudManager"
 #include "cloud_manager.h"
 
+#include "app_mgr_client.h"
 #include "cloud_service_proxy.h"
+#include "icloud_client_death_observer.h"
 #include "icloud_service.h"
 #include "iservice_registry.h"
 #include "itypes_util.h"
 #include "logger.h"
+#include "singleton.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::CloudData {
@@ -31,6 +34,7 @@ public:
     explicit DataMgrService(const sptr<IRemoteObject> &impl);
     ~DataMgrService() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
+    int32_t RegisterClientDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer) override;
 };
 
 class CloudDeath : public IRemoteObject::DeathRecipient {
@@ -51,6 +55,16 @@ CloudManager &CloudManager::GetInstance()
 {
     static CloudManager instance;
     return instance;
+}
+
+std::string CloudManager::GetProcessName()
+{
+    AppExecFwk::RunningProcessInfo info;
+    auto appMgrClient = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
+    if (appMgrClient != nullptr && appMgrClient->GetProcessRunningInfomation(info) == 0) {
+        return info.processName_;
+    }
+    return "";
 }
 
 std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService()
@@ -76,6 +90,8 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
         LOG_ERROR("New CloudDataServiceProxy failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
+    sptr<IRemoteObject> clientDeathObserver = new (std::nothrow) CloudClientDeathObserverStub();
+    dataMgr->RegisterClientDeathObserver(GetProcessName(), clientDeathObserver);
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
@@ -133,5 +149,36 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
         return nullptr;
     }
     return remoteObject;
+}
+
+int32_t DataMgrService::RegisterClientDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer)
+{
+    LOG_INFO("%{public}s", bundleName.c_str());
+    if (bundleName.empty() || observer == nullptr) {
+        LOG_ERROR("bundleName is empty or observer is nullptr.");
+        return CloudService::ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DataMgrService::GetDescriptor())) {
+        LOG_ERROR("Write descriptor failed.");
+        return CloudService::ERROR;
+    }
+
+    if (!ITypesUtil::Marshal(data, bundleName, observer)) {
+        LOG_ERROR("Write descriptor failed.");
+        return CloudService::ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t status = Remote()->SendRequest(
+        static_cast<uint32_t>(CloudKvStoreInterfaceCode::REGISTER_CLIENT_DEATH_OBSERVER), data, reply, mo);
+    if (status != 0) {
+        LOG_ERROR("SendRequest returned %{public}d", status);
+        return status;
+    }
+
+    ITypesUtil::Unmarshal(reply, status);
+    return status;
 }
 } // namespace OHOS::CloudData
