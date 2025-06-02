@@ -63,7 +63,6 @@ private:
     static constexpr uint32_t EXPANSION = 2;
     static ValueObject nullObject_;
     static std::reference_wrapper<ValueObject> nullRef_;
-    static std::string HandleTable(const std::string &tableName);
 };
 } // namespace NativeRdb
 } // namespace OHOS

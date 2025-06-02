@@ -294,18 +294,6 @@ SqliteSqlBuilder::BatchRefSqls SqliteSqlBuilder::MakeExecuteSqls(
     return executeSqls;
 }
 
-std::string SqliteSqlBuilder::HandleTable(const std::string &tableName)
-{
-    if (tableName.empty()) {
-        return tableName;
-    }
-    std::regex validName("^([a-zA-Z_][a-zA-Z0-9_\\.\\ ]*)$");
-    if (std::regex_match(tableName, validName)) {
-        return tableName;
-    }
-    return "'" + tableName + "'";
-}
-
 void SqliteSqlBuilder::UpdateAssetStatus(const ValueObject &val, int32_t status)
 {
     if (val.GetType() == ValueObject::TYPE_ASSET) {
