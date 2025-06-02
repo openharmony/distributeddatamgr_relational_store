@@ -134,6 +134,16 @@
                     }
                 },
                 {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+                    "header": {
+                        "header_files": [
+                            "serializable.h",
+                            "shared_block.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk/include"
+                    }
+                },
+                {
                     "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/appdatafwk:native_appdatafwk",
                     "header": {
                         "header_files": [
