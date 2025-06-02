@@ -47,7 +47,7 @@ int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, 
         return E_EMPTY_TABLE_NAME;
     }
     outSql = GetSelectClause(columns, distinct, "*");
-    AppendClause(outSql, " FROM ", HandleTable(table));
+    AppendClause(outSql, " FROM ", table);
     AppendClause(outSql, " INDEXED BY ", indexName);
     AppendClause(outSql, " ", joinClause);
     AppendClause(outSql, " WHERE ", whereClause);
@@ -140,7 +140,7 @@ std::string SqliteSqlBuilder::BuildQueryString(
     }
 
     std::string sqlStr = GetSelectClause(columns, predicates.IsDistinct(), "*");
-    AppendClause(sqlStr, " FROM ", HandleTable(predicates.GetTableName()));
+    AppendClause(sqlStr, " FROM ", predicates.GetTableName());
     sqlStr.append(BuildClauseFromPredicates(predicates));
     return sqlStr;
 }
@@ -148,14 +148,14 @@ std::string SqliteSqlBuilder::BuildQueryString(
 std::string SqliteSqlBuilder::BuildCountString(const AbsRdbPredicates &predicates)
 {
     std::string tableName = predicates.GetTableName();
-    return "SELECT COUNT(*) FROM " + HandleTable(tableName) + BuildClauseFromPredicates(predicates);
+    return "SELECT COUNT(*) FROM " + tableName + BuildClauseFromPredicates(predicates);
 }
 
 std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &predicates,
     const std::vector<std::string> &columns, const std::string &logTable, const std::pair<bool, bool> &queryStatus)
 {
-    std::string table = HandleTable(predicates.GetTableName());
-    auto logName = HandleTable(logTable);
+    std::string table = predicates.GetTableName();
+    auto logName = logTable;
     if (table.empty() || logName.empty()) {
         return "";
     }
@@ -190,8 +190,8 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
 std::string SqliteSqlBuilder::BuildLockRowQueryString(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
 {
-    std::string table = HandleTable(predicates.GetTableName());
-    auto logName = HandleTable(logTable);
+    std::string table = predicates.GetTableName();
+    auto logName = logTable;
     if (table.empty() || logName.empty()) {
         return "";
     }
