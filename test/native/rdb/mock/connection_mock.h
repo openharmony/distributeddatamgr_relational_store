@@ -42,6 +42,7 @@ public:
     MOCK_METHOD(bool, IsWriter, (), (const, override));
     MOCK_METHOD(int32_t, ReSetKey, (const RdbStoreConfig &config), (override));
     MOCK_METHOD(int32_t, TryCheckPoint, (bool timeout), (override));
+    MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig &config), (override));
     MOCK_METHOD(int32_t, LimitWalSize, (), (override));
     MOCK_METHOD(int32_t, ConfigLocale, (const std::string &localeStr), (override));
     MOCK_METHOD(int32_t, CleanDirtyData, (const std::string &table, uint64_t cursor), (override));
