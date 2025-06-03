@@ -54,7 +54,6 @@ public:
     std::pair<int32_t, int32_t> GetColumnType(int index) const override;
     std::pair<int32_t, size_t> GetSize(int index) const override;
     std::pair<int32_t, ValueObject> GetColumn(int index) const override;
-    std::pair<int32_t, ValuesBucket> GetRow() const override;
     std::pair<int32_t, std::vector<ValuesBucket>> GetRows(uint32_t maxCount) override;
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;

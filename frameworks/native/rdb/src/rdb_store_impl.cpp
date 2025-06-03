@@ -1312,6 +1312,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
         return { E_OK, 0 };
     }
 
+    RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
     auto pool = GetPool();

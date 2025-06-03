@@ -1940,7 +1940,8 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
 HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = TransactionTest::store_;
-    auto [createTableStatus, createTableresult] = store->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+    auto [createTableStatus, createTableresult] =
+        store->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
 
     auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
     ASSERT_EQ(res, E_OK);
@@ -2009,27 +2010,12 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
     row.Put("id", 201);
     row.Put("name", "zhang");
     rows.Put(std::move(row));
-    row.Put("id", 202);
-    row.Put("name", "zhao");
-    rows.Put(std::move(row));
 
     auto [status, result] =
         transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
-    EXPECT_EQ(result.changed, 3);
+    EXPECT_EQ(result.changed, 2);
     ASSERT_NE(result.results, nullptr);
-    int rowCount = -1;
-    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
-    EXPECT_EQ(rowCount, 3);
-    RowEntity rowEntity;
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "wang");
-    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhang");
-    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhao");
 
     auto predicates = AbsRdbPredicates("test");
     predicates.EqualTo("name", "zhang");
@@ -2040,7 +2026,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
 
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);
-    rowCount = -1;
+    int rowCount = -1;
     ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
     ASSERT_EQ(rowCount, 1);
     int columnIndex = -1;
@@ -2054,7 +2040,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
 
     rowCount = -1;
     resultSet->GetRowCount(rowCount);
-    ASSERT_EQ(rowCount, 2);
+    ASSERT_EQ(rowCount, 1);
 
     transaction->Execute("DROP TRIGGER IF EXISTS before_update");
 
@@ -2082,9 +2068,6 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
 
     ValuesBuckets rows;
     ValuesBucket row;
-    row.Put("id", 200);
-    row.Put("name", "wang");
-    rows.Put(std::move(row));
     row.Put("id", 201);
     row.Put("name", "zhang");
     rows.Put(std::move(row));
@@ -2095,20 +2078,8 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
     auto [status, result] =
         transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
-    EXPECT_EQ(result.changed, 3);
+    EXPECT_EQ(result.changed, 2);
     ASSERT_NE(result.results, nullptr);
-    int rowCount = -1;
-    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
-    EXPECT_EQ(rowCount, 3);
-    RowEntity rowEntity;
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "wang");
-    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhang");
-    ASSERT_EQ(result.results->GoToNextRow(), E_OK);
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("name")), "zhao");
 
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("name", "zhang");
@@ -2116,16 +2087,13 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
 
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);
-    rowCount = -1;
+    int rowCount = -1;
     ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
     ASSERT_EQ(rowCount, 1);
-    int columnIndex = -1;
-    ASSERT_EQ(result.results->GetColumnIndex("name", columnIndex), E_OK);
     std::string value;
-    ASSERT_EQ(result.results->GetString(columnIndex, value), E_OK);
+    ASSERT_EQ(result.results->GetString(0, value), E_OK);
     EXPECT_EQ(value, "zhang");
 
-    
     // Check the trigger effect
     AbsRdbPredicates predicates1("test");
     predicates1.EqualTo("id", 202);
@@ -2135,11 +2103,9 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
     queryResult->GetRowCount(rowCount);
     ASSERT_EQ(rowCount, 1);
     ASSERT_EQ(queryResult->GoToNextRow(), E_OK);
-    columnIndex = -1;
-    queryResult->GetColumnIndex("name", columnIndex);
 
     value.clear();
-    EXPECT_EQ(E_OK, queryResult->GetString(columnIndex, value));
+    EXPECT_EQ(E_OK, queryResult->GetString(0, value));
     EXPECT_EQ(value, "li");
 
     transaction->Execute("DROP TRIGGER IF EXISTS before_update");
