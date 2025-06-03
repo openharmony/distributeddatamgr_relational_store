@@ -461,7 +461,6 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         service->Enable(syncerParam_);
         if (errCode == E_OK && !config_.IsCustomEncryptParam()) {
             auto syncerParam = syncerParam_;
-
             syncerParam.password_ = config_.GetEncryptKey();
             service->AfterOpen(syncerParam);
         }
