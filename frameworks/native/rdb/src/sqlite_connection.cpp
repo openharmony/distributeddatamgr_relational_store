@@ -695,7 +695,6 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     if (errCode != E_OK) {
         key.assign(key.size(), 0);
         LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
-
             SqliteUtils::Anonymous(config_.GetName()).c_str());
         return errCode;
     }

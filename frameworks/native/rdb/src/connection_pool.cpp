@@ -539,7 +539,6 @@ int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         return errCode;
     }
     config_.ReSetEncryptKey(cryptoParam.encryptKey_);
- 
     connection = nullptr;
     auto initRes = Init();
     if (initRes.first != E_OK) {
