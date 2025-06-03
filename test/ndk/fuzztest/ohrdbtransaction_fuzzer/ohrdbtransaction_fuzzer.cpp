@@ -93,17 +93,31 @@ OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
     return vBucket;
 }
 
+std::vector<OH_VBucket*> g_randomVBuckets;
 OH_Data_VBuckets *CreateRandomVBuckets(FuzzedDataProvider &provider)
 {
     const int minRowCount = 1;
     const int maxRowCount = 5;
+    g_randomVBuckets.clear();
     size_t rowCount = provider.ConsumeIntegralInRange<size_t>(minRowCount, maxRowCount);
     OH_Data_VBuckets *list = OH_VBuckets_Create();
     for (size_t i = 0; i < rowCount; i++) {
         OH_VBucket *valueBucket = CreateRandomVBucket(provider);
+        g_randomVBuckets.push_back(valueBucket);
         OH_VBuckets_PutRow(list, valueBucket);
     }
     return list;
+}
+
+void DeleteCapiValueBuckets(OH_Data_VBuckets *rows)
+{
+    OH_VBuckets_Destroy(rows);
+    for (auto row : g_randomVBuckets) {
+        if (row != nullptr) {
+            row->destroy(row);
+        }
+    }
+    g_randomVBuckets.clear();
 }
 
 OH_VObject *CreateTransVObject(FuzzedDataProvider &provider)
@@ -136,7 +150,7 @@ OH_Predicates* GetCapiTransPredicates(FuzzedDataProvider &provider, std::string 
 
 void DeleteCapiTransPredicates(OH_Predicates *predicates)
 {
-    if (predicates != nullptr) {
+    if (predicates == nullptr) {
         return;
     }
     predicates->destroy(predicates);
@@ -167,10 +181,14 @@ void TransactionFuzzTest(FuzzedDataProvider &provider)
     OH_Predicates *predicate = GetCapiTransPredicates(provider, table);
     OH_RdbTrans_UpdateWithConflictResolution(trans, valueBucket, predicate, resolution, &rowId);
     DeleteCapiTransPredicates(predicate);
-    OH_VBuckets_Destroy(list);
+    DeleteCapiValueBuckets(list);
     OH_Rdb_CloseStore(store);
     ReleaseConfig(config);
     OH_RdbTrans_DestroyOptions(options);
+    if (valueBucket != nullptr) {
+        valueBucket->destroy(valueBucket);
+    }
+    OH_RdbTrans_Destroy(trans);
     if (!runEndFlag) {
         runEndFlag = true;
         std::cout << "TransactionFuzzTest end" << std::endl;
