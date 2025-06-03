@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <string>
+#include <vector>
 
 #include "common.h"
 #include "rdb_errno.h"
@@ -29,6 +31,8 @@ using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using Asset = ValueObject::Asset;
 using Assets = ValueObject::Assets;
+using ValueObjects = std::vector<ValueObject>;
+using Time = std::chrono::steady_clock::time_point;
 class RdbSqliteSharedResultSetTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -100,7 +104,7 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
 
     int64_t id;
     ValuesBucket values;
-    AssetValue asset {
+    AssetValue asset{
         .version = 0,
         .name = "123",
         .uri = "my test path",
@@ -117,14 +121,14 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
     values.PutBlob("data4", std::vector<uint8_t>{ 66 }); // set uint8_t value 66
     values.Put("data5", asset);
     values.Put("data6", assets);
-    values.Put("data7", std::vector<float>(1, 0.5));  // set float value 0.5
+    values.Put("data7", std::vector<float>(1, 0.5)); // set float value 0.5
     values.Put("data8", BigInteger(0));
     store->Insert(id, "test", values);
 
     values.Clear();
     values.PutInt("id", 2); // set int value 2
     values.PutString("data1", std::string("2"));
-    values.PutInt("data2", -5); // set int value -5
+    values.PutInt("data2", -5);     // set int value -5
     values.PutDouble("data3", 2.5); // set float value 2.5
     values.PutBlob("data4", std::vector<uint8_t>{});
     store->Insert(id, "test", values);
@@ -132,7 +136,7 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
     values.Clear();
     values.PutInt("id", 3); // set int value 3
     values.PutString("data1", std::string("hello world"));
-    values.PutInt("data2", 3); // set int value 3
+    values.PutInt("data2", 3);      // set int value 3
     values.PutDouble("data3", 1.8); // set float value 1.8
     values.PutBlob("data4", std::vector<uint8_t>{});
     store->Insert(id, "test", values);
@@ -1643,4 +1647,72 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_039, TestSize.Le
     rstSet->GetColumnType(8, colType);
     EXPECT_EQ(colType, ColumnType::TYPE_NULL);
     rstSet->Close();
+}
+
+/**
+ * @tc.name: Sqlite_Shared_Result_Set_003
+ * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
+    SqliteSharedOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    ValueObjects values = {};
+    Time start = std::chrono::steady_clock::now();
+    auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
+        start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
+    ASSERT_NE(sqliteSharedRst, nullptr);
+    auto res = sqliteSharedRst->PrepareStep();
+    ASSERT_EQ(res.first, nullptr);
+    EXPECT_EQ(res.second, E_ALREADY_CLOSED);
+}
+
+/**
+ * @tc.name: Sqlite_Shared_Result_Set_004
+ * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_004, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
+    SqliteSharedOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    ValueObjects values = {};
+    Time start = std::chrono::steady_clock::now();
+    auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
+        start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
+    ASSERT_NE(sqliteSharedRst, nullptr);
+    auto res = sqliteSharedRst->GetColumnNames();
+    EXPECT_EQ(res.first, E_ALREADY_CLOSED);
+    EXPECT_TRUE(res.second.empty());
+}
+
+/**
+ * @tc.name: Sqlite_Shared_Result_Set_005
+ * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_005, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
+    SqliteSharedOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    ValueObjects values = {};
+    Time start = std::chrono::steady_clock::now();
+    auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
+        start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
+    ASSERT_NE(sqliteSharedRst, nullptr);
+    auto res = sqliteSharedRst->OnGo(0, 0);
+    EXPECT_EQ(res, E_ALREADY_CLOSED);
 }
