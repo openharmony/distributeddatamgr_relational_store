@@ -2149,5 +2149,29 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
     EXPECT_NE(errCode, E_OK);
 }
 
+/**
+ * @tc.name: Invalid_TableName
+ * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, Invalid_TableName, TestSize.Level1)
+{
+    auto sql = "create table if not exists 'test_name' (id INTEGER PRIMARY KEY AUTOINCREMENT)";
+    auto ret = store->ExecuteSql(sql);
+    EXPECT_EQ(E_OK, ret);
+    int64_t rowId = 0;
+    ValuesBucket bucket{};
+    bucket.Put("id", 1);
+    ret = store->Insert(rowId, "test_name", bucket);
+    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(rowId, 1);
+    AbsRdbPredicates predicates("test_name where id = 1");
+    auto resultSet = store->Query(predicates, {});
+    EXPECT_NE(resultSet, nullptr);
+    auto rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowCount, 1);
+}
 } // namespace NativeRdb
 } // namespace OHOS
