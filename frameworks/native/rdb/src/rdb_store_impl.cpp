@@ -2907,8 +2907,6 @@ int RdbStoreImpl::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &
         LOG_ERROR("Set knowledge schema failed %{public}d.", ret);
         return ret;
     }
-    auto helper = GetKnowledgeSchemaHelper();
-    helper->Init(config_, schema);
     return E_OK;
 }
 
