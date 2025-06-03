@@ -516,11 +516,6 @@ void RdStatement::GetProperties()
     columnCount_ = RdUtils::RdSqlColCnt(stmtHandle_);
 }
 
-std::pair<int32_t, ValuesBucket> RdStatement::GetRow() const
-{
-    return { E_NOT_SUPPORT, {} };
-}
-
 std::pair<int32_t, std::vector<ValuesBucket>> RdStatement::GetRows(uint32_t maxCount)
 {
     return { E_NOT_SUPPORT, {} };

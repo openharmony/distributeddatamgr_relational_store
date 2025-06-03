@@ -352,7 +352,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_004, TestSize.Level1)
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim" + std::to_string(i));
-        std::vector<uint8_t> blob(i+1);
+        std::vector<uint8_t> blob(i + 1);
         std::iota(blob.begin(), blob.end(), 1);
         row.PutBlob("blobType", blob);
         rows.Put(row);
@@ -442,7 +442,9 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_006, TestSize.Level1)
  */
 HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_007, TestSize.Level1)
 {
-    store_->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+    auto [execRet, execResult] =
+        store_->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+    ASSERT_EQ(execRet, E_OK);
     ValuesBuckets rows;
     ValuesBucket row;
     row.Put("title", "fts5");

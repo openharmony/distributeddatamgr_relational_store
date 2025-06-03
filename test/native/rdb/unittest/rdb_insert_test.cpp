@@ -22,6 +22,8 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "result_set.h"
+#include "values_buckets.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -1319,5 +1321,153 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_015, TestSize.Level1)
     store_->Execute("DROP TABLE logs");
 }
 
+/**
+ * @tc.name: BatchInsert_016
+ * @tc.desc: abnormal test. batch insert with max returning limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbStoreInsertTest, BatchInsert_016, TestSize.Level0)
+{
+    int maxRowCount = 1024;
+    ValuesBuckets rows;
+    rows.Reserve(maxRowCount);
+    for (int i = 0; i < maxRowCount; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(std::move(row));
+    }
+    auto [status, result] =
+        store_->BatchInsert("test", ValuesBuckets(rows), {"id", "name"}, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, maxRowCount);
+    ASSERT_NE(result.results, nullptr);
+    int32_t count = 0;
+    ASSERT_EQ(result.results->GetRowCount(count), E_OK);
+    ASSERT_EQ(count, maxRowCount);
+    for (size_t i = 0; i < maxRowCount; i++) {
+        RowEntity rowEntity;
+        EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+        EXPECT_EQ(int(rowEntity.Get("id")), i);
+        EXPECT_EQ(std::string(rowEntity.Get("name")), "Jim");
+        if (i != maxRowCount - 1) {
+            ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+        }
+    }
+}
+
+/**
+ * @tc.name: BatchInsert_017
+ * @tc.desc: abnormal test. batch insert with max returning limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbStoreInsertTest, BatchInsert_017, TestSize.Level0)
+{
+    int maxRowCount = 1024;
+    ValuesBuckets rows;
+    rows.Reserve(maxRowCount);
+    for (int i = 0; i < maxRowCount; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(std::move(row));
+    }
+    auto [status, result] =
+        store_->BatchInsert("test", ValuesBuckets(rows), {"id", "name"}, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, maxRowCount);
+    int32_t count = 0;
+    ASSERT_EQ(result.results->GetRowCount(count), E_OK);
+    ASSERT_EQ(count, maxRowCount);
+
+    std::tie(status, result) =
+        store_->ExecuteExt("UPDATE test SET name = 'Tim' WHERE name = 'Jim' RETURNING id, name");
+
+    EXPECT_EQ(result.changed, maxRowCount);
+    count = 0;
+    EXPECT_EQ(result.results->GetRowCount(count), E_OK);
+    EXPECT_EQ(count, maxRowCount);
+    for (size_t i = 0; i < maxRowCount; i++) {
+        RowEntity rowEntity;
+        EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+        EXPECT_EQ(int(rowEntity.Get("id")), i);
+        EXPECT_EQ(std::string(rowEntity.Get("name")), "Tim");
+        if (i != maxRowCount - 1) {
+            ASSERT_EQ(result.results->GoToNextRow(), E_OK);
+        }
+    }
+}
+
+/**
+ * @tc.name: BatchInsert_018
+ * @tc.desc: abnormal test. batch insert with max returning limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbStoreInsertTest, BatchInsert_018, TestSize.Level0)
+{
+    int maxRowCount = 1024;
+    ValuesBuckets rows;
+    rows.Reserve(maxRowCount);
+    for (int i = 0; i < maxRowCount; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim");
+        rows.Put(std::move(row));
+    }
+    auto [status, result] =
+        store_->BatchInsert("test", ValuesBuckets(rows), {"id", "name"}, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, maxRowCount);
+
+    std::tie(status, result) =
+        store_->ExecuteExt("update test set name = ? where name = ?", { "Tim", "Jim" });
+
+    EXPECT_NE(result.results, nullptr);
+    EXPECT_EQ(result.changed, maxRowCount);
+    int32_t count = 0;
+    EXPECT_EQ(result.results->GetRowCount(count), E_OK);
+    EXPECT_EQ(count, 0);
+}
+/**
+ * @tc.name: BatchInsert_019
+ * @tc.desc: normal test. batch insert with returning and trigger
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbStoreInsertTest, BatchInsert_019, TestSize.Level1)
+{
+    auto [code, result1] = store_->Execute("CREATE TRIGGER after_name_insert AFTER INSERT ON test"
+                    " BEGIN UPDATE test SET name = 'after trigger' WHERE name = 'BatchInsert_014'; END");
+
+    EXPECT_EQ(code, E_OK);
+
+    auto [status, result] =
+        store_->ExecuteExt("INSERT INTO test (id, name) VALUES (200, 'BatchInsert_014') RETURNING name;");
+
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    ASSERT_NE(result.results, nullptr);
+    int32_t count = 0;
+    ASSERT_EQ(result.results->GetRowCount(count), E_OK);
+    ASSERT_EQ(count, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "BatchInsert_014");
+
+    auto resultSet = store_->QuerySql("select name from test where id = 200");
+    int rowCount = -1;
+    resultSet->GetRowCount(rowCount);
+    resultSet->GoToFirstRow();
+    EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("name")), "after trigger");
+    store_->Execute("DROP TRIGGER IF EXISTS after_name_insert");
+}
 INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreInsertTest

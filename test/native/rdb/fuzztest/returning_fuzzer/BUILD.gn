@@ -17,10 +17,13 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RdbStoreFuzzTest") {
+ohos_fuzztest("ReturningFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
-  include_dirs = [ "${relational_store_native_path}/rdb/include" ]
+  include_dirs = [
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_common_path}/include",
+  ]
 
   cflags = [
     "-g",
@@ -30,9 +33,9 @@ ohos_fuzztest("RdbStoreFuzzTest") {
   ]
 
   fuzz_config_file =
-      "${relational_store_base_path}/test/native/rdb/fuzztest/rdbstore_fuzzer"
+      "${relational_store_base_path}/test/native/rdb/fuzztest/returning_fuzzer"
 
-  sources = [ "rdbstore_fuzzer.cpp" ]
+  sources = [ "returning_fuzzer.cpp" ]
 
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 
@@ -54,7 +57,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":RdbStoreFuzzTest",
+    ":ReturningFuzzTest",
   ]
 }
 ###############################################################################
