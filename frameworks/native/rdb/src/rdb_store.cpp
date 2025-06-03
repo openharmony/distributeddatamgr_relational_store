@@ -451,6 +451,12 @@ bool RdbStore::IsHoldingConnection()
     return true;
 }
 
+int RdbStore::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    (void)cryptoParam;
+    return E_NOT_SUPPORT;
+}
+
 bool RdbStore::IsOpen() const
 {
     return true;
