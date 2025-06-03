@@ -27,6 +27,9 @@ public:
 };
 
 class CloudClientDeathObserverStub : public IRemoteStub<ICloudClientDeathObserver> {
+public:
+    CloudClientDeathObserverStub();
+    ~CloudClientDeathObserverStub();
 };
 
 class CloudClientDeathObserverProxy : public IRemoteProxy<ICloudClientDeathObserver> {
