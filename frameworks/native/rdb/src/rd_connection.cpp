@@ -144,7 +144,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     std::vector<uint8_t> newKey = config.GetNewEncryptKey();
     if (!newKey.empty()) {
         newKey.assign(newKey.size(), 0);
-        errCode = ReSetKey(config);
+        errCode = ResetKey(config);
         if (errCode != E_OK) {
             LOG_ERROR("Can not reset key %{public}d.", errCode);
             return errCode;
@@ -213,7 +213,7 @@ bool RdConnection::IsWriter() const
     return isWriter_;
 }
 
-int32_t RdConnection::ReSetKey(const RdbStoreConfig &config)
+int32_t RdConnection::ResetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
         return E_OK;

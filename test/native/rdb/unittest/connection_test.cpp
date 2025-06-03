@@ -114,15 +114,14 @@ HWTEST_F(ConnectionTest, SetEncryptAgo_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     config.SetIter(-1);
     errCode = conn->SetEncryptAgo(config);
     EXPECT_EQ(errCode, E_INVALID_ARGS);
 }
 
 /**
- * @tc.name: ReSetKey_Test_001
- * @tc.desc: The test case is to test whether ReSetKey is a write connection.
+ * @tc.name: ResetKey_Test_001
+ * @tc.desc: The test case is to test whether ResetKey is a write connection.
  * @tc.type: FUNC
  */
 HWTEST_F(ConnectionTest, ReSetKey_Test_001, TestSize.Level2)
@@ -130,8 +129,7 @@ HWTEST_F(ConnectionTest, ReSetKey_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, false);
-    ASSERT_NE(conn, nullptr);
-    errCode = conn->ReSetKey(config);
+    errCode = conn->ResetKey(config);
     EXPECT_EQ(errCode, E_OK);
 }
 
@@ -145,7 +143,6 @@ HWTEST_F(ConnectionTest, SetEncrypt_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     config.SetEncryptStatus(true);
     config.SetStorageMode(StorageMode::MODE_MEMORY);
     errCode = conn->SetEncrypt(config);
@@ -162,7 +159,6 @@ HWTEST_F(ConnectionTest, RegDefaultFunctions_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     errCode = conn->RegDefaultFunctions(nullptr);
     EXPECT_EQ(errCode, SQLITE_OK);
 }
@@ -177,7 +173,6 @@ HWTEST_F(ConnectionTest, SetTokenizer_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     config.SetTokenizer(TOKENIZER_END);
     errCode = conn->SetTokenizer(config);
     EXPECT_EQ(errCode, E_INVALID_ARGS);
@@ -193,10 +188,10 @@ HWTEST_F(ConnectionTest, Backup_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     SlaveStatus slaveStatus = BACKING_UP;
     errCode = conn->Backup("test", { 1, 2, 3 }, true, slaveStatus);
     EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(slaveStatus, BACKING_UP);
 }
 
 /**
@@ -209,7 +204,6 @@ HWTEST_F(ConnectionTest, ExchangeVerify_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     errCode = conn->ExchangeVerify(false);
     EXPECT_EQ(errCode, E_ALREADY_CLOSED);
 }
@@ -224,7 +218,6 @@ HWTEST_F(ConnectionTest, VeritySlaveIntegrity_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     errCode = conn->VeritySlaveIntegrity();
     EXPECT_EQ(errCode, E_ALREADY_CLOSED);
 }
@@ -238,7 +231,6 @@ HWTEST_F(ConnectionTest, IsDbVersionBelowSlave_Test_001, TestSize.Level2)
 {
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    ASSERT_NE(conn, nullptr);
     bool res = conn->IsDbVersionBelowSlave();
     EXPECT_EQ(res, false);
 }

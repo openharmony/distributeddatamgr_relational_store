@@ -104,7 +104,7 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
 
     int64_t id;
     ValuesBucket values;
-    AssetValue asset{
+    AssetValue asset {
         .version = 0,
         .name = "123",
         .uri = "my test path",
@@ -1651,7 +1651,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_039, TestSize.Le
 
 /**
  * @tc.name: Sqlite_Shared_Result_Set_003
- * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.desc: Abnormal testCase of PrepareStep
  * @tc.type: FUNC
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_003, TestSize.Level2)
@@ -1674,7 +1674,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_003, TestSize.Level
 
 /**
  * @tc.name: Sqlite_Shared_Result_Set_004
- * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.desc: Abnormal testCase of GetColumnNames
  * @tc.type: FUNC
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_004, TestSize.Level2)
@@ -1697,7 +1697,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_004, TestSize.Level
 
 /**
  * @tc.name: Sqlite_Shared_Result_Set_005
- * @tc.desc: Abnormal testCase of SqliteSharedResultSet
+ * @tc.desc: Abnormal testCase of OnGo
  * @tc.type: FUNC
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_005, TestSize.Level2)
