@@ -539,7 +539,7 @@ void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::s
             ctxt, ret == napi_ok && valueType == napi_function, Status::INVALID_ARGUMENT,
             "The type of progress should be function.");
         ASSERT_BUSINESS_ERR(
-            ctxt, napi_create_reference(env, argv[3], 1, &ctxt->asyncHolder) == napi_ok,
+            ctxt, napi_create_reference(env, argv[3], 1, &ctxt->asyncHolder) == napi_ok,    // 3 means the progress
             Status::INVALID_ARGUMENT, "create refrence failed.");
     }, true);
 }

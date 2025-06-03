@@ -29,6 +29,7 @@ public:
 private:
     CloudManager() = default;
     ~CloudManager() = default;
+    std::string GetProcessName();
     std::mutex mutex_;
     std::shared_ptr<CloudService> cloudService_;
 };
