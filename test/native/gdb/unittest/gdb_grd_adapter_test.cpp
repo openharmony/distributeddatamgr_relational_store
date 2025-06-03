@@ -32,7 +32,7 @@
 #include "path.h"
 #include "result.h"
 #include "vertex.h"
-#include "mock/grd_adapter.h"
+#include "../mock/grd_adapter.h"
 
 using namespace testing::ext;
 using namespace OHOS::DistributedDataAip;
