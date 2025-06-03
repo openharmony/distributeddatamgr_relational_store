@@ -542,6 +542,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
     ASSERT_EQ(inodeNumber1, inodeNumber2);
 }
 
+/**
 **
 * @tc.name: Rdb_Delete_Rekey_Test_009
 * @tc.desc: test rekey the encrypted database
