@@ -69,7 +69,6 @@ constexpr unsigned short SqliteConnection::BINLOG_FILE_NUMS_LIMIT;
 constexpr uint32_t SqliteConnection::BINLOG_FILE_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
-constexpr uint32_t SqliteConnection::SQLITE_CKSUMVFS_RESERVE_BYTES;
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -392,12 +391,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return E_OK;
     }
 
-    auto errCode = SetCrcCheck(config);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = RegDefaultFunctions(dbHandle_);
+    auto errCode = RegDefaultFunctions(dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -725,24 +719,6 @@ int SqliteConnection::ResetKey(const RdbStoreConfig &config)
         return E_OK;
     }
     config.ChangeEncryptKey();
-    return E_OK;
-}
-
-int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
-{
-    if (config.IsEncrypt() || config.IsMemoryRdb()) {
-        return E_OK;
-    }
-    int n = -1;
-    auto errCode = SQLiteError::ErrNo(sqlite3_file_control(dbHandle_, 0, SQLITE_FCNTL_RESERVE_BYTES, &n));
-    if (errCode != E_OK) {
-        LOG_ERROR("failed to set sqlite reserved bytes(SQLITE_FCNTL_RESERVE_BYTES), errCode=%{public}d", errCode);
-        return errCode;
-    }
-    if (n == 0) {
-        n = SQLITE_CKSUMVFS_RESERVE_BYTES;
-        (void)sqlite3_file_control(dbHandle_, 0, SQLITE_FCNTL_RESERVE_BYTES, &n);
-    }
     return E_OK;
 }
 
