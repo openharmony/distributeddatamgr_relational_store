@@ -41,6 +41,7 @@ public:
     void GenerateData(int count);
     static void DestroyDbFile(const std::string &filePath, size_t offset, size_t len, unsigned char ch);
     static constexpr const char *DATABASE_NAME = "corrupt_test.db";
+    static constexpr int DB_FILE_HEADER_LENGTH = 100;
     std::shared_ptr<RdbStore> store_;
 };
 
@@ -136,5 +137,21 @@ HWTEST_F(RdbCorruptTest, RdbCorruptTest001, TestSize.Level2)
     while ((errCode = resultSet->GoToNextRow()) == E_OK) {
     }
     EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
+}
+
+/**
+ * @tc.name: RdbCorruptTest002
+ * @tc.desc: test Rdb verify db file header's reserved bytes
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbCorruptTest, RdbCorruptTest002, TestSize.Level2)
+{
+    std::fstream f;
+    f.open(RDB_TEST_PATH + DATABASE_NAME);
+    f.seekp(0, std::ios::beg);
+    char buf[DB_FILE_HEADER_LENGTH] = {0};
+    f.read(buf, sizeof(buf));
+    f.close();
+    EXPECT_EQ((unsigned int)buf[20], 0); // 20 is the offset of reserved bytes field
 }
 } // namespace Test
