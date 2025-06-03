@@ -663,7 +663,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
     return E_OK;
 }
 
-int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
+int SqliteConnection::ResetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
         return E_OK;
@@ -757,7 +757,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     }
 
     if (!newKey.empty()) {
-        ReSetKey(config);
+        ResetKey(config);
     }
     newKey.assign(newKey.size(), 0);
     return E_OK;
