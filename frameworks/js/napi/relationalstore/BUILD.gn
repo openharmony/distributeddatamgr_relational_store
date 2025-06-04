@@ -167,7 +167,6 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
@@ -195,6 +194,7 @@ if (is_ohos) {
     ]
 
     deps = [
+      "${kvstore_path}/common:datamgr_common",
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
@@ -209,7 +209,6 @@ if (is_ohos) {
   ohos_source_set("data_relationalstore") {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "include",
@@ -234,6 +233,7 @@ if (is_ohos) {
     sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
 
     deps = [
+      "${kvstore_path}/common:datamgr_common",
       "${relational_store_innerapi_path}/rdb:native_rdb",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//plugins/libs/napi:napi_ios",
