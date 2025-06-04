@@ -20,7 +20,6 @@ config("rdb_data_ability_adapter_config") {
   }
   include_dirs = [
     "include",
-    "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/rdb/include",
   ]

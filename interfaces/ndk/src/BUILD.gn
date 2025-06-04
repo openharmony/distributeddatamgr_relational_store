@@ -28,7 +28,6 @@ ohos_shared_library("native_rdb_ndk") {
     "../include",
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_innerapi_path}/appdatafwk/include",
   ]
   sources = [
     "convertor_error_code.cpp",
