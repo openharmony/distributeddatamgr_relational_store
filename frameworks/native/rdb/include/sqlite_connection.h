@@ -51,7 +51,7 @@ public:
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
-    int ReSetKey(const RdbStoreConfig &config) override;
+    int ResetKey(const RdbStoreConfig &config) override;
     int32_t GetJournalMode() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     bool IsWriter() const override;
