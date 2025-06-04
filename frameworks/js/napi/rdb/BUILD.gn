@@ -78,7 +78,6 @@ ohos_shared_library("napi_rdb") {
   } else {
     include_dirs = [
       "include",
-      "${datashare_path}/common/include/",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
@@ -108,6 +107,11 @@ ohos_shared_library("napi_rdb") {
       "kv_store:datamgr_common",
       "napi:ace_napi",
     ]
+    if (relational_store_support_data_share) {
+      external_deps += [
+        "data_share:datashare_common_lite",
+      ]
+    }
   }
 
   subsystem_name = "distributeddatamgr"
@@ -155,7 +159,6 @@ ohos_shared_library("rdb") {
   } else {
     include_dirs = [
       "include",
-      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
     ]
@@ -176,6 +179,11 @@ ohos_shared_library("rdb") {
       "hitrace:hitrace_meter",
       "napi:ace_napi",
     ]
+    if (relational_store_support_data_share) {
+      external_deps += [
+        "data_share:datashare_common_lite",
+      ]
+    }
   }
 
   subsystem_name = "distributeddatamgr"

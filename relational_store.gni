@@ -19,6 +19,14 @@ declare_args() {
   } else {
     arkdata_db_core_is_exists = false
   }
+
+  relational_store_support_data_share = false
+  if (!defined(global_parts_info) ||
+     defined(global_parts_info.distributeddatamgr_data_share)) {
+     relational_store_support_data_share = true
+  } else {
+     relational_store_support_data_share = false
+  }
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
