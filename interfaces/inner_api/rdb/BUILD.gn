@@ -102,6 +102,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
+      "${relational_store_innerapi_path}/appdatafwk/include",
       "../cloud_data/include",
       "../common_type/include",
     ]
