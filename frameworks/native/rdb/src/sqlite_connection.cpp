@@ -519,6 +519,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
             sqlite3_db_release_memory(dbHandle_);
         }
         slaveStmt->config_ = &slaveConnection_->config_;
+        slaveStmt->conn_ = slaveConnection_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d, app self can check the SQL", errCode);
