@@ -25,6 +25,7 @@ config("module_private_config") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
+    "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
   ]
 
@@ -106,7 +107,6 @@ ohos_unittest("NativeRdbLogTest") {
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
-    "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
   ]
