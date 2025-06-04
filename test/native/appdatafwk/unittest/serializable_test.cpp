@@ -129,8 +129,8 @@ HWTEST_F(SerializableTest, GetNormalVal, TestSize.Level2)
     normal.cols = { "adfasdfas" };
     auto json = normal.Marshall();
     auto jstr = Serializable::JSONWrapper::to_string(json);
-    EXPECT_TRUE(json["count"] == -1);
-    EXPECT_TRUE(json["name"] == "normal");
+    EXPECT_EQ(json["count"], -1);
+    EXPECT_EQ(json["name"], "normal");
     Normal normal1;
     normal1.Unmarshall(jstr);
     ASSERT_TRUE(normal == normal1) << normal1.name;

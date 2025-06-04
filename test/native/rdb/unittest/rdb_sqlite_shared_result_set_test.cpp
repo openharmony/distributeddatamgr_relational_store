@@ -1656,17 +1656,10 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_039, TestSize.Le
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_003, TestSize.Level2)
 {
-    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
-    SqliteSharedOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    store = nullptr;
     ValueObjects values = {};
     Time start = std::chrono::steady_clock::now();
     auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
         start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
-    ASSERT_NE(sqliteSharedRst, nullptr);
     auto res = sqliteSharedRst->PrepareStep();
     ASSERT_EQ(res.first, nullptr);
     EXPECT_EQ(res.second, E_ALREADY_CLOSED);
@@ -1679,17 +1672,10 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_003, TestSize.Level
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_004, TestSize.Level2)
 {
-    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
-    SqliteSharedOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    store = nullptr;
     ValueObjects values = {};
     Time start = std::chrono::steady_clock::now();
     auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
         start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
-    ASSERT_NE(sqliteSharedRst, nullptr);
     auto res = sqliteSharedRst->GetColumnNames();
     EXPECT_EQ(res.first, E_ALREADY_CLOSED);
     EXPECT_TRUE(res.second.empty());
@@ -1702,17 +1688,10 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_004, TestSize.Level
  */
 HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_005, TestSize.Level2)
 {
-    RdbStoreConfig config(RdbSqliteSharedResultSetTest::DATABASE_NAME);
-    SqliteSharedOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    store = nullptr;
     ValueObjects values = {};
     Time start = std::chrono::steady_clock::now();
     auto sqliteSharedRst = std::make_shared<SqliteSharedResultSet>(
         start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
-    ASSERT_NE(sqliteSharedRst, nullptr);
     auto res = sqliteSharedRst->OnGo(0, 0);
     EXPECT_EQ(res, E_ALREADY_CLOSED);
 }
