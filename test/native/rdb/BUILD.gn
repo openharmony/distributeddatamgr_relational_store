@@ -193,6 +193,9 @@ ohos_unittest("NativeRdbTest") {
   ]
 
   sources += [
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+    "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+    "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
     "../../../frameworks/native/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../frameworks/native/rdb/src/connection.cpp",
@@ -234,6 +237,7 @@ ohos_unittest("NativeRdbTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
