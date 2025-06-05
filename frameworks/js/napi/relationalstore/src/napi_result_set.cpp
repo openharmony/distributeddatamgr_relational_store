@@ -613,6 +613,20 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
 
+napi_value ResultSetProxy::GetRowForFlutter(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto resultSet = GetInnerResultSet(env, info);
+    RowEntity rowEntity;
+    int errCode = E_ALREADY_CLOSED;
+    if (resultSet != nullptr) {
+        errCode = resultSet->GetRow(rowEntity);
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+ 
+    return JSUtils::Convert2JSValueExt(env, rowEntity);
+}
+
 std::pair<int, std::vector<RowEntity>> ResultSetProxy::GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
 {
     int rowPos = 0;
@@ -721,6 +735,27 @@ napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
     return JSUtils::Convert2JSValue(env, object);
 }
 
+napi_value ResultSetProxy::GetValueForFlutter(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int32_t columnIndex;
+    auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
+    ValueObject object;
+    int errCode = E_ALREADY_CLOSED;
+    if (resultSet != nullptr) {
+        errCode = resultSet->Get(columnIndex, object);
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    if (object.GetType() == ValueObjectType::TYPE_INT) {
+        int64_t valueInt64 = 0;
+        object.GetLong(valueInt64);
+        if (!JSUtils::IsConvertToString(valueInt64)) {
+            return JSUtils::Convert2JSValue(env, std::to_string(valueInt64));
+        }
+    }
+    return JSUtils::Convert2JSValue(env, object.value);
+}
+
 napi_value ResultSetProxy::IsClosed(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -752,8 +787,10 @@ void ResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("getDouble", GetDouble),
             DECLARE_NAPI_FUNCTION("isColumnNull", IsColumnNull),
             DECLARE_NAPI_FUNCTION("getValue", GetValue),
+            DECLARE_NAPI_FUNCTION("getValueForFlutter", GetValueForFlutter),
             DECLARE_NAPI_FUNCTION("getRow", GetRow),
             DECLARE_NAPI_FUNCTION("getRows", GetRows),
+            DECLARE_NAPI_FUNCTION("getRowForFlutter", GetRowForFlutter),
             DECLARE_NAPI_FUNCTION("getSendableRow", GetSendableRow),
 
             DECLARE_NAPI_GETTER("columnNames", GetAllColumnNames),
