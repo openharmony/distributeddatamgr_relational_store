@@ -41,8 +41,10 @@ public:
     };
     using SyncObservers = ConcurrentMap<std::string, std::list<SyncObserverParam>>;
     explicit RdbServiceProxy(const sptr<IRemoteObject> &object);
+    ~RdbServiceProxy();
 
-    std::string ObtainDistributedTableName(const std::string &device, const std::string &table) override;
+    std::string ObtainDistributedTableName(
+        const RdbSyncerParam &param, const std::string &device, const std::string &table) override;
 
     int32_t InitNotifier(const RdbSyncerParam &param);
 

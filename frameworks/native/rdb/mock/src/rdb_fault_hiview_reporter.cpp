@@ -47,6 +47,14 @@ void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
     (void)dbPath;
 }
 
+void RdbFaultHiViewReporter::ReportRAGFault(const std::string &errMsg, const std::string &functionName,
+    const std::string &bundleName, const int faultType, const int errCode)
+{
+    (void)errMsg;
+    (void)functionName;
+    (void)bundleName;
+}
+
 RdbCorruptedEvent RdbFaultHiViewReporter::Create(
     const RdbStoreConfig &config, int32_t errCode, const std::string &appendix, bool needSyncParaFromSrv)
 {

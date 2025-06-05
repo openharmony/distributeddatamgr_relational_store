@@ -23,6 +23,7 @@
 
 using namespace OHOS::RdbNdk;
 constexpr int ASSET_TRANSFORM_BASE = 10;
+constexpr uint32_t SIZE_LENGTH = 2147483647;  // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 int OH_Data_Asset_SetName(Data_Asset *asset, const char *name)
 {
     if (asset == nullptr || name == nullptr) {
@@ -94,8 +95,10 @@ int OH_Data_Asset_SetStatus(Data_Asset *asset, Data_AssetStatus status)
 
 int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get name error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || name == nullptr || length == nullptr) {
+        LOG_ERROR(
+            "Asset get name error: asset is NULL ? %{public}d, name is NULL ? %{public}d, length is NULL ? %{public}d.",
+            asset == nullptr, name == nullptr, length == nullptr);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t nameLength = asset->asset_.name.size();
@@ -114,8 +117,10 @@ int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 
 int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get uri error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || uri == nullptr || length == nullptr) {
+        LOG_ERROR(
+            "Asset get uri error: asset is NULL ? %{public}d, uri is NULL ? %{public}d, length is NULL ? %{public}d.",
+            asset == nullptr, uri == nullptr, length == nullptr);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t uriLength = asset->asset_.uri.size();
@@ -135,8 +140,10 @@ int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 
 int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get path error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || path == nullptr || length == nullptr) {
+        LOG_ERROR(
+            "Asset get path error: asset is NULL ? %{public}d, path is NULL ? %{public}d, length is NULL ? %{public}d.",
+            asset == nullptr, path == nullptr, length == nullptr);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t pathLength = asset->asset_.path.size();
@@ -155,7 +162,7 @@ int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 
 int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || createTime == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr;
@@ -169,7 +176,7 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
 
 int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || modifyTime == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr;
@@ -183,7 +190,7 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
 
 int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || size == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr;
@@ -197,7 +204,7 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
 
 int OH_Data_Asset_GetStatus(Data_Asset *asset, Data_AssetStatus *status)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || status == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     *status = static_cast<Data_AssetStatus>(asset->asset_.status);
@@ -211,13 +218,18 @@ Data_Asset *OH_Data_Asset_CreateOne()
 
 int OH_Data_Asset_DestroyOne(Data_Asset *asset)
 {
-    delete asset;
-    asset = nullptr;
+    if (asset != nullptr) {
+        delete asset;
+        asset = nullptr;
+    }
     return OH_Rdb_ErrCode::RDB_OK;
 }
 
 Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 {
+    if (count == 0 || count > SIZE_LENGTH) {
+        return nullptr;
+    }
     auto assets = new Data_Asset *[count];
     for (uint32_t i = 0; i < count; ++i) {
         assets[i] = new Data_Asset();
@@ -227,8 +239,17 @@ Data_Asset **OH_Data_Asset_CreateMultiple(uint32_t count)
 
 int OH_Data_Asset_DestroyMultiple(Data_Asset **assets, uint32_t count)
 {
+    if (assets == nullptr) {
+        return OH_Rdb_ErrCode::RDB_OK;
+    }
+    if (count > SIZE_LENGTH) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
     for (uint32_t i = 0; i < count; ++i) {
-        delete assets[i];
+        if (assets[i] != nullptr) {
+            delete assets[i];
+            assets[i] = nullptr;
+        }
     }
     delete[] assets;
     assets = nullptr;

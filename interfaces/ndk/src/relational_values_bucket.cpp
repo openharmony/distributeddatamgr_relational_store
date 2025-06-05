@@ -27,6 +27,7 @@
 namespace OHOS {
 namespace RdbNdk {
 constexpr int RDB_VBUCKET_CID = 1234562; // The class id used to uniquely identify the OH_Rdb_VBucket class.
+constexpr size_t SIZE_LENGTH = 2147483647; // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 int RelationalValuesBucket::PutText(OH_VBucket *bucket, const char *field, const char *value)
 {
     return PutValueObject(bucket, field, OHOS::NativeRdb::ValueObject(value));
@@ -44,6 +45,9 @@ int RelationalValuesBucket::PutReal(OH_VBucket *bucket, const char *field, doubl
 
 int RelationalValuesBucket::PutBlob(OH_VBucket *bucket, const char *field, const uint8_t *value, uint32_t size)
 {
+    if (size > SIZE_LENGTH) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
     std::vector<uint8_t> blobValue;
     if (value != nullptr) {
         blobValue.reserve(size);
@@ -138,7 +142,7 @@ int OH_VBucket_PutAsset(OH_VBucket *bucket, const char *field, Data_Asset *value
 int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **value, uint32_t count)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
-    if (self == nullptr || field == nullptr) {
+    if (self == nullptr || field == nullptr || value == nullptr || count > SIZE_LENGTH) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<AssetValue> assets;
@@ -157,7 +161,7 @@ int OH_VBucket_PutAssets(OH_VBucket *bucket, const char *field, Data_Asset **val
 int OH_VBucket_PutFloatVector(OH_VBucket *bucket, const char *field, const float *vec, size_t len)
 {
     auto self = RelationalValuesBucket::GetSelf(bucket);
-    if (self == nullptr || field == nullptr || vec == nullptr) {
+    if (self == nullptr || field == nullptr || vec == nullptr || len > SIZE_LENGTH) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     ValueObject::FloatVector floatVec(vec, vec + len);

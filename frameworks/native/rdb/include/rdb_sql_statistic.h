@@ -39,7 +39,6 @@ public:
     };
     API_EXPORT static int Subscribe(std::shared_ptr<SqlObserver> observer);
     API_EXPORT static int Unsubscribe(std::shared_ptr<SqlObserver> observer);
-    static uint32_t GenerateId();
     SqlStatistic(const std::string &sql, int32_t step, uint32_t seqId = 0);
     ~SqlStatistic();
 

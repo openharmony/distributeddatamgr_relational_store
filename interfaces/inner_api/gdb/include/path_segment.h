@@ -24,15 +24,16 @@
 
 #include "edge.h"
 #include "rdb_visibility.h"
+#include "serializable.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
-class PathSegment {
+class PathSegment final : public Serializable {
 public:
     API_EXPORT PathSegment();
     API_EXPORT PathSegment(std::shared_ptr<Vertex> sourceVertex, std::shared_ptr<Vertex> targetVertex,
         std::shared_ptr<Edge> edge);
-    static std::shared_ptr<PathSegment> Parse(const nlohmann::json &json, int32_t &errCode);
+    static std::shared_ptr<PathSegment> Parse(const std::string &jsonStr, int32_t &errCode);
 
     API_EXPORT std::shared_ptr<Vertex> GetSourceVertex() const;
     API_EXPORT void SetSourceVertex(std::shared_ptr<Vertex> vertex);
@@ -42,6 +43,9 @@ public:
 
     API_EXPORT std::shared_ptr<Vertex> GetTargetVertex() const;
     API_EXPORT void SetTargetVertex(std::shared_ptr<Vertex> vertex);
+
+    bool Marshal(json &node) const override;
+    bool Unmarshal(const json &node) override;
 
     static constexpr const char *SOURCE_VERTEX = "start";
     static constexpr const char *TARGET_VERTEX = "end";

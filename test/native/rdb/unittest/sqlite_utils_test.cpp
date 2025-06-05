@@ -27,8 +27,8 @@ class SqliteUtilsTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void){};
-    void TearDown(void){};
+    void SetUp(void) {};
+    void TearDown(void) {};
 };
 
 void SqliteUtilsTest::SetUpTestCase(void)
@@ -159,6 +159,11 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::Anonymous("file /data/stage/el2/database/rdb/ddddddd/linker_reborn.db-wal"),
         "file /***/el2/***/linker_reborn.db-wal");
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
+{
+    EXPECT_EQ(0, SqliteUtils::DeleteFolder("random123"));
 }
 
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)

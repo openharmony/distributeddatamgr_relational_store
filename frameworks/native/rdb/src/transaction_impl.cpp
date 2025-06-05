@@ -21,16 +21,19 @@
 #include "rdb_errno.h"
 #include "rdb_store.h"
 #include "trans_db.h"
+#include "rdb_perfStat.h"
 
 using namespace OHOS::Rdb;
 namespace OHOS::NativeRdb {
-
+using PerfStat = DistributedRdb::PerfStat;
 __attribute__((used))
 const int32_t TransactionImpl::regCreator_ = Transaction::RegisterCreator(TransactionImpl::Create);
 
-TransactionImpl::TransactionImpl(std::shared_ptr<Connection> connection, const std::string &name)
-    : name_(name), connection_(std::move(connection))
+TransactionImpl::TransactionImpl(std::shared_ptr<Connection> connection, const std::string &path)
+    : path_(path), connection_(std::move(connection))
 {
+    seqId_ = PerfStat::GenerateId();
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_START, seqId_);
 }
 
 TransactionImpl::~TransactionImpl()
@@ -38,6 +41,7 @@ TransactionImpl::~TransactionImpl()
     // If the user does not commit the transaction, the next time using this connection to create the transaction will
     // fail. Here, we attempt to roll back during the transaction object decomposition to prevent this situation
     // from happening.
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_END, seqId_);
     if (connection_ == nullptr) {
         return;
     }
@@ -45,9 +49,9 @@ TransactionImpl::~TransactionImpl()
 }
 
 std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
-    int32_t type, std::shared_ptr<Connection> connection, const std::string &name)
+    int32_t type, std::shared_ptr<Connection> connection, const std::string &path)
 {
-    auto trans = std::make_shared<TransactionImpl>(std::move(connection), name);
+    auto trans = std::make_shared<TransactionImpl>(std::move(connection), path);
     if (trans == nullptr) {
         return { E_ERROR, nullptr };
     }
@@ -71,7 +75,7 @@ std::string TransactionImpl::GetBeginSql(int32_t type)
 int32_t TransactionImpl::Begin(int32_t type)
 {
     std::lock_guard lock(mutex_);
-    store_ = std::make_shared<TransDB>(connection_, name_);
+    store_ = std::make_shared<TransDB>(connection_, path_);
     if (store_ == nullptr) {
         return E_ERROR;
     }
@@ -98,6 +102,7 @@ int32_t TransactionImpl::Begin(int32_t type)
 int32_t TransactionImpl::Commit()
 {
     std::lock_guard lock(mutex_);
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_END, seqId_);
     if (connection_ == nullptr) {
         LOG_ERROR("connection already closed");
         return E_ALREADY_CLOSED;
@@ -123,6 +128,7 @@ int32_t TransactionImpl::Commit()
 int32_t TransactionImpl::Rollback()
 {
     std::lock_guard lock(mutex_);
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_END, seqId_);
     if (connection_ == nullptr) {
         LOG_ERROR("connection already closed");
         return E_ALREADY_CLOSED;
@@ -175,6 +181,7 @@ std::shared_ptr<RdbStore> TransactionImpl::GetStore()
 
 std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
@@ -185,6 +192,7 @@ std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const 
 
 std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(const std::string &table, const Rows &rows)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.size());
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
@@ -197,6 +205,7 @@ std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(const std::string &tabl
 
 std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
@@ -205,63 +214,40 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
-std::pair<int32_t, int64_t> TransactionImpl::BatchInsertWithConflictResolution(
-    const std::string &table, const RefRows &rows, Resolution resolution)
+std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->BatchInsertWithConflictResolution(table, rows, resolution);
+    return store->BatchInsert(table, rows, returningFields, resolution);
 }
 
-std::pair<int, int> TransactionImpl::Update(
-    const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
+std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(table, row, where, args, resolution);
+    return store->Update(row, predicates, returningFields, resolution);
 }
 
-std::pair<int32_t, int32_t> TransactionImpl::Update(
-    const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
+std::pair<int32_t, Results> TransactionImpl::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(
-        predicates.GetTableName(), row, predicates.GetWhereClause(), predicates.GetBindArgs(), resolution);
-}
-
-std::pair<int32_t, int32_t> TransactionImpl::Delete(
-    const std::string &table, const std::string &whereClause, const Values &args)
-{
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    int deletedRows{};
-    auto errorCode = store->Delete(deletedRows, table, whereClause, args);
-    return { errorCode, deletedRows };
-}
-
-std::pair<int32_t, int32_t> TransactionImpl::Delete(const AbsRdbPredicates &predicates)
-{
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    int deletedRows{};
-    auto errorCode = store->Delete(deletedRows, predicates);
-    return { errorCode, deletedRows };
+    return store->Delete(predicates, returningFields);
 }
 
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
@@ -272,6 +258,7 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
@@ -287,6 +274,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
@@ -301,11 +289,22 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
 
 std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql, const Values &args)
 {
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, ValueObject() };
     }
     return store->Execute(sql, args);
+}
+
+std::pair<int32_t, Results> TransactionImpl::ExecuteExt(const std::string &sql, const Values &args)
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    return store->ExecuteExt(sql, args);
 }
 } // namespace OHOS::NativeRdb

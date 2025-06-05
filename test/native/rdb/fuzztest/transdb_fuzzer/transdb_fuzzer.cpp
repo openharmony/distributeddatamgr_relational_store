@@ -98,7 +98,7 @@ void TransDbInsertFuzzTest(std::shared_ptr<RdbStore> transDB, FuzzedDataProvider
 
     {
         ConflictResolution resolution = GetConflictResolution(provider);
-        transDB->BatchInsertWithConflictResolution(TABLE_NAME, rows, resolution);
+        transDB->BatchInsert(TABLE_NAME, rows, resolution);
     }
 }
 
@@ -131,4 +131,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
     FuzzedDataProvider provider(Data, Size);
     OHOS::TransDbFuzzTest(provider);
     return 0;
-}
+}

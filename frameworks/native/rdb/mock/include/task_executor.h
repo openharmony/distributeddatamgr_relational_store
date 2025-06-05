@@ -17,6 +17,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <functional>
+#include <shared_mutex>
 namespace OHOS {
 class ExecutorPool {
 public:
@@ -79,10 +80,13 @@ public:
     static TaskExecutor &GetInstance();
     std::shared_ptr<ExecutorPool> GetExecutor();
     void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+    void Init();
+    bool Stop();
 
 private:
     TaskExecutor();
     ~TaskExecutor();
+    mutable std::shared_mutex rwMutex_;
     std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace NativeRdb

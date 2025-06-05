@@ -44,6 +44,9 @@ const std::string RdbExecuteRdTest::databaseName = RDB_TEST_PATH + "execute_test
 const std::string RdbExecuteRdTest::restoreDatabaseName = RDB_TEST_PATH + "execute_test_restore.db";
 const std::string RdbExecuteRdTest::backupDatabaseName = RDB_TEST_PATH + "execute_test_backup.db";
 std::shared_ptr<RdbStore> RdbExecuteRdTest::store = nullptr;
+const bool IS_TESTING_PERFORMANCE = false;
+const int BATCH_TOTAL_SIZE = IS_TESTING_PERFORMANCE ? 12000 : 120;
+const int BATCH_SIZE = IS_TESTING_PERFORMANCE ? 100 : 10;
 
 class ExecuteTestOpenRdCallback : public RdbOpenCallback {
 public:
@@ -1002,4 +1005,126 @@ HWTEST_P(RdbExecuteRdTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
 HWTEST_P(RdbExecuteRdTest, Rdb_IsUsingArkDataTest_001, TestSize.Level2)
 {
     EXPECT_EQ(OHOS::NativeRdb::RdbHelper::IsSupportArkDataDb(), true);
+}
+
+/**
+ * @tc.name: RdbStore_BatchInsert_001
+ * @tc.desc: test RdbStore BatchInsert in vector mode
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, repr floatvector(8));";
+    std::string sqlQuery = "SELECT * FROM test order by repr <-> '[1.1, 0.3, 2.2, 6.6, 1.5, 3.1, 0.6, 0.2]' limit 3;";
+
+    std::pair<int32_t, ValueObject> res = {};
+    std::pair<int, int64_t> resBatch = {};
+    res = store->Execute(sqlCreateTable.c_str(), {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+    std::vector<float> vec = {1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4};
+
+    int id = 0;
+    std::cout << "Start BatchInsert" << std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int32_t batch = 0; batch < BATCH_TOTAL_SIZE / BATCH_SIZE; batch++) {
+        ValuesBuckets rows;
+        for (int32_t i = 0; i < BATCH_SIZE; i++) {
+            ValuesBucket row;
+            row.PutInt("id", id++);
+            row.Put("repr", vec);
+            rows.Put(row);
+        }
+        resBatch = store->BatchInsert("test", rows);
+        EXPECT_EQ(resBatch.first, E_OK);
+        EXPECT_EQ(resBatch.second, BATCH_SIZE);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Insert Cost Time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "Ops: " << BATCH_TOTAL_SIZE / (duration.count() * 1000) << " Kops/s" << std::endl;
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sqlQuery.c_str(), std::vector<ValueObject>());
+
+    int32_t resCnt = 0;
+    int32_t resId = -1;
+    while (resultSet->GoToNextRow() == E_OK) {
+        ValueObject::FloatVector floatVector = {};
+        resultSet->GetInt(0, resId);                // 0 is the index of primary INTEGER column in select projection
+        resultSet->GetFloat32Array(1, floatVector); // 1 is the index of vector column in select projection
+        EXPECT_EQ(resCnt, resId);
+        EXPECT_EQ(vec.size(), floatVector.size());
+        for (size_t i = 0; i < floatVector.size(); i++) {
+            EXPECT_FLOAT_EQ(vec[i], floatVector[i]);
+        }
+        resCnt++;
+    }
+    EXPECT_EQ(3, resCnt); // Expect 3 result due to limit 3
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_BatchInsert_002
+ * @tc.desc: test RdbStore BatchInsert performance in vector mode
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_002, TestSize.Level1)
+{
+    std::string testStr2k = R"(
+{"$type":"root", "width":"1260.000000", "height":"2720.000000", "$resolution":"3.250000", "pageUrl":"pages/AppIndex",
+"$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"__Common__", "$rect":"[0.00, 0.00],
+[1260.00, 2720.00]", "$attrs":{}, "$children":[{"$type":"Navigation", "$rect":"[0.00, 0.00], [1260.00, 2720.00]",
+"$attrs":{"id":"mixnavigator", "enabled":"1", "focusable":"1"}, "$children":[{"$type":"NavigationContent", "$rect":"
+[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{}, "$children":[{"$type":"NavDestination", "$rect":"[0.00, 0.00], 
+[1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"NavDestinationContent", 
+"$rect":"[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"Stack",
+"$rect":"[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":
+"__Common__", "$rect":"[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{}, "$children":[{"$type":"Stack", "$rect":"
+[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"Stack", "$rect":"
+[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{"id":"0", "enabled":"1", "focusable":"1"}, "$children":[{"$type":"Column",
+"$rect":"[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{"id":"1", "enabled":"1", "focusable":"1"}, "$children":[{"$type":
+"Tabs", "$rect":"[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":
+"Swiper", "$rect":"[0.00, 0.00], [1260.00, 2460.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":
+"TabContent", "$rect":"[0.00, 0.00], [1260.00, 2460.00]", "$attrs":{}, "$children":[{"$type":"Column", "$rect":"
+[0.00, 0.00], [1260.00, 2460.00]", "$attrs":{"id":"14", "enabled":"1", "focusable":"1"}, "$children":[{"$type":
+"Column", "$rect":"[0.00, 0.00], [1260.00, 2460.00]", "$attrs":{""}, "$children":[{"$attrs":{"id":"540", "enabled":"1",
+"focusable":"1"}, "$children":[{"$type":"GridCol", "$children":[{"$type":"Column", "$rect":"[0.00, 2460.00],
+[315.00, 2629.00]", "$attrs":{"enabled":"1", "focusable":"0"}, "$children":[{")";
+
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT);";
+
+    std::pair<int32_t, ValueObject> res = {};
+    std::pair<int, int64_t> resBatch = {};
+    res = store->Execute(sqlCreateTable.c_str(), {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+
+    int id = 0;
+    std::cout << "Start BatchInsert" << std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int32_t batch = 0; batch < BATCH_TOTAL_SIZE / BATCH_SIZE; batch++) {
+        ValuesBuckets rows;
+        for (int32_t i = 0; i < BATCH_SIZE; i++) {
+            ValuesBucket row;
+            row.PutInt("id", id++);
+            row.PutString("name", testStr2k);
+            rows.Put(row);
+        }
+        resBatch = store->BatchInsert("test", rows);
+        EXPECT_EQ(resBatch.first, E_OK);
+        EXPECT_EQ(resBatch.second, BATCH_SIZE);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Insert Cost Time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "Ops: " << BATCH_TOTAL_SIZE / (duration.count() * 1000) << " Kops/s" << std::endl;
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
 }
