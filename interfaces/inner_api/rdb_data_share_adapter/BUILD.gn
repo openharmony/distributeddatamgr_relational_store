@@ -60,15 +60,10 @@ ohos_shared_library("rdb_data_share_adapter") {
 
   external_deps = [
     "c_utils:utils",
+    "data_share:datashare_common_lite",
     "hilog:libhilog",
     "kv_store:datamgr_common",
   ]
-
-  if (relational_store_support_data_share) {
-    external_deps += [
-      "data_share:datashare_common_lite",
-    ]
-  }
 
   public_configs = [ ":rdb_data_share_adapter_public_config" ]
 
