@@ -568,7 +568,7 @@ public:
 
     void RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const;
 
-    void ReSetEncryptKey(const std::vector<uint8_t> &encryptKey) const;
+    void ResetEncryptKey(const std::vector<uint8_t> &encryptKey) const;
 
     /**
      * @brief Obtains the encrypt key in this {@code StoreConfig} object.
