@@ -115,6 +115,8 @@ napi_value Convert2JSValue(napi_env env, const Asset &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const RowEntity &value);
 
+napi_value Convert2JSValueExt(napi_env env, const RowEntity &rowEntity);
+
 template<>
 napi_value Convert2JSValue(napi_env env, const ValueObject &value);
 
@@ -152,6 +154,7 @@ bool HasDuplicateAssets(const std::vector<ValueObject> &values);
 bool HasDuplicateAssets(const ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<ValuesBucket> &values);
 bool HasDuplicateAssets(const ValuesBuckets &values);
+bool IsConvertToString(int64_t value);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H
