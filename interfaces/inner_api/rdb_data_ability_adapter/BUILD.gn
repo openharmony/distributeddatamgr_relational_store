@@ -57,7 +57,7 @@ ohos_shared_library("rdb_data_ability_adapter") {
 
   external_deps = [
     "c_utils:utils",
-    "data_share:datashare_common",
+    "data_share:datashare_common_lite",
     "kv_store:datamgr_common",
   ]
 

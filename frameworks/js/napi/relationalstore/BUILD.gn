@@ -46,7 +46,6 @@ if (is_ohos) {
   ohos_shared_library("relationalstore") {
     include_dirs = [
       "include",
-      "${datashare_path}/common/include/",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/relationalstore/include",
@@ -72,6 +71,7 @@ if (is_ohos) {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "data_share:datashare_common_lite",
       "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
