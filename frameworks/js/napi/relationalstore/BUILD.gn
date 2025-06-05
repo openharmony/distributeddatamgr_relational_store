@@ -71,18 +71,13 @@ if (is_ohos) {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "data_share:datashare_common_lite",
       "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "kv_store:datamgr_common",
       "napi:ace_napi",
     ]
-
-    if (relational_store_support_data_share) {
-      external_deps += [
-        "data_share:datashare_common_lite",
-      ]
-    }
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"

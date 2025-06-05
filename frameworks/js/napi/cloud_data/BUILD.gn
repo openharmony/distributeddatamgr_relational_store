@@ -56,6 +56,7 @@ ohos_shared_library("clouddata") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
+    "data_share:datashare_common_lite",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
@@ -63,12 +64,6 @@ ohos_shared_library("clouddata") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-
-  if (relational_store_support_data_share) {
-    external_deps += [
-      "data_share:datashare_common_lite",
-    ]
-  }
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"

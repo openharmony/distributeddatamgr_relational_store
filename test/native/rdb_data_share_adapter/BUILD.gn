@@ -43,6 +43,7 @@ ohos_unittest("RdbDataShareAdapterTest") {
 
   external_deps = [
     "c_utils:utils",
+    "data_share:datashare_common_lite",
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -53,12 +54,6 @@ ohos_unittest("RdbDataShareAdapterTest") {
     external_deps += [
       "icu:shared_icui18n",
       "icu:shared_icuuc",
-    ]
-  }
-
-  if (relational_store_support_data_share) {
-    external_deps += [
-      "data_share:datashare_common_lite",
     ]
   }
 
