@@ -516,22 +516,20 @@ void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::s
         ASSERT_BUSINESS_ERR(ctxt, argc >= 4, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument bundleName
         int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(), Status::INVALID_ARGUMENT,
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of bundleName must be string and not empty.");
         // 1 is the index of argument storeId
         status = JSUtils::Convert2Value(env, argv[1], ctxt->storeId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK && !ctxt->storeId.empty(), Status::INVALID_ARGUMENT,
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of storeId must be string and not empty.");
         // 2 is the index of argument syncMode
         status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->syncMode);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of syncMode must be number.");
-        bool checked = (status == napi_ok && ctxt->syncMode >= DistributedRdb::TIME_FIRST &&
-            ctxt->syncMode <= DistributedRdb::CLOUD_FIRST);
+        // bool checked = (status == napi_ok && ctxt->syncMode >= DistributedRdb::TIME_FIRST &&
+        //     ctxt->syncMode <= DistributedRdb::CLOUD_FIRST);
         ASSERT_BUSINESS_ERR(
-            ctxt, checked, Status::INVALID_ARGUMENT, "The syncMode is invalid.");
+            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The syncMode is invalid.");
         // 3 is the index of argument progress, it should be a founction
         napi_valuetype valueType = napi_undefined;
         napi_status ret = napi_typeof(env, argv[3], &valueType);
@@ -582,6 +580,9 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         option.syncMode = ctxt->syncMode;
         option.seqNum = GetSeqNum();
         auto status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
+        if (status == Status::INVALID_ARGUMENT) {
+            status = Status::INVALID_ARGUMENT_V20;
+        }
         ctxt->status =
             (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };
