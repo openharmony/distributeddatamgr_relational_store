@@ -35,12 +35,12 @@ public:
     using Deleter = int32_t (*)(const RdbStoreConfig &config);
     using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
     using Restorer = int32_t (*)(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
-	
+
     MOCK_METHOD(int32_t, VerifyAndRegisterHook, (const RdbStoreConfig &config), (override));
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateStatement, (const std::string &sql, SConn conn), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));
     MOCK_METHOD(bool, IsWriter, (), (const, override));
-    MOCK_METHOD(int32_t, ReSetKey, (const RdbStoreConfig &config), (override));
+    MOCK_METHOD(int32_t, ResetKey, (const RdbStoreConfig &config), (override));
     MOCK_METHOD(int32_t, TryCheckPoint, (bool timeout), (override));
     MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, LimitWalSize, (), (override));

@@ -929,6 +929,31 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_018, TestSize.Level1)
     }
 }
 
+/**
+@tc.name: RdbStore_Execute_019
+@tc.desc: test RdbStore Execute in vector mode, empty string bind case.
+@tc.type: FUNC
+*/
+HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_019, TestSize.Level1)
+{
+    std::string sqlCreateTable
+        = "CREATE TABLE IF NOT EXISTS testEmptyString (id INTEGER PRIMARY KEY, name text, repr floatvector(8));";
+    std::string sqlInsert = "INSERT INTO testEmptyString VALUES(?, ?, ?);";
+    std::string sqlQuery = "SELECT id FROM testEmptyString";
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::vector<float> floatVector = { 1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4 };
+    std::vector bindArgs = std::vector{ ValueObject(1), ValueObject(""), ValueObject(floatVector)};
+
+    EXPECT_EQ(store->Execute(sqlCreateTable).first, E_OK);
+    EXPECT_EQ(store->Execute(sqlInsert, bindArgs).first, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sqlQuery);
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount = 0;
+    EXPECT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+}
+
 /* *
  * @tc.name: Rdb_BackupRestoreTest_001
  * @tc.desc: backup and restore

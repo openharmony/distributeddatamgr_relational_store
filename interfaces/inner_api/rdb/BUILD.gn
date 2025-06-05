@@ -87,11 +87,6 @@ if (is_ohos && !build_ohos_sdk) {
         defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
       defines += [ "ARKDATA_DATABASE_CORE_ENABLE" ]
     }
-    include_dirs += [
-      "${kvstore_path}/common",
-      "${kvstore_interface_path}",
-      "${distributedfile_path}/mod_securitylabel",
-    ]
   }
 
   config("native_rdb_public_config") {
@@ -102,6 +97,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
+      "${relational_store_innerapi_path}/appdatafwk/include",
       "../cloud_data/include",
       "../common_type/include",
     ]
@@ -145,18 +141,20 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
     ]
 
-    public_deps = [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     ]
 
     external_deps = [
       "c_utils:utils",
+      "file_api:securitylabel",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
       "kv_store:database_utils",
+      "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
@@ -219,11 +217,13 @@ if (is_ohos && !build_ohos_sdk) {
 
     external_deps = [
       "c_utils:utils",
+      "file_api:securitylabel",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
       "kv_store:database_utils",
+      "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
