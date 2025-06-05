@@ -778,9 +778,9 @@ public:
 
     bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
 
-    void SetKnowledgeProcessing(bool knowledgeProcessing);
+    void SetEnableSemanticIndex(bool enableSemanticIndex);
 
-    bool GetKnowledgeProcessing() const;
+    bool GetEnableSemanticIndex() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -794,7 +794,7 @@ private:
     bool isVector_ = false;
     bool autoRekey_ = false;
     bool localOnly_ = false;
-    bool knowledgeProcessing_ = false;
+    bool enableSemanticIndex_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
     int32_t readConSize_ = 4;

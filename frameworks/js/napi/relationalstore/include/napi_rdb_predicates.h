@@ -105,6 +105,7 @@ private:
     static napi_value GetBindArgs(napi_env env, napi_callback_info info);
     static napi_value InDevices(napi_env env, napi_callback_info info);
     static napi_value InAllDevices(napi_env env, napi_callback_info info);
+    static napi_value Having(napi_env env, napi_callback_info info);
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

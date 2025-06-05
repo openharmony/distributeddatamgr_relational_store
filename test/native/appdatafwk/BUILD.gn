@@ -30,11 +30,16 @@ config("module_private_config") {
 ohos_unittest("NativeAppDataFwkTest") {
   module_out_path = module_output_path
 
-  sources = [ "unittest/serializable_test.cpp" ]
+  sources = [
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+    "unittest/serializable_test.cpp",
+  ]
 
   configs = [ ":module_private_config" ]
 
   external_deps = [
+    "cJSON:cjson",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "relational_store:native_appdatafwk",
   ]
@@ -43,7 +48,6 @@ ohos_unittest("NativeAppDataFwkTest") {
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
   ]
 }
 

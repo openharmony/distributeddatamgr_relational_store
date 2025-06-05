@@ -1079,13 +1079,13 @@ HWTEST_F(RdbStoreImplTest, CreateTransaction_004, TestSize.Level1)
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_001
- * @tc.desc: BatchInsertWithConflictResolution when violation the unique constraint.
+ * @tc.name: BatchInsert_001
+ * @tc.desc: BatchInsert when violation the unique constraint.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_001, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_001, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res =
         store_->Execute("CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
@@ -1104,27 +1104,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_001, TestSize.Level
     auto result = store_->Insert(tableName, row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
 
@@ -1136,13 +1136,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_001, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_002
- * @tc.desc: BatchInsertWithConflictResolution when violation the not null constraint.
+ * @tc.name: BatchInsert_002
+ * @tc.desc: BatchInsert when violation the not null constraint.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_002, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_002, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res =
         store_->Execute("CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
@@ -1155,27 +1155,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_002, TestSize.Level
         row.Put("name", i == 2 ? ValueObject() : "Jim");
         rows.Put(row);
     }
-    auto result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
@@ -1187,13 +1187,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_002, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_003
- * @tc.desc: BatchInsertWithConflictResolution when violation the PRIMARY constraint.
+ * @tc.name: BatchInsert_003
+ * @tc.desc: BatchInsert when violation the PRIMARY constraint.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_003, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_003, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res =
         store_->Execute("CREATE TABLE " + tableName + " (id TEXT PRIMARY KEY, name TEXT NOT NULL)");
@@ -1212,27 +1212,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_003, TestSize.Level
     auto result = store_->Insert(tableName, row);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 1);
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
 
@@ -1244,13 +1244,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_003, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_004
- * @tc.desc: BatchInsertWithConflictResolution when violation the check constraint.
+ * @tc.name: BatchInsert_004
+ * @tc.desc: BatchInsert when violation the check constraint.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_004, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_004, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res = store_->Execute(
         "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY CHECK (id >= 3 OR id <= 1), name TEXT NOT NULL)");
@@ -1263,27 +1263,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_004, TestSize.Level
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 2);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_SQLITE_CONSTRAINT);
     ASSERT_EQ(result.second, 0);
 
@@ -1295,13 +1295,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_004, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_005
- * @tc.desc: BatchInsertWithConflictResolution when busy.
+ * @tc.name: BatchInsert_005
+ * @tc.desc: BatchInsert when busy.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_005, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_005, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res = store_->Execute(
         "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY CHECK (id >= 3 OR id <= 1), name TEXT NOT NULL)");
@@ -1318,27 +1318,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_005, TestSize.Level
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_SQLITE_BUSY);
     ASSERT_EQ(result.second, -1);
 
@@ -1350,13 +1350,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_005, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_006
- * @tc.desc: Normal BatchInsertWithConflictResolution.
+ * @tc.name: BatchInsert_006
+ * @tc.desc: Normal BatchInsert.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_006, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_006, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res =
         store_->Execute("CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
@@ -1364,15 +1364,15 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_006, TestSize.Level
 
     ValuesBuckets rows;
 
-    auto result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 0);
     for (int i = 0; i < 5; i++) {
@@ -1381,15 +1381,15 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_006, TestSize.Level
         rows.Put(row);
     }
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 5);
 
@@ -1401,13 +1401,13 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_006, TestSize.Level
 }
 
 /* *
- * @tc.name: BatchInsertWithConflictResolution_007
- * @tc.desc: over limit params BatchInsertWithConflictResolution.
+ * @tc.name: BatchInsert_007
+ * @tc.desc: over limit params BatchInsert.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_007, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, BatchInsert_007, TestSize.Level1)
 {
-    std::string tableName = "BatchInsertWithConflictResolutionTest";
+    std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
     auto res =
         store_->Execute("CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
@@ -1422,27 +1422,27 @@ HWTEST_F(RdbStoreImplTest, BatchInsertWithConflictResolution_007, TestSize.Level
         row.Put("name", "Jim");
         rows.Put(row);
     }
-    auto result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ROLLBACK);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_ABORT);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_FAIL);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_IGNORE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
-    result = store_->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
+    result = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_REPLACE);
     ASSERT_EQ(result.first, E_INVALID_ARGS);
     ASSERT_EQ(result.second, -1);
 
@@ -1557,7 +1557,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     config.SetBundleName("");
-    config.SetKnowledgeProcessing(true);
+    config.SetEnableSemanticIndex(true);
     RdbStoreImplTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(E_OK, errCode);
@@ -1568,4 +1568,50 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
     errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_InitKnowledgeSchema_001
+ * @tc.desc: test RdbStore InitKnowledgeSchema
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    config.SetEnableSemanticIndex(true);
+    OHOS::DistributedRdb::RdbKnowledgeSchema schema;
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+
+    errCode = store->InitKnowledgeSchema(schema);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: CreateStatementTest_001
+ * @tc.desc: test CreateStatement
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, CreateStatementTest_001, TestSize.Level2)
+{
+    const std::string dbName = RDB_TEST_PATH + "SQLiteConnectionCreateStatementTest.db";
+    RdbStoreConfig config(dbName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetReadOnly(false);
+    auto [errCode, connection] = SqliteConnection::Create(config, true);
+    ASSERT_NE(nullptr, connection);
+    EXPECT_EQ(E_OK, errCode);
+
+    std::pair<int, std::shared_ptr<Statement>> pair = connection->CreateStatement("PRAGMA page_size", connection);
+    EXPECT_EQ(E_OK, pair.first);
+    std::shared_ptr<SqliteStatement> sqliteStmt = std::static_pointer_cast<SqliteStatement>(pair.second);
+    ASSERT_NE(nullptr, sqliteStmt);
+
+    std::shared_ptr<SqliteStatement> slaveSqliteStmt = std::static_pointer_cast<SqliteStatement>(sqliteStmt->slave_);
+    ASSERT_NE(nullptr, slaveSqliteStmt);
+    EXPECT_NE(nullptr, slaveSqliteStmt->conn_);
 }

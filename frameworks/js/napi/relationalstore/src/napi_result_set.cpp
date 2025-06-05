@@ -256,7 +256,7 @@ napi_value ResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
             errCode = result->GetColumnType(context->columnIndex, context->columnType);
         }
         if (errCode == E_INVALID_ARGS) {
-            return E_INVALID_ARGS_NEW;
+            return E_PARAM_ERROR;
         }
         return errCode;
     };

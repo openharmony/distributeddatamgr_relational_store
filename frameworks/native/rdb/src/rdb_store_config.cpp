@@ -622,14 +622,14 @@ ssize_t RdbStoreConfig::GetWalLimitSize() const
     return walLimitSize_;
 }
 
-void RdbStoreConfig::SetKnowledgeProcessing(bool knowledgeProcessing)
+void RdbStoreConfig::SetEnableSemanticIndex(bool enableSemanticIndex)
 {
-    knowledgeProcessing_ = knowledgeProcessing;
+    enableSemanticIndex_ = enableSemanticIndex;
 }
 
-bool RdbStoreConfig::GetKnowledgeProcessing() const
+bool RdbStoreConfig::GetEnableSemanticIndex() const
 {
-    return knowledgeProcessing_;
+    return enableSemanticIndex_;
 }
 
 void RdbStoreConfig::SetWalLimitSize(ssize_t size)

@@ -15,15 +15,73 @@
 #include "relationalstore_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
+#include <iostream>
+#include <sys/stat.h>
 
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+#include "accesstoken_kit.h"
+
+static constexpr const char *RDB_TEST_PATH = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/";
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
+using namespace OHOS::Security::AccessToken;
+
+void CreateAndSetCryptoParam(FuzzedDataProvider &provider, OH_Rdb_ConfigV2 *config)
+{
+    if (config == nullptr) {
+        return;
+    }
+    OH_Rdb_CryptoParam *param = OH_Rdb_CreateCryptoParam();
+    int32_t length = provider.ConsumeIntegral<int32_t>();
+    std::vector<uint8_t> key = provider.ConsumeBytes<uint8_t>(length);
+    int64_t iterator = provider.ConsumeIntegral<int32_t>();
+    int32_t algo = provider.ConsumeIntegral<int32_t>();
+    int64_t size = provider.ConsumeIntegral<int32_t>();
+
+    OH_Crypto_SetEncryptionKey(param, key.data(), key.size());
+    OH_Crypto_SetIteration(param, iterator);
+    OH_Crypto_SetEncryptionAlgo(param, algo);
+    OH_Crypto_SetHmacAlgo(param, algo);
+    OH_Crypto_SetKdfAlgo(param, algo);
+    OH_Crypto_SetCryptoPageSize(param, size);
+    OH_Rdb_SetCryptoParam(config, param);
+    if (param != nullptr) {
+        OH_Rdb_DestroyCryptoParam(param);
+    }
+}
+
+constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
+void CreateAndSetPlugins(FuzzedDataProvider &provider, OH_Rdb_ConfigV2 *config)
+{
+    uint32_t count = provider.ConsumeIntegralInRange(0, RDB_CONFIG_PLUGINS_MAX);
+    std::vector<std::string> plugins;
+    for (uint32_t i = 0; i < count; i++) {
+        plugins.push_back(provider.ConsumeRandomLengthString());
+    }
+    const char *arr[RDB_CONFIG_PLUGINS_MAX] = {nullptr};
+    for (size_t i = 0; i < count; ++i) {
+        arr[i] = plugins[i].c_str();
+    }
+    OH_Rdb_SetPlugins(config, arr, count);
+}
+
+void AppendApi20ConfigV2(FuzzedDataProvider &provider, struct OH_Rdb_ConfigV2 *configV2)
+{
+    if (configV2 == nullptr) {
+        return;
+    }
+    bool readOnly = provider.ConsumeBool();
+    OH_Rdb_SetReadOnly(configV2, readOnly);
+    std::string customDir = provider.ConsumeRandomLengthString();
+    OH_Rdb_SetCustomDir(configV2, customDir.c_str());
+    CreateAndSetPlugins(provider, configV2);
+    CreateAndSetCryptoParam(provider, configV2);
+}
 
 struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
 {
@@ -135,13 +193,13 @@ void RelationalStoreCAPIFuzzTest(FuzzedDataProvider &provider)
     int errCode = 0;
     static OH_Rdb_Store *OHRdbStore = OH_Rdb_CreateOrOpen(configV2, &errCode);
     {
-        std::string table = provider.ConsumeRandomLengthString();
+        table = provider.ConsumeRandomLengthString();
         OH_Rdb_Insert(OHRdbStore, table.c_str(), valueBucket);
     }
     OH_Data_VBuckets *list = OH_VBuckets_Create();
     OH_VBuckets_PutRow(list, valueBucket);
     {
-        std::string table = provider.ConsumeRandomLengthString();
+        table = provider.ConsumeRandomLengthString();
         Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
             provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
         int64_t changes = 0;
@@ -157,11 +215,214 @@ void RelationalStoreCAPIFuzzTest(FuzzedDataProvider &provider)
     OH_Rdb_DestroyConfig(configV2);
 }
 
+void RelationalConfigV2Capi20FuzzTest(FuzzedDataProvider &provider)
+{
+    static bool runEndFlag = false;
+    struct OH_Rdb_ConfigV2 *configV2 = CreateOHRdbConfigV2(provider);
+    if (configV2 == nullptr) {
+        return;
+    }
+    AppendApi20ConfigV2(provider, configV2);
+    OH_Rdb_DestroyConfig(configV2);
+    if (!runEndFlag) {
+        runEndFlag = true;
+        std::cout << "RelationalConfigV2Capi20FuzzTest end" << std::endl;
+    }
+}
+
+OH_Rdb_ConfigV2* g_normalConfig = nullptr;
+void MockHap(void)
+{
+    HapInfoParams info = {
+        .userID = 100,
+        .bundleName = "com.example.distributed",
+        .instIndex = 0,
+        .appIDDesc = "com.example.distributed"
+    };
+    PermissionDef infoManagerTestPermDef = {
+        .permissionName = "ohos.permission.test",
+        .bundleName = "com.example.distributed",
+        .grantMode = 1,
+        .availableLevel = APL_NORMAL,
+        .label = "label",
+        .labelId = 1,
+        .description = "open the door",
+        .descriptionId = 1
+    };
+    PermissionStateFull infoManagerTestState = {
+        .permissionName = "ohos.permission.test",
+        .isGeneral = true,
+        .resDeviceID = { "local" },
+        .grantStatus = { PermissionState::PERMISSION_GRANTED },
+        .grantFlags = { 1 }
+    };
+    HapPolicyParams policy = {
+        .apl = APL_NORMAL,
+        .domain = "test.domain",
+        .permList = { infoManagerTestPermDef },
+        .permStateList = { infoManagerTestState }
+    };
+    AccessTokenKit::AllocHapToken(info, policy);
+}
+
+OH_Rdb_Store *GetFuzzerNormalStore()
+{
+    MockHap();
+    // 0770 is permission
+    mkdir(RDB_TEST_PATH, 0770);
+    g_normalConfig = OH_Rdb_CreateConfig();
+    OH_Rdb_SetDatabaseDir(g_normalConfig, RDB_TEST_PATH);
+    OH_Rdb_SetStoreName(g_normalConfig, "rdb_store_test.db");
+    OH_Rdb_SetBundleName(g_normalConfig, "com.ohos.example.distributedndk");
+    OH_Rdb_SetEncrypted(g_normalConfig, false);
+    OH_Rdb_SetSecurityLevel(g_normalConfig, OH_Rdb_SecurityLevel::S1);
+    OH_Rdb_SetArea(g_normalConfig, RDB_SECURITY_AREA_EL1);
+    int errCode = 0;
+    OH_Rdb_Store *store = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode);
+    return store;
+}
+
+void DeleteFuzzerNormalStroe(OH_Rdb_Store *store)
+{
+    if (store != nullptr) {
+        delete store;
+    }
+    OH_Rdb_DeleteStoreV2(g_normalConfig);
+    OH_Rdb_DestroyConfig(g_normalConfig);
+    g_normalConfig = nullptr;
+}
+
+
+void InitFuzzerNormalStore(OH_Rdb_Store *store)
+{
+    if (store == nullptr) {
+        return;
+    }
+    char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    OH_Rdb_Execute(store, createTableSql);
+}
+
+OH_VBucket* GetFuzzerNormalValuesBucket()
+{
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    valueBucket->putInt64(valueBucket, "id", 1);
+    valueBucket->putText(valueBucket, "data1", "zhangSan");
+    // 12800 stub number
+    valueBucket->putInt64(valueBucket, "data2", 12800);
+    // 100.1 stub number
+    valueBucket->putReal(valueBucket, "data3", 100.1);
+    valueBucket->putText(valueBucket, "data5", "ABCDEFG");
+    return valueBucket;
+}
+
+void DeleteFuzzerNormalValuesBucket(OH_VBucket *valueBucket)
+{
+    if (valueBucket == nullptr) {
+        return;
+    }
+    valueBucket->destroy(valueBucket);
+}
+
+OH_Predicates* GetCapi20Predicates(FuzzedDataProvider &provider, std::string table)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates(table.c_str());
+    if (predicates == nullptr) {
+        return nullptr;
+    }
+    std::string value = provider.ConsumeRandomLengthString();
+    OH_VObject *valueObject = CreateOHVObject(provider);
+    if (valueObject == nullptr) {
+        predicates->destroy(predicates);
+        return nullptr;
+    }
+    predicates->equalTo(predicates, value.c_str(), valueObject);
+    valueObject->destroy(valueObject);
+    return predicates;
+}
+
+void DeleteCapi20Predicates(OH_Predicates *predicates)
+{
+    if (predicates != nullptr) {
+        return;
+    }
+    predicates->destroy(predicates);
+}
+
+
+void RelationalStoreCapi20FuzzTest(FuzzedDataProvider &provider)
+{
+    static bool runEndFlag = false;
+    int64_t rowId;
+    std::string table = "test";
+    Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
+        provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
+
+    OH_Rdb_Store *store = GetFuzzerNormalStore();
+    OH_VBucket *valueBucket = GetFuzzerNormalValuesBucket();
+    OH_Predicates *predicates = GetCapi20Predicates(provider, table);
+    do {
+        if (store == nullptr || valueBucket == nullptr || predicates == nullptr) {
+            break;
+        }
+        OH_Rdb_InsertWithConflictResolution(store, table.c_str(), valueBucket, resolution, &rowId);
+        OH_Rdb_UpdateWithConflictResolution(store, valueBucket, predicates, resolution, &rowId);
+        if (!runEndFlag) {
+            runEndFlag = true;
+            std::cout << "RelationalStoreCapi20FuzzTest end" << std::endl;
+        }
+    } while (0);
+
+    DeleteCapi20Predicates(predicates);
+    DeleteFuzzerNormalValuesBucket(valueBucket);
+    DeleteFuzzerNormalStroe(store);
+}
+
+void RelationalStoreAttatchFuzzTest(FuzzedDataProvider &provider)
+{
+    static bool runEndFlag = false;
+    OH_Rdb_Store *store = GetFuzzerNormalStore();
+    OH_Rdb_ConfigV2 *attachConfig = OH_Rdb_CreateConfig();
+    int64_t waitTime = provider.ConsumeIntegral<int32_t>();
+    do {
+        if (store == nullptr || attachConfig == nullptr) {
+            break;
+        }
+        OH_Rdb_SetDatabaseDir(attachConfig, RDB_TEST_PATH);
+        OH_Rdb_SetStoreName(attachConfig, "rdb_attach_store_test.db");
+        OH_Rdb_SetBundleName(attachConfig, "com.ohos.example.distributedndk");
+        OH_Rdb_SetEncrypted(attachConfig, false);
+        OH_Rdb_SetSecurityLevel(attachConfig, OH_Rdb_SecurityLevel::S1);
+        OH_Rdb_SetArea(attachConfig, RDB_SECURITY_AREA_EL1);
+
+        size_t attachedNumber = 0;
+        OH_Rdb_Attach(store, attachConfig, "attach_test", waitTime, &attachedNumber);
+        OH_Rdb_Detach(store, "attach_test", waitTime, &attachedNumber);
+        if (!runEndFlag) {
+            runEndFlag = true;
+            std::cout << "RelationalStoreAttatchFuzzTest end" << std::endl;
+        }
+    } while (0);
+
+    OH_Rdb_DestroyConfig(attachConfig);
+    DeleteFuzzerNormalStroe(store);
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     FuzzedDataProvider provider(data, size);
+
     RelationalStoreCAPIFuzzTest(provider);
+
+    // Test OH_Rdb_SetCryptoParam
+    RelationalConfigV2Capi20FuzzTest(provider);
+
+    // Test OH_Rdb_InsertWithConflictResolution and OH_Rdb_UpdateWithConflictResolution
+    RelationalStoreCapi20FuzzTest(provider);
+
+    // Test OH_Rdb_Attach and OH_Rdb_Detach
+    RelationalStoreAttatchFuzzTest(provider);
     return 0;
 }

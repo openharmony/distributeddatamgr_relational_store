@@ -72,6 +72,24 @@ public:
      * @return Returns {@code true} if the custom tokenizer is supported; returns {@code false} otherwise.
      */
     API_EXPORT static bool IsSupportedTokenizer(Tokenizer tokenizer);
+
+    /**
+     * @brief Clean up resources before dlclose.
+     *
+     * @note This interface is only used to release resources before calling dlclose, and can only be called before
+     * actually uninstalling rdb. Please manually release all resources obtained from rdb (rdbStore, resultSet,
+     * transaction, etc.) before calling, and then dlopen again to use them normally
+     */
+    API_EXPORT static bool Init();
+
+    /**
+     * @brief Clean up resources before dlclose.
+     *
+     * @note This interface is only used to release resources before calling dlclose, and can only be called before
+     * actually uninstalling rdb. Please manually release all resources obtained from rdb (rdbStore, resultSet,
+     * transaction, etc.) before calling, and then dlopen again to use them normally
+     */
+    API_EXPORT static bool Destroy();
 };
 } // namespace NativeRdb
 } // namespace OHOS

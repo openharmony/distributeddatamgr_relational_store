@@ -27,6 +27,9 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#if !defined(CROSS_PLATFORM)
+#include <filesystem>
+#endif
 #include <fstream>
 #include <regex>
 #include <string>
@@ -88,16 +91,18 @@ std::string SqliteUtils::StrToUpper(const std::string &s)
     return str;
 }
 
-void SqliteUtils::Replace(std::string &src, const std::string &rep, const std::string &dst)
+std::string SqliteUtils::Replace(const std::string &src, const std::string &rep, const std::string &dst)
 {
     if (src.empty() || rep.empty()) {
-        return;
+        return "";
     }
+    auto res = src;
     size_t pos = 0;
-    while ((pos = src.find(rep, pos)) != std::string::npos) {
-        src.replace(pos, rep.length(), dst);
+    while ((pos = res.find(rep, pos)) != std::string::npos) {
+        res.replace(pos, rep.length(), dst);
         pos += dst.length();
     }
+    return res;
 }
 
 bool SqliteUtils::IsSupportSqlForExecute(int sqlType)
@@ -169,6 +174,23 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     src.close();
     dst.close();
     return true;
+}
+
+size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
+{
+#if !defined(CROSS_PLATFORM)
+    std::error_code ec;
+    size_t count = std::filesystem::remove_all(folderPath, ec);
+    auto errorCount = static_cast<std::uintmax_t>(-1);
+    if (count == errorCount) {
+        LOG_WARN("remove folder, %{public}d, %{public}s, %{public}s", ec.value(),
+            ec.message().c_str(), Anonymous(folderPath).c_str());
+        count = 0;
+    }
+    return count;
+#else
+    return 0;
+#endif
 }
 
 std::string SqliteUtils::GetAnonymousName(const std::string &fileName)

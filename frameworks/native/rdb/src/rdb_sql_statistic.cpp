@@ -50,11 +50,6 @@ int SqlStatistic::Unsubscribe(std::shared_ptr<SqlObserver> observer)
     return E_OK;
 }
 
-uint32_t SqlStatistic::GenerateId()
-{
-    return ++seqId_;
-}
-
 SqlStatistic::SqlStatistic(const std::string &sql, int32_t step, uint32_t seqId)
 {
     if (!enabled_) {

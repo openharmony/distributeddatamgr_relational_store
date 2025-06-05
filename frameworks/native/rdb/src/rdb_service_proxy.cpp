@@ -15,6 +15,7 @@
 #define LOG_TAG "RdbServiceProxy"
 #include "rdb_service_proxy.h"
 
+#include <thread>
 #include "itypes_util.h"
 #include "logger.h"
 #include "result_set_proxy.h"
@@ -24,7 +25,7 @@ namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 using SqliteUtils = OHOS::NativeRdb::SqliteUtils;
 using RdbServiceCode = OHOS::DistributedRdb::RelationalStore::RdbServiceInterfaceCode;
-
+constexpr int32_t MAX_RETRY = 100;
 #define IPC_SEND(code, reply, ...)                                          \
 ({                                                                          \
     int32_t __status = RDB_OK;                                              \
@@ -56,9 +57,18 @@ RdbServiceProxy::RdbServiceProxy(const sptr<IRemoteObject> &object)
     remote_ = Remote();
 }
 
-std::string RdbServiceProxy::ObtainDistributedTableName(const std::string &device, const std::string &table)
+std::string RdbServiceProxy::ObtainDistributedTableName(
+    const RdbSyncerParam &param, const std::string &device, const std::string &table)
 {
-    return "";
+    MessageParcel reply;
+    int32_t status =
+        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_TABLE), reply, param, device, table);
+    std::string distributedTableName;
+    if (status != RDB_OK || !ITypesUtil::Unmarshal(reply, distributedTableName)) {
+        LOG_ERROR("status:%{public}d, device:%{public}s, table:%{public}s", status,
+            SqliteUtils::Anonymous(device).c_str(), SqliteUtils::Anonymous(table).c_str());
+    }
+    return distributedTableName;
 }
 
 int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
@@ -690,5 +700,16 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
     }
     return status;
+}
+
+RdbServiceProxy::~RdbServiceProxy()
+{
+    int32_t retry = 0;
+    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry++ < MAX_RETRY) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1) {
+        LOG_WARN("notifier_ has other in use:%{public}d!", notifier_->GetSptrRefCount());
+    }
 }
 } // namespace OHOS::DistributedRdb

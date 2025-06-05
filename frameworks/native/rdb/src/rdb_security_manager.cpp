@@ -15,6 +15,7 @@
 #define LOG_TAG "RdbSecurityManager"
 #include "rdb_security_manager.h"
 
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <securec.h>
 #include <sys/file.h>
@@ -25,8 +26,6 @@
 
 #include "directory_ex.h"
 #include "file_ex.h"
-#include "hks_api.h"
-#include "hks_param.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
@@ -129,89 +128,16 @@ std::string RdbSecurityManager::GetBundleNameByAlias(const std::vector<uint8_t> 
     return "";
 }
 
-int32_t RdbSecurityManager::HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
-    const struct HksBlob *inData, struct HksBlob *outData)
-{
-    if (outData->size < inData->size * TIMES) {
-        HksAbort(handle, paramSet);
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
-            "HksLoopUpdate out size not enough"));
-        return HKS_ERROR_INVALID_ARGUMENT;
-    }
-
-    struct HksBlob input = { MAX_UPDATE_SIZE, inData->data };
-    uint8_t *end = inData->data + inData->size - 1;
-    outData->size = 0;
-    struct HksBlob output = { MAX_OUTDATA_SIZE, outData->data };
-    while (input.data <= end) {
-        if (input.data + MAX_UPDATE_SIZE > end) {
-            input.size = end - input.data + 1;
-            break;
-        }
-        auto result = HksUpdate(handle, paramSet, &input, &output);
-        if (result != HKS_SUCCESS) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
-                "HksUpdate ret=" + std::to_string(result)));
-            LOG_ERROR("HksUpdate Failed.");
-            return HKS_FAILURE;
-        }
-
-        output.data += output.size;
-        outData->size += output.size;
-        input.data += MAX_UPDATE_SIZE;
-    }
-    output.size = input.size * TIMES;
-    auto result = HksFinish(handle, paramSet, &input, &output);
-    if (result != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_FAIL, GetBundleNameByAlias(),
-            "HksFinish ret=" + std::to_string(result)));
-        LOG_ERROR("HksFinish Failed.");
-        return HKS_FAILURE;
-    }
-    outData->size += output.size;
-    return HKS_SUCCESS;
-}
-
-int32_t RdbSecurityManager::HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
-    const struct HksBlob *plainText, struct HksBlob *cipherText)
-{
-    uint8_t handle[sizeof(uint64_t)] = { 0 };
-    struct HksBlob handleBlob = { sizeof(uint64_t), handle };
-    int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
-    if (result != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL,
-            GetBundleNameByAlias(), "Encrypt HksInit ret=" + std::to_string(result)));
-        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
-        return result;
-    }
-    return HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
-}
-
-int32_t RdbSecurityManager::HksDecryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
-    const struct HksBlob *cipherText, struct HksBlob *plainText)
-{
-    uint8_t handle[sizeof(uint64_t)] = { 0 };
-    struct HksBlob handleBlob = { sizeof(uint64_t), handle };
-    int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
-    if (result != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
-            "Decrypt HksInit ret=" + std::to_string(result)));
-        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
-        return result;
-    }
-    result = HksLoopUpdate(&handleBlob, paramSet, cipherText, plainText);
-    if (result != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
-            "Decrypt HksLoopUpdate ret=" + std::to_string(result)));
-    }
-    return result;
-}
-
 RdbSecurityManager::RdbSecurityManager()
-    : nonce_(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE)),
-      aad_(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD)) {};
+{
+};
 
-RdbSecurityManager::~RdbSecurityManager() = default;
+RdbSecurityManager::~RdbSecurityManager()
+{
+    if (handle_ != nullptr) {
+        dlclose(handle_);
+    }
+}
 
 std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
 {
@@ -237,7 +163,6 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     keyData.timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::system_clock::now());
     keyData.distributed = 0;
     keyData.secretKey = EncryptWorkKey(key);
-
     if (keyData.secretKey.empty()) {
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
@@ -276,167 +201,12 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
     return ret;
 }
 
-int RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias)
+void RdbSecurityManager::ReportCryptFault(const int32_t &errorCode, const std::string &custLog)
 {
-    LOG_INFO("RDB GenerateRootKey begin.");
-    std::vector<uint8_t> tempRootKeyAlias = rootKeyAlias;
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), tempRootKeyAlias.data() };
-    struct HksParamSet *params = nullptr;
-    int32_t ret = HksInitParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
-            "generator root key, HksInitParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksInitParamSet()-client failed with error %{public}d", ret);
-        return ret;
+    if (custLog.empty()) {
+        return;
     }
-
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
-    };
-
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
-            "HksAddParams ret=" + std::to_string(ret)));
-        LOG_ERROR("HksAddParams-client failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return ret;
-    }
-
-    ret = HksBuildParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
-            "HksBuildParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksBuildParamSet-client failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return ret;
-    }
-
-    ret = HksGenerateKey(&rootKeyName, params, nullptr);
-    HksFreeParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_ROOT_KEY_FAULT, GetBundleNameByAlias(rootKeyAlias),
-            "HksGenerateKey ret=" + std::to_string(ret)));
-        LOG_ERROR("HksGenerateKey-client failed with error %{public}d", ret);
-    }
-    return ret;
-}
-
-std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key)
-{
-    std::vector<uint8_t> rootKeyAlias = GetRootKeyAlias();
-    struct HksBlob blobAad = { uint32_t(aad_.size()), aad_.data() };
-    struct HksBlob blobNonce = { uint32_t(nonce_.size()), nonce_.data() };
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), rootKeyAlias.data() };
-    struct HksBlob plainKey = { uint32_t(key.size()), key.data() };
-    struct HksParamSet *params = nullptr;
-    int32_t ret = HksInitParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "Encrypt HksInitParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
-        return {};
-    }
-    struct HksParam hksParam[] = {{ .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
-        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE }};
-
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "Encrypt HksAddParams ret=" + std::to_string(ret)));
-        LOG_ERROR("HksAddParams failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return {};
-    }
-
-    ret = HksBuildParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_ENCRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "Encrypt HksBuildParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return {};
-    }
-    std::vector<uint8_t> encryptedKey(plainKey.size * TIMES + 1);
-    struct HksBlob cipherText = { uint32_t(encryptedKey.size()), encryptedKey.data() };
-    ret = HksEncryptThreeStage(&rootKeyName, params, &plainKey, &cipherText);
-    (void)HksFreeParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        encryptedKey.assign(encryptedKey.size(), 0);
-        LOG_ERROR("HksEncrypt failed with error %{public}d", ret);
-        return {};
-    }
-    encryptedKey.resize(cipherText.size);
-    return encryptedKey;
-}
-
-bool RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &source, std::vector<uint8_t> &key)
-{
-    std::vector<uint8_t> rootKeyAlias = GetRootKeyAlias();
-    struct HksBlob blobAad = { uint32_t(aad_.size()), &(aad_[0]) };
-    struct HksBlob blobNonce = { uint32_t(nonce_.size()), &(nonce_[0]) };
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), &(rootKeyAlias[0]) };
-    struct HksBlob encryptedKeyBlob = { uint32_t(source.size() - AEAD_LEN), source.data() };
-    struct HksBlob blobAead = { AEAD_LEN, source.data() + source.size() - AEAD_LEN };
-    struct HksParamSet *params = nullptr;
-    int32_t ret = HksInitParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksInitParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
-        return false;
-    }
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
-        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
-        { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
-    };
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksAddParams ret=" + std::to_string(ret)));
-        LOG_ERROR("HksAddParams failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return false;
-    }
-
-    ret = HksBuildParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(rootKeyAlias),
-            "HksBuildParamSet ret=" + std::to_string(ret)));
-        LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return false;
-    }
-    key.resize(encryptedKeyBlob.size * TIMES + 1);
-    struct HksBlob plainKeyBlob = { uint32_t(key.size()), key.data() };
-    ret = HksDecryptThreeStage(&rootKeyName, params, &encryptedKeyBlob, &plainKeyBlob);
-    (void)HksFreeParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        key.assign(key.size(), 0);
-        LOG_ERROR("HksDecrypt failed with error %{public}d", ret);
-        return false;
-    }
-    key.resize(plainKeyBlob.size);
-    return true;
+    Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, errorCode, GetBundleNameByAlias(), custLog));
 }
 
 int32_t RdbSecurityManager::Init(const std::string &bundleName)
@@ -468,42 +238,69 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
 
 int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
 {
-    LOG_DEBUG("RDB checkRootKeyExist begin.");
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), rootKeyAlias.data() };
-    struct HksParamSet *params = nullptr;
-    int32_t ret = HksInitParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        LOG_ERROR("HksInitParamSet()-client failed with error %{public}d", ret);
-        return ret;
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_NOT_SUPPORT;
     }
-
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_KEY_SIZE, .uint32Param = HKS_AES_KEY_SIZE_256 },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT | HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
-    };
-
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
-    if (ret != HKS_SUCCESS) {
-        LOG_ERROR("HksAddParams failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return ret;
+    auto creatorCheck = reinterpret_cast<CheckRootKeyExistsFunc>(dlsym(handle, "checkRootKeyExists"));
+    if (creatorCheck == nullptr) {
+        LOG_ERROR("CheckRootKeyExists failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
     }
+    return creatorCheck(rootKeyAlias);
+}
 
-    ret = HksBuildParamSet(&params);
-    if (ret != HKS_SUCCESS) {
-        LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
-        HksFreeParamSet(&params);
-        return ret;
+int32_t RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return E_NOT_SUPPORT;
     }
-
-    ret = HksKeyExist(&rootKeyName, params);
-    HksFreeParamSet(&params);
+    RDBCryptFault rdbFault;
+    auto creatorGenerate = reinterpret_cast<GenerateRootKeyFunc>(dlsym(handle, "generateRootKey"));
+    if (creatorGenerate == nullptr) {
+        LOG_ERROR("dlsym GenerateRootKey failed(%{public}d)!", errno);
+        return E_NOT_SUPPORT;
+    }
+    auto ret = creatorGenerate(rootKeyAlias, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
     return ret;
+}
+
+std::vector<uint8_t> RdbSecurityManager::EncryptWorkKey(std::vector<uint8_t> &key)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return {};
+    }
+    RDBCryptFault rdbFault;
+    auto creatorEncrypt = reinterpret_cast<EncryptFunc>(dlsym(handle, "encrypt"));
+    if (creatorEncrypt == nullptr) {
+        LOG_ERROR("dlsym Encrypt failed(%{public}d)!", errno);
+        return {};
+    }
+    auto rootKeyAlias = GetRootKeyAlias();
+    auto encryKey = creatorEncrypt(rootKeyAlias, key, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    return encryKey;
+}
+
+std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(std::vector<uint8_t> &key)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return {};
+    }
+    RDBCryptFault rdbFault;
+    auto creatorDecrypt = reinterpret_cast<DecryptFunc>(dlsym(handle, "decrypt"));
+    if (creatorDecrypt == nullptr) {
+        LOG_ERROR("dlsym Decrypt failed(%{public}d)!", errno);
+        return {};
+    }
+    auto rootKeyAlias = GetRootKeyAlias();
+    auto decryptKey = creatorDecrypt(rootKeyAlias, key, rdbFault);
+    ReportCryptFault(rdbFault.errorCode, rdbFault.custLog);
+    return decryptKey;
 }
 
 bool RdbSecurityManager::InitPath(const std::string &fileDir)
@@ -544,10 +341,8 @@ RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile
         return {};
     }
 
-    std::vector<uint8_t> key;
-    if (!DecryptWorkKey(keyData.secretKey, key)) {
-        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
-            "DecryptWorkKey fail,errno=" + std::to_string(errno)));
+    std::vector<uint8_t> key = DecryptWorkKey(keyData.secretKey);
+    if (key.empty()) {
         LOG_ERROR("Decrypt key failed!");
         return {};
     }
@@ -701,6 +496,18 @@ void RdbSecurityManager::ChangeKeyFile(const std::string &dbPath)
 bool RdbSecurityManager::HasRootKey()
 {
     return hasRootKey_;
+}
+
+void* RdbSecurityManager::GetHandle()
+{
+    std::lock_guard<std::mutex> lock(handleMutex_);
+    if (handle_ == nullptr) {
+        handle_ = dlopen("librelational_store_crypt.z.so", RTLD_LAZY);
+        if (handle_ == nullptr) {
+            LOG_ERROR("crypt dlopen failed errno is %{public}d", errno);
+        }
+    }
+    return handle_;
 }
 
 bool RdbSecurityManager::IsKeyFileEmpty(const std::string &keyFile)

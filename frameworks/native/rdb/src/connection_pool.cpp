@@ -30,6 +30,7 @@
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_perfStat.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
@@ -43,6 +44,7 @@ using ConnPool = ConnectionPool;
 using SharedConn = std::shared_ptr<Connection>;
 using SharedConns = std::vector<std::shared_ptr<Connection>>;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 
@@ -231,6 +233,7 @@ void ConnPool::SetInTransaction(bool isInTransaction)
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     if (transCount_.load() >= MAX_TRANS && limited) {
         trans_.Dump("NO TRANS", transCount_ + isInTransaction_);
         writers_.Dump("NO TRANS WRITE", transCount_ + isInTransaction_);
@@ -246,12 +249,14 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool l
 std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     return Acquire(isReadOnly);
 }
 
 std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     using namespace std::chrono;
     std::pair<SharedConn, SharedConns> result;
     auto &[writer, readers] = result;
@@ -316,6 +321,7 @@ std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::millisecon
 SharedConn ConnPool::AcquireRef(bool isReadOnly, std::chrono::milliseconds ms)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
+    PerfStat perfStat(config_.GetPath(), "", SqlStatistic::Step::STEP_WAIT);
     if (maxReader_ != 0) {
         return Acquire(isReadOnly, ms);
     }
@@ -451,12 +457,12 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
         return retVal;
     }
-    return RestoreMasterDb(newPath, backupPath, slaveStatus);
+    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
 }
 
-int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
+int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
 {
-    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() == HAMode::MAIN_REPLICA) {
+    if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
         auto connection = AcquireConnection(false);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
@@ -464,8 +470,34 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         return connection->Restore(backupPath, {}, slaveStatus);
     }
 
+    return RestoreMasterDb(newPath, backupPath);
+}
+
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+{
+    if (!CheckIntegrity(backupPath)) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    auto walFile = backupPath + "-wal";
+    if (SqliteUtils::GetFileSize(walFile) != 0) {
+        LOG_ERROR("Wal file exist.");
+        return E_SQLITE_CORRUPT;
+    }
+
+    SqliteUtils::DeleteFile(backupPath + "-shm");
+    SqliteUtils::DeleteFile(backupPath + "-wal");
+
     CloseAllConnections();
-    int ret = Connection::Restore(config_, backupPath, newPath);
+    Connection::Delete(config_);
+
+    if (config_.GetPath() != newPath) {
+        RdbStoreConfig config(newPath);
+        config.SetPath(newPath);
+        Connection::Delete(config);
+    }
+
+    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
     int32_t errCode = E_OK;
     std::shared_ptr<Connection> pool;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
@@ -485,7 +517,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         LOG_WARN("Restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
             SqliteUtils::Anonymous(backupPath).c_str());
     }
-    return ret == E_OK ? errCode : ret;
+    return copyRet ? errCode : E_ERROR;
 }
 
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
@@ -608,6 +640,7 @@ int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
             continue;
         }
         conn->connect_->ConfigLocale(locale);
+        ++it;
     }
     return E_OK;
 }

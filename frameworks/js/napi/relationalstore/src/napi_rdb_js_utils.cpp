@@ -218,6 +218,21 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::SqlObserver::SqlE
 }
 
 template<>
+napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "code", value.code),
+        DECLARE_JS_PROPERTY(env, "message", value.message),
+        DECLARE_JS_PROPERTY(env, "sql", value.sql),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 {
     return nullptr;
@@ -398,8 +413,8 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "persist", rdbConfig.persist, true);
     ASSERT(OK == status, "get persist failed.", napi_invalid_arg);
 
-    status = GetNamedProperty(env, jsValue, "knowledgeProcessing", rdbConfig.knowledgeProcessing, true);
-    ASSERT(OK == status, "get knowledgeProcessing failed.", napi_invalid_arg);
+    status = GetNamedProperty(env, jsValue, "enableSemanticIndex", rdbConfig.enableSemanticIndex, true);
+    ASSERT(OK == status, "get enableSemanticIndex failed.", napi_invalid_arg);
     return napi_ok;
 }
 
@@ -548,7 +563,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
 
-    rdbStoreConfig.SetKnowledgeProcessing(rdbConfig.knowledgeProcessing);
+    rdbStoreConfig.SetEnableSemanticIndex(rdbConfig.enableSemanticIndex);
     return rdbStoreConfig;
 }
 

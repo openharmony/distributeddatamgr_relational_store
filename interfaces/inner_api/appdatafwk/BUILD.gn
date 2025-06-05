@@ -39,7 +39,6 @@ config("common_public_config") {
   include_dirs = [
     "include",
     "${relational_store_common_path}/include",
-    "//third_party/json/single_include",
   ]
 }
 
@@ -61,6 +60,11 @@ if (is_android || is_ios) {
     configs = [
       ":common_public_config",
       ":appdatafwk_public_config",
+    ]
+
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${target_os}",
+      "//third_party/cJSON:cjson_static",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -98,6 +102,10 @@ if (is_android || is_ios) {
       ":common_public_config",
       ":appdatafwk_public_config",
     ]
+    external_deps = [
+      "cJSON:cjson",
+      "hilog:libhilog",
+    ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -127,6 +135,7 @@ ohos_shared_library("native_appdatafwk") {
 
   external_deps = [
     "c_utils:utils",
+    "cJSON:cjson",
     "hilog:libhilog",
     "ipc:ipc_single",
   ]

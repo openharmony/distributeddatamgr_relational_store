@@ -99,6 +99,7 @@ void RdbStoreUpdateTest::TearDownTestCase(void)
 void RdbStoreUpdateTest::SetUp(void)
 {
     store_ = *GetParam();
+    ASSERT_NE(store_, nullptr);
     store_->ExecuteSql("DELETE FROM test");
 }
 
@@ -114,13 +115,11 @@ void RdbStoreUpdateTest::TearDown(void)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -130,11 +129,11 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToFirstRow();
@@ -155,28 +154,26 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_001, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int64_t id;
     ValuesBucket values;
     int changedRows;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
     values.Clear();
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    ret = store->Update(changedRows, "test", values);
+    ret = store_->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -201,8 +198,6 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_002, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int changedRows;
     ValuesBucket values;
     values.PutInt("id", 1);
@@ -210,10 +205,10 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
     values.PutInt("age", 18);
     values.PutDouble("salary", 100.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = store->Update(changedRows, "", values, "", std::vector<std::string>()); // empty table name
+    int ret = store_->Update(changedRows, "", values, "", std::vector<std::string>()); // empty table name
     EXPECT_EQ(ret, E_EMPTY_TABLE_NAME);
 
-    ret = store->Update(changedRows, "wrongTable", values, "", std::vector<std::string>()); // no such table
+    ret = store_->Update(changedRows, "wrongTable", values, "", std::vector<std::string>()); // no such table
     EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
@@ -224,11 +219,9 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_003, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int changedRows;
     ValuesBucket emptyBucket;
-    int ret = store->Update(changedRows, "test", emptyBucket);
+    int ret = store_->Update(changedRows, "test", emptyBucket);
     EXPECT_EQ(ret, E_EMPTY_VALUES_BUCKET);
 
     ValuesBucket values;
@@ -237,7 +230,7 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
     values.PutInt("age", 18);
     values.PutDouble("wrongColumn", 100.5); // no such column
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    ret = store->Update(changedRows, "test", values, "", std::vector<std::string>());
+    ret = store_->Update(changedRows, "test", values, "", std::vector<std::string>());
     EXPECT_EQ(ret, E_SQLITE_ERROR);
 }
 
@@ -248,17 +241,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_004, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_EMPTY_VALUES_BUCKET);
 }
 
@@ -269,8 +260,6 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_005, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
@@ -281,15 +270,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
     values.PutInt("age", 20);
     values.PutDouble("salary", 200.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
+    ret = store_->Update(changedRows, "test", values, "id = ?", std::vector<std::string>{ "1" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToFirstRow();
@@ -310,21 +299,20 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_006, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue value{ .version = 1, .name = "123", .uri = "your test path", .createTime = "13", .modifyTime = "13" };
     int changedRows;
     int64_t id;
     values.PutNull("assetType");
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
     values.Clear();
     values.Put("assetType", value);
-    ret = store->Update(changedRows, "test", values);
+    ret = store_->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToFirstRow();
@@ -348,7 +336,6 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_007, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue valueDef{
         .version = 0,
@@ -361,15 +348,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
     int changedRows;
     int64_t id;
     values.Put("assetType", valueDef);
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(4, id);
     values.Clear();
     values.Put("assetType", value);
-    ret = store->Update(changedRows, "test", values);
+    ret = store_->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToFirstRow();
@@ -388,7 +375,6 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_008, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     AssetValue valueDef{ .version = 0,
         .status = AssetValue::STATUS_NORMAL,
@@ -403,15 +389,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
     int changedRows;
     int64_t id;
     values.Put("assetType", valueDef);
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(5, id);
     values.Clear();
     values.Put("assetType", value);
-    ret = store->Update(changedRows, "test", values);
+    ret = store_->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
@@ -435,7 +421,6 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_009, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
     ValuesBucket values;
     std::vector<AssetValue> assetsDef{
         { .version = 0, .name = "123", .uri = "my test path", .createTime = "12", .modifyTime = "12" }
@@ -447,13 +432,13 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
     int changedRows;
     int64_t id;
     values.Put("assetsType", assetsDef);
-    int ret = store->Insert(id, "test", values);
+    int ret = store_->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(6, id);
     values.Clear();
     values.Put("assetsType", assets);
 
-    ret = store->Update(changedRows, "test", values);
+    ret = store_->Update(changedRows, "test", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 }
@@ -465,17 +450,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_Update_010, TestSize.Level1)
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -485,11 +468,11 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = 19");
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = 19");
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -514,17 +497,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_001, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -534,11 +515,11 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
         ConflictResolution::ON_CONFLICT_NONE);
     EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -563,17 +544,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_002, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -583,12 +562,12 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
         ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -613,17 +592,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_003, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -633,11 +610,11 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
         ConflictResolution::ON_CONFLICT_ROLLBACK);
     EXPECT_EQ(ret, E_SQLITE_CONSTRAINT);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -662,17 +639,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_004, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -682,12 +657,12 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
     values.PutBlob("blobType", std::vector<uint8_t>{ 7, 8, 9 });
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
         ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -712,17 +687,15 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_005, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     ValuesBucket values;
     int changedRows;
     int64_t id;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
@@ -730,12 +703,12 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
     values.PutString("name", std::string("zhangsan"));
     values.PutInt("age", 20);
     values.PutDouble("salary", 300.5);
-    ret = store->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
+    ret = store_->UpdateWithConflictResolution(changedRows, "test", values, "age = ?", std::vector<std::string>{ "19" },
         ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(changedRows, 1);
 
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    std::shared_ptr<ResultSet> resultSet = store_->QuerySql("SELECT * FROM test");
     EXPECT_NE(resultSet, nullptr);
 
     ret = resultSet->GoToNextRow();
@@ -757,19 +730,17 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_006, TestSize
  */
 HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> store = *GetParam();
-
     int changedRows = 0;
     int64_t id = -1;
     ValuesBucket values;
 
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     values.PutInt("id", 2);
     values.PutInt("age", 19);
-    ret = store->UpdateWithConflictResolution(
+    ret = store_->UpdateWithConflictResolution(
         changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" }, static_cast<ConflictResolution>(6));
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, changedRows);
@@ -777,7 +748,7 @@ HWTEST_P(RdbStoreUpdateTest, RdbStore_UpdateWithConflictResolution_007, TestSize
     values.Clear();
     values.PutInt("id", 2);
     values.PutInt("age", 19);
-    ret = store->UpdateWithConflictResolution(
+    ret = store_->UpdateWithConflictResolution(
         changedRows, "test", values, "age = ?", std::vector<std::string>{ "18" }, static_cast<ConflictResolution>(-1));
     EXPECT_EQ(E_INVALID_CONFLICT_FLAG, ret);
     EXPECT_EQ(0, changedRows);
@@ -863,6 +834,191 @@ HWTEST_P(RdbStoreUpdateTest, OverLimitWithUpdate_001, TestSize.Level1)
     int changedRows;
     auto result = store->Update(changedRows, "test", row);
     ASSERT_EQ(result, E_SQLITE_FULL);
+}
+
+/**
+ * @tc.name: UpdateWithReturning_001
+ * @tc.desc: normal test
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_001, TestSize.Level1)
+{
+    int64_t id;
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ValuesBucket values;
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    AbsRdbPredicates predicates("test");
+    auto [status, result] = store_->Update(values, predicates, { "id" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    ASSERT_EQ(result.results.RowSize(), 1);
+    auto [code, val] = result.results.GetColumnValues("id");
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(val.size(), 1);
+    EXPECT_EQ(int(val[0]), 2);
+}
+
+/**
+ * @tc.name: UpdateWithReturning_002
+ * @tc.desc: abnormal test, update with conflict ignore and partial Success
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_002, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim_" + std::to_string(i));
+        rows.Put(row);
+    }
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 5);
+    ASSERT_TRUE(result.results.Empty());
+
+    ValuesBucket row;
+    row.PutString("name", "Jim_3");
+    row.PutInt("age", 20);
+    row.PutDouble("salary", 200.5);
+    row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    AbsRdbPredicates predicates("test");
+    predicates.In("id", { 1, 2, 3 });
+    std::tie(status, result) = store_->Update(row, predicates, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    ASSERT_EQ(result.results.RowSize(), 1);
+    auto [code, val] = result.results.GetColumnValues("name");
+    ASSERT_EQ(code, E_OK);
+    ASSERT_EQ(val.size(), 1);
+    EXPECT_EQ(std::string(val[0]), "Jim_3");
+}
+
+/**
+ * @tc.name: UpdateWithReturning_003
+ * @tc.desc: abnormal test, update with conflict abort and failed
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_003, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 5; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim_" + std::to_string(i));
+        rows.Put(row);
+    }
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 5);
+    ASSERT_TRUE(result.results.Empty());
+
+    ValuesBucket row;
+    row.PutString("name", "Jim_3");
+    row.PutInt("age", 20);
+    row.PutDouble("salary", 200.5);
+    row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    AbsRdbPredicates predicates("test");
+    predicates.In("id", { 1, 2, 3 });
+    std::tie(status, result) = store_->Update(row, predicates, { "blobType" }, ConflictResolution::ON_CONFLICT_ABORT);
+    EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(result.changed, 0);
+    ASSERT_EQ(result.results.RowSize(), 0);
+}
+
+/**
+ * @tc.name: UpdateWithReturning_004
+ * @tc.desc: abnormal test, update over returning limit
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_004, TestSize.Level1)
+{
+    ValuesBuckets rows;
+    for (int i = 0; i < 1124; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim_" + std::to_string(i));
+        rows.Put(row);
+    }
+    auto [status, result] = store_->BatchInsert("test", rows, {}, ConflictResolution::ON_CONFLICT_REPLACE);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(result.changed, 1124);
+    ASSERT_TRUE(result.results.Empty());
+
+    ValuesBucket row;
+    row.PutInt("age", 20);
+    row.PutDouble("salary", 200.5);
+    row.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6 });
+    AbsRdbPredicates predicates("test");
+    std::tie(status, result) = store_->Update(row, predicates, { "age" }, ConflictResolution::ON_CONFLICT_REPLACE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1124);
+    ASSERT_EQ(result.results.RowSize(), 1024);
+}
+
+/**
+ * @tc.name: UpdateWithReturning_005
+ * @tc.desc: abnormal test, update with returning no exist field
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_005, TestSize.Level1)
+{
+    int64_t id;
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ValuesBucket values;
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 10000);
+    auto [status, result] = store_->Update(values, predicates, { "noExist" });
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    ASSERT_EQ(result.results.RowSize(), 0);
+}
+
+/**
+ * @tc.name: UpdateWithReturning_006
+ * @tc.desc: abnormal test, update 0 rows
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_006, TestSize.Level1)
+{
+    int64_t id;
+    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    ValuesBucket values;
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", 10000);
+    auto [status, result] = store_->Update(values, predicates, { "id" });
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 0);
+    ASSERT_EQ(result.results.RowSize(), 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(UpdateTest, RdbStoreUpdateTest, testing::Values(&g_store, &g_memDb));

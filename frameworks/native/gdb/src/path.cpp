@@ -71,41 +71,37 @@ const std::vector<std::shared_ptr<PathSegment>> &Path::GetSegments() const
     return segments_;
 }
 
-std::shared_ptr<Path> Path::Parse(const nlohmann::json &json, int32_t &errCode)
+bool Path::Marshal(json &node) const
 {
-    if (!json.contains(Path::PATHLEN) || !json.contains(Path::START) || !json.at(Path::START).is_object() ||
-        !json.contains(Path::END) || !json.at(Path::END).is_object() || !json.contains(Path::SEGMENTS) ||
-        !json.at(Path::SEGMENTS).is_array() || !json.at(Path::PATHLEN).is_number_unsigned()) {
-        LOG_ERROR("path format error. jsonStr=%{public}s", json.dump().c_str());
+    return false;
+}
+
+bool Path::Unmarshal(const json &node)
+{
+    bool isUnmarshalSuccess = true;
+    isUnmarshalSuccess = GetValue(node, PATHLEN, pathLen_) && isUnmarshalSuccess;
+    if (start_ == nullptr) {
+        start_ = std::make_shared<Vertex>();
+    }
+    isUnmarshalSuccess = GetValue(node, START, start_) && isUnmarshalSuccess;
+    if (end_ == nullptr) {
+        end_ = std::make_shared<Vertex>();
+    }
+    isUnmarshalSuccess = GetValue(node, END, end_) && isUnmarshalSuccess;
+
+    isUnmarshalSuccess = GetValue(node, SEGMENTS, segments_) && isUnmarshalSuccess;
+    return isUnmarshalSuccess;
+}
+
+std::shared_ptr<Path> Path::Parse(const std::string &jsonStr, int32_t &errCode)
+{
+    Path path;
+    if (!Serializable::Unmarshall(jsonStr, path)) {
+        LOG_WARN("Parse path failed.");
         errCode = E_PARSE_JSON_FAILED;
         return nullptr;
     }
     errCode = E_OK;
-
-    auto pathLen = json.at(Path::PATHLEN).get<uint32_t>();
-    auto start = Vertex::Parse(json.at(Path::START), errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-
-    auto end = Vertex::Parse(json.at(Path::END), errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    auto pathSegments = std::vector<std::shared_ptr<PathSegment>>();
-    for (const auto &item : json.at(Path::SEGMENTS)) {
-        if (!item.is_object()) {
-            LOG_ERROR("pathItem format error. jsonStr=%{public}s", json.dump().c_str());
-            return nullptr;
-        }
-        auto pathSegment = PathSegment::Parse(item, errCode);
-        if (errCode != E_OK) {
-            return nullptr;
-        }
-        pathSegments.push_back(pathSegment);
-    }
-    errCode = E_OK;
-    return std::make_shared<Path>(start, end, pathLen, pathSegments);
-    ;
+    return std::make_shared<Path>(path);
 }
 } // namespace OHOS::DistributedDataAip

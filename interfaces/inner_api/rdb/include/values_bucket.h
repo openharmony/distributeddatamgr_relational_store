@@ -114,6 +114,14 @@ public:
     API_EXPORT void Put(const std::string &columnName, const ValueObject &value);
 
     /**
+     * @brief Put the integer double bool string bytes asset asset and so on
+     * to this {@code ValuesBucket} object for the given column name.
+     *
+     * @param columnName Indicates the name of the column.
+     */
+    API_EXPORT void Put(const std::string &columnName, ValueObject &&value);
+
+    /**
      * @brief Delete the ValueObject object for the given column name.
      *
      * @param columnName Indicates the name of the column.
