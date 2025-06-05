@@ -127,7 +127,11 @@ HWTEST_F(SerializableTest, GetNormalVal, TestSize.Level2)
     normal.value = -56;
     normal.isClear = true;
     normal.cols = { "adfasdfas" };
-    auto jstr = to_string(normal.Marshall());
+    auto json = normal.Marshall();
+    auto jstr = Serializable::JSONWrapper::to_string(json);
+    EXPECT_EQ(json["count"], -1);
+    EXPECT_EQ(json["name"], "normal");
+    EXPECT_TRUE(json.contains(GET_NAME(name)));
     Normal normal1;
     normal1.Unmarshall(jstr);
     ASSERT_TRUE(normal == normal1) << normal1.name;
@@ -156,7 +160,7 @@ HWTEST_F(SerializableTest, GetMutilVal, TestSize.Level2)
     NormalEx normalEx;
     normalEx.normals = { Normal() };
     normalEx.name = "normalEx";
-    auto jstr = to_string(normalEx.Marshall());
+    auto jstr = Serializable::JSONWrapper::to_string(normalEx.Marshall());
     NormalEx normal1;
     normal1.Unmarshall(jstr);
     ASSERT_TRUE(normalEx == normal1) << normal1.name;
@@ -221,5 +225,118 @@ HWTEST_F(SerializableTest, ToJson_04, TestSize.Level1)
     std::string jsonStr = "{invalid_json}";
     Serializable::json result = Serializable::ToJson(jsonStr);
     ASSERT_FALSE(result.is_discarded());
+}
+
+/**
+* @tc.name: SetStringMapValue
+* @tc.desc: set map value with string param.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, SetStringMapValue, TestSize.Level2)
+{
+    struct TestStringMap final : public Serializable {
+    public:
+        std::unordered_map<std::string, std::string> testMap = {
+            {"name", "John"},
+            {"email", "john@example.com"}
+        };
+        bool Marshal(json &node) const override
+        {
+            SetValue(node[GET_NAME(testMap)], testMap);
+            return true;
+        }
+        bool Unmarshal(const json &node) override
+        {
+            GetValue(node, GET_NAME(testMap), testMap);
+            return true;
+        }
+        bool operator==(const TestStringMap &other) const
+        {
+            return testMap == other.testMap;
+        }
+    };
+
+    TestStringMap in;
+    in.testMap["name"] = "New York";
+    in.testMap["email"] = "john@sample.com";
+    auto json = Serializable::JSONWrapper::to_string(in.Marshall());
+    TestStringMap out;
+    out.Unmarshall(json);
+    ASSERT_TRUE(in == out);
+}
+
+/**
+* @tc.name: SetMapValue
+* @tc.desc: set map value with int param.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, SetMapValue, TestSize.Level2)
+{
+    struct TestMap final : public Serializable {
+    public:
+        std::unordered_map<std::string, uint64_t> testMap = {
+            {"id", 123456},
+            {"version", 42}
+        };
+        bool Marshal(json &node) const override
+        {
+            SetValue(node[GET_NAME(testMap)], testMap);
+            return true;
+        }
+        bool Unmarshal(const json &node) override
+        {
+            GetValue(node, GET_NAME(testMap), testMap);
+            return true;
+        }
+        bool operator==(const TestMap &other) const
+        {
+            return testMap == other.testMap;
+        }
+    };
+
+    TestMap in;
+    in.testMap["version"] = 552;
+    auto json = Serializable::JSONWrapper::to_string(in.Marshall());
+
+    TestMap out;
+    out.Unmarshall(json);
+    ASSERT_TRUE(in == out);
+}
+
+/**
+* @tc.name: SetUintValue
+* @tc.desc: set value with uint param.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2)
+{
+    struct TestUint final : public Serializable {
+    public:
+        std::vector<uint8_t> testBytes = { 0x01, 0x02, 0x03, 0x04 };
+        bool Marshal(json &node) const override
+        {
+            SetValue(node[GET_NAME(testBytes)], testBytes);
+            return true;
+        }
+
+        bool Unmarshal(const json &node) override
+        {
+            bool success = true;
+            success = GetValue(node, GET_NAME(testBytes), testBytes) && success;
+            return success;
+        }
+
+        bool operator==(const TestUint &other) const
+        {
+            return testBytes == other.testBytes;
+        }
+    };
+
+    TestUint in;
+    in.testBytes = { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E };
+    auto json = Serializable::JSONWrapper::to_string(in.Marshall());
+    TestUint out;
+    out.Unmarshall(json);
+    ASSERT_TRUE(in == out);
 }
 } // namespace OHOS::Test

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #define LOG_TAG "GdbEdge"
+#include "edge.h"
+
 #include <utility>
 
 #include "gdb_errors.h"
@@ -20,12 +22,12 @@
 #include "logger.h"
 
 namespace OHOS::DistributedDataAip {
-Edge::Edge() : Vertex(), sourceId_("0"), targetId_("0")
+Edge::Edge() : id_("0"), properties_(), sourceId_("0"), targetId_("0")
 {
 }
 
 Edge::Edge(std::string id, std::string label, std::string sourceId, std::string targetId)
-    : Vertex(std::move(id), std::move(label)), sourceId_(std::move(sourceId)), targetId_(std::move(targetId))
+    : id_(std::move(id)), label_(std::move(label)), sourceId_(std::move(sourceId)), targetId_(std::move(targetId))
 {
 }
 
@@ -37,6 +39,36 @@ Edge::Edge(const std::shared_ptr<Vertex> &element, std::string sourceId, std::st
         label_ = element->GetLabel();
         properties_ = element->GetProperties();
     }
+}
+
+std::string Edge::GetId() const
+{
+    return id_;
+}
+
+void Edge::SetId(std::string id)
+{
+    id_ = std::move(id);
+}
+
+const std::string &Edge::GetLabel() const
+{
+    return label_;
+}
+
+void Edge::SetLabel(const std::string &label)
+{
+    label_ = label;
+}
+
+const std::unordered_map<std::string, PropType> &Edge::GetProperties() const
+{
+    return properties_;
+}
+
+void Edge::SetProperty(const std::string &key, PropType value)
+{
+    properties_[key] = std::move(value);
 }
 
 std::string Edge::GetSourceId() const
@@ -59,46 +91,31 @@ void Edge::SetTargetId(std::string targetId)
     targetId_ = std::move(targetId);
 }
 
-std::string Edge::GetIdFromJson(const std::string &key, const nlohmann::json &json, int32_t &errCode)
+bool Edge::Marshal(json &node) const
 {
-    if (key.empty() || (!json.at(key).is_string() && !json.at(key).is_number())) {
-        LOG_ERROR("edge start or end id is not number or string. jsonStr=%{public}s", json.dump().c_str());
-        errCode = E_PARSE_JSON_FAILED;
-        return "";
-    }
-    errCode = E_OK;
-    if (json.at(key).is_number()) {
-        auto sourceId = json.at(key).get<int32_t>();
-        return std::to_string(sourceId);
-    }
-    if (json.at(key).is_string()) {
-        return json.at(key).get<std::string>();
-    }
-    errCode = E_PARSE_JSON_FAILED;
-    return "";
+    return false;
 }
 
-std::shared_ptr<Edge> Edge::Parse(const nlohmann::json &json, int32_t &errCode)
+bool Edge::Unmarshal(const json &node)
 {
-    if (!json.contains(Edge::SOURCEID) || !json.contains(Edge::TARGETID)) {
-        LOG_ERROR("edge format error. jsonStr=%{public}s", json.dump().c_str());
+    bool isUnmarshalSuccess = true;
+    isUnmarshalSuccess = Vertex::GetID(node, ID, id_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = GetValue(node, LABEL, label_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = Vertex::GetID(node, SOURCEID, sourceId_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = Vertex::GetID(node, TARGETID, targetId_) && isUnmarshalSuccess;
+    isUnmarshalSuccess = Vertex::GetPropsValue(node, PROPERTIES, properties_) && isUnmarshalSuccess;
+    return isUnmarshalSuccess;
+}
+
+std::shared_ptr<Edge> Edge::Parse(const std::string &jsonStr, int32_t &errCode)
+{
+    Edge edge;
+    if (!Serializable::Unmarshall(jsonStr, edge)) {
+        LOG_WARN("Parse edge failed.");
         errCode = E_PARSE_JSON_FAILED;
         return nullptr;
     }
     errCode = E_OK;
-    std::shared_ptr<Vertex> element = Vertex::Parse(json, errCode);
-    if (errCode != E_OK || element == nullptr) {
-        LOG_ERROR("parse edge element failed. jsonStr=%{public}s", json.dump().c_str());
-        return nullptr;
-    }
-    auto sourceId = Edge::GetIdFromJson(Edge::SOURCEID, json, errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    auto targetId = Edge::GetIdFromJson(Edge::TARGETID, json, errCode);
-    if (errCode != E_OK) {
-        return nullptr;
-    }
-    return std::make_shared<Edge>(element, sourceId, targetId);
+    return std::make_shared<Edge>(edge);
 }
 } // namespace OHOS::DistributedDataAip

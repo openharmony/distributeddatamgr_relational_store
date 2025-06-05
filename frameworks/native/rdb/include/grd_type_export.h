@@ -30,9 +30,11 @@ typedef struct GRD_DB GRD_DB;
 typedef struct GRD_SqlStmt GRD_SqlStmt;
 typedef struct GRD_Stmt GRD_StmtT;
 
-typedef void (*GRD_ScheduleFunc)(void *func, void *param);
+typedef uint64_t (*GRD_ScheduleFunc)(void *func, void *param);
+typedef bool (*GRD_RemoveFunc)(uint64_t taskId, bool wait);
 typedef struct GRD_ThreadPool {
     GRD_ScheduleFunc schedule;
+    GRD_RemoveFunc remove;
 } GRD_ThreadPoolT;
 
 /**

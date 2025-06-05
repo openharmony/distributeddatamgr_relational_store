@@ -14,10 +14,12 @@
  */
 #include "rdb_store.h"
 
+#include "logger.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "traits.h"
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
 RdbStore::ModifyTime::ModifyTime(
     std::shared_ptr<ResultSet> result, std::map<std::vector<uint8_t>, PRIKey> hashKeys, bool isFromRowId)
     : result_(std::move(result)), hash_(std::move(hashKeys)), isFromRowId_(isFromRowId)
@@ -138,6 +140,12 @@ int RdbStore::Replace(int64_t &outRowId, const std::string &table, const Row &ro
     return errCode;
 }
 
+// Old version implementation, cannot be modified
+std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
+
 int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const Rows &rows)
 {
     ValuesBuckets refRows;
@@ -151,13 +159,14 @@ int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const
     return errCode;
 }
 
-std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows)
+std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    return { E_NOT_SUPPORT, -1 };
+    auto [code, result] = BatchInsert(table, rows, {}, resolution);
+    return { code, result.changed };
 }
 
-std::pair<int, int64_t> RdbStore::BatchInsertWithConflictResolution(
-    const std::string &table, const RdbStore::RefRows &rows, RdbStore::Resolution resolution)
+std::pair<int, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
+    const std::vector<std::string> &returningFields, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -165,12 +174,11 @@ std::pair<int, int64_t> RdbStore::BatchInsertWithConflictResolution(
 std::pair<int, int> RdbStore::Update(
     const std::string &table, const Row &row, const std::string &where, const Values &args, Resolution resolution)
 {
-    (void)table;
-    (void)row;
-    (void)where;
-    (void)args;
-    (void)resolution;
-    return { E_NOT_SUPPORT, 0 };
+    AbsRdbPredicates predicates(table);
+    predicates.SetWhereClause(where);
+    predicates.SetBindArgs(args);
+    auto [code, result] = Update(row, predicates, {}, resolution);
+    return { code, result.changed };
 }
 
 int RdbStore::Update(
@@ -193,6 +201,12 @@ int RdbStore::Update(
 {
     return Update(changedRows, table, row, whereClause, ToValues(args));
 };
+
+std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const std::vector<std::string> &returningFields, Resolution resolution)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
 
 int RdbStore::UpdateWithConflictResolution(int &changedRows, const std::string &table, const Row &row,
     const std::string &whereClause, const Olds &args, Resolution resolution)
@@ -224,6 +238,23 @@ int RdbStore::Delete(int &deletedRows, const AbsRdbPredicates &predicates)
     return Delete(deletedRows, predicates.GetTableName(), predicates.GetWhereClause(), predicates.GetBindArgs());
 }
 
+int RdbStore::Delete(
+    int &deletedRows, const std::string &table, const std::string &whereClause, const RdbStore::Values &args)
+{
+    AbsRdbPredicates predicates(table);
+    predicates.SetWhereClause(whereClause);
+    predicates.SetBindArgs(args);
+    auto [code, result] = Delete(predicates);
+    deletedRows = result.changed;
+    return code;
+}
+
+std::pair<int32_t, Results> RdbStore::Delete(
+    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+{
+    return { E_NOT_SUPPORT, -1 };
+}
+
 std::shared_ptr<AbsSharedResultSet> RdbStore::Query(int &errCode, bool distinct, const std::string &table,
     const Fields &columns, const std::string &whereClause, const Values &args, const std::string &groupBy,
     const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset)
@@ -242,8 +273,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStore::Query(const AbsRdbPredicates &pred
     std::string sql;
     std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
     if (queryStatus.first || queryStatus.second) {
-        std::string table = predicates.GetTableName();
-        std::string logTable = GetLogTableName(table);
+        std::string logTable = GetLogTableName(predicates.GetTableName());
         sql = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
     } else {
         sql = SqliteSqlBuilder::BuildQueryString(predicates, columns);
@@ -265,7 +295,8 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
     bool preCount)
 {
     std::string sql;
-    if (predicates.HasSpecificField()) {
+    std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
+    if (queryStatus.first || queryStatus.second) {
         std::string table = predicates.GetTableName();
         std::string logTable = GetLogTableName(table);
         sql = SqliteSqlBuilder::BuildLockRowQueryString(predicates, columns, logTable);
@@ -302,6 +333,11 @@ int RdbStore::ExecuteSql(const std::string &sql, const Values &args)
 std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
     return { E_NOT_SUPPORT, ValueObject() };
+}
+
+std::pair<int32_t, Results> RdbStore::ExecuteExt(const std::string &sql, const Values &args)
+{
+    return { E_NOT_SUPPORT, -1 };
 }
 
 int RdbStore::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args)
@@ -609,6 +645,17 @@ std::string RdbStore::GetLogTableName(const std::string &tableName)
 }
 
 int RdbStore::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::ConfigLocale(const std::string &localeStr)
+{
+    (void)localeStr;
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     return E_NOT_SUPPORT;
 }

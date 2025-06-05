@@ -1,0 +1,50 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+group("build_module") {
+  deps = [ ":rdb_obs_mgr_adapter" ]
+}
+
+ohos_shared_library("rdb_obs_mgr_adapter") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  cflags_cc = [ "-fvisibility=hidden" ]
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_innerapi_path}/rdb/include",
+  ]
+
+  sources = [ "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}

@@ -17,13 +17,15 @@
 
 #include <utility>
 
-#include "gdb_errors.h"
 #include "connection.h"
 #include "full_result.h"
+#include "gdb_errors.h"
 #include "grd_error.h"
 #include "logger.h"
+#include "serializable.h"
 
 namespace OHOS::DistributedDataAip {
+using json = OHOS::Serializable::JSONWrapper;
 GraphStatement::GraphStatement(GRD_DB *db, const std::string &gql, std::shared_ptr<Connection> conn, int32_t &errCode)
     : conn_(conn), gql_(gql), dbHandle_(db)
 {
@@ -119,36 +121,30 @@ std::pair<int32_t, ColumnType> GraphStatement::GetColumnType(int32_t index) cons
 
 GraphValue GraphStatement::ParseJsonStr(const std::string &jsonStr, int32_t &errCode)
 {
+    errCode = E_OK;
     if (jsonStr.empty()) {
         LOG_WARN("parse json string. jsonStr is empty");
-        errCode = E_OK;
         return nullptr;
     }
-    nlohmann::json json = nlohmann::json::parse(jsonStr, nullptr, false);
-    if (json.is_discarded()) {
+    json jsonObj = json::parse(jsonStr);
+    if (jsonObj.is_discarded() || jsonObj.is_null()) {
         LOG_ERROR("parse json string failed. jsonStr=%{public}s", jsonStr.c_str());
         errCode = E_PARSE_JSON_FAILED;
         return nullptr;
     }
-
-    errCode = E_OK;
-    if (json.is_null()) {
-        LOG_WARN("parse json string. jsonStr is empty");
-        return nullptr;
-    }
-    if (!json.is_object()) {
+    if (!jsonObj.is_object()) {
         LOG_ERROR("json format error. jsonStr=%{public}s", jsonStr.c_str());
         errCode = E_PARSE_JSON_FAILED;
         return nullptr;
     }
 
-    if (json.contains(Path::SEGMENTS)) {
-        return Path::Parse(json, errCode);
+    if (jsonObj.find(Path::SEGMENTS) != jsonObj.end()) {
+        return Path::Parse(jsonStr, errCode);
     }
-    if (json.contains(Edge::SOURCEID) && json.contains(Edge::TARGETID)) {
-        return Edge::Parse(json, errCode);
+    if (jsonObj.find(Edge::SOURCEID) != jsonObj.end() && jsonObj.find(Edge::TARGETID) != jsonObj.end()) {
+        return Edge::Parse(jsonStr, errCode);
     }
-    return Vertex::Parse(json, errCode);
+    return Vertex::Parse(jsonStr, errCode);
 }
 
 std::pair<int32_t, GraphValue> GraphStatement::GetColumnValue(int32_t index) const

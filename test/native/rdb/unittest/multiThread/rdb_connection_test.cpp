@@ -19,7 +19,7 @@
 #include <string>
 #include <string_view>
 
-#include "../common.h"
+#include "common.h"
 #include "block_data.h"
 #include "executor_pool.h"
 #include "rdb_errno.h"

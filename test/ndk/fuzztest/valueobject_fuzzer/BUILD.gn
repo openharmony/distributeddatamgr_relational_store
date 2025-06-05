@@ -36,7 +36,8 @@ ohos_fuzztest("ValueObjectFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  fuzz_config_file = "${relational_store_base_path}/test/ndk/fuzztest/valueobject_fuzzer"
+  fuzz_config_file =
+      "${relational_store_base_path}/test/ndk/fuzztest/valueobject_fuzzer"
 
   sources = [ "valueobject_fuzzer.cpp" ]
 
@@ -52,6 +53,7 @@ ohos_fuzztest("ValueObjectFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 }

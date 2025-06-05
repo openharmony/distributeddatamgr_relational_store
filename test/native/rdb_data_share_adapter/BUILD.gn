@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/distributeddatamgr/data_share/datashare.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 module_output_path = "relational_store/relational_store/rdb_data_share_adapter"
@@ -23,27 +22,16 @@ config("module_private_config") {
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb_data_share_adapter/include",
-    "${datashare_common_native_path}/include",
     "${relational_store_innerapi_path}/rdb/src",
     "${relational_store_innerapi_path}/rdb_data_share_adapter/src",
-    "${datashare_base_path}/interfaces/inner_api/common/include",
-    "${datashare_base_path}/interfaces/inner_api/consumer/include",
-    "${datashare_base_path}/interfaces/inner_api/provider/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/rdb_data_share_adapter/include",
-    "//commonlibrary/c_utils/base/include",
   ]
 
   cflags = [
     "-fno-access-control",  #Ignore Private Member Access Control
   ]
 
-  if (relational_store_rdb_support_icu) {
-    include_dirs += [
-      "//third_party/icu/icu4c/source/i18n",
-      "//third_party/icu/icu4c/source/common",
-    ]
-  }
 }
 
 ohos_unittest("RdbDataShareAdapterTest") {
@@ -55,17 +43,21 @@ ohos_unittest("RdbDataShareAdapterTest") {
 
   external_deps = [
     "c_utils:utils",
+    "data_share:datashare_common_lite",
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
     "relational_store:rdb_data_share_adapter",
   ]
 
-  deps = [
-    "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/icu/icu4c:shared_icui18n",
-    "//third_party/icu/icu4c:shared_icuuc",
-  ]
+  if (relational_store_rdb_support_icu) {
+    external_deps += [
+      "icu:shared_icui18n",
+      "icu:shared_icuuc",
+    ]
+  }
+
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 }
 
 ###############################################################################

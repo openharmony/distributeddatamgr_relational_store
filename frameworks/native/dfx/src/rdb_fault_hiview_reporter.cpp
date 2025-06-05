@@ -26,10 +26,8 @@
 #include <unordered_map>
 #include <limits>
 
-#include "accesstoken_kit.h"
 #include "connection.h"
 #include "hisysevent_c.h"
-#include "ipc_skeleton.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_global_config.h"
@@ -38,12 +36,12 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-using namespace Security::AccessToken;
 static constexpr const char *CORRUPTED_EVENT = "DATABASE_CORRUPTED";
 static constexpr const char *FAULT_EVENT = "DISTRIBUTED_DATA_RDB_FAULT";
 static constexpr const char *DISTRIBUTED_DATAMGR = "DISTDATAMGR";
 static constexpr const char *DB_CORRUPTED_POSTFIX = ".corruptedflg";
 static constexpr int MAX_FAULT_TIMES = 1;
+static constexpr const char *RAG_FAULT_EVENT_NAME = "ARKDATA_RAG_FRAMEWORK_FAULT";
 RdbFaultHiViewReporter::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 
 RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
@@ -135,6 +133,29 @@ void RdbFaultHiViewReporter::ReportCorrupted(const RdbCorruptedEvent &eventInfo)
     };
     auto size = sizeof(params) / sizeof(params[0]);
     OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, CORRUPTED_EVENT, HISYSEVENT_FAULT, params, size);
+}
+
+void RdbFaultHiViewReporter::ReportRAGFault(const std::string &errMsg, const std::string &functionName,
+    const std::string &bundleName, const int faultType, const int errCode)
+{
+    std::string appendix = "";
+    HiSysEventParam params[] = {
+        { .name = "FAULT_TYPE", .t = HISYSEVENT_INT32,
+            .v = { .ui32 =  faultType}, .arraySize = 0 },
+        { .name = "ERROR_CODE", .t = HISYSEVENT_INT32,
+            .v = { .ui32 =  errCode}, .arraySize = 0 },
+        { .name = "ERROR_MESSAGE", .t = HISYSEVENT_STRING,
+            .v = { .s = const_cast<char *>(errMsg.c_str()) }, .arraySize = 0 },
+        { .name = "BUNDLE_NAME", .t = HISYSEVENT_STRING,
+            .v = { .s = const_cast<char *>(bundleName.c_str()) }, .arraySize = 0 },
+        { .name = "FUNCTION_NAME", .t = HISYSEVENT_STRING,
+            .v = { .s = const_cast<char *>(functionName.c_str()) }, .arraySize = 0 },
+        { .name = "APPENDIX", .t = HISYSEVENT_STRING,
+            .v = { .s = const_cast<char *>(appendix.c_str()) }, .arraySize = 0 },
+    };
+ 
+    OH_HiSysEvent_Write(DISTRIBUTED_DATAMGR, RAG_FAULT_EVENT_NAME,
+        HISYSEVENT_FAULT, params, sizeof(params) / sizeof(params[0]));
 }
 
 bool RdbFaultHiViewReporter::IsReportCorruptedFault(const std::string &dbPath)
@@ -242,14 +263,6 @@ std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName,
 {
     if (!bundleName.empty()) {
         return bundleName;
-    }
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if ((tokenType == TOKEN_NATIVE) || (tokenType == TOKEN_SHELL)) {
-        NativeTokenInfo tokenInfo;
-        if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) == 0) {
-            return tokenInfo.processName;
-        }
     }
     return SqliteUtils::Anonymous(storeName);
 }

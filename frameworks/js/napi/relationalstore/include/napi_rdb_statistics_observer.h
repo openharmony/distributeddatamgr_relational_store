@@ -39,6 +39,20 @@ private:
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
 };
 
+class NapiPerfStatObserver
+    : public DistributedRdb::SqlObserver, public std::enable_shared_from_this<NapiPerfStatObserver> {
+public:
+    NapiPerfStatObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
+    virtual ~NapiPerfStatObserver();
+    void Clear();
+    bool operator==(napi_value value);
+    void OnStatistic(const SqlExecutionInfo &sqlExeInfo) override;
+
+private:
+    napi_env env_ = nullptr;
+    napi_ref callback_ = nullptr;
+    std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
+};
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
 #endif //RDB_JSKIT_NAPI_RDB_STATISTICS_OBSERVER_H

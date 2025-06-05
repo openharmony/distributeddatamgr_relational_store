@@ -24,7 +24,10 @@
 #include <variant>
 #include <vector>
 
-namespace OHOS::DistributedRdb {
+#include "values_buckets.h"
+
+namespace OHOS {
+namespace DistributedRdb {
 enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
@@ -231,6 +234,7 @@ enum RdbPredicateOperator {
     NOT_CONTAINS,
     NOT_LIKE,
     ASSETS_ONLY,
+    NOT_GLOB,
     OPERATOR_MAX
 };
 
@@ -390,5 +394,26 @@ public:
     virtual ~SqlObserver() = default;
     virtual void OnStatistic(const SqlExecutionInfo &info) = 0;
 };
-} // namespace OHOS::DistributedRdb
+
+class SqlErrorObserver {
+public:
+    struct ExceptionMessage {
+        int32_t code = 0;
+        std::string message;
+        std::string sql;
+    };
+    virtual ~SqlErrorObserver() = default;
+    virtual void OnErrorLog(const ExceptionMessage &message) = 0;
+};
+} // namespace DistributedRdb
+namespace NativeRdb {
+struct Results {
+    Results(int32_t count) : changed(count)
+    {
+    }
+    int32_t changed = -1;
+    NativeRdb::ValuesBuckets results;
+};
+} // namespace NativeRdb
+} // namespace OHOS
 #endif

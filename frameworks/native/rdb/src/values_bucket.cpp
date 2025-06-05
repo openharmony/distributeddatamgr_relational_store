@@ -91,6 +91,11 @@ void ValuesBucket::Put(const std::string &columnName, const ValueObject &value)
     values_.insert_or_assign(columnName, value);
 }
 
+void ValuesBucket::Put(const std::string &columnName, ValueObject &&value)
+{
+    values_.insert_or_assign(columnName, std::move(value));
+}
+
 void ValuesBucket::Delete(const std::string &columnName)
 {
     values_.erase(columnName);

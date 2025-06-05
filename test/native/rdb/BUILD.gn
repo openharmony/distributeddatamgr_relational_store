@@ -26,9 +26,7 @@ config("module_private_config") {
     "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
-    "//commonlibrary/c_utils/base/include",
-    "${common_tool_path}/",
-    "${kvstore_interface_path}",
+    "${relational_store_base_path}/test/native/rdb/unittest",
   ]
 
   defines = [ "RELATIONAL_STORE" ]
@@ -48,17 +46,18 @@ ohos_unittest("NativeRdbMultiThreadTest") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
+    "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
+    "sqlite:sqlite",
   ]
 
-  deps = [
-    "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
-    "//third_party/sqlite:sqlite",
-  ]
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 }
 
 ohos_unittest("NativeRdbMultiProcessTest") {
@@ -75,6 +74,7 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "${relational_store_native_path}/dfx/include",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_base_path}/test/native/rdb/unittest",
   ]
 
   defines = [ "RELATIONAL_STORE" ]
@@ -88,6 +88,43 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "huks:libhukssdk",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
+    "sqlite:sqlite",
+  ]
+
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
+}
+
+ohos_unittest("NativeRdbLogTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/common.cpp",
+    "unittest/rdb_error_log_test/rdb_error_log_test.cpp",
+    "unittest/rdb_error_log_test/rdb_perfStat_test.cpp",
+  ]
+  sources += [ "../../../frameworks/native/rdb/src/suspender.cpp" ]
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_base_path}/test/native/rdb/unittest",
+  ]
+
+  defines = [ "RELATIONAL_STORE" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "googletest:gtest",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+    "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
+    "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 
@@ -156,12 +193,14 @@ ohos_unittest("NativeRdbTest") {
   ]
 
   sources += [
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+    "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+    "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
     "../../../frameworks/native/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "../../../frameworks/native/rdb/src/base_transaction.cpp",
     "../../../frameworks/native/rdb/src/connection.cpp",
     "../../../frameworks/native/rdb/src/connection_pool.cpp",
     "../../../frameworks/native/rdb/src/grd_api_manager.cpp",
-    "../../../frameworks/native/rdb/src/knowledge_schema.cpp",
     "../../../frameworks/native/rdb/src/knowledge_schema_helper.cpp",
     "../../../frameworks/native/rdb/src/raw_data_parser.cpp",
     "../../../frameworks/native/rdb/src/rd_connection.cpp",
@@ -170,8 +209,10 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/rdb_local_db_observer.cpp",
     "../../../frameworks/native/rdb/src/rdb_manager_impl.cpp",
     "../../../frameworks/native/rdb/src/rdb_notifier_stub.cpp",
+    "../../../frameworks/native/rdb/src/rdb_perfStat.cpp",
     "../../../frameworks/native/rdb/src/rdb_security_manager.cpp",
     "../../../frameworks/native/rdb/src/rdb_service_proxy.cpp",
+    "../../../frameworks/native/rdb/src/rdb_sql_log.cpp",
     "../../../frameworks/native/rdb/src/rdb_sql_statistic.cpp",
     "../../../frameworks/native/rdb/src/rdb_time_utils.cpp",
     "../../../frameworks/native/rdb/src/result_set_proxy.cpp",
@@ -186,6 +227,7 @@ ohos_unittest("NativeRdbTest") {
     "../../../frameworks/native/rdb/src/sqlite_utils.cpp",
     "../../../frameworks/native/rdb/src/step_result_set.cpp",
     "../../../frameworks/native/rdb/src/string_utils.cpp",
+    "../../../frameworks/native/rdb/src/suspender.cpp",
     "../../../frameworks/native/rdb/src/task_executor.cpp",
     "../../../frameworks/native/rdb/src/trans_db.cpp",
   ]
@@ -195,20 +237,20 @@ ohos_unittest("NativeRdbTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "cJSON:cjson",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
-    "huks:libhukssdk",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "samgr:samgr_proxy",
+    "sqlite:sqlite",
   ]
 
-  deps = [
-    "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
-    "//third_party/sqlite:sqlite",
-  ]
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 }
 
 ###############################################################################
@@ -216,6 +258,7 @@ group("unittest") {
   testonly = true
 
   deps = [
+    ":NativeRdbLogTest",
     ":NativeRdbMultiProcessTest",
     ":NativeRdbMultiThreadTest",
     ":NativeRdbTest",
@@ -228,12 +271,12 @@ group("fuzztest") {
   testonly = true
   deps = []
   deps += [
+    "fuzztest/rdbhelper_fuzzer:fuzztest",
     "fuzztest/rdbimpl_fuzzer:fuzztest",
     "fuzztest/rdbrdutils_fuzzer:fuzztest",
     "fuzztest/rdbstore_fuzzer:fuzztest",
     "fuzztest/rdstatement_fuzzer:fuzztest",
     "fuzztest/sharedblock_fuzzer:fuzztest",
-    "fuzztest/rdbhelper_fuzzer:fuzztest",
     "fuzztest/transdb_fuzzer:fuzztest",
   ]
 }

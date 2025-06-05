@@ -26,6 +26,8 @@ public:
     static TaskExecutor &GetInstance();
     std::shared_ptr<ExecutorPool> GetExecutor();
     void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+    void Init();
+    bool Stop();
 
 private:
     size_t MAX_THREADS = 2;

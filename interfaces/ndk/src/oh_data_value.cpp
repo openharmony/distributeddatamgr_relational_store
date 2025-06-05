@@ -37,6 +37,7 @@ constexpr int32_t TO_OH_TYPE[] = {
 };
 
 static constexpr int32_t TO_OH_TYPE_SIZE = sizeof(TO_OH_TYPE) / sizeof(TO_OH_TYPE[0]);
+constexpr size_t SIZE_LENGTH = 2147483647; // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 
 static int CheckValueType(const OH_Data_Value *value, int32_t type)
 {
@@ -108,13 +109,17 @@ int OH_Value_PutText(OH_Data_Value *value, const char *val)
     if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
+    if (val == nullptr) {
+        value->value_.value = std::string();
+        return RDB_OK;
+    }
     value->value_.value = std::string(val);
     return RDB_OK;
 }
 
 int OH_Value_PutBlob(OH_Data_Value *value, const unsigned char *val, size_t length)
 {
-    if (value == nullptr || !value->IsValid() || val == nullptr) {
+    if (value == nullptr || !value->IsValid() || val == nullptr || length == 0 || length > SIZE_LENGTH) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = std::vector<uint8_t>{ val, val + length };
@@ -132,7 +137,7 @@ int OH_Value_PutAsset(OH_Data_Value *value, const Data_Asset *val)
 
 int OH_Value_PutAssets(OH_Data_Value *value, const Data_Asset * const * val, size_t length)
 {
-    if (value == nullptr || !value->IsValid() || val == nullptr || length == 0) {
+    if (value == nullptr || !value->IsValid() || val == nullptr || length == 0 || length > SIZE_LENGTH) {
         return RDB_E_INVALID_ARGS;
     }
     ValueObject::Assets assets;
@@ -147,7 +152,7 @@ int OH_Value_PutAssets(OH_Data_Value *value, const Data_Asset * const * val, siz
 
 int OH_Value_PutFloatVector(OH_Data_Value *value, const float *val, size_t length)
 {
-    if (value == nullptr || !value->IsValid() || val == nullptr) {
+    if (value == nullptr || !value->IsValid() || val == nullptr || length > SIZE_LENGTH) {
         return RDB_E_INVALID_ARGS;
     }
     std::vector<float> valVec = std::vector<float>{ val, val + length };
@@ -157,7 +162,8 @@ int OH_Value_PutFloatVector(OH_Data_Value *value, const float *val, size_t lengt
 
 int OH_Value_PutUnlimitedInt(OH_Data_Value *value, int sign, const uint64_t *trueForm, size_t length)
 {
-    if (value == nullptr || !value->IsValid() || (sign != 0 && sign != 1) || trueForm == nullptr) {
+    if (value == nullptr || !value->IsValid() || (sign != 0 && sign != 1) || trueForm == nullptr ||
+        length > SIZE_LENGTH) {
         return RDB_E_INVALID_ARGS;
     }
     ValueObject::BigInt bigNumber(sign, {trueForm, trueForm + length});
@@ -276,7 +282,7 @@ int OH_Value_GetAssetsCount(OH_Data_Value *value, size_t *size)
 
 int OH_Value_GetAssets(OH_Data_Value *value, Data_Asset **val, size_t inLen, size_t *outLen)
 {
-    if (val == nullptr || outLen == nullptr) {
+    if (val == nullptr || outLen == nullptr || inLen > SIZE_LENGTH) {
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_ASSETS);

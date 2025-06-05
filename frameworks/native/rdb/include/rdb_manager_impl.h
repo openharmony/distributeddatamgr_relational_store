@@ -40,6 +40,8 @@ public:
 
     std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
 
+    bool CleanUp();
+
     void OnRemoteDied();
 
     class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -63,6 +65,8 @@ private:
 
     void ResetServiceHandle();
 
+    static sptr<IRemoteObject::DeathRecipient> LinkToDeath(const sptr<IRemoteObject> &remote);
+
     static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager(const std::string &bundleName);
 
     std::mutex mutex_;
@@ -76,7 +80,12 @@ public:
     explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
     ~RdbStoreDataServiceProxy() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
-    int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer) override;
+    int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer,
+        const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
+    int32_t Exit(const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
+
+private:
+    sptr<IRemoteObject> clientDeathObserver_;
 };
 } // namespace OHOS::DistributedRdb
 #endif

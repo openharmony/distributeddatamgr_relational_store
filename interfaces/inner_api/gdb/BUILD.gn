@@ -64,15 +64,14 @@ ohos_shared_library("native_graphstore") {
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
     "${relational_store_native_path}/rdb/src/string_utils.cpp",
   ]
-  deps = []
+  deps = [ "${relational_store_innerapi_path}/appdatafwk:relational_common_base" ]
   external_deps = [
     "c_utils:utils",
+    "cJSON:cjson",
     "file_api:securitylabel",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
-    "json:nlohmann_json_static",
   ]
   if (arkdata_db_core_is_exists) {
     defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]

@@ -45,7 +45,6 @@ public:
         BUTT
     };
 
-    API_EXPORT std::string GetStatement() const;
     API_EXPORT std::string GetWhereClause() const;
     API_EXPORT void SetWhereClause(const std::string &whereClause);
     [[deprecated("Use GetBindArgs() instead.")]]
@@ -64,6 +63,7 @@ public:
     API_EXPORT bool IsNeedAnd() const;
     API_EXPORT bool IsSorted() const;
     API_EXPORT bool HasSpecificField() const;
+    API_EXPORT std::string GetHaving() const;
 
 public:
     API_EXPORT virtual void Clear();
@@ -82,6 +82,7 @@ public:
     API_EXPORT virtual AbsPredicates *Like(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *NotLike(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Glob(const std::string &field, const std::string &value);
+    API_EXPORT virtual AbsPredicates *NotGlob(const std::string &field, const std::string &value);
     API_EXPORT virtual AbsPredicates *Between(
         const std::string &field, const ValueObject &low, const ValueObject &high);
     API_EXPORT virtual AbsPredicates *NotBetween(
@@ -104,6 +105,9 @@ public:
     [[deprecated("Use NotIn(const std::string &, const std::vector<ValueObject> &) instead.")]]
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);
+    API_EXPORT virtual AbsPredicates *Having(
+        const std::string &conditions, const std::vector<ValueObject> &values = {});
+    API_EXPORT virtual std::string GetStatement() const;
 
 private:
     static constexpr const char *LOG_ORIGIN_FIELD = "#_flag";
@@ -113,6 +117,7 @@ private:
     std::string order;
     std::string group;
     std::string index;
+    std::string havingClause;
     int limit;
     int offset;
     bool distinct;

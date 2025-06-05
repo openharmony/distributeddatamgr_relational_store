@@ -13,9 +13,14 @@
 * limitations under the License.
 */
 
+#define LOG_TAG "TaskExecutor"
 #include "task_executor.h"
 
+#include "logger.h"
+
 namespace OHOS::NativeRdb {
+using namespace OHOS::Rdb;
+constexpr int32_t MAX_RETRY = 100;
 TaskExecutor::TaskExecutor()
 {
     pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
@@ -32,6 +37,15 @@ TaskExecutor &TaskExecutor::GetInstance()
     return instance;
 }
 
+void TaskExecutor::Init()
+{
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    if (pool_ != nullptr) {
+        return;
+    }
+    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
+};
+
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
     std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
@@ -42,6 +56,25 @@ void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     pool_ = executor;
+}
+
+bool TaskExecutor::Stop()
+{
+    std::shared_ptr<ExecutorPool> pool;
+    {
+        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+        pool = std::move(pool_);
+        pool_ = nullptr;
+    }
+    int32_t retry = 0;
+    while (pool.use_count() > 1 && retry++ < MAX_RETRY) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (pool.use_count() > 1) {
+        LOG_WARN("There are other threads using the thread pool. count:%{public}ld", pool.use_count());
+        return false;
+    }
+    return true;
 };
 
 } // namespace OHOS::NativeRdb

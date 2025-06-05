@@ -22,7 +22,10 @@
 #include <climits>
 #include <string>
 
+#include "grd_api_manager.h"
 #include "grd_type_export.h"
+#include "rdb_helper.h"
+#include "task_executor.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -42,6 +45,13 @@ void RdUtilsTest::SetUpTestCase(void)
 
 void RdUtilsTest::TearDownTestCase(void)
 {
+}
+
+static void ScheduleMock(void *param)
+{
+    (void)param;
+    int sleepTime = 20;
+    std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
 }
 
 /**
@@ -64,5 +74,40 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_002, TestSize.Level1)
     EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_BLOB), ColumnType::TYPE_BLOB);
     EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_FLOATVECTOR), ColumnType::TYPE_FLOAT32_ARRAY);
     EXPECT_EQ(RdUtils::TransferGrdTypeToColType(GRD_DB_DATATYPE_NULL), ColumnType::TYPE_NULL);
+}
+
+/**
+ * @tc.name: RdUtils_Test_003
+ * @tc.desc: Test RdSqlRegistryThreadPool
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    std::string dbPath = "/data/test/execute_test.db";
+    std::string configStr = "{}";
+    RdbHelper::DeleteRdbStore(dbPath);
+
+    GRD_DB *db = nullptr;
+    EXPECT_EQ(RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(), GRD_DB_OPEN_CREATE, &db), E_OK);
+    ASSERT_EQ(RdUtils::RdSqlRegistryThreadPool(db), E_OK);
+
+    ASSERT_NE(RdUtils::threadPool_.schedule, nullptr);
+    ASSERT_NE(RdUtils::threadPool_.remove, nullptr);
+
+    TaskExecutor::TaskId taskId = RdUtils::threadPool_.schedule(reinterpret_cast<void *>(ScheduleMock), nullptr);
+    ASSERT_NE(static_cast<uint64_t>(taskId), TaskExecutor::INVALID_TASK_ID);
+
+    int sleepTime = 2;
+    std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
+
+    bool ret = RdUtils::threadPool_.remove(static_cast<uint64_t>(taskId), false);
+    // expect false because this task is running, will remove from exec list
+    ASSERT_FALSE(ret);
+
+    EXPECT_EQ(RdUtils::RdDbClose(db, 0), E_OK);
+    RdbHelper::DeleteRdbStore(dbPath);
 }
 } // namespace Test
