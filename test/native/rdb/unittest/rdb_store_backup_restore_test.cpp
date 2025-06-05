@@ -320,7 +320,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_005, TestSize.Level2)
     store = nullptr;
     CorruptDoubleWriteStore();
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
+    ASSERT_EQ(errCode, E_OK);
 
     int deletedRows = 0;
     ret = store->Delete(deletedRows, "test", "id = 1");
@@ -691,7 +691,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
 
     auto res = store->ExecuteSql("SELECT import_db_from_path");
 
-    EXPECT_EQ(res, E_SQLITE_SCHEMA);
+    EXPECT_EQ(res, E_SQLITE_ERROR);
 
     auto [code, result] = store->Execute("pragma integrity_check");
     std::string val;

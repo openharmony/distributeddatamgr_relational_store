@@ -146,7 +146,7 @@ bool RdbStoreFuzzTest::BatchInsertData(std::shared_ptr<RdbStore> store, FuzzedDa
     for (uint32_t i = 0; i < loopTimes; i++) {
         rows.Put(value);
     }
-    auto [code, num] = store->BatchInsertWithConflictResolution(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
+    auto [code, num] = store->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE);
     return code == E_OK;
 }
 
@@ -467,6 +467,22 @@ void RdbQueryFuzz2(FuzzedDataProvider &provider)
     RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
+
+void RdbInitKnowledgeSchemaFuzz(FuzzedDataProvider &provider)
+{
+    if (RdbStoreFuzzTest::store_ == nullptr) {
+        return;
+    }
+    DistributedRdb::RdbKnowledgeTable table;
+    DistributedRdb::RdbKnowledgeSchema schema;
+    std::string dbName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString();
+    table.tableName = tableName;
+    schema.dbName = dbName;
+    schema.tables.push_back(table);
+    std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
+    store->InitKnowledgeSchema(schema);
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -484,6 +500,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbUnlockRowFuzz(provider);
     OHOS::RdbQueryLockedRowFuzz1(provider);
     OHOS::RdbQueryLockedRowFuzz2(provider);
+    OHOS::RdbInitKnowledgeSchemaFuzz(provider);
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }

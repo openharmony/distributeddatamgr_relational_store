@@ -67,15 +67,15 @@ ohos_unittest("NativeGdbTest") {
     "unittest/gdb_transaction_test.cpp",
   ]
 
+  deps = [ "${relational_store_innerapi_path}/appdatafwk:relational_common_base" ]
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "file_api:securitylabel",
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
-    "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
   ]
   if (arkdata_db_core_is_exists) {
@@ -97,8 +97,9 @@ ohos_unittest("NativeGdbAdaptTest") {
 
   sources = base_sources
   sources += [ "unittest/gdb_adapt_test.cpp" ]
-
+  deps = [ "${relational_store_innerapi_path}/appdatafwk:relational_common_base" ]
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "file_api:securitylabel",
     "googletest:gmock",
@@ -107,7 +108,6 @@ ohos_unittest("NativeGdbAdaptTest") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "huks:libhukssdk",
-    "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
   ]
   if (arkdata_db_core_is_exists) {
@@ -125,6 +125,7 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "${relational_store_native_path}/gdb/include",
     "${relational_store_native_path}/gdb/adapter/include",
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_base_path}/test/native/gdb/unittest",
   ]
 
   sources = [
@@ -151,11 +152,12 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
     "${relational_store_native_path}/rdb/src/string_utils.cpp",
-    "mock/grd_adapter.cpp",
     "unittest/gdb_grd_adapter_test.cpp",
+    "unittest/mock/grd_adapter.cpp",
   ]
-
+  deps = [ "${relational_store_innerapi_path}/appdatafwk:relational_common_base" ]
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "file_api:securitylabel",
     "googletest:gmock",
@@ -163,8 +165,6 @@ ohos_unittest("NativeGdbGrdAdapterTest") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "huks:libhukssdk",
-    "json:nlohmann_json_static",
   ]
 
   if (arkdata_db_core_is_exists) {

@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "rdb_store_config.h"
 
 namespace OHOS::DistributedRdb {
@@ -37,6 +38,7 @@ struct RdbKnowledgeTable {
     std::string tableName;
     std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
+    std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
 };
 
 struct RdbKnowledgeSchema {
@@ -66,9 +68,9 @@ public:
     API_EXPORT virtual void StopTask() = 0;
 
     /**
-     * @brief Get knowledge schema from manager.
+     * @brief Get rdb knowledge schema.
      */
-    API_EXPORT virtual std::vector<std::string> GetJsonSchema() = 0;
+    API_EXPORT virtual std::shared_ptr<RdbKnowledgeSchema> GetRdbKnowledgeSchema(const std::string &dbName) = 0;
 };
 }
 #endif // DISTRIBUTED_RDB_KNOWLEDGE_TYPES_H

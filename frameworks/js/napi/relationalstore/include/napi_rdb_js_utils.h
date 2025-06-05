@@ -43,6 +43,7 @@ using Tokenizer = NativeRdb::Tokenizer;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
 using SqlExecInfo = DistributedRdb::SqlObserver::SqlExecutionInfo;
+using ExceptionMessage = DistributedRdb::SqlErrorObserver::ExceptionMessage;
 using ValuesBucket = OHOS::NativeRdb::ValuesBucket;
 using ValuesBuckets = OHOS::NativeRdb::ValuesBuckets;
 using HAMode = NativeRdb::HAMode;
@@ -58,7 +59,7 @@ struct RdbConfig {
     bool allowRebuild = false;
     bool isReadOnly = false;
     bool persist = true;
-    bool knowledgeProcessing = false;
+    bool enableSemanticIndex = false;
     SecurityLevel securityLevel = SecurityLevel::LAST;
     Tokenizer tokenizer = Tokenizer::NONE_TOKENIZER;
     std::string dataGroupId;
@@ -138,6 +139,8 @@ template<>
 std::string ToString(const PRIKey &key);
 template<>
 napi_value Convert2JSValue(napi_env env, const SqlExecInfo &value);
+template<>
+napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value);
 bool IsNapiString(napi_env env, napi_value value);
 
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(

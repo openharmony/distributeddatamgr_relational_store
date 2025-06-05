@@ -24,13 +24,14 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/connection.cpp",
   "${relational_store_native_path}/rdb/src/connection_pool.cpp",
   "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-  "${relational_store_native_path}/rdb/src/knowledge_schema.cpp",
   "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",
   "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
   "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
   "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
   "${relational_store_native_path}/rdb/src/rdb_store.cpp",
@@ -45,6 +46,7 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   "${relational_store_native_path}/rdb/src/step_result_set.cpp",
   "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  "${relational_store_native_path}/rdb/src/suspender.cpp",
   "${relational_store_native_path}/rdb/src/trans_db.cpp",
   "${relational_store_native_path}/rdb/src/transaction.cpp",
   "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
@@ -71,7 +73,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
-      "${relational_store_native_path}/rdb_device_manager_adapter/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     defines = [
@@ -85,11 +87,6 @@ if (is_ohos && !build_ohos_sdk) {
         defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
       defines += [ "ARKDATA_DATABASE_CORE_ENABLE" ]
     }
-    include_dirs += [
-      "${kvstore_path}/common",
-      "${kvstore_interface_path}",
-      "${distributedfile_path}/mod_securitylabel",
-    ]
   }
 
   config("native_rdb_public_config") {
@@ -99,6 +96,8 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
+      "${relational_store_innerapi_path}/appdatafwk/include",
       "../cloud_data/include",
       "../common_type/include",
     ]
@@ -140,27 +139,23 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
-    public_deps = [
+    deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     ]
 
     external_deps = [
-      "ability_base:zuri",
-      "ability_runtime:dataobs_manager",
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "device_manager:devicemanagersdk",
+      "file_api:securitylabel",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
-      "kv_store:distributeddb",
+      "kv_store:datamgr_common",
+      "kv_store:distributeddb_client",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
       "sqlite:sqliteicu",
@@ -213,7 +208,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
       "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/task_executor.cpp",
-      "${relational_store_native_path}/rdb_device_manager_adapter/src/rdb_device_manager_adapter.cpp",
     ]
 
     public_deps = [
@@ -222,18 +216,15 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     external_deps = [
-      "ability_base:zuri",
-      "ability_runtime:dataobs_manager",
-      "access_token:libaccesstoken_sdk",
       "c_utils:utils",
-      "device_manager:devicemanagersdk",
+      "file_api:securitylabel",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
-      "huks:libhukssdk",
       "ipc:ipc_core",
       "kv_store:database_utils",
-      "kv_store:distributeddb",
+      "kv_store:datamgr_common",
+      "kv_store:distributeddb_client",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
       "sqlite:sqliteicu",
@@ -260,6 +251,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "//third_party/libuv/src/win",
     ]
 
@@ -354,6 +346,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -442,6 +435,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -460,6 +454,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
@@ -507,6 +502,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/rdb/include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
     cflags = [ "-includemock.h" ]
@@ -524,6 +520,7 @@ if (is_ohos && !build_ohos_sdk) {
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
+      "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",

@@ -19,6 +19,7 @@
 
 #include "logger.h"
 #include "rdb_trace.h"
+#include "sqlite_sql_builder.h"
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
@@ -304,6 +305,11 @@ AbsRdbPredicates *AbsRdbPredicates::Glob(const std::string &field, const std::st
     predicates_.AddOperation(DistributedRdb::GLOB, field, value);
     return (AbsRdbPredicates *)AbsPredicates::Glob(field, value);
 }
+AbsRdbPredicates *AbsRdbPredicates::NotGlob(const std::string &field, const std::string &value)
+{
+    predicates_.AddOperation(DistributedRdb::NOT_GLOB, field, value);
+    return (AbsRdbPredicates *)AbsPredicates::NotGlob(field, value);
+}
 AbsRdbPredicates *AbsRdbPredicates::Distinct()
 {
     predicates_.AddOperation(DistributedRdb::DISTINCT, "", "");
@@ -332,5 +338,9 @@ AbsRdbPredicates *AbsRdbPredicates::NotIn(const std::string &field, const std::v
     }
     predicates_.AddOperation(DistributedRdb::NOT_IN, field, vals);
     return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
+}
+std::string AbsRdbPredicates::GetStatement() const
+{
+    return SqliteSqlBuilder::BuildClauseFromPredicates(*this);
 }
 } // namespace OHOS::NativeRdb

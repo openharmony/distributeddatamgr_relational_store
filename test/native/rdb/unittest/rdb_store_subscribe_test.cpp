@@ -17,6 +17,7 @@
 #include <functional>
 #include <string>
 
+#include "block_data.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -44,6 +45,22 @@ public:
 
 private:
     CheckOnChangeFunc checkOnChangeFunc_;
+};
+class LocalShareObserver : public RdbStoreObserver {
+public:
+    LocalShareObserver(std::function<void()> func) : callback_(func)
+    {
+    }
+    void OnChange(const std::vector<std::string> &devices){};
+    void OnChange()
+    {
+        if (callback_ != nullptr) {
+            callback_();
+        }
+    };
+
+private:
+    std::function<void()> callback_;
 };
 
 class StatisticsObserver : public SqlObserver {
@@ -305,20 +322,21 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStoreSubscribeLocalShared
+ * @tc.name: RdbStoreSubscribeLocalShared001
  * @tc.desc: RdbStoreSubscribe
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
  */
-HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared, TestSize.Level1)
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared001, TestSize.Level1)
 {
     EXPECT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_);
-    store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_);
     EXPECT_EQ(status, E_OK);
-    store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer2" }, observer_);
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer2" }, observer_);
     EXPECT_EQ(status, E_OK);
 
     status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "nonexistent" }, observer_);
@@ -329,6 +347,148 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared, TestSize.Level1)
     EXPECT_EQ(status, E_OK);
     status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "observer2" }, nullptr);
     EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared002
+ * @tc.desc: RdbStoreSubscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared002, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto block = std::make_shared<OHOS::BlockData<bool>>(5, false);
+    auto callback = [block]() { block->SetValue(true); };
+    auto observer = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared002" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = store->Notify("RdbStoreSubscribeLocalShared002");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_TRUE(block->GetValue());
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared002" }, observer);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared003
+ * @tc.desc: RdbStoreSubscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared003, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto count = std::make_shared<std::atomic<int32_t>>(0);
+    auto callback = [count]() { count->fetch_add(1); };
+    auto observer = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared003" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared003" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = store->Notify("RdbStoreSubscribeLocalShared003");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 1);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared003" }, observer);
+    EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared004
+ * @tc.desc: UnSubscribe all
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared004, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto count = std::make_shared<std::atomic<int32_t>>(0);
+    auto callback = [count]() { count->fetch_add(1); };
+    auto observer1 = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared004" }, observer1);
+    EXPECT_EQ(status, E_OK);
+    auto observer2 = std::make_shared<LocalShareObserver>(callback);
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared004" }, observer2);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared004" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+    status = store->Notify("RdbStoreSubscribeLocalShared004");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 0);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared005
+ * @tc.desc: Subscribe after UnSubscribe
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared005, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    auto block = std::make_shared<OHOS::BlockData<bool>>(3, false);
+    auto callback = [block]() { block->SetValue(true); };
+    auto observer = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared005" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared005" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = store->Notify("RdbStoreSubscribeLocalShared005");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_FALSE(block->GetValue());
+
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared005" }, observer);
+    EXPECT_EQ(status, E_OK);
+    block->Clear(false);
+    status = store->Notify("RdbStoreSubscribeLocalShared005");
+    EXPECT_EQ(status, E_OK);
+    EXPECT_TRUE(block->GetValue());
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared005" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: RdbStoreSubscribeLocalShared006
+ * @tc.desc: Different db Subscribe same uri
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared006, TestSize.Level1)
+{
+    EXPECT_NE(store, nullptr) << "store is null";
+    RdbStoreConfig config(RDB_TEST_PATH + "RdbStoreSubscribeLocalShared006.db");
+    config.SetBundleName("subscribe_test");
+    Callback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> localStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(localStore, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    auto count = std::make_shared<std::atomic<int32_t>>(0);
+    auto callback = [count]() { count->fetch_add(1); };
+    auto observer = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared006" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status = localStore->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared006" }, observer);
+    EXPECT_EQ(status, E_OK);
+
+    status = store->Notify("RdbStoreSubscribeLocalShared006");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 1);
+    status = localStore->Notify("RdbStoreSubscribeLocalShared006");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 2);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared006" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(RdbHelper::DeleteRdbStore(config), E_OK);
 }
 
 /**

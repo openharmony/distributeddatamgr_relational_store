@@ -24,14 +24,47 @@ ValuesBuckets::ValuesBuckets()
     values_ = std::make_shared<std::set<ValueObject>>();
 }
 
+ValuesBuckets::ValuesBuckets(const std::vector<ValuesBucket> &rows) : ValuesBuckets()
+{
+    buckets_.reserve(rows.size());
+    for (const auto &bucket : rows) {
+        Put(bucket);
+    }
+}
+
+ValuesBuckets::ValuesBuckets(std::vector<ValuesBucket> &&rows) noexcept : ValuesBuckets()
+{
+    buckets_.reserve(rows.size());
+    for (auto &bucket : rows) {
+        Put(std::move(bucket));
+    }
+}
+
 size_t ValuesBuckets::RowSize() const
 {
     return buckets_.size();
 }
 
+bool ValuesBuckets::Empty() const
+{
+    return buckets_.empty();
+}
+
 std::pair<ValuesBuckets::FieldsType, ValuesBuckets::ValuesType> ValuesBuckets::GetFieldsAndValues() const
 {
     return { fields_, values_ };
+}
+
+void ValuesBuckets::Reserve(int32_t size)
+{
+    buckets_.reserve(size);
+}
+
+void ValuesBuckets::Clear()
+{
+    buckets_.clear();
+    fields_->clear();
+    values_->clear();
 }
 
 void ValuesBuckets::Put(const ValuesBucket &bucket)
@@ -40,6 +73,18 @@ void ValuesBuckets::Put(const ValuesBucket &bucket)
     for (const auto &[field, value] : bucket.values_) {
         auto fieldResult = fields_->insert(field);
         auto valueResult = values_->insert(value);
+        row.insert(std::make_pair(std::ref(const_cast<std::string &>(*fieldResult.first)),
+            std::ref(const_cast<ValueObject &>(*valueResult.first))));
+    }
+    buckets_.push_back(std::move(row));
+}
+
+void ValuesBuckets::Put(ValuesBucket &&bucket)
+{
+    BucketType row;
+    for (auto &[field, value] : bucket.values_) {
+        auto fieldResult = fields_->insert(std::move(field));
+        auto valueResult = values_->insert(std::move(value));
         row.insert(std::make_pair(std::ref(const_cast<std::string &>(*fieldResult.first)),
             std::ref(const_cast<ValueObject &>(*valueResult.first))));
     }
@@ -61,6 +106,20 @@ std::pair<int, ValuesBuckets::ValueType> ValuesBuckets::Get(size_t row, const Fi
     }
 
     return { E_OK, it->second };
+}
+
+std::pair<int, std::vector<ValueObject>> ValuesBuckets::GetColumnValues(const std::string &field) const
+{
+    std::vector<ValueObject> res;
+    res.reserve(buckets_.size());
+    for (const auto &bucket : buckets_) {
+        auto it = bucket.find(field);
+        if (it == bucket.end()) {
+            return { E_INVALID_ARGS, {} };
+        }
+        res.push_back(it->second);
+    }
+    return { E_OK, res };
 }
 } // namespace NativeRdb
 } // namespace OHOS

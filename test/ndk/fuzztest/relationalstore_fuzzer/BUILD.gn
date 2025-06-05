@@ -36,7 +36,8 @@ ohos_fuzztest("RelationalStoreFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  fuzz_config_file = "${relational_store_base_path}/test/ndk/fuzztest/relationalstore_fuzzer"
+  fuzz_config_file =
+      "${relational_store_base_path}/test/ndk/fuzztest/relationalstore_fuzzer"
 
   sources = [ "relationalstore_fuzzer.cpp" ]
 
@@ -48,10 +49,13 @@ ohos_fuzztest("RelationalStoreFuzzTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
 }

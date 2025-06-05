@@ -90,16 +90,16 @@ public:
 
 class InnerError : public Error {
 public:
-    InnerError(int code)
+    InnerError(int code, const std::string &msg = "")
     {
         auto errorMsg = GetJsErrorCode(code);
         if (errorMsg.has_value()) {
             auto napiError = errorMsg.value();
             code_ = napiError.jsCode;
-            msg_ = napiError.message;
+            msg_ = napiError.message + msg;
         } else {
             code_ = E_INNER_ERROR;
-            msg_ = "Inner error. Inner code is " + std::to_string(code % E_INNER_ERROR);
+            msg_ = "Inner error.";
         }
     }
 

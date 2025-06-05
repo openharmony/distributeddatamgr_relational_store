@@ -61,6 +61,8 @@ Note:If the text contains special characters, please escape them according to th
                             desc="self developed image"/>
                 <filteritem type="filepath" name="figures/zh-cn_关系型数据库运作机制.png"
                             desc="self developed image"/>
+                <filteritem type="filepath" name="test/ets/relational_store/entry/src/main/resources/base/media/icon.png"
+                            desc="png for unittest"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>

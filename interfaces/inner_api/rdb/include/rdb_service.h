@@ -20,6 +20,7 @@
 #include <string>
 
 #include "distributeddata_relational_store_ipc_interface_code.h"
+#include "iremote_object.h"
 #include "rdb_notifier.h"
 #include "rdb_types.h"
 #include "result_set.h"
@@ -38,7 +39,8 @@ public:
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
 
-    virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table) = 0;
+    virtual std::string ObtainDistributedTableName(
+        const RdbSyncerParam &param, const std::string &device, const std::string &table) = 0;
 
     virtual int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;

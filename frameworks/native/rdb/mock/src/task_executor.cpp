@@ -31,13 +31,27 @@ TaskExecutor &TaskExecutor::GetInstance()
     return instance;
 }
 
+void TaskExecutor::Init()
+{
+    pool_ = nullptr;
+};
+
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
+    std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
     return pool_;
 }
 
 void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     pool_ = executor;
 };
+
+bool TaskExecutor::Stop()
+{
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    pool_ = nullptr;
+    return true;
+}
 } // namespace OHOS::NativeRdb

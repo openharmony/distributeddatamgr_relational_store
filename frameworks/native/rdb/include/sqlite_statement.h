@@ -36,7 +36,7 @@ public:
     static constexpr int COLUMN_TYPE_FLOATS = 1002;
     static constexpr int COLUMN_TYPE_BIGINT = 1003;
 
-    SqliteStatement();
+    SqliteStatement(const RdbStoreConfig *config = nullptr);
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
     int Bind(const std::vector<ValueObject> &args) override;
@@ -94,6 +94,7 @@ private:
     void TableReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
     void ColumnReport(const std::string &errMsg, const std::string &bundleName, ErrMsgState state);
     void HandleErrMsg(const std::string &errMsg, const std::string &dbPath, const std::string &bundleName);
+    void TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, const std::string &sql);
 
     static constexpr uint32_t BUFFER_LEN = 16;
 

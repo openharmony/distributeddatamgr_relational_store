@@ -20,7 +20,6 @@ config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "${kvstore_path}/common",
     "${relational_store_base_path}/interfaces/ndk/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/appdatafwk/include",
@@ -35,7 +34,10 @@ ohos_unittest("NativeRdbNdkTest") {
 
   sources = [
     "unittest/rdb_asset_test.cpp",
+    "unittest/rdb_crypto_param_test.cpp",
     "unittest/rdb_cursor_test.cpp",
+    "unittest/rdb_performance_test.cpp",
+    "unittest/rdb_predicates_pref_test.cpp",
     "unittest/rdb_predicates_test.cpp",
     "unittest/rdb_store_configv2_test.cpp",
     "unittest/rdb_store_test.cpp",
@@ -49,13 +51,14 @@ ohos_unittest("NativeRdbNdkTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
+    "kv_store:datamgr_common",
   ]
 
   deps = [
     "${relational_store_base_path}/interfaces/ndk/src:native_rdb_ndk",
     "${relational_store_innerapi_path}/rdb:native_rdb",
-    "//third_party/googletest:gtest_main",
   ]
 }
 
@@ -70,11 +73,12 @@ group("fuzztest") {
   testonly = true
   deps = []
   deps += [
-    "fuzztest/relationalstore_fuzzer:fuzztest",
-    "fuzztest/valueobject_fuzzer:fuzztest",
-    "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/datavalue_fuzzer:fuzztest",
-    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
     "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
+    "fuzztest/relationalstore_fuzzer:fuzztest",
+    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
+    "fuzztest/valuebucket_fuzzer:fuzztest",
+    "fuzztest/valueobject_fuzzer:fuzztest",
+    "fuzztest/ohpredicates_fuzzer:fuzztest",
   ]
 }

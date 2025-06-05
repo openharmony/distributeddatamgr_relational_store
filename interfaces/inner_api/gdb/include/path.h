@@ -23,20 +23,20 @@
 #include <vector>
 
 #include "edge.h"
-#include "nlohmann/json.hpp"
 #include "path_segment.h"
 #include "rdb_visibility.h"
+#include "serializable.h"
 #include "vertex.h"
 
 namespace OHOS::DistributedDataAip {
-class Path {
+class Path  final : public Serializable {
 public:
     API_EXPORT Path();
     API_EXPORT Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end);
     API_EXPORT Path(std::shared_ptr<Vertex> start, std::shared_ptr<Vertex> end, uint32_t pathLen,
         std::vector<std::shared_ptr<PathSegment>> segments);
 
-    static std::shared_ptr<Path> Parse(const nlohmann::json &json, int32_t &errCode);
+    static std::shared_ptr<Path> Parse(const std::string &jsonStr, int32_t &errCode);
 
     API_EXPORT uint32_t GetPathLength() const;
     API_EXPORT void SetPathLength(uint32_t pathLen);
@@ -45,6 +45,9 @@ public:
     API_EXPORT std::shared_ptr<Vertex> GetEnd() const;
     API_EXPORT void SetEnd(std::shared_ptr<Vertex> end);
     API_EXPORT const std::vector<std::shared_ptr<PathSegment>> &GetSegments() const;
+
+    bool Marshal(json &node) const override;
+    bool Unmarshal(const json &node) override;
 
     static constexpr const char *PATHLEN = "length";
     static constexpr const char *START = "start";

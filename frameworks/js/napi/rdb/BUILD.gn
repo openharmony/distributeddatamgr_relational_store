@@ -40,7 +40,6 @@ ohos_shared_library("napi_rdb") {
   if (is_mingw || is_mac) {
     include_dirs = [
       "mock/include",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/mock/include",
       "${relational_store_napi_path}/rdb/mock/include",
@@ -72,12 +71,13 @@ ohos_shared_library("napi_rdb") {
       "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "kv_store:datamgr_common",
+    ]
   } else {
     include_dirs = [
       "include",
-      "${datashare_path}/common/include/",
-      "${kvstore_path}/common",
       "${relational_store_common_path}/include",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
@@ -101,9 +101,11 @@ ohos_shared_library("napi_rdb") {
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
+      "data_share:datashare_common_lite",
       "eventhandler:libeventhandler",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
+      "kv_store:datamgr_common",
       "napi:ace_napi",
     ]
   }
@@ -153,7 +155,6 @@ ohos_shared_library("rdb") {
   } else {
     include_dirs = [
       "include",
-      "${datashare_path}/common/include/",
       "${relational_store_js_common_path}/include",
       "${relational_store_napi_path}/rdb/include",
     ]
@@ -170,6 +171,7 @@ ohos_shared_library("rdb") {
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
       "c_utils:utils",
+      "data_share:datashare_common_lite",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "napi:ace_napi",
