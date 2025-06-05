@@ -127,7 +127,11 @@ HWTEST_F(SerializableTest, GetNormalVal, TestSize.Level2)
     normal.value = -56;
     normal.isClear = true;
     normal.cols = { "adfasdfas" };
-    auto jstr = Serializable::JSONWrapper::to_string(normal.Marshall());
+    auto json = normal.Marshall();
+    auto jstr = Serializable::JSONWrapper::to_string(json);
+    EXPECT_EQ(json["count"], -1);
+    EXPECT_EQ(json["name"], "normal");
+    EXPECT_TRUE(json.contains(GET_NAME(name)));
     Normal normal1;
     normal1.Unmarshall(jstr);
     ASSERT_TRUE(normal == normal1) << normal1.name;
@@ -251,7 +255,7 @@ HWTEST_F(SerializableTest, SetStringMapValue, TestSize.Level2)
             return testMap == other.testMap;
         }
     };
- 
+
     TestStringMap in;
     in.testMap["name"] = "New York";
     in.testMap["email"] = "john@sample.com";
@@ -260,7 +264,7 @@ HWTEST_F(SerializableTest, SetStringMapValue, TestSize.Level2)
     out.Unmarshall(json);
     ASSERT_TRUE(in == out);
 }
- 
+
 /**
 * @tc.name: SetMapValue
 * @tc.desc: set map value with int param.
@@ -289,11 +293,11 @@ HWTEST_F(SerializableTest, SetMapValue, TestSize.Level2)
             return testMap == other.testMap;
         }
     };
- 
+
     TestMap in;
     in.testMap["version"] = 552;
     auto json = Serializable::JSONWrapper::to_string(in.Marshall());
- 
+
     TestMap out;
     out.Unmarshall(json);
     ASSERT_TRUE(in == out);
@@ -304,28 +308,32 @@ HWTEST_F(SerializableTest, SetMapValue, TestSize.Level2)
 * @tc.desc: set value with uint param.
 * @tc.type: FUNC
 */
-HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2) {
+HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2)
+{
     struct TestUint final : public Serializable {
-      public:
-        std::vector<uint8_t> testBytes = {0x01, 0x02, 0x03, 0x04};
-        bool Marshal(json &node) const override {
+    public:
+        std::vector<uint8_t> testBytes = { 0x01, 0x02, 0x03, 0x04 };
+        bool Marshal(json &node) const override
+        {
             SetValue(node[GET_NAME(testBytes)], testBytes);
             return true;
         }
 
-        bool Unmarshal(const json &node) override {
+        bool Unmarshal(const json &node) override
+        {
             bool success = true;
             success = GetValue(node, GET_NAME(testBytes), testBytes) && success;
             return success;
         }
 
-        bool operator==(const TestUint &other) const {
+        bool operator==(const TestUint &other) const
+        {
             return testBytes == other.testBytes;
         }
     };
 
     TestUint in;
-    in.testBytes = {0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
+    in.testBytes = { 0x0A, 0x0B, 0x0C, 0x0D, 0x0E };
     auto json = Serializable::JSONWrapper::to_string(in.Marshall());
     TestUint out;
     out.Unmarshall(json);

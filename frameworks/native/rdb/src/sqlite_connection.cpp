@@ -519,6 +519,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
             sqlite3_db_release_memory(dbHandle_);
         }
         slaveStmt->config_ = &slaveConnection_->config_;
+        slaveStmt->conn_ = slaveConnection_;
         errCode = slaveStmt->Prepare(slaveConnection_->dbHandle_, sql);
         if (errCode != E_OK) {
             LOG_WARN("prepare slave stmt failed:%{public}d, app self can check the SQL", errCode);
@@ -705,7 +706,7 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_OK;
 }
 
-int SqliteConnection::ReSetKey(const RdbStoreConfig &config)
+int SqliteConnection::ResetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
         return E_OK;
@@ -799,7 +800,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     }
 
     if (!newKey.empty()) {
-        ReSetKey(config);
+        ResetKey(config);
     }
     newKey.assign(newKey.size(), 0);
     return E_OK;
