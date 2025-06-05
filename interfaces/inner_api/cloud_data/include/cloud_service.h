@@ -94,6 +94,7 @@ public:
         CLOUD_INFO_INVALID,
         SCHEMA_INVALID,
         STRATEGY_BLOCKING,
+        INVALID_ARGUMENT_V20,
     };
 
     struct Option {

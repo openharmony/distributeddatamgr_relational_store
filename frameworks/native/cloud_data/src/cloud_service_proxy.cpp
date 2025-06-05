@@ -331,8 +331,9 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
     const Option &option, const AsyncDetail &async)
 {
     LOG_INFO("cloud sync start, bundleName = %{public}s, seqNum = %{public}u", bundleName.c_str(), option.seqNum);
-    if (async == nullptr) {
-        LOG_ERROR("no async, bundleName = %{public}s", bundleName.c_str());
+    if (bundleName.empty() || storeId.empty() || option.syncMode  < DistributedRdb::TIME_FIRST ||
+        option.syncMode  > DistributedRdb::CLOUD_FIRST || async == nullptr) {
+        LOG_ERROR("invalid args, bundleName = %{public}s", bundleName.c_str());
         return INVALID_ARGUMENT;
     }
     auto status = InitNotifier(bundleName);
