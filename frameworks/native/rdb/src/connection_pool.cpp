@@ -538,12 +538,12 @@ int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         key.assign(key.size(), 0);
         return errCode;
     }
-    config_.ReSetEncryptKey(cryptoParam.encryptKey_);
+    config_.ResetEncryptKey(cryptoParam.encryptKey_);
     connection = nullptr;
     auto initRes = Init();
     if (initRes.first != E_OK) {
         LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
-        config_.ReSetEncryptKey(key);
+        config_.ResetEncryptKey(key);
         key.assign(key.size(), 0);
         initRes = Init();
         return initRes.first;
