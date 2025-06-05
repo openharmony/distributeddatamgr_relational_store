@@ -200,8 +200,6 @@ if (is_ohos) {
       "//foundation/arkui/ace_engine/adapter/android/build:libarkui_android",
     ]
 
-    external_deps = [ "bounds_checking_function:libsec_static" ]
-
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
   }
@@ -238,8 +236,6 @@ if (is_ohos) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//plugins/libs/napi:napi_ios",
     ]
-
-    external_deps = [ "bounds_checking_function:libsec_static" ]
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
