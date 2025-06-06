@@ -18,6 +18,7 @@
 #include <numeric>
 #include <string>
 
+#include "abs_rdb_predicates.h"
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -262,11 +263,15 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_001, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "id" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 1);
-    ASSERT_EQ(res.results.RowSize(), 1);
-    auto [code, val] = res.results.GetColumnValues("id");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(val.size(), 1);
-    EXPECT_EQ(int(val[0]), 1);
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("id", columnIndex), E_OK);
+    int64_t value;
+    ASSERT_EQ(res.results->GetLong(columnIndex, value), E_OK);
+    EXPECT_EQ(value, 1);
 }
 
 /**
@@ -291,7 +296,9 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_002, TestSize.Level1)
     auto [code, res] = store_->Delete(predicates, { "id" });
     EXPECT_EQ(code, E_OK);
     EXPECT_EQ(res.changed, 1124);
-    EXPECT_EQ(res.results.RowSize(), 1024);
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1024);
 }
 
 /**
@@ -316,12 +323,20 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_003, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "name" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 15);
-    EXPECT_EQ(res.results.RowSize(), 15);
-    auto [code, values] = res.results.GetColumnValues("name");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(values.size(), 15);
-    for (int i = 0; i < 15; i++) {
-        EXPECT_EQ(std::string(values[i]), "Jim" + std::to_string(i));
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 15);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    int i = 0;
+    while (i < 15) {
+        ASSERT_EQ(res.results->GetString(columnIndex, value), E_OK);
+        EXPECT_EQ(value, "Jim" + std::to_string(i++));
+        if (i < 15) {
+            ASSERT_EQ(res.results->GoToNextRow(), E_OK);
+        }
     }
 }
 
@@ -337,7 +352,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_004, TestSize.Level1)
         ValuesBucket row;
         row.Put("id", i);
         row.Put("name", "Jim" + std::to_string(i));
-        std::vector<uint8_t> blob(i);
+        std::vector<uint8_t> blob(i + 1);
         std::iota(blob.begin(), blob.end(), 1);
         row.PutBlob("blobType", blob);
         rows.Put(row);
@@ -350,14 +365,22 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_004, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "blobType" });
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(res.changed, 15);
-    EXPECT_EQ(res.results.RowSize(), 15);
-    auto [code, values] = res.results.GetColumnValues("blobType");
-    ASSERT_EQ(code, E_OK);
-    ASSERT_EQ(values.size(), 15);
-    for (int i = 0; i < 15; i++) {
-        std::vector<uint8_t> blob(i);
-        std::iota(blob.begin(), blob.end(), 1);
-        EXPECT_EQ(std::vector<uint8_t>(values[i]), blob);
+    
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 15);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("blobType", columnIndex), E_OK);
+    int i = 0;
+    while (i < 15) {
+        std::vector<uint8_t> blob;
+        ASSERT_EQ(res.results->GetBlob(columnIndex, blob), E_OK);
+        std::vector<uint8_t> expectedBlob(++i);
+        std::iota(expectedBlob.begin(), expectedBlob.end(), 1);
+        EXPECT_EQ(blob, expectedBlob);
+        if (i < 15) {
+            ASSERT_EQ(res.results->GoToNextRow(), E_OK);
+        }
     }
 }
 
@@ -383,7 +406,7 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_005, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "notExist" });
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(res.changed, -1);
-    ASSERT_EQ(res.results.RowSize(), 0);
+    ASSERT_EQ(res.results, nullptr);
 }
 
 /**
@@ -409,8 +432,97 @@ HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_006, TestSize.Level1)
     auto [status, res] = store_->Delete(predicates, { "notExist" });
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(res.changed, -1);
-    ASSERT_EQ(res.results.RowSize(), 0);
+    ASSERT_EQ(res.results, nullptr);
 }
 
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_007
+ * @tc.desc: normal test. delete from virtual table with returning
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_007, TestSize.Level1)
+{
+    auto [execRet, execResult] =
+        store_->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+    ASSERT_EQ(execRet, E_OK);
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("title", "fts5");
+    row.Put("content", "test virtual tables");
+    rows.Put(std::move(row));
+    auto [insertStatus, result] =
+        store_->BatchInsert("articles", rows, NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(insertStatus, E_OK);
+
+    AbsRdbPredicates predicates("articles");
+    predicates.EqualTo("title", "fts5");
+    auto [status, res] = store_->Delete(predicates, { "title" });
+    // DELETE RETURNING is not available on virtual tables
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(res.changed, -1);
+
+    store_->Execute("Drop TABLE articles");
+}
+
+/**
+ * @tc.name: RdbStore_Delete_With_Returning_008
+ * @tc.desc: normal test. delete with returning and trigger
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+*/
+HWTEST_P(RdbDeleteTest, RdbStore_Delete_With_Returning_008, TestSize.Level1)
+{
+    auto [code, result1] = store_->Execute(
+        "CREATE TRIGGER before_delete BEFORE DELETE ON test"
+        " BEGIN UPDATE test SET name = 'li' WHERE name = 'wang'; END");
+
+    EXPECT_EQ(code, E_OK);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("id", 200);
+    row.Put("name", "wang");
+    rows.Put(std::move(row));
+    row.Put("id", 201);
+    row.Put("name", "zhang");
+    rows.Put(std::move(row));
+
+    auto [insertStatus, result] =
+        store_->BatchInsert("test", rows, { "name" }, NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(insertStatus, E_OK);
+    EXPECT_EQ(result.changed, 2);
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("name", "zhang");
+    auto [status, res] = store_->Delete(predicates, { "name" });
+
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(res.changed, 1);
+    int rowCount = -1;
+    ASSERT_EQ(res.results->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1);
+    int columnIndex = -1;
+    ASSERT_EQ(res.results->GetColumnIndex("name", columnIndex), E_OK);
+    std::string value;
+    ASSERT_EQ(res.results->GetString(columnIndex, value), E_OK);
+    EXPECT_EQ(value, "zhang");
+
+    // Check the trigger effect
+    auto resultSet = store_->QuerySql("select name from test where id = 200");
+
+    rowCount = -1;
+    resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(rowCount, 1);
+    ASSERT_EQ(resultSet->GoToNextRow(), E_OK);
+    columnIndex = -1;
+    resultSet->GetColumnIndex("name", columnIndex);
+
+    value.clear();
+    EXPECT_EQ(E_OK, resultSet->GetString(columnIndex, value));
+    EXPECT_EQ(value, "li");
+
+    store_->Execute("DROP TRIGGER IF EXISTS before_delete");
+}
 INSTANTIATE_TEST_SUITE_P(DeleteTest, RdbDeleteTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbDeleteTest

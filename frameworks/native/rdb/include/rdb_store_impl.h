@@ -124,6 +124,7 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
@@ -237,7 +238,7 @@ private:
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
     static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
-    static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
+    static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();

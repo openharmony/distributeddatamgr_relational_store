@@ -20,7 +20,10 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 ohos_fuzztest("SharedBlockFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
-  include_dirs = [ "${relational_store_native_path}/rdb/include" ]
+  include_dirs = [
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_common_path}/include",
+  ]
 
   cflags = [
     "-g",
@@ -33,7 +36,10 @@ ohos_fuzztest("SharedBlockFuzzTest") {
 
   sources = [ "sharedblock_fuzzer.cpp" ]
 
-  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb_static" ]
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+  ]
 
   external_deps = [
     "ability_base:zuri",
