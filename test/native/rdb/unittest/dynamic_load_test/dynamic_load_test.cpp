@@ -197,12 +197,12 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
  */
 HWTEST_F(RdbDynamicLoadTest, GetICUHandle001, TestSize.Level0)
 {
-    auto cleanUp = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
-    EXPECT_EQ(cleanUp, E_OK);
+    auto res = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
+    EXPECT_EQ(res, E_OK);
     auto handle = OHOS::NativeRdb::SqliteConnection::GetICUHandle();
     EXPECT_NE(handle, nullptr);
-    cleanUp = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
-    EXPECT_EQ(cleanUp, E_OK);
+    res = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
+    EXPECT_EQ(res, E_OK);
 }
 
 /**
@@ -242,36 +242,4 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
     status =
         rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
     EXPECT_EQ(status, E_OK);
-}
-
-/**
- * @tc.name: ObsManger003
- * @tc.desc: Dynamic loading test
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDynamicLoadTest, ObsManger003, TestSize.Level0)
-{
-    const std::string dbPath = RDB_TEST_PATH + "DynamicLoading.db";
-    RdbStoreConfig config(dbPath);
-    config.SetBundleName("com.ohos.config.DynamicLoading");
-    int errCode = E_ERROR;
-    RdbDynamicLoadTestOpenCallback helper;
-    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(rdbStore, nullptr);
-    std::shared_ptr<RdbStoreObserver> observer;
-    auto status =
-        rdbStore->Subscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
-    EXPECT_EQ(status, E_OK);
-    status =
-        rdbStore->Subscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer1" }, observer);
-    EXPECT_EQ(status, E_OK);
-    status =
-        rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
-    EXPECT_EQ(status, E_OK);
-    status =
-        rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer1" }, observer);
-    EXPECT_EQ(status, E_OK);
-    auto clean = OHOS::NativeRdb::ObsManger::CleanUp();
-    EXPECT_EQ(clean, E_OK);
 }

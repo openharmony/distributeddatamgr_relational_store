@@ -67,27 +67,23 @@ bool RdbHelper::Destroy(const DestroyOption &option)
 {
     LOG_INFO("Destroy resource start");
     bool ret = RdbStoreManager::GetInstance().Destroy();
-    bool flag = true;
     if (option.cleanICU && GlobalResource::CleanUp(GlobalResource::ICU) != E_OK) {
-        LOG_WARN("CleanUp ICU failed errno:%{public}d", errno);
-        flag = false;
+        LOG_WARN("CleanUp ICU failed");
+        ret = false;
     }
     if (option.cleanOpenSSL && GlobalResource::CleanUp(GlobalResource::OPEN_SSL) != E_OK) {
-        LOG_WARN("CleanUp OPEN_SSL failed errno:%{public}d", errno);
-        flag = false;
+        LOG_WARN("CleanUp OPEN_SSL failed");
+        ret = false;
     }
     if (GlobalResource::CleanUp(GlobalResource::OBS) != E_OK) {
-        LOG_WARN("CleanUp OBS failed errno:%{public}d", errno);
-        flag = false;
+        LOG_WARN("CleanUp OBS failed");
+        ret = false;
     }
     if (GlobalResource::CleanUp(GlobalResource::IPC) != E_OK) {
-        LOG_WARN("CleanUp IPC failed errno:%{public}d", errno);
-        flag = false;
+        LOG_WARN("CleanUp IPC failed");
+        ret = false;
     }
-    if (!flag || !ret) {
-        return false;
-    }
-    return true;
+    return ret;
 }
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)

@@ -186,7 +186,7 @@ int32_t RdbManagerImpl::CleanUp()
     if (distributedDataMgr_ != nullptr) {
         auto code = distributedDataMgr_->Exit();
         if (code != E_OK) {
-            LOG_ERROR("distributedDataMgr_ Exit:%{public}d!", code);
+            LOG_ERROR("Exit failed.code:%{public}d!", code);
             return code;
         }
     }
