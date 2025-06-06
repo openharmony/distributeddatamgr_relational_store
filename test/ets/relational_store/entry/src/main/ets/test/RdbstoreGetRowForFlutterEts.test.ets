@@ -95,7 +95,7 @@ export default function getRowForFlutterEtsTest() {
      * @tc.desc integer is Number.MAX_SAFE_INTEGER test
      */
     it('testRdbStoreGetRowForFlutter_0002',  0, async  (done:Function) => {
-      console.log(TAG + "************* testRdbStoreGetRowForFlutter_0001 start *************");
+      console.log(TAG + "************* testRdbStoreGetRowForFlutter_0002 start *************");
       rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       expect(rdbStore != undefined).assertTrue();
       await rdbStore.executeSql(CREATE_TABLE_TEST);
