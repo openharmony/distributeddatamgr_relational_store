@@ -20,7 +20,7 @@
 #include "icloud_service.h"
 #include "iremote_object.h"
 #include "iremote_proxy.h"
-#include "rdb_notifier_stub.h"
+#include "cloud_notifier_stub.h"
 
 namespace OHOS::CloudData {
 using namespace DistributedRdb;
@@ -58,13 +58,13 @@ public:
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
     int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteObject> notifier) override;
+    int32_t InitNotifier(const std::string &bundleName);
 
 private:
     int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);
-    int32_t InitNotifier(const std::string &bundleName);
     void OnSyncComplete(uint32_t seqNum, Details &&result);
     sptr<IRemoteObject> remote_;
-    std::map<std::string, sptr<RdbNotifierStub>> notifiers_;
+    sptr<CloudNotifierStub> notifier_;
     ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
 };
 } // namespace OHOS::CloudData

@@ -15,6 +15,8 @@
 
 #ifndef OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_MANAGER_IMPL_H
 #define OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_MANAGER_IMPL_H
+
+#include <optional>
 #include <memory>
 #include <mutex>
 
@@ -24,14 +26,15 @@ namespace OHOS::CloudData {
 class CloudManager {
 public:
     static CloudManager &GetInstance();
-    std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
+    std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService(
+        const std::optional<std::string> &bundleName = std::nullopt);
 
 private:
     CloudManager() = default;
     ~CloudManager() = default;
-    std::string GetProcessName();
     std::mutex mutex_;
     std::shared_ptr<CloudService> cloudService_;
+    std::string bundleName_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_MANAGER_IMPL_H

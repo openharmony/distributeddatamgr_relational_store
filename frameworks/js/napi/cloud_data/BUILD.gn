@@ -32,15 +32,16 @@ ohos_shared_library("clouddata") {
     "${cloud_data_napi_path}/src/js_error_utils.cpp",
     "${cloud_data_napi_path}/src/napi_queue.cpp",
     "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
     "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
     "${cloud_data_native_path}/src/cloud_types_util.cpp",
     "${cloud_data_native_path}/src/data_mgr_service.cpp",
     "${cloud_data_native_path}/src/icloud_client_death_observer.cpp",
+    "${relational_store_js_common_path}/src/js_ability.cpp",
     "${relational_store_napi_path}/common/src/js_df_manager.cpp",
     "${relational_store_napi_path}/common/src/js_scope.cpp",
     "${relational_store_napi_path}/common/src/js_utils.cpp",
     "${relational_store_napi_path}/common/src/js_uv_queue.cpp",
-    "${relational_store_frameworks_path}/native/rdb/src/rdb_notifier_stub.cpp",
   ]
 
   include_dirs = [
@@ -58,7 +59,6 @@ ohos_shared_library("clouddata") {
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 
   external_deps = [
-    "ability_runtime:app_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "c_utils:utils",
