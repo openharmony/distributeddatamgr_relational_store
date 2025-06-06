@@ -148,34 +148,6 @@ napi_value Convert2JSValue(napi_env env, const RowEntity &rowEntity)
     return object;
 }
 
-bool IsConvertToString(int64_t value)
-{
-    constexpr int64_t MAX_VALUE = 9007199254740991;
-    constexpr int64_t MIN_VALUE = -9007199254740991;
-    return (value >= MIN_VALUE) && (value <= MAX_VALUE);
-}
- 
-napi_value Convert2JSValueExt(napi_env env, const RowEntity &rowEntity)
-{
-    napi_value object = nullptr;
-    NAPI_CALL_RETURN_ERR(napi_create_object(env, &object), object);
-    auto &values = rowEntity.Get();
-    for (auto const &[key, value] : values) {
-        if (value.GetType() == ValueObjectType::TYPE_INT) {
-            int64_t val = 0;
-            value.GetLong(val);
-            if (IsConvertToString(val)) {
-                NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, key.c_str(), value), object);
-            } else {
-                NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, key.c_str(), std::to_string(val)), object);
-            }
-        } else {
-            NAPI_CALL_RETURN_ERR(SetNamedProperty(env, object, key.c_str(), value), object);
-        }
-    }
-    return object;
-}
-
 template<>
 napi_value Convert2JSValue(napi_env env, const ValueObject &value)
 {
