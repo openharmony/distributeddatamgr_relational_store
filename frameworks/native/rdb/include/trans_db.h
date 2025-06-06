@@ -45,7 +45,7 @@ private:
     void HandleSchemaDDL(std::shared_ptr<Statement> statement);
     static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
     static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
-    static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
+    static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
 
     int32_t maxArgs_ = 0;
     int64_t vSchema_ = 0;

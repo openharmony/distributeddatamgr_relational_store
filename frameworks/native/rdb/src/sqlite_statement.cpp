@@ -630,6 +630,44 @@ std::pair<int32_t, ValueObject> SqliteStatement::GetColumn(int index) const
     return { E_OK, GetValueFromBlob(index, type) };
 }
 
+std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(uint32_t maxCount)
+{
+    auto colCount = GetColumnCount();
+    if (colCount <= 0) {
+        LOG_WARN("Column count invalid: %{public}d", colCount);
+        return { E_OK, {} };
+    }
+    std::vector<ValuesBucket> valuesBuckets;
+    std::vector<std::string> colNames;
+    colNames.reserve(colCount);
+    for (int i = 0; i < colCount; i++) {
+        auto [code, colName] = GetColumnName(i);
+        if (code != E_OK) {
+            LOG_ERROR("GetColumnName ret %{public}d", code);
+            return { code, {} };
+        }
+        colNames.push_back(std::move(colName));
+    }
+    int32_t status = 0;
+    do {
+        if (valuesBuckets.size() >= maxCount) {
+            break;
+        }
+        ValuesBucket value;
+        for (int32_t i = 0; i < colCount; i++) {
+            auto [code, val] = GetColumn(i);
+            if (code != E_OK) {
+                LOG_WARN("GetColumn failed, errCode:%{public}d", code);
+                continue;
+            }
+            value.Put(colNames[i], std::move(val));
+        }
+        valuesBuckets.push_back(std::move(value));
+        status = InnerStep();
+    } while (status == E_OK);
+    return { status, valuesBuckets };
+}
+
 ValueObject SqliteStatement::GetValueFromBlob(int32_t index, int32_t type) const
 {
     int size = sqlite3_column_bytes(stmt_, index);
