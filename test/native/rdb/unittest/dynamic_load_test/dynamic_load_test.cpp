@@ -23,6 +23,8 @@
 #include "rdb_open_callback.h"
 #include "rdb_manager_impl.h"
 #include "rdb_store_manager.h"
+#include "rdb_store_impl.h"
+#include "sqlite_connection.h"
 #include "task_executor.h"
 
 using namespace testing::ext;
@@ -124,11 +126,11 @@ int RdbDynamicLoadTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, i
 }
 
 /**
- * @tc.name: DynamicLoading
+ * @tc.name: DynamicLoading001
  * @tc.desc: Dynamic loading test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DynamicLoading, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
 {
     EXPECT_TRUE(RdbHelper::Init());
 
@@ -154,4 +156,122 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading, TestSize.Level0)
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
     EXPECT_TRUE(RdbHelper::Init());
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
+}
+
+/**
+ * @tc.name: DynamicLoading002
+ * @tc.desc: Dynamic loading test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
+{
+    EXPECT_TRUE(RdbHelper::Init());
+
+    const std::string dbPath = RDB_TEST_PATH + "DynamicLoading.db";
+    RdbStoreConfig config(dbPath);
+    config.SetBundleName("com.ohos.config.DynamicLoading");
+    int errCode = E_ERROR;
+    RdbDynamicLoadTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
+
+    EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
+    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
+    OHOS::NativeRdb::RdbHelper::DestroyOption destroyOption;
+    destroyOption.cleanICU = true;
+    EXPECT_TRUE(RdbHelper::Destroy(destroyOption));
+
+    EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
+    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
+}
+
+/**
+ * @tc.name: GetICUHandle001
+ * @tc.desc: Dynamic loading test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, GetICUHandle001, TestSize.Level0)
+{
+    auto cleanUp = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
+    EXPECT_EQ(cleanUp, E_OK);
+    auto handle = OHOS::NativeRdb::SqliteConnection::GetICUHandle();
+    EXPECT_NE(handle, nullptr);
+    cleanUp = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
+    EXPECT_EQ(cleanUp, E_OK);
+}
+
+/**
+ * @tc.name: ObsManger001
+ * @tc.desc: Dynamic loading test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
+{
+    auto clean = OHOS::NativeRdb::ObsManger::CleanUp();
+    EXPECT_EQ(clean, E_OK);
+    auto handle = OHOS::NativeRdb::ObsManger::GetHandle();
+    EXPECT_NE(handle, nullptr);
+    clean = OHOS::NativeRdb::ObsManger::CleanUp();
+    EXPECT_EQ(clean, E_OK);
+}
+
+/**
+ * @tc.name: ObsManger002
+ * @tc.desc: Dynamic loading test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "DynamicLoading.db";
+    RdbStoreConfig config(dbPath);
+    config.SetBundleName("com.ohos.config.DynamicLoading");
+    int errCode = E_ERROR;
+    RdbDynamicLoadTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
+    std::shared_ptr<RdbStoreObserver> observer;
+    auto status =
+        rdbStore->Subscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status =
+        rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
+    EXPECT_EQ(status, E_OK);
+}
+
+/**
+ * @tc.name: ObsManger003
+ * @tc.desc: Dynamic loading test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, ObsManger003, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "DynamicLoading.db";
+    RdbStoreConfig config(dbPath);
+    config.SetBundleName("com.ohos.config.DynamicLoading");
+    int errCode = E_ERROR;
+    RdbDynamicLoadTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
+    std::shared_ptr<RdbStoreObserver> observer;
+    auto status =
+        rdbStore->Subscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status =
+        rdbStore->Subscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer1" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status =
+        rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer" }, observer);
+    EXPECT_EQ(status, E_OK);
+    status =
+        rdbStore->UnSubscribe({ OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED, "observer1" }, observer);
+    EXPECT_EQ(status, E_OK);
+    auto clean = OHOS::NativeRdb::ObsManger::CleanUp();
+    EXPECT_EQ(clean, E_OK);
 }
