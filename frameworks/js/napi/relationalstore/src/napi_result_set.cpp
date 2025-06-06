@@ -87,14 +87,14 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 
 bool IsOverLimit(const ValueObject &object)
 {
-    constexpr int64_t MAX_VALUE = 9007199254740991;
-    constexpr int64_t MIN_VALUE = -9007199254740991;
+    constexpr int64_t maxValue = 9007199254740991;
+    constexpr int64_t minValue = -9007199254740991;
     if (object.GetType() != ValueObjectType::TYPE_INT) {
         return false;
     }
     int64_t value = 0;
     object.GetLong(value);
-    return (value < MIN_VALUE) || (value > MAX_VALUE);
+    return (value < minValue) || (value > maxValue);
 }
 
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
@@ -764,7 +764,7 @@ napi_value ResultSetProxy::GetValueForFlutter(napi_env env, napi_callback_info i
         errCode = resultSet->Get(columnIndex, object);
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    if(IsOverLimit(object)) {
+    if (IsOverLimit(object)) {
         return JSUtils::Convert2JSValue(env, std::string(object));
     }
     return JSUtils::Convert2JSValue(env, object.value);
