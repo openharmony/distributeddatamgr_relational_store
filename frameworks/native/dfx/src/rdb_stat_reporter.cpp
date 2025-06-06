@@ -65,9 +65,7 @@ RdbStatReporter::~RdbStatReporter()
             return;
         }
         pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)]() {
-            if (!report) {
-                (*report)(statEvent);
-            }
+            (*report)(statEvent);
         });
         reportTime_.store(std::chrono::steady_clock::now());
     }

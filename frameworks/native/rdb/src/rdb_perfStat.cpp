@@ -215,12 +215,12 @@ void PerfStat::Notify(SqlExecInfo *execInfo, const std::string &storeId)
 void PerfStat::Pause(uint32_t seqId)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    ++threadParams_[GetThreadId()].suspenders_;
+    threadParams_[GetThreadId()].suspenders_ = std::max(1, threadParams_[GetThreadId()].suspenders_ + 1);
 }
 void PerfStat::Resume(uint32_t seqId)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    --threadParams_[GetThreadId()].suspenders_;
+    threadParams_[GetThreadId()].suspenders_ = std::max(0, threadParams_[GetThreadId()].suspenders_ - 1);
 }
 
 void PerfStat::FormatSql(const std::string &sql)

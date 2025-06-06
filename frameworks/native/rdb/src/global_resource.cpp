@@ -39,10 +39,11 @@ int32_t GlobalResource::CleanUp(int32_t type)
         return E_INVALID_ARGS;
     }
 
+    int32_t ret = E_OK;
     if (g_cleaners[type] != nullptr) {
-        g_cleaners[type]();
+        ret = g_cleaners[type]();
     }
 
-    return E_OK;
+    return ret;
 }
 } // namespace OHOS::NativeRdb

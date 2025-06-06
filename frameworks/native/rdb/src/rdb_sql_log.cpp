@@ -79,13 +79,13 @@ void SqlLog::Notify(const std::string &storeId, const ExceptionMessage &exceptio
 void SqlLog::Pause()
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    ++suspenders_[GetThreadId()];
+    suspenders_[GetThreadId()] = std::max(1, ++suspenders_[GetThreadId()]);
 }
 
 void SqlLog::Resume()
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    --suspenders_[GetThreadId()];
+    suspenders_[GetThreadId()] = std::max(0, --suspenders_[GetThreadId()]);
 }
 
 bool SqlLog::IsPause()
