@@ -247,8 +247,7 @@ void RdbStoreManager::Init()
 bool RdbStoreManager::Destroy()
 {
     Clear();
-    TaskExecutor::GetInstance().Stop();
-    return true;
+    return TaskExecutor::GetInstance().Stop();
 }
 
 bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)

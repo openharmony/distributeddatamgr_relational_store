@@ -12,25 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef NATIVE_RDB_GLOBAL_RESOURCE_H
-#define NATIVE_RDB_GLOBAL_RESOURCE_H
-#include <cstdint>
-namespace OHOS {
-namespace NativeRdb {
-class GlobalResource {
-public:
-    enum CleanType {
-        OPEN_SSL,
-        ICU,
-        OBS,
-        IPC,
-        CLEAN_BUTT
-    };
-    using Cleaner = int32_t (*)();
-    static int32_t RegisterClean(CleanType type, Cleaner clean);
-    static int32_t CleanUp(int32_t type);
-};
 
-} // namespace NativeRdb
-} // namespace OHOS
-#endif // NATIVE_RDB_GLOBAL_RESOURCE_H
+#include "mock_global_resource.h"
+#include "rdb_errno.h"
+namespace OHOS::NativeRdb {
+    
+int32_t GlobalResource::CleanUp(int32_t type)
+{
+    if (BGlobalResource::globalResource_ == nullptr) {
+        return NativeRdb::E_ERROR;
+    }
+    return BGlobalResource::globalResource_->CleanUp(type);
+}
+
+int32_t GlobalResource::RegisterClean(GlobalResource::CleanType type, GlobalResource::Cleaner clean)
+{
+    if (BGlobalResource::globalResource_ == nullptr) {
+        return NativeRdb::E_ERROR;
+    }
+    return BGlobalResource::globalResource_->RegisterClean(type, clean);
+}
+} // namespace OHOS::NativeRdb
