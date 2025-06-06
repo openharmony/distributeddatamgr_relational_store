@@ -85,11 +85,16 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 }
 #endif
 
-bool ResultSetProxy::IsOverLimit(int64_t value)
+bool IsOverLimit(const ValueObject &object)
 {
     constexpr int64_t MAX_VALUE = 9007199254740991;
     constexpr int64_t MIN_VALUE = -9007199254740991;
-    return (value >= MIN_VALUE) && (value <= MAX_VALUE);
+    if (object.GetType() != ValueObjectType::TYPE_INT) {
+        return false;
+    }
+    int64_t value = 0;
+    object.GetLong(value);
+    return (value < MIN_VALUE) || (value > MAX_VALUE);
 }
 
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
@@ -630,24 +635,14 @@ napi_value ResultSetProxy::GetRowForFlutter(napi_env env, napi_callback_info inf
         errCode = resultSet->GetRow(rowEntity);
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    
-    napi_value object = nullptr;
-    napi_create_object(env, &object);
-    auto &values = rowEntity.Get();
-    for (auto const &[key, value] : values) {
-        if (value.GetType() == ValueObjectType::TYPE_INT) {
-            int64_t val = 0;
-            value.GetLong(val);
-            if (IsOverLimit(val)) {
-                AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), value);
-            } else {
-                AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), std::to_string(val));
-            }
-        } else {
-            AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), value);
+    auto mp = rowEntity.Steal();
+    for (auto &[key, value] : mp) {
+        if (IsOverLimit(value)) {
+            value = std::string(value);
         }
     }
-    return object;
+ 
+    return JSUtils::Convert2JSValue(env, mp);
 }
 
 std::pair<int, std::vector<RowEntity>> ResultSetProxy::GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
@@ -769,12 +764,8 @@ napi_value ResultSetProxy::GetValueForFlutter(napi_env env, napi_callback_info i
         errCode = resultSet->Get(columnIndex, object);
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    if (object.GetType() == ValueObjectType::TYPE_INT) {
-        int64_t valueInt64 = 0;
-        object.GetLong(valueInt64);
-        if (!IsOverLimit(valueInt64)) {
-            return JSUtils::Convert2JSValue(env, std::to_string(valueInt64));
-        }
+    if(IsOverLimit(object)) {
+        return JSUtils::Convert2JSValue(env, std::string(object));
     }
     return JSUtils::Convert2JSValue(env, object.value);
 }
