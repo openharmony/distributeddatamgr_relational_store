@@ -296,23 +296,19 @@ int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName, sptr<IRem
 
 int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName)
 {
-    if (notifiers_.find(bundleName) != notifiers_.end()) {
-        return SUCCESS;
-    }
-    sptr<RdbNotifierStub> notifier = new (std::nothrow) RdbNotifierStub(
-        [this](uint32_t seqNum, Details &&result) {
-            OnSyncComplete(seqNum, std::move(result));
-        }, nullptr, nullptr);
-    if (notifier == nullptr) {
+    notifier_ = new (std::nothrow) CloudNotifierStub([this](uint32_t seqNum, Details &&result) {
+        OnSyncComplete(seqNum, std::move(result));
+    });
+    if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed, bundleName = %{public}s", bundleName.c_str());
         return ERROR;
     }
-    auto status = InitNotifier(bundleName, notifier->AsObject());
+    auto status = InitNotifier(bundleName, notifier_->AsObject());
     if (status != SUCCESS) {
+        notifier_ = nullptr;
         LOG_ERROR("init notifier failed, bundleName = %{public}s", bundleName.c_str());
         return status;
     }
-    notifiers_.emplace(bundleName, notifier);
     return SUCCESS;
 }
 
@@ -336,16 +332,11 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
         LOG_ERROR("invalid args, bundleName = %{public}s", bundleName.c_str());
         return INVALID_ARGUMENT;
     }
-    auto status = InitNotifier(bundleName);
-    if (status != SUCCESS) {
-        LOG_ERROR("init notifier failed, bundleName = %{public}s", bundleName.c_str());
-        return status;
-    }
     if (!syncCallbacks_.Insert(option.seqNum, async)) {
         LOG_ERROR("register progress failed, bundleName = %{public}s", bundleName.c_str());
         return ERROR;
     }
-    status = DoAsync(bundleName, storeId, option);
+    auto status = DoAsync(bundleName, storeId, option);
     if (status != SUCCESS) {
         syncCallbacks_.Erase(option.seqNum);
     }

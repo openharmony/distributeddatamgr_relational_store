@@ -15,7 +15,6 @@
 #define LOG_TAG "CloudManager"
 #include "cloud_manager.h"
 
-#include "app_mgr_client.h"
 #include "cloud_service_proxy.h"
 #include "data_mgr_service.h"
 #include "icloud_client_death_observer.h"
@@ -23,7 +22,6 @@
 #include "iservice_registry.h"
 #include "itypes_util.h"
 #include "logger.h"
-#include "singleton.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::CloudData {
@@ -49,20 +47,11 @@ CloudManager &CloudManager::GetInstance()
     return instance;
 }
 
-std::string CloudManager::GetProcessName()
-{
-    AppExecFwk::RunningProcessInfo info;
-    auto appMgrClient = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
-    if (appMgrClient != nullptr && appMgrClient->GetProcessRunningInformation(info) == 0) {
-        return info.processName_;
-    }
-    return "";
-}
-
-std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService()
+std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
+    const std::optional<std::string> &bundleName)
 {
     std::lock_guard<decltype(mutex_)> lg(mutex_);
-    if (cloudService_ != nullptr) {
+    if ((cloudService_ != nullptr) && (!bundleName || bundleName.value() == bundleName_)) {
         return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
     }
 
@@ -83,7 +72,9 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
     sptr<IRemoteObject> clientDeathObserver = new (std::nothrow) CloudClientDeathObserverStub();
-    dataMgr->RegisterClientDeathObserver(GetProcessName(), clientDeathObserver);
+    if (!bundleName) {
+        dataMgr->RegisterClientDeathObserver(bundleName.value(), clientDeathObserver);
+    }
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
@@ -100,11 +91,17 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     if (proxy == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
+    if (bundleName && !bundleName.value().empty() &&
+        proxy->InitNotifier(bundleName.value()) != CloudService::Status::SUCCESS) {
+        LOG_ERROR("Init notifier failed.");
+        return { CloudService::Status::ERROR, nullptr };
+    }
 
     cloudService_ = std::shared_ptr<CloudService>(proxy.GetRefPtr(), [holder = proxy](const auto *) {});
     if (cloudService_ == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
+    bundleName_ = bundleName ? bundleName.value() : "";
     return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
 }
 } // namespace OHOS::CloudData

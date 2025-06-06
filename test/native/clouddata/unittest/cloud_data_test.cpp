@@ -23,7 +23,7 @@
 #include "cloud_types.h"
 #include "cloud_types_util.h"
 #include "logger.h"
-#include "rdb_notifier_stub.h"
+#include "cloud_notifier_stub.h"
 #include "token_setproc.h"
 
 namespace OHOS::CloudData {
@@ -631,7 +631,7 @@ HWTEST_F(CloudDataTest, InitNotifier001, TestSize.Level1)
 {
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    sptr<RdbNotifierStub> notifier = nullptr;
+    sptr<CloudNotifierStub> notifier = nullptr;
     auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);  // can not Marshalling a 'nullptr'
     EXPECT_EQ(status, CloudService::IPC_PARCEL_ERROR);
     LOG_INFO("InitNotifier001 test end.");
@@ -647,7 +647,7 @@ HWTEST_F(CloudDataTest, InitNotifier002, TestSize.Level1)
 {
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    sptr<RdbNotifierStub> notifier = new (std::nothrow) RdbNotifierStub(nullptr, nullptr, nullptr);
+    sptr<CloudNotifierStub> notifier = new (std::nothrow) CloudNotifierStub(nullptr);
     auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);
     EXPECT_EQ(status, CloudService::SUCCESS);
     LOG_INFO("InitNotifier002 test end.");

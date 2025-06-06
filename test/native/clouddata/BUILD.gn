@@ -33,11 +33,11 @@ ohos_unittest("NativeCloudDataTest") {
 
   sources = [
     "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
     "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
     "${cloud_data_native_path}/src/cloud_types_util.cpp",
     "${cloud_data_native_path}/src/data_mgr_service.cpp",
     "${cloud_data_native_path}/src/icloud_client_death_observer.cpp",
-    "${relational_store_frameworks_path}/native/rdb/src/rdb_notifier_stub.cpp",
     "unittest/cloud_data_test.cpp",
     "unittest/data_mgr_service_test.cpp",
   ]
@@ -54,7 +54,6 @@ ohos_unittest("NativeCloudDataTest") {
   }
 
   external_deps = [
-    "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
