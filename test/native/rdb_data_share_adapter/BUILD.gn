@@ -47,6 +47,7 @@ ohos_unittest("RdbDataShareAdapterTest") {
     "googletest:gmock",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "relational_store:rdb_data_share_adapter",
   ]
 
