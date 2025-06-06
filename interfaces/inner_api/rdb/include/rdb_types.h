@@ -407,12 +407,13 @@ public:
 };
 } // namespace DistributedRdb
 namespace NativeRdb {
+class ResultSet;
 struct Results {
     Results(int32_t count) : changed(count)
     {
     }
     int32_t changed = -1;
-    NativeRdb::ValuesBuckets results;
+    std::shared_ptr<ResultSet> results;
 };
 } // namespace NativeRdb
 } // namespace OHOS

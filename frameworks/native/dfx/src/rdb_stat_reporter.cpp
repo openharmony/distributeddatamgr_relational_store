@@ -58,10 +58,12 @@ RdbStatReporter::~RdbStatReporter()
     auto loadedReportTime = reportTime_.load();
     auto reportInterval = std::chrono::duration_cast<std::chrono::seconds>(endTime - loadedReportTime).count();
     statEvent_.costTime = GetTimeType(static_cast<uint32_t>(duration));
-    if (statEvent_.costTime > TIME_LEVEL_NONE && reportInterval >= WAIT_TIME) {
+    if (statEvent_.costTime > TIME_LEVEL_NONE &&
+        (loadedReportTime == std::chrono::steady_clock::time_point() || reportInterval >= WAIT_TIME)) {
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool == nullptr) {
             LOG_WARN("task pool err when RdbStatReporter");
+            return;
         }
         pool->Execute([report = std::move(reportFunc_), statEvent = std::move(statEvent_)]() {
             (*report)(statEvent);

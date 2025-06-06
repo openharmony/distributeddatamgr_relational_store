@@ -21,6 +21,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "cache_result_set.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "sqlite_shared_result_set.h"
 #endif
@@ -356,47 +357,24 @@ Results TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> stateme
         result.changed = statement->Changes();
     }
     if (isDML && result.changed <= 0) {
-        result.results.Clear();
+        result.results = std::make_shared<CacheResultSet>();
     }
     return result;
 }
 
-ValuesBuckets TransDB::GetValues(std::shared_ptr<Statement> statement)
+std::shared_ptr<ResultSet> TransDB::GetValues(std::shared_ptr<Statement> statement)
 {
     if (statement == nullptr) {
-        return {};
+        return nullptr;
     }
-    auto colCount = statement->GetColumnCount();
-    if (colCount <= 0) {
-        return {};
-    }
-    ValuesBuckets values;
-    std::vector<std::string> colNames;
-    colNames.reserve(colCount);
-    for (int i = 0; i < colCount; i++) {
-        auto [code, colName] = statement->GetColumnName(i);
-        if (code != E_OK) {
-            LOG_ERROR("GetColumnName ret %{public}d", code);
-            return {};
-        }
-        colNames.push_back(std::move(colName));
-    }
+    auto [code, rows] = statement->GetRows(MAX_RETURNING_ROWS);
+    auto size = rows.size();
+    std::shared_ptr<ResultSet> result = std::make_shared<CacheResultSet>(std::move(rows));
     // The correct number of changed rows can only be obtained after completing the step
-    do {
-        if (values.RowSize() >= MAX_RETURNING_ROWS) {
-            continue;
-        }
-        ValuesBucket value;
-        for (int32_t i = 0; i < colCount; i++) {
-            auto [code, val] = statement->GetColumn(i);
-            if (code != E_OK) {
-                LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
-                break;
-            }
-            value.Put(colNames[i], std::move(val));
-        }
-        values.Put(std::move(value));
-    } while (statement->Step() == E_OK);
-    return values;
+    while (code == E_OK && size == MAX_RETURNING_ROWS) {
+        std::tie(code, rows) = statement->GetRows(MAX_RETURNING_ROWS);
+        size = rows.size();
+    }
+    return result;
 }
 } // namespace OHOS::NativeRdb
