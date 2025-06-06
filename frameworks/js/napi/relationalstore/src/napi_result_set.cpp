@@ -623,8 +623,24 @@ napi_value ResultSetProxy::GetRowForFlutter(napi_env env, napi_callback_info inf
         errCode = resultSet->GetRow(rowEntity);
     }
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
- 
-    return JSUtils::Convert2JSValueExt(env, rowEntity);
+    
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    auto &values = rowEntity.Get();
+    for (auto const &[key, value] : values) {
+        if (value.GetType() == ValueObjectType::TYPE_INT) {
+            int64_t val = 0;
+            value.GetLong(val);
+            if (IsOverLimit(val)) {
+                AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), value);
+            } else {
+                AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), std::to_string(val));
+            }
+        } else {
+            AppDataMgrJsKit::JSUtils::SetNamedProperty(env, object, key.c_str(), value);
+        }
+    }
+    return object;
 }
 
 std::pair<int, std::vector<RowEntity>> ResultSetProxy::GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
@@ -749,7 +765,7 @@ napi_value ResultSetProxy::GetValueForFlutter(napi_env env, napi_callback_info i
     if (object.GetType() == ValueObjectType::TYPE_INT) {
         int64_t valueInt64 = 0;
         object.GetLong(valueInt64);
-        if (!JSUtils::IsConvertToString(valueInt64)) {
+        if (!IsOverLimit(valueInt64)) {
             return JSUtils::Convert2JSValue(env, std::to_string(valueInt64));
         }
     }

@@ -40,6 +40,7 @@ public:
     static void Init(napi_env env, napi_value exports);
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     std::shared_ptr<DataShare::ResultSetBridge> Create() override;
+    static bool IsOverLimit(int64_t value);
 
 private:
     static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
