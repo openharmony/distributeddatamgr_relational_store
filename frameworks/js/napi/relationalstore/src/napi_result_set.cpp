@@ -85,6 +85,13 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 }
 #endif
 
+bool ResultSetProxy::IsOverLimit(int64_t value)
+{
+    constexpr int64_t MAX_VALUE = 9007199254740991;
+    constexpr int64_t MIN_VALUE = -9007199254740991;
+    return (value >= MIN_VALUE) && (value <= MAX_VALUE);
+}
+
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
