@@ -1312,6 +1312,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
         return { E_OK, 0 };
     }
 
+    RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
     auto pool = GetPool();
@@ -2806,43 +2807,20 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return conn->CleanDirtyLog(table, cursor);
 }
 
-ValuesBuckets RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
+std::shared_ptr<ResultSet> RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
 {
     if (statement == nullptr) {
-        return {};
+        return nullptr;
     }
-    auto colCount = statement->GetColumnCount();
-    if (colCount <= 0) {
-        return {};
-    }
-    ValuesBuckets valuesBuckets;
-    std::vector<std::string> colNames;
-    colNames.reserve(colCount);
-    for (int i = 0; i < colCount; i++) {
-        auto [code, colName] = statement->GetColumnName(i);
-        if (code != E_OK) {
-            LOG_ERROR("GetColumnName ret %{public}d", code);
-            return {};
-        }
-        colNames.push_back(std::move(colName));
-    }
+    auto [code, rows] = statement->GetRows(MAX_RETURNING_ROWS);
+    auto size = rows.size();
+    std::shared_ptr<ResultSet> result = std::make_shared<CacheResultSet>(std::move(rows));
     // The correct number of changed rows can only be obtained after completing the step
-    do {
-        if (valuesBuckets.RowSize() >= MAX_RETURNING_ROWS) {
-            continue;
-        }
-        ValuesBucket value;
-        for (int32_t i = 0; i < colCount; i++) {
-            auto [code, val] = statement->GetColumn(i);
-            if (code != E_OK) {
-                LOG_ERROR("GetColumn failed, errCode:%{public}d", code);
-                break;
-            }
-            value.Put(colNames[i], std::move(val));
-        }
-        valuesBuckets.Put(std::move(value));
-    } while (statement->Step() == E_OK);
-    return valuesBuckets;
+    while (code == E_OK && size == MAX_RETURNING_ROWS) {
+        std::tie(code, rows) = statement->GetRows(MAX_RETURNING_ROWS);
+        size = rows.size();
+    }
+    return result;
 }
 
 Results RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
@@ -2860,7 +2838,7 @@ Results RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> st
         result.changed = statement->Changes();
     }
     if (isDML && result.changed <= 0) {
-        result.results.Clear();
+        result.results = std::make_shared<CacheResultSet>();
     }
     return result;
 }

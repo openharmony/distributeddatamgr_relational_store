@@ -158,7 +158,7 @@ private:
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
     static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
-    static ValuesBuckets GetValues(std::shared_ptr<Statement> statement);
+    static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();

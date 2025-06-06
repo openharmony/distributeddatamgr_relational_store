@@ -25,6 +25,9 @@
 #include "rdb_trace.h"
 namespace OHOS {
 namespace NativeRdb {
+CacheResultSet::CacheResultSet() : row_(0), maxRow_(0), maxCol_(0)
+{
+}
 CacheResultSet::CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets)
     : row_(0), maxCol_(0), valueBuckets_(std::move(valueBuckets))
 {
