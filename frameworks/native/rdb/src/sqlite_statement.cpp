@@ -70,6 +70,7 @@ SqliteStatement::~SqliteStatement()
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
+    slave_ = nullptr;
     conn_ = nullptr;
     config_ = nullptr;
 }

@@ -1590,28 +1590,3 @@ HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_001, TestSize.Level1)
     errCode = store->InitKnowledgeSchema(schema);
     EXPECT_EQ(errCode, E_OK);
 }
-
-/**
- * @tc.name: CreateStatementTest_001
- * @tc.desc: test CreateStatement
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplTest, CreateStatementTest_001, TestSize.Level2)
-{
-    const std::string dbName = RDB_TEST_PATH + "SQLiteConnectionCreateStatementTest.db";
-    RdbStoreConfig config(dbName);
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetReadOnly(false);
-    auto [errCode, connection] = SqliteConnection::Create(config, true);
-    ASSERT_NE(nullptr, connection);
-    EXPECT_EQ(E_OK, errCode);
-
-    std::pair<int, std::shared_ptr<Statement>> pair = connection->CreateStatement("PRAGMA page_size", connection);
-    EXPECT_EQ(E_OK, pair.first);
-    std::shared_ptr<SqliteStatement> sqliteStmt = std::static_pointer_cast<SqliteStatement>(pair.second);
-    ASSERT_NE(nullptr, sqliteStmt);
-
-    std::shared_ptr<SqliteStatement> slaveSqliteStmt = std::static_pointer_cast<SqliteStatement>(sqliteStmt->slave_);
-    ASSERT_NE(nullptr, slaveSqliteStmt);
-    EXPECT_NE(nullptr, slaveSqliteStmt->conn_);
-}

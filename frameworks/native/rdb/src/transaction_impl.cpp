@@ -117,8 +117,8 @@ int32_t TransactionImpl::Commit()
 
     errorCode = statement->Execute();
     if (errorCode != E_OK) {
-        CloseInner(false);
         LOG_ERROR("statement execute failed, errorCode=%{public}d", errorCode);
+        CloseInner(false);
         return errorCode;
     }
     CloseInner();
@@ -143,8 +143,8 @@ int32_t TransactionImpl::Rollback()
 
     errorCode = statement->Execute();
     if (errorCode != E_OK) {
-        CloseInner(false);
         LOG_ERROR("statement execute failed, errorCode=%{public}d", errorCode);
+        CloseInner(false);
         return errorCode;
     }
     CloseInner();
