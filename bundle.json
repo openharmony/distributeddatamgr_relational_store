@@ -220,6 +220,7 @@
                 "//foundation/distributeddatamgr/relational_store/test/ndk:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data:stage_unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/appdatafwk:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native/clouddata:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
