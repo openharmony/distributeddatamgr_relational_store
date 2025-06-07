@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <cstdlib>
 
 #include "abs_rdb_predicates.h"
 #include "common.h"
@@ -1934,54 +1935,54 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_Transaction_049
- * @tc.desc: abnormal testcase of virtual table with returning in transaction.
+ * @tc.desc: Crash Occurs When Test Commit Fails
  * @tc.type: FUNC
  */
 HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
 {
-    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
-    auto [createTableStatus, createTableresult] =
-        store->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA); // Dual-write must be enabled.
+    config.SetReadOnly(false);
+    TransactionTestOpenCallback helper;
+    int errCode = E_OK;
+    const int version = 1;
+    std::shared_ptr<RdbStore> storePtr = RdbHelper::GetRdbStore(config, version, helper, errCode);
+    EXPECT_NE(storePtr, nullptr);
+    EXPECT_EQ(errCode, E_OK);
 
-    auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
-    ASSERT_EQ(res, E_OK);
+    storePtr->Execute("DROP TABLE IF EXISTS test1");
+    auto res = storePtr->Execute("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)");
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = storePtr->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    ValuesBuckets rows;
-    ValuesBucket row;
-    row.Put("title", "fts5");
-    row.Put("content", "test virtual tables");
-    rows.Put(std::move(row));
-    auto [status, result] =
-        transaction->BatchInsert("articles", rows, {"title"}, ConflictResolution::ON_CONFLICT_IGNORE);
-    EXPECT_EQ(status, E_OK);
-    EXPECT_EQ(result.changed, 1);
-    ASSERT_NE(result.results, nullptr);
-    int rowCount = -1;
-    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
-    EXPECT_EQ(rowCount, 1);
-    RowEntity rowEntity;
-    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
-    EXPECT_EQ(std::string(rowEntity.Get("title")), "fts5");
+    const int idValue = 1;
+    Transaction::Row row;
+    row.Put("id", idValue);
+    row.Put("name", "Jim");
+    auto result = transaction->Insert("test1", row);
+    ASSERT_EQ(result.first, E_OK);
+    const int count = 1;
+    ASSERT_EQ(result.second, count);
 
-    AbsRdbPredicates predicates("test");
-    predicates.EqualTo("title", "fts5");
-    ValuesBucket values;
-    values.PutString("title", "fts5 updated");
+    // Constructing a Commit Failure Scenario
+    std::string walFile = DATABASE_NAME + "-wal";
 
-    std::tie(status, result) = transaction->Update(values, predicates, { "title" });
-    // UPDATE RETURNING is not available on virtual tables
-    EXPECT_EQ(status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.changed, -1);
-    EXPECT_EQ(result.results, nullptr);
+    // Disabling wal File Operations
+    std::string chattrAddiCmd = "chattr +i " + walFile;
+    system(chattrAddiCmd.c_str());
 
-    std::tie(status, result) = store_->Delete(predicates, { "title" });
-    // DELETE RETURNING is not available on virtual tables
-    EXPECT_EQ(status, E_SQLITE_ERROR);
-    EXPECT_EQ(result.changed, -1);
-    
-    transaction->Execute("Drop TABLE articles");
-    EXPECT_EQ(transaction->Rollback(), E_OK);
+    ret = transaction->Commit();
+    EXPECT_NE(ret, E_OK);
+
+    // Enable the wal file operation.
+    std::string chattrSubiCmd = "chattr -i " + walFile;
+    system(chattrSubiCmd.c_str());
+
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
 }
 
 /**
@@ -2112,4 +2113,56 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
 
     int ret = transaction->Rollback();
     EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_052
+ * @tc.desc: abnormal testcase of virtual table with returning in transaction.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_052, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+    auto [createTableStatus, createTableresult] =
+        store->Execute("CREATE VIRTUAL TABLE IF NOT EXISTS articles USING fts5(title, content);");
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    ValuesBuckets rows;
+    ValuesBucket row;
+    row.Put("title", "fts5");
+    row.Put("content", "test virtual tables");
+    rows.Put(std::move(row));
+    auto [status, result] =
+        transaction->BatchInsert("articles", rows, {"title"}, ConflictResolution::ON_CONFLICT_IGNORE);
+    EXPECT_EQ(status, E_OK);
+    EXPECT_EQ(result.changed, 1);
+    ASSERT_NE(result.results, nullptr);
+    int rowCount = -1;
+    ASSERT_EQ(result.results->GetRowCount(rowCount), E_OK);
+    EXPECT_EQ(rowCount, 1);
+    RowEntity rowEntity;
+    EXPECT_EQ(result.results->GetRow(rowEntity), E_OK);
+    EXPECT_EQ(std::string(rowEntity.Get("title")), "fts5");
+
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("title", "fts5");
+    ValuesBucket values;
+    values.PutString("title", "fts5 updated");
+
+    std::tie(status, result) = transaction->Update(values, predicates, { "title" });
+    // UPDATE RETURNING is not available on virtual tables
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    EXPECT_EQ(result.results, nullptr);
+
+    std::tie(status, result) = store_->Delete(predicates, { "title" });
+    // DELETE RETURNING is not available on virtual tables
+    EXPECT_EQ(status, E_SQLITE_ERROR);
+    EXPECT_EQ(result.changed, -1);
+    
+    transaction->Execute("Drop TABLE articles");
+    EXPECT_EQ(transaction->Rollback(), E_OK);
 }
