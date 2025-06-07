@@ -110,4 +110,18 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
     EXPECT_EQ(RdUtils::RdDbClose(db, 0), E_OK);
     RdbHelper::DeleteRdbStore(dbPath);
 }
+
+/**
+ * @tc.name: RdUtils_Test_004
+ * @tc.desc: Test bind empty string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdUtilsTest, RdUtils_Test_004, TestSize.Level1)
+{
+    GRD_SqlStmt *stmt = nullptr;
+    uint32_t idx = 0;
+    const char *str = "";
+    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, -1, nullptr), E_OK);
+    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, 0, nullptr), E_OK);
+}
 } // namespace Test
