@@ -279,6 +279,7 @@ group("fuzztest") {
     "fuzztest/returning_fuzzer:fuzztest",
     "fuzztest/sharedblock_fuzzer:fuzztest",
     "fuzztest/transdb_fuzzer:fuzztest",
+    "fuzztest/transaction_fuzzer:fuzztest",
   ]
 }
 
