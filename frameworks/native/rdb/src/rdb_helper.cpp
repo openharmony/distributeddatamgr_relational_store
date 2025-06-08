@@ -15,6 +15,7 @@
 #define LOG_TAG "RdbHelper"
 #include "rdb_helper.h"
 
+#include "global_resource.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -62,10 +63,27 @@ bool RdbHelper::Init()
     return true;
 }
 
-bool RdbHelper::Destroy()
+bool RdbHelper::Destroy(const DestroyOption &option)
 {
     LOG_INFO("Destroy resource start");
-    return RdbStoreManager::GetInstance().Destroy();
+    bool ret = RdbStoreManager::GetInstance().Destroy();
+    if (option.cleanICU && GlobalResource::CleanUp(GlobalResource::ICU) != E_OK) {
+        LOG_WARN("CleanUp ICU failed");
+        ret = false;
+    }
+    if (option.cleanOpenSSL && GlobalResource::CleanUp(GlobalResource::OPEN_SSL) != E_OK) {
+        LOG_WARN("CleanUp OPEN_SSL failed");
+        ret = false;
+    }
+    if (GlobalResource::CleanUp(GlobalResource::OBS) != E_OK) {
+        LOG_WARN("CleanUp OBS failed");
+        ret = false;
+    }
+    if (GlobalResource::CleanUp(GlobalResource::IPC) != E_OK) {
+        LOG_WARN("CleanUp IPC failed");
+        ret = false;
+    }
+    return ret;
 }
 
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)

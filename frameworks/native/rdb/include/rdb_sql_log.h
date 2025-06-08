@@ -17,6 +17,7 @@
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_SQL_LOG_H
 #include <set>
 #include <string>
+#include <shared_mutex>
 #include <memory>
 
 #include "rdb_types.h"
@@ -38,9 +39,11 @@ public:
     static void Pause();
     static void Resume();
 private:
+    static bool IsPause();
     static ConcurrentMap<std::string, std::set<std::shared_ptr<SqlErrorObserver>>> observerSets_;
-    static thread_local int32_t suspenders_;
     static std::atomic<bool> enabled_;
+    static std::shared_mutex mutex_;
+    static std::map<uint64_t, int32_t> suspenders_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
