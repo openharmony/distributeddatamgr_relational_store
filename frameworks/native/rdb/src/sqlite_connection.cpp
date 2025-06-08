@@ -27,6 +27,7 @@
 #include <sstream>
 #include <string>
 
+#include "global_resource.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
@@ -78,6 +79,8 @@ const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQL
 __attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
 
+void *SqliteConnection::ICU_HANDLE = nullptr;
+std::mutex SqliteConnection::mutex_;
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
@@ -1064,7 +1067,7 @@ void SqliteConnection::LimitPermission(const RdbStoreConfig &config, const std::
 
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-    static void *handle = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    auto handle = GetICUHandle();
     if (handle == nullptr) {
         LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
         return E_NOT_SUPPORT;
@@ -1628,6 +1631,36 @@ bool SqliteConnection::IsDbVersionBelowSlave()
         }
     }
     return false;
+}
+
+int32_t SqliteConnection::ICUCleanUp()
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (ICU_HANDLE == nullptr) {
+        return E_OK;
+    }
+    auto cleanUp = reinterpret_cast<int32_t (*)()>(dlsym(ICU_HANDLE, "CleanUp"));
+    if (cleanUp == nullptr) {
+        LOG_ERROR("dlsym(CleanUp) failed(%{public}d)!", errno);
+        return E_ERROR;
+    }
+    auto code = cleanUp();
+    if (code == E_OK) {
+        dlclose(ICU_HANDLE);
+        ICU_HANDLE = nullptr;
+    }
+    return code;
+}
+
+void *SqliteConnection::GetICUHandle()
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (ICU_HANDLE != nullptr) {
+        return ICU_HANDLE;
+    }
+    ICU_HANDLE = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
+    GlobalResource::RegisterClean(GlobalResource::ICU, ICUCleanUp);
+    return ICU_HANDLE;
 }
 
 void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath)

@@ -247,11 +247,7 @@ void RdbStoreManager::Init()
 bool RdbStoreManager::Destroy()
 {
     Clear();
-    TaskExecutor::GetInstance().Stop();
-#if !defined(CROSS_PLATFORM)
-    return DistributedRdb::RdbManagerImpl::GetInstance().CleanUp();
-#endif
-    return true;
+    return TaskExecutor::GetInstance().Stop();
 }
 
 bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)

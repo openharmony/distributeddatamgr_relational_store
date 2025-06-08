@@ -17,6 +17,7 @@
 
 #include <thread>
 
+#include "global_resource.h"
 #include "ipc_skeleton.h"
 #include "irdb_service.h"
 #include "iservice_registry.h"
@@ -137,6 +138,9 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         serviceBase->AsObject()->RemoveDeathRecipient(deathRecipient);
     });
     param_ = param;
+    GlobalResource::RegisterClean(GlobalResource::IPC, []() {
+        return RdbManagerImpl::GetInstance().CleanUp();
+    });
     return { E_OK, rdbService_ };
 }
 
@@ -176,14 +180,14 @@ void RdbManagerImpl::ResetServiceHandle()
     rdbService_ = nullptr;
 }
 
-bool RdbManagerImpl::CleanUp()
+int32_t RdbManagerImpl::CleanUp()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (distributedDataMgr_ != nullptr) {
         auto code = distributedDataMgr_->Exit();
         if (code != E_OK) {
-            LOG_ERROR("distributedDataMgr_ Exit:%{public}d!", code);
-            return false;
+            LOG_ERROR("Exit failed.code:%{public}d!", code);
+            return code;
         }
     }
     distributedDataMgr_ = nullptr;
@@ -193,10 +197,10 @@ bool RdbManagerImpl::CleanUp()
     }
     if (rdbService_.use_count() > 1) {
         LOG_WARN("RdbService has other in use:%{public}ld!", rdbService_.use_count());
-        return false;
+        return E_ERROR;
     }
     rdbService_ = nullptr;
-    return true;
+    return E_OK;
 }
 
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)
