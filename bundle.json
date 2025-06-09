@@ -69,10 +69,7 @@
                 "file_api",
                 "cJSON"
             ],
-            "third_party": [
-                "sqlite",
-                "cJSON"
-            ]
+            "third_party": [ "sqlite" ]
         },
         "build": {
             "sub_component": [
