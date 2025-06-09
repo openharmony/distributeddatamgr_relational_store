@@ -2980,4 +2980,18 @@ bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChan
     }
     return false;
 }
+
+int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
+{
+    if (!config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return E_NOT_SUPPORT;
+    }
+
+    auto [ret, conn] = GetConn(false);
+    if (ret != E_OK) {
+        LOG_ERROR("The database is busy or closed when RegisterAlgo ret %{public}d.", ret);
+        return ret;
+    }
+    return conn->RegisterAlgo(clstAlgoName, func);
+}
 } // namespace OHOS::NativeRdb

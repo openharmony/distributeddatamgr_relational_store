@@ -1842,5 +1842,10 @@ std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
     std::string suffix(BINLOG_FOLDER_SUFFIX);
     return dbPath + suffix;
 }
+
+int SqliteConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
+{
+    return E_NOT_SUPPORT;
+}
 } // namespace NativeRdb
 } // namespace OHOS

@@ -74,6 +74,7 @@ protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
+    int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
 
 private:
     struct Suffix {

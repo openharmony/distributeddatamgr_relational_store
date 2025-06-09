@@ -98,6 +98,8 @@ public:
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
+    int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
+
     const RdbStoreConfig &GetConfig();
     int ConfigLocale(const std::string &localeStr) override;
     std::string GetName();

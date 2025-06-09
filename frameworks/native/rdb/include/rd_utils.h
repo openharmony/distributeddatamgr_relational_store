@@ -88,6 +88,7 @@ public:
     static int RdDbSetVersion(GRD_DB *db, GRD_ConfigTypeE type, int version);
 
     static int RdSqlRegistryThreadPool(GRD_DB *db);
+    static int RdSqlRegistryClusterAlgo(GRD_DB *db, const char *clstAlgoName, GRD_ClusterAlgoFunc func);
 private:
     static GRD_ThreadPoolT threadPool_;
 };
