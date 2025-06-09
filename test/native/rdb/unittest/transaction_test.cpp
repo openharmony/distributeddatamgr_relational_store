@@ -1940,8 +1940,11 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
  */
 HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
 {
-    RdbHelper::DeleteRdbStore(DATABASE_NAME);
-    RdbStoreConfig config(DATABASE_NAME);
+    // This test case constructs a transaction commit failure scenario. A special command is used to operate
+    //  the database file. To avoid affecting other test cases, this test case uses an independent database file.
+    const std::string dbPath = RDB_TEST_PATH + "transaction049_test.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    RdbStoreConfig config(dbPath);
     config.SetHaMode(HAMode::MAIN_REPLICA); // Dual-write must be enabled.
     config.SetReadOnly(false);
     TransactionTestOpenCallback helper;
@@ -1969,7 +1972,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
     ASSERT_EQ(result.second, count);
 
     // Constructing a Commit Failure Scenario
-    std::string walFile = DATABASE_NAME + "-wal";
+    std::string walFile = dbPath + "-wal";
 
     // Disabling wal File Operations
     std::string chattrAddiCmd = "chattr +i " + walFile;
@@ -1982,7 +1985,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
     std::string chattrSubiCmd = "chattr -i " + walFile;
     system(chattrSubiCmd.c_str());
 
-    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(dbPath);
 }
 
 /**
