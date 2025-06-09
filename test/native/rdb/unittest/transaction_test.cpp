@@ -1936,12 +1936,13 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_048, TestSize.Level1)
 /**
  * @tc.name: RdbStore_Transaction_049
  * @tc.desc: Crash Occurs When Test Commit Fails
+ *           This test case constructs a transaction commit failure scenario.
+ *           A special command is used to operate the database file.
+ *           To avoid affecting other test cases, this test case uses an independent database file.
  * @tc.type: FUNC
  */
 HWTEST_F(TransactionTest, RdbStore_Transaction_049, TestSize.Level1)
 {
-    // This test case constructs a transaction commit failure scenario. A special command is used to operate
-    //  the database file. To avoid affecting other test cases, this test case uses an independent database file.
     const std::string dbPath = RDB_TEST_PATH + "transaction049_test.db";
     RdbHelper::DeleteRdbStore(dbPath);
     RdbStoreConfig config(dbPath);
