@@ -284,29 +284,29 @@ int32_t CloudServiceProxy::DoAsync(const std::string &bundleName, const std::str
     return status;
 }
 
-int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName, sptr<IRemoteObject> notifier)
+int32_t CloudServiceProxy::InitNotifier(sptr<IRemoteObject> notifier)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_INIT_NOTIFIER, reply, bundleName, notifier);
+    int32_t status = IPC_SEND(TRANS_INIT_NOTIFIER, reply, notifier);
     if (status != SUCCESS) {
-        LOG_ERROR("Status:0x%{public}x bundleName:%{public}s", status, bundleName.c_str());
+        LOG_ERROR("Status:0x%{public}x", status);
     }
     return status;
 }
 
-int32_t CloudServiceProxy::InitNotifier(const std::string &bundleName)
+int32_t CloudServiceProxy::InitNotifier()
 {
     notifier_ = new (std::nothrow) CloudNotifierStub([this](uint32_t seqNum, Details &&result) {
         OnSyncComplete(seqNum, std::move(result));
     });
     if (notifier_ == nullptr) {
-        LOG_ERROR("create notifier failed, bundleName = %{public}s", bundleName.c_str());
+        LOG_ERROR("create notifier failed");
         return ERROR;
     }
-    auto status = InitNotifier(bundleName, notifier_->AsObject());
+    auto status = InitNotifier(notifier_->AsObject());
     if (status != SUCCESS) {
         notifier_ = nullptr;
-        LOG_ERROR("init notifier failed, bundleName = %{public}s", bundleName.c_str());
+        LOG_ERROR("init notifier failed.");
         return status;
     }
     return SUCCESS;

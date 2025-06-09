@@ -135,7 +135,7 @@ public:
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
     virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const DistributedRdb::AsyncDetail &async) = 0;
-    virtual int32_t InitNotifier(const std::string &bundleName, sptr<IRemoteObject> notifier) = 0;
+    virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };

@@ -62,8 +62,7 @@ public:
     static napi_value CloudSync(napi_env env, napi_callback_info info);
 private:
     struct CloudSyncContext : public ContextBase {
-        std::string currentBundleName;
-        std::string syncBundleName;
+        std::string bundleName;
         std::string storeId;
         int32_t syncMode;
         napi_ref asyncHolder = nullptr;

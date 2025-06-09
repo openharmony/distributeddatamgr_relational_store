@@ -29,7 +29,6 @@ public:
 class IKvStoreDataService : public IRemoteBroker {
 public:
     virtual sptr<IRemoteObject> GetFeatureInterface(const std::string &name) = 0;
-    virtual int32_t RegisterClientDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedKv.IKvStoreDataService");
 };

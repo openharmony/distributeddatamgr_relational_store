@@ -16,8 +16,6 @@
 #include "cloud_manager.h"
 
 #include "cloud_service_proxy.h"
-#include "data_mgr_service.h"
-#include "icloud_client_death_observer.h"
 #include "icloud_service.h"
 #include "iservice_registry.h"
 #include "itypes_util.h"
@@ -26,7 +24,14 @@
 
 namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
+using namespace OHOS::DistributedRdb::RelationalStore;
 
+class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
+public:
+    explicit DataMgrService(const sptr<IRemoteObject> &impl);
+    ~DataMgrService() = default;
+    sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
+};
 class CloudDeath : public IRemoteObject::DeathRecipient {
 public:
     explicit CloudDeath(std::function<void()> action) : action_(std::move(action)) {};
@@ -47,11 +52,10 @@ CloudManager &CloudManager::GetInstance()
     return instance;
 }
 
-std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
-    const std::optional<std::string> &bundleName)
+std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService()
 {
     std::lock_guard<decltype(mutex_)> lg(mutex_);
-    if ((cloudService_ != nullptr) && (!bundleName || bundleName.value() == bundleName_)) {
+    if (cloudService_ != nullptr) {
         return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
     }
 
@@ -71,10 +75,6 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
         LOG_ERROR("New CloudDataServiceProxy failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
-    sptr<IRemoteObject> clientDeathObserver = new (std::nothrow) CloudClientDeathObserverStub();
-    if (!bundleName) {
-        dataMgr->RegisterClientDeathObserver(bundleName.value(), clientDeathObserver);
-    }
 
     auto cloudObject = dataMgr->GetFeatureInterface(CloudService::SERVICE_NAME);
     if (cloudObject == nullptr) {
@@ -91,8 +91,7 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     if (proxy == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
-    if (bundleName && !bundleName.value().empty() &&
-        proxy->InitNotifier(bundleName.value()) != CloudService::Status::SUCCESS) {
+    if (proxy->InitNotifier() != CloudService::Status::SUCCESS) {
         LOG_ERROR("Init notifier failed.");
         return { CloudService::Status::ERROR, nullptr };
     }
@@ -101,7 +100,41 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     if (cloudService_ == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
-    bundleName_ = bundleName ? bundleName.value() : "";
     return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
+}
+
+DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)
+{
+}
+
+sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
+{
+    LOG_INFO("%s", name.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(DataMgrService::GetDescriptor())) {
+        LOG_ERROR("Write descriptor failed.");
+        return nullptr;
+    }
+
+    if (!ITypesUtil::Marshal(data, name)) {
+        LOG_ERROR("Write descriptor failed.");
+        return nullptr;
+    }
+
+    MessageParcel reply;
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t error = Remote()->SendRequest(
+        static_cast<uint32_t>(CloudKvStoreInterfaceCode::GET_FEATURE_INTERFACE), data, reply, mo);
+    if (error != 0) {
+        LOG_ERROR("SendRequest returned %{public}d", error);
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject;
+    if (!ITypesUtil::Unmarshal(reply, remoteObject)) {
+        LOG_ERROR("Remote object is nullptr.");
+        return nullptr;
+    }
+    return remoteObject;
 }
 } // namespace OHOS::CloudData
