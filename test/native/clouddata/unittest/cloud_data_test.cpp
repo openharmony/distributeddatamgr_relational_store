@@ -632,7 +632,7 @@ HWTEST_F(CloudDataTest, InitNotifier001, TestSize.Level1)
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
     sptr<CloudNotifierStub> notifier = nullptr;
-    auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);  // can not Marshalling a 'nullptr'
+    auto status = proxy->InitNotifier(notifier);  // can not Marshalling a 'nullptr'
     EXPECT_EQ(status, CloudService::IPC_PARCEL_ERROR);
     LOG_INFO("InitNotifier001 test end.");
 }
@@ -648,7 +648,7 @@ HWTEST_F(CloudDataTest, InitNotifier002, TestSize.Level1)
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
     sptr<CloudNotifierStub> notifier = new (std::nothrow) CloudNotifierStub(nullptr);
-    auto status = proxy->InitNotifier(TEST_BUNDLE_NAME, notifier);
+    auto status = proxy->InitNotifier(notifier);
     EXPECT_EQ(status, CloudService::SUCCESS);
     LOG_INFO("InitNotifier002 test end.");
 }

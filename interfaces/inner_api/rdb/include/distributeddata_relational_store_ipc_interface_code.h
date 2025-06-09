@@ -64,8 +64,7 @@ enum class KvStoreInterfaceCode {
 };
 
 enum class CloudKvStoreInterfaceCode {
-    GET_FEATURE_INTERFACE = 0,
-    REGISTER_CLIENT_DEATH_OBSERVER,
+    GET_FEATURE_INTERFACE = 0
 };
 
 enum class ICloudNotifierInterfaceCode {

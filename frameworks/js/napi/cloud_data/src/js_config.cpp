@@ -17,11 +17,9 @@
 
 #include <cstddef>
 #include <memory>
-#include <optional>
 
 #include "cloud_manager.h"
 #include "cloud_service.h"
-#include "js_ability.h"
 #include "js_cloud_utils.h"
 #include "js_df_manager.h"
 #include "js_error_utils.h"
@@ -517,7 +515,7 @@ void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::s
         // less required 4 arguments :: <bundleName> <storeId> <mode> <progress>
         ASSERT_BUSINESS_ERR(ctxt, argc >= 4, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         // 0 is the index of argument bundleName
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->syncBundleName);
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
         ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
             "The type of bundleName must be string and not empty.");
         // 1 is the index of argument storeId
@@ -541,12 +539,6 @@ void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::s
         ASSERT_BUSINESS_ERR(
             ctxt, napi_create_reference(env, argv[3], 1, &ctxt->asyncHolder) == napi_ok,    // 3 means the progress
             Status::INVALID_ARGUMENT, "create refrence failed.");
-        auto context = JSAbility::GetCurrentAbility(env, nullptr);
-        ASSERT_BUSINESS_ERR(
-            ctxt, context != nullptr, Status::ERROR, "Get current ability context failed.");
-        ctxt->currentBundleName = context->GetBundleName();
-        ASSERT_BUSINESS_ERR(
-            ctxt, !ctxt->currentBundleName.empty(), Status::ERROR, "Get current bundleName failed.");
     }, true);
 }
 
@@ -564,7 +556,7 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
     ASSERT_NULL(!ctxt->isThrowError, "CloudSync exit");
 
     auto execute = [ctxt]() {
-        auto [state, proxy] = CloudManager::GetInstance().GetCloudService(ctxt->currentBundleName);
+        auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
             if (state != CloudService::SERVER_UNAVAILABLE) {
                 state = CloudService::NOT_SUPPORT;
@@ -587,7 +579,7 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         CloudService::Option option;
         option.syncMode = ctxt->syncMode;
         option.seqNum = GetSeqNum();
-        auto status = proxy->CloudSync(ctxt->syncBundleName, ctxt->storeId, option, async);
+        auto status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
         if (status == Status::INVALID_ARGUMENT) {
             status = Status::INVALID_ARGUMENT_V20;
         }
