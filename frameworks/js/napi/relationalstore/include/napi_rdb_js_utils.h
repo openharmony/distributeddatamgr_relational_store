@@ -28,6 +28,7 @@
 #include "value_object.h"
 #include "values_bucket.h"
 #include "values_buckets.h"
+#include "rdb_sql_utils.h"
 
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
@@ -39,6 +40,7 @@ using JSChangeInfo = OHOS::RelationalStoreJsKit::NapiRdbStoreObserver::JSChangeI
 using PRIKey = OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey;
 using Error = RelationalStoreJsKit::Error;
 using SecurityLevel = NativeRdb::SecurityLevel;
+using SqlInfo = NativeRdb::SqlInfo;
 using Tokenizer = NativeRdb::Tokenizer;
 using RdbStoreConfig = NativeRdb::RdbStoreConfig;
 using BigInt = OHOS::NativeRdb::BigInteger;
@@ -141,6 +143,8 @@ template<>
 napi_value Convert2JSValue(napi_env env, const SqlExecInfo &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value);
+template<>
+napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlinfo);
 bool IsNapiString(napi_env env, napi_value value);
 
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(

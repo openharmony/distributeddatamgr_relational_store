@@ -30,6 +30,7 @@ sources = [
   "src/entry_point.cpp",
   "src/napi_async_call.cpp",
   "src/napi_rdb_const_properties.cpp",
+  "src/napi_rdb_context.cpp",
   "src/napi_rdb_error.cpp",
   "src/napi_rdb_js_utils.cpp",
   "src/napi_rdb_log_observer.cpp",
