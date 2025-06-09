@@ -1153,3 +1153,182 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_002, TestSize.Level1)
     res = store->Execute("DROP TABLE test;", {}, 0);
     EXPECT_EQ(res.first, E_OK);
 }
+
+constexpr uint16_t CLUSTER_INDEX_DIM = 256;
+
+int32_t ClusterAlgoByEvenNumber(ClstAlgoParaT *para)
+{
+    int *result = para->clusterResult;
+    const int specialId = 985;
+    for (uint32_t i = 0; i < para->newFeaturesNum; i++) {
+        result[i] = specialId;
+    }
+    std::cout << "ClusterAlgoByEvenNumber exec!" << std::endl;
+    return 0;
+}
+
+/**
+ * @tc.name: RdbStore_RegisterAlgo_001
+ * @tc.desc: test RdbStore RegisterAlgo in vector mode
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string algoName = "clst_algo_v0";
+    int ret = store->RegisterAlgo(algoName, nullptr);
+    EXPECT_EQ(ret, E_NO_MORE_ROWS);
+    ret = store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
+    EXPECT_EQ(ret, E_OK);
+
+    std::string sqlCreateTable =
+        "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(CLUSTER_INDEX_DIM) + "));";
+    std::string sqlCreateIndex =
+        "CREATE INDEX ivfcluster_l2_idx ON test USING IVFCLUSTER(repr L2) with (CLUSTER_ALGO='clst_algo_v0');";
+    std::string sqlSelect = "SELECT id, repr, CLUSTER_ID(repr) from test;";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    res = store->Execute(sqlCreateIndex.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    for (uint16_t i = 0; i < EXPEC_INSERT_CNT_FOR; i++) {
+        std::string sqlInsert = "INSERT INTO test VALUES(1000000" + std::to_string(i) + ", '" +
+                                GetRandVector(MAX_INT_PART, CLUSTER_INDEX_DIM) + "');";
+        res = store->Execute(sqlInsert.c_str(), {});
+        EXPECT_EQ(res.first, E_OK);
+    }
+
+    ret = store->RegisterAlgo(algoName, nullptr);
+    EXPECT_EQ(ret, E_OK);
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_RegisterAlgo_002
+ * @tc.desc: test RdbStore RegisterAlgo in vector mode
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_002, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string algoName = "clst_algo_v0";
+    int ret = store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
+    EXPECT_EQ(ret, E_OK);
+
+    std::string sqlCreateTable =
+        "CREATE TABLE test(id int primary key, repr floatvector(" + std::to_string(CLUSTER_INDEX_DIM) + "));";
+    std::string sqlCreateIndex =
+        "CREATE INDEX ivfcluster_l2_idx ON test USING IVFCLUSTER(repr L2) with (CLUSTER_ALGO='clst_algo_v0');";
+    std::string sqlSelect = "SELECT id, repr, CLUSTER_ID(repr) from test;";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    res = store->Execute(sqlCreateIndex.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    for (uint16_t i = 0; i < EXPEC_INSERT_CNT_FOR; i++) {
+        std::string sqlInsert = "INSERT INTO test VALUES(1000000" + std::to_string(i) + ", '" +
+                                GetRandVector(MAX_INT_PART, CLUSTER_INDEX_DIM) + "');";
+        res = store->Execute(sqlInsert.c_str(), {});
+        EXPECT_EQ(res.first, E_OK);
+    }
+
+    std::string sqlRunCluster = "PRAGMA CLUSTER_RUN test.ivfcluster_l2_idx;";
+    res = store->Execute(sqlRunCluster.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sqlSelect.c_str(), std::vector<ValueObject>());
+    EXPECT_NE(resultSet, nullptr);
+
+    int32_t resCnt = 0;
+    while (resultSet->GoToNextRow() == E_OK) {
+        resCnt++;
+    }
+    EXPECT_EQ(EXPEC_INSERT_CNT_FOR, resCnt);
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_RegisterAlgo_003
+ * @tc.desc: test sqlite don't support RegisterAlgo
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_003, TestSize.Level1)
+{
+    RdbExecuteRdTest::store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
+
+    int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
+    RdbStoreConfig config(RdbExecuteRdTest::databaseName);
+    config.SetIsVector(false);
+    config.SetEncryptStatus(GetParam());
+    ExecuteTestOpenRdCallback helper;
+    RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbExecuteRdTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+
+    std::string sqlCreateTable =
+        "CREATE TABLE test(id int primary key, repr int);";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    std::string algoName = "clst_algo_v0";
+    int ret = store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_RegisterAlgo_004
+ * @tc.desc: test don't support RegisterAlgo
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_004, TestSize.Level1)
+{
+    RdbExecuteRdTest::store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbExecuteRdTest::databaseName);
+    config.SetIsVector(true);
+    config.SetReadOnly(true);
+    config.SetEncryptStatus(GetParam());
+    ExecuteTestOpenRdCallback helper;
+    RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbExecuteRdTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::string algoName = "clst_algo_v0";
+    int ret = RdbExecuteRdTest::store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: RdbStore_RegisterAlgo_005
+ * @tc.desc: test RegisterAlgo after deleteRdbStore
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_005, TestSize.Level1)
+{
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string algoName = "clst_algo_v0";
+    int ret = store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
+}

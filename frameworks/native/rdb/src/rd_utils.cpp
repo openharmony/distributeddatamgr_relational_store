@@ -677,5 +677,17 @@ int RdUtils::RdSqlRegistryThreadPool(GRD_DB *db)
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlRegistryThreadPool(db, &threadPool_));
 }
 
+int RdUtils::RdSqlRegistryClusterAlgo(GRD_DB *db, const char *clstAlgoName, GRD_ClusterAlgoFunc func)
+{
+    if (GRD_KVApiInfo.DBSqlRegistryClusterAlgo == nullptr) {
+        GRD_KVApiInfo = GetApiInfoInstance();
+    }
+    if (GRD_KVApiInfo.DBSqlRegistryClusterAlgo == nullptr) {
+        LOG_ERROR("registry ClusterAlgo ptr is nullptr");
+        return E_NOT_SUPPORT;
+    }
+    return TransferGrdErrno(GRD_KVApiInfo.DBSqlRegistryClusterAlgo(db, clstAlgoName, func));
+}
+
 } // namespace NativeRdb
 } // namespace OHOS

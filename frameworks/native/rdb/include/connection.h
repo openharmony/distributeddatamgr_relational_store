@@ -24,9 +24,9 @@
 
 #include "knowledge_types.h"
 #include "rdb_common.h"
+#include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "statement.h"
-#include "rdb_store_config.h"
 
 namespace DistributedDB {
 class StoreObserver;
@@ -81,6 +81,7 @@ public:
     virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
+    virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;
 
 private:
     int32_t id_ = 0;
