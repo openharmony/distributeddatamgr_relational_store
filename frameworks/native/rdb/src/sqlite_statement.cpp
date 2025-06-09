@@ -67,7 +67,6 @@ SqliteStatement::SqliteStatement(const RdbStoreConfig *config)
 
 SqliteStatement::~SqliteStatement()
 {
-    LOG_WARN("SqliteStatement::~SqliteStatement");
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
