@@ -168,6 +168,30 @@ struct PromiseInfo {
     std::vector<std::string> permissionNames_ = {};
 };
 
+struct ClstAlgoParaT {
+    /* Input Parameters */
+    uint16_t featureDim;      // Feature vector dimension, currently supports 256D only
+    uint32_t oldFeaturesNum;  // Number of historical cluster center vectors
+    float *oldFeatures;       // Array of historical cluster center vectors,
+                              // stored in row-major order (length: oldFeaturesNum * dim)
+    const int32_t *oldClstGroupId;  // Cluster ID for each historical vector (length: oldFeaturesNum)
+    const int32_t *oldClstVecNum;   // Number of vectors in each historical cluster (length: oldFeaturesNum)
+
+    uint32_t newFeaturesNum;  // Number of newly collected vectors
+    float *newFeatures;       // Array of new feature vectors
+                              // stored in row-major order (length: newFeaturesNum * dim)
+    int32_t newClusterIdStart;  // Starting cluster ID for new clusters, usually the maximum old cluster ID plus one
+
+    /* Customization Parameters */
+    void *customParams;       // Developers need to communicate with the database development team before using it
+
+    /* Output Parameters */
+    int32_t *clusterResult;   // Clustering result array, indicating the assigned cluster ID for each new vector
+                              // (length: newFeaturesNum)
+};
+
+using ClusterAlgoFunc = int32_t (*)(ClstAlgoParaT *para);
+
 class RdbStoreConfig {
 public:
     struct CryptoParam {

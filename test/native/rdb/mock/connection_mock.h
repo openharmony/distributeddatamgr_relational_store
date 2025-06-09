@@ -62,6 +62,7 @@ public:
     MOCK_METHOD(ExchangeStrategy, GenerateExchangeStrategy, (const SlaveStatus &status), (override));
     MOCK_METHOD(int, SetKnowledgeSchema, (const DistributedRdb::RdbKnowledgeSchema &schema), (override));
     MOCK_METHOD(int, CleanDirtyLog, (const std::string &table, uint64_t cursor), (override));
+    MOCK_METHOD(int, RegisterAlgo, (const std::string &clstAlgoName, ClusterAlgoFunc func), (override));
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H
