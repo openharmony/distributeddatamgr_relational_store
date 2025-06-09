@@ -665,4 +665,11 @@ int RdbStore::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &sche
 {
     return E_NOT_SUPPORT;
 }
+
+int RdbStore::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
+{
+    (void)func;
+    (void)clstAlgoName;
+    return E_NOT_SUPPORT;
+}
 } // namespace OHOS::NativeRdb

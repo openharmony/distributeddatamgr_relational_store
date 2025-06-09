@@ -483,6 +483,32 @@ void RdbInitKnowledgeSchemaFuzz(FuzzedDataProvider &provider)
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     store->InitKnowledgeSchema(schema);
 }
+
+int32_t ClusterAlgoByEvenNumberFuzz(ClstAlgoParaT *para)
+{
+    int *result = para->clusterResult;
+    const int specialId = 985;
+    for (uint32_t i = 0; i < para->newFeaturesNum; i++) {
+        result[i] = specialId;
+    }
+    return 0;
+}
+
+bool RdbRegisterAlgoFuzz(FuzzedDataProvider &provider)
+{
+    if (RdbStoreFuzzTest::store_ == nullptr) {
+        return false;
+    }
+    bool result = true;
+    std::string clstAlgoName = provider.ConsumeRandomLengthString();
+    int errCode =
+        RdbStoreFuzzTest::store_->RegisterAlgo(clstAlgoName, ClusterAlgoByEvenNumberFuzz);
+    if (errCode != E_OK) {
+        result = false;
+    }
+    return result;
+}
+
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -501,6 +527,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbQueryLockedRowFuzz1(provider);
     OHOS::RdbQueryLockedRowFuzz2(provider);
     OHOS::RdbInitKnowledgeSchemaFuzz(provider);
+    OHOS::RdbRegisterAlgoFuzz(provider);
     OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }

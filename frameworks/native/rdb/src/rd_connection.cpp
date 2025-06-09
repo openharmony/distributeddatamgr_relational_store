@@ -357,5 +357,17 @@ int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu:
 {
     return E_NOT_SUPPORT;
 }
+
+int RdConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
+{
+    int errCode =
+        RdUtils::RdSqlRegistryClusterAlgo(dbHandle_, clstAlgoName.c_str(), reinterpret_cast<GRD_ClusterAlgoFunc>(func));
+    if (errCode != E_OK) {
+        LOG_ERROR("Can not registry cluster func in rd db %{public}d.", errCode);
+        return errCode;
+    }
+    return E_OK;
+}
+
 } // namespace NativeRdb
 } // namespace OHOS

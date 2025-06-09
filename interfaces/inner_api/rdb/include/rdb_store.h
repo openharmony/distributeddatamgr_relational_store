@@ -781,6 +781,14 @@ public:
      */
     virtual int ConfigLocale(const std::string &localeStr);
 
+    /**
+     * @brief Register a customised cluster algo to db
+     *
+     * @param clstAlgoName name of function
+     * @param func ptr of function
+     */
+    virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func);
+
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };
