@@ -38,6 +38,7 @@ ohos_unittest("NativeDataAbilityAdapterTest") {
     "data_share:datashare_common_lite",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "relational_store:native_dataability",
     "relational_store:rdb_data_ability_adapter",
   ]
