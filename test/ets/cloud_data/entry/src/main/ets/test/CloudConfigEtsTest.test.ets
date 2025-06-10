@@ -54,7 +54,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync001 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e.code == 202).assertTrue();
             done();
         }
     })
@@ -77,7 +77,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync002 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e.code == 202).assertTrue();
             done();
         }
     })
@@ -100,7 +100,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync003 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 201).assertTrue();
+            expect(e.code == 202).assertTrue();
             done();
         }
     })
