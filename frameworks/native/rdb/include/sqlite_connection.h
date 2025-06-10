@@ -105,7 +105,6 @@ private:
 
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
-    int SetCrcCheck(const RdbStoreConfig &config);
     void SetDwrEnable(const RdbStoreConfig &config);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
@@ -155,7 +154,6 @@ private:
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
-    static constexpr uint32_t SQLITE_CKSUMVFS_RESERVE_BYTES = 8;
     static std::mutex mutex_;
     static void *ICU_HANDLE;
     static const int32_t regCreator_;
