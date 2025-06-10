@@ -43,7 +43,6 @@ static constexpr JSUtils::JsFeatureSpace FEATURE_NAME_SPACES[] = {
     { "ohos.data.dataShare", "ZGF0YS5kYXRhU2hhcmU=", false },
     { "ohos.data.distributedDataObject", "ZGF0YS5kaXN0cmlidXRlZERhdGFPYmplY3Q=", false },
     { "ohos.data.distributedKVStore", "ZGF0YS5kaXN0cmlidXRlZEtWU3RvcmU=", false },
-    { "ohos.data.graphStore", "ZGF0YS5ncmFwaFN0b3Jl", true },
     { "ohos.data.rdb", "ZGF0YS5yZGI=", true },
     { "ohos.data.relationalStore", "ZGF0YS5yZWxhdGlvbmFsU3RvcmU=", true },
 };
