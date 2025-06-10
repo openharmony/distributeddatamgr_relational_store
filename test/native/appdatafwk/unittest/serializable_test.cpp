@@ -299,7 +299,6 @@ HWTEST_F(SerializableTest, SetMapValue, TestSize.Level2)
     TestMap in;
     in.testMap["version"] = 552;
     auto json = Serializable::JSONWrapper::to_string(in.Marshall());
-
     TestMap out;
     out.Unmarshall(json);
     ASSERT_TRUE(in == out);
