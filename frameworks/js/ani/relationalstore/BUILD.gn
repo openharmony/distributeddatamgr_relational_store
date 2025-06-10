@@ -1,0 +1,83 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+ohos_shared_library("relationalstore_ani") {
+  sources = [
+    "src/ani_rdb_entry.cpp",
+    "src/ani_rdb_error.cpp",
+    "src/ani_rdb_predicates.cpp",
+    "src/ani_rdb_store.cpp",
+    "src/ani_rdb_store_helper.cpp",
+    "src/ani_result_set.cpp",
+    "src/ani_utils.cpp",
+  ]
+  include_dirs = [
+    "./include",
+    "${relational_store_common_path}/include",
+  ]
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
+  ]
+
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:appkit_native",
+    "ability_runtime:wantagent_innerkits",
+    "c_utils:utils",
+    "data_share:datashare_common",
+    "hilog:libhilog",
+    "runtime_core:ani",
+    "samgr:samgr_proxy",
+  ]
+
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  output_extension = "so"
+}
+
+generate_static_abc("relationalstore_abc") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.data.relationalStore.ets" ]
+  dst_file = "$target_out_dir/relationalstore.abc"
+  out_puts = [ "$target_out_dir/relationalstore.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/relationalstore.abc"
+}
+
+ohos_prebuilt_etc("relationalstore_abc_etc") {
+  source = "$target_out_dir/relationalstore.abc"
+  module_install_dir = "framework"
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  deps = [ ":relationalstore_abc" ]
+}
+
+group("relationalstore_ani_package") {
+  deps = [
+    ":relationalstore_abc_etc",
+    ":relationalstore_ani",
+  ]
+}
