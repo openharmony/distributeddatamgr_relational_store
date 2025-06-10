@@ -135,6 +135,8 @@ HWTEST_F(SerializableTest, GetNormalVal, TestSize.Level2)
     Normal normal1;
     normal1.Unmarshall(jstr);
     ASSERT_TRUE(normal == normal1) << normal1.name;
+    ASSERT_FALSE(normal1.Unmarshall(""));
+    ASSERT_FALSE(normal1.Unmarshall("{"));
 }
 
 /**
@@ -338,5 +340,24 @@ HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2)
     TestUint out;
     out.Unmarshall(json);
     ASSERT_TRUE(in == out);
+}
+
+/**
+* @tc.name: ToString
+* @tc.desc: to string.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, ToString, TestSize.Level1)
+{
+    Serializable::JSONWrapper wrapper;
+    wrapper["name"] = "Alice";
+    wrapper["age"] = 30;
+    wrapper["height"] = 1.75;
+    wrapper["is_student"] = false;
+    std::string result = wrapper;
+    EXPECT_EQ(result, "{\"name\":\"Alice\",\"age\":30,\"height\":1.75,\"is_student\":false}");
+    EXPECT_TRUE(wrapper["name"].is_string());
+    EXPECT_TRUE(wrapper["age"].is_number_float());
+    EXPECT_TRUE(wrapper["is_student"].is_boolean());
 }
 } // namespace OHOS::Test
