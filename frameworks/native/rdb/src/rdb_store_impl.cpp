@@ -223,7 +223,8 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
         LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
             SqliteUtils::Anonymous(param.storeName_).c_str());
         auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+        if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
             pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() {
                 AfterOpen(param, retry);
             });
@@ -634,7 +635,7 @@ int32_t ObsManger::CleanUp()
     auto cleanUp = reinterpret_cast<CleanFunc>(dlsym(handle_, "CleanUp"));
     if (cleanUp == nullptr) {
         LOG_ERROR("dlsym(CleanUp) failed!");
-        return E_OK;
+        return E_ERROR;
     }
     if (!cleanUp()) {
         return E_ERROR;
@@ -990,7 +991,8 @@ void RdbStoreImpl::RegisterDataChangeCallback(
     if (conn == nullptr) {
         relConnPool->Dump(true, "DATACHANGE");
         auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+        if (pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
             pool->Schedule(std::chrono::seconds(1),
                 [delayNotifier, connPool, retry]() { RegisterDataChangeCallback(delayNotifier, connPool, retry); });
         }

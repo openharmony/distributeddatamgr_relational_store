@@ -203,15 +203,14 @@ bool ObsMgrAdapterImpl::Clean()
             int32_t err = client->UnregisterObserver(Uri(key), *it);
             if (err != 0) {
                 LOG_ERROR("UnregisterObserver failed. code:%{public}d, uri:%{public}s", err, Anonymous(key).c_str());
-                ++it;
-                continue;
+                break;
             }
             PushReleaseObs(*it);
             it = observer.erase(it);
         }
-        return true;
+        return observer.empty();
     });
-    return CleanReleaseObs(true);
+    return obs_.Empty() && CleanReleaseObs(true);
 }
 
 void ObsMgrAdapterImpl::RemoveObserver(const std::string &uri, sptr<RdbStoreLocalSharedObserver> observer)
@@ -260,7 +259,8 @@ bool ObsMgrAdapterImpl::CleanReleaseObs(bool force)
                 it = releaseObs_.erase(it);
             }
         }
-    } while (force && retry++ < MAX_RETRY && !releaseObs_.empty());
+        retry++;
+    } while (force && retry < MAX_RETRY && !releaseObs_.empty());
     if (!releaseObs_.empty()) {
         LOG_ERROR("Failed to release obs, size:%{public}zu", releaseObs_.size());
         return false;

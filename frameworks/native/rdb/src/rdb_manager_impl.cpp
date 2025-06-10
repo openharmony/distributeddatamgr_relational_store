@@ -192,7 +192,8 @@ int32_t RdbManagerImpl::CleanUp()
     }
     distributedDataMgr_ = nullptr;
     int32_t retry = 0;
-    while (rdbService_ != nullptr && rdbService_.use_count() > 1 && retry++ < MAX_RETRY) {
+    while (rdbService_ != nullptr && retry < MAX_RETRY) {
+        retry++;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (rdbService_.use_count() > 1) {
@@ -295,7 +296,8 @@ int32_t RdbStoreDataServiceProxy::Exit(const std::string &featureName)
     ITypesUtil::Unmarshal(reply, status);
     if (status == E_OK) {
         int32_t retry = 0;
-        while (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1 && retry++ < MAX_RETRY) {
+        while (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1 && retry < MAX_RETRY) {
+            retry++;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         if (clientDeathObserver_ != nullptr && clientDeathObserver_->GetSptrRefCount() > 1) {
