@@ -317,7 +317,7 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
             RdbSecurityManager::GetInstance().GetBundleNameByAlias(),
             "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
             ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
-        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::Anonymous(fileDir).c_str());
+        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::GetArea(fileDir).c_str());
         return false;
     }
     return true;
@@ -543,9 +543,7 @@ RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
 {
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
     const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
-    if (!InitPath(lockDir)) {
-        LOG_ERROR("lockDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(lockDir).c_str());
-    }
+    bool isDirCreate = InitPath(lockDir);
     const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
     lock_ = lockDir + dbName + SUFFIX_KEY_LOCK;
     keys_[PUB_KEY_FILE] = dbKeyDir + dbName + SUFFIX_PUB_KEY;
@@ -554,7 +552,7 @@ RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
         return;
     }
     lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-    if (lockFd_ < 0) {
+    if (lockFd_ < 0 && isDirCreate) {
         LOG_WARN("open failed, errno:%{public}d, file:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
     }
 }

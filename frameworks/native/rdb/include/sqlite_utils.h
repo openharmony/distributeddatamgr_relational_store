@@ -68,6 +68,7 @@ public:
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static size_t DeleteFolder(const std::string &folderPath);
     static std::string Anonymous(const std::string &srcFile);
+    static std::string GetArea(const std::string &srcFile);
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
     static std::string GetSlavePath(const std::string &name);

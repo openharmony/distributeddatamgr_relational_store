@@ -220,8 +220,10 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
         return;
     }
     if (err != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-            SqliteUtils::Anonymous(param.storeName_).c_str());
+        if (err != E_INVALID_ARGS) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(param.storeName_).c_str());
+        }
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
             pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() {
@@ -1530,7 +1532,7 @@ int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement, cons
     auto [err, version] = statement->ExecuteForValue();
     statement = nullptr;
     if (vSchema_ < static_cast<int64_t>(version)) {
-        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 ">",
             SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
         vSchema_ = version;
         if (!isMemoryRdb_) {

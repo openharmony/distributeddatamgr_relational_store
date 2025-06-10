@@ -270,6 +270,20 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
 }
 
+std::string SqliteUtils::GetArea(const std::string &srcFile)
+{
+    auto pre = srcFile.find("/");
+    auto end = srcFile.rfind("/");
+    if (pre == std::string::npos || end - pre < AREA_MINI_SIZE) {
+        return "";
+    }
+    size_t pos = srcFile.find("el");
+    if (srcFile != std::string::npos && pos + DISPLAY_BYTE < srcFile.length()) {
+        return srcFile.substr(pos, PREFIX_LENGTH);
+    }
+    return "";
+}
+
 ssize_t SqliteUtils::GetFileSize(const std::string &fileName)
 {
     struct stat fileStat;
