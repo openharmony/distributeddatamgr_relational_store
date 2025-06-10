@@ -26,12 +26,12 @@ class HiTrace final {
 public:
     inline HiTrace(const std::string &value)
     {
-        StartTrace(HITRACE_TAG_DISTRIBUTEDDATA, value);
+        StartTraceEx(HiTraceOutputLevel::HITRACE_LEVEL_INFO, HITRACE_TAG_DISTRIBUTEDDATA, value.c_str(), "");
     }
 
     inline ~HiTrace()
     {
-        FinishTrace(HITRACE_TAG_DISTRIBUTEDDATA);
+        FinishTraceEx(HiTraceOutputLevel::HITRACE_LEVEL_INFO, HITRACE_TAG_DISTRIBUTEDDATA);
     }
 };
 } // namespace NativeRdb
