@@ -78,11 +78,9 @@ public:
         bool cleanICU = false;
     };
     /**
-     * @brief Clean up resources before dlclose.
+     * @brief initialization resources.
      *
-     * @note This interface is only used to release resources before calling dlclose, and can only be called before
-     * actually uninstalling rdb. Please manually release all resources obtained from rdb (rdbStore, resultSet,
-     * transaction, etc.) before calling, and then dlopen again to use them normally
+     * @note Create pool initialization resources.
      */
     API_EXPORT static bool Init();
 

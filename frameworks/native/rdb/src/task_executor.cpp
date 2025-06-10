@@ -67,7 +67,8 @@ bool TaskExecutor::Stop()
         pool_ = nullptr;
     }
     int32_t retry = 0;
-    while (pool.use_count() > 1 && retry++ < MAX_RETRY) {
+    while (pool != nullptr && retry < MAX_RETRY) {
+        retry++;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (pool.use_count() > 1) {

@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 
 #include "rdb_store_impl.h"
+#include "sqlite_connection.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -96,7 +97,7 @@ HWTEST_F(RdbObsManageTest, RdbObsManageTest_Dlopen01, TestSize.Level2)
 }
 
 /**
-* @tc.name: RdbObsManageTest_Dlopen01
+* @tc.name: RdbObsManageTest_Dlopen02
 * @tc.desc: No Mock All Symbols
 * @tc.type: FUNC
 */
@@ -110,4 +111,21 @@ HWTEST_F(RdbObsManageTest, RdbObsManageTest_Dlopen02, TestSize.Level2)
         .WillRepeatedly(Return(reinterpret_cast<void *>(&MockCleanUP)));
     auto ret = ObsManger::CleanUp();
     EXPECT_EQ(ret, E_ERROR);
+}
+ 
+/**
+* @tc.name: RdbObsManageTest_Dlopen03
+* @tc.desc: No Mock All Symbols
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbObsManageTest, RdbObsManageTest_Dlopen03, TestSize.Level2)
+{
+    EXPECT_CALL(*mockDlsym, dlopen(::testing::_, RTLD_LAZY))
+        .WillRepeatedly(Return(reinterpret_cast<void *>(0x1234)));
+    auto handle = OHOS::NativeRdb::SqliteConnection::GetICUHandle();
+    EXPECT_NE(handle, nullptr);
+    EXPECT_CALL(*mockDlsym, dlsym(handle, ::testing::StrEq("CleanUp")))
+        .WillRepeatedly(Return(nullptr));
+    auto res = OHOS::NativeRdb::SqliteConnection::ICUCleanUp();
+    EXPECT_EQ(res, E_ERROR);
 }
