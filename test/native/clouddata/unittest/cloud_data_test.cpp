@@ -15,15 +15,18 @@
 
 #define LOG_TAG "CloudDataTest"
 
+#include <condition_variable>
 #include <gtest/gtest.h>
 #include <unistd.h>
 
 #include "accesstoken_kit.h"
 #include "cloud_manager.h"
+#include "cloud_notifier_stub.h"
+#include "cloud_service_proxy.h"
 #include "cloud_types.h"
 #include "cloud_types_util.h"
 #include "logger.h"
-#include "cloud_notifier_stub.h"
+#include "rdb_types.h"
 #include "token_setproc.h"
 
 namespace OHOS::CloudData {
@@ -150,7 +153,18 @@ public:
     {
         SetSelfTokenID(g_selfTokenID);
     }
+
+    static std::mutex syncCompleteLock_;
+    static std::condition_variable syncCompleteCv_;
+    static int32_t progressStatus_;
+    static int32_t code_;
+    static constexpr uint32_t delayTime = 2000;
 };
+
+std::mutex CloudDataTest::syncCompleteLock_;
+std::condition_variable CloudDataTest::syncCompleteCv_;
+int32_t CloudDataTest::progressStatus_ = Progress::SYNC_BEGIN;
+int32_t CloudDataTest::code_ = ProgressCode::SUCCESS;
 
 void CloudDataTest::SetUpTestCase(void)
 {
@@ -162,6 +176,43 @@ void CloudDataTest::TearDownTestCase(void)
 {
     LOG_INFO("TearDownTestCase in.");
     SetSelfTokenID(g_selfTokenID);
+}
+
+/* *
+ * @tc.name: CloudSync_SyncComplete_001
+ * @tc.desc: Test the CloudSync API with syncComplete callback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_SyncComplete_001, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&details) {
+        ASSERT_NE(details.size(), 0);
+        progressStatus_ = details.begin()->second.progress;
+        code_ = details.begin()->second.code;
+        LOG_INFO("CloudSync_SyncComplete_001, progressStatus_:%{public}d, code_:%{public}d", progressStatus_, code_);
+        if (progressStatus_ == Progress::SYNC_FINISH) {
+            LOG_INFO("CloudSync_SyncComplete_001, start to notify, progressStatus_:%{public}d, code_:%{public}d",
+                progressStatus_, code_);
+            std::unique_lock<std::mutex> lock(syncCompleteLock_);
+            syncCompleteCv_.notify_one();
+        }
+    };
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 101;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+    std::unique_lock<std::mutex> lock(syncCompleteLock_);
+    auto result = syncCompleteCv_.wait_for(lock, std::chrono::milliseconds(CloudDataTest::delayTime), [] {
+        LOG_INFO("CloudSync_SyncComplete_001, wait_for in, progressStatus_:%{public}d, code_:%{public}d",
+            progressStatus_, code_);
+        return progressStatus_ == Progress::SYNC_FINISH && code_ == ProgressCode::CLOUD_DISABLED;
+    });
+    EXPECT_TRUE(result);
+    LOG_INFO("CloudSync_SyncComplete_001 test end.");
 }
 
 /* *
@@ -623,6 +674,86 @@ HWTEST_F(CloudDataTest, CloudSync005, TestSize.Level1)
     auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
     EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
     LOG_INFO("CloudSync005 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync006
+ * @tc.desc: Test the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync006, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 20;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+
+    // same seqNum, register progress failed.
+    status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::ERROR);
+    LOG_INFO("CloudSync006 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync007
+ * @tc.desc: Test the invalid param of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync007, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 21;
+    auto ret = proxy->CloudSync("", TEST_STORE_ID, { syncMode, seqNum }, progress);  // bundleName is empty
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT);
+    LOG_INFO("CloudSync007 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync008
+ * @tc.desc: Test the invalid param of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync008, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 22;
+    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, "", { syncMode, seqNum }, progress);  // storeId is empty
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT);
+    LOG_INFO("CloudSync008 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync009
+ * @tc.desc: Test the invalid param of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync009, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 10;
+    uint32_t seqNum = 22;
+    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);  // invalid syncMode
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT);
+    LOG_INFO("CloudSync009 test end.");
 }
 
 /* *

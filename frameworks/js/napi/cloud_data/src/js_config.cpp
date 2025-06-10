@@ -526,10 +526,6 @@ void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::s
         status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->syncMode);
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of syncMode must be number.");
-        // bool checked = (status == napi_ok && ctxt->syncMode >= DistributedRdb::TIME_FIRST &&
-        //     ctxt->syncMode <= DistributedRdb::CLOUD_FIRST);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The syncMode is invalid.");
         // 3 is the index of argument progress, it should be a founction
         napi_valuetype valueType = napi_undefined;
         napi_status ret = napi_typeof(env, argv[3], &valueType);
