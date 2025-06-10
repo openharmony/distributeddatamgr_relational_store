@@ -553,45 +553,11 @@ HWTEST_F(CloudDataTest, CloudSync001, TestSize.Level1)
 
 /* *
  * @tc.name: CloudSync002
- * @tc.desc: Test the hap permission of the CloudSync API
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(CloudDataTest, CloudSync002, TestSize.Level1)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto progress = [](DistributedRdb::Details &&) {};
-    auto ret = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
-    EXPECT_EQ(ret, CloudService::PERMISSION_DENIED);
-    LOG_INFO("CloudSync002 test end.");
-}
-
-/* *
- * @tc.name: CloudSync003
- * @tc.desc: Test the permissions of the CloudSync API
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(CloudDataTest, CloudSync003, TestSize.Level1)
-{
-    AllocSystemHapToken(g_notPermissonPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto progress = [](DistributedRdb::Details &&) {};
-    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
-    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
-    LOG_INFO("CloudSync003 test end.");
-}
-
-/* *
- * @tc.name: CloudSync004
  * @tc.desc: Test the CloudSync API
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, CloudSync004, TestSize.Level1)
+HWTEST_F(CloudDataTest, CloudSync002, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -599,16 +565,16 @@ HWTEST_F(CloudDataTest, CloudSync004, TestSize.Level1)
     auto progress = [](DistributedRdb::Details &&) {};
     auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {}, progress);
     EXPECT_EQ(status, CloudService::INVALID_ARGUMENT);  // invalid syncMode
-    LOG_INFO("CloudSync004 test end.");
+    LOG_INFO("CloudSync002 test end.");
 }
 
 /* *
- * @tc.name: CloudSync005
+ * @tc.name: CloudSync003
  * @tc.desc: Test the CloudSync API
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(CloudDataTest, CloudSync005, TestSize.Level1)
+HWTEST_F(CloudDataTest, CloudSync003, TestSize.Level1)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -618,6 +584,44 @@ HWTEST_F(CloudDataTest, CloudSync005, TestSize.Level1)
     uint32_t seqNum = 10;
     auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
     EXPECT_EQ(status, CloudService::SUCCESS);
+    LOG_INFO("CloudSync003 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync004
+ * @tc.desc: Test the hap permission of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync004, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 100;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+    LOG_INFO("CloudSync004 test end.");
+}
+
+/* *
+ * @tc.name: CloudSync005
+ * @tc.desc: Test the permissions of the CloudSync API
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync005, TestSize.Level1)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4; // 4 is native_first
+    uint32_t seqNum = 1000;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
     LOG_INFO("CloudSync005 test end.");
 }
 

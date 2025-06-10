@@ -50,11 +50,13 @@ export default function CloudConfigEtsTest() {
         try {
             // cloud config permission denied
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
+            expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync001 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 201).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -71,11 +73,13 @@ export default function CloudConfigEtsTest() {
         try {
             // cloud config permission denied
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_NATIVE_FIRST, Progress);
+            expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync002 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 201).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -92,11 +96,13 @@ export default function CloudConfigEtsTest() {
         try {
             // cloud config permission denied
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, Progress);
+            expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync003 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 201).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -111,11 +117,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The number of parameters is incorrect.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync004 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -133,12 +140,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. storeId can not empty.
             await cloudData.Config.cloudSync("bundleName", "", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync005 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 14800001).assertTrue();
             done();
         }
-        done();
     })
 
     /**
@@ -156,11 +163,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of storeId must be string and not empty.
             await cloudData.Config.cloudSync("bundleName", null, relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync006 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -178,11 +186,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of storeId must be string and not empty.
             await cloudData.Config.cloudSync("bundleName", undefined, relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync007 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -200,11 +209,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of storeId must be string.
             await cloudData.Config.cloudSync("bundleName", 10, relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync008 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -222,12 +232,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The syncMode is invalid.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_PUSH, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync009 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 14800001).assertTrue();
             done();
         }
-        done();
     })
 
     /**
@@ -245,12 +255,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The syncMode is invalid.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_PULL, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync010 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 14800001).assertTrue();
             done();
         }
-        done();
     })
 
     /**
@@ -268,12 +278,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The syncMode is invalid.
             await cloudData.Config.cloudSync("bundleName", "storeId", 100, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync011 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 14800001).assertTrue();
             done();
         }
-        done();
     })
 
     /**
@@ -291,11 +301,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of syncMode must be number.
             await cloudData.Config.cloudSync("bundleName", "storeId", "syncMode", Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync012 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -313,11 +324,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of syncMode must be number.
             await cloudData.Config.cloudSync("bundleName", "storeId", null, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync013 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
         /**
@@ -335,11 +347,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of syncMode must be number.
             await cloudData.Config.cloudSync("bundleName", "storeId", undefined, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync014 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -357,12 +370,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. bundleName can not be empty.
             await cloudData.Config.cloudSync("", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync015 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 14800001).assertTrue();
             done();
         }
-        done();
     })
 
     /**
@@ -380,11 +393,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of bundleName must be string and not empty.
             await cloudData.Config.cloudSync(null, "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync016 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -402,11 +416,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of bundleName must be string and not empty.
             await cloudData.Config.cloudSync(undefined, "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync017 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -424,11 +439,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type of bundleName must be string.
             await cloudData.Config.cloudSync(5, "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, Progress);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync018 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -443,11 +459,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type progress should be function.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, null);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync019 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -462,11 +479,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type progress should be function.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, undefined);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync020 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
 
     /**
@@ -481,11 +499,12 @@ export default function CloudConfigEtsTest() {
             // Parameter error. The type progress should be function.
             await cloudData.Config.cloudSync("bundleName", "storeId", relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, 123);
             expect(false).assertTrue();
+            done();
         } catch (e) {
             console.error('CloudSync021 fail' + `, error code is ${e.code}, message is ${e.message}`);
             expect(e.code == 401).assertTrue();
+            done();
         }
-        done();
     })
   })
 }
