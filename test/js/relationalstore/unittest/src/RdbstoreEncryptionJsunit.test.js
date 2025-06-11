@@ -115,7 +115,7 @@ async function CreateRdbStoreAndInsertData(context, store_config) {
         "y": 1
     }
     let insertPromise = rdbStore.insert("t", valueBucket)
-    insertPromise.then(async (ret) => {
+    await insertPromise.then(async (ret) => {
         expect(1).assertEqual(ret)
     })
     return rdbStore
