@@ -33,7 +33,6 @@ config("rdb_data_share_adapter_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "${datashare_path}/provider/include",
   ]
 }
 
