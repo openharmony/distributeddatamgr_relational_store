@@ -530,3 +530,104 @@ HWTEST_F(RdbEncryptTest, KeyFilePath_test_001, TestSize.Level2)
     EXPECT_EQ(E_OK, store2->Backup(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
     EXPECT_EQ(E_OK, store2->Restore(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
 }
+
+/**
+ * @tc.name: KeyCorruptTest
+ * @tc.desc: test key file corrupt readonly
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
+{
+    RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config1.SetEncryptStatus(true);
+    config1.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper1;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
+    ASSERT_NE(nullptr, store1);
+    ASSERT_EQ(E_OK, errCode);
+    int64_t id;
+    int ret = store1->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+    store1 = nullptr;
+
+    RdbSecurityManager::KeyFiles keyFile(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    ASSERT_TRUE(OHOS::FileExists(file));
+    std::vector<char> keyfileData;
+    ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfileData));
+    
+    std::vector<char> keyCorrupted = keyfileData;
+    // fill bytes of keyfile index 10 to 19 with 0
+    for (size_t i = 10; i < 20 && i < keyCorrupted.size(); ++i) {
+        keyCorrupted[i] = 0;
+    }
+    ASSERT_TRUE(OHOS::SaveBufferToFile(file, keyCorrupted));
+
+    RdbStoreConfig config2(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config2.SetEncryptStatus(true);
+    config2.SetBundleName("com.example.TestEncrypt1");
+    config2.SetReadOnly(true);
+    EncryptTestOpenCallback helper2;
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
+    ASSERT_NE(nullptr, store2);
+    ASSERT_EQ(E_OK, errCode);
+
+    std::shared_ptr<ResultSet> resultSet = store2->QuerySql("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RowEntity rowEntity;
+    ASSERT_EQ(E_OK, resultSet->GetRow(rowEntity));
+    ASSERT_EQ(1, int(rowEntity.Get("id")));
+    resultSet->Close();
+    store2 = nullptr;
+}
+
+/**
+ * @tc.name: KeyCorruptTest
+ * @tc.desc: test key file not exist when readonly
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, KeyCorruptTest_02, TestSize.Level1)
+{
+    RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config1.SetEncryptStatus(true);
+    config1.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper1;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
+    ASSERT_NE(nullptr, store1);
+    ASSERT_EQ(E_OK, errCode);
+    int64_t id;
+    int ret = store1->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+    store1 = nullptr;
+
+    RdbSecurityManager::KeyFiles keyFile(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    ASSERT_TRUE(OHOS::FileExists(file));
+    std::remove(file.c_str());
+    ASSERT_FALSE(OHOS::FileExists(file));
+
+    RdbStoreConfig config2(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config2.SetEncryptStatus(true);
+    config2.SetBundleName("com.example.TestEncrypt1");
+    config2.SetReadOnly(true);
+    EncryptTestOpenCallback helper2;
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
+    ASSERT_NE(nullptr, store2);
+    ASSERT_EQ(E_OK, errCode);
+
+    std::shared_ptr<ResultSet> resultSet = store2->QuerySql("SELECT * FROM test");
+    EXPECT_NE(nullptr, resultSet);
+    ret = resultSet->GoToFirstRow();
+    EXPECT_EQ(ret, E_OK);
+    RowEntity rowEntity;
+    ASSERT_EQ(E_OK, resultSet->GetRow(rowEntity));
+    ASSERT_EQ(1, int(rowEntity.Get("id")));
+    resultSet->Close();
+    store2 = nullptr;
+}

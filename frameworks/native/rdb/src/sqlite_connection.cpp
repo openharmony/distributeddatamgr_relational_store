@@ -821,7 +821,7 @@ int SqliteConnection::SetEncryptKey(const std::vector<uint8_t> &key, const RdbSt
         return errCode;
     }
 
-    if (IsWriter()) {
+    if (IsWriter() || config.IsReadOnly()) {
         ValueObject version;
         std::tie(errCode, version) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
         if (errCode != E_OK || version.GetType() == ValueObject::TYPE_NULL) {

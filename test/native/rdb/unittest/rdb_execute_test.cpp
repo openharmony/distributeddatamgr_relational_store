@@ -599,7 +599,8 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0020, TestSize.Level1)
 HWTEST_P(RdbExecuteTest, RdbStore_Execute_0021, TestSize.Level1)
 {
     std::vector<ValueObject> args = { "tt", 28, 50000.0, "ttt", 58, 500080.0 };
-    auto [status, result] = store_->ExecuteExt("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?) returning name", args);
+    auto [status, result] =
+        store_->ExecuteExt("INSERT INTO test(name, age, salary) VALUES (?, ?, ?), (?, ?, ?) returning name", args);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 2);
     ASSERT_EQ(result.results.RowSize(), 2);
@@ -609,7 +610,8 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_0021, TestSize.Level1)
     EXPECT_EQ(std::string(values[0]), "tt");
     EXPECT_EQ(std::string(values[1]), "ttt");
 
-    std::tie(status, result) = store_->ExecuteExt("update test set name = ? where name = ? returning name", { "update", "tt" });
+    std::tie(status, result) =
+        store_->ExecuteExt("update test set name = ? where name = ? returning name", {"update", "tt"});
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);
     ASSERT_EQ(result.results.RowSize(), 1);
