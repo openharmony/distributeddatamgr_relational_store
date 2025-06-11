@@ -67,7 +67,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &er
     }
     std::string dbPath;
     (void)SqliteGlobalConfig::GetDbPath(config, dbPath);
-    LOG_INFO("code:%{public}d app[%{public}s:%{public}s] path[%{public}s] "
+    LOG_INFO("code:%{public}d app[%{public}s:%{public}s] area[%{public}s] "
              "cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
              "%{public}s",
         errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),

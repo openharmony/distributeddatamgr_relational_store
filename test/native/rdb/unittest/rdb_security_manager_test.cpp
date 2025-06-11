@@ -157,4 +157,16 @@ HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
 
     RdbHelper::DeleteRdbStore(config);
 }
+
+/**
+ * @tc.name: InitPathTest
+ * @tc.desc: test init path test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSecurityManagerTest, InitPathTest, TestSize.Level1)
+{
+    std::string filePath("system/test");
+    bool ret = RdbSecurityManager::InitPath(filePath);
+    EXPECT_FALSE(ret);
+}
 } // namespace Test
