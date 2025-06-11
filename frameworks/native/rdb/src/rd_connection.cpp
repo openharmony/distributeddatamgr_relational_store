@@ -261,6 +261,11 @@ int32_t RdConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     return E_NOT_SUPPORT;
 }
 
+int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    return E_NOT_SUPPORT;
+}
+
 int32_t RdConnection::SubscribeTableChanges(const Connection::Notifier &notifier)
 {
     return E_NOT_SUPPORT;
