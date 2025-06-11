@@ -317,7 +317,7 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
             RdbSecurityManager::GetInstance().GetBundleNameByAlias(),
             "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
             ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
-        LOG_ERROR("mkdir error:%{public}d, dbDir:%{public}s", errno, SqliteUtils::GetArea(fileDir).c_str());
+        LOG_ERROR("mkdir error:%{public}d, area:%{public}s", errno, SqliteUtils::GetArea(fileDir).c_str());
         return false;
     }
     return true;

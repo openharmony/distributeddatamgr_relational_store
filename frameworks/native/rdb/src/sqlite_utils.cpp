@@ -272,14 +272,13 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
 
 std::string SqliteUtils::GetArea(const std::string &srcFile)
 {
-    auto pre = srcFile.find("/");
-    auto end = srcFile.rfind("/");
-    if (pre == std::string::npos || end - pre < AREA_MINI_SIZE) {
+    size_t start = srcFile.find("/el");
+    if (start == std::string::npos) {
         return "";
     }
-    size_t pos = srcFile.find("el");
-    if (srcFile != std::string::npos && pos + DISPLAY_BYTE < srcFile.length()) {
-        return srcFile.substr(pos, PREFIX_LENGTH);
+    size_t end = srcFile.find("/", start + 1);
+    if (end != std::string::npos) {
+        return srcFile.substr(start + 1, end - start - 1);
     }
     return "";
 }
