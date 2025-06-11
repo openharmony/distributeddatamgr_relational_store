@@ -57,7 +57,6 @@ public:
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus);
-    int Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();

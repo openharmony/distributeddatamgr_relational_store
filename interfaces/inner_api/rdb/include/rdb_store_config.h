@@ -280,12 +280,6 @@ public:
         API_EXPORT CryptoParam();
         API_EXPORT ~CryptoParam();
         API_EXPORT bool IsValid() const;
-        bool Equal(const CryptoParam &other) const
-        {
-            bool baseEqual = encryptAlgo == other.encryptAlgo && hmacAlgo == other.hmacAlgo &&
-                             kdfAlgo == other.kdfAlgo && cryptoPageSize == other.cryptoPageSize;
-            return (other.iterNum == 0) ? baseEqual : (iterNum == other.iterNum && baseEqual);
-        }
     };
 
     /**
@@ -568,8 +562,6 @@ public:
 
     void RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const;
 
-    void ResetEncryptKey(const std::vector<uint8_t> &encryptKey) const;
-
     /**
      * @brief Obtains the encrypt key in this {@code StoreConfig} object.
      */
@@ -623,7 +615,7 @@ public:
     /**
      * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
      */
-    bool IsCustomEncryptParam() const;
+    bool IsLocalOnly() const;
 
     /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
@@ -801,7 +793,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    bool customEncryptParam_ = false;
+    bool localOnly_ = false;
     bool enableSemanticIndex_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
