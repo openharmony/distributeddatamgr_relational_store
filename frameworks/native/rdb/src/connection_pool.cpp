@@ -45,6 +45,7 @@ using SharedConns = std::vector<std::shared_ptr<Connection>>;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
+constexpr int64_t WAIT_TIME = 2;
 
 std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &errCode)
 {
@@ -522,6 +523,36 @@ std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
 std::mutex &ConnPool::GetTransactionStackMutex()
 {
     return transactionStackMutex_;
+}
+
+int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    int errCode = E_OK;
+    auto [connection, readers] = AcquireAll(WAIT_TIME);
+    if (connection == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+    CloseAllConnections();
+    auto key = config_.GetEncryptKey();
+    readers.clear();
+ 
+    errCode = connection->Rekey(cryptoParam);
+    if (errCode != E_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+        key.assign(key.size(), 0);
+        return errCode;
+    }
+    config_.ResetEncryptKey(cryptoParam.encryptKey_);
+    connection = nullptr;
+    auto initRes = Init();
+    if (initRes.first != E_OK) {
+        LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
+        config_.ResetEncryptKey(key);
+        key.assign(key.size(), 0);
+        initRes = Init();
+        return initRes.first;
+    }
+    return E_OK;
 }
 
 std::pair<int32_t, std::shared_ptr<Conn>> ConnPool::DisableWal()
