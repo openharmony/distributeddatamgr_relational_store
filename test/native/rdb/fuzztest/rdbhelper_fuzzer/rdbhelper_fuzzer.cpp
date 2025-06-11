@@ -58,8 +58,9 @@ void ExecuteSqlFuzzTest(FuzzedDataProvider &provider)
     FuzzRdbOpenCallback openCallback;
     int errCode = 0;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, openCallback, errCode);
-    if (!store)
+    if (!store) {
         return;
+    }
 
     {
         std::string sql = provider.ConsumeRandomLengthString();
@@ -96,8 +97,9 @@ void OnDowngradeFuzzTest(FuzzedDataProvider &provider)
     int errCode = 0;
     std::shared_ptr<RdbStore> rdbStore =
         RdbHelper::GetRdbStore(config, provider.ConsumeIntegral<int>(), openCallback, errCode);
-    if (!rdbStore)
+    if (!rdbStore) {
         return;
+    }
 
     // Test GetBackupStatus
     rdbStore->GetBackupStatus();
@@ -113,10 +115,10 @@ void OnDowngradeFuzzTest(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    FuzzedDataProvider provider(Data, Size);
+    FuzzedDataProvider provider(data, size);
     OHOS::ExecuteSqlFuzzTest(provider);
     OHOS::OnDowngradeFuzzTest(provider);
     return 0;
-}
+}
