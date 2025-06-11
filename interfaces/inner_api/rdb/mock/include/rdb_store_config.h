@@ -201,7 +201,7 @@ public:
 
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
-    bool IsLocalOnly() const;
+    bool IsCustomEncryptParam() const;
     std::string GetDatabaseFileType() const;
     SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
@@ -242,6 +242,7 @@ public:
     void SetReadConSize(int readConSize);
     void SetEncryptKey(const std::vector<uint8_t> &encryptKey);
     void RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const;
+    void ResetEncryptKey(const std::vector<uint8_t> &encryptKey) const;
     std::vector<uint8_t> GetEncryptKey() const;
     void ChangeEncryptKey() const;
     std::vector<uint8_t> GetNewEncryptKey() const;
@@ -346,7 +347,7 @@ private:
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    bool localOnly_ = false;
+    bool customEncryptParam_ = false;
     bool knowledgeProcessing_ = false;
     int32_t journalSize_;
     int32_t pageSize_;

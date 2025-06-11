@@ -74,6 +74,7 @@ private:
     static napi_value GetRebuilt(napi_env env, napi_callback_info info);
     static napi_value SetVersion(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
+    static napi_value Rekey(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);
