@@ -125,6 +125,7 @@ public:
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;

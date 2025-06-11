@@ -598,6 +598,13 @@ public:
     virtual bool IsMemoryRdb() const;
 
     /**
+     * @brief Changes the key used to encrypt the database.
+     *
+     * @param Crypto parameters
+     */
+    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
+
+    /**
      * @brief Restores a database from a specified database file.
      *
      * @param backupPath  Indicates the name that saves the database file path.
