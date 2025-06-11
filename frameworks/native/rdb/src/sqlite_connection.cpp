@@ -612,29 +612,24 @@ int SqliteConnection::SetPageSize(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 {
-    return SetEncryptAgo(config.GetCryptoParam());
-}
-
-int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam)
-{
-    if (!cryptoParam.IsValid()) {
-        LOG_ERROR("Invalid crypto param: %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
-            cryptoParam.iterNum, cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo,
-            cryptoParam.cryptoPageSize);
+    if (!config.GetCryptoParam().IsValid()) {
+        LOG_ERROR("Invalid crypto param: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetCryptoParam().iterNum,
+            config.GetCryptoParam().encryptAlgo, config.GetCryptoParam().hmacAlgo, config.GetCryptoParam().kdfAlgo,
+            config.GetCryptoParam().cryptoPageSize);
         return E_INVALID_ARGS;
     }
 
-    if (cryptoParam.iterNum != NO_ITER) {
-        auto errCode =
-            ExecuteSql(std::string(GlobalExpr::CIPHER_ALGO_PREFIX) +
-                       SqliteUtils::EncryptAlgoDescription(static_cast<EncryptAlgo>(cryptoParam.encryptAlgo)) +
-                       std::string(GlobalExpr::ALGO_SUFFIX));
+    if (config.GetIter() != NO_ITER) {
+        auto errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_ALGO_PREFIX) +
+                                  SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
+                                  std::string(GlobalExpr::ALGO_SUFFIX));
         if (errCode != E_OK) {
             LOG_ERROR("set cipher algo failed, err = %{public}d", errCode);
             return errCode;
         }
 
-        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(cryptoParam.iterNum));
+        errCode = ExecuteSql(std::string(GlobalExpr::CIPHER_KDF_ITER) + std::to_string(config.GetIter()));
         if (errCode != E_OK) {
             LOG_ERROR("set kdf iter number V1 failed, err = %{public}d", errCode);
             return errCode;
@@ -642,7 +637,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
     }
 
     auto errCode = ExecuteSql(std::string(GlobalExpr::CODEC_HMAC_ALGO_PREFIX) +
-                              SqliteUtils::HmacAlgoDescription(cryptoParam.hmacAlgo) +
+                              SqliteUtils::HmacAlgoDescription(config.GetCryptoParam().hmacAlgo) +
                               std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
@@ -650,7 +645,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
     }
 
     errCode = ExecuteSql(std::string(GlobalExpr::CODEC_KDF_ALGO_PREFIX) +
-                         SqliteUtils::KdfAlgoDescription(cryptoParam.kdfAlgo) +
+                         SqliteUtils::KdfAlgoDescription(config.GetCryptoParam().kdfAlgo) +
                          std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec kdf algo failed, err = %{public}d", errCode);
@@ -658,7 +653,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
     }
 
     errCode = ExecuteSql(
-        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(cryptoParam.cryptoPageSize));
+        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(config.GetCryptoParam().cryptoPageSize));
     if (errCode != E_OK) {
         LOG_ERROR("set codec page size failed, err = %{public}d", errCode);
         return errCode;
@@ -669,43 +664,6 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
         LOG_ERROR("set rekey sha algo failed, err = %{public}d", errCode);
         return errCode;
     }
-    return E_OK;
-}
-
-int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
-{
-    std::vector<uint8_t> key;
-    RdbPassword rdbPwd;
-    int errCode = E_OK;
-    if (cryptoParam.encryptKey_.empty()) {
-        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
-            config_.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
-        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    } else {
-        key = cryptoParam.encryptKey_;
-    }
-    if (key.empty()) {
-        LOG_ERROR("key is empty");
-        return E_ERROR;
-    }
-    errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
-    if (errCode != SQLITE_OK) {
-        key.assign(key.size(), 0);
-        LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
-            SqliteUtils::Anonymous(config_.GetName()).c_str());
-        return SQLiteError::ErrNo(errCode);
-    }
-    errCode = SetEncryptAgo(cryptoParam);
-    if (errCode != E_OK) {
-        key.assign(key.size(), 0);
-        LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
-            SqliteUtils::Anonymous(config_.GetName()).c_str());
-        return errCode;
-    }
-    if (cryptoParam.encryptKey_.empty()) {
-        RdbSecurityManager::GetInstance().ChangeKeyFile(config_.GetPath());
-    }
-    key.assign(key.size(), 0);
     return E_OK;
 }
 

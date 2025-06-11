@@ -26,7 +26,6 @@
 #include "rdb_common.h"
 #include "rdb_types.h"
 #include "statement.h"
-#include "rdb_store_config.h"
 
 namespace DistributedDB {
 class StoreObserver;
@@ -64,7 +63,6 @@ public:
     virtual bool IsWriter() const = 0;
     virtual int32_t ResetKey(const RdbStoreConfig &config) = 0;
     virtual int32_t TryCheckPoint(bool timeout) = 0;
-    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t LimitWalSize() = 0;
     virtual int32_t ConfigLocale(const std::string &localeStr) = 0;
     virtual int32_t CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
