@@ -65,6 +65,15 @@ napi_value Convert2JSValue(napi_env env, const StatisticInfo &value);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &value);
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &value);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // CLOUD_DATA_JS_CLOUD_UTILS_H
