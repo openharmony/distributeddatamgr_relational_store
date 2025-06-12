@@ -203,7 +203,8 @@ bool ObsMgrAdapterImpl::Clean()
             int32_t err = client->UnregisterObserver(Uri(key), *it);
             if (err != 0) {
                 LOG_ERROR("UnregisterObserver failed. code:%{public}d, uri:%{public}s", err, Anonymous(key).c_str());
-                break;
+                ++it;
+                continue;
             }
             PushReleaseObs(*it);
             it = observer.erase(it);
