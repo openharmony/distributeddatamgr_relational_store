@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,6 @@ public:
     ~DataMgrService() = default;
     sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
 };
-
 class CloudDeath : public IRemoteObject::DeathRecipient {
 public:
     explicit CloudDeath(std::function<void()> action) : action_(std::move(action)) {};
@@ -91,6 +90,10 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     sptr<CloudServiceProxy> proxy = new (std::nothrow) CloudServiceProxy(cloudObject);
     if (proxy == nullptr) {
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
+    }
+    if (proxy->InitNotifier() != CloudService::Status::SUCCESS) {
+        LOG_ERROR("Init notifier failed.");
+        return { CloudService::Status::ERROR, nullptr };
     }
 
     cloudService_ = std::shared_ptr<CloudService>(proxy.GetRefPtr(), [holder = proxy](const auto *) {});
