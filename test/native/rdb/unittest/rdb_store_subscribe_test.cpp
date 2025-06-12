@@ -48,7 +48,7 @@ private:
 };
 class LocalShareObserver : public RdbStoreObserver {
 public:
-    LocalShareObserver(std::function<void()> func) : callback_(func)
+    explicit LocalShareObserver(std::function<void()> func) : callback_(func)
     {
     }
     void OnChange(const std::vector<std::string> &devices){};
