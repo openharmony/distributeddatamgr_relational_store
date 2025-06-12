@@ -575,7 +575,7 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
     ASSERT_EQ(E_OK, errCode);
 
     std::shared_ptr<ResultSet> resultSet = store2->QuerySql("SELECT * FROM test");
-    EXPECT_NE(nullptr, resultSet);
+    ASSERT_NE(nullptr, resultSet);
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
     RowEntity rowEntity;
@@ -622,7 +622,7 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_02, TestSize.Level1)
     ASSERT_EQ(E_OK, errCode);
 
     std::shared_ptr<ResultSet> resultSet = store2->QuerySql("SELECT * FROM test");
-    EXPECT_NE(nullptr, resultSet);
+    ASSERT_NE(nullptr, resultSet);
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
     RowEntity rowEntity;
