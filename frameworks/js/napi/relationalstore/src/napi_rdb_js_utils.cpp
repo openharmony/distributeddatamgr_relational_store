@@ -233,6 +233,26 @@ napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value)
 }
 
 template<>
+napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlinfo)
+{
+    napi_value jsResult = nullptr;
+    NAPI_CALL_RETURN_ERR(napi_create_object(env, &jsResult), jsResult);
+    napi_value strVal = nullptr;
+    NAPI_CALL_RETURN_ERR(napi_create_string_utf8(env, sqlinfo.sql.c_str(), sqlinfo.sql.length(), &strVal), jsResult);
+    NAPI_CALL_RETURN_ERR(napi_set_named_property(env, jsResult, "sql", strVal), jsResult);
+
+    napi_value arrayParams = nullptr;
+    NAPI_CALL_RETURN_ERR(napi_create_array(env, &arrayParams), jsResult);
+    NAPI_CALL_RETURN_ERR(napi_set_named_property(env, jsResult, "args", arrayParams), jsResult);
+    for (size_t index = 0; index < sqlinfo.args.size(); index++) {
+        ValueObject obj = sqlinfo.args[index];
+        napi_value jsObjectValue = JSUtils::Convert2JSValue(env, obj);
+        NAPI_CALL_RETURN_ERR(napi_set_element(env, arrayParams, index, jsObjectValue), jsResult);
+    }
+    return jsResult;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const DistributedRdb::Details &details)
 {
     return nullptr;

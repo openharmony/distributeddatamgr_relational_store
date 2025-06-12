@@ -21,6 +21,7 @@ import PerfStatEtsTest from './RdbstorePerfStatEts.test.ets';
 import RdbstoreGetValueForFlutterEts from './RdbstoreGetValueForFlutterEts.test.ets';
 import RdbstoreGetRowForFlutterEts from './RdbstoreGetRowForFlutterEts.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
+import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -30,4 +31,5 @@ export default function testsuite() {
   RdbstoreGetValueForFlutterEts();
   RdbstoreGetRowForFlutterEts();
   RdbRekeyEtsTest();
+  RDBstoreGetSqlInfoTest();
 }
