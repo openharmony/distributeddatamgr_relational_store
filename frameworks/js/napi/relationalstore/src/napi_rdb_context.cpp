@@ -315,11 +315,11 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     bool isArray = false;
-    napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_SET(isArray, std::make_shared<ParamError>("ValuesBuckets is invalid."));
+    napi_status status = napi_is_array(env, arg, &isArray);
+    CHECK_RETURN_SET(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBuckets is invalid."));
 
     uint32_t arrLen = 0;
-    napi_status status = napi_get_array_length(env, arg, &arrLen);
+    status = napi_get_array_length(env, arg, &arrLen);
     CHECK_RETURN_SET(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBuckets is invalid."));
 
     for (uint32_t i = 0; i < arrLen; ++i) {

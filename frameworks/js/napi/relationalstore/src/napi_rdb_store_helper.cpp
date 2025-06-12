@@ -50,7 +50,7 @@ const std::map<int, std::string> ERR_STRING_MAP = {
     { E_EMPTY_TABLE_NAME, "The table must be not empty string." },
     { E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
     { E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
-    { E_INVALID_ARGS, "ValuesBucket is Assets." },
+    { E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
 };
 
 class DefaultOpenCallback : public RdbOpenCallback {
