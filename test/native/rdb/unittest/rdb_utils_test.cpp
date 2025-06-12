@@ -137,3 +137,21 @@ HWTEST_F(RdbUtilsTest, GetSqlStatementType_002, TestSize.Level1)
     EXPECT_EQ(SqliteUtils::STATEMENT_UPDATE, SqliteUtils::GetSqlStatementType("\r\nupdate test set id = ?"));
     EXPECT_EQ(SqliteUtils::STATEMENT_OTHER, SqliteUtils::GetSqlStatementType("~!@# attach database ? as ?"));
 }
+
+/**
+ * @tc.name: GetAreaTest
+ * @tc.desc: Test get area
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbUtilsTest, GetAreaTest, TestSize.Level1)
+{
+    std::string srcFile("data/app/el2/database");
+    auto area = SqliteUtils::GetArea(srcFile);
+    EXPECT_EQ(area, "el2");
+    std::string dirFile("data/app/database");
+    area = SqliteUtils::GetArea(dirFile);
+    EXPECT_EQ(area, "");
+    std::string dirSrcFile("data/app/el2database");
+    area = SqliteUtils::GetArea(dirSrcFile);
+    EXPECT_EQ(area, "");
+}
