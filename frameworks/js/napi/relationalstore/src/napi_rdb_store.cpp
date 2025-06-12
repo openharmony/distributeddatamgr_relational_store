@@ -210,8 +210,9 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
-                uintptr_t(hint));
+            LOG_ERROR(
+                "RdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
+                uintptr_t(data) & LOWER_24_BITS_MASK, uintptr_t(hint) & LOWER_24_BITS_MASK);
             return;
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
@@ -1034,6 +1035,35 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
+napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
+{
+    LOG_INFO("RdbStoreProxy::Rekey start.");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc >= 0 && argc <= 1, std::make_shared<ParamNumError>("0 - 1"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
+            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+        }
+        CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
+        return rdbStore->Rekey(context->cryptoParam);
+    };
+
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
 #if !defined(CROSS_PLATFORM)
 void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor> &properties)
 {
@@ -1286,35 +1316,6 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
         return rdbStore->CleanDirtyData(context->tableName, context->cursor);
-    };
-
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_get_undefined(env, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return ASYNC_CALL(env, context);
-}
-
-napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
-{
-    LOG_INFO("RdbStoreProxy::Rekey start.");
-    auto context = std::make_shared<RdbStoreContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc >= 0 && argc <=1, std::make_shared<ParamNumError>("0 - 1"));
-        CHECK_RETURN(OK == ParserThis(env, self, context));
-        if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
-            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
-        }
-        CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
-    };
-    auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Rekey(context->cryptoParam);
     };
 
     auto output = [context](napi_env env, napi_value &result) {
