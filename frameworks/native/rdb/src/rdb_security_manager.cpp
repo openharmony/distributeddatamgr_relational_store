@@ -130,6 +130,7 @@ std::string RdbSecurityManager::GetBundleNameByAlias(const std::vector<uint8_t> 
 
 RdbSecurityManager::RdbSecurityManager()
 {
+    handle_ = nullptr;
 };
 
 RdbSecurityManager::~RdbSecurityManager()

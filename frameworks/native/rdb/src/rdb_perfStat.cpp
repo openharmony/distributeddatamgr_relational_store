@@ -246,13 +246,15 @@ void PerfStat::FormatSql(const std::string &sql)
 bool PerfStat::IsPaused()
 {
     std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return threadParams_[GetThreadId()].suspenders_ > 0;
+    auto it = threadParams_.find(GetThreadId());
+    return it != threadParams_.end() && it->second.suspenders_ > 0;
 }
 
 size_t PerfStat::GetSize()
 {
     std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return threadParams_[GetThreadId()].size_;
+    auto it = threadParams_.find(GetThreadId());
+    return it != threadParams_.end() ? it->second.size_ : 0;
 }
 
 void PerfStat::SetSize(size_t size)

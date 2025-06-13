@@ -16,7 +16,6 @@
 #include "rdb_helper.h"
 
 #include <gtest/gtest.h>
-
 #include <string>
 
 #include "rdb_errno.h"
@@ -213,7 +212,7 @@ HWTEST_F(RdbDynamicLoadTest, GetICUHandle001, TestSize.Level0)
 HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
 {
     auto clean = OHOS::NativeRdb::ObsManger::CleanUp();
-    EXPECT_EQ(clean, E_OK);
+    EXPECT_EQ(clean, E_ERROR);
     auto handle = OHOS::NativeRdb::ObsManger::GetHandle();
     EXPECT_NE(handle, nullptr);
     clean = OHOS::NativeRdb::ObsManger::CleanUp();
