@@ -27,14 +27,23 @@
 #include <vector>
 
 namespace OHOS::NativeRdb {
-struct RdbSecretKeyData {
-    uint8_t distributed = 0;
-    time_t timeValue{};
-    std::vector<uint8_t> secretKey{};
-    RdbSecretKeyData() = default;
-    ~RdbSecretKeyData()
+struct SecurityContent {
+    time_t time{};
+    static constexpr size_t MAGIC_NUM = 4;
+    static constexpr uint8_t MAGIC_CHAR = 0x6B;
+    static constexpr uint32_t MAGIC_NUMBER = 0x6B6B6B6B;
+    static constexpr uint8_t INVALID_VERSION = 0x00;
+    static constexpr uint8_t CURRENT_VERSION = 0x01;
+    static constexpr int32_t NONCE_SIZE = 12;
+
+    uint32_t magicNum = MAGIC_NUMBER;
+    uint8_t version = INVALID_VERSION;
+    std::vector<uint8_t> nonceValue;
+    std::vector<uint8_t> encryptKey;
+    ~SecurityContent()
     {
-        secretKey.assign(secretKey.size(), 0);
+        encryptKey.assign(encryptKey.size(), 0);
+        nonceValue.assign(nonceValue.size(), 0);
     }
 };
 
@@ -105,10 +114,10 @@ public:
 private:
     using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
     using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t>&, RDBCryptFault&);
-    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
-        const std::vector<uint8_t>&, RDBCryptFault&);
-    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
-        const std::vector<uint8_t>&, RDBCryptFault&);
+    using EncryptFunc = bool (*)(const std::vector<uint8_t>&,
+        const std::vector<uint8_t>&, RDBCryptFault&, SecurityContent&);
+    using DecryptFunc = bool (*)(const std::vector<uint8_t>&,
+        const std::vector<uint8_t>&, RDBCryptFault&, SecurityContent&);
     RdbSecurityManager();
     ~RdbSecurityManager();
 
@@ -116,26 +125,30 @@ private:
     void* GetHandle();
     int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
-    std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
-    std::vector<uint8_t> DecryptWorkKey(std::vector<uint8_t> &key);
+    bool EncryptWorkKey(std::vector<uint8_t> &key, SecurityContent &content);
+    bool DecryptWorkKey(SecurityContent &content, std::vector<uint8_t> &key);
     void ReportCryptFault(const int32_t &errorCode, const std::string &custLog);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
     static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
-    bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    bool SaveSecretKeyToDisk(const std::string &keyPath, SecurityContent &securityContent);
     RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
-    bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    SecurityContent LoadSecretKeyFromDisk(const std::string &keyPath);
+    void LoadNewKey(const std::vector<char> &content, SecurityContent &securityContent);
     bool IsKeyFileEmpty(const std::string &keyFile);
     static bool IsKeyExpired(const time_t &createTime);
     std::vector<uint8_t> GetRootKeyAlias();
     std::string GetBundleNameByAlias();
     std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
     void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
+    std::string ReplaceSuffix(const std::string& str);
 
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
+    static constexpr const char *SUFFIX_PUB_TMP_KEY = ".pub_key.bk";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
+    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key.new.bk";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr uint32_t TIMES = 4;
     static constexpr uint32_t MAX_UPDATE_SIZE = 64;

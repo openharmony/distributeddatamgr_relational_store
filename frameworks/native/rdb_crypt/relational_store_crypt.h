@@ -28,10 +28,10 @@ class RDBCrypt {
 public:
     static int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     static int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptFault &rdbFault);
-    static std::vector<uint8_t> Encrypt(const std::vector<uint8_t>& rootKeyAlias,
-        const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
-    static std::vector<uint8_t> Decrypt(const std::vector<uint8_t>& rootKeyAlias,
-        const std::vector<uint8_t>& key, RDBCryptFault &rdbFault);
+    static bool Encrypt(const std::vector<uint8_t>& rootKeyAlias,
+        const std::vector<uint8_t>& key, RDBCryptFault &rdbFault, SecurityContent &content);
+    static bool Decrypt(const std::vector<uint8_t>& rootKeyAlias,
+        std::vector<uint8_t>& key, RDBCryptFault &rdbFault, SecurityContent &content);
     static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog);
 };
 } // namespace OHOS::NativeRdb
