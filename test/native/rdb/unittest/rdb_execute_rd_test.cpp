@@ -1079,8 +1079,8 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_002, TestSize.Level1)
 "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"__Common__", "$rect":"[0.00, 0.00],
 [1260.00, 2720.00]", "$attrs":{}, "$children":[{"$type":"Navigation", "$rect":"[0.00, 0.00], [1260.00, 2720.00]",
 "$attrs":{"id":"mixnavigator", "enabled":"1", "focusable":"1"}, "$children":[{"$type":"NavigationContent", "$rect":"
-[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{}, "$children":[{"$type":"NavDestination", "$rect":"[0.00, 0.00], 
-[1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"NavDestinationContent", 
+[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{}, "$children":[{"$type":"NavDestination", "$rect":"[0.00, 0.00],
+[1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"NavDestinationContent",
 "$rect":"[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":"Stack",
 "$rect":"[0.00, 0.00], [1260.00, 2720.00]", "$attrs":{"enabled":"1", "focusable":"1"}, "$children":[{"$type":
 "__Common__", "$rect":"[0.00, 0.00], [1260.00, 2629.00]", "$attrs":{}, "$children":[{"$type":"Stack", "$rect":"

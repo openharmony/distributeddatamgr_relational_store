@@ -23,6 +23,7 @@
 #include "db_trace.h"
 #include "js_utils.h"
 #include "logger.h"
+#include "js_df_manager.h"
 #include "napi_gdb_context.h"
 #include "napi_gdb_error.h"
 #include "napi_gdb_js_utils.h"
@@ -109,8 +110,8 @@ napi_value GdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
         if (data != hint) {
-            LOG_ERROR("GdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data),
-                uintptr_t(hint));
+            LOG_ERROR("GdbStoreProxy memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR,
+                uintptr_t(data) & LOWER_24_BITS_MASK, uintptr_t(hint) & LOWER_24_BITS_MASK);
             return;
         }
         GdbStoreProxy *proxy = reinterpret_cast<GdbStoreProxy *>(data);
