@@ -56,10 +56,6 @@ bool TaskExecutor::Stop()
         pool = std::move(pool_);
         pool_ = nullptr;
     }
-    int32_t retry = 0;
-    while (pool.use_count() > 1 && retry++ < 100) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
     if (pool.use_count() > 1) {
         LOG_WARN("There are other threads using the thread pool. count:%{public}ld", pool.use_count());
         return false;
