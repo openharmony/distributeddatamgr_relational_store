@@ -33,6 +33,7 @@ TaskExecutor &TaskExecutor::GetInstance()
 
 void TaskExecutor::Init()
 {
+    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     pool_ = nullptr;
 };
 
