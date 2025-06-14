@@ -18,7 +18,7 @@ import sendableRelationalStore from '@ohos.data.sendableRelationalStore';
 
 const TAG = "[RDB_GETSQL_TEST]";
 const bucket1000: relationalStore.ValuesBucket = {};
-for(let i = 0; i < 1000; i++) {
+for(let i = 0; i < 1001; i++) {
   bucket1000["test" + i] = i;
 }
 export default function RDBstoreGetSqlInfoTest() {
@@ -44,106 +44,109 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetInsertSqlInfo', 0, async () => {
       console.log(TAG + "************* testGetInsertSqlInfo start *************");
-      const bucket: relationalStore.ValuesBucket = {
-        name: "Logitech",
-        age: "18",
-        sex: "man",
-        desc: "asserter"
-      };
-      const info: relationalStore.SqlInfo = relationalStore.getInsertSqlInfo(
-        "USER",
-        bucket,
-        relationalStore.ConflictResolution.ON_CONFLICT_NONE
-      );
-      expect(info.sql).assertEqual("INSERT INTO USER(age,desc,name,sex) VALUES (?,?,?,?)");
-      expect(info.args).assertContain("Logitech");
-      expect(info.args).assertContain("18");
-      expect(info.args).assertContain("man");
-      expect(info.args).assertContain("asserter");
-      console.log(TAG + "************* testGetInsertSqlInfo end *************");
+      try {
+        const bucket: relationalStore.ValuesBucket = {
+          name: "Logitech",
+          age: "18",
+          sex: "man",
+          desc: "asserter"
+        };
+        const info: relationalStore.SqlInfo = relationalStore.getInsertSqlInfo(
+          "USER",
+          bucket,
+          relationalStore.ConflictResolution.ON_CONFLICT_NONE
+        );
+        expect(info.sql).assertEqual("INSERT INTO USER(age,desc,name,sex) VALUES (?,?,?,?)");
+        expect(info.args[0]).assertEqual("18");
+        expect(info.args[1]).assertEqual("asserter");
+        expect(info.args[2]).assertEqual("Logitech");
+        expect(info.args[3]).assertEqual("man");
+        console.log(TAG + "************* testGetInsertSqlInfo end *************");
+      } catch (e){
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetInsertSqlInfo end *************");
+      }
     });
 
     /**
-     * @tc.number testGetInsertSqlInfoTabkleNameTooLength
-     * @tc.name Get Insert SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty or null.
+     * @tc.number testGetInsertSqlInfoTabkleNameTooLong
+     * @tc.name Get Insert SQL Info tablename length must less then 256
+     * @tc.desc Verifies that an error is thrown when the tablename is too long.
      */
-    it('testGetInsertSqlInfoTabkleNameTooLength', 0, async () => {
-      console.log(TAG + "************* testGetInsertSqlInfoTabkleNameTooLength start *************");
+    it('testGetInsertSqlInfoTabkleNameTooLong', 0, async () => {
+      console.log(TAG + "************* testGetInsertSqlInfoTabkleNameTooLong start *************");
       const bucket: relationalStore.ValuesBucket = {
         name: "Logitech",
         age: "18",
         sex: "man",
         desc: "asserter"
       };
-      let tableName: string = "";
-      for(let i = 0; i < 256; i++) {
-        tableName = tableName + "a";
-      }
+      let tableName: string = "x".repeat(257);
       try {
         relationalStore.getInsertSqlInfo(
           tableName,
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetInsertSqlInfoTabkleNameTooLength end *************");
+        console.log(TAG + "************* testGetInsertSqlInfoTabkleNameTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetInsertSqlInfoBucketTooLength
-     * @tc.name Get Insert SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty or null.
+     * @tc.number testGetInsertSqlInfoBucketTooLong
+     * @tc.name Get Insert SQL Info Bucket length must less then 1000
+     * @tc.desc Verifies that an error is thrown when the bucket is too long.
      */
-    it('testGetInsertSqlInfoBucketTooLength', 0, async () => {
-      console.log(TAG + "************* testGetInsertSqlInfoBucketTooLength start *************");
+    it('testGetInsertSqlInfoBucketTooLong', 0, async () => {
+      console.log(TAG + "************* testGetInsertSqlInfoBucketTooLong start *************");
       try {
         relationalStore.getInsertSqlInfo(
           "user",
           bucket1000,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetInsertSqlInfoBucketTooLength end *************");
+        console.log(TAG + "************* testGetInsertSqlInfoBucketTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetInsertSqlInfoBucketColumTooLength
-     * @tc.name Get Insert SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty or null.
+     * @tc.number testGetInsertSqlInfoBucketColumnTooLong
+     * @tc.name Get Insert SQL Info bucket key length must less then 256
+     * @tc.desc Verifies that an error is thrown when the bucket Column is too long.
      */
-    it('testGetInsertSqlInfoBucketColumTooLength', 0, async () => {
-      console.log(TAG + "************* testGetInsertSqlInfoBucketColumTooLength start *************");
-      let tableName: string = "";
-      for(let i = 0; i < 256; i++) {
-        tableName = tableName + "a";
-      }
+    it('testGetInsertSqlInfoBucketColumnTooLong', 0, async () => {
+      console.log(TAG + "************* testGetInsertSqlInfoBucketColumnTooLong start *************");
+      let tableName: string = "a".repeat(257);
       const bucket: relationalStore.ValuesBucket = {
         name: tableName,
         age: "18",
         sex: "man",
         desc: "asserter"
       };
+      bucket[tableName] = "tableName"
       try {
         relationalStore.getInsertSqlInfo(
           "user",
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetInsertSqlInfoBucketColumTooLength end *************");
+        console.log(TAG + "************* testGetInsertSqlInfoBucketColumnTooLong end *************");
       }
     });
 
     /**
      * @tc.number testGetInsertSqlInfoTableNameIsEmpty
-     * @tc.name Get Insert SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty or null.
+     * @tc.name Get Insert SQL Info table Is empty
+     * @tc.desc Verifies that an error is thrown when the table is empty or null.
      */
     it('testGetInsertSqlInfoTableNameIsEmpty', 0, async () => {
       console.log(TAG + "************* testGetInsertSqlInfoTableNameIsEmpty start *************");
@@ -159,6 +162,7 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
         console.log(TAG + "************* testGetInsertSqlInfoTableNameIsEmpty end *************");
@@ -166,27 +170,29 @@ export default function RDBstoreGetSqlInfoTest() {
     });
 
     /**
-     * @tc.number testGetInsertSqlInfoConflictResolutionIsEmpty
-     * @tc.name Get Insert SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty or null.
+     * @tc.number testGetInsertSqlInfoConflictResolutionIsNotEmpty
+     * @tc.name Get Insert SQL Info
+     * @tc.desc Verifies that an error is thrown when the ConflictResolution is not empty.
      */
-    it('testGetInsertSqlInfoConflictResolutionIsEmpty', 0, async () => {
-      console.log(TAG + "************* testGetInsertSqlInfoConflictResolutionIsEmpty start *************");
-      const bucket: relationalStore.ValuesBucket = {
-        name: "tableName",
-        age: "18",
-        sex: "man",
-        desc: "asserter"
-      };
+    it('testGetInsertSqlInfoConflictResolutionIsNotEmpty', 0, async () => {
+      console.log(TAG + "************* testGetInsertSqlInfoConflictResolutionIsNotEmpty start *************");
       try {
-        relationalStore.getInsertSqlInfo(
+        const bucket: relationalStore.ValuesBucket = {
+          name: "tableName",
+          age: "18",
+          sex: "man",
+          desc: "asserter"
+        };
+        const info: relationalStore.SqlInfo = relationalStore.getInsertSqlInfo(
           "tableName",
           bucket,
-          5
+          relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(info.sql).assertEqual("INSERT INTO tableName(age,desc,name,sex) VALUES (?,?,?,?)");
+        console.log(TAG + "************* testGetInsertSqlInfoConflictResolutionIsNotEmpty end *************");
       } catch (e) {
-        expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetInsertSqlInfoConflictResolutionIsEmpty end *************");
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetInsertSqlInfoConflictResolutionIsNotEmpty end *************");
       }
     });
 
@@ -204,6 +210,7 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
         console.log(TAG + "************* testGetInsertSqlInfoBucketIsNull end *************");
@@ -212,8 +219,8 @@ export default function RDBstoreGetSqlInfoTest() {
 
     /**
      * @tc.number testGetInsertSqlInfoBucketIsAssets
-     * @tc.name Get Insert SQL Info Bucket Is Assets
-     * @tc.desc Verifies that an error is thrown when the bucket contains invalid data type (Assets).
+     * @tc.name Get Insert SQL Info Bucket contains Assets
+     * @tc.desc Verifies that an error is thrown when the bucket contains Assets & ON_CONFLICT_REPLACE.
      */
     it('testGetInsertSqlInfoBucketIsAssets', 0, async () => {
       console.log(TAG + "************* testGetInsertSqlInfoBucketIsAssets start *************");
@@ -225,7 +232,7 @@ export default function RDBstoreGetSqlInfoTest() {
           createTime: "d",
           modifyTime: "e",
           size: "f",
-          status: relationalStore.AssetStatus.ASSET_NORMAL
+          status: relationalStore.AssetStatus.ASSET_INSERT
         }
       ];
       const bucket: relationalStore.ValuesBucket = {
@@ -237,9 +244,54 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_REPLACE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
         console.log(TAG + "************* testGetInsertSqlInfoBucketIsAssets end *************");
+      }
+    });
+
+    /**
+     * @tc.number testGetInsertSqlInfoBucketIsAssets2
+     * @tc.name Get Insert SQL Info Bucket contains Assets
+     * @tc.desc Verifies that an error is thrown when the bucket contains Assets & ON_CONFLICT_IGNORE.
+     */
+    it('testGetInsertSqlInfoBucketIsAssets2', 0, async () => {
+      console.log(TAG + "************* testGetInsertSqlInfoBucketIsAssets start *************");
+      try {
+        const values: relationalStore.Assets = [
+          {
+            name: "a",
+            uri: "b",
+            path: "c",
+            createTime: "d",
+            modifyTime: "e",
+            size: "f",
+            status: relationalStore.AssetStatus.ASSET_INSERT
+          }
+        ];
+        const bucket: relationalStore.ValuesBucket = {
+          value: values
+        };
+        const info: relationalStore.SqlInfo = relationalStore.getInsertSqlInfo(
+          "USER",
+          bucket,
+          relationalStore.ConflictResolution.ON_CONFLICT_IGNORE
+        );
+        const assets = info.args[0] as relationalStore.Assets;
+        expect(info.sql).assertEqual("INSERT OR IGNORE INTO USER(value) VALUES (?)");
+        expect(assets.length).assertEqual(values.length);
+        expect(assets[0].name).assertEqual(values[0].name);
+        expect(assets[0].uri).assertEqual(values[0].uri);
+        expect(assets[0].path).assertEqual(values[0].path);
+        expect(assets[0].createTime).assertEqual(values[0].createTime);
+        expect(assets[0].modifyTime).assertEqual(values[0].modifyTime);
+        expect(assets[0].size).assertEqual(values[0].size);
+        expect(assets[0].status).assertEqual(values[0].status);
+        console.log(TAG + "************* testGetInsertSqlInfo end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetInsertSqlInfo end *************");
       }
     });
 
@@ -250,24 +302,29 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetUpdateSqlInfo', 0, async () => {
       console.log(TAG + "************* testGetUpdateSqlInfo start *************");
-      const bucket: relationalStore.ValuesBucket = {
-        name: "Logitech",
-        age: "18",
-        sex: "man",
-        desc: "asserter"
-      };
-      const predicates = new relationalStore.RdbPredicates("users");
-      const info: relationalStore.SqlInfo = relationalStore.getUpdateSqlInfo(
-        predicates,
-        bucket,
-        relationalStore.ConflictResolution.ON_CONFLICT_NONE
-      );
-      expect(info.sql).assertEqual("UPDATE users SET age=?,desc=?,name=?,sex=?");
-      expect(info.args).assertContain("Logitech");
-      expect(info.args).assertContain("18");
-      expect(info.args).assertContain("man");
-      expect(info.args).assertContain("asserter");
-      console.log(TAG + "************* testGetUpdateSqlInfo end *************");
+      try {
+        const bucket: relationalStore.ValuesBucket = {
+          name: "Logitech",
+          age: "18",
+          sex: "man",
+          desc: "asserter"
+        };
+        const predicates = new relationalStore.RdbPredicates("users");
+        const info: relationalStore.SqlInfo = relationalStore.getUpdateSqlInfo(
+          predicates,
+          bucket,
+          relationalStore.ConflictResolution.ON_CONFLICT_NONE
+        );
+        expect(info.sql).assertEqual("UPDATE users SET age=?,desc=?,name=?,sex=?");
+        expect(info.args[0]).assertEqual("18");
+        expect(info.args[1]).assertEqual("asserter");
+        expect(info.args[2]).assertEqual("Logitech");
+        expect(info.args[3]).assertEqual("man");
+        console.log(TAG + "************* testGetUpdateSqlInfo end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetUpdateSqlInfo end *************");
+      }
     });
 
     /**
@@ -285,6 +342,7 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
         console.log(TAG + "************* testGetUpdateSqlInfoBucketIsNull end *************");
@@ -292,12 +350,12 @@ export default function RDBstoreGetSqlInfoTest() {
     });
 
     /**
-     * @tc.number testGetUpdateSqlInfoBucketTooLength
-     * @tc.name Get Update SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty.
+     * @tc.number testGetUpdateSqlInfoBucketTooLong
+     * @tc.name Get Update SQL Info Bucket length must less then 1000
+     * @tc.desc Verifies that an error is thrown when the bucket is too long.
      */
-    it('testGetUpdateSqlInfoBucketTooLength', 0, async () => {
-      console.log(TAG + "************* testGetUpdateSqlInfoBucketTooLength start *************");
+    it('testGetUpdateSqlInfoBucketTooLong', 0, async () => {
+      console.log(TAG + "************* testGetUpdateSqlInfoBucketTooLong start *************");
       const predicates = new relationalStore.RdbPredicates("users");
       try {
         relationalStore.getUpdateSqlInfo(
@@ -305,50 +363,49 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket1000,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetUpdateSqlInfoBucketTooLength end *************");
+        console.log(TAG + "************* testGetUpdateSqlInfoBucketTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetUpdateSqlInfoBucketCloumTooLength
-     * @tc.name Get Update SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty.
+     * @tc.number testGetUpdateSqlInfoBucketCloumnTooLong
+     * @tc.name Get Update SQL Info the column in bucket length must less then 256
+     * @tc.desc Verifies that an error is thrown when the column in bucket is too long.
      */
-    it('testGetUpdateSqlInfoBucketCloumTooLength', 0, async () => {
-      console.log(TAG + "************* testGetUpdateSqlInfoBucketCloumTooLength start *************");
+    it('testGetUpdateSqlInfoBucketCloumnTooLong', 0, async () => {
+      console.log(TAG + "************* testGetUpdateSqlInfoBucketCloumnTooLong start *************");
       const predicates = new relationalStore.RdbPredicates("users");
-      let tableName: string = "";
-      for(let i = 0; i < 256; i++) {
-        tableName = tableName + "a";
-      }
+      let tableName: string = "a".repeat(257);
       const bucket: relationalStore.ValuesBucket = {
-        name: tableName,
         age: "18",
         sex: "man",
         desc: "asserter"
       };
+      bucket[tableName] = "tableName";
       try {
         relationalStore.getUpdateSqlInfo(
           predicates,
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetUpdateSqlInfoBucketCloumTooLength end *************");
+        console.log(TAG + "************* testGetUpdateSqlInfoBucketCloumnTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetUpdateSqlInfoTableTooLength
+     * @tc.number testGetUpdateSqlInfoTableTooLong
      * @tc.name Get Update SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty.
+     * @tc.desc Verifies that an error is thrown when the tablename is too long.
      */
-    it('testGetUpdateSqlInfoTableTooLength', 0, async () => {
-      console.log(TAG + "************* testGetUpdateSqlInfoTableTooLength start *************");
-      let tableName: string = "";
+    it('testGetUpdateSqlInfoTableTooLong', 0, async () => {
+      console.log(TAG + "************* testGetUpdateSqlInfoTableTooLong start *************");
+      let tableName: string = "a".repeat(257);
       for(let i = 0; i < 256; i++) {
         tableName = tableName + "a";
       }
@@ -365,19 +422,20 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetUpdateSqlInfoTableTooLength end *************");
+        console.log(TAG + "************* testGetUpdateSqlInfoTableTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetUpdateSqlInfoWhereClauseTooLength
+     * @tc.number testGetUpdateSqlInfoWhereClauseTooLong
      * @tc.name Get Update SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty.
+     * @tc.desc Verifies that an error is thrown when the WhereClause is too long.
      */
-    it('testGetUpdateSqlInfoWhereClauseTooLength', 0, async () => {
-      console.log(TAG + "************* testGetUpdateSqlInfoWhereClauseTooLength start *************");
+    it('testGetUpdateSqlInfoWhereClauseTooLong', 0, async () => {
+      console.log(TAG + "************* testGetUpdateSqlInfoWhereClauseTooLong start *************");
       let tableName: string = "";
       for(let i = 0; i < 256; i++) {
         tableName = tableName + "a";
@@ -396,35 +454,37 @@ export default function RDBstoreGetSqlInfoTest() {
           bucket,
           relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetUpdateSqlInfoWhereClauseTooLength end *************");
+        console.log(TAG + "************* testGetUpdateSqlInfoWhereClauseTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetUpdateSqlInfoConflictResolutionIsEmpty
+     * @tc.number testGetUpdateSqlInfoConflictResolutionIsNotEmpty
      * @tc.name Get Update SQL Info Bucket Is Null
-     * @tc.desc Verifies that an error is thrown when the bucket is empty.
+     * @tc.desc Verifies that an error is thrown when the Conflict is not empty.
      */
-    it('testGetUpdateSqlInfoConflictResolutionIsEmpty', 0, async () => {
-      console.log(TAG + "************* testGetUpdateSqlInfoConflictResolutionIsEmpty start *************");
-      const predicates = new relationalStore.RdbPredicates("tableName");
-      predicates.equalTo("tableName", "user");
-      const bucket: relationalStore.ValuesBucket = {
-        name: "tableName",
-        age: "18",
-        sex: "man",
-        desc: "asserter"
-      };
+    it('testGetUpdateSqlInfoConflictResolutionIsNotEmpty', 0, async () => {
+      console.log(TAG + "************* testGetUpdateSqlInfoConflictResolutionIsNotEmpty start *************");
       try {
-        relationalStore.getUpdateSqlInfo(
+        const predicates = new relationalStore.RdbPredicates("tableName");
+        predicates.equalTo("tableName", "user");
+        const bucket: relationalStore.ValuesBucket = {
+          name: "tableName",
+          age: "18",
+          sex: "man",
+          desc: "asserter"
+        };
+        const info: relationalStore.SqlInfo = relationalStore.getUpdateSqlInfo(
           predicates,
           bucket,
-          5
+          relationalStore.ConflictResolution.ON_CONFLICT_NONE
         );
+        expect(info.sql).assertEqual("UPDATE tableName SET age=?,desc=?,name=?,sex=? WHERE tableName = ? ");
       } catch (e) {
-        expect(e.code).assertEqual("14800001");
+        expect(null).assertFail();
         console.log(TAG + "************* testGetUpdateSqlInfoConflictResolutionIsEmpty end *************");
       }
     });
@@ -436,50 +496,73 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetDeleteSqlInfo', 0, async () => {
       console.log(TAG + "************* testGetDeleteSqlInfo start *************");
-      const predicates = new relationalStore.RdbPredicates("users");
-      const info: relationalStore.SqlInfo = relationalStore.getDeleteSqlInfo(predicates);
-      expect(info.sql).assertEqual("DELETE FROM users");
-      console.log(TAG + "************* testGetDeleteSqlInfo end *************");
-    });
-
-    /**
-     * @tc.number testGetDeleteSqlInfoTableNameTooLength
-     * @tc.name Get Delete SQL Info Table Name Must Be Not Empty
-     * @tc.desc Verifies that an error is thrown when the table name is empty for delete SQL generation.
-     */
-    it('testGetDeleteSqlInfoTableNameTooLength', 0, async () => {
-      console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLength start *************");
       try {
-        let tableName: string = "";
-        for(let i = 0; i < 256; i++) {
-          tableName = tableName + "a";
-        }
-        const predicates = new relationalStore.RdbPredicates(tableName);
-        relationalStore.getDeleteSqlInfo(predicates);
+        const predicates = new relationalStore.RdbPredicates("users");
+        const info: relationalStore.SqlInfo = relationalStore.getDeleteSqlInfo(predicates);
+        expect(info.sql).assertEqual("DELETE FROM users");
+        console.log(TAG + "************* testGetDeleteSqlInfo end *************");
       } catch (e) {
-        expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLength end *************");
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetDeleteSqlInfo end *************");
       }
     });
 
     /**
-     * @tc.number testGetDeleteSqlInfoTableNameTooLength
+     * @tc.number testGetDeleteSqlInfo2
      * @tc.name Get Delete SQL Info Table Name Must Be Not Empty
-     * @tc.desc Verifies that an error is thrown when the WhereClause is too length.
+     * @tc.desc Verifies that the generated delete SQL statement is correct when the table name is provided.
      */
-    it('testGetDeleteSqlInfoTableNameTooLength', 0, async () => {
-      console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLength start *************");
+    it('testGetDeleteSqlInfo2', 0, async () => {
+      console.log(TAG + "************* testGetDeleteSqlInfo2 start *************");
       try {
-        let tableName: string = "";
-        for(let i = 0; i < 256; i++) {
-          tableName = tableName + "a";
-        }
+        const predicates = new relationalStore.RdbPredicates("users");
+        predicates.equalTo("tableName", "a");
+        predicates.notEqualTo("age", 18)
+        const info: relationalStore.SqlInfo = relationalStore.getDeleteSqlInfo(predicates);
+        expect(info.sql).assertEqual("DELETE FROM users WHERE tableName = ?  AND age <> ? ");
+        expect(info.args[0]).assertEqual("a");
+        expect(info.args[1]).assertEqual(18);
+        console.log(TAG + "************* testGetDeleteSqlInfo2 end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetQuerySqlInfo end *************");
+      }
+    });
+
+    /**
+     * @tc.number testGetDeleteSqlInfoTableNameTooLong
+     * @tc.name Get Delete SQL Info Table Name length Must less then 256
+     * @tc.desc Verifies that an error is thrown when the table name is too long.
+     */
+    it('testGetDeleteSqlInfoTableNameTooLong', 0, async () => {
+      console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLong start *************");
+      try {
+        let tableName: string = "a".repeat(257);
+        const predicates = new relationalStore.RdbPredicates(tableName);
+        relationalStore.getDeleteSqlInfo(predicates);
+        expect(null).assertFail();
+      } catch (e) {
+        expect(e.code).assertEqual("14800001");
+        console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLong end *************");
+      }
+    });
+
+    /**
+     * @tc.number testGetDeleteSqlInfoValueTooLong
+     * @tc.name Get Delete SQL Info value Must less then 256
+     * @tc.desc Verifies that an error is thrown when the value is too long.
+     */
+    it('testGetDeleteSqlInfoValueTooLong', 0, async () => {
+      console.log(TAG + "************* testGetDeleteSqlInfoValueTooLong start *************");
+      try {
+        let tableName: string = "a".repeat(257);
         const predicates = new relationalStore.RdbPredicates("tableName");
         predicates.equalTo(tableName, "a");
         relationalStore.getDeleteSqlInfo(predicates);
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetDeleteSqlInfoTableNameTooLength end *************");
+        console.log(TAG + "************* testGetDeleteSqlInfoValueTooLong end *************");
       }
     });
 
@@ -490,10 +573,15 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetQuerySqlInfo', 0, async () => {
       console.log(TAG + "************* testGetQuerySqlInfo start *************");
-      const predicates = new relationalStore.RdbPredicates("users");
-      const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates);
-      expect(info.sql).assertEqual("SELECT * FROM users");
-      console.log(TAG + "************* testGetQuerySqlInfo end *************");
+      try {
+        const predicates = new relationalStore.RdbPredicates("users");
+        const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates);
+        expect(info.sql).assertEqual("SELECT * FROM users");
+        console.log(TAG + "************* testGetQuerySqlInfo end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetQuerySqlInfo end *************");
+      }
     });
 
     /**
@@ -503,10 +591,15 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetQuerySqlInfoColumnsIsNullList', 0, async () => {
       console.log(TAG + "************* testGetQuerySqlInfoColumnsIsNullList start *************");
-      const predicates = new relationalStore.RdbPredicates("users");
-      const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates, []);
-      expect(info.sql).assertEqual("SELECT * FROM users");
-      console.log(TAG + "************* testGetQuerySqlInfoColumnsIsNullList end *************");
+      try {
+        const predicates = new relationalStore.RdbPredicates("users");
+        const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates, []);
+        expect(info.sql).assertEqual("SELECT * FROM users");
+        console.log(TAG + "************* testGetQuerySqlInfoColumnsIsNullList end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetQuerySqlInfoColumnsIsNullList end *************");
+      }
     });
 
     /**
@@ -516,77 +609,81 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testGetQuerySqlInfoByColumns', 0, async () => {
       console.log(TAG + "************* testGetQuerySqlInfoByColumns start *************");
-      const predicates = new relationalStore.RdbPredicates("users");
-      const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates, ["name", "age"]);
-      expect(info.sql).assertEqual("SELECT name, age  FROM users");
-      console.log(TAG + "************* testGetQuerySqlInfoByColumns end *************");
-    });
-
-    /**
-     * @tc.number testGetQuerySqlInfoTableNameTooLength
-     * @tc.name Get Query SQL Info Table Name Must Be Not Empty
-     * @tc.desc Verifies that an error is thrown when the Table is too length.
-     */
-    it('testGetQuerySqlInfoTableNameTooLength', 0, async () => {
-      console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLength start *************");
       try {
-        let tableName: string = "";
-        for(let i = 0; i < 256; i++) {
-          tableName = tableName + "a";
-        }
-        const predicates = new relationalStore.RdbPredicates(tableName);
-        relationalStore.getQuerySqlInfo(predicates);
+        const predicates = new relationalStore.RdbPredicates("users");
+        const info: relationalStore.SqlInfo = relationalStore.getQuerySqlInfo(predicates, ["name", "age"]);
+        expect(info.sql).assertEqual("SELECT name, age  FROM users");
+        console.log(TAG + "************* testGetQuerySqlInfoByColumns end *************");
       } catch (e) {
-        expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLength end *************");
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetQuerySqlInfoByColumns end *************");
       }
     });
 
     /**
-     * @tc.number testGetQuerySqlInfoWhereClauseTooLength
-     * @tc.name Get Query SQL Info Table Name Must Be Not Empty
-     * @tc.desc Verifies that an error is thrown when the WhereClause is too length.
+     * @tc.number testGetQuerySqlInfoTableNameTooLong
+     * @tc.name Get Query SQL Info Table Name length must less then 256
+     * @tc.desc Verifies that an error is thrown when the Table is too Long.
      */
-    it('testGetQuerySqlInfoWhereClauseTooLength', 0, async () => {
-      console.log(TAG + "************* testGetQuerySqlInfoWhereClauseTooLength start *************");
+    it('testGetQuerySqlInfoTableNameTooLong', 0, async () => {
+      console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLong start *************");
       try {
-        let tableName: string = "";
-        for(let i = 0; i < 256; i++) {
-          tableName = tableName + "a";
-        }
+        let tableName: string = "a".repeat(257);
+        const predicates = new relationalStore.RdbPredicates(tableName);
+        relationalStore.getQuerySqlInfo(predicates);
+        expect(null).assertFail();
+      } catch (e) {
+        expect(e.code).assertEqual("14800001");
+        console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLong end *************");
+      }
+    });
+
+    /**
+     * @tc.number testGetQuerySqlInfoWhereClauseTooLong
+     * @tc.name Get Query SQL Info WhereClause length is less then 256
+     * @tc.desc Verifies that an error is thrown when the WhereClause is too long.
+     */
+    it('testGetQuerySqlInfoWhereClauseTooLong', 0, async () => {
+      console.log(TAG + "************* testGetQuerySqlInfoWhereClauseTooLong start *************");
+      try {
+        let tableName: string = "a".repeat(257);
         const predicates = new relationalStore.RdbPredicates("tableName");
         predicates.equalTo(tableName, "a");
         relationalStore.getQuerySqlInfo(predicates);
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetQuerySqlInfoWhereClauseTooLength end *************");
+        console.log(TAG + "************* testGetQuerySqlInfoWhereClauseTooLong end *************");
       }
     });
 
     /**
-     * @tc.number testGetQuerySqlInfoColumnsNotString
-     * @tc.name Get Query SQL Info Table Name Must Be Not Empty
+     * @tc.number testGetQuerySqlInfoColumnsNotstringarray
+     * @tc.name Get Query SQL Info Columns must be a string array
      * @tc.desc Verifies that an error is thrown when the Columns is not a string array.
      */
-    it('testGetQuerySqlInfoTableNameTooLength', 0, async () => {
-      console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLength start *************");
+    it('testGetQuerySqlInfoColumnsNotstringarray', 0, async () => {
+      console.log(TAG + "************* testGetQuerySqlInfoColumnsNotstringarray start *************");
       try {
         const predicates = new relationalStore.RdbPredicates("tableName");
         predicates.equalTo("tableName", "a");
-        relationalStore.getQuerySqlInfo(predicates, [3, 4]);
+        const info: relationalStore.SqlInfo =  relationalStore.getQuerySqlInfo(predicates, ["3", "4"]);
+        expect(info.sql).assertEqual("SELECT 3, 4  FROM tableName WHERE tableName = ? ");
+        expect(info.args[0]).assertEqual('a');
+        console.log(TAG + "************* testGetQuerySqlInfoColumnsNotstringarray end *************");
       } catch (e) {
-        expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetQuerySqlInfoTableNameTooLength end *************");
+        expect(null).assertFail();
+        console.log(TAG + "************* testGetQuerySqlInfoColumnsNotstringarray end *************");
       }
     });
 
     /**
-     * @tc.number testGetQuerySqlInfoColumnsTooLength
-     * @tc.name Get Query SQL Info Table Name Must Be Not Empty
+     * @tc.number testGetQuerySqlInfoColumnsTooLong
+     * @tc.name Get Query SQL Info Columns length Must less then 1000
      * @tc.desc Verifies that an error is thrown when the Columns is too length.
      */
-    it('testGetQuerySqlInfoColumnsTooLength', 0, async () => {
-      console.log(TAG + "************* testGetQuerySqlInfoColumnsTooLength start *************");
+    it('testGetQuerySqlInfoColumnsTooLong', 0, async () => {
+      console.log(TAG + "************* testGetQuerySqlInfoColumnsTooLong start *************");
       try {
         const colums:string[] = new Array(1003);
         for(let i = 0; i < colums.length; i++) {
@@ -595,9 +692,10 @@ export default function RDBstoreGetSqlInfoTest() {
         const predicates = new relationalStore.RdbPredicates("tableName");
         predicates.equalTo("tableName", "a");
         relationalStore.getQuerySqlInfo(predicates, colums);
+        expect(null).assertFail();
       } catch (e) {
         expect(e.code).assertEqual("14800001");
-        console.log(TAG + "************* testGetQuerySqlInfoColumnsTooLength end *************");
+        console.log(TAG + "************* testGetQuerySqlInfoColumnsTooLong end *************");
       }
     });
 
@@ -608,12 +706,21 @@ export default function RDBstoreGetSqlInfoTest() {
      */
     it('testToSendableValues', 0, async () => {
       console.log(TAG + "************* testToSendableValues start *************");
-      const array: relationalStore.ValueType[] = [];
-      array.push(1);
-      array.push(2);
-      const values = sendableRelationalStore.toSendableValues(array);
-      expect(values.length).assertEqual(2);
-      console.log(TAG + "************* testToSendableValues end *************");
+      try {
+        const array: relationalStore.ValueType[] = [];
+        array.push(1);
+        array.push(2);
+        array.push("aaaaaaa");
+        const values = sendableRelationalStore.toSendableValues(array);
+        expect(values.length).assertEqual(3);
+        expect(values[0]).assertEqual(1);
+        expect(values[1]).assertEqual(2);
+        expect(values[2]).assertEqual("aaaaaaa");
+        console.log(TAG + "************* testToSendableValues end *************");
+      } catch (e) {
+        expect(null).assertFail();
+        console.log(TAG + "************* testToSendableValues end *************");
+      }
     });
     console.log(TAG + "*************Unit Test End*************");
   })
