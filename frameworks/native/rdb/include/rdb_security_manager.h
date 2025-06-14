@@ -35,6 +35,7 @@ struct SecurityContent {
     static constexpr uint8_t INVALID_VERSION = 0x00;
     static constexpr uint8_t CURRENT_VERSION = 0x01;
     static constexpr int32_t NONCE_SIZE = 12;
+    bool isNewStyle = true;
 
     uint32_t magicNum = MAGIC_NUMBER;
     uint8_t version = INVALID_VERSION;
@@ -110,6 +111,7 @@ public:
     void ChangeKeyFile(const std::string &dbPath);
     int32_t RestoreKeyFile(const std::string &dbPath, const std::vector<uint8_t> &key);
     bool IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType);
+    static bool InitPath(const std::string &fileDir);
 
 private:
     using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
@@ -118,6 +120,7 @@ private:
         const std::vector<uint8_t>&, RDBCryptFault&, SecurityContent&);
     using DecryptFunc = bool (*)(const std::vector<uint8_t>&,
         const std::vector<uint8_t>&, RDBCryptFault&, SecurityContent&);
+    using GenerateRandomNumFunc = std::vector<uint8_t> (*)(int32_t&);
     RdbSecurityManager();
     ~RdbSecurityManager();
 
@@ -129,7 +132,6 @@ private:
     bool DecryptWorkKey(SecurityContent &content, std::vector<uint8_t> &key);
     void ReportCryptFault(const int32_t &errorCode, const std::string &custLog);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
-    static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, SecurityContent &securityContent);
