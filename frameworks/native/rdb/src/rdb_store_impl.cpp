@@ -2130,7 +2130,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
 int RdbStoreImpl::GetVersion(int &version)
 {
     Suspender suspender(Suspender::SQL_LOG);
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, true);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
         return errCode;
     }
