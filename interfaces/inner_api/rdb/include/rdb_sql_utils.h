@@ -15,10 +15,27 @@
 
 #ifndef NATIVE_RDB_SQL_UTILS_H
 #define NATIVE_RDB_SQL_UTILS_H
+#include <string>
+#include <vector>
 #include "abs_rdb_predicates.h"
+#include "rdb_common.h"
+#include "rdb_predicates.h"
+#include "values_bucket.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
+struct SqlInfo {
+    std::string sql;
+    std::vector<NativeRdb::ValueObject> args;
+};
+
+using Values = std::vector<ValueObject>;
+using Row = ValuesBucket;
+using Rows = std::vector<Row>;
+using Fields = std::vector<std::string>;
+using Resolution = ConflictResolution;
+
 class API_EXPORT RdbSqlUtils {
 public:
     /**
@@ -47,6 +64,13 @@ public:
      * @brief build query sql string.
      */
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
+    
+    static std::pair<int, SqlInfo> GetInsertSqlInfo(const std::string &table, const Row &row, Resolution resolution);
+    static std::pair<int, SqlInfo> GetUpdateSqlInfo(const AbsRdbPredicates &predicates, const Row &row,
+        Resolution resolution, const std::vector<std::string> &returningFields = {});
+    static std::pair<int, SqlInfo> GetDeleteSqlInfo(
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields = {});
+    static std::pair<int, SqlInfo> GetQuerySqlInfo(const AbsRdbPredicates &predicates, const Fields &columns);
 };
 } // namespace NativeRdb
 } // namespace OHOS
