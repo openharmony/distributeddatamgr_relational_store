@@ -95,7 +95,6 @@ public:
 
         API_EXPORT bool empty() const;
         API_EXPORT static std::string to_string(const JSONWrapper &jsonWrapper);
-        API_EXPORT std::vector<std::string> Keys() const;
     private:
         void AddToRoot();
         JSONWrapper(const JSONWrapper &jsonWrapper) = delete;
