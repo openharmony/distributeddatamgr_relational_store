@@ -34,6 +34,7 @@ API_EXPORT bool Encrypt(const std::vector<uint8_t> &rootKeyAlias,
     const std::vector<uint8_t> &key, RDBCryptFault &rdbFault, SecurityContent &content) asm("encrypt");
 API_EXPORT bool Decrypt(const std::vector<uint8_t> &rootKeyAlias,
     std::vector<uint8_t> &key, RDBCryptFault &rdbFault, SecurityContent &content) asm("decrypt");
+API_EXPORT std::vector<uint8_t> GenerateRandomNum(int32_t len) asm("GenerateRandomNum");
 int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
 {
     return OHOS::NativeRdb::RDBCrypt::CheckRootKeyExists(rootKeyAlias);
@@ -52,6 +53,10 @@ bool Decrypt(const std::vector<uint8_t> &rootKeyAlias,
 {
     return OHOS::NativeRdb::RDBCrypt::Decrypt(rootKeyAlias, key, rdbFault, content);
 }
+std::vector<uint8_t> GenerateRandomNum(int32_t len)
+{
+    return OHOS::NativeRdb::RDBCrypt::GenerateRandomNum(len);
+}
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
@@ -61,6 +66,7 @@ constexpr uint32_t TIMES = 4;
 constexpr uint32_t MAX_UPDATE_SIZE = 64;
 constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
 constexpr uint8_t AEAD_LEN = 16;
+static constexpr int RDB_KEY_SIZE = 32;
 static std::vector<uint8_t> g_nonce(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
 static std::vector<uint8_t> g_add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
@@ -378,6 +384,19 @@ bool RDBCrypt::Decrypt(const std::vector<uint8_t> &rootKeyAlias,
     }
     key.resize(plainKeyBlob.size);
     return true;
+}
+
+std::vector<uint8_t> RDBCrypt::GenerateRandomNum(int32_t len)
+{
+    uint8_t keyValue[RDB_KEY_SIZE] = {0};
+    struct HksBlob blobKey = { .size = RDB_KEY_SIZE, .data = keyValue };
+    auto ret = HksGenerateRandom(nullptr, &blobKey);
+    if (ret != HKS_SUCCESS) {
+        LOG_ERROR("HksGenerateRandom failed, status: %{public}d", ret);
+        return {};
+    }
+    std::vector<uint8_t> key(blobKey.data, blobKey.data + blobKey.size);
+    return key;
 }
 } // namespace OHOS::NativeRdb
 } // OHOS

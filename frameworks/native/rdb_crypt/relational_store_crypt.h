@@ -33,6 +33,7 @@ public:
     static bool Decrypt(const std::vector<uint8_t>& rootKeyAlias,
         std::vector<uint8_t>& key, RDBCryptFault &rdbFault, SecurityContent &content);
     static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog);
+    static std::vector<uint8_t> GenerateRandomNum(int32_t len);
 };
 } // namespace OHOS::NativeRdb
 } // OHOS

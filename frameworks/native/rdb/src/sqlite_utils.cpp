@@ -55,6 +55,10 @@ constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t DISPLAY_BYTE = 2;
 constexpr int32_t PREFIX_LENGTH = 3;
 constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
+static constexpr const char *PATH_INVALID_FLAG1 = "../";
+static constexpr const char *PATH_INVALID_FLAG2 = "/..";
+static constexpr const char PATH_SPLIT = '/';
+static constexpr int32_t PATH_INVALID_FLAG_LEN = 3;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
@@ -657,6 +661,26 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
                   it->second;
     }
     return result.empty() ? "no_parent" : result;
+}
+
+bool SqliteUtils::IsPathInvalid(const std::string &path)
+{
+    auto pos = path.find(PATH_INVALID_FLAG1);
+    while (pos != std::string::npos) {
+        if (pos == 0 || path[pos - 1] == PATH_SPLIT) {
+            LOG_ERROR("relative path is not allow, path contain:%{public}s, path:%{public}s", PATH_INVALID_FLAG1,
+                Anonymous(path).c_str());
+            return true;
+        }
+        pos = path.find(PATH_INVALID_FLAG1, pos + PATH_INVALID_FLAG_LEN);
+    }
+    pos = path.rfind(PATH_INVALID_FLAG2);
+    if ((pos != std::string::npos) && (path.size() - pos == PATH_INVALID_FLAG_LEN)) {
+        LOG_ERROR("relative path is not allow, path contain:%{public}s, path:%{public}s", PATH_INVALID_FLAG2,
+            Anonymous(path).c_str());
+        return true;
+    }
+    return false;
 }
 } // namespace NativeRdb
 } // namespace OHOS
