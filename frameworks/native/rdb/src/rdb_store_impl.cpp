@@ -1151,13 +1151,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        RdbParam param;
-        param.bundleName_ = config_.GetBundleName();
-        param.storeName_ = config_.GetName();
-        param.subUser_ = config_.GetSubUser();
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
+        InitSyncerParam(config_, false);
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
-            service->Disable(param);
+            service->Disable(syncerParam_);
         }
 #endif
         config_.SetIter(0);
@@ -1170,7 +1167,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         if (service != nullptr) {
-            service->Enable(param);
+            service->Enable(syncerParam_);
         }
 #endif
     }
