@@ -19,6 +19,7 @@ import RelationalStoreDataGroupId from './RdbGroupIdEts.test.ets';
 import RdbStoreErrorlogTest from './RdbOnErrorLog.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
 import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
+import PerfStatEtsTest from './RdbstorePerfStatEts.test.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -26,4 +27,5 @@ export default function testsuite() {
   RdbStoreErrorlogTest();
   RdbRekeyEtsTest();
   RDBstoreGetSqlInfoTest();
+  PerfStatEtsTest();
 }
