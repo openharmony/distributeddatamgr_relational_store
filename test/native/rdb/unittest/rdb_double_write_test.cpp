@@ -2022,13 +2022,13 @@ static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, si
     size_t bigSize = dataSize;
     char *data = (char *)malloc(bigSize);
     EXPECT_NE(data, nullptr);
-    if(data == nullptr) {
+    if (data == nullptr) {
         return -1;
     }
     memset_s(data, bigSize - 1, 'a', bigSize - 1);
     LOG_INFO("---- start insert ----");
     int64_t totalCost = 0;
-    for(int64_t id=0; id < repeat; id++) {
+    for (int64_t id = 0; id < repeat; id++) {
         ValuesBucket values;
         values.PutInt("id", id);
         values.PutString("name", std::string(data));
@@ -2050,13 +2050,13 @@ static int64_t GetUpdateTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     size_t bigSize = dataSize;
     char *data = (char *)malloc(bigSize);
     EXPECT_NE(data, nullptr);
-    if(data == nullptr) {
+    if (data == nullptr) {
         return -1;
     }
     memset_s(data, bigSize - 1, 'b', bigSize - 1);
     LOG_INFO("---- start update ----");
     int64_t totalCost = 0;
-    for(int i=0; i < repeat; i++) {
+    for (int i = 0; i < repeat; i++) {
         int start = i * batchSize;
         int end = (i+1) * batchSize;
         std::string sql = "update test set name = '" + std::string(data) +
@@ -2075,7 +2075,7 @@ static int64_t GetDeleteTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
 {
     LOG_INFO("---- start delete ----");
     int64_t totalCost = 0;
-    for(int i=0; i < repeat; i++) {
+    for (int i = 0; i < repeat; i++) {
         int start = i * batchSize;
         int end = (i+1) * batchSize;
         std::string sql = "delete from test where id >= " +
@@ -2095,7 +2095,7 @@ static int MockSupportBinlogOff(void)
 }
  
 int64_t RdbDoubleWriteTest::GetRestoreTime(HAMode haMode)
-{   
+{
     InitDb(haMode);
     EXPECT_NE(store, nullptr);
     if (haMode == HAMode::MANUAL_TRIGGER) {

@@ -901,18 +901,6 @@ std::string Serializable::JSONWrapper::to_string(const JSONWrapper &jsonWrapper)
     return jsonWrapper.dump();
 }
 
-std::vector<std::string> Serializable::JSONWrapper::Keys() const
-{
-    std::vector<std::string> keys;
-    cJSON *item;
-    cJSON *current = json_;
-    cJSON_ArrayForEach(item, current) {
-        auto *key = item->string;
-        keys.emplace_back(key);
-    }
-    return keys;
-}
-
 bool Serializable::JSONWrapper::contains(const std::string &key) const
 {
     if (json_ == nullptr || !is_object()) {

@@ -39,20 +39,6 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
     return { LOG_CORE, 0xD001650, "SRdb" };
 }
 } // namespace Rdb
-
-namespace GraphStoreJsKit {
-static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
-{
-    return { LOG_CORE, 0xD001660, "GdbJS" };
-}
-} // namespace GraphStoreJsKit
-
-namespace DistributedDataAip {
-static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
-{
-    return { LOG_CORE, 0xD001660, "GdbNative" };
-}
-} // namespace DistributedDataAip
 } // namespace OHOS
 
 #define LOG_DEBUG(fmt, ...)                                                    \

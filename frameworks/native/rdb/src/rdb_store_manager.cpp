@@ -132,7 +132,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         return false;
     }
     if (config.GetBundleName().empty()) {
-        LOG_WARN("Config has no bundleName, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
+        LOG_WARN("no bundleName");
         return false;
     }
     Param lastParam = GetSyncParam(config);
@@ -316,6 +316,9 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
         param.bundleName_ = config.GetBundleName();
         param.storeName_ = *tokens.rbegin();
         param.subUser_ = config.GetSubUser();
+        param.area_ = config.GetArea();
+        param.hapName_ = config.GetModuleName();
+        param.customDir_ = config.GetCustomDir();
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);

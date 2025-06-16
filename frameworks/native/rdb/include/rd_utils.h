@@ -42,10 +42,10 @@ public:
     static int RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int32_t len, void (*freeFunc)(void *));
     /**
     * @brief Binds a text buffer to a parameter in a prepared SQL statement
-    * 
+    *
     * This function binds a text data buffer to a parameter placeholder in a SQL prepared statement.
     * Typically used to replace "?" placeholders in SQL statements with actual values before execution.
-    * 
+    *
     * @param stmt      Pointer to the prepared statement object. Must be properly initialized.
     * @param idx       1-based parameter index (SQL parameter numbering starts at 1).
     * @param val       Pointer to the data buffer to bind. Can be text.

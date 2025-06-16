@@ -24,6 +24,7 @@
 
 #include "cloud_types.h"
 #include "common_types.h"
+#include "iremote_broker.h"
 #include "rdb_types.h"
 #include "values_bucket.h"
 namespace OHOS {
@@ -42,6 +43,7 @@ public:
         TRANS_QUERY_STATISTICS,
         TRANS_QUERY_LAST_SYNC_INFO,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
+        TRANS_CLOUD_SYNC,
         TRANS_CONFIG_BUTT,
         TRANS_SHARE_HEAD = TRANS_CONFIG_BUTT,
         TRANS_ALLOC_RESOURCE_AND_SHARE = TRANS_SHARE_HEAD,
@@ -56,6 +58,7 @@ public:
         TRANS_SHARE_BUTT,
         TRANS_CLIENT_HEAD = TRANS_SHARE_BUTT,
         TRANS_SET_CLOUD_STRATEGY = TRANS_CLIENT_HEAD,
+        TRANS_INIT_NOTIFIER,
         TRANS_CLIENT_BUTT,
         TRANS_BUTT = TRANS_CLIENT_BUTT,
     };
@@ -91,6 +94,12 @@ public:
         CLOUD_INFO_INVALID,
         SCHEMA_INVALID,
         STRATEGY_BLOCKING,
+        INVALID_ARGUMENT_V20,
+    };
+
+    struct Option {
+        int32_t syncMode;
+        uint32_t seqNum = 0;
     };
 
     static const int INVALID_USER_ID = -1;
@@ -124,6 +133,9 @@ public:
     virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
     virtual std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
+    virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
+        const DistributedRdb::AsyncDetail &async) = 0;
+    virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };

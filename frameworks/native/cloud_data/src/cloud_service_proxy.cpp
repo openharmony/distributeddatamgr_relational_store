@@ -271,4 +271,75 @@ std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
     ITypesUtil::Unmarshal(reply, results);
     return { status, results };
 }
+
+int32_t CloudServiceProxy::DoAsync(const std::string &bundleName, const std::string &storeId, Option option)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_CLOUD_SYNC, reply, bundleName, storeId, option);
+    if (status != SUCCESS) {
+        LOG_ERROR(
+            "Status:0x%{public}x bundleName:%{public}s storeId:%{public}.3s syncMode:%{public}d seqNum:%{public}u",
+            status, bundleName.c_str(), storeId.c_str(), option.syncMode, option.seqNum);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::InitNotifier(sptr<IRemoteObject> notifier)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_INIT_NOTIFIER, reply, notifier);
+    if (status != SUCCESS) {
+        LOG_ERROR("Status:0x%{public}x", status);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::InitNotifier()
+{
+    notifier_ = new (std::nothrow) CloudNotifierStub([this](uint32_t seqNum, Details &&result) {
+        OnSyncComplete(seqNum, std::move(result));
+    });
+    if (notifier_ == nullptr) {
+        LOG_ERROR("create notifier failed");
+        return ERROR;
+    }
+    auto status = InitNotifier(notifier_->AsObject());
+    if (status != SUCCESS) {
+        notifier_ = nullptr;
+        LOG_ERROR("init notifier failed.");
+        return status;
+    }
+    return SUCCESS;
+}
+
+void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
+{
+    syncCallbacks_.ComputeIfPresent(seqNum, [&result](const auto &key, const AsyncDetail &callback) {
+        auto finished = result.empty() || (result.begin()->second.progress == SYNC_FINISH);
+        if (callback != nullptr) {
+            callback(std::move(result));
+        }
+        return !finished;
+    });
+}
+
+int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::string &storeId,
+    const Option &option, const AsyncDetail &async)
+{
+    LOG_INFO("cloud sync start, bundleName = %{public}s, seqNum = %{public}u", bundleName.c_str(), option.seqNum);
+    if (bundleName.empty() || storeId.empty() || option.syncMode  < DistributedRdb::TIME_FIRST ||
+        option.syncMode  > DistributedRdb::CLOUD_FIRST || async == nullptr) {
+        LOG_ERROR("invalid args, bundleName = %{public}s", bundleName.c_str());
+        return INVALID_ARGUMENT;
+    }
+    if (!syncCallbacks_.Insert(option.seqNum, async)) {
+        LOG_ERROR("register progress failed, bundleName = %{public}s", bundleName.c_str());
+        return ERROR;
+    }
+    auto status = DoAsync(bundleName, storeId, option);
+    if (status != SUCCESS) {
+        syncCallbacks_.Erase(option.seqNum);
+    }
+    return status;
+}
 } // namespace OHOS::CloudData

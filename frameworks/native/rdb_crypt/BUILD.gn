@@ -38,6 +38,7 @@ ldflags = [ "-Wl,--exclude-libs,ALL" ]
 cflags_cc = [ "-fvisibility=hidden" ]
 
 external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "huks:libhukssdk",
 ]

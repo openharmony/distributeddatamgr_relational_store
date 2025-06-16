@@ -47,6 +47,7 @@
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_log.h"
+#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
 #include "rdb_trace.h"
@@ -220,10 +221,13 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
         return;
     }
     if (err != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
-            SqliteUtils::Anonymous(param.storeName_).c_str());
+        if (err != E_INVALID_ARGS) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
+                SqliteUtils::Anonymous(param.storeName_).c_str());
+        }
         auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+        if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
             pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [param, retry]() {
                 AfterOpen(param, retry);
             });
@@ -634,7 +638,7 @@ int32_t ObsManger::CleanUp()
     auto cleanUp = reinterpret_cast<CleanFunc>(dlsym(handle_, "CleanUp"));
     if (cleanUp == nullptr) {
         LOG_ERROR("dlsym(CleanUp) failed!");
-        return E_OK;
+        return E_ERROR;
     }
     if (!cleanUp()) {
         return E_ERROR;
@@ -990,7 +994,8 @@ void RdbStoreImpl::RegisterDataChangeCallback(
     if (conn == nullptr) {
         relConnPool->Dump(true, "DATACHANGE");
         auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (pool != nullptr && retry++ < MAX_RETRY_TIMES) {
+        if (pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
             pool->Schedule(std::chrono::seconds(1),
                 [delayNotifier, connPool, retry]() { RegisterDataChangeCallback(delayNotifier, connPool, retry); });
         }
@@ -1146,13 +1151,10 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-        RdbParam param;
-        param.bundleName_ = config_.GetBundleName();
-        param.storeName_ = config_.GetName();
-        param.subUser_ = config_.GetSubUser();
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
+        InitSyncerParam(config_, false);
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
-            service->Disable(param);
+            service->Disable(syncerParam_);
         }
 #endif
         config_.SetIter(0);
@@ -1165,7 +1167,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         created = true;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
         if (service != nullptr) {
-            service->Enable(param);
+            service->Enable(syncerParam_);
         }
 #endif
     }
@@ -1207,45 +1209,16 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    if (table.empty()) {
-        return { E_EMPTY_TABLE_NAME, -1 };
-    }
-
-    if (row.IsEmpty()) {
-        return { E_EMPTY_VALUES_BUCKET, -1 };
-    }
-
-    auto conflictClause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
-    if (conflictClause == nullptr) {
-        return { E_INVALID_CONFLICT_FLAG, -1 };
-    }
     RdbStatReporter reportStat(RDB_PERF, INSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("INSERT").append(conflictClause).append(" INTO ").append(table).append("(");
-    size_t bindArgsSize = row.values_.size();
-    std::vector<ValueObject> bindArgs;
-    bindArgs.reserve(bindArgsSize);
-    const char *split = "";
-    for (const auto &[key, val] : row.values_) {
-        sql.append(split).append(key);
-        if (val.GetType() == ValueObject::TYPE_ASSETS && resolution == ConflictResolution::ON_CONFLICT_REPLACE) {
-            return { E_INVALID_ARGS, -1 };
-        }
-        SqliteSqlBuilder::UpdateAssetStatus(val, AssetValue::STATUS_INSERT);
-        bindArgs.push_back(val); // columnValue
-        split = ",";
+    auto [status, sqlInfo] = RdbSqlUtils::GetInsertSqlInfo(table, row, resolution);
+    if (status != E_OK) {
+        return { status, -1 };
     }
 
-    sql.append(") VALUES (");
-    if (bindArgsSize > 0) {
-        sql.append(SqliteSqlBuilder::GetSqlArgs(bindArgsSize));
-    }
-
-    sql.append(")");
     int64_t rowid = -1;
-    auto errCode = ExecuteForLastInsertedRowId(rowid, sql, bindArgs);
+    auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1379,51 +1352,16 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    auto table = predicates.GetTableName();
-    if (table.empty()) {
-        return { E_EMPTY_TABLE_NAME, -1 };
-    }
-
-    if (row.IsEmpty()) {
-        return { E_EMPTY_VALUES_BUCKET, -1 };
-    }
-
-    auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
-    if (clause == nullptr) {
-        return { E_INVALID_CONFLICT_FLAG, -1 };
-    }
     RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("UPDATE").append(clause).append(" ").append(table).append(" SET ");
-    std::vector<ValueObject> tmpBindArgs;
-    auto args = predicates.GetBindArgs();
-    size_t tmpBindSize = row.values_.size() + args.size();
-    tmpBindArgs.reserve(tmpBindSize);
-    const char *split = "";
-    for (auto &[key, val] : row.values_) {
-        sql.append(split);
-        if (val.GetType() == ValueObject::TYPE_ASSETS) {
-            sql.append(key).append("=merge_assets(").append(key).append(", ?)"); // columnName
-        } else if (val.GetType() == ValueObject::TYPE_ASSET) {
-            sql.append(key).append("=merge_asset(").append(key).append(", ?)"); // columnName
-        } else {
-            sql.append(key).append("=?"); // columnName
-        }
-        tmpBindArgs.push_back(val); // columnValue
-        split = ",";
+    auto [status, sqlInfo] = RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution, returningFields);
+    if (status != E_OK) {
+        return { status, -1 };
     }
-    auto where = predicates.GetWhereClause();
-    if (!where.empty()) {
-        sql.append(" WHERE ").append(where);
-    }
-    SqliteSqlBuilder::AppendReturning(sql, returningFields);
-    tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
-
-    auto [code, result] = ExecuteForRow(sql, tmpBindArgs);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args);
     if (result.changed > 0) {
-        DoCloudSync(table);
+        DoCloudSync(predicates.GetTableName());
     }
     return { code, result };
 }
@@ -1435,25 +1373,17 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    auto table = predicates.GetTableName();
-    if (table.empty()) {
-        return { E_EMPTY_TABLE_NAME, -1 };
-    }
-
     RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    std::string sql;
-    sql.append("DELETE FROM ").append(table);
-    auto whereClause = predicates.GetWhereClause();
-    if (!whereClause.empty()) {
-        sql.append(" WHERE ").append(whereClause);
+    auto [status, sqlInfo] = RdbSqlUtils::GetDeleteSqlInfo(predicates, returningFields);
+    if (status != E_OK) {
+        return { status, -1 };
     }
-    SqliteSqlBuilder::AppendReturning(sql, returningFields);
-    auto args = predicates.GetBindArgs();
-    auto [code, result] = ExecuteForRow(sql, args);
+    
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs());
     if (result.changed > 0) {
-        DoCloudSync(table);
+        DoCloudSync(predicates.GetTableName());
     }
     return { code, result };
 }
@@ -1530,7 +1460,7 @@ int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement, cons
     auto [err, version] = statement->ExecuteForValue();
     statement = nullptr;
     if (vSchema_ < static_cast<int64_t>(version)) {
-        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 ">",
             SqliteUtils::Anonymous(name_).c_str(), vSchema_, static_cast<int64_t>(version));
         vSchema_ = version;
         if (!isMemoryRdb_) {
@@ -2197,7 +2127,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
 int RdbStoreImpl::GetVersion(int &version)
 {
     Suspender suspender(Suspender::SQL_LOG);
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, true);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
         return errCode;
     }

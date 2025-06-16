@@ -1868,3 +1868,54 @@ HWTEST_F(RdbStoreImplConditionTest, CloudTables_Change_Test_001, TestSize.Level2
     res = cloudTables->Change(table);
     EXPECT_EQ(false, res);
 }
+
+/**
+ * @tc.name: RdbStore_GetValues_002
+ * @tc.desc: test RdbStore GetValues
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_GetValues_002, TestSize.Level1)
+{
+    EXPECT_EQ(OHOS::NativeRdb::RdbStoreImpl::GetValues(nullptr), nullptr);
+    uint32_t maxReturningRows = 1024;
+    std::vector<ValuesBucket> valuesBuckets;
+    EXPECT_CALL(*mockStatement, GetRows(maxReturningRows))
+        .WillOnce(Return(std::make_pair(E_ERROR, valuesBuckets)));
+    auto resultSet = RdbStoreImpl::GetValues(mockStatement);
+    ASSERT_NE(nullptr, resultSet);
+    int rowCount = -1;
+    ASSERT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 0);
+}
+
+/**
+ * @tc.name: RdbStore_GetValues_003
+ * @tc.desc: test RdbStore GetValues
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_GetValues_003, TestSize.Level1)
+{
+    uint32_t maxReturningRows = 1024;
+    auto [code, statement] =
+        static_cast<RdbStoreImpl *>(store_.get())->GetStatement("PRAGMA user_version = 1;", true);
+    ASSERT_EQ(E_OK, code);
+    ASSERT_NE(nullptr, statement);
+    auto [ret, valuesBucket] = statement->GetRows(maxReturningRows);
+    ASSERT_EQ(E_OK, ret);
+
+    std::vector<ValuesBucket> valuesBuckets;
+    for (int i = 0; i < maxReturningRows; i++) {
+        ValuesBucket valuesBucket;
+        valuesBucket.Put("name", "test");
+        valuesBuckets.push_back(std::move(valuesBucket));
+    }
+    
+    EXPECT_CALL(*mockStatement, GetRows(maxReturningRows))
+        .WillOnce(Return(std::make_pair(E_OK, valuesBuckets)))
+        .WillOnce(Return(std::make_pair(E_NO_MORE_ROWS, valuesBuckets)));
+    auto resultSet = RdbStoreImpl::GetValues(mockStatement);
+    ASSERT_NE(nullptr, resultSet);
+    int rowCount = -1;
+    ASSERT_EQ(resultSet->GetRowCount(rowCount), E_OK);
+    ASSERT_EQ(rowCount, 1024);
+}

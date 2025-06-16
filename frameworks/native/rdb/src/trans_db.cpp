@@ -309,7 +309,7 @@ void TransDB::HandleSchemaDDL(std::shared_ptr<Statement> statement)
     statement->Prepare("PRAGMA schema_version");
     auto [err, version] = statement->ExecuteForValue();
     if (vSchema_ < static_cast<int64_t>(version)) {
-        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 "> app self can check the SQL.",
+        LOG_INFO("db:%{public}s exe DDL schema<%{public}" PRIi64 "->%{public}" PRIi64 ">",
             SqliteUtils::Anonymous(path_).c_str(), vSchema_, static_cast<int64_t>(version));
         vSchema_ = version;
     }

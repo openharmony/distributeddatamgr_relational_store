@@ -635,7 +635,6 @@ std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(uint32_t 
 {
     auto colCount = GetColumnCount();
     if (colCount <= 0) {
-        LOG_WARN("Column count invalid: %{public}d", colCount);
         return { E_OK, {} };
     }
     std::vector<ValuesBucket> valuesBuckets;

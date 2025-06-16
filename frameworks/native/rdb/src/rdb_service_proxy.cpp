@@ -705,7 +705,8 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
 RdbServiceProxy::~RdbServiceProxy()
 {
     int32_t retry = 0;
-    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry++ < MAX_RETRY) {
+    while (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1 && retry < MAX_RETRY) {
+        retry++;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (notifier_ != nullptr && notifier_->GetSptrRefCount() > 1) {

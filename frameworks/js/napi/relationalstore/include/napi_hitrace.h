@@ -26,12 +26,13 @@ class HiTrace final {
 public:
     inline HiTrace(const std::string &value)
     {
-        StartTrace(HITRACE_TAG_DISTRIBUTEDDATA, "NAPI-RDB-" + value);
+        std::string traceName = "NAPI-RDB-" + value;
+        StartTraceEx(HiTraceOutputLevel::HITRACE_LEVEL_INFO, HITRACE_TAG_DISTRIBUTEDDATA, traceName.c_str(), "");
     }
 
     inline ~HiTrace()
     {
-        FinishTrace(HITRACE_TAG_DISTRIBUTEDDATA);
+        FinishTraceEx(HiTraceOutputLevel::HITRACE_LEVEL_INFO, HITRACE_TAG_DISTRIBUTEDDATA);
     }
 };
 } // namespace RelationalStoreJsKit
