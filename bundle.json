@@ -67,7 +67,8 @@
                 "icu",
                 "sqlite",
                 "file_api",
-                "cJSON"
+                "cJSON",
+                "runtime_core"
             ],
             "third_party": [ "sqlite" ]
         },
@@ -89,8 +90,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/obs_mgr_adapter:rdb_obs_mgr_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb_crypt:relational_store_crypt",
-                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/graphstore:graphstore"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/ani/relationalstore:relationalstore_ani_package"
             ],
             "inner_kits": [
                 {
@@ -181,24 +181,6 @@
                     }
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb:native_graphstore",
-                    "header": {
-                        "header_files": [
-                            "edge.h",
-                            "gdb_errors.h",
-                            "gdb_helper.h",
-                            "gdb_store.h",
-                            "gdb_store_config.h",
-                            "gdb_transaction.h",
-                            "path.h",
-                            "path_segment.h",
-                            "result.h",
-                            "vertex.h"
-                        ],
-                      "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/gdb/include"
-                  }
-                },
-                {
                     "name": "//foundation/distributeddatamgr/relational_store/frameworks/cj:cj_relational_store_ffi",
                     "header": {
                         "header_files": [],
@@ -215,7 +197,9 @@
                 "//foundation/distributeddatamgr/relational_store/test/js/clouddata:cloudtest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:fuzztest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data:stage_unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/appdatafwk:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native/clouddata:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
@@ -226,8 +210,6 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
-                "//foundation/distributeddatamgr/relational_store/test/native/gdb:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/gdb:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest"
             ]
         }

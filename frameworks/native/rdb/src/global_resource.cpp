@@ -21,7 +21,8 @@ namespace OHOS::NativeRdb {
 static GlobalResource::Cleaner g_cleaners[GlobalResource::CLEAN_BUTT];
 int32_t GlobalResource::RegisterClean(CleanType type, Cleaner clean)
 {
-    if (type < static_cast<int32_t>(GlobalResource::ICU) || type >= static_cast<int32_t>(GlobalResource::CLEAN_BUTT)) {
+    if (type < static_cast<int32_t>(GlobalResource::ICU) || type >= static_cast<int32_t>(GlobalResource::CLEAN_BUTT) ||
+        clean == nullptr) {
         return E_INVALID_ARGS;
     }
 

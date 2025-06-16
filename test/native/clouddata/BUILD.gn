@@ -33,6 +33,7 @@ ohos_unittest("NativeCloudDataTest") {
 
   sources = [
     "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
     "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
     "${cloud_data_native_path}/src/cloud_types_util.cpp",
     "unittest/cloud_data_test.cpp",
@@ -70,4 +71,14 @@ group("unittest") {
 
   deps = [ ":NativeCloudDataTest" ]
 }
+###############################################################################
+
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    "fuzztest/cloudnotifierstub_fuzzer:fuzztest",
+  ]
+}
+
 ###############################################################################

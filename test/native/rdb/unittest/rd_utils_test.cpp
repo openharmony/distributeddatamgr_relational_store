@@ -118,10 +118,13 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_003, TestSize.Level1)
  */
 HWTEST_F(RdUtilsTest, RdUtils_Test_004, TestSize.Level1)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     GRD_SqlStmt *stmt = nullptr;
     uint32_t idx = 0;
     const char *str = "";
-    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, -1, nullptr), E_OK);
-    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, 0, nullptr), E_OK);
+    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, -1, nullptr), E_INVALID_ARGS);
+    EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, 0, nullptr), E_INVALID_ARGS);
 }
 } // namespace Test

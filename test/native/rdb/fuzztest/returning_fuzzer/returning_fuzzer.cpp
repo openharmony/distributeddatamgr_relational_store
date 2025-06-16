@@ -174,7 +174,7 @@ void BatchInsertReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbS
     auto [ret, trans] = store->CreateTransaction(GetRandomTransactionType(provider));
 
     if (ret != E_OK || trans == nullptr) {
-        LOG_ERROR("Failed to create transaction, error code: %d", ret);
+        LOG_ERROR("Failed to create transaction, error code: %{public}d", ret);
         return;
     }
     
@@ -207,7 +207,7 @@ void UpdateReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
     auto [ret, trans] = store->CreateTransaction(GetRandomTransactionType(provider));
 
     if (ret != E_OK || trans == nullptr) {
-        LOG_ERROR("Failed to create transaction, error code: %d", ret);
+        LOG_ERROR("Failed to create transaction, error code: %{public}d", ret);
         return;
     }
 
@@ -230,7 +230,7 @@ void DeleteReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
     auto [ret, trans] = store->CreateTransaction(GetRandomTransactionType(provider));
 
     if (ret != E_OK || trans == nullptr) {
-        LOG_ERROR("Failed to create transaction, error code: %d", ret);
+        LOG_ERROR("Failed to create transaction, error code: %{public}d", ret);
         return;
     }
     AbsRdbPredicates predicates2(TABLE_NAME);
@@ -262,19 +262,19 @@ void ExecuteExtReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbSt
     });
 
     store->ExecuteExt("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?) returning " + returning, bindArgs);
-    store->ExecuteExt("UPDATE test set name = ? where name = ? RETURNING" + returning, bindArgs);
-    store->ExecuteExt("DELETE FROM test where name = ? RETURNING" + returning, bindArgs);
+    store->ExecuteExt("UPDATE test set name = ? where name = ? RETURNING " + returning, bindArgs);
+    store->ExecuteExt("DELETE FROM test where name = ? RETURNING " + returning, bindArgs);
 
     auto [ret, trans] = store->CreateTransaction(GetRandomTransactionType(provider));
 
     if (ret != E_OK || trans == nullptr) {
-        LOG_ERROR("Failed to create transaction, error code: %d", ret);
+        LOG_ERROR("Failed to create transaction, error code: %{public}d", ret);
         return;
     }
 
     trans->ExecuteExt("INSERT INTO test(id, name, age, salary) VALUES (?, ?, ?, ?) returning " + returning, bindArgs);
-    trans->ExecuteExt("UPDATE test set name = ? where name = ? RETURNING" + returning, bindArgs);
-    trans->ExecuteExt("DELETE FROM test where name = ? RETURNING" + returning, bindArgs);
+    trans->ExecuteExt("UPDATE test set name = ? where name = ? RETURNING " + returning, bindArgs);
+    trans->ExecuteExt("DELETE FROM test where name = ? RETURNING " + returning, bindArgs);
     trans->Rollback();
 }
 

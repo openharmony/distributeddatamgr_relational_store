@@ -67,6 +67,11 @@ enum class CloudKvStoreInterfaceCode {
     GET_FEATURE_INTERFACE = 0
 };
 
+enum class ICloudNotifierInterfaceCode {
+    CLOUD_NOTIFIER_CMD_SYNC_COMPLETE = 0,
+    CLOUD_NOTIFIER_CMD_MAX
+};
+
 enum class RdbServiceInterfaceCode {
     RDB_SERVICE_CMD_OBTAIN_TABLE,
     RDB_SERVICE_CMD_INIT_NOTIFIER,

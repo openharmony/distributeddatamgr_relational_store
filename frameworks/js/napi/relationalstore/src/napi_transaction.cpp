@@ -287,7 +287,9 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
         }
         if (data != hint) {
-            LOG_ERROR("Memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data), uintptr_t(hint));
+            LOG_ERROR(
+                "Memory corrupted! data:0x%016" PRIXPTR "hint:0x%016" PRIXPTR, uintptr_t(data) & LOWER_24_BITS_MASK,
+                uintptr_t(hint) & LOWER_24_BITS_MASK);
             return;
         }
         TransactionProxy *proxy = reinterpret_cast<TransactionProxy *>(data);

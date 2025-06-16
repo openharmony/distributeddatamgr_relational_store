@@ -91,7 +91,8 @@ void SqlLog::Resume()
 bool SqlLog::IsPause()
 {
     std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return suspenders_[GetThreadId()] > 0;
+    auto it = suspenders_.find(GetThreadId());
+    return it != suspenders_.end() && it->second > 0;
 }
 
 SqlLog::SqlLog()

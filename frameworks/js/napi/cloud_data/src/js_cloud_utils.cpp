@@ -269,5 +269,50 @@ napi_value Convert2JSValue(napi_env env, const CloudSyncInfo &value)
     napi_set_named_property(env, jsValue, "syncStatus", Convert2JSValue(env, value.syncStatus));
     return jsValue;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "total", value.total),
+        DECLARE_JS_PROPERTY(env, "success", value.success),
+        DECLARE_JS_PROPERTY(env, "successful", value.success),
+        DECLARE_JS_PROPERTY(env, "failed", value.failed),
+        DECLARE_JS_PROPERTY(env, "remained", value.untreated),
+    };
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::TableDetail &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "upload", value.upload),
+        DECLARE_JS_PROPERTY(env, "download", value.download),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "schedule", value.progress),
+        DECLARE_JS_PROPERTY(env, "code", value.code),
+        DECLARE_JS_PROPERTY(env, "details", value.details),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
