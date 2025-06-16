@@ -345,7 +345,7 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator=(int32_t value)
 
 Serializable::JSONWrapper &Serializable::JSONWrapper::operator=(uint32_t value)
 {
-    if (root_ == nullptr && cJSON_IsNull(json_)) {
+    if (root_ == nullptr) {
         cJSON_Delete(json_);
         json_ = nullptr;
     }
