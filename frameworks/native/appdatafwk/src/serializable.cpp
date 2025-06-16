@@ -517,11 +517,13 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index)
         children_.push_back(std::make_shared<JSONWrapper>(item, json_));
         len++;
     }
-    if (index > len) {
-        LOG_ERROR("cannot use operator[]");
+    if (index >= len) {
+        ZLOGE("index over limit.");
     }
-    if (index == len) {
-        children_.push_back(std::make_shared<JSONWrapper>(nullptr, json_));
+    while (len <= index) {
+        auto item = cJSON_GetArrayItem(json_, len);
+        children_.push_back(std::make_shared<JSONWrapper>(item, json_));
+        len++;
     }
     return *children_[index];
 }
@@ -538,6 +540,14 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index) c
     }
     auto len = children_.size();
     while (len < size) {
+        auto item = cJSON_GetArrayItem(json_, len);
+        children_.push_back(std::make_shared<JSONWrapper>(item, json_));
+        len++;
+    }
+    if (index >= len) {
+        ZLOGE("index over limit.");
+    }
+    while (len <= index) {
         auto item = cJSON_GetArrayItem(json_, len);
         children_.push_back(std::make_shared<JSONWrapper>(item, json_));
         len++;
