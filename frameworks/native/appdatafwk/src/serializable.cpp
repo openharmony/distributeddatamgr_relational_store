@@ -518,7 +518,7 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index)
         len++;
     }
     if (index >= len) {
-        ZLOGE("index over limit.");
+        LOG_ERROR("index over limit.");
     }
     while (len <= index) {
         auto item = cJSON_GetArrayItem(json_, len);
@@ -545,7 +545,7 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index) c
         len++;
     }
     if (index >= len) {
-        ZLOGE("index over limit.");
+        LOG_ERROR("index over limit.");
     }
     while (len <= index) {
         auto item = cJSON_GetArrayItem(json_, len);
