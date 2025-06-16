@@ -408,7 +408,6 @@ HWTEST_F(SerializableTest, BoundaryTest, TestSize.Level1)
     in.uint32Val = UINT32_MAX;
     in.int64Val = (1LL << 53) - 2;
     in.uint64Val = (1LL << 53) - 2;
-
     json = Serializable::JSONWrapper::to_string(in.Marshall());
     out.Unmarshall(json);
     EXPECT_EQ(out.int32Val, in.int32Val);
