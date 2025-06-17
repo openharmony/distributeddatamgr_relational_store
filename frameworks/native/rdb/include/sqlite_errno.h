@@ -27,7 +27,11 @@
 #endif
 namespace OHOS {
 namespace NativeRdb {
-const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
+struct SQLiteErrorCode {
+    int sqliteError;
+    int rdbError;
+};
+static constexpr SQLiteErrorCode SQLiteErrorCodes[] = {
     { SQLITE_ERROR, E_SQLITE_ERROR },
     { SQLITE_ABORT, E_SQLITE_ABORT },
     { SQLITE_PERM, E_SQLITE_PERM },
@@ -49,15 +53,39 @@ const static std::map<int, int> ERROR_CODE_MAPPINT_TABLE = {
     { SQLITE_ROW, E_OK },
     { SQLITE_META_RECOVERED, E_SQLITE_META_RECOVERED },
 };
+
+static constexpr bool IsIncreasing()
+{
+    for (size_t i = 1; i < sizeof(SQLiteErrorCodes) / sizeof(SQLiteErrorCode); i++) {
+        if (SQLiteErrorCodes[i].sqliteError <= SQLiteErrorCodes[i - 1].sqliteError) {
+            return false;
+        }
+    }
+    return true;
+}
+// JS_ERROR_CODE_MSGS must ensure increment
+static_assert(IsIncreasing());
+
+static int GetRdbErrorCode(int32_t errorCode)
+{
+    auto jsErrorCode = SQLiteErrorCode{ errorCode, -errorCode };
+    auto iter = std::lower_bound(SQLiteErrorCodes,
+        SQLiteErrorCodes + sizeof(SQLiteErrorCodes) / sizeof(SQLiteErrorCodes[0]), jsErrorCode,
+        [](const SQLiteErrorCode &jsErrorCode1, const SQLiteErrorCode &jsErrorCode2) {
+            return jsErrorCode1.sqliteError < jsErrorCode2.sqliteError;
+        });
+    if (iter < SQLiteErrorCodes + sizeof(SQLiteErrorCodes) / sizeof(SQLiteErrorCodes[0]) &&
+        iter->sqliteError == errorCode) {
+        return iter->rdbError;
+    }
+    return -errorCode;
+}
+
 class SQLiteError {
 public:
     static int ErrNo(int sqliteErr)
     {
-        auto iter = ERROR_CODE_MAPPINT_TABLE.find(sqliteErr);
-        if (iter != ERROR_CODE_MAPPINT_TABLE.end()) {
-            return iter->second;
-        }
-        return -sqliteErr;
+        return GetRdbErrorCode(sqliteErr);
     }
 };
 } // namespace NativeRdb

@@ -17,6 +17,7 @@
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_PERFSTAT
 #include <atomic>
 #include <chrono>
+#include <shared_mutex>
 #include <memory>
 #include <list>
 
@@ -29,6 +30,10 @@ class ConcurrentMap;
 namespace DistributedRdb {
 class PerfStat {
 public:
+    struct ThreadParam {
+        int32_t suspenders_ = 0;
+        size_t size_ = 0;
+    };
     enum Step : int32_t {
         STEP_TOTAL,
         STEP_TOTAL_REF,
@@ -57,12 +62,15 @@ private:
     static Release GetRelease(int32_t step, uint32_t seqId, const std::string &storeId);
     static void Merge(uint32_t seqId, SqlExecInfo *execInfo);
     static void Notify(SqlExecInfo *execInfo, const std::string &storeId);
+    static bool IsPaused();
+    static size_t GetSize();
+    static void SetSize(size_t size);
     static ConcurrentMap<std::string, std::set<std::shared_ptr<SqlObserver>>> observers_;
     static ConcurrentMap<uint64_t, std::shared_ptr<SqlExecInfo>> execInfos_;
     static bool enabled_;
     static std::atomic_uint32_t seqId_;
-    static thread_local int32_t suspenders_;
-    static thread_local size_t size_;
+    static std::shared_mutex mutex_;
+    static std::map<uint64_t, ThreadParam> threadParams_;
 
     int32_t step_ = 0;
     uint64_t key_ = 0;

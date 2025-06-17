@@ -29,15 +29,15 @@ using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using SqlExecInfo = SqlObserver::SqlExecutionInfo;
 
+std::shared_mutex PerfStat::mutex_;
+std::map<uint64_t, PerfStat::ThreadParam> PerfStat::threadParams_;
 ConcurrentMap<std::string, std::set<std::shared_ptr<SqlObserver>>> PerfStat::observers_;
 ConcurrentMap<uint64_t, std::shared_ptr<SqlExecInfo>> PerfStat::execInfos_;
-thread_local int32_t PerfStat::suspenders_ = 0;
 bool PerfStat::enabled_ = false;
 std::atomic_uint32_t PerfStat::seqId_ = 0;
-thread_local size_t PerfStat::size_ = 0;
 int PerfStat::Subscribe(const std::string &storeId, std::shared_ptr<SqlObserver> observer)
 {
-    observers_.Compute(storeId, [observer](const auto&, auto& observers) {
+    observers_.Compute(storeId, [observer](const auto &, auto &observers) {
         observers.insert(observer);
         enabled_ = true;
         return true;
@@ -47,13 +47,15 @@ int PerfStat::Subscribe(const std::string &storeId, std::shared_ptr<SqlObserver>
 
 int PerfStat::Unsubscribe(const std::string &storeId, std::shared_ptr<SqlObserver> observer)
 {
-    observers_.ComputeIfPresent(storeId, [observer](const auto& key, auto& observers) {
+    observers_.ComputeIfPresent(storeId, [observer](const auto & key, auto &observers) {
         observers.erase(observer);
         return !observers.empty();
     });
     observers_.DoActionIfEmpty([]() {
         enabled_ = false;
         execInfos_.Clear();
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        threadParams_.clear();
     });
     return E_OK;
 }
@@ -65,7 +67,7 @@ uint32_t PerfStat::GenerateId()
 
 PerfStat::PerfStat(const std::string &storeId, const std::string &sql, int32_t step, uint32_t seqId, size_t size)
 {
-    if (!enabled_ || suspenders_ > 0) {
+    if (!enabled_ || IsPaused()) {
         return;
     }
     auto storeObservers = observers_.Find(storeId);
@@ -97,7 +99,7 @@ PerfStat::PerfStat(const std::string &storeId, const std::string &sql, int32_t s
     }
 
     if ((step_ == STEP_TOTAL || step_ == STEP_TRANS) && size > 0) {
-        size_ = size;
+        SetSize(size);
     }
 
     if (step_ == STEP_PREPARE && !sql.empty() && execInfo_ != nullptr) {
@@ -105,10 +107,9 @@ PerfStat::PerfStat(const std::string &storeId, const std::string &sql, int32_t s
     }
 }
 
-
 PerfStat::~PerfStat()
 {
-    if (!enabled_ || suspenders_ > 0) {
+    if (!enabled_ || IsPaused()) {
         return;
     }
     if (execInfo_ == nullptr) {
@@ -127,7 +128,7 @@ PerfStat::~PerfStat()
             execInfo_->executeTime_ += interval.count();
             break;
         case STEP_TOTAL:
-            size_ = 0;
+            SetSize(0);
         case STEP_TOTAL_RES:
             execInfo_->totalTime_ += interval.count();
             execInfos_.Erase(key_);
@@ -135,7 +136,7 @@ PerfStat::~PerfStat()
         case STEP_TRANS:
             execInfo_->totalTime_ += interval.count();
             execInfos_.Erase(GetThreadId());
-            size_ = 0;
+            SetSize(0);
             break;
         case STEP_TRANS_END:
             execInfo_->totalTime_ += interval.count();
@@ -214,31 +215,50 @@ void PerfStat::Notify(SqlExecInfo *execInfo, const std::string &storeId)
 }
 void PerfStat::Pause(uint32_t seqId)
 {
-    ++suspenders_;
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    ++threadParams_[GetThreadId()].suspenders_;
 }
 void PerfStat::Resume(uint32_t seqId)
 {
-    if (suspenders_ > 0) {
-        --suspenders_;
-    }
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    --threadParams_[GetThreadId()].suspenders_;
 }
 
-void PerfStat::FormatSql(const std::string& sql)
+void PerfStat::FormatSql(const std::string &sql)
 {
-    if (size_ == 0) {
+    auto size = GetSize();
+    if (size == 0) {
         execInfo_->sql_.emplace_back(sql);
         return;
     }
-    if (size_ > 0 && execInfo_->sql_.size() > 0) {
+    if (size > 0 && execInfo_->sql_.size() > 0) {
         return;
     }
     size_t firstPos = sql.find("),(");
     if (firstPos != std::string::npos) {
         std::string newSql = sql.substr(0, firstPos + 1);
-        newSql.append(",...,").append(std::to_string(size_));
-        execInfo_->sql_.emplace_back(newSql);
+        newSql.append(",...,").append(std::to_string(size));
+        execInfo_->sql_.emplace_back(std::move(newSql));
         return;
     }
     execInfo_->sql_.emplace_back(sql);
 }
+
+bool PerfStat::IsPaused()
+{
+    std::shared_lock<decltype(mutex_)> lock(mutex_);
+    return threadParams_[GetThreadId()].suspenders_ > 0;
 }
+
+size_t PerfStat::GetSize()
+{
+    std::shared_lock<decltype(mutex_)> lock(mutex_);
+    return threadParams_[GetThreadId()].size_;
+}
+
+void PerfStat::SetSize(size_t size)
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    threadParams_[GetThreadId()].size_ = size;
+}
+} // namespace OHOS::DistributedRdb
