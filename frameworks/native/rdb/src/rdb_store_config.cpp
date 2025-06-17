@@ -16,6 +16,7 @@
 #include "rdb_store_config.h"
 
 #include <sstream>
+#include <mutex>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -27,6 +28,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+static std::mutex g_mutex;
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
@@ -399,6 +401,7 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         name = std::string(path_).substr(0, path_.rfind("/") + 1);
     }
     using KeyFileType = RdbSecurityManager::KeyFileType;
+    std::lock_guard<std::mutex> lock(g_mutex);
     auto errCode = RdbSecurityManager::GetInstance().Init(name);
     if (errCode != E_OK) {
         RdbFaultHiViewReporter::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_ROOT_KEY_FAULT, *this,
