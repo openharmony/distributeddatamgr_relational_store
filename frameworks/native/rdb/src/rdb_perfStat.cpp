@@ -216,12 +216,12 @@ void PerfStat::Notify(SqlExecInfo *execInfo, const std::string &storeId)
 void PerfStat::Pause(uint32_t seqId)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    ++threadParams_[GetThreadId()].suspenders_;
+    threadParams_[GetThreadId()].suspenders_ = std::max(1, threadParams_[GetThreadId()].suspenders_ + 1);
 }
 void PerfStat::Resume(uint32_t seqId)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    --threadParams_[GetThreadId()].suspenders_;
+    threadParams_[GetThreadId()].suspenders_ = std::max(0, threadParams_[GetThreadId()].suspenders_ - 1);
 }
 
 void PerfStat::FormatSql(const std::string &sql)
@@ -247,13 +247,15 @@ void PerfStat::FormatSql(const std::string &sql)
 bool PerfStat::IsPaused()
 {
     std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return threadParams_[GetThreadId()].suspenders_ > 0;
+    auto it = threadParams_.find(GetThreadId());
+    return it != threadParams_.end() && it->second.suspenders_ > 0;
 }
 
 size_t PerfStat::GetSize()
 {
     std::shared_lock<decltype(mutex_)> lock(mutex_);
-    return threadParams_[GetThreadId()].size_;
+    auto it = threadParams_.find(GetThreadId());
+    return it != threadParams_.end() ? it->second.size_ : 0;
 }
 
 void PerfStat::SetSize(size_t size)
