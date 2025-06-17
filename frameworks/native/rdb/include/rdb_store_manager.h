@@ -41,22 +41,19 @@ public:
     bool Destroy();
     bool Remove(const std::string &path, bool shouldClose);
     bool Delete(const RdbStoreConfig &config, bool shouldClose);
-    int SetSecurityLabel(const RdbStoreConfig &config);
 
 private:
     using Param = DistributedRdb::RdbSyncerParam;
     using Info = DistributedRdb::RdbDebugInfo;
     using DebugInfos = std::map<std::string, RdbStoreManager::Info>;
     using DfxInfo = DistributedRdb::RdbDfxInfo;
-    int ProcessOpenCallback(RdbStore &rdbStore, int version, RdbOpenCallback &openCallback);
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
     static bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
     static int32_t CheckConfig(const RdbStoreConfig &config);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static int32_t Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo);
-    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path);
-    std::pair<int32_t, std::shared_ptr<RdbStoreImpl>> OpenStore(const RdbStoreConfig &config, const std::string &path);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path, const RdbStoreConfig &config);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;
