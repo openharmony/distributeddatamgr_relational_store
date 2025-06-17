@@ -345,8 +345,24 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator=(int32_t value)
 
 Serializable::JSONWrapper &Serializable::JSONWrapper::operator=(uint32_t value)
 {
-    int32_t number = static_cast<int32_t>(value);
-    return operator=(number);
+    if (root_ == nullptr) {
+        cJSON_Delete(json_);
+        json_ = nullptr;
+    }
+    if (json_ != nullptr) {
+        if (cJSON_IsNumber(json_)) {
+            cJSON_SetNumberValue(json_, static_cast<double>(value));
+        } else {
+            LOG_WARN("type is not number");
+        }
+        return *this;
+    }
+    json_ = cJSON_CreateNumber(static_cast<double>(value));
+    if (json_ == nullptr || root_ == nullptr) {
+        return *this;
+    }
+    AddToRoot();
+    return *this;
 }
 
 Serializable::JSONWrapper &Serializable::JSONWrapper::operator=(int64_t value)
@@ -493,7 +509,8 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index)
         LOG_ERROR("is not array, cannot use operator[].");
     }
 
-    int size = cJSON_GetArraySize(json_);
+    int rawSize = cJSON_GetArraySize(json_);
+    size_t size = (rawSize < 0) ? 0 : static_cast<size_t>(rawSize);
     auto len = children_.size();
     while (len < size) {
         auto item = cJSON_GetArrayItem(json_, len);
@@ -501,10 +518,12 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index)
         len++;
     }
     if (index > len) {
-        LOG_ERROR("cannot use operator[]");
+        LOG_ERROR("index over limit.");
     }
-    if (index == len) {
-        children_.push_back(std::make_shared<JSONWrapper>(nullptr, json_));
+    while (len <= index) {
+        auto item = cJSON_GetArrayItem(json_, len);
+        children_.push_back(std::make_shared<JSONWrapper>(item, json_));
+        len++;
     }
     return *children_[index];
 }
@@ -514,12 +533,21 @@ Serializable::JSONWrapper &Serializable::JSONWrapper::operator[](size_t index) c
     if (!is_array()) {
         LOG_ERROR("invalid args.");
     }
-    int size = cJSON_GetArraySize(json_);
+    int rawSize = cJSON_GetArraySize(json_);
+    size_t size = (rawSize < 0) ? 0 : static_cast<size_t>(rawSize);
     if (index >= size) {
         LOG_ERROR("invalid args.");
     }
     auto len = children_.size();
     while (len < size) {
+        auto item = cJSON_GetArrayItem(json_, len);
+        children_.push_back(std::make_shared<JSONWrapper>(item, json_));
+        len++;
+    }
+    if (index > len) {
+        LOG_ERROR("index over limit.");
+    }
+    while (len <= index) {
         auto item = cJSON_GetArrayItem(json_, len);
         children_.push_back(std::make_shared<JSONWrapper>(item, json_));
         len++;
@@ -642,7 +670,8 @@ bool Serializable::JSONWrapper::get_to(uint32_t &values) const
     if (json_ == nullptr || !is_number_unsigned()) {
         return false;
     }
-    values = json_->valueint;
+    double num = cJSON_GetNumberValue(json_);
+    values = static_cast<uint32_t>(num);
     return true;
 }
 
@@ -651,8 +680,8 @@ bool Serializable::JSONWrapper::get_to(int64_t &values) const
     if (json_ == nullptr || !is_number_integer()) {
         return false;
     }
-    values = json_->valueint;
-
+    double num = cJSON_GetNumberValue(json_);
+    values = static_cast<int64_t>(num);
     return true;
 }
 
@@ -661,7 +690,8 @@ bool Serializable::JSONWrapper::get_to(uint64_t &values) const
     if (json_ == nullptr || !is_number_unsigned()) {
         return false;
     }
-    values = json_->valueint;
+    double num = cJSON_GetNumberValue(json_);
+    values = static_cast<uint64_t>(num);
     return true;
 }
 
@@ -713,12 +743,16 @@ std::string Serializable::JSONWrapper::dump() const
     if (json_ == nullptr) {
         return "";
     }
-    return cJSON_PrintUnformatted(json_);
+    char *str = cJSON_PrintUnformatted(json_);
+    std::string res(str);
+    cJSON_free(str);
+    return res;
 }
 
 Serializable::iterator Serializable::JSONWrapper::find(const std::string &key) const
 {
-    auto size = cJSON_GetArraySize(json_);
+    int rawSize = cJSON_GetArraySize(json_);
+    size_t size = (rawSize < 0) ? 0 : static_cast<size_t>(rawSize);
     auto len = children_.size();
     if (len != size) {
         children_.clear();
@@ -742,7 +776,8 @@ Serializable::iterator Serializable::JSONWrapper::begin() const
     if (json_ == nullptr || (!is_array() && !is_object())) {
         LOG_ERROR("not support.");
     }
-    auto size = cJSON_GetArraySize(json_);
+    int rawSize = cJSON_GetArraySize(json_);
+    size_t size = (rawSize < 0) ? 0 : static_cast<size_t>(rawSize);
     auto len = children_.size();
     if (len != size) {
         children_.clear();
@@ -759,7 +794,8 @@ Serializable::iterator Serializable::JSONWrapper::end() const
     if (json_ == nullptr || json_->child == nullptr || (!is_array() && !is_object())) {
         LOG_ERROR("not support.");
     }
-    auto size = cJSON_GetArraySize(json_);
+    int rawSize = cJSON_GetArraySize(json_);
+    size_t size = (rawSize < 0) ? 0 : static_cast<size_t>(rawSize);
     auto len = children_.size();
     if (len != size) {
         children_.clear();
