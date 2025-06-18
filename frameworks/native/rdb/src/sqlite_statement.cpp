@@ -28,6 +28,7 @@
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_perfStat.h"
 #include "rdb_types.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
@@ -45,6 +46,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
 constexpr SqliteStatement::Action SqliteStatement::ACTIONS[ValueObject::TYPE_MAX];
@@ -54,15 +56,19 @@ static constexpr const char *ERR_MSG[] = {
     "no such column:",
     "has no column named"
 };
-SqliteStatement::SqliteStatement() : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_("")
+
+SqliteStatement::SqliteStatement(const RdbStoreConfig *config)
+    : readOnly_(false), columnCount_(0), numParameters_(0), stmt_(nullptr), sql_(""), config_(config)
 {
-    seqId_ = SqlStatistic::GenerateId();
+    seqId_ = PerfStat::GenerateId();
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_REF, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", SqlStatistic::Step::STEP_TOTAL_REF, seqId_);
 }
 
 SqliteStatement::~SqliteStatement()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL_RES, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_TOTAL_RES, seqId_);
     Finalize();
     conn_ = nullptr;
     config_ = nullptr;
@@ -143,6 +149,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
     // prepare the new sqlite3_stmt
     sqlite3_stmt *stmt = nullptr;
     SqlStatistic sqlStatistic(newSql, SqlStatistic::Step::STEP_PREPARE, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", newSql, PerfStat::Step::STEP_PREPARE, seqId_);
     int errCode = sqlite3_prepare_v2(dbHandle, newSql.c_str(), newSql.length(), &stmt, nullptr);
     if (errCode != SQLITE_OK) {
         std::string errMsg(sqlite3_errmsg(dbHandle));
@@ -238,6 +245,7 @@ int SqliteStatement::BindArgs(const std::vector<ValueObject> &bindArgs)
 int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObject>> &bindArgs)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_PREPARE, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_PREPARE, seqId_);
     if (bound_) {
         sqlite3_reset(stmt_);
         sqlite3_clear_bindings(stmt_);
@@ -369,6 +377,7 @@ int SqliteStatement::Step()
 int SqliteStatement::InnerStep()
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
     int ret = SQLiteError::ErrNo(errCode);
     auto db = sqlite3_db_handle(stmt_);
@@ -669,6 +678,7 @@ bool SqliteStatement::SupportBlockInfo() const
 int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
+    PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     if (info == nullptr) {
         return E_INVALID_ARGS;
     }

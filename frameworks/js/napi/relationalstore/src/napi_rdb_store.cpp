@@ -39,6 +39,7 @@
 #include "rdb_errno.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_perfStat.h"
 #include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -1674,6 +1675,53 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         (*it)->Clear();
         it = statisticses_.erase(it);
+    }
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OnPerfStat(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("perfStat", "function"));
+    bool result = std::any_of(perfStats_.begin(), perfStats_.end(),
+        [argv](std::shared_ptr<NapiPerfStatObserver> obs) { return obs && *obs == argv[0]; });
+    if (result) {
+        LOG_DEBUG("Duplicate subscribe.");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiPerfStatObserver>(env, argv[0], queue_);
+    std::string path = this->GetInstance()->GetPath();
+    int errCode = DistributedRdb::PerfStat::Subscribe(path, observer);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    perfStats_.push_back(std::move(observer));
+    LOG_DEBUG("perfStats_ subscribe success.");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffPerfStat(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
+        std::make_shared<ParamError>("perfStat", "function"));
+
+    auto it = perfStats_.begin();
+    while (it != perfStats_.end()) {
+        if (*it == nullptr) {
+            it = perfStats_.erase(it);
+            LOG_WARN("perfStatsObserver is nullptr.");
+            continue;
+        }
+        if (type == napi_function && !(**it == argv[0])) {
+            ++it;
+            continue;
+        }
+        std::string path = this->GetInstance()->GetPath();
+        int errCode = DistributedRdb::PerfStat::Unsubscribe(path, *it);
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = perfStats_.erase(it);
     }
     return nullptr;
 }
