@@ -36,7 +36,7 @@ public:
     static constexpr int COLUMN_TYPE_FLOATS = 1002;
     static constexpr int COLUMN_TYPE_BIGINT = 1003;
 
-    SqliteStatement();
+    SqliteStatement(const RdbStoreConfig *config = nullptr);
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
     int Bind(const std::vector<ValueObject> &args) override;

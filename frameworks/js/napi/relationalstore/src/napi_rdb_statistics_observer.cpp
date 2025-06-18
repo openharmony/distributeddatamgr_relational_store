@@ -62,4 +62,49 @@ void NapiStatisticsObserver::OnStatistic(const SqlExecutionInfo &sqlExeInfo)
             argv[0] = JSUtils::Convert2JSValue(env, infos);
         });
 }
+
+NapiPerfStatObserver::NapiPerfStatObserver(
+    napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> queue)
+    : env_(env), queue_(queue)
+{
+    napi_create_reference(env, callback, 1, &callback_);
+}
+
+NapiPerfStatObserver::~NapiPerfStatObserver()
+{
+}
+
+void NapiPerfStatObserver::Clear()
+{
+    if (callback_ == nullptr) {
+        return;
+    }
+    napi_delete_reference(env_, callback_);
+    callback_ = nullptr;
+}
+
+bool NapiPerfStatObserver::operator==(napi_value value)
+{
+    return JSUtils::Equal(env_, callback_, value);
+}
+
+void NapiPerfStatObserver::OnStatistic(const SqlExecutionInfo &sqlExeInfo)
+{
+    auto queue = queue_;
+    if (queue == nullptr) {
+        return;
+    }
+    queue->AsyncCall({ [observer = shared_from_this()](napi_env env) -> napi_value {
+        if (observer->callback_ == nullptr) {
+            return nullptr;
+        }
+        napi_value callback = nullptr;
+        napi_get_reference_value(env, observer->callback_, &callback);
+        return callback;
+    } },
+        [infos = std::move(sqlExeInfo)](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            argv[0] = JSUtils::Convert2JSValue(env, infos);
+        });
+}
 } // namespace OHOS::RelationalStoreJsKit
