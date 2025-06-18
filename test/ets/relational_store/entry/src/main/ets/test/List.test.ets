@@ -22,6 +22,10 @@ import RdbstoreGetValueForFlutterEts from './RdbstoreGetValueForFlutterEts.test.
 import RdbstoreGetRowForFlutterEts from './RdbstoreGetRowForFlutterEts.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
 import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
+import RdbStoreTransactionTest from './RdbStoreTransaction.test.ets';
+import RdbstoreTransactionJsunit from './RdbstoreTransactionJsunit.test.ets';
+import RdbStoreTransInsertJsunit from './RdbStoreTransInsertJsunit.test.ets';
+import RdbStoreTransJsunit from './RdbStoreTransJsunit.test.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -32,4 +36,8 @@ export default function testsuite() {
   RdbstoreGetRowForFlutterEts();
   RdbRekeyEtsTest();
   RDBstoreGetSqlInfoTest();
+  RdbStoreTransactionTest();
+  RdbstoreTransactionJsunit();
+  RdbStoreTransInsertJsunit();
+  RdbStoreTransJsunit();
 }
