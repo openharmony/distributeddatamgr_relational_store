@@ -1,0 +1,80 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+##############################fuzztest##########################################
+ohos_fuzztest("cloud_data_test_ut2fuzz") {
+  module_out_path = "relational_store/relational_store"
+
+  include_dirs = [ 
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_base_path}/interfaces/ndk/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_base_path}/interfaces/ndk/src",
+    "${relational_store_common_path}/include",
+    "${cloud_data_native_path}/include",
+    "${relational_store_innerapi_path}/cloud_data/include",
+    "${relational_store_innerapi_path}/common_type/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  fuzz_config_file =
+      "${relational_store_base_path}/test/native/rdb/fuzztest/ut2fuzzer/cloud_data_test_ut2fuzz"
+
+  sources = [ 
+    "${cloud_data_native_path}/src/cloud_types_util.cpp",
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+    "cloud_data_test_ut2fuzz.cpp",
+  ]
+
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "kv_store:distributeddb",
+    "kv_store:datamgr_common",
+    "sqlite:sqlite",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
+    "samgr:samgr_proxy",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":cloud_data_test_ut2fuzz",
+  ]
+}
+###############################################################################
