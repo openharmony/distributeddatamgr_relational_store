@@ -90,7 +90,7 @@ public:
     static int RdSqlRegistryThreadPool(GRD_DB *db);
     static int RdSqlRegistryClusterAlgo(GRD_DB *db, const char *clstAlgoName, GRD_ClusterAlgoFunc func);
 private:
-    static GRD_ThreadPoolT threadPool_;
+    static GRD_DbThreadPoolT threadPool_;
 };
 
 } // namespace NativeRdb
