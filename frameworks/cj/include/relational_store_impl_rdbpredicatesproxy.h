@@ -97,7 +97,31 @@ public:
 
     void NotEqualTo(const char *field, ValueType value);
 
+    void NotContains(const char* field, const char* value);
+
+    void NotLike(const char* field, const char* value);
+
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates();
+
+    void LessThanOrEqualToEx(const char *field, const ValueTypeEx *value);
+
+    void EqualToEx(const char *field, const ValueTypeEx *value);
+
+    void GreaterThanOrEqualToEx(const char *field, const ValueTypeEx *value);
+
+    void GreaterThanEx(const char *field, const ValueTypeEx *value);
+
+    void NotBetweenEx(const char *field, const ValueTypeEx *lowValue, const ValueTypeEx *highValue);
+
+    void LessThanEx(const char *field, const ValueTypeEx *value);
+
+    void BetweenEx(const char *field, const ValueTypeEx *lowValue, const ValueTypeEx *highValue);
+
+    void InEx(const char *field, ValueTypeEx *values, int64_t valuesSize);
+
+    void NotInEx(const char *field, ValueTypeEx *values, int64_t valuesSize);
+
+    void NotEqualToEx(const char *field, const ValueTypeEx *value);
 
 private:
     std::shared_ptr<NativeRdb::RdbPredicates> predicates_;
