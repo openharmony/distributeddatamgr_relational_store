@@ -1191,12 +1191,7 @@ HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
  
     std::vector<uint8_t> timeData(sizeof(time_t), 0x00);
     time_t testTime = 1630400000;
-    errno_t err = memcpy_s(timeData.data(),
-        timeData.size(),
-        &testTime,
-        sizeof(time_t)
-    );
-    EXPECT_EQ(err, EOK);
+    std::memcpy(timeData.data(), &testTime, sizeof(time_t));
     
     std::vector<uint8_t> key(16, 0x01);
     content.encryptValue = {0x01};
@@ -1223,13 +1218,7 @@ HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
  
     time_t testTime = 1630400000;
     std::vector<uint8_t> timeData(sizeof(time_t));
-    errno_t err = memcpy_s(
-        timeData.data(),
-        timeData.size(),
-        &testTime,
-        sizeof(time_t)
-    );
-    EXPECT_EQ(err, EOK);
+    std::memcpy(timeData.data(), &testTime, sizeof(time_t));
  
     content.encryptValue.insert(content.encryptValue.end(), timeData.begin(), timeData.end());
     const size_t keyDataSize = RdbSecurityManager::AEAD_LEN + 1;

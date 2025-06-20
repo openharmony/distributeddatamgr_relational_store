@@ -576,7 +576,7 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<c
     offset += sizeof(rdbSecretContent.magicNum) / sizeof(uint8_t);
     switch (rdbSecretContent.magicNum) {
         case RdbSecretContent::MAGIC_NUMBER_V2:
-        return UnpackV2(content); 
+            return UnpackV2(content);
             break;
         default:
             break;
