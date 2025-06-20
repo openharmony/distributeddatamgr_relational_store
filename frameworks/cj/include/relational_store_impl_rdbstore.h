@@ -151,6 +151,13 @@ public:
     int32_t GetVersion(int32_t &errCode);
     void SetVersion(int32_t value, int32_t &errCode);
     ModifyTime GetModifyTime(char *cTable, char *cColumnName, CArrPRIKeyType &cPrimaryKeys, int32_t &errCode);
+    int32_t GetRebuilt();
+    int64_t InsertEx(const char *table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode);
+    int32_t UpdateEx(ValuesBucketEx valuesBucket, RdbPredicatesImpl &predicates,
+        NativeRdb::ConflictResolution conflictResolution, int32_t *errCode);
+    int32_t BatchInsertEx(int64_t &insertNum, const char *tableName, ValuesBucketEx *valuesBuckets, int64_t valuesSize);
+    std::shared_ptr<NativeRdb::ResultSet> QuerySqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t size);
+    void ExecuteSqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int32_t *errCode);
 
 private:
     friend class OHOS::FFI::RuntimeType;
@@ -167,9 +174,13 @@ private:
 
 int64_t GetRdbStore(OHOS::AbilityRuntime::Context *context, StoreConfig config, int32_t *errCode);
 
+int64_t GetRdbStoreEx(OHOS::AbilityRuntime::Context *context, const StoreConfigEx *config, int32_t *errCode);
+
 void DeleteRdbStore(OHOS::AbilityRuntime::Context *context, const char *name, int32_t *errCode);
 
 void DeleteRdbStoreConfig(OHOS::AbilityRuntime::Context *context, StoreConfig config, int32_t *errCode);
+
+void DeleteRdbStoreConfigEx(OHOS::AbilityRuntime::Context *context, const StoreConfigEx *config, int32_t *errCode);
 } // namespace Relational
 } // namespace OHOS
 
