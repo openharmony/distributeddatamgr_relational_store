@@ -40,7 +40,7 @@ ohos_fuzztest("cloud_data_test_ut2fuzz") {
   ]
 
   fuzz_config_file =
-      "${relational_store_base_path}/test/native/rdb/fuzztest/ut2fuzzer/cloud_data_test_ut2fuzz"
+      "${relational_store_base_path}/test/native/rdb/fuzztest/cloud_data_test_ut2fuzz"
 
   sources = [ 
     "${cloud_data_native_path}/src/cloud_types_util.cpp",
