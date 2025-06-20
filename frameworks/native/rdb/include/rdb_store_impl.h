@@ -193,7 +193,7 @@ private:
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
-    void CreateConn(int &errCode, bool &created);
+    int CreatePool(bool &created);
     static void RegisterDataChangeCallback(
         std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry);
     int InnerOpen();
@@ -269,6 +269,7 @@ private:
     bool isMemoryRdb_ = false;
     bool inited_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
+    int storeCode_ = -1;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;

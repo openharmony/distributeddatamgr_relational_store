@@ -28,6 +28,7 @@
 #include "concurrent_map.h"
 #include "connection_pool.h"
 #include "knowledge_schema_helper.h"
+#include "rdb_open_callback.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_statement.h"
@@ -126,7 +127,7 @@ private:
 
     int InnerOpen();
     int ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
-    void CreateConn(int &errCode, bool &created);
+    int CreatePool(bool &created);
     void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int SetSecurityLabel(const RdbStoreConfig &config);
@@ -184,6 +185,7 @@ private:
     bool isMemoryRdb_ = false;
     bool inited_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
+    int storeCode_ = -1;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
