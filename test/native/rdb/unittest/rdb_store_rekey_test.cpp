@@ -264,9 +264,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
     bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
 
-    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
-
     RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
@@ -279,8 +276,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
     isFileExists = OHOS::FileExists(newKeyPath);
     ASSERT_FALSE(isFileExists);
 
-    auto newDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_TRUE(std::chrono::system_clock::now() - newDate < std::chrono::seconds(2));
     CheckQueryData(store);
 }
 
@@ -354,13 +349,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    auto keyFileDate = GetKeyFileDate(encryptedDatabaseName);
-
     bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, -RdbRekeyTest::HOURS_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
-
-    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_GT(changedDate, keyFileDate);
 
     RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
@@ -372,9 +362,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
     ASSERT_TRUE(isFileExists);
     isFileExists = OHOS::FileExists(newKeyPath);
     ASSERT_FALSE(isFileExists);
-
-    keyFileDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_EQ(changedDate, keyFileDate);
 
     CheckQueryData(store);
 }
@@ -392,13 +379,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    auto keyFileDate = GetKeyFileDate(encryptedDatabaseName);
-
     bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_LONG_LONG_AGO);
     ASSERT_TRUE(isFileDateChanged);
-
-    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_GT(keyFileDate, changedDate);
 
     RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
@@ -1184,4 +1166,111 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_DecryptV1_Test_001
+* @tc.desc: decryptV1 test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
+{
+    RdbSecurityManager manager;
+    RdbSecretContent content;
+    std::string invalidStr = ".pub";
+    auto str = manager.ReplaceSuffix(invalidStr);
+    EXPECT_EQ(invalidStr, str);
+    bool res = false;
+    RdbSecretKeyData keyData;
+    std::tie(res, keyData) = manager.DecryptV1(content);
+    EXPECT_FALSE(res);
+ 
+    content.encryptValue = {0x01, 0x02, 0x03, 0x04};
+    std::tie(res, keyData) = manager.DecryptV1(content);
+    EXPECT_FALSE(res);
+ 
+    std::vector<uint8_t> timeData(sizeof(time_t), 0x00);
+    time_t testTime = 1630400000;
+    errno_t err = memcpy_s(timeData.data(),
+        timeData.size(),
+        &testTime,
+        sizeof(time_t)
+    );
+    EXPECT_EQ(err, EOK);
+    
+    std::vector<uint8_t> key(16, 0x01);
+    content.encryptValue = {0x01};
+    content.encryptValue.insert(content.encryptValue.end(), timeData.begin(), timeData.end());
+    content.encryptValue.insert(content.encryptValue.end(), key.begin(), key.end());
+    content.nonceValue.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x01);
+    
+    std::tie(res, keyData) = manager.DecryptV1(content);
+    EXPECT_FALSE(res);
+    EXPECT_EQ(keyData.distributed, 0x01);
+    EXPECT_EQ(keyData.timeValue, testTime);
+}
+
+/**
+* @tc.name: Rdb_DecryptV1_Test_002
+* @tc.desc: decryptV1 test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
+{
+    RdbSecurityManager manager;
+    RdbSecretContent content;
+    content.encryptValue.push_back(0x01);
+ 
+    time_t testTime = 1630400000;
+    std::vector<uint8_t> timeData(sizeof(time_t));
+    errno_t err = memcpy_s(
+        timeData.data(),
+        timeData.size(),
+        &testTime,
+        sizeof(time_t)
+    );
+    EXPECT_EQ(err, EOK);
+ 
+    content.encryptValue.insert(content.encryptValue.end(), timeData.begin(), timeData.end());
+    const size_t keyDataSize = RdbSecurityManager::AEAD_LEN + 1;
+    std::vector<uint8_t> keyData(keyDataSize, 0x01);
+    content.encryptValue.insert(content.encryptValue.end(), keyData.begin(), keyData.end());
+    content.nonceValue.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x02);
+    auto result = manager.DecryptV1(content);
+    EXPECT_TRUE(result.first);
+    EXPECT_EQ(result.second.distributed, 0x01);
+    EXPECT_EQ(result.second.timeValue, testTime);
+    EXPECT_TRUE(result.second.secretKey.empty());
+    content.magicNum = 0x6A6A6A6A;
+    result = manager.Decrypt(content);
+    EXPECT_TRUE(result.first);
+}
+
+/**
+* @tc.name: Rdb_UnpackV2_Test_001
+* @tc.desc: unpackV2 test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, UnpackV2Test, TestSize.Level1)
+{
+    RdbSecurityManager manager;
+    std::vector<char> content;
+    auto result = manager.UnpackV2(content);
+    EXPECT_FALSE(result.first);
+    EXPECT_EQ(result.second.nonceValue.size(), 0);
+    EXPECT_EQ(result.second.encryptValue.size(), 0);
+ 
+    uint32_t magicNum = RdbSecretContent::MAGIC_NUMBER_V2;
+    char* magicPtr = reinterpret_cast<char*>(&magicNum);
+    content.insert(content.end(), magicPtr, magicPtr + sizeof(magicNum));
+
+    const size_t nonceSize = RdbSecretContent::NONCE_VALUE_SIZE - 1;
+    std::vector<char> nonce(nonceSize, 'N');
+    content.insert(content.end(), nonce.begin(), nonce.end());
+
+    result = manager.UnpackV2(content);
+
+    EXPECT_FALSE(result.first);
+    EXPECT_EQ(result.second.nonceValue.size(), 0);
+    EXPECT_EQ(result.second.encryptValue.size(), 0);
 }

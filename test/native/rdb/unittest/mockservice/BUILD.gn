@@ -27,6 +27,7 @@ config("module_private_config") {
     "${relational_store_native_path}/obs_mgr_adapter",
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_native_path}/rdb_crypt",
     "${relational_store_native_path}/rdb_device_manager_adapter/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
     "${relational_store_mock_test_path}/",
