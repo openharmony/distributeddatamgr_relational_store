@@ -235,21 +235,23 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     std::vector<ValueObject> bindArgs;
     auto sqlStr = AniStringUtils::ToStd(env, sql);
 
-    bool convertOk = ConvertBindArgs(env, args, bindArgs, true);
-    if (!convertOk) {
+    if (!ConvertBindArgs(env, args, bindArgs, true)) {
         LOG_ERROR("args conver fail");
         return nullptr;
     }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
-        LOG_ERROR("RdbStore should be initialized properly.");
         ThrowBusinessError(env, E_INNER_ERROR, "RdbStore uninitialized.");
         return nullptr;
     }
     auto resultsetProxy = new ResultSetProxy();
+    if (resultsetProxy == nullptr) {
+        ThrowBusinessError(env, E_INNER_ERROR, "Proxy is nullptr.");
+        return nullptr;
+    }
     resultsetProxy->resultset = proxy->nativeRdb->QueryByStep(sqlStr, bindArgs);
     if (resultsetProxy->resultset == nullptr) {
-        LOG_ERROR("QueryByStep failed.");
+        delete resultsetProxy;
         ThrowBusinessError(env, E_INNER_ERROR, "QueryByStep returned nullptr.");
         return nullptr;
     }
@@ -259,20 +261,19 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
-        LOG_ERROR("[ANI] Failed to create class '%{public}s' object.", className);
-        ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.");
+        delete resultsetProxy;
+        ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.class: LResultSetInner;");
         return nullptr;
     }
     ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy);
     if (ANI_OK != status) {
-        LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'.", className);
-        ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet failed.");
+        delete resultsetProxy;
+        ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet  failed.class: LResultSetInner;");
         return nullptr;
     }
     status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
     if (ANI_OK != status) {
-        LOG_ERROR("[ANI] Failed to initFinalizer for class '%{public}s'.", className);
-        ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.");
+        ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.class: LResultSetInner;");
         return nullptr;
     }
     return obj;
