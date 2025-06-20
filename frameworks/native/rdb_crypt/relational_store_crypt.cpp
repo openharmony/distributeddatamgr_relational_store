@@ -42,8 +42,8 @@ public:
 API_EXPORT int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias) asm("checkRootKeyExists");
 API_EXPORT int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault) asm(
     "generateRootKey");
-API_EXPORT bool Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault, OHOS::NativeRdb::RdbSecretContent &content) asm(
-    "encrypt");
+API_EXPORT bool Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault,
+    OHOS::NativeRdb::RdbSecretContent &content) asm("encrypt");
 API_EXPORT std::vector<uint8_t> Decrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault) asm(
     "decrypt");
 int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
@@ -54,7 +54,8 @@ int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault
 {
     return OHOS::NativeRdb::RDBCrypto::GenerateRootKey(rootKeyAlias, rdbFault);
 }
-bool Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault, OHOS::NativeRdb::RdbSecretContent &content)
+bool Encrypt(
+    const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault, OHOS::NativeRdb::RdbSecretContent &content)
 {
     return OHOS::NativeRdb::RDBCrypto::Encrypt(param, rdbFault, content);
 }
