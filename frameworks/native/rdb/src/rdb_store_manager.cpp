@@ -58,7 +58,8 @@ RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE)
 {
 }
 
-std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::string &path, const RdbStoreConfig &config)
+std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::string &path,
+    const RdbStoreConfig &config, int &errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
@@ -71,6 +72,22 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
 
     rdbStore = it->second.lock();
     if (rdbStore == nullptr) {
+        storeCache_.erase(it);
+        rdbStore = std::make_shared<RdbStoreImpl>(config);
+        storeCache_[path] = rdbStore;
+    }
+    
+    if (!(rdbStore->GetConfig() == config)) {
+        auto log = RdbStoreConfig::FormatCfg(rdbStore->GetConfig(), config);
+        LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
+            config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
+            log.c_str());
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
+        if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
+            errCode = E_CONFIG_INVALID_CHANGE;
+            rdbStore = nullptr;
+            return rdbStore;
+        }
         storeCache_.erase(it);
         rdbStore = std::make_shared<RdbStoreImpl>(config);
         storeCache_[path] = rdbStore;
@@ -91,31 +108,27 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         return nullptr;
     }
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    rdbStore = GetStoreFromCache(path, config);
-    errCode = rdbStore->Init(version, openCallback);
-    if (errCode == E_OK && rdbStore->GetConfig() == config) {
+    rdbStore = GetStoreFromCache(path, config, errCode);
+    if (rdbStore == nullptr) {
         return rdbStore;
     }
-    if (errCode == E_OK) {
-        auto log = RdbStoreConfig::FormatCfg(rdbStore->GetConfig(), config);
-        LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
-            config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
-            log.c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
-        if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
-            errCode = E_CONFIG_INVALID_CHANGE;
-            return nullptr;
-        }
-
+    errCode = rdbStore->Init(version, openCallback);
+    if (errCode != E_OK) {
         RdbStoreConfig modifyConfig = config;
         if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
             errCode = E_CONFIG_INVALID_CHANGE;
-            return nullptr;
+            rdbStore = nullptr;
+            return rdbStore;
         }
-        rdbStore = std::make_shared<RdbStoreImpl>(modifyConfig);
-        errCode = rdbStore->Init(version, openCallback);
-    } else {
-        return nullptr;
+        if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
+            rdbStore = nullptr;
+            rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
+            errCode = rdbStore->Init(version, openCallback);
+        }
+        if (errCode != E_OK) {
+            rdbStore = nullptr;
+            return rdbStore;
+        }
     }
 
     if (!rdbStore->GetConfig().IsMemoryRdb()) {
@@ -276,6 +289,9 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
         param.bundleName_ = config.GetBundleName();
         param.storeName_ = *tokens.rbegin();
         param.subUser_ = config.GetSubUser();
+        param.area_ = config.GetArea();
+        param.hapName_ = config.GetModuleName();
+        param.customDir_ = config.GetCustomDir();
         auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);

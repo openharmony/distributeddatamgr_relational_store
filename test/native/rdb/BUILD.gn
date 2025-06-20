@@ -100,6 +100,7 @@ ohos_unittest("NativeRdbLogTest") {
 
   sources = [
     "unittest/common.cpp",
+    "unittest/rdb_error_log_test/get_rdb_store_test.cpp",
     "unittest/rdb_error_log_test/rdb_error_log_test.cpp",
     "unittest/rdb_error_log_test/rdb_perfStat_test.cpp",
   ]
@@ -280,6 +281,12 @@ group("fuzztest") {
     "fuzztest/sharedblock_fuzzer:fuzztest",
     "fuzztest/transdb_fuzzer:fuzztest",
     "fuzztest/transaction_fuzzer:fuzztest",
+    "fuzztest/big_integer_test_ut2fuzz:fuzztest",
+    "fuzztest/cache_result_set_test_ut2fuzz:fuzztest",
+    "fuzztest/cloud_data_test_ut2fuzz:fuzztest",
+    "fuzztest/connection_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_attach_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_bigint_test_ut2fuzz:fuzztest",
   ]
 }
 

@@ -35,7 +35,7 @@ using namespace OHOS::Rdb;
 
 static GRD_APIInfo GRD_KVApiInfo;
 
-GRD_ThreadPoolT RdUtils::threadPool_ = { 0 };
+GRD_DbThreadPoolT RdUtils::threadPool_ = { 0 };
 
 struct GrdErrnoPair {
     int32_t grdCode;
@@ -672,8 +672,8 @@ int RdUtils::RdSqlRegistryThreadPool(GRD_DB *db)
         LOG_ERROR("registry threadPool ptr is nullptr");
         return E_NOT_SUPPORT;
     }
-    RdUtils::threadPool_.schedule = reinterpret_cast<GRD_ScheduleFunc>(Schedule);
-    RdUtils::threadPool_.remove = reinterpret_cast<GRD_RemoveFunc>(Remove);
+    RdUtils::threadPool_.schedule = reinterpret_cast<GRD_DbScheduleFunc>(Schedule);
+    RdUtils::threadPool_.remove = reinterpret_cast<GRD_DbRemoveFunc>(Remove);
     return TransferGrdErrno(GRD_KVApiInfo.DBSqlRegistryThreadPool(db, &threadPool_));
 }
 

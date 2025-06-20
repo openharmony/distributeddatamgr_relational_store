@@ -28,6 +28,7 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
+// this is modifications to be made in the future.
 static std::mutex g_mutex;
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
