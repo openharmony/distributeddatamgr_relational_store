@@ -417,6 +417,49 @@ void OHRdbFindModifyTimeFuzzTest(FuzzedDataProvider &provider)
     ReleaseConfig(config);
 }
 
+void OHRdbGetFloatVectorCountFuzzTest(FuzzedDataProvider &provider)
+{
+    OH_Rdb_Config *config = CreateRandomConfig(provider);
+    int errCode;
+    OH_Rdb_Store *store = OH_Rdb_GetOrOpen(config, &errCode);
+    if (store != nullptr) {
+        std::string sql = provider.ConsumeRandomLengthString();
+        OH_Data_Values *args = nullptr; // Simplified for fuzzing
+        OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store, sql.c_str(), args);
+        if (cursor != nullptr) {
+            int columnIndex = provider.ConsumeIntegral<int>();
+            size_t length = provider.ConsumeIntegral<size_t>();
+            OH_Cursor_GetFloatVectorCount(cursor, columnIndex, &length);
+            cursor->destroy(cursor);
+        }
+        OH_Rdb_CloseStore(store);
+    }
+    ReleaseConfig(config);
+}
+
+void OHRdbGetFloatVectorFuzzTest(FuzzedDataProvider &provider)
+{
+    OH_Rdb_Config *config = CreateRandomConfig(provider);
+    int errCode;
+    OH_Rdb_Store *store = OH_Rdb_GetOrOpen(config, &errCode);
+    if (store != nullptr) {
+        std::string sql = provider.ConsumeRandomLengthString();
+        OH_Data_Values *args = nullptr; // Simplified for fuzzing
+        OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store, sql.c_str(), args);
+        if (cursor != nullptr) {
+            int columnIndex = provider.ConsumeIntegral<int>();
+            float *val = new float();
+            size_t inLen = provider.ConsumeIntegral<size_t>();
+            size_t outLen = provider.ConsumeIntegral<size_t>();
+            OH_Cursor_GetFloatVector(cursor, columnIndex, val, inLen, &outLen);
+            delete val;
+            cursor->destroy(cursor);
+        }
+        OH_Rdb_CloseStore(store);
+    }
+    ReleaseConfig(config);
+}
+
 void RelationalStoreFuzzTest(FuzzedDataProvider &provider)
 {
     // Test OH_Rdb_CreateOrOpen
@@ -466,6 +509,12 @@ void RelationalStoreFuzzTest(FuzzedDataProvider &provider)
 
     // Test OH_Rdb_FindModifyTime
     OHRdbFindModifyTimeFuzzTest(provider);
+
+    // Test OH_Cursor_GetFloatVectorCount
+    OHRdbGetFloatVectorCountFuzzTest(provider);
+
+    // Test OH_Cursor_GetFloatVector
+    OHRdbGetFloatVectorFuzzTest(provider);
 }
 
 /* Fuzzer entry point */
