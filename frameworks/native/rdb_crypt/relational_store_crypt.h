@@ -23,17 +23,14 @@
 
 namespace OHOS {
 namespace NativeRdb {
-
-class RDBCrypt {
-public:
-    static int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
-    static int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptFault &rdbFault);
-    static bool Encrypt(const std::vector<uint8_t>& rootKeyAlias,
-        const std::vector<uint8_t>& key, RDBCryptFault &rdbFault, SecurityContent &content);
-    static bool Decrypt(const std::vector<uint8_t>& rootKeyAlias,
-        std::vector<uint8_t>& key, RDBCryptFault &rdbFault, SecurityContent &content);
-    static RDBCryptFault GetDfxFault(int32_t errorCode, const std::string &custLog);
-    static std::vector<uint8_t> GenerateRandomNum(int32_t len);
+struct RDBCryptoFault {
+    int32_t code;
+    std::string message;
+};
+struct RDBCryptoParam {
+    std::vector<uint8_t> rootAlias;
+    std::vector<uint8_t> nonceValue;
+    std::vector<uint8_t> KeyValue;
 };
 } // namespace OHOS::NativeRdb
 } // OHOS

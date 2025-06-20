@@ -28,9 +28,4 @@ static bool LoadBufferFromFile(const std::string &filePath, std::vector<char> &c
 {
     return true;
 }
-
-static bool FileExists(const std::string& fileName)
-{
-    return true;
-}
 #endif /* MOCK_UTILS_BASE_FILE_EX_H */
