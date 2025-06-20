@@ -392,7 +392,7 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
     if (!isOk) {
         return false;
     }
-    ani_int enumVal;
+    ani_int enumVal = 0;
     isOk = GetObjectEnumValuePropertyByName(clsName, "status", enumVal, true);
     if (!isOk) {
         return false;
