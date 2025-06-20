@@ -30,7 +30,7 @@ ohos_fuzztest("big_integer_test_ut2fuzz") {
   ]
 
   fuzz_config_file =
-      "${relational_store_base_path}/test/native/rdb/fuzztest/ut2fuzzer/big_integer_test_ut2fuzz"
+      "${relational_store_base_path}/test/native/rdb/fuzztest/big_integer_test_ut2fuzz"
 
   sources = [ "big_integer_test_ut2fuzz.cpp" ]
 
