@@ -446,9 +446,6 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string 
 void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
 {
     LOG_INFO("Delete all key files begin.");
-    if (SqliteUtils::IsPathInvalid(dbPath)) {
-        return;
-    }
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
     if (access(dbKeyDir.c_str(), F_OK) != 0) {
         return;
@@ -466,9 +463,6 @@ void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
 
 void RdbSecurityManager::DelKeyFile(const std::string &dbPath, KeyFileType keyFileType)
 {
-    if (SqliteUtils::IsPathInvalid(dbPath)) {
-        return;
-    }
     KeyFiles keyFiles(dbPath);
     keyFiles.Lock();
     {
