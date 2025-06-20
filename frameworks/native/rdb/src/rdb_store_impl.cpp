@@ -1185,13 +1185,10 @@ int RdbStoreImpl::CreatePool(bool &created)
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
 #if !defined(CROSS_PLATFORM)
-        RdbParam param;
-        param.bundleName_ = config_.GetBundleName();
-        param.storeName_ = config_.GetName();
-        param.subUser_ = config_.GetSubUser();
-        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
+        InitSyncerParam(config_, false);
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
-            service->Disable(param);
+            service->Disable(syncerParam_);
         }
 #endif
         config_.SetIter(0);
@@ -1204,7 +1201,7 @@ int RdbStoreImpl::CreatePool(bool &created)
         created = true;
 #if !defined(CROSS_PLATFORM)
         if (service != nullptr) {
-            service->Enable(param);
+            service->Enable(syncerParam_);
         }
 #endif
     }
@@ -1224,41 +1221,38 @@ int RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
 
 int RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
 {
-    int errCode = E_OK;
-    if (inited_) {
-        return storeCode_;
+    if (initStatus_ != -1) {
+        return initStatus_;
     }
-    std::lock_guard<std::mutex> lock(rdbMutex_);
-    if (inited_) {
-        return storeCode_;
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (initStatus_ != -1) {
+        return initStatus_;
     }
     bool created = access(path_.c_str(), F_OK) != 0;
-    errCode = CreatePool(created);
-    if (connectionPool_ == nullptr || errCode != E_OK) {
+    initStatus_ = CreatePool(created);
+    if (connectionPool_ == nullptr || initStatus_ != E_OK) {
         connectionPool_ = nullptr;
-        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
+        LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", initStatus_,
             SqliteUtils::Anonymous(path_).c_str());
-        return errCode;
+        return initStatus_;
     }
     InitSyncerParam(config_, created);
     InitReportFunc(syncerParam_);
     InnerOpen();
 
     if (config_.GetRoleType() == OWNER && !config_.IsReadOnly()) {
-        errCode = SetSecurityLabel(config_);
-        if (errCode != E_OK) {
-            return errCode;
+        initStatus_ = SetSecurityLabel(config_);
+        if (initStatus_ != E_OK) {
+            return initStatus_;
         }
         (void) ExchangeSlaverToMaster();
-        errCode = ProcessOpenCallback(version, openCallback);
-        if (errCode != E_OK) {
-            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
-            return errCode;
+        initStatus_ = ProcessOpenCallback(version, openCallback);
+        if (initStatus_ != E_OK) {
+            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), initStatus_);
+            return initStatus_;
         }
     }
-    inited_ = true;
-    storeCode_ = errCode;
-    return errCode;
+    return initStatus_;
 }
 
 RdbStoreImpl::~RdbStoreImpl()
@@ -2206,7 +2200,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
 int RdbStoreImpl::GetVersion(int &version)
 {
     Suspender suspender(Suspender::SQL_LOG);
-    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, true);
+    auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
         return errCode;
     }

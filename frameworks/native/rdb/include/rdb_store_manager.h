@@ -53,7 +53,8 @@ private:
     static int32_t CheckConfig(const RdbStoreConfig &config);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static int32_t Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo);
-    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path, const RdbStoreConfig &config);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path,
+        const RdbStoreConfig &config, int &errCode);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static const bool regCollector_;

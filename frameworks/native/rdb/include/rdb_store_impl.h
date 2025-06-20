@@ -267,9 +267,8 @@ private:
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
-    bool inited_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
-    int storeCode_ = -1;
+    int initStatus_ = -1;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
@@ -284,7 +283,7 @@ private:
     mutable std::shared_mutex rwMutex_;
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
-    std::mutex rdbMutex_;
+    std::mutex initMutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
