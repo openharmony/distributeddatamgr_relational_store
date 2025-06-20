@@ -1175,15 +1175,16 @@ int RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCallback
     return openCallback.OnOpen(*this);
 }
 
-void RdbStoreImpl::CreateConn(int &errCode, bool &created)
+int RdbStoreImpl::CreatePool(bool &created)
 {
+    int errCode = E_OK;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
         !isReadOnly_) {
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
         RdbParam param;
         param.bundleName_ = config_.GetBundleName();
         param.storeName_ = config_.GetName();
@@ -1201,12 +1202,13 @@ void RdbStoreImpl::CreateConn(int &errCode, bool &created)
         }
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
         if (service != nullptr) {
             service->Enable(param);
         }
 #endif
     }
+    return errCode;
 }
 
 int RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
@@ -1224,14 +1226,14 @@ int RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
 {
     int errCode = E_OK;
     if (inited_) {
-        return errCode;
+        return storeCode_;
     }
     std::lock_guard<std::mutex> lock(rdbMutex_);
     if (inited_) {
-        return errCode;
+        return storeCode_;
     }
     bool created = access(path_.c_str(), F_OK) != 0;
-    CreateConn(errCode, created);
+    errCode = CreatePool(created);
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
@@ -1255,6 +1257,7 @@ int RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
         }
     }
     inited_ = true;
+    storeCode_ = errCode;
     return errCode;
 }
 
