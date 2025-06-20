@@ -89,6 +89,9 @@ void TearDownTestCase(void)
 void QueryCheck1(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    if (resultSet == nullptr) {
+        return;
+    }
     int ret = resultSet->GoToNextRow();
     int columnIndex;
     int intVal;
@@ -108,6 +111,9 @@ void QueryCheck1(std::shared_ptr<RdbStore> &store)
 void QueryCheck2(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
+    if (resultSet == nullptr) {
+        return;
+    }
     int ret = resultSet->GoToNextRow();
     int columnIndex;
     int intVal;
@@ -127,7 +133,7 @@ void RdbAttachTestRdbStoreAttach001(FuzzedDataProvider &fdp)
     encryptAttachedConfig.SetEncryptStatus(fdp.ConsumeBool());
     std::shared_ptr<RdbStore> encryptAttachedStore =
         RdbHelper::GetRdbStore(encryptAttachedConfig, 1, attachedHelper, errCode);
-    if (encryptAttachedStore == NULL) {
+    if (encryptAttachedStore == nullptr) {
         return;
     }
     encryptAttachedStore = nullptr;
@@ -136,7 +142,7 @@ void RdbAttachTestRdbStoreAttach001(FuzzedDataProvider &fdp)
     MainOpenCallback helper;
 
     std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    if (store1 == NULL) {
+    if (store1 == nullptr) {
         return;
     }
 
@@ -164,13 +170,13 @@ void RdbAttachTestRdbStoreAttach002(FuzzedDataProvider &fdp)
     MainOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> mainMemDb = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    if (mainMemDb == NULL) {
+    if (mainMemDb == nullptr) {
         return;
     }
 
     RdbStoreConfig attachedConfig(fdp.ConsumeRandomLengthString());
     std::shared_ptr<RdbStore> walDb = RdbHelper::GetRdbStore(attachedConfig, 1, helper, errCode);
-    if (walDb == NULL) {
+    if (walDb == nullptr) {
         return;
     }
 

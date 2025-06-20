@@ -136,6 +136,9 @@ void CloudDataTestCloudDataTest001(FuzzedDataProvider &fdp)
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     std::map<std::string, int32_t> switches;
     switches.emplace(TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     proxy->EnableCloud(TEST_ACCOUNT_ID, switches);
 }
 
@@ -143,6 +146,9 @@ void CloudDataTestChangeAppSwitch001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
 }
 
@@ -150,6 +156,9 @@ void CloudDataTestClean001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::map<std::string, int32_t> actions;
     actions.emplace(TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
     proxy->Clean(TEST_ACCOUNT_ID, actions);
@@ -159,6 +168,9 @@ void CloudDataTestNotifyDataChange001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string eventId = fdp.ConsumeRandomLengthString();
     std::string extraData = fdp.ConsumeRandomLengthString();
     int32_t userId = fdp.ConsumeIntegral<int32_t>();
@@ -169,6 +181,9 @@ void CloudDataTestShare001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
 
     CloudData::Participants participants = CreateParticipants(fdp);
@@ -180,6 +195,9 @@ void CloudDataTestUnshare001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
 
     CloudData::Participants participants = CreateParticipants(fdp);
@@ -191,6 +209,9 @@ void CloudDataTestExit001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
     std::pair<int32_t, std::string> result;
     proxy->Exit(sharingRes, result);
@@ -200,6 +221,9 @@ void CloudDataTestChangePrivilege001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
     CloudData::Participants participants = CreateParticipants(fdp);
     CloudData::Results results;
@@ -210,6 +234,9 @@ void CloudDataTestQuery001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
     CloudData::QueryResults result;
     proxy->Query(sharingRes, result);
@@ -219,6 +246,9 @@ void CloudDataTestQueryByInvitation001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string invitation = fdp.ConsumeRandomLengthString();
     CloudData::QueryResults result;
     proxy->QueryByInvitation(invitation, result);
@@ -228,6 +258,9 @@ void CloudDataTestConfirmInvitation001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
     int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
     std::tuple<int32_t, std::string, std::string> result;
@@ -238,6 +271,9 @@ void CloudDataTestChangeConfirmation001(FuzzedDataProvider &fdp)
 {
     AllocNormalHapToken(g_normalPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (state != CloudService::SUCCESS || proxy == nullptr) {
+        return;
+    }
     std::string sharingRes = fdp.ConsumeRandomLengthString();
     int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
     std::pair<int32_t, std::string> result;
