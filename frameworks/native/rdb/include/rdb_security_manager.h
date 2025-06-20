@@ -132,7 +132,7 @@ private:
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretContent &secretContent);
     RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
-    bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
+    bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
     std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
     std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
     std::pair<bool, RdbSecretContent> UnpackV2(const std::vector<char> &content);

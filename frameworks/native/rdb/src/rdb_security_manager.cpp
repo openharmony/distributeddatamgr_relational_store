@@ -203,9 +203,11 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecr
 
     std::string secretKeyInString;
     secretKeyInString.append(reinterpret_cast<const char *>(&secretContent.magicNum), sizeof(uint32_t));
-    secretKeyInString.append(reinterpret_cast<const char *>(secretContent.nonceValue.data()), secretContent.nonceValue.size());
-    secretKeyInString.append(reinterpret_cast<const char *>(secretContent.encryptValue.data()), secretContent.encryptValue.size());
- 
+    secretKeyInString.append(
+        reinterpret_cast<const char *>(secretContent.nonceValue.data()), secretContent.nonceValue.size());
+    secretKeyInString.append(
+        reinterpret_cast<const char *>(secretContent.encryptValue.data()), secretContent.encryptValue.size());
+
     bool ret;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -574,7 +576,7 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<c
     offset += sizeof(rdbSecretContent.magicNum) / sizeof(uint8_t);
     switch (rdbSecretContent.magicNum) {
         case RdbSecretContent::MAGIC_NUMBER_V2:
-            return UnpackV2(content); 
+        return UnpackV2(content); 
             break;
         default:
             break;
@@ -664,9 +666,8 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretC
 {
     RdbSecretKeyData keyData;
     std::vector<uint8_t> value = DecryptWorkKey(content.encryptValue, content.nonceValue);
-    std::shared_ptr<const char> autoClean = std::shared_ptr<const char>("autoClean", [&value](const char *) mutable{
-        value.assign(value.size(), 0);
-    });
+    std::shared_ptr<const char> autoClean =
+        std::shared_ptr<const char>("autoClean", [&value](const char *) mutable { value.assign(value.size(), 0); });
     auto size = value.size();
     std::size_t offset = 0;
     auto iter = value.begin();
