@@ -22,6 +22,14 @@
 #include "rdb_store_config.h"
 
 namespace OHOS::DistributedRdb {
+
+constexpr int DEFAULT_CHUNK_SIZE = 3072;
+constexpr int DEFAULT_SEGMENT_SIZE = 300;
+constexpr double DEFAULT_OVERLAP_RATIO = 0.1;
+constexpr int DEFAULT_TEXT_EMBEDDING_MAX_CNT = 50;
+constexpr int DEFAULT_IMAGE_EMBEDDING_MAX_CNT = 10;
+constexpr int DEFAULT_PARSE_FILE_MAX_CNT = 10;
+
 struct RdbKnowledgeParser {
     std::string type;
     std::string path;
@@ -38,13 +46,34 @@ struct RdbKnowledgeTable {
     std::string tableName;
     std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
-    std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
+};
+
+struct RdbKnowledgeProcess {
+    std::unordered_map<std::string, std::vector<std::string>> processPipeline;
+    struct {
+        std::string modelVersion;
+    } embeddingModelCfgs;
+    struct {
+        int chunkSize{DEFAULT_CHUNK_SIZE};
+        int segmentSize{DEFAULT_SEGMENT_SIZE};
+        double overlapRatio{DEFAULT_OVERLAP_RATIO};
+    } chunkSplitter;
+    struct {
+        int textEmbeddingMaxCnt{DEFAULT_TEXT_EMBEDDING_MAX_CNT};
+        int imageEmbeddingMaxCnt{DEFAULT_IMAGE_EMBEDDING_MAX_CNT};
+        int parseFileMaxCnt{DEFAULT_PARSE_FILE_MAX_CNT};
+    } perRecordLimit;
+    bool IsEmpty() const
+    {
+        return processPipeline.empty();
+    }
 };
 
 struct RdbKnowledgeSchema {
     int64_t version = 0;
     std::string dbName;
     std::vector<RdbKnowledgeTable> tables;
+    RdbKnowledgeProcess knowledgeProcess;
 };
 
 class API_EXPORT IKnowledgeSchemaManager {
