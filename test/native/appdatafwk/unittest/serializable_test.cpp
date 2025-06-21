@@ -342,6 +342,41 @@ HWTEST_F(SerializableTest, SetUintValue, TestSize.Level2)
 }
 
 /**
+* @tc.name: SetDoubleValue
+* @tc.desc: Set value with double param.
+* @tc.type: FUNC
+*/
+HWTEST_F(SerializableTest, SetDoubleValue, TestSize.Level2)
+{
+    struct TestDouble final : public Serializable {
+    public:
+        double testPi = 7.77;
+        bool Marshal(json &node) const override
+        {
+            SetValue(node[GET_NAME(testPi)], testPi);
+            return true;
+        }
+        bool Unmarshal(const json &node) override
+        {
+            bool success = GetValue(node, GET_NAME(testPi), testPi);
+            return success;
+        }
+        bool operator==(const TestDouble &other) const
+        {
+            return std::abs(testPi - other.testPi) < 1e-6;
+        }
+    };
+
+    TestDouble in;
+    in.testPi = 3.1415926;
+    auto json = Serializable::JSONWrapper::to_string(in.Marshall());
+
+    TestDouble out;
+    ASSERT_TRUE(out.Unmarshall(json));
+    ASSERT_TRUE(in == out);
+}
+
+/**
 * @tc.name: ToString
 * @tc.desc: to string.
 * @tc.type: FUNC
@@ -488,7 +523,7 @@ HWTEST_F(SerializableTest, OperatorTest, TestSize.Level1)
     wrapper1 = 1u;
     EXPECT_TRUE(wrapper1.is_number_unsigned());
 }
- 
+
 /**
 * @tc.name: ConstTest
 * @tc.desc: test const.
