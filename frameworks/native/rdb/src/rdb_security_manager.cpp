@@ -45,6 +45,7 @@ using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t> &);
 using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t> &, RDBCryptoFault &);
 using EncryptFunc = std::vector<uint8_t> (*)(const RDBCryptoParam &, RDBCryptoFault &);
 using DecryptFunc = std::vector<uint8_t> (*)(const RDBCryptoParam &, RDBCryptoFault &);
+using GenerateRandomNumFunc = std::vector<uint8_t> (*)(int32_t &);
 
 RdbPassword::RdbPassword() = default;
 
@@ -149,13 +150,20 @@ RdbSecurityManager::~RdbSecurityManager()
 
 std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
 {
-    std::random_device randomDevice;
-    std::uniform_int_distribution<int> distribution(0, std::numeric_limits<uint8_t>::max());
-    std::vector<uint8_t> key(len);
-    for (int32_t i = 0; i < len; i++) {
-        key[i] = static_cast<uint8_t>(distribution(randomDevice));
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return {};
     }
-    return key;
+    RDBCryptoFault rdbFault;
+    auto generateRandomNum = reinterpret_cast<GenerateRandomNumFunc>(dlsym(handle, "generateRandomNum"));
+    if (generateRandomNum == nullptr) {
+        LOG_ERROR("dlsym GenerateRandomNum failed(%{public}d)!", errno);
+        return {};
+    }
+    auto rootKeyAlias = GetRootKeyAlias();
+    auto ret = generateRandomNum(len);
+    ReportCryptFault(rdbFault.code, rdbFault.message);
+    return ret;
 }
 
 bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey)

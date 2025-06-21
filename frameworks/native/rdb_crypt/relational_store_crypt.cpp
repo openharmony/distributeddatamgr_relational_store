@@ -35,6 +35,7 @@ public:
     static int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> Decrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
+    static std::vector<uint8_t> GenerateRandomNum(int32_t &len);
 };
 } // namespace NativeRdb
 } // namespace OHOS
@@ -45,6 +46,7 @@ API_EXPORT std::vector<uint8_t> Encrypt(const OHOS::NativeRdb::RDBCryptoParam &p
     "encrypt");
 API_EXPORT std::vector<uint8_t> Decrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault) asm(
     "decrypt");
+API_EXPORT std::vector<uint8_t> GenerateRandomNum(int32_t &len) asm("generateRandomNum");
 int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
 {
     return OHOS::NativeRdb::RDBCrypto::CheckRootKeyExists(rootKeyAlias);
@@ -60,6 +62,10 @@ std::vector<uint8_t> Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCr
 std::vector<uint8_t> Decrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault)
 {
     return OHOS::NativeRdb::RDBCrypto::Decrypt(param, rdbFault);
+}
+std::vector<uint8_t> GenerateRandomNum(int32_t &len)
+{
+    return OHOS::NativeRdb::RDBCrypto::GenerateRandomNum(len);
 }
 namespace OHOS {
 namespace NativeRdb {
@@ -251,7 +257,7 @@ int32_t RDBCrypto::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDB
     return ret;
 }
 
-std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, RdbSecretContent &content)
+std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault)
 {
     std::vector<uint8_t> tempRootKeyAlias(param.rootAlias);
     std::vector<uint8_t> tempKey(param.KeyValue);
@@ -346,6 +352,18 @@ std::vector<uint8_t> RDBCrypto::Decrypt(const RDBCryptoParam &param, RDBCryptoFa
     }
     decryptKey.resize(plainKeyBlob.size);
     return decryptKey;
+}
+
+std::vector<uint8_t> RDBCrypto::GenerateRandomNum(int32_t &len)
+{
+    std::vector<uint8_t> value(len, 0);
+    struct HksBlob blobValue = { .size = len, .data = &(value[0]) };
+    auto ret = HksGenerateRandom(nullptr, &blobValue);
+    if (ret != HKS_SUCCESS) {
+        LOG_ERROR("HksGenerateRandom failed, status: %{public}d", ret);
+        return {};
+    }
+    return value;
 }
 } // namespace NativeRdb
 } // namespace OHOS
