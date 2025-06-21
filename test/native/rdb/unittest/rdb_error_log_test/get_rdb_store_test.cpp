@@ -30,6 +30,7 @@
 #include "rdb_types.h"
 #include "executor_pool.h"
 #include "shared_block.h"
+#include "values_bucket.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -39,6 +40,8 @@ static constexpr int32_t MAX_THREAD = 8;
 static constexpr int32_t MID_THREAD = 4;
 static constexpr int32_t SLEEP_TIME = 500;
 static constexpr int32_t MAX_SLEEP_TIME = 2000;
+static constexpr int32_t JOURNAL_MAX_SIZE = 4096;
+static constexpr int32_t JOURNAL_MIN_SIZE = 1024;
 
 class RdbStoreStoreMultiTest : public testing::Test {
 public:
@@ -47,10 +50,10 @@ public:
     void SetUp();
     void TearDown();
 
-    static std::shared_ptr<RdbStore> CreateRDB(std::string path,
-        bool encrypt = false, const std::string bundleName = "");
-    static std::shared_ptr<RdbStore> CreateRDBSleep(std::string path,
-        bool encrypt = false, const std::string bundleName = "");
+    static std::shared_ptr<RdbStore> CreateRDB(const std::string &path,
+        bool encrypt = false, const std::string &bundleName = "");
+    static std::shared_ptr<RdbStore> CreateRDBSleep(const std::string &path,
+        bool encrypt = false, const std::string &bundleName = "");
 };
 
 
@@ -104,12 +107,13 @@ int CallbackSleep::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
     return E_OK;
 }
 
-std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDB(std::string path,
-    bool encrypt, const std::string bundleName)
+std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDB(const std::string &path,
+    bool encrypt, const std::string &bundleName)
 {
     int version = 1;
     RdbStoreConfig config(path);
     config.SetEncryptStatus(encrypt);
+    config.SetBundleName(bundleName);
     RDBCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
@@ -117,12 +121,13 @@ std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDB(std::string path,
     return store;
 }
 
-std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDBSleep(std::string path,
-    bool encrypt, const std::string bundleName)
+std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDBSleep(const std::string &path,
+    bool encrypt, const std::string &bundleName)
 {
     int version = 1;
     RdbStoreConfig config(path);
     config.SetEncryptStatus(encrypt);
+    config.SetBundleName(bundleName);
     CallbackSleep helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
@@ -239,7 +244,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_003, TestSize.Level1)
 
 /**
  * @tc.name: GetRdbStoreTest_004
- * @tc.desc: test Multithreading calls GetRdbStore with same encrypt store
+ * @tc.desc: test Multithreading calls GetRdbStore with diff encrypt store
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -254,7 +259,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_004, TestSize.Level1)
             stores[i] = RdbStoreStoreMultiTest::CreateRDB(g_dbPaths[i], true, bundleName);
         });
     }
-    for (int i = MID_THREAD; i < 8; ++i) {
+    for (int i = MID_THREAD; i < MAX_THREAD; ++i) {
         threads[i] = std::thread([i, &stores, &bundleName]() {
             stores[i] = RdbStoreStoreMultiTest::CreateRDBSleep(g_dbPaths[i], true, bundleName);
         });
@@ -273,7 +278,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_004, TestSize.Level1)
 
 /**
  * @tc.name: GetRdbStoreTest_005
- * @tc.desc: test Multithreading calls GetRdbStore with same encrypt store
+ * @tc.desc: test Multithreading calls GetRdbStore with diff encrypt store and store
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
@@ -305,7 +310,6 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_005, TestSize.Level1)
     }
 }
 
-
 /**
  * @tc.name: GetRdbStoreTest_006
  * @tc.desc: test Multithreading calls GetRdbStore with diff encrypt store with diff bundlename
@@ -317,7 +321,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_006, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> stores[MAX_THREAD];
     std::thread threads[MAX_THREAD];
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < MAX_THREAD; ++i) {
         threads[i] = std::thread([i, &stores]() {
             stores[i] = RdbStoreStoreMultiTest::CreateRDB(g_dbPaths[i], true, g_dbBundlenames[i]);
         });
@@ -332,4 +336,93 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_006, TestSize.Level1)
     for (int i = 0; i < MAX_THREAD; ++i) {
         RdbHelper::DeleteRdbStore(g_dbPaths[i]);
     }
+}
+
+/**
+ * @tc.name: GetRdbStoreTest_007
+ * @tc.desc: test Multithreading calls GetRdbStore with diff config
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_007, TestSize.Level1)
+{
+    std::string path = "/data/test/encrypt07store.db";
+    int version = 1;
+    RdbStoreConfig configA(path);
+    configA.SetEncryptStatus(true);
+    configA.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    EXPECT_NE(storeA, nullptr);
+    const std::string createTable =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
+    storeA->Execute(createTable);
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = storeA->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+    storeA = nullptr;
+
+    RdbStoreConfig configB(path);
+    configB.SetEncryptStatus(false);
+    configB.SetBundleName("com.ohos.test");
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    EXPECT_NE(storeB, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet = storeB->QuerySql("select * from test");
+    ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    int columnIndex;
+    std::string strVal;
+
+    ret = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GetString(columnIndex, strVal);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ("zhangsan", strVal);
+    
+    RdbHelper::DeleteRdbStore(path);
+}
+
+
+/**
+ * @tc.name: GetRdbStoreTest_008
+ * @tc.desc: test Multithreading calls GetRdbStore with diff config
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_008, TestSize.Level1)
+{
+    std::string path = "/data/test/store.db";
+    int version = 1;
+    RdbStoreConfig configA(path);
+    configA.SetJournalSize(JOURNAL_MAX_SIZE);
+    configA.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    EXPECT_NE(storeA, nullptr);
+
+    RdbStoreConfig configB(path);
+    configB.SetBundleName("com.ohos.test");
+    configB.SetJournalSize(JOURNAL_MIN_SIZE);
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    EXPECT_NE(storeB, nullptr);
+    EXPECT_NE(storeA, storeB);
+
+    std::shared_ptr<RdbStore> storeC = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    EXPECT_EQ(storeB, storeC);
+    RdbHelper::DeleteRdbStore(path);
 }

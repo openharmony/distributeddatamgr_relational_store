@@ -53,7 +53,7 @@ class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
-    int Init(int version, RdbOpenCallback &openCallback);
+    int32_t Init(int version, RdbOpenCallback &openCallback);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
@@ -126,11 +126,11 @@ private:
     };
 
     int InnerOpen();
-    int ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
-    int CreatePool(bool &created);
+    int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
+    int32_t CreatePool(bool &created);
     void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
-    int SetSecurityLabel(const RdbStoreConfig &config);
+    int32_t SetSecurityLabel(const RdbStoreConfig &config);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, Results> HandleResults(
@@ -184,11 +184,11 @@ private:
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
-    int initStatus_ = -1;
+    int32_t initStatus_ = -1;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
-    RdbStoreConfig config_;
+    const RdbStoreConfig config_;
     DistributedRdb::RdbSyncerParam syncerParam_;
     DistributedRdb::RdbStatEvent statEvent_;
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
