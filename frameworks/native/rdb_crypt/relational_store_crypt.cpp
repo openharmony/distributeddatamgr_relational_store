@@ -35,7 +35,6 @@ public:
     static int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> Decrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
-    static std::vector<uint8_t> GenerateRandomNum(int32_t len);
 };
 } // namespace NativeRdb
 } // namespace OHOS
@@ -310,11 +309,7 @@ std::vector<uint8_t> RDBCrypto::Decrypt(const RDBCryptoParam &param, RDBCryptoFa
     std::vector<uint8_t> tempRootKeyAlias(param.rootAlias);
     std::vector<uint8_t> source(param.KeyValue);
     struct HksBlob blobAad = { uint32_t(g_add.size()), &(g_add[0]) };
-    struct HksBlob blobNonce = { uint32_t(g_nonce.size()), &(g_nonce[0]) };
-    if (!(param.nonceValue.empty())) {
-        blobNonce.size = uint32_t(param.nonceValue.size());
-        blobNonce.data = const_cast<uint8_t*>(&(param.nonceValue[0]));
-    }
+    struct HksBlob blobNonce = { uint32_t(param.nonceValue.size()), const_cast<uint8_t*>(&(param.nonceValue[0])) };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), &(tempRootKeyAlias[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size() - AEAD_LEN), source.data() };
     struct HksBlob blobAead = { AEAD_LEN, source.data() + source.size() - AEAD_LEN };
@@ -351,17 +346,6 @@ std::vector<uint8_t> RDBCrypto::Decrypt(const RDBCryptoParam &param, RDBCryptoFa
     }
     decryptKey.resize(plainKeyBlob.size);
     return decryptKey;
-}
-
-std::vector<uint8_t> RDBCrypto::GenerateRandomNum(int32_t len)
-{
-    std::random_device randomDevice;
-    std::uniform_int_distribution<int> distribution(0, std::numeric_limits<uint8_t>::max());
-    std::vector<uint8_t> key(len);
-    for (int32_t i = 0; i < len; i++) {
-        key[i] = static_cast<uint8_t>(distribution(randomDevice));
-    }
-    return key;
 }
 } // namespace NativeRdb
 } // namespace OHOS
