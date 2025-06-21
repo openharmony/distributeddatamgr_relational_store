@@ -183,7 +183,6 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     }
     secretContent = content;
     if (secretContent.encryptValue.empty()) {
-        LOG_INFO("secretKey is null keyFile%{public}s.", SqliteUtils::Anonymous(keyFile).c_str());
         Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
         key.assign(key.size(), 0);
@@ -401,7 +400,6 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     auto [res, rdbSecretContent] = Unpack(content);
     if (!res) {
         LOG_ERROR("Unpack failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
- 
         return false;
     }
     std::tie(res, keyData) = Decrypt(rdbSecretContent);
