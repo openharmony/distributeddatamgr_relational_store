@@ -72,11 +72,11 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
 
     rdbStore = it->second.lock();
     if (rdbStore == nullptr) {
-        storeCache_.erase(it);
         rdbStore = std::make_shared<RdbStoreImpl>(config);
         storeCache_[path] = rdbStore;
+        return rdbStore;
     }
-    
+
     if (!(rdbStore->GetConfig() == config)) {
         auto log = RdbStoreConfig::FormatCfg(rdbStore->GetConfig(), config);
         LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
@@ -88,7 +88,6 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
             rdbStore = nullptr;
             return rdbStore;
         }
-        storeCache_.erase(it);
         rdbStore = std::make_shared<RdbStoreImpl>(config);
         storeCache_[path] = rdbStore;
     }
