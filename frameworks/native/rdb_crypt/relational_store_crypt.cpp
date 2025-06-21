@@ -33,7 +33,7 @@ class RDBCrypto {
 public:
     static int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     static int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault);
-    static bool Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, RdbSecretContent &content);
+    static std::vector<uint8_t> Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> Decrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault);
     static std::vector<uint8_t> GenerateRandomNum(int32_t len);
 };
@@ -42,8 +42,8 @@ public:
 API_EXPORT int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias) asm("checkRootKeyExists");
 API_EXPORT int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault) asm(
     "generateRootKey");
-API_EXPORT bool Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault,
-    OHOS::NativeRdb::RdbSecretContent &content) asm("encrypt");
+API_EXPORT std::vector<uint8_t> Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault) asm(
+    "encrypt");
 API_EXPORT std::vector<uint8_t> Decrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault) asm(
     "decrypt");
 int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
@@ -54,10 +54,9 @@ int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault
 {
     return OHOS::NativeRdb::RDBCrypto::GenerateRootKey(rootKeyAlias, rdbFault);
 }
-bool Encrypt(
-    const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault, OHOS::NativeRdb::RdbSecretContent &content)
+std::vector<uint8_t> Encrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault)
 {
-    return OHOS::NativeRdb::RDBCrypto::Encrypt(param, rdbFault, content);
+    return OHOS::NativeRdb::RDBCrypto::Encrypt(param, rdbFault);
 }
 std::vector<uint8_t> Decrypt(const OHOS::NativeRdb::RDBCryptoParam &param, RDBCryptoFault &rdbFault)
 {
@@ -253,7 +252,7 @@ int32_t RDBCrypto::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDB
     return ret;
 }
 
-bool RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, RdbSecretContent &content)
+std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, RdbSecretContent &content)
 {
     std::vector<uint8_t> tempRootKeyAlias(param.rootAlias);
     std::vector<uint8_t> tempKey(param.KeyValue);
@@ -262,13 +261,12 @@ bool RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, R
     if (ret != HKS_SUCCESS) {
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
-        return false;
+        return {};
     }
-    content.nonceValue = GenerateRandomNum(RdbSecretContent::NONCE_VALUE_SIZE);
     struct HksBlob blobAad = { uint32_t(g_add.size()), g_add.data() };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksBlob plainKey = { uint32_t(tempKey.size()), tempKey.data() };
-    struct HksBlob blobNonce = { uint32_t(content.nonceValue.size()), &(content.nonceValue[0]) };
+    struct HksBlob blobNonce = { uint32_t(param.nonceValue.size()), const_cast<uint8_t*>(&(param.nonceValue[0])) };
 
     struct HksParam hksParam[] = {
         { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
@@ -285,7 +283,7 @@ bool RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, R
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
-        return false;
+        return {};
     }
 
     ret = HksBuildParamSet(&params);
@@ -293,7 +291,7 @@ bool RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, R
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
-        return false;
+        return {};
     }
     std::vector<uint8_t> encryptedKey(plainKey.size * TIMES + 1);
     struct HksBlob cipherText = { uint32_t(encryptedKey.size()), encryptedKey.data() };
@@ -301,11 +299,10 @@ bool RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault, R
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         encryptedKey.assign(encryptedKey.size(), 0);
-        return false;
+        return {};
     }
     encryptedKey.resize(cipherText.size);
-    content.encryptValue = encryptedKey;
-    return true;
+    return encryptedKey;
 }
 
 std::vector<uint8_t> RDBCrypto::Decrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault)

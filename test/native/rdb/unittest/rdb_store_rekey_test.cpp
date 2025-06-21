@@ -1177,9 +1177,6 @@ HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
 {
     RdbSecurityManager manager;
     RdbSecretContent content;
-    std::string invalidStr = ".pub";
-    auto str = manager.ReplaceSuffix(invalidStr);
-    EXPECT_EQ(invalidStr, str);
     bool res = false;
     RdbSecretKeyData keyData;
     std::tie(res, keyData) = manager.DecryptV1(content);
