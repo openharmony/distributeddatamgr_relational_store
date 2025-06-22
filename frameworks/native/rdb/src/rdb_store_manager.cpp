@@ -122,9 +122,12 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
             rdbStore = nullptr;
             rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
+            if (rdbStore == nullptr) {
+                return rdbStore;
+            }
             errCode = rdbStore->Init(version, openCallback);
         }
-        if (errCode != E_OK) {
+        if (errCode != E_OK || rdbStore == nullptr) {
             rdbStore = nullptr;
             return rdbStore;
         }
