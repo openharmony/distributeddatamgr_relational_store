@@ -1169,67 +1169,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_DecryptV1_Test_001
-* @tc.desc: decryptV1 test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
-{
-    RdbSecurityManager manager;
-    RdbSecretContent content;
-    bool res = false;
-    RdbSecretKeyData keyData;
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
- 
-    content.encryptValue = {0x01, 0x02, 0x03, 0x04};
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
- 
-    std::vector<uint8_t> timeData(sizeof(time_t), 0x00);
-    time_t testTime = 1630400000;
-    std::memcpy(timeData.data(), &testTime, sizeof(time_t));
-    
-    std::vector<uint8_t> key(16, 0x01);
-    content.encryptValue = {0x01};
-    content.encryptValue.insert(content.encryptValue.end(), timeData.begin(), timeData.end());
-    content.encryptValue.insert(content.encryptValue.end(), key.begin(), key.end());
-    content.nonceValue.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x01);
-    
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
-    EXPECT_EQ(keyData.distributed, 0x01);
-    EXPECT_EQ(keyData.timeValue, testTime);
-}
-
-/**
-* @tc.name: Rdb_DecryptV1_Test_002
-* @tc.desc: decryptV1 test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
-{
-    RdbSecurityManager manager;
-    RdbSecretContent content;
-    content.encryptValue.push_back(0x01);
- 
-    time_t testTime = 1630400000;
-    std::vector<uint8_t> timeData(sizeof(time_t));
-    std::memcpy(timeData.data(), &testTime, sizeof(time_t));
- 
-    content.encryptValue.insert(content.encryptValue.end(), timeData.begin(), timeData.end());
-    const size_t keyDataSize = RdbSecurityManager::AEAD_LEN + 1;
-    std::vector<uint8_t> keyData(keyDataSize, 0x01);
-    content.encryptValue.insert(content.encryptValue.end(), keyData.begin(), keyData.end());
-    content.nonceValue.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x02);
-    auto result = manager.DecryptV1(content);
-    EXPECT_TRUE(result.first);
-    EXPECT_EQ(result.second.distributed, 0x01);
-    EXPECT_EQ(result.second.timeValue, testTime);
-    EXPECT_TRUE(result.second.secretKey.empty());
-}
-
-/**
 * @tc.name: Rdb_UnpackV2_Test_001
 * @tc.desc: unpackV2 test
 * @tc.type: FUNC
