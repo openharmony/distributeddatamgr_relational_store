@@ -42,10 +42,9 @@ struct RdbSecretKeyData {
 };
 
 struct RdbSecretContent {
-    static constexpr uint32_t MAGIC_NUMBER = 0x6B6B6B6B;
     static constexpr uint32_t MAGIC_NUMBER_V2 = 0x6B6B6B6B;
     static constexpr uint32_t NONCE_VALUE_SIZE = 12;
-    uint32_t magicNum = MAGIC_NUMBER;
+    uint32_t magicNum = MAGIC_NUMBER_V2;
     std::vector<uint8_t> nonceValue{};
     std::vector<uint8_t> encryptValue{};
     RdbSecretContent() = default;
@@ -130,13 +129,12 @@ private:
     static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
-    bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretContent &secretContent);
+    bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
     RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
-    std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
+    bool LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData);
     std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
     std::pair<bool, RdbSecretContent> UnpackV2(const std::vector<char> &content);
-    std::pair<bool, RdbSecretKeyData> Decrypt(const RdbSecretContent &content);
     std::pair<bool, RdbSecretKeyData> DecryptV1(const RdbSecretContent &content);
     std::pair<bool, RdbSecretKeyData> DecryptV2(const RdbSecretContent &content);
     bool IsKeyFileEmpty(const std::string &keyFile);
@@ -145,10 +143,13 @@ private:
     std::string GetBundleNameByAlias();
     std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
     void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
+    std::string ReplaceSuffix(const std::string& str);
 
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
-    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
+    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_V1";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
+    static constexpr const char *SUFFIX_PUB_KEY_OLD = ".pub_key";
+    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key.new.bk";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr uint32_t TIMES = 4;
