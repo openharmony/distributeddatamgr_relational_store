@@ -1025,11 +1025,10 @@ HWTEST_F(RdbStoreImplConditionTest, RegisterDataChangeCallback_Test_001, TestSiz
     if (!IsUsingArkData()) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
-    int errCode;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config, errCode);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->connectionPool_ = nullptr;
     auto res = storeImpl->RegisterDataChangeCallback();
     EXPECT_EQ(E_ALREADY_CLOSED, res);

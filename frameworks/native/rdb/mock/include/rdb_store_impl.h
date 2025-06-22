@@ -28,6 +28,7 @@
 #include "concurrent_map.h"
 #include "connection_pool.h"
 #include "knowledge_schema_helper.h"
+#include "rdb_open_callback.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_statement.h"
@@ -51,8 +52,8 @@ private:
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
-    RdbStoreImpl(const RdbStoreConfig &config, int &errCode);
     ~RdbStoreImpl() override;
+    int32_t Init(int version, RdbOpenCallback &openCallback);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
@@ -125,8 +126,11 @@ private:
     };
 
     int InnerOpen();
+    int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
+    int32_t CreatePool(bool &created);
     void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
+    int32_t SetSecurityLabel(const RdbStoreConfig &config);
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, Results> HandleResults(
@@ -180,6 +184,7 @@ private:
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
+    int32_t initStatus_ = -1;
     SlaveStatus slaveStatus_ = SlaveStatus::UNDEFINED;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
@@ -192,6 +197,7 @@ private:
     std::string fileType_;
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
+    std::mutex initMutex_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
