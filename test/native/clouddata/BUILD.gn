@@ -25,6 +25,7 @@ config("module_private_config") {
     "${relational_store_innerapi_path}/cloud_data/include",
     "${relational_store_innerapi_path}/common_type/include",
     "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/rdb_crypt",
   ]
 }
 

@@ -28,19 +28,31 @@
 
 namespace OHOS::NativeRdb {
 struct RdbSecretKeyData {
-    uint8_t distributed = 0;
+    static constexpr uint32_t CURRENT_VERSION = 1;
+    uint8_t distributed = CURRENT_VERSION;
     time_t timeValue{};
     std::vector<uint8_t> secretKey{};
     RdbSecretKeyData() = default;
     ~RdbSecretKeyData()
     {
+        distributed = 0;
+        timeValue = time_t();
         secretKey.assign(secretKey.size(), 0);
     }
 };
 
-struct RDBCryptFault {
-    int32_t errorCode;
-    std::string custLog;
+struct RdbSecretContent {
+    static constexpr uint32_t MAGIC_NUMBER_V2 = 0x6B6B6B6B;
+    static constexpr uint32_t NONCE_VALUE_SIZE = 12;
+    uint32_t magicNum = MAGIC_NUMBER_V2;
+    std::vector<uint8_t> nonceValue{};
+    std::vector<uint8_t> encryptValue{};
+    RdbSecretContent() = default;
+    ~RdbSecretContent()
+    {
+        nonceValue.assign(nonceValue.size(), 0);
+        encryptValue.assign(encryptValue.size(), 0);
+    }
 };
 
 class RdbPassword final {
@@ -103,12 +115,6 @@ public:
     bool IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType);
 
 private:
-    using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t>&);
-    using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t>&, RDBCryptFault&);
-    using EncryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
-        const std::vector<uint8_t>&, RDBCryptFault&);
-    using DecryptFunc = std::vector<uint8_t> (*)(const std::vector<uint8_t>&,
-        const std::vector<uint8_t>&, RDBCryptFault&);
     RdbSecurityManager();
     ~RdbSecurityManager();
 
@@ -116,27 +122,36 @@ private:
     void* GetHandle();
     int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
-    std::vector<uint8_t> EncryptWorkKey(std::vector<uint8_t> &key);
-    std::vector<uint8_t> DecryptWorkKey(std::vector<uint8_t> &key);
-    void ReportCryptFault(const int32_t &errorCode, const std::string &custLog);
+    std::pair<bool, RdbSecretContent> EncryptWorkKey(const std::vector<uint8_t> &key);
+    std::vector<uint8_t> DecryptWorkKey(const std::vector<uint8_t> &key, const std::vector<uint8_t> &nonce);
+    void ReportCryptFault(int32_t code, const std::string &message);
     std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
     static bool InitPath(const std::string &fileDir);
     std::vector<uint8_t> GenerateRandomNum(int32_t len);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
-    bool SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
     RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
     bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    bool LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData);
+    std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
+    std::pair<bool, RdbSecretContent> UnpackV2(const std::vector<char> &content);
+    std::pair<bool, RdbSecretKeyData> DecryptV1(const RdbSecretContent &content);
+    std::pair<bool, RdbSecretKeyData> DecryptV2(const RdbSecretContent &content);
     bool IsKeyFileEmpty(const std::string &keyFile);
     static bool IsKeyExpired(const time_t &createTime);
     std::vector<uint8_t> GetRootKeyAlias();
     std::string GetBundleNameByAlias();
     std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
     void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
+    std::string ReplaceSuffix(const std::string& str);
 
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
-    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key";
+    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_V1";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
+    static constexpr const char *SUFFIX_PUB_KEY_OLD = ".pub_key";
+    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key.new.bk";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
+    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr uint32_t TIMES = 4;
     static constexpr uint32_t MAX_UPDATE_SIZE = 64;
     static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
