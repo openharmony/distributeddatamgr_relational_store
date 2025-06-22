@@ -154,7 +154,6 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
     if (handle == nullptr) {
         return {};
     }
-    RDBCryptoFault rdbFault;
     auto generateRandomNum = reinterpret_cast<GenerateRandomNumFunc>(dlsym(handle, "generateRandomNum"));
     if (generateRandomNum == nullptr) {
         LOG_ERROR("dlsym GenerateRandomNum failed(%{public}d)!", errno);
@@ -162,7 +161,6 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
     }
     auto rootKeyAlias = GetRootKeyAlias();
     auto ret = generateRandomNum(len);
-    ReportCryptFault(rdbFault.code, rdbFault.message);
     return ret;
 }
 
