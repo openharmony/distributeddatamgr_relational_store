@@ -209,7 +209,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     return SqliteUtils::DeleteFile(keyFileOld);
 }
 
-bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, RdbSecretContent &secretContent)
+bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent)
 {
     LOG_INFO("begin keyPath:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
 
@@ -485,6 +485,8 @@ void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
         std::lock_guard<std::mutex> lock(mutex_);
         SqliteUtils::DeleteFile(keyFiles.GetKeyFile(PUB_KEY_FILE));
         SqliteUtils::DeleteFile(keyFiles.GetKeyFile(PUB_KEY_FILE_NEW_KEY));
+        SqliteUtils::DeleteFile(ReplaceSuffix(keyFiles.GetKeyFile(PUB_KEY_FILE)));
+        SqliteUtils::DeleteFile(ReplaceSuffix(keyFiles.GetKeyFile(PUB_KEY_FILE_NEW_KEY)));
     }
     keyFiles.Unlock();
     keyFiles.DestroyLock();
