@@ -1137,20 +1137,54 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
-RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
-    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType())
+int32_t RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCallback)
 {
-    isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
-    SqliteGlobalConfig::GetDbPath(config_, path_);
-    bool created = access(path_.c_str(), F_OK) != 0;
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    int32_t errCode = E_OK;
+    if (version == -1) {
+        return errCode;
+    }
+
+    int32_t currentVersion;
+    errCode = GetVersion(currentVersion);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (version == currentVersion) {
+        return openCallback.OnOpen(*this);
+    }
+
+    if (currentVersion == 0) {
+        errCode = openCallback.OnCreate(*this);
+    } else if (version > currentVersion) {
+        errCode = openCallback.OnUpgrade(*this, currentVersion, version);
+    } else {
+        errCode = openCallback.OnDowngrade(*this, currentVersion, version);
+    }
+
+    if (errCode == E_OK) {
+        errCode = SetVersion(version);
+    }
+
+    if (errCode != E_OK) {
+        LOG_ERROR("ProcessOpenCallback set new version failed.");
+        return errCode;
+    }
+
+    return openCallback.OnOpen(*this);
+}
+
+int32_t RdbStoreImpl::CreatePool(bool &created)
+{
+    int32_t errCode = E_OK;
     connectionPool_ = ConnectionPool::Create(config_, errCode);
     if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
         !isReadOnly_) {
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
         InitSyncerParam(config_, false);
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
@@ -1165,21 +1199,62 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, int &errCode)
         }
         std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
         created = true;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
         if (service != nullptr) {
             service->Enable(syncerParam_);
         }
 #endif
     }
+    return errCode;
+}
+
+int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
+{
+    if (config.IsMemoryRdb()) {
+        return E_OK;
+    }
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+    return SecurityPolicy::SetSecurityLabel(config);
+#endif
+    return E_OK;
+}
+
+int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
+{
+    if (initStatus_ != -1) {
+        return initStatus_;
+    }
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (initStatus_ != -1) {
+        return initStatus_;
+    }
+    int32_t errCode = E_OK;
+    bool created = access(path_.c_str(), F_OK) != 0;
+    errCode = CreatePool(created);
     if (connectionPool_ == nullptr || errCode != E_OK) {
         connectionPool_ = nullptr;
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
             SqliteUtils::Anonymous(path_).c_str());
-        return;
+        return errCode;
     }
     InitSyncerParam(config_, created);
     InitReportFunc(syncerParam_);
     InnerOpen();
+
+    if (config_.GetRoleType() == OWNER && !config_.IsReadOnly()) {
+        errCode = SetSecurityLabel(config_);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+        (void) ExchangeSlaverToMaster();
+        errCode = ProcessOpenCallback(version, openCallback);
+        if (errCode != E_OK) {
+            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
+            return errCode;
+        }
+    }
+    initStatus_ = errCode;
+    return initStatus_;
 }
 
 RdbStoreImpl::~RdbStoreImpl()
