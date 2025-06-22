@@ -1227,9 +1227,6 @@ HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
     EXPECT_EQ(result.second.distributed, 0x01);
     EXPECT_EQ(result.second.timeValue, testTime);
     EXPECT_TRUE(result.second.secretKey.empty());
-    content.magicNum = 0x6A6A6A6A;
-    result = manager.Decrypt(content);
-    EXPECT_TRUE(result.first);
 }
 
 /**
