@@ -416,7 +416,13 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
         LOG_ERROR("DecryptV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
         return false;
     }
-    SaveSecretKeyToFile(keyPath, keyData.secretKey);
+    std::string keyPathV1;
+    std::string oldSuffix = std::string(SUFFIX_PUB_KEY_OLD);
+    if (keyPath.length() >= oldSuffix.length() &&
+        keyPath.compare(keyPath.length() - oldSuffix.length(), oldSuffix.length(), oldSuffix) == 0) {
+        keyPathV1 = keyPath.substr(0, keyPath.length() - oldSuffix.length()) + SUFFIX_PUB_KEY;
+    }
+    SaveSecretKeyToFile(keyPathV1, keyData.secretKey);
     return true;
 }
 
