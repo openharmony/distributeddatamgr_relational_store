@@ -134,7 +134,7 @@ std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::st
 {
     std::chrono::system_clock::time_point timePoint;
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_V1";
     if (!OHOS::FileExists(keyPath)) {
         return timePoint;
     }
@@ -155,7 +155,7 @@ std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::st
 bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 {
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_V1";
     if (!OHOS::FileExists(keyPath)) {
         return false;
     }
@@ -176,7 +176,7 @@ bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 bool RdbRekeyTest::SaveNewKey(const string &dbName)
 {
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_V1";
     auto newKeyPath = RDB_TEST_PATH + "key/" + name + ".pub_key.new";
     if (!OHOS::FileExists(keyPath)) {
         return false;
@@ -255,7 +255,7 @@ void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
@@ -286,7 +286,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
@@ -312,7 +312,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
@@ -343,7 +343,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
@@ -373,7 +373,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
@@ -404,7 +404,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
@@ -450,7 +450,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
     struct stat fileStat;
@@ -496,7 +496,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
     struct stat fileStat;
@@ -985,7 +985,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_FALSE(isFileExists);
 
@@ -1049,7 +1049,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
  
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_V1";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
  
