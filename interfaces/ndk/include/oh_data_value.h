@@ -266,7 +266,8 @@ int OH_Value_GetType(OH_Data_Value *value, OH_ColumnType *type);
  * @brief Check whether the data is empty from OH_Data_Value object.
  *
  * @param value Represents a pointer to an instance of OH_Data_Value.
- * @param val Represents empty data flag. It is an output parameter. Ture is empty, false is not empty.
+ * @param val Represents empty data flag. It is an output parameter.
+ * The value true means that the data is empty, and false means the opposite.
  * @return Returns the error code.
  *         Returns {@link RDB_OK} if the execution is successful.
  *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.

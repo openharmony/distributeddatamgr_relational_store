@@ -40,7 +40,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using Reportor = RdbFaultHiViewReporter;
+using Reporter = RdbFaultHiViewReporter;
 using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t> &);
 using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t> &, RDBCryptoFault &);
 using EncryptFunc = std::vector<uint8_t> (*)(const RDBCryptoParam &, RDBCryptoFault &);
@@ -169,7 +169,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 {
     LOG_INFO("begin keyFile%{public}s.", SqliteUtils::Anonymous(keyFile).c_str());
     if (!HasRootKey()) {
-        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_ROOT_KEY_NOT_LOAD, GetBundleNameByAlias(), "not root key"));
+        Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_ROOT_KEY_NOT_LOAD, GetBundleNameByAlias(), "not root key"));
         LOG_ERROR("Root key not exists!");
         return false;
     }
@@ -192,7 +192,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
         return false;
     }
     if (secretContent.encryptValue.empty()) {
-        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
+        Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
         key.assign(key.size(), 0);
         return false;
@@ -223,15 +223,13 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const R
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto fd = open(keyPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        if (fd > 0) {
-            ret = SaveStringToFd(fd, secretKeyInString);
+        ret = SaveStringToFd(fd, secretKeyInString);
+        if (fd >= 0) {
             close(fd);
-        } else {
-            ret = false;
         }
     }
     if (!ret) {
-        Reportor::ReportFault(RdbFaultEvent(
+        Reporter::ReportFault(RdbFaultEvent(
             FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "save fail errno=" + std::to_string(errno)));
     }
     return ret;
@@ -242,7 +240,7 @@ void RdbSecurityManager::ReportCryptFault(int32_t code, const std::string &messa
     if (message.empty()) {
         return;
     }
-    Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, code, GetBundleNameByAlias(), message));
+    Reporter::ReportFault(RdbFaultEvent(FT_EX_HUKS, code, GetBundleNameByAlias(), message));
 }
 
 int32_t RdbSecurityManager::Init(const std::string &bundleName)
@@ -362,7 +360,7 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
     umask(DEFAULT_UMASK);
     auto ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
     if (ret != 0 && errno != EEXIST) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
+        Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
             RdbSecurityManager::GetInstance().GetBundleNameByAlias(),
             "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
             ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
@@ -399,7 +397,7 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed!");
             return false;
@@ -431,7 +429,7 @@ bool RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath, Rdb
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+            Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed!");
             return false;

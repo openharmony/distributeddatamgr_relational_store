@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_DATD_ABILITY_PREDICATES_H
-#define NATIVE_RDB_DATD_ABILITY_PREDICATES_H
+#ifndef NATIVE_RDB_DATA_ABILITY_PREDICATES_H
+#define NATIVE_RDB_DATA_ABILITY_PREDICATES_H
 
 #include <string>
 
