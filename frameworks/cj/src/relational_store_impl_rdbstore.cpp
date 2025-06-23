@@ -115,6 +115,19 @@ namespace Relational {
         return nativeValuesBucket;
     }
 
+    NativeRdb::ValuesBucket ConvertFromValueBucketEx(ValuesBucketEx valuesBucket)
+    {
+        int64_t mapSize = valuesBucket.size;
+        NativeRdb::ValuesBucket nativeValuesBucket = NativeRdb::ValuesBucket();
+
+        for (int64_t i = 0; i < mapSize; i++) {
+            NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(valuesBucket.value[i]);
+            std::string keyStr = valuesBucket.key[i];
+            nativeValuesBucket.Put(keyStr, valueObject);
+        }
+        return nativeValuesBucket;
+    }
+
     std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &predicates, char** column,
         int64_t columnSize)
     {
@@ -144,6 +157,17 @@ namespace Relational {
     {
         int32_t affectedRows;
         NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBucket);
+        *errCode = rdbStore_->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
+            nativeValuesBucket, predicates.GetPredicates()->GetWhereClause(), predicates.GetPredicates()->GetBindArgs(),
+            conflictResolution);
+        return affectedRows;
+    }
+
+    int32_t RdbStoreImpl::UpdateEx(ValuesBucketEx valuesBucket, RdbPredicatesImpl &predicates,
+        NativeRdb::ConflictResolution conflictResolution, int32_t *errCode)
+    {
+        int32_t affectedRows;
+        NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBucket);
         *errCode = rdbStore_->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
             nativeValuesBucket, predicates.GetPredicates()->GetWhereClause(), predicates.GetPredicates()->GetBindArgs(),
             conflictResolution);
@@ -233,9 +257,19 @@ namespace Relational {
         return result;
     }
 
+    int64_t RdbStoreImpl::InsertEx(const char* table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode)
+    {
+        std::string tableName = table;
+        int64_t result;
+        NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBucket);
+        *errCode = rdbStore_->InsertWithConflictResolution(result, tableName,
+            nativeValuesBucket, NativeRdb::ConflictResolution(conflict));
+        return result;
+    }
+
     void RdbStoreImpl::ExecuteSql(const char* sql, int32_t *errCode)
     {
-        *errCode = rdbStore_->ExecuteSql(sql, bindArgs);
+        *errCode = rdbStore_->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>());
     }
 
 
@@ -255,6 +289,22 @@ namespace Relational {
         }
         for (int64_t i = 0; i < valuesSize; i++) {
             NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBuckets[i]);
+            valuesVector.push_back(nativeValuesBucket);
+        }
+        int32_t rtnCode = rdbStore_->BatchInsert(insertNum, tableNameStr, valuesVector);
+        return rtnCode;
+    }
+
+    int32_t RdbStoreImpl::BatchInsertEx(int64_t &insertNum, const char* tableName, ValuesBucketEx* valuesBuckets,
+        int64_t valuesSize)
+    {
+        std::vector<NativeRdb::ValuesBucket> valuesVector;
+        std::string tableNameStr = tableName;
+        if (tableNameStr.empty()) {
+            return RelationalStoreJsKit::E_PARAM_ERROR;
+        }
+        for (int64_t i = 0; i < valuesSize; i++) {
+            NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBuckets[i]);
             valuesVector.push_back(nativeValuesBucket);
         }
         int32_t rtnCode = rdbStore_->BatchInsert(insertNum, tableNameStr, valuesVector);
@@ -299,11 +349,31 @@ namespace Relational {
         return result;
     }
 
+    std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::QuerySqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t size)
+    {
+        std::string tmpSql = sql;
+        std::vector<NativeRdb::ValueObject> tmpBindArgs = std::vector<NativeRdb::ValueObject>();
+        for (int64_t i = 0; i < size; i++) {
+            tmpBindArgs.push_back(ValueTypeExToValueObject(bindArgs[i]));
+        }
+        auto result = rdbStore_->QueryByStep(tmpSql, tmpBindArgs);
+        return result;
+    }
+
     void RdbStoreImpl::ExecuteSql(const char* sql, ValueType* bindArgs, int64_t bindArgsSize, int32_t *errCode)
     {
         std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < bindArgsSize; i++) {
             bindArgsObjects.push_back(ValueTypeToValueObject(bindArgs[i]));
+        }
+        *errCode = rdbStore_->ExecuteSql(sql, bindArgsObjects);
+    }
+
+    void RdbStoreImpl::ExecuteSqlEx(const char* sql, ValueTypeEx* bindArgs, int64_t bindArgsSize, int32_t *errCode)
+    {
+        std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
+        for (int64_t i = 0; i < bindArgsSize; i++) {
+            bindArgsObjects.push_back(ValueTypeExToValueObject(bindArgs[i]));
         }
         *errCode = rdbStore_->ExecuteSql(sql, bindArgsObjects);
     }
@@ -622,6 +692,13 @@ namespace Relational {
         return MapToModifyTime(map, errCode);
     }
 
+    int32_t RdbStoreImpl::GetRebuilt()
+    {
+        auto rebuilt = NativeRdb::RebuiltType::NONE;
+        rdbStore_->GetRebuilt(rebuilt);
+        return static_cast<int32_t>(rebuilt);
+    }
+
     int32_t GetRealPath(AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
         const AppDataMgrJsKit::JSUtils::ContextParam &param,
         std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilitycontext)
@@ -690,6 +767,25 @@ namespace Relational {
         rdbConfig.customDir = config.customDir;
     }
 
+    void initRdbConfigEx(AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig, const StoreConfigEx &config)
+    {
+        rdbConfig.isEncrypt = config.encrypt;
+        rdbConfig.isSearchable = config.isSearchable;
+        rdbConfig.isAutoClean = config.autoCleanDirtyData;
+        rdbConfig.securityLevel = static_cast<NativeRdb::SecurityLevel>(config.securityLevel);
+        rdbConfig.dataGroupId = config.dataGroupId;
+        rdbConfig.name = config.name;
+        rdbConfig.customDir = config.customDir;
+        rdbConfig.rootDir = config.rootDir;
+        rdbConfig.vector = config.vector;
+        rdbConfig.allowRebuild = config.allowRebuild;
+        rdbConfig.isReadOnly = config.isReadOnly;
+        rdbConfig.pluginLibs = CArrStrToVector(config.pluginLibs);
+        rdbConfig.cryptoParam = ToCCryptoParam(config.cryptoParam);
+        rdbConfig.tokenizer = static_cast<OHOS::NativeRdb::Tokenizer>(config.tokenizer);
+        rdbConfig.persist = config.persist;
+    }
+
     NativeRdb::RdbStoreConfig getRdbStoreConfig(const AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
         const AppDataMgrJsKit::JSUtils::ContextParam &param)
     {
@@ -709,6 +805,38 @@ namespace Relational {
         }
         rdbStoreConfig.SetModuleName(param.moduleName);
         rdbStoreConfig.SetArea(param.area);
+        return rdbStoreConfig;
+    }
+
+    NativeRdb::RdbStoreConfig getRdbStoreConfigEx(const AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+        const AppDataMgrJsKit::JSUtils::ContextParam &param)
+    {
+        NativeRdb::RdbStoreConfig rdbStoreConfig(rdbConfig.path);
+        rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
+        rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
+        rdbStoreConfig.SetIsVector(rdbConfig.vector);
+        rdbStoreConfig.SetDBType(rdbConfig.vector ? NativeRdb::DB_VECTOR : NativeRdb::DB_SQLITE);
+        rdbStoreConfig.SetStorageMode(rdbConfig.persist ? NativeRdb::StorageMode::MODE_DISK :
+            NativeRdb::StorageMode::MODE_MEMORY);
+        rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
+        rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
+        rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);
+        rdbStoreConfig.SetName(rdbConfig.name);
+        rdbStoreConfig.SetCustomDir(rdbConfig.customDir);
+        rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
+        rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
+        rdbStoreConfig.SetIntegrityCheck(NativeRdb::IntegrityCheck::NONE);
+        rdbStoreConfig.SetTokenizer(rdbConfig.tokenizer);
+
+        if (!param.bundleName.empty()) {
+            rdbStoreConfig.SetBundleName(param.bundleName);
+        }
+        rdbStoreConfig.SetModuleName(param.moduleName);
+        rdbStoreConfig.SetArea(param.area);
+        rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
+        rdbStoreConfig.SetHaMode(rdbConfig.haMode);
+
+        rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
         return rdbStoreConfig;
     }
 
@@ -740,6 +868,42 @@ namespace Relational {
         if (nativeRdbStore == nullptr) {
             *errCode = -1;
             return -1;
+        }
+        return nativeRdbStore->GetID();
+    }
+
+    int64_t GetRdbStoreEx(OHOS::AbilityRuntime::Context* context, const StoreConfigEx *config,
+        int32_t *errCode)
+    {
+        if (context == nullptr) {
+            *errCode = ERROR_VALUE;
+            return ERROR_VALUE;
+        }
+        auto abilitycontext = std::make_shared<AppDataMgrJsKit::Context>(context->shared_from_this());
+        AppDataMgrJsKit::JSUtils::ContextParam param;
+        initContextParam(param, abilitycontext);
+        AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
+        initRdbConfigEx(rdbConfig, *config);
+        if (!rdbConfig.cryptoParam.IsValid()) {
+            *errCode = RelationalStoreJsKit::E_PARAM_ERROR;
+            return ERROR_VALUE;
+        }
+
+        *errCode = GetRealPath(rdbConfig, param, abilitycontext);
+        if (*errCode != NativeRdb::E_OK) {
+            return ERROR_VALUE;
+        }
+
+        DefaultOpenCallback callback;
+        auto rdbStore =
+            NativeRdb::RdbHelper::GetRdbStore(getRdbStoreConfigEx(rdbConfig, param), -1, callback, *errCode);
+        if (*errCode != 0) {
+            return ERROR_VALUE;
+        }
+        auto nativeRdbStore = FFIData::Create<RdbStoreImpl>(rdbStore);
+        if (nativeRdbStore == nullptr) {
+            *errCode = ERROR_VALUE;
+            return ERROR_VALUE;
         }
         return nativeRdbStore->GetID();
     }
@@ -777,6 +941,27 @@ namespace Relational {
         initContextParam(param, abilitycontext);
         AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
         initRdbConfig(rdbConfig, config);
+
+        *errCode = GetRealPath(rdbConfig, param, abilitycontext);
+        if (*errCode != NativeRdb::E_OK) {
+            return;
+        }
+        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
+        return;
+    }
+
+    void DeleteRdbStoreConfigEx(OHOS::AbilityRuntime::Context* context, const StoreConfigEx *config,
+        int32_t *errCode)
+    {
+        if (context == nullptr) {
+            *errCode = ERROR_VALUE;
+            return;
+        }
+        auto abilitycontext = std::make_shared<AppDataMgrJsKit::Context>(context->shared_from_this());
+        AppDataMgrJsKit::JSUtils::ContextParam param;
+        initContextParam(param, abilitycontext);
+        AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
+        initRdbConfigEx(rdbConfig, *config);
 
         *errCode = GetRealPath(rdbConfig, param, abilitycontext);
         if (*errCode != NativeRdb::E_OK) {

@@ -17,8 +17,23 @@
 #include "native_log.h"
 #include "rdb_store.h"
 
+const int64_t UI64TOUI8 = 8;
+const int64_t BITNUMOFUI64 = 64;
+
 namespace OHOS {
 namespace Relational {
+    OHOS::NativeRdb::RdbStoreConfig::CryptoParam ToCCryptoParam(CryptoParam param)
+    {
+        auto cryptoParam = OHOS::NativeRdb::RdbStoreConfig::CryptoParam();
+        cryptoParam.iterNum = param.iterNum;
+        cryptoParam.encryptAlgo = param.encryptAlgo;
+        cryptoParam.hmacAlgo = param.hmacAlgo;
+        cryptoParam.kdfAlgo = param.kdfAlgo;
+        cryptoParam.cryptoPageSize = param.cryptoPageSize;
+        cryptoParam.encryptKey_ = CArrUI8ToVector(param.encryptKey);
+        return cryptoParam;
+    }
+
     char* MallocCString(const std::string& origin)
     {
         if (origin.empty()) {
@@ -123,6 +138,140 @@ namespace Relational {
         return valueObject;
     }
 
+    NativeRdb::ValueObject ValueTypeExToValueObjectBlob(const ValueTypeEx& value)
+    {
+        std::vector<uint8_t> blob = std::vector<uint8_t>();
+        for (int64_t j = 0; j < value.uint8Array.size; j++) {
+            blob.push_back(value.uint8Array.head[j]);
+        }
+        return NativeRdb::ValueObject(blob);
+    }
+
+    NativeRdb::ValueObject ValueTypeExToValueObjectAsset(const ValueTypeEx& value)
+    {
+        std::string modifyTime = value.asset.modifyTime;
+        std::string size = value.asset.size;
+        NativeRdb::ValueObject::Asset asset = {
+            .status = value.asset.status,
+            .name = value.asset.name,
+            .uri = value.asset.uri,
+            .createTime = value.asset.createTime,
+            .modifyTime = modifyTime,
+            .size = size,
+            .hash = modifyTime + "_" + size,
+            .path = value.asset.path
+        };
+        return NativeRdb::ValueObject(asset);
+    }
+
+    NativeRdb::ValueObject ValueTypeExToValueObjectAssets(const ValueTypeEx& value)
+    {
+        std::vector<NativeRdb::ValueObject::Asset> assets = std::vector<NativeRdb::ValueObject::Asset>();
+        for (int64_t j = 0; j < value.assets.size; j++) {
+            Asset asset = value.assets.head[j];
+            std::string modifyTime = asset.modifyTime;
+            std::string size = asset.size;
+            NativeRdb::ValueObject::Asset nativeAsset = {
+                .status = asset.status,
+                .name = asset.name,
+                .uri = asset.uri,
+                .createTime = asset.createTime,
+                .modifyTime = modifyTime,
+                .size = size,
+                .hash = modifyTime + "_" + size,
+                .path = asset.path
+            };
+            assets.push_back(nativeAsset);
+        }
+        return NativeRdb::ValueObject(assets);
+    }
+
+    NativeRdb::ValueObject ValueTypeExToValueObjectFloatArr(const ValueTypeEx& value)
+    {
+        std::vector<float> arr = std::vector<float>();
+        for (int64_t j = 0; j < value.floatArray.size; j++) {
+            arr.push_back(value.floatArray.head[j]);
+        }
+        return NativeRdb::ValueObject(arr);
+    }
+
+    NativeRdb::ValueObject ValueTypeExToValueObjectBigInt(const ValueTypeEx& value)
+    {
+        std::vector<uint64_t> arr = std::vector<uint64_t>();
+        int64_t firstSize = (value.bigInt.value.size % UI64TOUI8 == 0) ? UI64TOUI8 :
+            (value.bigInt.value.size % UI64TOUI8);
+        for (int64_t i = 0; i < ((value.bigInt.value.size + UI64TOUI8 - 1) / UI64TOUI8); i++) {
+            uint64_t tempValue = 0;
+            if (i == 0) {
+                for (int64_t j = 0; j < firstSize; j++) {
+                    tempValue |=
+                        (static_cast<uint64_t>(value.bigInt.value.head[j]) << (UI64TOUI8 * (firstSize -j - 1)));
+                }
+            } else {
+                for (int64_t j = 0; j < UI64TOUI8; j++) {
+                    tempValue |=
+                        (static_cast<uint64_t>(value.bigInt.value.head[UI64TOUI8 * (i - 1) + firstSize + j]) <<
+                        (UI64TOUI8 * ((value.bigInt.value.size - (UI64TOUI8 * (i - 1) + firstSize + j) - 1) %
+                        UI64TOUI8)));
+                }
+            }
+            arr.push_back(tempValue);
+        }
+        return NativeRdb::ValueObject(NativeRdb::ValueObject::BigInt(static_cast<int32_t>(value.bigInt.sign),
+            std::move(arr)));
+    }
+
+    NativeRdb::ValueObject ValueTypeExToValueObject(const ValueTypeEx& value)
+    {
+        NativeRdb::ValueObject valueObject;
+        switch (value.tag) {
+            case TYPE_NULL: {
+                valueObject = NativeRdb::ValueObject();
+                break;
+            }
+            case TYPE_INT: {
+                valueObject = NativeRdb::ValueObject(value.integer);
+                break;
+            }
+            case TYPE_DOU: {
+                valueObject = NativeRdb::ValueObject(value.dou);
+                break;
+            }
+            case TYPE_STR: {
+                valueObject = NativeRdb::ValueObject(value.string);
+                break;
+            }
+            case TYPE_BOOL: {
+                valueObject = NativeRdb::ValueObject(value.boolean);
+                break;
+            }
+            case TYPE_BLOB: {
+                valueObject = ValueTypeExToValueObjectBlob(value);
+                break;
+            }
+            case TYPE_ASSET: {
+                valueObject = ValueTypeExToValueObjectAsset(value);
+                break;
+            }
+            case TYPE_ASSETS: {
+                valueObject = ValueTypeExToValueObjectAssets(value);
+                break;
+            }
+            case TYPE_FLOATARR: {
+                valueObject = ValueTypeExToValueObjectFloatArr(value);
+                break;
+            }
+            case TYPE_BIGINT: {
+                valueObject = ValueTypeExToValueObjectBigInt(value);
+                break;
+            }
+            default:
+                valueObject = NativeRdb::ValueObject();
+                break;
+        }
+        return valueObject;
+    }
+
     ValueType ValueObjectToValueTypeAsset(const NativeRdb::ValueObject& object)
     {
         NativeRdb::ValueObject::Asset val;
@@ -215,6 +364,141 @@ namespace Relational {
         }
     }
 
+    ValueTypeEx ValueObjectToValueTypeExBlob(const NativeRdb::ValueObject& object)
+    {
+        std::vector<uint8_t> val = static_cast<std::vector<uint8_t>>(object);
+        auto size = val.size();
+        if (size == 0) {
+            return ValueTypeEx {.uint8Array = CArrUI8 {nullptr, ERROR_VALUE}, .tag = TYPE_BLOB};
+        }
+        CArrUI8 arr = CArrUI8 {.head = static_cast<uint8_t*>(malloc(size * sizeof(uint8_t))),
+            .size = size};
+        if (arr.head == nullptr) {
+            return ValueTypeEx {.uint8Array = CArrUI8 {nullptr, ERROR_VALUE}, .tag = TYPE_BLOB};
+        }
+        for (size_t i = 0; i < size; i++) {
+            arr.head[i] = val[i];
+        }
+        return ValueTypeEx {.uint8Array = arr, .tag = TYPE_BLOB};
+    }
+
+    ValueTypeEx ValueObjectToValueTypeExAsset(const NativeRdb::ValueObject& object)
+    {
+        NativeRdb::ValueObject::Asset val = static_cast<NativeRdb::ValueObject::Asset>(object);
+        Asset asset = Asset {
+            .name = MallocCString(val.name),
+            .uri = MallocCString(val.uri),
+            .path = MallocCString(val.path),
+            .createTime = MallocCString(val.createTime),
+            .modifyTime = MallocCString(val.modifyTime),
+            .size = MallocCString(val.size),
+            .status = val.status
+        };
+        return ValueTypeEx {.asset = asset, .tag = TYPE_ASSET};
+    }
+
+    ValueTypeEx ValueObjectToValueTypeExAssets(const NativeRdb::ValueObject& object)
+    {
+        NativeRdb::ValueObject::Assets val = static_cast<NativeRdb::ValueObject::Assets>(object);
+        if (val.size() == 0) {
+            return ValueTypeEx {.assets = Assets{nullptr, ERROR_VALUE}, .tag = TYPE_ASSETS};
+        }
+        Assets assets = Assets {.head = static_cast<Asset*>(malloc(val.size() * sizeof(Asset))), .size = val.size()};
+        if (assets.head == nullptr) {
+            return ValueTypeEx {.assets = Assets{nullptr, ERROR_VALUE}, .tag = TYPE_ASSETS};
+        }
+        for (std::size_t i = 0; i < val.size(); i++) {
+            assets.head[i] = Asset {
+                .name = MallocCString(val[i].name),
+                .uri = MallocCString(val[i].uri),
+                .path = MallocCString(val[i].path),
+                .createTime = MallocCString(val[i].createTime),
+                .modifyTime = MallocCString(val[i].modifyTime),
+                .size = MallocCString(val[i].size),
+                .status = static_cast<int32_t>(val[i].status)
+            };
+        }
+        return ValueTypeEx {.assets = assets, .tag = TYPE_ASSETS};
+    }
+
+    ValueTypeEx ValueObjectToValueTypeExFloatArray(const NativeRdb::ValueObject& object)
+    {
+        std::vector<float> val = static_cast<std::vector<float>>(object);
+        auto size = val.size();
+        if (size == 0) {
+            return ValueTypeEx {.floatArray = CArrFloat {nullptr, ERROR_VALUE}, .tag = TYPE_FLOATARR};
+        }
+        CArrFloat arr = CArrFloat {.head = static_cast<float*>(malloc(size * sizeof(float))),
+            .size = size};
+        if (arr.head == nullptr) {
+            return ValueTypeEx {.floatArray = CArrFloat {nullptr, ERROR_VALUE}, .tag = TYPE_FLOATARR};
+        }
+        for (size_t i = 0; i < size; i++) {
+            arr.head[i] = val[i];
+        }
+        return ValueTypeEx {.floatArray = arr, .tag = TYPE_FLOATARR};
+    }
+
+    ValueTypeEx ValueObjectToValueTypeExBigInt(const NativeRdb::ValueObject& object)
+    {
+        NativeRdb::ValueObject::BigInt bigInt = static_cast<NativeRdb::ValueObject::BigInt>(object);
+        int32_t sign = bigInt.Sign();
+        std::vector<uint64_t> value = bigInt.Value();
+        size_t size = value.size();
+        if (size == 0) {
+            return ValueTypeEx {.bigInt = BigInt {CArrUI8 {nullptr, ERROR_VALUE}, ERROR_VALUE}, .tag = TYPE_BIGINT};
+        }
+        uint8_t *head = static_cast<uint8_t*>(calloc(UI64TOUI8 * size, sizeof(uint8_t)));
+        if (head == nullptr) {
+            return ValueTypeEx {.bigInt = BigInt {CArrUI8 {nullptr, ERROR_VALUE}, ERROR_VALUE}, .tag = TYPE_BIGINT};
+        }
+        for (size_t i = 0; i < size; i++) {
+            for (size_t j = 0; j < UI64TOUI8; j++) {
+                head[UI64TOUI8 * i + j] |= (value[i] >> (BITNUMOFUI64 - (UI64TOUI8 * (j + 1))));
+            }
+        }
+        return ValueTypeEx {.bigInt = BigInt {CArrUI8 {head, UI64TOUI8 * size}, sign}, .tag = TYPE_BIGINT};
+    }
+
+    ValueTypeEx ValueObjectToValueTypeEx(const NativeRdb::ValueObject& object)
+    {
+        switch (object.GetType()) {
+            case NativeRdb::ValueObject::TYPE_NULL:
+                return ValueTypeEx {.tag = TYPE_NULL};
+            case NativeRdb::ValueObject::TYPE_INT: {
+                return ValueTypeEx {.integer = static_cast<int64_t>(object), .tag = TYPE_INT};
+            }
+            case NativeRdb::ValueObject::TYPE_DOUBLE: {
+                return ValueTypeEx {.dou = static_cast<double>(object), .tag = TYPE_DOU};
+            }
+            case NativeRdb::ValueObject::TYPE_STRING: {
+                return ValueTypeEx {.string = MallocCString(static_cast<std::string>(object)), .tag = TYPE_STR};
+            }
+            case NativeRdb::ValueObject::TYPE_BOOL: {
+                return ValueTypeEx {.boolean = static_cast<bool>(object), .tag = TYPE_BOOL};
+            }
+            case NativeRdb::ValueObject::TYPE_BLOB: {
+                return ValueObjectToValueTypeExBlob(object);
+            }
+            case NativeRdb::ValueObject::TYPE_ASSET: {
+                return ValueObjectToValueTypeExAsset(object);
+            }
+            case NativeRdb::ValueObject::TYPE_ASSETS: {
+                return ValueObjectToValueTypeExAssets(object);
+            }
+            case NativeRdb::ValueObject::TYPE_VECS: {
+                return ValueObjectToValueTypeExFloatArray(object);
+            }
+            case NativeRdb::ValueObject::TYPE_BIGINT: {
+                return ValueObjectToValueTypeExBigInt(object);
+            }
+            case NativeRdb::ValueObject::TYPE_BUTT:
+                return ValueTypeEx {.tag = 128};
+            default:
+                return ValueTypeEx {.tag = TYPE_NULL};
+        }
+    }
+
     CArrStr VectorToCArrStr(const std::vector<std::string> &devices)
     {
         CArrStr cArrStr{0};
@@ -241,6 +525,15 @@ namespace Relational {
             } else {
                 arr.push_back(std::string());
             }
+        }
+        return arr;
+    }
+
+    std::vector<uint8_t> CArrUI8ToVector(CArrUI8 carr)
+    {
+        std::vector<std::uint8_t> arr;
+        for (int i = 0; i < carr.size; i++) {
+            arr.push_back(carr.head[i]);
         }
         return arr;
     }

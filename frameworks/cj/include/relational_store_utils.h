@@ -23,7 +23,35 @@
 
 namespace OHOS {
 namespace Relational {
+#define ERROR_VALUE (-1)
+
 char *MallocCString(const std::string &origin);
+
+struct CArrUI8 {
+    uint8_t *head;
+    int64_t size;
+};
+
+struct CArrFloat {
+    float *head;
+    int64_t size;
+};
+
+struct CArrStr {
+    char **head;
+    int64_t size;
+};
+
+struct CryptoParam {
+    CArrUI8 encryptKey;
+    int32_t iterNum;
+    int32_t encryptAlgo;
+    int32_t hmacAlgo;
+    int32_t kdfAlgo;
+    uint32_t cryptoPageSize;
+};
+
+OHOS::NativeRdb::RdbStoreConfig::CryptoParam ToCCryptoParam(CryptoParam param);
 
 struct StoreConfig {
     char *name;
@@ -33,6 +61,24 @@ struct StoreConfig {
     char *customDir;
     bool isSearchable;
     bool autoCleanDirtyData;
+};
+
+struct StoreConfigEx {
+    char *name;
+    int32_t securityLevel;
+    bool encrypt;
+    char *dataGroupId;
+    char *customDir;
+    char *rootDir;
+    bool isSearchable;
+    bool autoCleanDirtyData;
+    bool allowRebuild;
+    bool isReadOnly;
+    CArrStr pluginLibs;
+    CryptoParam cryptoParam;
+    bool vector;
+    int32_t tokenizer;
+    bool persist;
 };
 
 struct Asset {
@@ -47,16 +93,6 @@ struct Asset {
 
 struct Assets {
     Asset *head;
-    int64_t size;
-};
-
-struct CArrUI8 {
-    uint8_t *head;
-    int64_t size;
-};
-
-struct CArrStr {
-    char **head;
     int64_t size;
 };
 
@@ -75,7 +111,38 @@ struct ValueType {
     uint8_t tag;
 };
 
-enum TagType { TYPE_NULL, TYPE_INT, TYPE_DOU, TYPE_STR, TYPE_BOOL, TYPE_BLOB, TYPE_ASSET, TYPE_ASSETS };
+struct BigInt {
+    CArrUI8 value;
+    bool sign;
+};
+
+struct ValueTypeEx {
+    int64_t integer;
+    double dou;
+    char *string;
+    bool boolean;
+    CArrUI8 uint8Array;
+    Asset asset;
+    Assets assets;
+    CArrFloat floatArray;
+    BigInt bigInt;
+    uint8_t tag;
+};
+
+std::vector<uint8_t> CArrUI8ToVector(CArrUI8 carr);
+
+enum TagType {
+    TYPE_NULL,
+    TYPE_INT,
+    TYPE_DOU,
+    TYPE_STR,
+    TYPE_BOOL,
+    TYPE_BLOB,
+    TYPE_ASSET,
+    TYPE_ASSETS,
+    TYPE_FLOATARR,
+    TYPE_BIGINT
+};
 
 struct ValuesBucket {
     char **key;
@@ -83,7 +150,15 @@ struct ValuesBucket {
     int64_t size;
 };
 
+struct ValuesBucketEx {
+    char **key;
+    ValueTypeEx *value;
+    int64_t size;
+};
+
 NativeRdb::ValueObject ValueTypeToValueObject(const ValueType &value);
+
+NativeRdb::ValueObject ValueTypeExToValueObject(const ValueTypeEx &value);
 
 struct CArrInt32 {
     int32_t *head;
@@ -97,6 +172,8 @@ struct CArrSyncResult {
 };
 
 ValueType ValueObjectToValueType(const NativeRdb::ValueObject &object);
+
+ValueTypeEx ValueObjectToValueTypeEx(const NativeRdb::ValueObject &object);
 
 struct RetPRIKeyType {
     int64_t integer;
