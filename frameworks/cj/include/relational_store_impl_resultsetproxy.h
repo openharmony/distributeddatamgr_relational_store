@@ -87,6 +87,10 @@ public:
 
     ValuesBucket GetRow(int32_t *rtnCode);
 
+    ValuesBucketEx GetRowEx(int32_t *rtnCode);
+
+    ValueTypeEx GetValue(int32_t columnIndex, int32_t* rtnCode);
+
     std::shared_ptr<NativeRdb::ResultSet> resultSetValue;
 
 private:
