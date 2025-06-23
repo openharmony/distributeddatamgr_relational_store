@@ -86,7 +86,7 @@ using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
 
@@ -127,7 +127,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam()) {
         return E_OK;
     }
@@ -213,7 +213,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
     return { E_OK, connection };
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
 void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
 {
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
@@ -1213,7 +1213,7 @@ int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.IsMemoryRdb()) {
         return E_OK;
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     return SecurityPolicy::SetSecurityLabel(config);
 #endif
     return E_OK;
@@ -1471,7 +1471,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     }
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     auto start = std::chrono::steady_clock::now();
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -1496,7 +1496,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, preCount);
 #else
     return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, false);
@@ -2543,7 +2543,7 @@ std::string RdbStoreImpl::GetName()
 
 void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     auto needSync = cloudInfo_->Change(table);
     if (!needSync) {
         return;
@@ -2633,7 +2633,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
             return ret;
         }
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
@@ -2642,7 +2642,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
     keyFiles.Unlock();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);
