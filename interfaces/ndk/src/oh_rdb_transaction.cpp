@@ -52,22 +52,22 @@ OH_RDB_TransOptions *OH_RdbTrans_CreateOptions(void)
     return value;
 }
 
-int OH_RdbTrans_DestroyOptions(OH_RDB_TransOptions *opitons)
+int OH_RdbTrans_DestroyOptions(OH_RDB_TransOptions *options)
 {
-    if (!IsValidRdbTransOptions(opitons)) {
+    if (!IsValidRdbTransOptions(options)) {
         return RDB_E_INVALID_ARGS;
     }
-    delete opitons;
+    delete options;
     return RDB_OK;
 }
 
-int OH_RdbTransOption_SetType(OH_RDB_TransOptions *opitons, OH_RDB_TransType type)
+int OH_RdbTransOption_SetType(OH_RDB_TransOptions *options, OH_RDB_TransType type)
 {
-    if (!IsValidRdbTransOptions(opitons) || type < RDB_TRANS_DEFERRED || type >= RDB_TRANS_BUTT) {
+    if (!IsValidRdbTransOptions(options) || type < RDB_TRANS_DEFERRED || type >= RDB_TRANS_BUTT) {
         LOG_ERROR("invalid options, type=%{public}d.", type);
         return RDB_E_INVALID_ARGS;
     }
-    opitons->type_ = type;
+    options->type_ = type;
     return RDB_OK;
 }
 

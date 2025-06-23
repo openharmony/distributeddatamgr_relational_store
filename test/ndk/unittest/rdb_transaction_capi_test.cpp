@@ -763,6 +763,10 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_011, TestSize.Level1)
     ret = OH_Value_GetType(value, &type);
     EXPECT_EQ(ret, RDB_OK);
     EXPECT_EQ(type, TYPE_FLOAT_VECTOR);
+    ret = OH_Value_GetType(nullptr, &type);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_GetType(value, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     size_t length;
     ret = OH_Value_GetFloatVectorCount(value, &length);
     EXPECT_EQ(ret, RDB_OK);
@@ -802,6 +806,26 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_012, TestSize.Level1)
 
     ret = OH_Value_PutNull(value);
     EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Value_PutNull(nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    double val = 1;
+    ret = OH_Value_PutReal(nullptr, val);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    ret = OH_Value_PutAsset(nullptr, asset);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_PutAsset(value, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(2);
+    ret = OH_Value_PutAssets(nullptr, assets, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_PutAssets(value, assets, 0);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    bool isNull;
+    ret = OH_Value_IsNull(nullptr, &isNull);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_IsNull(value, nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = OH_Value_GetReal(value, &realValue);
     EXPECT_EQ(ret, RDB_E_DATA_TYPE_NULL);
     ret = OH_Value_Destroy(value);
@@ -972,10 +996,162 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_017, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Transaction_capi_test_018
- * @tc.desc: Normal testCase of store transaction for OH_RdbTrans_InsertWithConflictResolution and OH_RdbTrans_Commit
+ * @tc.desc: Abnormal testCase of store transaction for OH_Value_PutBlob
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_018, TestSize.Level1)
+{
+    OH_Data_Value *value = OH_Value_Create();
+    ASSERT_NE(value, nullptr);
+    const unsigned char val[] = { 0x01, 0x02, 0x03 };
+    size_t length = sizeof(val) / sizeof(val[0]);
+    int ret = OH_Value_PutBlob(value, nullptr, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_PutBlob(nullptr, val, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    length = 4294967295;
+    ret = OH_Value_PutBlob(value, val, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_Destroy(value);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_019
+ * @tc.desc: Abnormal testCase of store transaction for OH_Value_PutFloatVector
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_019, TestSize.Level1)
+{
+    OH_Data_Value *value = OH_Value_Create();
+    ASSERT_NE(value, nullptr);
+    float floatArr[] = { 1.0, 2.0, 3.0 };
+    size_t length = 4294967295;
+    int ret = OH_Value_PutFloatVector(value, floatArr, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_PutFloatVector(nullptr, floatArr, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Value_Destroy(value);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_020
+ * @tc.desc: Abnormal testCase of store transaction for OH_Value_PutUnlimitedInt
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_020, TestSize.Level1)
+{
+    OH_Data_Value *value = OH_Value_Create();
+    ASSERT_NE(value, nullptr);
+    const uint64_t trueForm[] = { 0x01, 0x02, 0x03 };
+    size_t length = sizeof(trueForm) / sizeof(trueForm[0]);
+    int ret = OH_Value_PutUnlimitedInt(nullptr, 0, trueForm, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_PutUnlimitedInt(value, 2, trueForm, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_PutUnlimitedInt(value, 0, nullptr, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_PutUnlimitedInt(value, 0, trueForm, length);
+    EXPECT_EQ(ret, RDB_OK);
+
+    length = 4294967295;
+    ret = OH_Value_PutUnlimitedInt(nullptr, 0, nullptr, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_Destroy(nullptr);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Value_Destroy(value);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_021
+ * @tc.desc: Abnormal testCase of store transaction for OH_Data_Asset_CreateMultiple
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_021, TestSize.Level1)
+{
+    OH_Data_Value *value = OH_Value_Create();
+    ASSERT_NE(value, nullptr);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(0);
+    ASSERT_EQ(assets, nullptr);
+    int ret = OH_Data_Asset_DestroyMultiple(assets, 2);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_022
+ * @tc.desc: Abnormal testCase of store transaction for OH_Data_Asset_CreateMultiple
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_022, TestSize.Level1)
+{
+    uint32_t count = 4294967295;
+    OH_Data_Value *value = OH_Value_Create();
+    ASSERT_NE(value, nullptr);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(count);
+    ASSERT_EQ(assets, nullptr);
+    // 2 elements in assets
+    int ret = OH_Data_Asset_DestroyMultiple(assets, count);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_023
+ * @tc.desc: Abnormal testCase of store transaction for OH_Values_PutAssets
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_023, TestSize.Level1)
+{
+    OH_Data_Values *values = OH_Values_Create();
+    ASSERT_NE(values, nullptr);
+    // 2 elements in assets
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(2);
+    ASSERT_NE(assets, nullptr);
+    int ret = OH_Data_Asset_SetName(assets[0], "name1");
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Data_Asset_SetName(assets[1], "name2");
+    EXPECT_EQ(ret, RDB_OK);
+    // 2 elements in assets
+    ret = OH_Values_PutAssets(nullptr, assets, 2);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    // 2 elements in assets
+    ret = OH_Values_PutAssets(values, nullptr, 2);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    uint32_t length = 4294967295;
+
+    ret = OH_Values_PutAssets(values, assets, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    // 2 elements in assets
+    ret = OH_Values_PutAssets(values, assets, 2);
+    EXPECT_EQ(ret, RDB_OK);
+
+    size_t outLen;
+    ret = OH_Values_GetAssets(values, 1, assets, length, &outLen);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Data_Asset_DestroyMultiple(assets, length);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+
+    ret = OH_Data_Asset_DestroyMultiple(assets, 2);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Values_Destroy(values);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_024
+ * @tc.desc: Normal testCase of store transaction for OH_RdbTrans_InsertWithConflictResolution and OH_RdbTrans_Commit
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_024, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
     const char *table = "test";

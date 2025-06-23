@@ -631,3 +631,49 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_02, TestSize.Level1)
     resultSet->Close();
     store2 = nullptr;
 }
+
+/**
+ * @tc.name: KeyCorruptTest
+ * @tc.desc: test save key data to file failed
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptTest, KeyCorruptTest_03, TestSize.Level0)
+{
+    RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config1.SetEncryptStatus(true);
+    config1.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper1;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
+    ASSERT_NE(nullptr, store1);
+    ASSERT_EQ(E_OK, errCode);
+    store1 = nullptr;
+
+    RdbSecurityManager::KeyFiles keyFile(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    std::string file = keyFile.GetKeyFile(RdbSecurityManager::KeyFileType::PUB_KEY_FILE);
+    ASSERT_TRUE(OHOS::FileExists(file));
+    std::vector<char> keyfileData;
+    ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfileData));
+
+    std::vector<char> keyCorrupted = keyfileData;
+    // fill bytes of keyfile index 10 to 19 with 0
+    for (size_t i = 10; i < 20 && i < keyCorrupted.size(); ++i) {
+        keyCorrupted[i] = 0;
+    }
+    ASSERT_TRUE(OHOS::SaveBufferToFile(file, keyCorrupted));
+
+    std::string chattrAddiCmd = "chattr +i " + file;
+    ASSERT_EQ(E_OK, system(chattrAddiCmd.c_str()));
+
+    RdbStoreConfig config2(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
+    config2.SetEncryptStatus(true);
+    config2.SetBundleName("com.example.TestEncrypt1");
+    EncryptTestOpenCallback helper2;
+    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
+    ASSERT_NE(nullptr, store2);
+    ASSERT_EQ(E_OK, errCode);
+
+    // Enable the wal file operation.
+    std::string chattrSubiCmd = "chattr -i " + file;
+    ASSERT_EQ(E_OK, system(chattrSubiCmd.c_str()));
+}
