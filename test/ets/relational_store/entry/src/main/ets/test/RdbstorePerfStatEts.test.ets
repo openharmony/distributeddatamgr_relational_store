@@ -615,6 +615,10 @@ export default function PerfStatEtsTest() {
      */
     it('testRdbStorePerfStat_0023',  0, async  (done:Function) => {
       console.log(TAG + "************* testRdbStorePerfStat_0023 start *************");
+      if (!relationalStore.isVectorSupported()) {
+        done()
+        return
+      }
       let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
         expect().assertFail();
       };
@@ -640,6 +644,10 @@ export default function PerfStatEtsTest() {
      */
     it('testRdbStorePerfStat_0024',  0, async  (done:Function) => {
       console.log(TAG + "************* testRdbStorePerfStat_0024 start *************");
+      if (!relationalStore.isVectorSupported()) {
+        done()
+        return
+      }
       let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
         expect().assertFail();
       };
