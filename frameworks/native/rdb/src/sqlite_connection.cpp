@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <future>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -32,6 +31,7 @@
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
+#include "rdb_icu_manager.h"
 #include "rdb_local_db_observer.h"
 #include "rdb_security_manager.h"
 #include "rdb_sql_log.h"
@@ -77,9 +77,11 @@ __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 __attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
+__attribute__((used)) const int32_t SqliteConnection::regDbClientCleaner_ =
+    GlobalResource::RegisterClean(GlobalResource::DB_CLIENT, SqliteConnection::ClientCleanUp);
+__attribute__((used)) const int32_t SqliteConnection::regOpenSSLCleaner_ =
+    GlobalResource::RegisterClean(GlobalResource::OPEN_SSL, SqliteConnection::OpenSSLCleanUp);
 
-void *SqliteConnection::ICU_HANDLE = nullptr;
-std::mutex SqliteConnection::mutex_;
 std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const RdbStoreConfig &config, bool isWrite)
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
@@ -1043,18 +1045,7 @@ void SqliteConnection::LimitPermission(const RdbStoreConfig &config, const std::
 
 int SqliteConnection::ConfigLocale(const std::string &localeStr)
 {
-    auto handle = GetICUHandle();
-    if (handle == nullptr) {
-        LOG_ERROR("dlopen(librelational_store_icu) failed(%{public}d)!", errno);
-        return E_NOT_SUPPORT;
-    }
-    auto func = reinterpret_cast<int32_t (*)(sqlite3 *, const std::string &str)>(dlsym(handle, "ConfigICULocal"));
-    if (func == nullptr) {
-        LOG_ERROR("dlsym(librelational_store_icu) failed(%{public}d)!", errno);
-        return E_ERROR;
-    }
-    func(dbHandle_, localeStr);
-    return E_OK;
+    return RdbICUManager::GetInstance().ConfigLocale(dbHandle_, localeStr);
 }
 
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
@@ -1609,36 +1600,6 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     return false;
 }
 
-int32_t SqliteConnection::ICUCleanUp()
-{
-    std::lock_guard<decltype(mutex_)> lock(mutex_);
-    if (ICU_HANDLE == nullptr) {
-        return E_OK;
-    }
-    auto cleanUp = reinterpret_cast<int32_t (*)()>(dlsym(ICU_HANDLE, "CleanUp"));
-    if (cleanUp == nullptr) {
-        LOG_ERROR("dlsym(CleanUp) failed(%{public}d)!", errno);
-        return E_ERROR;
-    }
-    auto code = cleanUp();
-    if (code == E_OK) {
-        dlclose(ICU_HANDLE);
-        ICU_HANDLE = nullptr;
-    }
-    return code;
-}
-
-void *SqliteConnection::GetICUHandle()
-{
-    std::lock_guard<decltype(mutex_)> lock(mutex_);
-    if (ICU_HANDLE != nullptr) {
-        return ICU_HANDLE;
-    }
-    ICU_HANDLE = dlopen("librelational_store_icu.z.so", RTLD_LAZY);
-    GlobalResource::RegisterClean(GlobalResource::ICU, ICUCleanUp);
-    return ICU_HANDLE;
-}
-
 void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath)
 {
     if (pCtx == nullptr || dbPath == nullptr) {
@@ -1693,7 +1654,7 @@ void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
         .xLogFullCallback = nullptr,
         .callbackCtx = nullptr,
     };
-    
+
     int err = sqlite3_db_config(dbHandle, SQLITE_DBCONFIG_ENABLE_BINLOG, &binLogConfig);
     if (err != SQLITE_OK) {
         LOG_ERROR("set binlog config error. err=%{public}d, errno=%{public}d", err, errno);
@@ -1730,7 +1691,7 @@ int SqliteConnection::SetBinlog()
         .xLogFullCallback = &BinlogOnFullFunc,
         .callbackCtx = this,
     };
-    
+
     int err = sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, &binLogConfig);
     if (err != SQLITE_OK) {
         LOG_ERROR("set binlog error. err=%{public}d, errno=%{public}d", err, errno);
@@ -1822,6 +1783,18 @@ std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
 int SqliteConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
 {
     return E_NOT_SUPPORT;
+}
+
+int32_t SqliteConnection::ClientCleanUp()
+{
+    Clean(false);
+    return E_OK;
+}
+
+int32_t SqliteConnection::OpenSSLCleanUp()
+{
+    Clean(true);
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS

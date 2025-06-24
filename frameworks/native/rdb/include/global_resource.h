@@ -20,6 +20,8 @@ namespace NativeRdb {
 class GlobalResource {
 public:
     enum CleanType {
+        CLEAN_HEAD = 0,
+        DB_CLIENT = CLEAN_HEAD,
         OPEN_SSL,
         ICU,
         OBS,
