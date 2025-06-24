@@ -288,6 +288,12 @@ group("fuzztest") {
     "fuzztest/connection_test_ut2fuzz:fuzztest",
     "fuzztest/rdb_attach_test_ut2fuzz:fuzztest",
     "fuzztest/rdb_bigint_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_callback_icu_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_corrupt_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_delete_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_distributed_test_ut2fuzz:fuzztest",
+    "fuzztest/rdb_double_write_test_ut2fuzz:fuzztest",
+
   ]
 }
 
