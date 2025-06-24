@@ -1019,7 +1019,7 @@ describe('rdbStoreRdExecuteTest', function () {
         }
 
         try {
-            await store?.execute("create index cluster_index on cluster_vec_10 using IVFCLUSTER(repr COSINE);");
+            await store?.execute("create table cluster_vec_10 (id int PRIMARY KEY, repr floatvector(256));");
         } catch (e) {
             console.error(TAG + `create table cluster_vec_10 failed. errcode: ${e.code}`);
         }
