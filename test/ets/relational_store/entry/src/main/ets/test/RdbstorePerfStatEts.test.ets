@@ -607,7 +607,6 @@ export default function PerfStatEtsTest() {
       console.log(TAG + "************* testRdbStorePerfStat_0022 end *************");
     })
 
-
     /**
      * @tc.name Abnormal case for perfStat
      * @tc.number testRdbStorePerfStat_0023
