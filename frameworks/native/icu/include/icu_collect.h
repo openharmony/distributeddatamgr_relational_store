@@ -23,7 +23,7 @@ namespace OHOS::NativeRdb {
 
 class ICUCollect {
 public:
-    static int32_t Local(sqlite3 *dbHandle, const std::string &str);
+    static int32_t Locale(sqlite3 *dbHandle, const std::string &str);
 
 private:
     static int Collate8Compare(void *p, int n1, const void *v1, int n2, const void *v2);
