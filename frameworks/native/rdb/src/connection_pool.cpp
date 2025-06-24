@@ -264,7 +264,7 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
     auto interval = duration_cast<milliseconds>(seconds(time));
     auto start = steady_clock::now();
     auto [res, writerNodes] = writers_.AcquireAll(interval);
-    if (!res) {
+    if (!res || writerNodes.empty()) {
         return {};
     }
     writer = Convert2AutoConn(writerNodes.front());
