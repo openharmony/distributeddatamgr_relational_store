@@ -143,3 +143,8 @@ __attribute__((visibility("default"))) DistributedDB::DBStatus CleanDeletedData(
 {
     return DBStatus::OK;
 }
+
+__attribute__((visibility("default"))) void Clean([[gnu::unused]] bool isOpenSslClean)
+{
+    return;
+}

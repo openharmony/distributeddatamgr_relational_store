@@ -44,6 +44,8 @@ public:
     static int32_t Delete(const std::string &path);
     static int32_t Repair(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
+    static int32_t ClientCleanUp();
+    static int32_t OpenSSLCleanUp();
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~SqliteConnection();
     int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
@@ -127,8 +129,6 @@ private:
     int RegisterClientObs();
     int RegisterHookIfNecessary();
     void ReplayBinlog(const RdbStoreConfig &config);
-    static void *GetICUHandle();
-    static int32_t ICUCleanUp();
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
@@ -154,12 +154,12 @@ private:
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
-    static std::mutex mutex_;
-    static void *ICU_HANDLE;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
+    static const int32_t regDbClientCleaner_;
+    static const int32_t regOpenSSLCleaner_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;

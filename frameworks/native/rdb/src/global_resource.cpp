@@ -15,6 +15,7 @@
 
 #define LOG_TAG "global_resource"
 #include "global_resource.h"
+
 #include "rdb_errno.h"
 
 namespace OHOS::NativeRdb {
@@ -36,7 +37,8 @@ int32_t GlobalResource::RegisterClean(CleanType type, Cleaner clean)
 
 int32_t GlobalResource::CleanUp(int32_t type)
 {
-    if (type < static_cast<int32_t>(GlobalResource::ICU) || type >= static_cast<int32_t>(GlobalResource::CLEAN_BUTT)) {
+    if (type < static_cast<int32_t>(GlobalResource::CLEAN_HEAD) ||
+        type >= static_cast<int32_t>(GlobalResource::CLEAN_BUTT)) {
         return E_INVALID_ARGS;
     }
 
