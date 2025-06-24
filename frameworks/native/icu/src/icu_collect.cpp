@@ -25,11 +25,11 @@
 #include "rdb_visibility.h"
 #include "sqlite3.h"
 
-API_EXPORT int32_t ConfigICULocal(sqlite3 *, const std::string &str) asm("ConfigICULocal");
+API_EXPORT int32_t ConfigICULocale(sqlite3 *, const std::string &str) asm("ConfigICULocale");
 API_EXPORT int32_t CleanUp() asm("CleanUp");
-int32_t ConfigICULocal(sqlite3 *handle, const std::string &str)
+int32_t ConfigICULocale(sqlite3 *handle, const std::string &str)
 {
-    return OHOS::NativeRdb::ICUCollect::Local(handle, str);
+    return OHOS::NativeRdb::ICUCollect::Locale(handle, str);
 }
 
 int32_t CleanUp()
@@ -70,7 +70,7 @@ void ICUCollect::LocalizedCollatorDestroy(void *collator)
     ucol_close(reinterpret_cast<UCollator *>(collator));
 }
 
-int32_t ICUCollect::Local(sqlite3 *dbHandle, const std::string &str)
+int32_t ICUCollect::Locale(sqlite3 *dbHandle, const std::string &str)
 {
     UErrorCode status = U_ZERO_ERROR;
     SetHwIcuDirectory();
