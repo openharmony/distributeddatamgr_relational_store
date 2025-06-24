@@ -246,7 +246,7 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
         ThrowBusinessError(env, E_INNER_ERROR, "RdbStore uninitialized.");
         return nullptr;
     }
-    auto resultsetProxy = new ResultSetProxy();
+    auto resultsetProxy = std::make_shared<ResultSetProxy>();
     resultsetProxy->resultset = proxy->nativeRdb->QueryByStep(sqlStr, bindArgs);
     if (resultsetProxy->resultset == nullptr) {
         LOG_ERROR("QueryByStep failed.");

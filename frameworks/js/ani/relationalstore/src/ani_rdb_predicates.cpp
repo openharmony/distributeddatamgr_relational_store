@@ -32,7 +32,7 @@ using namespace OHOS::Rdb;
 
 void InitNativePredicates(ani_env *env, ani_object object, ani_string tableName)
 {
-    auto proxy = new PredicatesProxy();
+    auto proxy = std::make_shared<PredicatesProxy>();
     auto tname = AniStringUtils::ToStd(env, tableName);
     proxy->predicates = std::make_shared<RdbPredicates>(tname);
 
