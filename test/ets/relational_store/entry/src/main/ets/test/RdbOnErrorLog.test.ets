@@ -245,6 +245,54 @@ export default function rdbStoreSqliteErrorOccurredTest() {
       done();
       console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0005 end *************");
     })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0006
+     * @tc.name Abormal test case of OnErrorlog
+     * @tc.desc 1.Insert data
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0006',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0006 start *************");
+      let STORE_CONFIG1: data_relationalStore.StoreConfig = {
+        name: 'rdbStore2.db',
+        securityLevel: data_relationalStore.SecurityLevel.S1,
+        vector: true,
+      };
+      let rdbStore1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1)
+      try{
+        rdbStore1.on('sqliteErrorOccurred', exceptionMessage => {
+          expect().assertFail();
+        });
+      } catch (err){
+        expect(err.code).assertEqual("801");
+        done()
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0006 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0007
+     * @tc.name Abnormal test case of offErrorlog
+     * @tc.desc 1.Insert data
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0007',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0007 start *************");
+      let STORE_CONFIG1: data_relationalStore.StoreConfig = {
+        name: 'rdbStore2.db',
+        securityLevel: data_relationalStore.SecurityLevel.S1,
+        vector: true,
+      };
+      let rdbStore1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1)
+      try{
+        rdbStore1.off('sqliteErrorOccurred');
+      } catch (err){
+        expect(err.code).assertEqual("801");
+        console.error(`mmy, message is ${err.message}  code  ${err.code}`);
+        done()
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0007 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
   })
 }
