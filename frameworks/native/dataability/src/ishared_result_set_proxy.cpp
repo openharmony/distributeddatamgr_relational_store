@@ -40,16 +40,12 @@ std::shared_ptr<AbsSharedResultSet> ISharedResultSetProxy::CreateProxy(MessagePa
         return nullptr;
     }
     sptr<ISharedResultSet> result = iface_cast<ISharedResultSet>(remoter);
-    AppDataFwk::SharedBlock *block = nullptr;
     if (result->GetBlock() == nullptr) {
+        AppDataFwk::SharedBlock *block = nullptr;
         AppDataFwk::SharedBlock::ReadMessageParcel(parcel, block);
         result->SetBlock(block);
     }
-    return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result, block](AbsSharedResultSet *) {
-        if (block != nullptr) {
-            delete block;
-        }
-    });
+    return std::shared_ptr<AbsSharedResultSet>(result.GetRefPtr(), [keep = result](AbsSharedResultSet *) {});
 }
 
 int ISharedResultSetProxy::GetRowCount(int &count)
