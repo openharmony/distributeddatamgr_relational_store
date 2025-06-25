@@ -51,6 +51,9 @@ public:
 
     bool operator==(std::shared_ptr<RdbStoreObserver> observer)
     {
+        if (observer == nullptr) {
+            return false;
+        }
         return observer_ == observer;
     }
 
@@ -260,10 +263,14 @@ bool ObsMgrAdapterImpl::CleanReleaseObs(bool force)
                 it = releaseObs_.erase(it);
             }
         }
+        if (!force) {
+            break;
+        }
         retry++;
-    } while (force && retry < MAX_RETRY && !releaseObs_.empty());
-    if (!releaseObs_.empty()) {
-        LOG_ERROR("Failed to release obs, size:%{public}zu", releaseObs_.size());
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    } while (retry < MAX_RETRY && !releaseObs_.empty());
+    if (force && !releaseObs_.empty()) {
+        LOG_ERROR("Failed to release obs, size:%{public}zu, retry:%{public}d", releaseObs_.size(), retry);
         return false;
     }
     return true;
