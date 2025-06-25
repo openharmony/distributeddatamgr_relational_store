@@ -253,7 +253,7 @@ export default function rdbStoreSqliteErrorOccurredTest() {
      */
     it('testRdbStoreOnsqliteErrorOccurred0006',  0, async  (done:Function) => {
       console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0006 start *************");
-      if (!relationalStore.isVectorSupported()) {
+      if (!data_relationalStore.isVectorSupported()) {
         done()
         return
       }
@@ -281,7 +281,7 @@ export default function rdbStoreSqliteErrorOccurredTest() {
      */
     it('testRdbStoreOnsqliteErrorOccurred0007',  0, async  (done:Function) => {
       console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0007 start *************");
-      if (!relationalStore.isVectorSupported()) {
+      if (!data_relationalStore.isVectorSupported()) {
         done()
         return
       }
