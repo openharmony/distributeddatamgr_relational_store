@@ -75,6 +75,10 @@ bool RdbHelper::Destroy(const DestroyOption &option)
         LOG_WARN("CleanUp OPEN_SSL failed");
         ret = false;
     }
+    if (GlobalResource::CleanUp(GlobalResource::DB_CLIENT) != E_OK) {
+        LOG_WARN("CleanUp DB_CLIENT failed");
+        ret = false;
+    }
     if (GlobalResource::CleanUp(GlobalResource::OBS) != E_OK) {
         LOG_WARN("CleanUp OBS failed");
         ret = false;

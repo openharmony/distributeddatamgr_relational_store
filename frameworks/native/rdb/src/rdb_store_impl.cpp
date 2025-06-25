@@ -34,10 +34,8 @@
 #include "connection_pool.h"
 #include "delay_notify.h"
 #include "directory_ex.h"
-#include "global_resource.h"
 #include "knowledge_schema_helper.h"
 #include "logger.h"
-#include "obs_mgr_adapter.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -55,7 +53,6 @@
 #include "relational_store_client.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
-#include "sqlite_statement.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
 #include "suspender.h"
@@ -95,8 +92,6 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 constexpr int64_t TIME_OUT = 1500;
-std::mutex ObsManger::mutex_;
-void *ObsManger::handle_;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -597,123 +592,6 @@ int RdbStoreImpl::SubscribeLocal(const SubscribeOption &option, std::shared_ptr<
 
     localObservers_[option.event].push_back(std::make_shared<RdbStoreLocalObserver>(observer));
     return E_OK;
-}
-
-ObsManger::~ObsManger()
-{
-    if (handle_ == nullptr) {
-        return;
-    }
-    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle_, "Unregister"));
-    if (func == nullptr) {
-        LOG_ERROR("dlsym(Unregister) failed(%{public}d)!", errno);
-        return;
-    }
-    obs_.ForEach([func](const auto &key, auto &value) {
-        for (auto &obs : value) {
-            func(key, obs);
-        }
-        return !value.empty();
-    });
-}
-
-void *ObsManger::GetHandle()
-{
-    std::lock_guard<decltype(mutex_)> lock(mutex_);
-    if (handle_ != nullptr) {
-        return handle_;
-    }
-    handle_ = dlopen("librdb_obs_mgr_adapter.z.so", RTLD_LAZY);
-    if (handle_ == nullptr) {
-        LOG_ERROR("dlopen(librdb_obs_mgr_adapter) failed(%{public}d)!", errno);
-    } else {
-        GlobalResource::RegisterClean(GlobalResource::OBS, CleanUp);
-    }
-    return handle_;
-}
-
-int32_t ObsManger::CleanUp()
-{
-    std::lock_guard<decltype(mutex_)> lock(mutex_);
-    auto cleanUp = reinterpret_cast<CleanFunc>(dlsym(handle_, "CleanUp"));
-    if (cleanUp == nullptr) {
-        LOG_ERROR("dlsym(CleanUp) failed!");
-        return E_ERROR;
-    }
-    if (!cleanUp()) {
-        return E_ERROR;
-    }
-    dlclose(handle_);
-    handle_ = nullptr;
-    return E_OK;
-}
-
-int32_t ObsManger::Register(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)
-{
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return E_ERROR;
-    }
-    auto func = reinterpret_cast<RegisterFunc>(dlsym(handle, "Register"));
-    if (func == nullptr) {
-        LOG_ERROR("dlsym(Register) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
-        return E_ERROR;
-    }
-    auto code = func(uri, obs);
-    if (code == E_OK) {
-        obs_.Compute(uri, [obs](const auto &key, auto &value) {
-            value.push_back(obs);
-            return !value.empty();
-        });
-        return E_OK;
-    }
-    return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
-}
-
-int32_t ObsManger::Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)
-{
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return E_ERROR;
-    }
-    auto func = reinterpret_cast<UnregisterFunc>(dlsym(handle, "Unregister"));
-    if (func == nullptr) {
-        LOG_ERROR("dlsym(Unregister) failed(%{public}d)!, uri:%{public}s", errno, SqliteUtils::Anonymous(uri).c_str());
-        return E_ERROR;
-    }
-    auto code = func(uri, obs);
-    if (code != E_OK) {
-        return code;
-    }
-    obs_.Compute(uri, [obs](const auto &key, auto &value) {
-        if (obs == nullptr) {
-            value.clear();
-        }
-        for (auto it = value.begin(); it != value.end();) {
-            if (*it == obs) {
-                value.erase(it);
-                break;
-            }
-            ++it;
-        }
-        return !value.empty();
-    });
-    return code;
-}
-
-int32_t ObsManger::Notify(const std::string &uri)
-{
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return E_ERROR;
-    }
-    auto func = reinterpret_cast<NotifyFunc>(dlsym(handle, "NotifyChange"));
-    if (func == nullptr) {
-        LOG_ERROR("dlsym(NotifyChange) failed(%{public}d)!, uri:%{public}s",
-            errno, SqliteUtils::Anonymous(uri).c_str());
-        return E_ERROR;
-    }
-    return func(uri);
 }
 
 int RdbStoreImpl::SubscribeLocalShared(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)

@@ -27,6 +27,7 @@
 #include "connection_pool.h"
 #include "knowledge_schema_helper.h"
 #include "rdb_errno.h"
+#include "rdb_obs_manager.h"
 #include "rdb_open_callback.h"
 #include "rdb_service.h"
 #include "rdb_store.h"
@@ -62,26 +63,6 @@ public:
 
 private:
     std::weak_ptr<RdbStoreObserver> observer_;
-};
-
-class ObsManger {
-public:
-    ObsManger() = default;
-    virtual ~ObsManger();
-    int32_t Register(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> rdbStoreObserver);
-    int32_t Unregister(const std::string &uri, std::shared_ptr<DistributedRdb::RdbStoreObserver> rdbStoreObserver);
-    int32_t Notify(const std::string &uri);
-
-private:
-    using RegisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
-    using UnregisterFunc = int32_t (*)(const std::string &, std::shared_ptr<RdbStoreObserver>);
-    using NotifyFunc = int32_t (*)(const std::string &);
-    using CleanFunc = bool (*)();
-    static void *GetHandle();
-    static int32_t CleanUp();
-    static std::mutex mutex_;
-    static void *handle_;
-    ConcurrentMap<std::string, std::list<std::shared_ptr<DistributedRdb::RdbStoreObserver>>> obs_;
 };
 
 class RdbStoreImpl : public RdbStore {
@@ -287,7 +268,7 @@ private:
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();
-    ObsManger obsManger_;
+    RdbObsManager obsManger_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreLocalObserver>>> localObservers_;
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
