@@ -479,7 +479,6 @@ export default function PerfStatEtsTest() {
       rdbStore?.on('perfStat',observer1)
 
       const rdbTrans = await rdbStore?.createTransaction();
-      console.info(`mmy 4`);
       const valueBucket1: relationalStore.ValuesBucket = {
         'name': 'zhangsan',
         'age': 18,
@@ -605,6 +604,68 @@ export default function PerfStatEtsTest() {
       await rdbTrans?.batchInsert("test", valueBuckets);
       await rdbTrans?.commit();
       console.log(TAG + "************* testRdbStorePerfStat_0022 end *************");
+    })
+
+    /**
+     * @tc.name Abnormal case for perfStat
+     * @tc.number testRdbStorePerfStat_0023
+     * @tc.desc 1. Register callback for perfStat
+     */
+    it('testRdbStorePerfStat_0023',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0023 start *************");
+      if (!relationalStore.isVectorSupported()) {
+        done()
+        return
+      }
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        expect().assertFail();
+      };
+      let STORE_CONFIG1: relationalStore.StoreConfig = {
+        name: 'rdbStore2.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        vector: true,
+      };
+      let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1)
+      try{
+        rdbStore1.on('perfStat', observer);
+        expect().assertFail();
+        done();
+      } catch (err){
+        expect(err.code).assertEqual("801");
+        done()
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0023 end *************");
+    })
+
+    /**
+     * @tc.name Abnormal case for perfStat
+     * @tc.number testRdbStorePerfStat_0024
+     * @tc.desc 1. Register callback for perfStat
+     */
+    it('testRdbStorePerfStat_0024',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0024 start *************");
+      if (!relationalStore.isVectorSupported()) {
+        done()
+        return
+      }
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        expect().assertFail();
+      };
+      let STORE_CONFIG1: relationalStore.StoreConfig = {
+        name: 'rdbStore2.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        vector: true,
+      };
+      let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1)
+      try{
+        rdbStore1.off('perfStat', observer);
+        expect().assertFail();
+        done();
+      } catch (err){
+        expect(err.code).assertEqual("801");
+        done()
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0024 end *************");
     })
   })
 }
