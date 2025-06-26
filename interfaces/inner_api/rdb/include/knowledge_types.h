@@ -63,10 +63,6 @@ struct RdbKnowledgeProcess {
         int imageEmbeddingMaxCnt{DEFAULT_IMAGE_EMBEDDING_MAX_CNT};
         int parseFileMaxCnt{DEFAULT_PARSE_FILE_MAX_CNT};
     } perRecordLimit;
-    bool IsEmpty() const
-    {
-        return processPipeline.empty();
-    }
 };
 
 struct RdbKnowledgeSchema {
