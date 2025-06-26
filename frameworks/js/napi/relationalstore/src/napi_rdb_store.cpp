@@ -1681,6 +1681,9 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
 
 napi_value RdbStoreProxy::OnPerfStat(napi_env env, size_t argc, napi_value *argv)
 {
+    RDB_NAPI_ASSERT(env, this->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+    int32_t dbType = this->GetInstance()->GetDbType();
+    RDB_NAPI_ASSERT(env, dbType == DB_SQLITE, std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("perfStat", "function"));
@@ -1701,6 +1704,9 @@ napi_value RdbStoreProxy::OnPerfStat(napi_env env, size_t argc, napi_value *argv
 
 napi_value RdbStoreProxy::OffPerfStat(napi_env env, size_t argc, napi_value *argv)
 {
+    RDB_NAPI_ASSERT(env, this->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+    int32_t dbType = this->GetInstance()->GetDbType();
+    RDB_NAPI_ASSERT(env, dbType == DB_SQLITE, std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     napi_valuetype type;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
@@ -1728,6 +1734,9 @@ napi_value RdbStoreProxy::OffPerfStat(napi_env env, size_t argc, napi_value *arg
 
 napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv)
 {
+    RDB_NAPI_ASSERT(env, this->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+    int32_t dbType = this->GetInstance()->GetDbType();
+    RDB_NAPI_ASSERT(env, dbType == DB_SQLITE, std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("sqliteErrorOccurred", "function"));
@@ -1748,6 +1757,9 @@ napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv
 
 napi_value RdbStoreProxy::OffErrorLog(napi_env env, size_t argc, napi_value *argv)
 {
+    RDB_NAPI_ASSERT(env, this->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+    int32_t dbType = this->GetInstance()->GetDbType();
+    RDB_NAPI_ASSERT(env, dbType == DB_SQLITE, std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     napi_valuetype type;
     napi_typeof(env, argv[0], &type);
     RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
