@@ -71,7 +71,7 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
         ThrowBusinessError(env, E_INNER_ERROR, "ANI create class.");
         return nullptr;
     }
-    ani_status status = AniObjectUtils::Wrap(env, obj, proxy);
+    ani_status status = AniObjectUtils::Wrap(env, obj, proxy.get());
     if (ANI_OK != status) {
         LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'", className);
         ThrowBusinessError(env, E_INNER_ERROR, "ANI SetField.");
