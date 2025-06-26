@@ -263,7 +263,7 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
         ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.");
         return nullptr;
     }
-    ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy);
+    ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy.get());
     if (ANI_OK != status) {
         LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'.", className);
         ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet failed.");
