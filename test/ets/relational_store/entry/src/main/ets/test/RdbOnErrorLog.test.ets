@@ -299,7 +299,6 @@ export default function rdbStoreSqliteErrorOccurredTest() {
         done();
       } catch (err){
         expect(err.code).assertEqual("801");
-        console.error(`mmy, message is ${err.message}  code  ${err.code}`);
         done()
       }
       console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0007 end *************");

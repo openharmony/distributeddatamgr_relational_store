@@ -479,7 +479,6 @@ export default function PerfStatEtsTest() {
       rdbStore?.on('perfStat',observer1)
 
       const rdbTrans = await rdbStore?.createTransaction();
-      console.info(`mmy 4`);
       const valueBucket1: relationalStore.ValuesBucket = {
         'name': 'zhangsan',
         'age': 18,
