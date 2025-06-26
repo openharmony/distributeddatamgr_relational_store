@@ -629,6 +629,8 @@ export default function PerfStatEtsTest() {
       let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1)
       try{
         rdbStore1.on('perfStat', observer);
+        expect().assertFail();
+        done();
       } catch (err){
         expect(err.code).assertEqual("801");
         done()
@@ -658,6 +660,8 @@ export default function PerfStatEtsTest() {
       let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1)
       try{
         rdbStore1.off('perfStat', observer);
+        expect().assertFail();
+        done();
       } catch (err){
         expect(err.code).assertEqual("801");
         done()

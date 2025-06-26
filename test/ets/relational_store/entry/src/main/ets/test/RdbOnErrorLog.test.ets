@@ -267,6 +267,8 @@ export default function rdbStoreSqliteErrorOccurredTest() {
         rdbStore1.on('sqliteErrorOccurred', exceptionMessage => {
           expect().assertFail();
         });
+        expect().assertFail();
+        done();
       } catch (err){
         expect(err.code).assertEqual("801");
         done()
@@ -293,6 +295,8 @@ export default function rdbStoreSqliteErrorOccurredTest() {
       let rdbStore1 = await data_relationalStore.getRdbStore(context, STORE_CONFIG1)
       try{
         rdbStore1.off('sqliteErrorOccurred');
+        expect().assertFail();
+        done();
       } catch (err){
         expect(err.code).assertEqual("801");
         console.error(`mmy, message is ${err.message}  code  ${err.code}`);
