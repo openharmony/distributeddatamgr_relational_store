@@ -740,17 +740,19 @@ int32_t RdbSecurityManager::KeyFiles::InitKeyPath()
     return E_OK;
 }
 
-int32_t RdbSecurityManager::KeyFiles::Lock()
+int32_t RdbSecurityManager::KeyFiles::Lock(bool isBlock)
 {
     if (lockFd_ < 0) {
         return E_INVALID_FILE_PATH;
     }
     int32_t errCode;
+    int lockType = isBlock ? LOCK_EX : LOCK_EX | LOCK_NB;
     do {
-        errCode = flock(lockFd_, LOCK_EX);
+        errCode = flock(lockFd_, lockType);
     } while (errCode < 0 && errno == EINTR);
     if (errCode < 0) {
-        LOG_WARN("lock failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
+        LOG_WARN("lock failed, type:%{public}d, errno:%{public}d, dir:%{public}s.", lockType, errno,
+            SqliteUtils::Anonymous(lock_).c_str());
         return E_ERROR;
     }
     return E_OK;

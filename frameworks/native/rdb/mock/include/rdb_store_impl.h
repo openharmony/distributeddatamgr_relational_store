@@ -155,6 +155,13 @@ private:
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
+    void SwitchOver(bool isUseReplicaDb);
+    bool TryAsyncRepair();
+    bool IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath);
+    int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
+    int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
+        std::shared_ptr<ConnectionPool> pool);
+    static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
 
@@ -169,6 +176,7 @@ private:
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
+    bool isUseReplicaDb_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
