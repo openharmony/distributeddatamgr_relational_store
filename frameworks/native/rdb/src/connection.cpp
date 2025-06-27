@@ -22,6 +22,7 @@ static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
 static Connection::Repairer g_repairers[DB_BUTT] = { nullptr, nullptr };
 static Connection::Deleter g_fileDeleter[DB_BUTT] = { nullptr, nullptr };
 static Connection::Collector g_collectors[DB_BUTT] = { nullptr, nullptr };
+static Connection::ReplicaChecker g_replicaCheckers[DB_BUTT] = { nullptr, nullptr };
 std::pair<int, std::shared_ptr<Connection>> Connection::Create(const RdbStoreConfig &config, bool isWriter)
 {
     auto dbType = config.GetDBType();
@@ -81,6 +82,20 @@ std::map<std::string, Connection::Info> Connection::Collect(const RdbStoreConfig
     return collector(config);
 }
 
+int32_t Connection::CheckReplicaIntegrity(const RdbStoreConfig &config)
+{
+    auto dbType = config.GetDBType();
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return E_INVALID_ARGS;
+    }
+    auto replicaChecker = g_replicaCheckers[dbType];
+    if (replicaChecker == nullptr) {
+        return E_NOT_SUPPORT;
+    }
+
+    return replicaChecker(config);
+}
+
 int32_t Connection::RegisterCreator(int32_t dbType, Creator creator)
 {
     if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
@@ -134,6 +149,20 @@ int32_t Connection::RegisterCollector(int32_t dbType, Collector collector)
     }
 
     g_collectors[dbType] = collector;
+    return E_OK;
+}
+
+int32_t Connection::RegisterReplicaChecker(int32_t dbType, ReplicaChecker replicaChecker)
+{
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return E_INVALID_ARGS;
+    }
+
+    if (g_replicaCheckers[dbType] != nullptr) {
+        return E_OK;
+    }
+
+    g_replicaCheckers[dbType] = replicaChecker;
     return E_OK;
 }
 

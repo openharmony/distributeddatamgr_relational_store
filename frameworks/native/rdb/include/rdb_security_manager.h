@@ -96,7 +96,7 @@ public:
         const std::string &GetKeyFile(KeyFileType type);
         int32_t InitKeyPath();
         int32_t DestroyLock();
-        int32_t Lock();
+        int32_t Lock(bool isBlock = true);
         int32_t Unlock();
 
     private:

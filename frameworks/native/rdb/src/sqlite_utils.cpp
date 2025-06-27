@@ -395,6 +395,36 @@ bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)
     return access((dbPath + SLAVE_INTERRUPT).c_str(), F_OK) == 0;
 }
 
+bool SqliteUtils::IsSlaveLarge(const std::string &slavePath)
+{
+    std::pair<int32_t, DistributedRdb::RdbDebugInfo> fileInfo = Stat(slavePath);
+    if (fileInfo.first == E_OK) {
+        return fileInfo.second.size_ > SLAVE_ASYNC_REPAIR_CHECK_LIMIT;
+    }
+    return false;
+}
+
+int SqliteUtils::SetSlaveRestoring(const std::string &dbPath, bool isRestore)
+{
+    if (IsSlaveRestoring(dbPath)) {
+        if (!isRestore) {
+            std::remove((dbPath + SLAVE_RESTORE).c_str());
+        }
+        return E_OK;
+    }
+    std::ofstream src((dbPath + SLAVE_RESTORE).c_str(), std::ios::binary);
+    if (src.is_open()) {
+        src.close();
+        return E_OK;
+    }
+    return E_ERROR;
+}
+
+bool SqliteUtils::IsSlaveRestoring(const std::string &dbPath)
+{
+    return access((dbPath + SLAVE_RESTORE).c_str(), F_OK) == 0;
+}
+
 void SqliteUtils::SetSlaveValid(const std::string &dbPath)
 {
     std::remove((dbPath + SLAVE_INTERRUPT).c_str());

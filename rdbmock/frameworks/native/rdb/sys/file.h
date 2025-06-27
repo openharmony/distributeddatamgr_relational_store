@@ -23,6 +23,10 @@
 #ifndef LOCK_UN
 #define LOCK_UN 1
 #endif
+
+#ifndef LOCK_NB
+#define LOCK_NB 4
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
