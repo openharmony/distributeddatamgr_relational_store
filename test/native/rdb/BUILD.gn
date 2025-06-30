@@ -297,7 +297,10 @@ group("fuzztest") {
     "fuzztest/rdb_double_write_test_ut2fuzz:fuzztest",
     "fuzztest/rdbsqlutils_fuzzer:fuzztest",
     "fuzztest/storeconfig_fuzzer:fuzztest",
-
+    "fuzztest/absrdbpredicates_fuzzer:fuzztest",
+    "fuzztest/abssharedresultset_fuzzer:fuzztest",
+    "fuzztest/abspredicates_fuzzer:fuzztest",
+    "fuzztest/absresultset_fuzzer:fuzztest",
   ]
 }
 
