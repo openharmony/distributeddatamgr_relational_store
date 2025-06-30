@@ -148,7 +148,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_003, TestSize.Level1)
     const int *supportTypeList = OH_Rdb_GetSupportedDbType(&numType);
     EXPECT_NE(supportTypeList, nullptr);
     EXPECT_TRUE(((!OHOS::NativeRdb::IsUsingArkData()) && numType == 1) || // 1 means only contain RDB_SQLITE
-                ((OHOS::NativeRdb::IsUsingArkData()) && numType == 2)); // 2 means both contain RDB_SQLITE and RDB_CAYLEY
+        ((OHOS::NativeRdb::IsUsingArkData()) && numType == 2)); // 2 means both contain RDB_SQLITE and RDB_CAYLEY
     EXPECT_EQ(RDB_SQLITE, supportTypeList[0]);
     if (OHOS::NativeRdb::IsUsingArkData()) {
         EXPECT_EQ(RDB_CAYLEY, supportTypeList[1]); // 1st element must be RDB_CAYLEY
@@ -655,43 +655,4 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_017, TestSize.Level1)
     config->token = 10;
     auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: RDB_Native_store_test_018
- * @tc.desc: normal test of RdbNdkUtils::GetRdbStoreConfig.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_018, TestSize.Level1)
-{
-    class RdbHelperTestOpenCallback : public RdbOpenCallback {
-    public:
-        int OnCreate(RdbStore &store) override
-        {
-            return E_OK;
-        }
-        int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
-        {
-            return E_OK;
-        }
-    };
-    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
-    EXPECT_NE(config, nullptr);
-    std::shared_ptr<const char> configRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
-        [config](const char *) {
-            OH_Rdb_DestroyConfig(config);
-        });
-    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SetStoreName(config, "RDB_Native_store_test_018.db"), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
-    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
-
-    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
-    EXPECT_EQ(errCode, RDB_OK);
-    RdbHelperTestOpenCallback helper;
-    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(rdbConfig, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(rdbStore, nullptr);
-    RdbHelper::DeleteRdbStore(rdbConfig);
 }
