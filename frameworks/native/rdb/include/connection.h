@@ -75,10 +75,11 @@ public:
     virtual int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-        SlaveStatus &slaveStatus) = 0;
+        std::shared_ptr<SlaveStatus> slaveStatus) = 0;
     virtual int32_t Restore(
-        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus) = 0;
-    virtual ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) = 0;
+        const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+        std::shared_ptr<SlaveStatus> slaveStatus) = 0;
+    virtual ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) = 0;
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;

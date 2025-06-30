@@ -54,12 +54,13 @@ public:
     MOCK_METHOD(int32_t, Unsubscribe, (const std::shared_ptr<DistributedDB::StoreObserver> &observer), (override));
     MOCK_METHOD(int32_t, Backup,
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-            SlaveStatus &slaveStatus),
+            std::shared_ptr<SlaveStatus> slaveStatus),
         (override));
     MOCK_METHOD(int32_t, Restore,
-        (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus),
+        (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+            std::shared_ptr<SlaveStatus> slaveStatus),
         (override));
-    MOCK_METHOD(ExchangeStrategy, GenerateExchangeStrategy, (const SlaveStatus &status), (override));
+    MOCK_METHOD(ExchangeStrategy, GenerateExchangeStrategy, (std::shared_ptr<SlaveStatus> status), (override));
     MOCK_METHOD(int, SetKnowledgeSchema, (const DistributedRdb::RdbKnowledgeSchema &schema), (override));
     MOCK_METHOD(int, CleanDirtyLog, (const std::string &table, uint64_t cursor), (override));
     MOCK_METHOD(int, RegisterAlgo, (const std::string &clstAlgoName, ClusterAlgoFunc func), (override));
