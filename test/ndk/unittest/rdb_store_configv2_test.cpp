@@ -27,6 +27,7 @@
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+#include "relational_store_inner_types.h"
 #include "token_setproc.h"
 #include "oh_data_utils.h"
 
@@ -564,18 +565,145 @@ public:
 };
 
 /**
-  * @tc.name: RDB_Native_store_test_013
-  * @tc.desc: test apis of config interface OH_Rdb_SetCryptoParam.
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_Native_store_test_013
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when config is null.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_013, TestSize.Level1)
 {
-    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
-    EXPECT_NE(confg, nullptr);
-    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(confg);
+    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(nullptr);
+    EXPECT_EQ(errCode, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_014
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when securityLevel overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_014, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    config->securityLevel = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->securityLevel = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_015
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when securityLevel overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_015, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, false), RDB_OK);
+    config->area = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->area = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_016
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when dbType overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_016, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    config->dbType = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->dbType = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_017
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when token overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_017, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    config->token = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->token = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_018
+ * @tc.desc: normal test of RdbNdkUtils::GetRdbStoreConfig.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_018, TestSize.Level1)
+{
+    class RdbHelperTestOpenCallback : public RdbOpenCallback {
+    public:
+        int OnCreate(RdbStore &store) override
+        {
+            return E_OK;
+        }
+        int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
+        {
+            return E_OK;
+        }
+    };
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> configRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "RDB_Native_store_test_018.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+
+    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode, RDB_OK);
     RdbHelperTestOpenCallback helper;
     std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(rdbConfig, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     ASSERT_NE(rdbStore, nullptr);
+    RdbHelper::DeleteRdbStore(rdbConfig);
 }
