@@ -18,6 +18,7 @@
 #include <string>
 
 #include "block_data.h"
+#include "global_resource.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_manager_impl.h"
@@ -207,7 +208,7 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
  * @tc.desc: Destroy ICU
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ICUManager001.db";
     RdbStoreConfig config(dbPath);
@@ -270,7 +271,7 @@ void SubObserver::RegisterCallback(const CheckOnChangeFunc &callback)
  * @tc.desc: Destroy DbClient
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "DbClient001.db";
     RdbStoreConfig config(dbPath);
@@ -306,7 +307,7 @@ HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level0)
  * @tc.desc: Destroy OpenSSL
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, OpenSSL001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, OpenSSL001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "OpenSSL001.db";
     RdbStoreConfig config(dbPath);
@@ -329,4 +330,15 @@ HWTEST_F(RdbDynamicLoadTest, OpenSSL001, TestSize.Level0)
     RdbHelper::DestroyOption option;
     option.cleanOpenSSL = true;
     ASSERT_NO_FATAL_FAILURE(EXPECT_TRUE(RdbHelper::Destroy(option)));
+}
+
+/**
+ * @tc.name: GlobalResource001
+ * @tc.desc: GlobalResource CleanUp invalid args
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDynamicLoadTest, GlobalResource001, TestSize.Level0)
+{
+    EXPECT_EQ(GlobalResource::CleanUp(-1), E_INVALID_ARGS);
+    EXPECT_EQ(GlobalResource::CleanUp(GlobalResource::CLEAN_BUTT), E_INVALID_ARGS);
 }
