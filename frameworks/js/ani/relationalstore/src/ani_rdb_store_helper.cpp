@@ -46,33 +46,34 @@ public:
 
 static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object context, ani_object config)
 {
-    DefaultOpenCallback callback;
-    int errCode = OK;
-    auto proxy = std::make_shared<RdbStoreProxy>();
-    RdbSqlUtils::CreateDirectory("/data/storage/el2/database/rdb");
-    auto rdbConfig = RdbStoreConfig("/data/storage/el2/database/rdb/test.db");
-    proxy->nativeRdb = RdbHelper::GetRdbStore(rdbConfig, -1, callback, errCode);
-    if (proxy->nativeRdb == nullptr) {
-        ThrowBusinessError(env, E_INNER_ERROR, "RdbHelper returned nullptr.");
-        return nullptr;
-    }
-
     if (env == nullptr) {
         LOG_ERROR("env is nullptr.");
         return nullptr;
     }
-
+    DefaultOpenCallback callback;
+    int errCode = OK;
+    auto proxy = new RdbStoreProxy();
+    RdbSqlUtils::CreateDirectory("/data/storage/el2/database/rdb");
+    auto rdbConfig = RdbStoreConfig("/data/storage/el2/database/rdb/test.db");
+    proxy->nativeRdb = RdbHelper::GetRdbStore(rdbConfig, -1, callback, errCode);
+    if (proxy->nativeRdb == nullptr) {
+        delete proxy;
+        ThrowBusinessError(env, E_INNER_ERROR, "RdbHelper returned nullptr.");
+        return nullptr;
+    }
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     static const char *className = "LRdbStoreInner;";
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
+        delete proxy;
         LOG_ERROR("[ANI] Failed to create class '%{public}s' obj", className);
         ThrowBusinessError(env, E_INNER_ERROR, "ANI create class.");
         return nullptr;
     }
-    ani_status status = AniObjectUtils::Wrap(env, obj, proxy.get());
+    ani_status status = AniObjectUtils::Wrap(env, obj, proxy);
     if (ANI_OK != status) {
+        delete proxy;
         LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'", className);
         ThrowBusinessError(env, E_INNER_ERROR, "ANI SetField.");
         return nullptr;
