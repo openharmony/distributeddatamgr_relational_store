@@ -203,7 +203,6 @@ std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
     Callback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
-    EXPECT_NE(store, nullptr);
     return store;
 }
 
@@ -240,7 +239,7 @@ void RdbStoreSubTest::RegisterCheckUpdateCallback(const std::vector<std::shared_
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::REMOTE, "observer" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -257,7 +256,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeRemote, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::CLOUD, "observer" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -274,7 +273,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloud, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::CLOUD_DETAIL, "observer" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -291,7 +290,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudDetail, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::LOCAL, "observer1" }, observer_);
     store->Subscribe({ SubscribeMode::LOCAL, "observer1" }, observer_);
@@ -330,7 +329,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocal, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared001, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer1" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -358,7 +357,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared001, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared002, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     auto block = std::make_shared<OHOS::BlockData<bool>>(5, false);
     auto callback = [block]() { block->SetValue(true); };
     auto observer = std::make_shared<LocalShareObserver>(callback);
@@ -379,7 +378,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared002, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared003, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     auto count = std::make_shared<std::atomic<int32_t>>(0);
     auto callback = [count]() { count->fetch_add(1); };
     auto observer = std::make_shared<LocalShareObserver>(callback);
@@ -404,7 +403,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared003, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared004, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     auto count = std::make_shared<std::atomic<int32_t>>(0);
     auto callback = [count]() { count->fetch_add(1); };
     auto observer1 = std::make_shared<LocalShareObserver>(callback);
@@ -430,7 +429,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared004, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared005, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     auto block = std::make_shared<OHOS::BlockData<bool>>(3, false);
     auto callback = [block]() { block->SetValue(true); };
     auto observer = std::make_shared<LocalShareObserver>(callback);
@@ -461,7 +460,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared005, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared006, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     RdbStoreConfig config(RDB_TEST_PATH + "RdbStoreSubscribeLocalShared006.db");
     config.SetBundleName("subscribe_test");
     Callback helper;
@@ -492,6 +491,39 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared006, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStoreSubscribeLocalShared007
+ * @tc.desc: Subscribe to the same URI with different obs, then cancel all at once
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared007, TestSize.Level1)
+{
+    ASSERT_NE(store, nullptr) << "store is null";
+    auto count = std::make_shared<std::atomic<int32_t>>(0);
+    auto callback = [count]() { count->fetch_add(1); };
+    auto observer1 = std::make_shared<LocalShareObserver>(callback);
+    auto status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared007" }, observer1);
+    EXPECT_EQ(status, E_OK);
+
+    auto observer2 = std::make_shared<LocalShareObserver>(callback);
+    status = store->Subscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared007" }, observer2);
+    EXPECT_EQ(status, E_OK);
+
+    status = store->Notify("RdbStoreSubscribeLocalShared007");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 2);
+    status = store->UnSubscribe({ SubscribeMode::LOCAL_SHARED, "RdbStoreSubscribeLocalShared007" }, nullptr);
+    EXPECT_EQ(status, E_OK);
+
+    status = store->Notify("RdbStoreSubscribeLocalShared007");
+    EXPECT_EQ(status, E_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    EXPECT_EQ(count->load(), 2);
+}
+
+/**
  * @tc.name: RdbStoreSubscribeLocalDetail001
  * @tc.desc: test local observer onchange when insert data
  * @tc.type: FUNC
@@ -500,7 +532,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalShared006, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail001, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test "
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -552,7 +584,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail001, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail002, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -600,7 +632,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail002, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail003, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -634,7 +666,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail003, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail004, TestSize.Level1)
 {
     int num = 10;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -677,7 +709,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail004, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail005, TestSize.Level1)
 {
     int num = 1;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, observer_);
     EXPECT_EQ(status, E_OK);
@@ -728,7 +760,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail005, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail006, TestSize.Level1)
 {
     int num = 20;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test2"
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -781,7 +813,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail006, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail007, TestSize.Level1)
 {
     int num = 20;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test3"
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -838,7 +870,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail007, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail008, TestSize.Level1)
 {
     int num = 20;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS local_test4"
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -883,7 +915,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail008, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail009, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(observer_, nullptr) << "observer is null";
     auto status = store->SubscribeObserver({ SubscribeMode::LOCAL_DETAIL, "dataChange" }, nullptr);
     EXPECT_EQ(status, E_OK);
@@ -909,7 +941,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeLocalDetail009, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics001, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS statistics_test "
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -944,7 +976,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics001, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics002, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -971,7 +1003,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics002, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics003, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -996,7 +1028,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics003, TestSize.Level1)
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics004, TestSize.Level1)
 {
     int num = 10;
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -1026,7 +1058,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics004, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics005, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -1057,7 +1089,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics005, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics006, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -1077,7 +1109,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics006, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics007, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -1097,7 +1129,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics007, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics008, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
     EXPECT_EQ(status, E_OK);
@@ -1116,7 +1148,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics008, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics009, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     std::string value = "with test as (select * from statistics_test) select * from test1";
     auto status = SqlStatistic::Subscribe(sqlObserver_);
@@ -1136,7 +1168,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics009, TestSize.Level1)
  */
 HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics010, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     EXPECT_NE(sqlObserver_, nullptr) << "observer is null";
     auto status = SqlStatistic::Subscribe(nullptr);
     EXPECT_EQ(status, E_OK);
@@ -1149,7 +1181,7 @@ HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeStatistics010, TestSize.Level1)
 */
 HWTEST_F(RdbStoreSubTest, RdbStore_RegisterAutoSyncCallbackAndRdbStore_UnregisterAutoSyncCallback_001, TestSize.Level1)
 {
-    EXPECT_NE(store, nullptr) << "store is null";
+    ASSERT_NE(store, nullptr) << "store is null";
     auto obs = std::make_shared<TestDetailProgressObserver>();
     auto status = store->RegisterAutoSyncCallback(obs);
     EXPECT_EQ(status, E_OK);
