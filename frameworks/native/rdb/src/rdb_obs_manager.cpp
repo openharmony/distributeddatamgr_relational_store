@@ -100,7 +100,7 @@ int32_t RdbObsManager::Register(const std::string &uri, std::shared_ptr<RdbStore
         });
         return E_OK;
     }
-    return code == static_cast<int32_t>(DuplicateType::DUPLICATE_SUB) ? E_OK : code;
+    return code == RDB_OBS_DUPLICATE_SUB ? E_OK : code;
 }
 
 int32_t RdbObsManager::Unregister(const std::string &uri, std::shared_ptr<RdbStoreObserver> obs)

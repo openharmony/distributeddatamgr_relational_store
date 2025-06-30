@@ -99,6 +99,7 @@ int32_t ObsMgrAdapterImpl::RegisterObserver(const std::string &uri, std::shared_
             }
             if ((**it) == observer) {
                 LOG_WARN("Duplicate subscribe, uri:%{public}s", Anonymous(uri).c_str());
+                code = RDB_OBS_DUPLICATE_SUB;
                 return !obs.empty();
             }
             ++it;

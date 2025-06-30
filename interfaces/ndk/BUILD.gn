@@ -1,0 +1,66 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+ohos_shared_library("native_rdb_ndk") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "include",
+    "${relational_store_base_path}/interfaces/ndk",
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+  ]
+  sources = [
+    "src/convertor_error_code.cpp",
+    "src/modify_time_cursor.cpp",
+    "src/oh_data_utils.cpp",
+    "src/oh_data_value.cpp",
+    "src/oh_data_values.cpp",
+    "src/oh_data_values_buckets.cpp",
+    "src/oh_rdb_crypto_param.cpp",
+    "src/oh_rdb_transaction.cpp",
+    "src/relational_asset.cpp",
+    "src/relational_cursor.cpp",
+    "src/relational_predicates.cpp",
+    "src/relational_predicates_objects.cpp",
+    "src/relational_store.cpp",
+    "src/relational_values_bucket.cpp",
+  ]
+
+  defines = [ "API_EXPORT=__attribute__((visibility (\"default\")))" ]
+
+  deps = [
+    "${relational_store_base_path}/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
+    "${relational_store_innerapi_path}/rdb:native_rdb"
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "kv_store:datamgr_common",
+  ]
+
+  relative_install_dir = "ndk"
+  part_name = "relational_store"
+  subsystem_name = "distributeddatamgr"
+}
