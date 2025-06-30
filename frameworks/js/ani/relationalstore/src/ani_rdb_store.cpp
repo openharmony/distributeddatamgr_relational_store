@@ -246,9 +246,10 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
         ThrowBusinessError(env, E_INNER_ERROR, "RdbStore uninitialized.");
         return nullptr;
     }
-    auto resultsetProxy = std::make_shared<ResultSetProxy>();
+    auto resultsetProxy = new ResultSetProxy();
     resultsetProxy->resultset = proxy->nativeRdb->QueryByStep(sqlStr, bindArgs);
     if (resultsetProxy->resultset == nullptr) {
+        delete resultsetProxy;
         LOG_ERROR("QueryByStep failed.");
         ThrowBusinessError(env, E_INNER_ERROR, "QueryByStep returned nullptr.");
         return nullptr;
@@ -259,12 +260,14 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
+        delete resultsetProxy;
         LOG_ERROR("[ANI] Failed to create class '%{public}s' object.", className);
         ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.");
         return nullptr;
     }
-    ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy.get());
+    ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy);
     if (ANI_OK != status) {
+        delete resultsetProxy;
         LOG_ERROR("[ANI] Failed to wrap for class '%{public}s'.", className);
         ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet failed.");
         return nullptr;
