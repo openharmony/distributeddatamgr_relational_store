@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,7 +14,14 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-ohos_shared_library("native_rdb_ndk") {
+config("native_rdb_ndk_utils_public_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "include",
+  ]
+}
+ohos_shared_library("native_rdb_ndk_utils") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     boundary_sanitize = true
@@ -25,26 +32,11 @@ ohos_shared_library("native_rdb_ndk") {
   }
 
   include_dirs = [
-    "../include",
+    "${relational_store_base_path}/interfaces/ndk",
+    "${relational_store_base_path}/interfaces/ndk/include",
     "${relational_store_common_path}/include",
-    "${relational_store_native_path}/rdb/include",
   ]
-  sources = [
-    "convertor_error_code.cpp",
-    "modify_time_cursor.cpp",
-    "oh_data_utils.cpp",
-    "oh_data_value.cpp",
-    "oh_data_values.cpp",
-    "oh_data_values_buckets.cpp",
-    "oh_rdb_crypto_param.cpp",
-    "oh_rdb_transaction.cpp",
-    "relational_asset.cpp",
-    "relational_cursor.cpp",
-    "relational_predicates.cpp",
-    "relational_predicates_objects.cpp",
-    "relational_store.cpp",
-    "relational_values_bucket.cpp",
-  ]
+  sources = [ "src/rdb_ndk_utils.cpp" ]
 
   defines = [ "API_EXPORT=__attribute__((visibility (\"default\")))" ]
 
@@ -55,8 +47,8 @@ ohos_shared_library("native_rdb_ndk") {
     "hilog:libhilog",
     "kv_store:datamgr_common",
   ]
+  public_configs = [ ":native_rdb_ndk_utils_public_config" ]
 
-  relative_install_dir = "ndk"
   part_name = "relational_store"
   subsystem_name = "distributeddatamgr"
 }

@@ -21,10 +21,14 @@
 #include "accesstoken_kit.h"
 #include "common.h"
 #include "grd_api_manager.h"
+#include "oh_data_utils.h"
 #include "rdb_errno.h"
+#include "rdb_helper.h"
+#include "rdb_ndk_utils.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+#include "relational_store_inner_types.h"
 #include "token_setproc.h"
 
 using namespace testing::ext;
@@ -144,7 +148,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_003, TestSize.Level1)
     const int *supportTypeList = OH_Rdb_GetSupportedDbType(&numType);
     EXPECT_NE(supportTypeList, nullptr);
     EXPECT_TRUE(((!OHOS::NativeRdb::IsUsingArkData()) && numType == 1) || // 1 means only contain RDB_SQLITE
-    ((OHOS::NativeRdb::IsUsingArkData()) && numType == 2)); // 2 means both contain RDB_SQLITE and RDB_CAYLEY
+        ((OHOS::NativeRdb::IsUsingArkData()) && numType == 2)); // 2 means both contain RDB_SQLITE and RDB_CAYLEY
     EXPECT_EQ(RDB_SQLITE, supportTypeList[0]);
     if (OHOS::NativeRdb::IsUsingArkData()) {
         EXPECT_EQ(RDB_CAYLEY, supportTypeList[1]); // 1st element must be RDB_CAYLEY
@@ -371,10 +375,10 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST001, TestSize.Level1)
 }
 
 /**
-  * @tc.name: RDB_ICU_TEST002
-  * @tc.desc: test apis of icu
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_ICU_TEST002
+ * @tc.desc: test apis of icu
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
 {
     mkdir(RDB_TEST_PATH, 0770);
@@ -436,14 +440,14 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
 }
 
 /**
-  * @tc.name: RDB_Native_store_test_009
-  * @tc.desc: test apis of config interface OH_Rdb_SetCustomDir.
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_Native_store_test_009
+ * @tc.desc: test apis of config interface OH_Rdb_SetCustomDir.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_009, TestSize.Level1)
 {
     const char *customDir = "test";
-    auto ret =  OH_Rdb_SetCustomDir(nullptr, customDir);
+    auto ret = OH_Rdb_SetCustomDir(nullptr, customDir);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret =  OH_Rdb_SetCustomDir(nullptr, "12345678901234567890123456789012345678901234567890"
@@ -452,7 +456,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_009, TestSize.Level1)
 
     OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
     EXPECT_NE(confg, nullptr);
-    ret =  OH_Rdb_SetCustomDir(confg, nullptr);
+    ret = OH_Rdb_SetCustomDir(confg, nullptr);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret = OH_Rdb_SetCustomDir(confg, customDir);
@@ -463,16 +467,16 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_009, TestSize.Level1)
 }
 
 /**
-  * @tc.name: RDB_Native_store_test_010
-  * @tc.desc: test apis of config interface OH_Rdb_SetReadOnly.
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_Native_store_test_010
+ * @tc.desc: test apis of config interface OH_Rdb_SetReadOnly.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_010, TestSize.Level1)
 {
     OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
     EXPECT_NE(confg, nullptr);
 
-    auto ret =  OH_Rdb_SetReadOnly(nullptr, true);
+    auto ret = OH_Rdb_SetReadOnly(nullptr, true);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret = OH_Rdb_SetReadOnly(confg, true);
@@ -486,17 +490,17 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_010, TestSize.Level1)
 }
 
 /**
-  * @tc.name: RDB_Native_store_test_011
-  * @tc.desc: test apis of config interface OH_Rdb_SetPlugins.
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_Native_store_test_011
+ * @tc.desc: test apis of config interface OH_Rdb_SetPlugins.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
 {
     OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
     EXPECT_NE(confg, nullptr);
 
-    const char *plugins[] = {"1"};
-    auto ret =  OH_Rdb_SetPlugins(nullptr, plugins, 1);
+    const char *plugins[] = { "1" };
+    auto ret = OH_Rdb_SetPlugins(nullptr, plugins, 1);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret = OH_Rdb_SetPlugins(confg, nullptr, 1);
@@ -508,7 +512,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
     ret = OH_Rdb_SetPlugins(confg, plugins, 1);
     EXPECT_EQ(ret, RDB_OK);
 
-    const char *pluginsNew[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "0", "x"};
+    const char *pluginsNew[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "0", "x" };
     ret = OH_Rdb_SetPlugins(confg, pluginsNew, sizeof(pluginsNew) / sizeof(pluginsNew[0]) - 1);
     EXPECT_EQ(ret, RDB_OK);
 
@@ -520,10 +524,10 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
 }
 
 /**
-  * @tc.name: RDB_Native_store_test_012
-  * @tc.desc: test apis of config interface OH_Rdb_SetCryptoParam.
-  * @tc.type: FUNC
-  */
+ * @tc.name: RDB_Native_store_test_012
+ * @tc.desc: test apis of config interface OH_Rdb_SetCryptoParam.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_012, TestSize.Level1)
 {
     OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
@@ -546,4 +550,109 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_012, TestSize.Level1)
 
     ret = OH_Rdb_DestroyConfig(confg);
     EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_013
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when config is null.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_013, TestSize.Level1)
+{
+    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(nullptr);
+    EXPECT_EQ(errCode, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_014
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when securityLevel overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_014, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_014",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    config->securityLevel = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->securityLevel = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_015
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when securityLevel overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_015, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_015",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, false), RDB_OK);
+    config->area = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->area = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_016
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when dbType overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_016, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_016",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    config->dbType = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->dbType = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_017
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when token overlimit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_017, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_017",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    config->token = -1;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+
+    config->token = 10;
+    auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
 }
