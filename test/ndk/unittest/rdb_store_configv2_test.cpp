@@ -22,10 +22,13 @@
 #include "common.h"
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
+#include "rdb_helper.h"
+#include "rdb_ndk_utils.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 #include "token_setproc.h"
+#include "oh_data_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -546,4 +549,33 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_012, TestSize.Level1)
 
     ret = OH_Rdb_DestroyConfig(confg);
     EXPECT_EQ(ret, RDB_OK);
+}
+
+class RdbHelperTestOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override
+    {
+        return E_OK;
+    }
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
+};
+
+/**
+  * @tc.name: RDB_Native_store_test_013
+  * @tc.desc: test apis of config interface OH_Rdb_SetCryptoParam.
+  * @tc.type: FUNC
+  */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_013, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
+    EXPECT_NE(confg, nullptr);
+    auto [errCode, rdbConfig] = RdbNdkUtils::GetRdbStoreConfig(confg);
+    EXPECT_EQ(errCode, RDB_OK);
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore = RdbHelper::GetRdbStore(rdbConfig, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore, nullptr);
 }

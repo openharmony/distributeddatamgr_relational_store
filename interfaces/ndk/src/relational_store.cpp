@@ -19,9 +19,12 @@
 #include "grd_api_manager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
+#include "oh_data_define.h"
+#include "oh_data_utils.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
+#include "rdb_ndk_utils.h"
 #include "rdb_predicates.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
@@ -30,45 +33,25 @@
 #include "relational_predicates_objects.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+#include "relational_store_inner_types.h"
 #include "relational_types_v0.h"
 #include "relational_values_bucket.h"
 #include "securec.h"
 #include "sqlite_global_config.h"
-#include "oh_data_define.h"
-#include "oh_data_utils.h"
 #include "values_buckets.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
-constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
+constexpr int RDB_STORE_CID = 1234560;       // The class id used to uniquely identify the OH_Rdb_Store class.
 constexpr uint32_t SIZE_LENGTH = 2147483647; // length or count up to 2147483647(1024 * 1024 * 1024 * 2 - 1).
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
-constexpr int RDB_CONFIG_V2_MAGIC_CODE = 0xDBCF2ADE;
 constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
 constexpr int RDB_ATTACH_WAIT_TIME_MAX = 300;
 constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
 constexpr int RDB_CONFIG_CUST_DIR_MAX_LEN = 128;
 
 static int g_supportDbTypes[] = { RDB_SQLITE, RDB_CAYLEY };
-
-struct OH_Rdb_ConfigV2 {
-    int magicNum = RDB_CONFIG_V2_MAGIC_CODE;
-    std::string dataBaseDir = "";
-    std::string storeName = "";
-    std::string bundleName = "";
-    std::string moduleName = "";
-    bool isEncrypt = false;
-    bool persist = true;
-    int securityLevel = 0;
-    int area = 0;
-    int dbType = RDB_SQLITE;
-    int token = RDB_NONE_TOKENIZER;
-    std::string customDir = "";
-    bool readOnly = false;
-    std::vector<std::string> pluginLibs{};
-    OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
-};
 
 OH_Rdb_ConfigV2 *OH_Rdb_CreateConfig()
 {
@@ -405,71 +388,6 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
     return static_cast<RelationalStore *>(store);
 }
 
-// caller must ensure token is valid
-static OHOS::NativeRdb::Tokenizer ConvertTokenizer2Native(Rdb_Tokenizer token)
-{
-    if (token == Rdb_Tokenizer::RDB_NONE_TOKENIZER) {
-        return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
-    }
-    if (token == Rdb_Tokenizer::RDB_ICU_TOKENIZER) {
-        return OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER;
-    }
-    if (token == Rdb_Tokenizer::RDB_CUSTOM_TOKENIZER) {
-        return OHOS::NativeRdb::Tokenizer::CUSTOM_TOKENIZER;
-    }
-    return OHOS::NativeRdb::Tokenizer::TOKENIZER_END;
-}
-
-static OHOS::NativeRdb::RdbStoreConfig GetRdbStoreConfig(const OH_Rdb_ConfigV2 *config, int *errCode)
-{
-    if (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE || (config->persist &&
-        ((OHOS::NativeRdb::SecurityLevel(config->securityLevel) < OHOS::NativeRdb::SecurityLevel::S1 ||
-            OHOS::NativeRdb::SecurityLevel(config->securityLevel) >= OHOS::NativeRdb::SecurityLevel::LAST))) ||
-        (config->area < RDB_SECURITY_AREA_EL1 || config->area > RDB_SECURITY_AREA_EL5) ||
-        (config->dbType < RDB_SQLITE || config->dbType > RDB_CAYLEY) ||
-        (config->token < RDB_NONE_TOKENIZER || config->token > RDB_CUSTOM_TOKENIZER)) {
-        *errCode = OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
-        LOG_ERROR("Config magic number is not valid %{public}x or securityLevel %{public}d area %{public}d"
-                  " dbType %{public}d token %{public}d errCode %{public}d persist %{public}d"
-                  " readOnly %{public}d",
-            config->magicNum, config->securityLevel, config->area, config->dbType, config->token, *errCode,
-            config->persist, config->readOnly);
-        return OHOS::NativeRdb::RdbStoreConfig("");
-    }
-
-    std::string realPath;
-    if (config->persist) {
-        std::tie(realPath, *errCode) = OHOS::NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(config->dataBaseDir,
-            config->storeName, config->customDir);
-    } else {
-        realPath = config->dataBaseDir;
-    }
-
-    if (*errCode != 0) {
-        *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
-        LOG_ERROR("Get database path failed from new config, ret %{public}d ", *errCode);
-        return OHOS::NativeRdb::RdbStoreConfig("");
-    }
-    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
-    if (!config->storeName.empty()) {
-        rdbStoreConfig.SetName(config->storeName);
-    }
-    rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
-    rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
-    rdbStoreConfig.SetArea(config->area - 1);
-    rdbStoreConfig.SetIsVector(config->dbType == RDB_CAYLEY);
-    rdbStoreConfig.SetBundleName(config->bundleName);
-    rdbStoreConfig.SetName(config->storeName);
-    rdbStoreConfig.SetTokenizer(ConvertTokenizer2Native(static_cast<Rdb_Tokenizer>(config->token)));
-    rdbStoreConfig.SetStorageMode(
-        config->persist ? OHOS::NativeRdb::StorageMode::MODE_DISK : OHOS::NativeRdb::StorageMode::MODE_MEMORY);
-    rdbStoreConfig.SetCustomDir(config->customDir);
-    rdbStoreConfig.SetReadOnly(config->readOnly);
-    rdbStoreConfig.SetPluginLibs(config->pluginLibs);
-    rdbStoreConfig.SetCryptoParam(config->cryptoParam);
-    return rdbStoreConfig;
-}
-
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
     if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
@@ -516,8 +434,10 @@ OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
             (config == nullptr), (config == nullptr ? 0 : config->magicNum), (errCode == nullptr));
         return nullptr;
     }
-    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig = GetRdbStoreConfig(config, errCode);
-    if (*errCode != OH_Rdb_ErrCode::RDB_OK) {
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+	    *errCode = ret;
         return nullptr;
     }
     MainOpenCallback callback;
@@ -1400,10 +1320,9 @@ int OH_Rdb_Attach(OH_Rdb_Store *store, const OH_Rdb_ConfigV2 *config, const char
         attachedNumber == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    int ret = OH_Rdb_ErrCode::RDB_OK;
-    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig = GetRdbStoreConfig(config, &ret);
-    if (ret != OH_Rdb_ErrCode::RDB_OK) {
-        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return ConvertorErrorCode::NativeToNdk(ret);
     }
     auto [errCode, size] = rdbStore->GetStore()->Attach(rdbStoreConfig, attachName, static_cast<int32_t>(waitTime));
     *attachedNumber = size;
