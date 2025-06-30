@@ -14,13 +14,6 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-config("native_rdb_ndk_public_config") {
-  visibility = [ ":*" ]
-
-  include_dirs = [
-    "include",
-  ]
-}
 ohos_shared_library("native_rdb_ndk") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -32,6 +25,7 @@ ohos_shared_library("native_rdb_ndk") {
   }
 
   include_dirs = [
+    "include",
     "${relational_store_base_path}/interfaces/ndk",
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
@@ -65,7 +59,6 @@ ohos_shared_library("native_rdb_ndk") {
     "hilog:libhilog",
     "kv_store:datamgr_common",
   ]
-  public_configs = [ ":native_rdb_ndk_public_config" ]
 
   relative_install_dir = "ndk"
   part_name = "relational_store"

@@ -97,7 +97,7 @@ void SqliteGlobalConfig::SqliteErrReport(int err, const char *msg)
 {
     auto lowErr = static_cast<uint32_t>(err) & 0xFF;
     if (lowErr == SQLITE_NOMEM || lowErr == SQLITE_INTERRUPT || lowErr == SQLITE_FULL || lowErr == SQLITE_SCHEMA ||
-        lowErr ==  SQLITE_NOLFS || lowErr == SQLITE_AUTH || lowErr == SQLITE_BUSY || lowErr == SQLITE_LOCKED ||
+        lowErr == SQLITE_NOLFS || lowErr == SQLITE_AUTH || lowErr == SQLITE_BUSY || lowErr == SQLITE_LOCKED ||
         lowErr == SQLITE_IOERR || lowErr == SQLITE_CANTOPEN) {
         std::string log(msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str());
         log.append(",errcode=").append(std::to_string(err)).append(",errno=").append(std::to_string(errno));

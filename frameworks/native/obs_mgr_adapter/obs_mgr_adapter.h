@@ -16,6 +16,6 @@
 #define HOS_NATIVE_RDB_OBS_MGR_ADAPTER_H
 #include <cstdint>
 namespace OHOS::NativeRdb {
-enum class DuplicateType : int32_t { DUPLICATE_SUB = -1 };
+constexpr int32_t RDB_OBS_DUPLICATE_SUB = -1;
 } // namespace OHOS::NativeRdb
 #endif //HOS_NATIVE_RDB_OBS_MGR_ADAPTER_H
