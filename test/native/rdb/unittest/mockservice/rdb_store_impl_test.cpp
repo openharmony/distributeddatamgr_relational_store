@@ -1730,7 +1730,7 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_002, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    storeImpl->slaveStatus_ = DB_NOT_EXITS;
+    *(storeImpl->slaveStatus_) = DB_NOT_EXITS;
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_CANCEL, res);
 }
@@ -1745,7 +1745,7 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_003, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    storeImpl->slaveStatus_ = BACKING_UP;
+    *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_OK, res);
 }
@@ -1774,7 +1774,7 @@ HWTEST_F(RdbStoreImplConditionTest, GetBackupStatus_Test_002, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    storeImpl->slaveStatus_ = BACKING_UP;
+    *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->GetBackupStatus();
     EXPECT_EQ(BACKING_UP, res);
 }

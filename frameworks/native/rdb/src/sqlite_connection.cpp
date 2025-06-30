@@ -1147,9 +1147,9 @@ int32_t SqliteConnection::Unsubscribe(const std::shared_ptr<DistributedDB::Store
 }
 
 int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    bool isAsync, SlaveStatus &slaveStatus)
+    bool isAsync, std::shared_ptr<SlaveStatus> slaveStatus)
 {
-    if (slaveStatus == SlaveStatus::BACKING_UP) {
+    if (*slaveStatus == SlaveStatus::BACKING_UP) {
         LOG_INFO("backing up, return:%{public}s", config_.GetName().c_str());
         return E_OK;
     }
@@ -1174,7 +1174,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
             LOG_WARN("task pool err when restore");
             return E_OK;
         }
-        backupId_ = pool->Execute([this, &slaveStatus]() {
+        backupId_ = pool->Execute([this, slaveStatus]() {
             auto [err, conn] = InnerCreate(config_, true);
             if (err != E_OK) {
                 return;
@@ -1190,7 +1190,8 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
 }
 
 int32_t SqliteConnection::Restore(
-    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus)
+    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    std::shared_ptr<SlaveStatus> slaveStatus)
 {
     return ExchangeSlaverToMaster(true, true, slaveStatus);
 };
@@ -1278,12 +1279,12 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     return errCode;
 }
 
-int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, SlaveStatus &curStatus)
+int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus)
 {
-    curStatus = SlaveStatus::BACKING_UP;
+    *curStatus = SlaveStatus::BACKING_UP;
     int err = verifyDb ? ExchangeVerify(isRestore) : E_OK;
     if (err != E_OK) {
-        curStatus = SlaveStatus::UNDEFINED;
+        *curStatus = SlaveStatus::UNDEFINED;
         return err;
     }
 
@@ -1295,7 +1296,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, Slav
         LOG_INFO("reset binlog start");
         err = SQLiteError::ErrNo(sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE));
         if (err != E_OK) {
-            curStatus = SlaveStatus::BACKUP_INTERRUPT;
+            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
             LOG_WARN("reset binlog failed %{public}d", err);
         } else {
             LOG_INFO("reset binlog success");
@@ -1304,19 +1305,19 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, Slav
     return E_OK;
 }
 
-int SqliteConnection::SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus)
+int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus)
 {
     sqlite3 *dbFrom = isRestore ? dbHandle_ : slaveConnection_->dbHandle_;
     sqlite3 *dbTo = isRestore ? slaveConnection_->dbHandle_ : dbHandle_;
     sqlite3_backup *pBackup = sqlite3_backup_init(dbFrom, "main", dbTo, "main");
     if (pBackup == nullptr) {
         LOG_WARN("slave backup init failed");
-        curStatus = SlaveStatus::UNDEFINED;
+        *curStatus = SlaveStatus::UNDEFINED;
         return E_OK;
     }
     int rc = SQLITE_OK;
     do {
-        if (!isRestore && curStatus == SlaveStatus::BACKUP_INTERRUPT) {
+        if (!isRestore && *curStatus == SlaveStatus::BACKUP_INTERRUPT) {
             rc = E_CANCEL;
             break;
         }
@@ -1337,7 +1338,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus)
                 slaveConnection_ = nullptr;
                 (void)SqliteConnection::Delete(slaveConfig.GetPath());
             }
-            curStatus = SlaveStatus::BACKUP_INTERRUPT;
+            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
             Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveBackup"));
         }
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
@@ -1345,21 +1346,21 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus)
     rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
     if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         if (!isRestore) {
-            curStatus = SlaveStatus::BACKUP_INTERRUPT;
+            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
         }
         LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
         return E_OK;
     }
-    curStatus = SlaveStatus::BACKUP_FINISHED;
+    *curStatus = SlaveStatus::BACKUP_FINISHED;
     SqliteUtils::SetSlaveValid(config_.GetPath());
     LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
     return E_OK;
 }
 
-ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &status)
+ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status)
 {
     if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr ||
-        config_.GetHaMode() == HAMode::SINGLE || status == SlaveStatus::BACKING_UP) {
+        config_.GetHaMode() == HAMode::SINGLE || *status == SlaveStatus::BACKING_UP) {
         return ExchangeStrategy::NOT_HANDLE;
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
@@ -1381,7 +1382,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(const SlaveStatus &s
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
     }
-    if (status == SlaveStatus::DB_NOT_EXITS || status == SlaveStatus::BACKUP_INTERRUPT) {
+    if (*status == SlaveStatus::DB_NOT_EXITS || *status == SlaveStatus::BACKUP_INTERRUPT) {
         return ExchangeStrategy::BACKUP;
     }
     int64_t sCount = static_cast<int64_t>(sObj);
@@ -1455,7 +1456,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
         return ret;
     }
     connection->TryCheckPoint(true);
-    SlaveStatus curStatus;
+    std::shared_ptr<SlaveStatus> curStatus = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
     ret = connection->ExchangeSlaverToMaster(true, false, curStatus);
     if (ret != E_OK) {
         LOG_ERROR("repair failed, [%{public}s]->[%{public}s], err:%{public}d", rdbSlaveStoreConfig.GetName().c_str(),

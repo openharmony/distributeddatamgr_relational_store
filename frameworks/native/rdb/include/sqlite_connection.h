@@ -65,10 +65,10 @@ public:
     int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-        SlaveStatus &slaveStatus) override;
+        std::shared_ptr<SlaveStatus> slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        SlaveStatus &slaveStatus) override;
-    ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
+        std::shared_ptr<SlaveStatus> slaveStatus) override;
+    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
@@ -120,9 +120,9 @@ private:
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
-    int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, SlaveStatus &status);
+    int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus);
     int ExchangeVerify(bool isRestore);
-    int SqliteNativeBackup(bool isRestore, SlaveStatus &curStatus);
+    int SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus);
     int VeritySlaveIntegrity();
     bool IsDbVersionBelowSlave();
     int RegisterStoreObs();
