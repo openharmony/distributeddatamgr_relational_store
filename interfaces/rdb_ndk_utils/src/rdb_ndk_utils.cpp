@@ -15,6 +15,7 @@
 
 #define LOG_TAG "RdbNdkUtils"
 #include "rdb_ndk_utils.h"
+
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -70,9 +71,6 @@ std::pair<int32_t, OHOS::NativeRdb::RdbStoreConfig> RdbNdkUtils::GetRdbStoreConf
         return { OHOS::NativeRdb::E_INVALID_ARGS, OHOS::NativeRdb::RdbStoreConfig("") };
     }
     OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
-    if (!config->storeName.empty()) {
-        rdbStoreConfig.SetName(config->storeName);
-    }
     rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
     rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
     rdbStoreConfig.SetArea(config->area - 1);
