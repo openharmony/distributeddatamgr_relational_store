@@ -16,8 +16,9 @@
 #include "task_executor.h"
 
 namespace OHOS::NativeRdb {
-TaskExecutor::TaskExecutor() : pool_(nullptr)
+TaskExecutor::TaskExecutor()
 {
+    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
 }
 
 TaskExecutor::~TaskExecutor()
@@ -34,7 +35,10 @@ TaskExecutor &TaskExecutor::GetInstance()
 void TaskExecutor::Init()
 {
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-    pool_ = nullptr;
+    if (pool_ != nullptr) {
+        return;
+    }
+    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS);
 };
 
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
