@@ -584,7 +584,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
 
     // newPath == currentPath, writeConnectionUsed == true
     auto connection = connectionPool->AcquireConnection(false);
-    SlaveStatus curStatus;
+    std::shared_ptr<SlaveStatus> curStatus = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
     errCode = connectionPool->ChangeDbFileForRestore(newPath, backupPath, newKey, curStatus);
     EXPECT_EQ(E_ERROR, errCode);
     connection = nullptr;

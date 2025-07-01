@@ -2587,8 +2587,8 @@ int RdbStoreImpl::InterruptBackup()
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_NOT_SUPPORT;
     }
-    if (slaveStatus_ == SlaveStatus::BACKING_UP) {
-        slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
+    if (*slaveStatus_ == SlaveStatus::BACKING_UP) {
+        *slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
         return E_OK;
     }
     return E_CANCEL;
@@ -2599,7 +2599,7 @@ int32_t RdbStoreImpl::GetBackupStatus() const
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER && config_.GetHaMode() != HAMode::MAIN_REPLICA) {
         return SlaveStatus::UNDEFINED;
     }
-    return slaveStatus_;
+    return *slaveStatus_;
 }
 
 bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore)

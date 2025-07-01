@@ -54,10 +54,10 @@ public:
     int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-        SlaveStatus &slaveStatus) override;
+        std::shared_ptr<SlaveStatus> slaveStatus) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        SlaveStatus &slaveStatus) override;
-    ExchangeStrategy GenerateExchangeStrategy(const SlaveStatus &status) override;
+        std::shared_ptr<SlaveStatus> slaveStatus) override;
+    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;

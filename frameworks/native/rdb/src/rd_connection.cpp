@@ -297,7 +297,7 @@ int32_t RdConnection::Unsubscribe(const std::shared_ptr<DistributedDB::StoreObse
 }
 
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-    SlaveStatus &slaveStatus)
+    std::shared_ptr<SlaveStatus> slaveStatus)
 {
     if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
         return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
@@ -312,7 +312,8 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
 }
 
 int32_t RdConnection::Restore(
-    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, SlaveStatus &slaveStatus)
+    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    std::shared_ptr<SlaveStatus> slaveStatus)
 {
     auto ret = RdUtils::RdDbClose(dbHandle_, 0);
     if (ret != E_OK) {
@@ -343,7 +344,7 @@ int32_t RdConnection::Restore(
     return ret;
 }
 
-ExchangeStrategy RdConnection::GenerateExchangeStrategy(const SlaveStatus &status)
+ExchangeStrategy RdConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status)
 {
     return ExchangeStrategy::NOT_HANDLE;
 }
