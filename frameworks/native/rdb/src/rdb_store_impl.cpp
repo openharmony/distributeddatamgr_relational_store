@@ -64,12 +64,13 @@
 #include "raw_data_parser.h"
 #include "rdb_manager_impl.h"
 #include "relational_store_manager.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "security_policy.h"
-#endif
 #include "sqlite_shared_result_set.h"
 #endif
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "security_policy.h"
+#endif
 #ifdef WINDOWS_PLATFORM
 #define ISFILE(filePath) ((filePath.find("\\") == std::string::npos))
 #else
