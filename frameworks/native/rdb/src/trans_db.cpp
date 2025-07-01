@@ -227,7 +227,11 @@ std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, co
 std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
     auto start = std::chrono::steady_clock::now();
+#if !defined(CROSS_PLATFORM)
     return std::make_shared<StepResultSet>(start, conn_.lock(), sql, args, true, true);
+#else
+    return std::make_shared<StepResultSet>(start, conn_.lock(), sql, args, false, true);
+#endif
 }
 
 std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
