@@ -188,10 +188,10 @@ HWTEST_F(ConnectionTest, Backup_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    SlaveStatus slaveStatus = BACKING_UP;
+    std::shared_ptr<SlaveStatus> slaveStatus = std::make_shared<SlaveStatus>(SlaveStatus::BACKING_UP);
     errCode = conn->Backup("test", { 1, 2, 3 }, true, slaveStatus);
     EXPECT_EQ(errCode, E_OK);
-    EXPECT_EQ(slaveStatus, BACKING_UP);
+    EXPECT_EQ(*slaveStatus, BACKING_UP);
 }
 
 /**

@@ -430,7 +430,7 @@ int ConnPool::ConfigLocale(const std::string &localeStr)
  * Rename the backed up database.
  */
 int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-    const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus)
+    const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus)
 {
     if (!writers_.IsFull() || config_.GetPath() == backupPath || newPath == backupPath) {
         LOG_ERROR("Connection pool is busy now!");
@@ -461,7 +461,8 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
     return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
 }
 
-int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus)
+int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
+    std::shared_ptr<SlaveStatus> slaveStatus)
 {
     if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
         auto connection = AcquireConnection(false);

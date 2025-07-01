@@ -56,7 +56,7 @@ public:
     int RestartConns();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-        const std::vector<uint8_t> &newKey, SlaveStatus &slaveStatus);
+        const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus);
     int Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
@@ -126,7 +126,8 @@ private:
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans = false);
     void ReleaseNode(std::shared_ptr<ConnNode> node, bool reuse = true);
-    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath, SlaveStatus &slaveStatus);
+    int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
+        std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
