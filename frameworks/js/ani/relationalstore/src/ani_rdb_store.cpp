@@ -242,7 +242,6 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     }
     auto proxy = AniObjectUtils::Unwrap<RdbStoreProxy>(env, object);
     if (proxy == nullptr || proxy->nativeRdb == nullptr) {
-        LOG_ERROR("RdbStore should be initialized properly.");
         ThrowBusinessError(env, E_INNER_ERROR, "RdbStore uninitialized.");
         return nullptr;
     }
@@ -250,7 +249,6 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     resultsetProxy->resultset = proxy->nativeRdb->QueryByStep(sqlStr, bindArgs);
     if (resultsetProxy->resultset == nullptr) {
         delete resultsetProxy;
-        LOG_ERROR("QueryByStep failed.");
         ThrowBusinessError(env, E_INNER_ERROR, "QueryByStep returned nullptr.");
         return nullptr;
     }
