@@ -70,8 +70,6 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-constexpr int32_t KEY_INDEX = 0;
-constexpr int32_t VALUE_INDEX = 1;
 
 RdbStoreProxy::RdbStoreProxy() {}
 
