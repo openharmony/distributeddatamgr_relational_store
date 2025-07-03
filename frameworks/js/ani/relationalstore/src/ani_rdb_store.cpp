@@ -284,16 +284,10 @@ ani_status RdbStoreInit(ani_env *env)
         LOG_ERROR("env is nullptr.");
         return ANI_ERROR;
     }
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
-    ani_namespace ns;
-    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        LOG_ERROR("Not found '%{public}s'", namespaceName);
-        return ANI_ERROR;
-    }
 
-    static const char *clsName = "LRdbStoreInner;";
+    static const char *clsName = "@ohos.data.relationalStore.relationalStore.RdbStoreInner";
     ani_class cls;
-    if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
+    if (ANI_OK != env->FindClass(clsName, &cls)) {
         LOG_ERROR("Not found '%{public}s'", clsName);
         return ANI_ERROR;
     }
