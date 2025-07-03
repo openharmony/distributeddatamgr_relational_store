@@ -54,7 +54,9 @@ public:
 
     Executor()
         : thread_([this] {
+#if !defined(CROSS_PLATFORM)
               pthread_setname_np(pthread_self(), "OS_TaskExecutor");
+#endif
               Run();
               self_ = nullptr;
           })
