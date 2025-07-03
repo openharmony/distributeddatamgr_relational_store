@@ -155,7 +155,7 @@ RDB_UTILS_DISABLE_WARNING("-Wc99-designator")
         [DataShare::SQL_IN] = &RdbUtils::In,
         [DataShare::NOT_IN] = &RdbUtils::NotIn,
         [DataShare::LIKE] = &RdbUtils::Like,
-        [DataShare::UNLIKE] = &RdbUtils::NoSupport,
+        [DataShare::UNLIKE] = &RdbUtils::NotLike,
         [DataShare::ORDER_BY_ASC] = &RdbUtils::OrderByAsc,
         [DataShare::ORDER_BY_DESC] = &RdbUtils::OrderByDesc,
         [DataShare::LIMIT] = &RdbUtils::Limit,
