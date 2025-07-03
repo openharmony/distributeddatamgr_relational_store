@@ -43,7 +43,7 @@ static constexpr int ERR_NULL = -1;
 
 void ThrowInnerError(int errcode)
 {
-    LOG_ERROR("ThrowInnerError, errcode = E_BASE + %{public}d", errcode - OHOS::NativeRdb::E_BASE);
+    LOG_ERROR("ThrowInnerError, errcode = %{public}d", errcode);
     auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerError>(errcode);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
@@ -944,7 +944,7 @@ public:
     int32_t GetVersion()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         int32_t version = 0;
@@ -958,7 +958,7 @@ public:
     void SetVersion(int32_t veriosn)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->SetVersion(veriosn);
@@ -971,7 +971,7 @@ public:
     {
         OHOS::NativeRdb::RebuiltType rebuilt = OHOS::NativeRdb::RebuiltType::NONE;
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return (RebuildType::key_t)rebuilt;
         }
         int errcode = nativeRdbStore_->GetRebuilt(rebuilt);
@@ -989,7 +989,7 @@ public:
     int64_t InsertWithConflict(string_view table, map_view<string, ValueType> values, ConflictResolution conflict)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
 
@@ -1027,7 +1027,7 @@ public:
     int64_t BatchInsertSync(string_view table, array_view<map<string, ValueType>> values)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         OHOS::NativeRdb::ValuesBuckets buckets = ani_rdbutils::BucketValuesToNative(values);
@@ -1053,7 +1053,7 @@ public:
         optional_view<ConflictResolution> conflict)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         ConflictResolution conflictres = ConflictResolution::key_t::ON_CONFLICT_NONE;
@@ -1083,7 +1083,7 @@ public:
         uintptr_t predicates)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         ani_env *env = get_env();
@@ -1111,7 +1111,7 @@ public:
     int64_t DeleteSync(weak::RdbPredicates predicates)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
@@ -1132,7 +1132,7 @@ public:
     int64_t DeleteDataShareSync(::taihe::string_view table, uintptr_t predicates)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         ani_env *env = get_env();
@@ -1172,7 +1172,7 @@ public:
     ResultSet QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return make_holder<ResultSetImpl, ResultSet>();
         }
         std::vector<std::string> stdcolumns;
@@ -1199,7 +1199,7 @@ public:
         optional_view<array<::taihe::string>> columns)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return taihe::make_holder<ResultSetImpl, ResultSet>();
         }
         ani_env *env = get_env();
@@ -1233,7 +1233,7 @@ public:
     ResultSet QuerySqlSync(string_view sql, optional_view<array<ValueType>> bindArgs)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return taihe::make_holder<ResultSetImpl, ResultSet>();
         }
         std::vector<OHOS::NativeRdb::ValueObject> para;
@@ -1297,7 +1297,7 @@ public:
     void ExecuteSqlWithSql(string_view sql)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
@@ -1314,7 +1314,7 @@ public:
     void ExecuteSqlWithOptionArgs(string_view sql, optional_view<array<ValueType>> bindArgs)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         if (!bindArgs.has_value()) {
@@ -1344,7 +1344,7 @@ public:
     {
         ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return aniValue;
         }
         return ExecuteWithTxId(sql, 0, args);
@@ -1354,7 +1354,7 @@ public:
     {
         ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return aniValue;
         }
         std::vector<OHOS::NativeRdb::ValueObject> nativeValues;
@@ -1382,7 +1382,7 @@ public:
     void BeginTransaction()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->BeginTransaction();
@@ -1394,7 +1394,7 @@ public:
     int64_t BeginTransSync()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
         auto [errcode, rxid] = nativeRdbStore_->BeginTrans();
@@ -1408,7 +1408,7 @@ public:
     void Commit()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->Commit();
@@ -1420,7 +1420,7 @@ public:
     void CommitWithTxId(int64_t txId)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->Commit(txId);
@@ -1432,7 +1432,7 @@ public:
     void RollBack()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->RollBack();
@@ -1444,7 +1444,7 @@ public:
     void RollbackSync(int64_t txId)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->RollBack(txId);
@@ -1456,7 +1456,7 @@ public:
     void BackupSync(string_view destName)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->Backup(std::string(destName));
@@ -1468,7 +1468,7 @@ public:
     void RestoreWithSrcName(string_view srcName)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->Restore(std::string(srcName));
@@ -1480,7 +1480,7 @@ public:
     void RestoreWithVoid()
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
         int errcode = nativeRdbStore_->Restore("");
@@ -1643,7 +1643,7 @@ public:
     Transaction CreateTransactionSync(optional_view<::ohos::data::relationalStore::TransactionOptions> options)
     {
         if (nativeRdbStore_ == nullptr) {
-            LOG_ERROR("nativeRdbStore_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return make_holder<TransactionImpl, Transaction>();
         }
         int32_t transactionType = 0;
