@@ -61,8 +61,8 @@ ani_status PredicatesInit(ani_env *env)
     }
 
     ani_class cls;
-    const char *className = "LRdbPredicates;";
-    if (ANI_OK != env->Namespace_FindClass(ns, className, &cls)) {
+    const char *className = "@ohos.data.relationalStore.relationalStore.RdbPredicates";
+    if (ANI_OK != env->FindClass(className, &cls)) {
         LOG_ERROR("Not found '%{public}s'", className);
         return ANI_ERROR;
     }
