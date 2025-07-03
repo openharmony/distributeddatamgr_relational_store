@@ -589,6 +589,29 @@ HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_009, TestSize.Level1)
     EXPECT_EQ(2, ResultSize(allPerson));
 }
 
+/* *
+ * @tc.name: Rdb_DataShare_Adapter_010
+ * @tc.desc: normal testcase of RdbDataShareAdapter
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDataShareAdapterTest, Rdb_DataShare_Adapter_010, TestSize.Level1)
+{
+    GenerateDefaultTable();
+
+    std::string table = "test";
+    std::string column = "data1";
+    std::string value = "%hello%";
+    DataSharePredicates predicates;
+    predicates.Unlike(column, value);
+    std::vector<std::string> columns;
+    auto result = store->Query(RdbUtils::ToPredicates(predicates, table), columns);
+    int rowCount = 0;
+    if (result.get() != nullptr) {
+        result.get()->GetRowCount(rowCount);
+    }
+    EXPECT_EQ(rowCount, 2);
+}
+
 void RdbDataShareAdapterTest::LessThanTest(MockRdbPredicates &predicates)
 {
     EXPECT_CALL(predicates, LessThan(testing::_, testing::_)).Times(1);
