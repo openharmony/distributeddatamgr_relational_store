@@ -46,6 +46,10 @@ public:
 
 static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object context, ani_object config)
 {
+    if (env == nullptr) {
+        LOG_ERROR("env is nullptr.");
+        return nullptr;
+    }
     DefaultOpenCallback callback;
     int errCode = OK;
     auto proxy = new RdbStoreProxy();
@@ -53,15 +57,10 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     auto rdbConfig = RdbStoreConfig("/data/storage/el2/database/rdb/test.db");
     proxy->nativeRdb = RdbHelper::GetRdbStore(rdbConfig, -1, callback, errCode);
     if (proxy->nativeRdb == nullptr) {
+        delete proxy;
         ThrowBusinessError(env, E_INNER_ERROR, "RdbHelper returned nullptr.");
         return nullptr;
     }
-
-    if (env == nullptr) {
-        LOG_ERROR("env is nullptr.");
-        return nullptr;
-    }
-
     static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
     static const char *className = "LRdbStoreInner;";
     static const char *initFinalizer = "initFinalizer";

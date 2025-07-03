@@ -32,17 +32,16 @@ using namespace OHOS::Rdb;
 
 void InitNativePredicates(ani_env *env, ani_object object, ani_string tableName)
 {
-    auto proxy = new PredicatesProxy();
-    auto tname = AniStringUtils::ToStd(env, tableName);
-    proxy->predicates = std::make_shared<RdbPredicates>(tname);
-
     if (env == nullptr) {
         LOG_ERROR("env is nullptr.");
         return;
     }
-
+    auto proxy = new PredicatesProxy();
+    auto tname = AniStringUtils::ToStd(env, tableName);
+    proxy->predicates = std::make_shared<RdbPredicates>(tname);
     ani_status status = env->Object_SetFieldByName_Long(object, "nativePtr", reinterpret_cast<ani_long>(proxy));
     if (ANI_OK != status) {
+        delete proxy;
         LOG_ERROR("[ANI] Failed to set nativePtr to predicates object.");
     }
 }
