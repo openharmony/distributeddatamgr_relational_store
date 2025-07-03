@@ -68,6 +68,9 @@
 #include "sqlite_shared_result_set.h"
 #endif
 
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
+#include "security_policy.h"
+#endif
 #ifdef WINDOWS_PLATFORM
 #define ISFILE(filePath) ((filePath.find("\\") == std::string::npos))
 #else
@@ -1091,7 +1094,7 @@ int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.IsMemoryRdb()) {
         return E_OK;
     }
-#if !defined(CROSS_PLATFORM)
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     return SecurityPolicy::SetSecurityLabel(config);
 #endif
     return E_OK;
