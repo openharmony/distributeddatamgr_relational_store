@@ -1090,8 +1090,8 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
             return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
         }
     }
-    bool valueBool = false;
-    status = JSUtils::Convert2Value(env, argv[1], valueBool);
+    bool valueFlag = false;
+    status = JSUtils::Convert2Value(env, argv[1], valueFlag);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
     napi_valuetype type = napi_undefined;
     // 'argv[2]' is observer function
@@ -1099,7 +1099,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
     DistributedRdb::SubscribeOption option;
     option.event = event;
-    option.mode = valueBool ? DistributedRdb::SubscribeMode::LOCAL_SHARED : DistributedRdb::SubscribeMode::LOCAL;
+    option.mode = valueFlag ? DistributedRdb::SubscribeMode::LOCAL_SHARED : DistributedRdb::SubscribeMode::LOCAL;
     // 'argv[2]' represents a callback function
     return proxy->RegisteredObserver(env, option, argv[2]);
 }
@@ -1128,8 +1128,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
         }
     }
 
-    bool valueBool = false;
-    status = JSUtils::Convert2Value(env, argv[1], valueBool);
+    bool valueFlag = false;
+    status = JSUtils::Convert2Value(env, argv[1], valueFlag);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
 
     // 'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'
@@ -1141,7 +1141,7 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     }
     SubscribeOption option;
     option.event = event;
-    valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
+    valueFlag ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
     // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
     return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
 }
@@ -1158,9 +1158,12 @@ napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *ar
         return nullptr;
     }
     auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
+    if (observer == nullptr) {
+        LOG_ERROR("Failed to create NapiStatisticsObserver.");
+        return nullptr;
+    }
     int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    LOG_INFO("libo 2.");
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));   
     statisticses_.push_back(std::move(observer));
     LOG_INFO("Statistics subscribe success.");
     return nullptr;
@@ -1175,11 +1178,6 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
 
     auto it = statisticses_.begin();
     while (it != statisticses_.end()) {
-        if (*it == nullptr) {
-            it = statisticses_.erase(it);
-            LOG_WARN("statisticsObserver is nullptr.");
-            continue;
-        }
         if (type == napi_function && !(**it == argv[0])) {
             ++it;
             continue;
