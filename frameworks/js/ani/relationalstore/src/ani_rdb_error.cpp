@@ -76,17 +76,19 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
 
 ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string &msg)
 {
-    ani_string message;
-    env->String_NewUTF8(msg.c_str(), msg.size(), &message);
-
     if (env == nullptr) {
         LOG_ERROR("env is nullptr.");
         return nullptr;
     }
-
+    ani_string message;
+    auto status = env->String_NewUTF8(msg.c_str(), msg.size(), &message);
+    if (ANI_OK != status) {
+        LOG_ERROR("String_NewUTF8 failed, errcode %{public}d.", status);
+        return nullptr;
+    }
     static const char *businessErrorName = "L@ohos/base/BusinessError;";
     ani_class cls;
-    auto status = env->FindClass(businessErrorName, &cls);
+    status = env->FindClass(businessErrorName, &cls);
     if (ANI_OK != status) {
         LOG_ERROR("Not found class '%{public}s' errcode %{public}d.", businessErrorName, status);
         return nullptr;
