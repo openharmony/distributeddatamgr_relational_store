@@ -88,8 +88,14 @@ void DelayNotify::StartTimer()
         }
 
         if (delaySyncTaskId_ == TaskExecutor::INVALID_TASK_ID) {
+            std::weak_ptr<DelayNotify> delayNotify = shared_from_this();
             delaySyncTaskId_ = pool_->Schedule(std::chrono::milliseconds(autoSyncInterval_),
-                [this]() { ExecuteTask(); });
+                [delayNotify]() {
+                    auto lockedDelayNotify = delayNotify.lock();
+                    if (lockedDelayNotify != nullptr) {
+                        lockedDelayNotify->ExecuteTask();
+                    }
+                });
         } else {
             delaySyncTaskId_ =
                 pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));

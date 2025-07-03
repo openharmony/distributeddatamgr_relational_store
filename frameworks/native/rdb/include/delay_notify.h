@@ -28,7 +28,7 @@
 namespace OHOS {
 class ExecutorPool;
 namespace NativeRdb {
-class DelayNotify {
+class DelayNotify : public std::enable_shared_from_this<DelayNotify> {
 public:
     using Task = std::function<int(const DistributedRdb::RdbChangedData &, const DistributedRdb::RdbNotifyConfig &)>;
     using Time = std::chrono::steady_clock::time_point;
