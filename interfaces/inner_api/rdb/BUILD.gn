@@ -353,6 +353,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]
@@ -443,6 +444,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]
@@ -511,6 +513,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]

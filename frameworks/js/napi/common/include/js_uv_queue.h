@@ -71,10 +71,8 @@ private:
     static napi_value Resolved(napi_env env, napi_callback_info info);
     static napi_value Rejected(napi_env env, napi_callback_info info);
     static napi_value Future(napi_env env, napi_callback_info info, bool exception);
-    static void DoWork(uv_work_t *work);
+
     static void DoExecute(uv_work_t *work);
-    static void DoUvCallback(uv_work_t *work, int status);
-    static void DoUvPromise(uv_work_t *work, int status);
 
     struct UvEntry {
         napi_env env_ = nullptr;
