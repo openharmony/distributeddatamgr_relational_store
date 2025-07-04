@@ -1159,8 +1159,7 @@ napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *ar
     }
     auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
     int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    LOG_INFO("libo 2.");
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));   
     statisticses_.push_back(std::move(observer));
     LOG_INFO("Statistics subscribe success.");
     return nullptr;
