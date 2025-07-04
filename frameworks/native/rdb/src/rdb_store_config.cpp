@@ -673,12 +673,12 @@ void RdbStoreConfig::SetClearMemorySize(int32_t size)
 
 std::string RdbStoreConfig::GetCollatorLocales() const
 {
-    return loacles_;
+    return locales_;
 }
 
-void RdbStoreConfig::SetCollatorLocales(const std::string &loacles)
+void RdbStoreConfig::SetCollatorLocales(const std::string &locales)
 {
-    loacles_ = loacles;
+    locales_ = locales;
 }
 
 ssize_t RdbStoreConfig::GetCheckpointSize() const

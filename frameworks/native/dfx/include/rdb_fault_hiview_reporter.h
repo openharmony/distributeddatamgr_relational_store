@@ -60,12 +60,13 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 static constexpr const char *FT_SQLITE = "SQLITE";
+static constexpr const char *FT_LENGTH_PARAM = "LENGTH_PARAM";
 
 static constexpr const char *BUNDLE_NAME_COMMON = "common";
 
-class RdbFaultEvent {
+class API_EXPORT RdbFaultEvent {
 public:
-    RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
+    API_EXPORT RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
 
     std::string GetBundleName() const { return bundleName_; };
@@ -109,7 +110,7 @@ public:
     static bool RegCollector(Collector collector);
     static void ReportCorrupted(const RdbCorruptedEvent &eventInfo);
     static void ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo);
-    static void ReportFault(const RdbFaultEvent &faultEvent);
+    API_EXPORT static void ReportFault(const RdbFaultEvent &faultEvent);
     static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static std::string GetBundleName(const std::string &bundleName, const std::string &storeName);

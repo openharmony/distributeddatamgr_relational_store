@@ -780,7 +780,7 @@ public:
 
     std::string GetCollatorLocales() const;
 
-    void SetCollatorLocales(const std::string &loacles);
+    void SetCollatorLocales(const std::string &locales);
 
     int32_t GetHaMode() const;
 
@@ -852,7 +852,7 @@ private:
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
     int32_t clearMemorySize_;
-    std::string loacles_;
+    std::string locales_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

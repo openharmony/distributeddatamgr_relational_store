@@ -421,7 +421,7 @@ int OH_Rdb_SetPersistent(OH_Rdb_ConfigV2 *config, bool isPersistent);
 
 /**
  * @brief Get support db type list
- * @param typeCount The output parameter, which is used to recieve the length of the support db type array.
+ * @param typeCount The output parameter, which is used to receive the length of the support db type array.
  * @return Return Rdb_DBType array contains supported db type, array length is number of support type
  * @since 14
  */
@@ -707,7 +707,7 @@ int OH_Rdb_Execute(OH_Rdb_Store *store, const char *sql);
  * @return Returns the status code of the execution.
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support.
  * @see OH_Rdb_Store.
  * @since 14
  */
@@ -769,7 +769,7 @@ int OH_Rdb_Commit(OH_Rdb_Store *store);
  * @return Returns the status code of the execution.
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support.
  * @see OH_Rdb_Store.
  * @since 14
  */
@@ -783,7 +783,7 @@ int OH_Rdb_BeginTransWithTrxId(OH_Rdb_Store *store, int64_t *trxId);
  * @return Returns the status code of the execution.
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support.
  * @see OH_Rdb_Store.
  * @since 14
  */
@@ -797,7 +797,7 @@ int OH_Rdb_RollBackByTrxId(OH_Rdb_Store *store, int64_t trxId);
  * @return Returns the status code of the execution.
  *     {@link RDB_OK} - success.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
- *     {@link RDB_E_NOT_SUPPORTED} - The error code for not supprt.
+ *     {@link RDB_E_NOT_SUPPORTED} - The error code for not support.
  * @see OH_Rdb_Store.
  * @since 14
  */
@@ -1374,7 +1374,7 @@ int OH_Rdb_CloudSync(OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[
 * A callback will be invoked when there is a notification of the automatic synchronization progress.
 *
 * @param store Indicates the pointer to the target {@Link OH_Rdb_Store} instance.
-* @param observer The {@link Rdb_SyncObserver} for the automatic synchornizaiton progress
+* @param observer The {@link Rdb_SyncObserver} for the automatic synchronization progress
 * Indicates the callback invoked to return the automatic synchronization progress.
 * @return Returns the status code of the execution. See {@link OH_Rdb_ErrCode}.
 *     {@link RDB_OK} - success.
@@ -1518,7 +1518,7 @@ OH_Cursor *OH_Rdb_ExecuteQueryV2(OH_Rdb_Store *store, const char *sql, const OH_
  * @param store Represents a pointer to an OH_Rdb_Store instance.
  * @param config Represents a pointer to an OH_Rdb_ConfigV2 configuration of the database related to this RDB store.
  * @param attachName Represents the alias of the database.
- * @param waitTime Represents the maximum time allowed for attaching the database, vaild range is 1 to 300.
+ * @param waitTime Represents the maximum time allowed for attaching the database, valid range is 1 to 300.
  * @param attachedNumber Represents the number of attached databases, It is an output parameter.
  * @return Returns the status code of the execution.
  *         Returns {@link RDB_OK} if the execution is successful.
@@ -1548,7 +1548,7 @@ int OH_Rdb_Attach(OH_Rdb_Store *store, const OH_Rdb_ConfigV2 *config, const char
  *
  * @param store Represents a pointer to an OH_Rdb_Store instance.
  * @param attachName Represents the alias of the database.
- * @param waitTime Represents the maximum time allowed for detaching the database, vaild range is 1 to 300.
+ * @param waitTime Represents the maximum time allowed for detaching the database, valid range is 1 to 300.
  * @param attachedNumber Represents the number of attached databases, It is an output parameter.
  * @return Returns the status code of the execution.
  *         Returns {@link RDB_OK} if the execution is successful.

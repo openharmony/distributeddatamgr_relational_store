@@ -49,7 +49,7 @@ public:
     API_EXPORT ~AbsRdbPredicates() override {}
 
     /**
-     * @brief Initalzie AbsRdbPredicates object.
+     * @brief Clear AbsRdbPredicates object.
      */
     API_EXPORT void Clear() override;
 
