@@ -103,25 +103,25 @@ OH_RDB_TransOptions *OH_RdbTrans_CreateOptions(void);
 /**
  * @brief Destroys an OH_RDB_TransOptions instance object.
  *
- * @param opitons Represents a pointer to an instance of OH_RDB_TransOptions.
+ * @param options Represents a pointer to an instance of OH_RDB_TransOptions.
  * @return Returns the error code.
  *         Returns {@link RDB_OK} if the execution is successful.
  *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
  * @since 16
  */
-int OH_RdbTrans_DestroyOptions(OH_RDB_TransOptions *opitons);
+int OH_RdbTrans_DestroyOptions(OH_RDB_TransOptions *options);
 
 /**
- * @brief Sets integer data to the opitons object.
+ * @brief Sets integer data to the options object.
  *
- * @param opitons Represents a pointer to an instance of OH_RDB_TransOptions.
+ * @param options Represents a pointer to an instance of OH_RDB_TransOptions.
  * @param type Represents relation database transaction type.
  * @return Returns the error code.
  *         Returns {@link RDB_OK} if the execution is successful.
  *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
  * @since 16
  */
-int OH_RdbTransOption_SetType(OH_RDB_TransOptions *opitons, OH_RDB_TransType type);
+int OH_RdbTransOption_SetType(OH_RDB_TransOptions *options, OH_RDB_TransType type);
 
 /**
  * @brief Commits a transaction of a relational database.

@@ -243,7 +243,8 @@ int OH_Values_Get(OH_Data_Values *values, int index, OH_Data_Value **val);
  *
  * @param values Represents a pointer to an instance of OH_Data_Values.
  * @param index Represents the zero-based index of target data in values.
- * @param val Represents empty data flag. It is an output parameter. Ture is empty, false is not empty.
+ * @param val Represents empty data flag. It is an output parameter.
+ * The value true means that the data is empty, and false means the opposite.
  * @return Returns the error code.
  *         Returns {@link RDB_OK} if the execution is successful.
  *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.

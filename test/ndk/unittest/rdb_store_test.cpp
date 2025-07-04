@@ -1937,3 +1937,28 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_042, TestSize.Level1)
     errCode = OH_Rdb_SetLocale(store, "zh");
     EXPECT_EQ(errCode, RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_043
+ * @tc.desc: Abnormal testCase of store for putBlob and OH_VBucket_PutFloatVector.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_043, TestSize.Level1)
+{
+    ASSERT_NE(storeTestRdbStore_, nullptr);
+    char createTableSql[] =
+        "CREATE TABLE bucket_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+        "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
+    EXPECT_EQ(errCode, 0);
+
+    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket, nullptr);
+    uint8_t arr[] = { 1, 2, 3, 4, 5 };
+    uint32_t len = 4294967295;
+    int ret = valueBucket->putBlob(valueBucket, "data4", arr, len);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    float floatArr[] = { 1.0, 2.0, 3.0 };
+    ret = OH_VBucket_PutFloatVector(valueBucket, "data3", floatArr, len);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+}

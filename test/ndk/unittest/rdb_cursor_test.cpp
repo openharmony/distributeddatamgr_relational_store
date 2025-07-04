@@ -660,6 +660,8 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_PutAssets_test_010, TestSize.Level
     errCode = OH_VBucket_PutAssets(valueBucket, nullptr, assets, assetsCount);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     EXPECT_EQ(OH_VBucket_PutAssets(valueBucket, "data2", nullptr, assetsCount), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    // Number of elements 4294967295
+    EXPECT_EQ(OH_VBucket_PutAssets(valueBucket, "data2", assets, 4294967295), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets, assetsCount);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
