@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,7 +71,10 @@ private:
     static napi_value Resolved(napi_env env, napi_callback_info info);
     static napi_value Rejected(napi_env env, napi_callback_info info);
     static napi_value Future(napi_env env, napi_callback_info info, bool exception);
+    static void DoWork(uv_work_t *work);
     static void DoExecute(uv_work_t *work);
+    static void DoUvCallback(uv_work_t *work, int status);
+    static void DoUvPromise(uv_work_t *work, int status);
 
     struct UvEntry {
         napi_env env_ = nullptr;

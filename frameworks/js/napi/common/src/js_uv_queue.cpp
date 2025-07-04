@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,7 @@ UvQueue::~UvQueue()
 
 void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
 {
+#if !defined(CROSS_PLATFORM)
     if (callback.IsNull()) {
         LOG_ERROR("callback is nullptr.");
         return;
@@ -56,6 +57,37 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
+#else
+    if (loop_ == nullptr || callback.IsNull()) {
+        LOG_ERROR("loop_ or callback is nullptr.");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        LOG_ERROR("No memory for uv_work_t.");
+        return;
+    }
+    auto entry = new (std::nothrow) UvEntry();
+    if (entry == nullptr) {
+        delete work;
+        LOG_ERROR("No memory for UvEntry.");
+        return;
+    }
+    entry->env_ = env_;
+    entry->object_ = callback.object_;
+    entry->callback_ = callback.callback_;
+    entry->repeat_ = callback.repeat_;
+    entry->getter_ = std::move(callback.getter_);
+    entry->args_ = std::move(args);
+    entry->result_ = std::move(result);
+    work->data = entry;
+    int ret = uv_queue_work(loop_, work, DoWork, DoUvCallback);
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete entry;
+        delete work;
+    }
+#endif
 }
 
 void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
@@ -83,6 +115,7 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
 
 void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
 {
+#if !defined(CROSS_PLATFORM)
     if (promise.IsNull()) {
         LOG_ERROR("promise is nullptr.");
         return;
@@ -95,7 +128,67 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
+#else
+    if (loop_ == nullptr || promise.IsNull()) {
+        LOG_ERROR("loop_ or promise is nullptr.");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        LOG_ERROR("No memory for uv_work_t.");
+        return;
+    }
+    auto entry = new (std::nothrow) UvEntry();
+    if (entry == nullptr) {
+        delete work;
+        LOG_ERROR("No memory for UvEntry.");
+        return;
+    }
+    entry->env_ = env_;
+    entry->defer_ = promise.defer_;
+    entry->args_ = std::move(args);
+    work->data = entry;
+    int ret = uv_queue_work(loop_, work, DoWork, DoUvPromise);
+    if (ret < 0) {
+        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        delete entry;
+        delete work;
+    }
+#endif
 }
+
+#if defined(CROSS_PLATFORM)
+void UvQueue::DoWork(uv_work_t *work)
+{
+}
+
+void UvQueue::DoUvCallback(uv_work_t *work, int status)
+{
+    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
+        delete data;
+        delete work;
+    });
+
+    GenCallbackTask(entry)();
+}
+
+void UvQueue::DoUvPromise(uv_work_t *work, int status)
+{
+    std::shared_ptr<UvEntry> entry(static_cast<UvEntry *>(work->data), [work](UvEntry *data) {
+        delete data;
+        delete work;
+    });
+
+    Scope scope(entry->env_);
+    napi_value argv[ARG_BUTT] = { nullptr };
+    auto argc = entry->GetArgv(argv, ARG_BUTT);
+    if (argv[ARG_ERROR] != nullptr || argc != ARG_BUTT) {
+        napi_reject_deferred(entry->env_, entry->defer_, argv[ARG_ERROR]);
+    } else {
+        napi_resolve_deferred(entry->env_, entry->defer_, argv[ARG_DATA]);
+    }
+}
+#endif
 
 void UvQueue::Execute(UvQueue::Task task)
 {
