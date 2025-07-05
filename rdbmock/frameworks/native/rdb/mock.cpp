@@ -19,11 +19,7 @@
 #include "share_block.h"
 #include "sqlite_errno.h"
 
-constexpr int ERROR_STATUS = -1;
-constexpr unsigned int SLEEP_TIME = 1000;
-// move to the highest 32 bits of 64 bits number
 constexpr int RETRY_TIME = 50;
-constexpr int PRINT_RETRY_TIMES = 10;
 
 namespace OHOS {
 __attribute__((visibility("default"))) bool PathToRealPath(const std::string &path, std::string &realPath)
