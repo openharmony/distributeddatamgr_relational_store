@@ -266,6 +266,7 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
     if (ret != HKS_SUCCESS) {
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksInitParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksInitParamSet() failed with error %{public}d", ret);
+        tempKey.assign(tempKey.size(), 0);
         return {};
     }
     struct HksBlob blobAad = { uint32_t(g_add.size()), g_add.data() };
@@ -288,6 +289,7 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
         HksFreeParamSet(&params);
+        tempKey.assign(tempKey.size(), 0);
         return {};
     }
 
@@ -296,6 +298,7 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksBuildParamSet ret=" + std::to_string(ret));
         LOG_ERROR("HksBuildParamSet failed with error %{public}d", ret);
         HksFreeParamSet(&params);
+        tempKey.assign(tempKey.size(), 0);
         return {};
     }
     std::vector<uint8_t> encryptedKey(plainKey.size * TIMES + 1);
@@ -304,9 +307,11 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         encryptedKey.assign(encryptedKey.size(), 0);
+        tempKey.assign(tempKey.size(), 0);
         return {};
     }
     encryptedKey.resize(cipherText.size);
+    tempKey.assign(tempKey.size(), 0);
     return encryptedKey;
 }
 
