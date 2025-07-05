@@ -1408,7 +1408,7 @@ void WriteToCompareFile(const std::string &dbPath, const std::string &bundleName
     }
 }
 
-int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql)
+int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql)
 {
     statement->Reset();
     Suspender suspender(Suspender::SQL_STATISTIC);
@@ -1423,6 +1423,10 @@ int32_t RdbStoreImpl::HandleSchemaDDL(std::shared_ptr<Statement> statement, cons
             std::string dbPath = config_.GetPath();
             std::string bundleName = config_.GetBundleName();
             WriteToCompareFile(dbPath, bundleName, sql);
+        }
+        statement = nullptr;
+        if (config_.GetEnableSemanticIndex() && !isKnowledgeSchemaReady_) {
+            SetKnowledgeSchema();
         }
         auto pool = GetPool();
         if (pool == nullptr) {
@@ -1458,7 +1462,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        HandleSchemaDDL(statement, sql);
+        HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
     if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
@@ -1498,11 +1502,11 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         return { errCode, object };
     }
 
-    return HandleDifferentSqlTypes(statement, sql, errCode, sqlType);
+    return HandleDifferentSqlTypes(std::move(statement), sql, errCode, sqlType);
 }
 
 std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
-    std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType)
+    std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
 {
     if (code != E_OK) {
         return { code, ValueObject() };
@@ -1529,7 +1533,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        HandleSchemaDDL(statement, sql);
+        HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
 }
@@ -1553,16 +1557,16 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
     }
     errCode = statement->Execute(args);
     TryDump(errCode, "ExecuteExt");
-    return HandleResults(statement, sql, errCode, sqlType);
+    return HandleResults(std::move(statement), sql, errCode, sqlType);
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::HandleResults(
-    std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType)
+    std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
 {
     Results result = GenerateResult(
         code, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        HandleSchemaDDL(statement, sql);
+        HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, result };
 }
@@ -2813,11 +2817,15 @@ void RdbStoreImpl::SetKnowledgeSchema()
         LOG_ERROR("The database is busy or closed when set knowledge schema ret %{public}d.", ret);
         return;
     }
+    if (isKnowledgeSchemaReady_) {
+        return;
+    }
     ret = conn->SetKnowledgeSchema(schema);
     if (ret != E_OK) {
         LOG_ERROR("Set knowledge schema failed %{public}d.", ret);
         return;
     }
+    isKnowledgeSchemaReady_ = true;
     auto helper = GetKnowledgeSchemaHelper();
     helper->Init(config_, schema);
     helper->DonateKnowledgeData();
