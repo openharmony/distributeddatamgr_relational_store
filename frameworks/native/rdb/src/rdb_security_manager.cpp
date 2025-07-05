@@ -189,15 +189,18 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
     if (!res) {
         LOG_ERROR("EncryptWorkKey failed, keyFile%{public}s", SqliteUtils::Anonymous(keyFile).c_str());
         keyContent.assign(keyContent.size(), 0);
+        key.assign(key.size(), 0);
         return false;
     }
     if (secretContent.encryptValue.empty()) {
         Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
+        keyContent.assign(keyContent.size(), 0);
         key.assign(key.size(), 0);
         return false;
     }
 
+    keyContent.assign(keyContent.size(), 0);
     key.assign(key.size(), 0);
     auto keyFileOld = ReplaceSuffix(keyFile);
     auto ret = SaveSecretKeyToDisk(keyFile, secretContent);
