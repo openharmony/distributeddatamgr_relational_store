@@ -2268,7 +2268,6 @@ int RdbStoreImpl::ExecuteByTrxId(
     if (ret != E_OK) {
         LOG_ERROR("transaction id: %{public}" PRIu64 ", storeName: %{public}s, errCode: %{public}d" PRIu64, trxId,
             SqliteUtils::Anonymous(name_).c_str(), ret);
-        trxConnMap_.Erase(trxId);
         return ret;
     }
     if (closeConnAfterExecute) {
