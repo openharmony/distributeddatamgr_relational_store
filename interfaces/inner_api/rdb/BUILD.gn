@@ -78,7 +78,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include",
     ]
 
     defines = [
@@ -354,7 +353,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]
@@ -422,6 +420,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//third_party/sqlite:sqlite_sdk",
     ]
+    external_deps = [ "kv_store:distributeddata_inner" ]
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -445,7 +444,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]
@@ -493,6 +491,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//third_party/sqlite:sqlite_static",
     ]
+    external_deps = [ "kv_store:distributeddata_inner" ]
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -514,7 +513,6 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
-      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
     ]
 
     cflags = [ "-includemock.h" ]
@@ -561,7 +559,10 @@ if (is_ohos && !build_ohos_sdk) {
       "//third_party/sqlite:sqlite_static",
     ]
 
-    external_deps = [ "c_utils:utils" ]
+    external_deps = [ 
+      "c_utils:utils",
+      "kv_store:distributeddata_inner",
+    ]
 
     cflags_cc = [ "-std=c++17" ]
 
