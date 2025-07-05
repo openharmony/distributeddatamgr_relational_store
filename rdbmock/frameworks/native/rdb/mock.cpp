@@ -38,8 +38,6 @@ __attribute__((visibility("default"))) std::string ExtractFilePath(const std::st
 }
 
 namespace NativeRdb {
-struct SharedBlockInfo;
-struct sqlite3_stmt;
 __attribute__((visibility("default"))) int gettid()
 {
     return 0;
