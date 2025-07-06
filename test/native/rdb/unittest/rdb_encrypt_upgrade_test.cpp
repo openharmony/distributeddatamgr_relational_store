@@ -58,18 +58,17 @@ public:
     static const std::string encryptedDatabaseName;
     static const std::string encryptedDatabasePath;
     static const std::string encryptedDatabaseKeyDir;
-    static constexpr uint32_t TIMES = 4;
-    static constexpr uint32_t MAX_UPDATE_SIZE = 64;
-    static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
-    static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
-    static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-    static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     std::mutex mutex_;
 };
 
 const std::string RdbEncryptUpgradeTest::encryptedDatabaseName = "encrypted.db";
 const std::string RdbEncryptUpgradeTest::encryptedDatabasePath = RDB_TEST_PATH + encryptedDatabaseName;
 const std::string RdbEncryptUpgradeTest::encryptedDatabaseKeyDir = RDB_TEST_PATH + "key/";
+static constexpr uint32_t TIMES = 4;
+static constexpr uint32_t MAX_UPDATE_SIZE = 64;
+static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
+static constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
 
 class RdbEncryptUpgradeTestOpenCallback : public RdbOpenCallback {
 public:

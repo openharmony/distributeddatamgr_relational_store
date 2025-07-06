@@ -257,6 +257,19 @@ int32_t RDBCrypto::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDB
     return ret;
 }
 
+std::vector<HksParam> CreateEncryptHksParams(const HksBlob &blobNonce, const HksBlob &blobAad)
+{
+    return {
+        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
+        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT },
+        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
+        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
+        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
+        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
+        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
+        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE } };
+}
+
 std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault)
 {
     std::vector<uint8_t> tempRootKeyAlias(param.rootAlias);
@@ -274,17 +287,8 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
     struct HksBlob plainKey = { uint32_t(tempKey.size()), tempKey.data() };
     struct HksBlob blobNonce = { uint32_t(param.nonceValue.size()), const_cast<uint8_t*>(&(param.nonceValue[0])) };
 
-    struct HksParam hksParam[] = {
-        { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_ENCRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 },
-        { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
-        { .tag = HKS_TAG_NONCE, .blob = blobNonce },
-        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE } };
-
-    ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
+    auto hksParams = CreateEncryptHksParams(blobNonce, blobAad);
+    ret = HksAddParams(params, hksParams.data(), hksParams.size());
     if (ret != HKS_SUCCESS) {
         rdbFault = GetDfxFault(E_WORK_KEY_ENCRYPT_FAIL, "Encrypt HksAddParams ret=" + std::to_string(ret));
         LOG_ERROR("HksAddParams failed with error %{public}d", ret);
