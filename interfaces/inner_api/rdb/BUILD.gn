@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -343,6 +343,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
+      "${relational_store_mock_path}/frameworks/native/mac",
       "mock/include",
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -389,6 +390,7 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/mac/mac_mock.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
@@ -418,9 +420,10 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
-    external_deps = [ "kv_store:distributeddata_inner" ]
+
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -489,9 +492,10 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
-    external_deps = [ "kv_store:distributeddata_inner" ]
+
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -504,6 +508,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
+      "${relational_store_mock_path}/frameworks/native/mac",
       "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
@@ -549,6 +554,7 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/mac/mac_mock.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
@@ -556,13 +562,11 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
 
-    external_deps = [ 
-      "c_utils:utils",
-      "kv_store:distributeddata_inner",
-    ]
+    external_deps = [ "c_utils:utils" ]
 
     cflags_cc = [ "-std=c++17" ]
 
