@@ -110,8 +110,8 @@ void RdbEncryptUpgradeTest::SetUp()
 
 void RdbEncryptUpgradeTest::TearDown()
 {
-    RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(RdbEncryptUpgradeTest::encryptedDatabasePath);
+    // RdbHelper::ClearCache();
+    // RdbHelper::DeleteRdbStore(RdbEncryptUpgradeTest::encryptedDatabasePath);
 }
 
 std::string RdbEncryptUpgradeTest::RemoveSuffix(const std::string &name)
@@ -262,6 +262,7 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_001, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
     std::string keyPathV2 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    LOG_ERROR("bai: keyPathV2 is %{public}s.", keyPathV2.c_str());
     bool isFileExists = OHOS::FileExists(keyPathV2);
     ASSERT_TRUE(isFileExists);
     store = nullptr;
