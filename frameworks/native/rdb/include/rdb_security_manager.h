@@ -146,7 +146,7 @@ private:
     std::string ReplaceSuffix(const std::string& str);
 
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
-    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_V1";
+    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_v1";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
     static constexpr const char *SUFFIX_PUB_KEY_OLD = ".pub_key";
     static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key.new.bk";
