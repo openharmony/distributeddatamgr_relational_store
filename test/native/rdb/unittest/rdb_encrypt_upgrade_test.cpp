@@ -167,7 +167,7 @@ int32_t RdbEncryptUpgradeTest::HksEncryptThreeStage(const struct HksBlob *keyAli
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
-        LOG_ERROR("bai: HksEncrypt failed with error %{public}d", result);
+        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
         return result;
     }
     return HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
@@ -215,11 +215,10 @@ std::vector<uint8_t> RdbEncryptUpgradeTest::EncryptV1(std::vector<uint8_t> &key,
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         encryptedKey.assign(encryptedKey.size(), 0);
-        LOG_ERROR("bai: HksEncrypt failed with error %{public}d", ret);
+        LOG_ERROR("HksEncrypt failed with error %{public}d", ret);
         return {};
     }
     encryptedKey.resize(cipherText.size);
-    LOG_ERROR("bai: EncryptOld success ");
     return encryptedKey;
 }
 
