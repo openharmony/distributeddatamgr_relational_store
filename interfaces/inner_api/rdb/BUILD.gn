@@ -304,6 +304,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
 
