@@ -193,7 +193,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_V1";
+    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_v1";
     int ret = access(keyPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
 
@@ -356,7 +356,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
     EXPECT_NE(store, nullptr);
     EXPECT_EQ(errCode, E_OK);
 
-    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_V1";
+    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_v1";
     int ret = access(keyPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
 
