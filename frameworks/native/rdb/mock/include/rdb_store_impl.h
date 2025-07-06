@@ -120,9 +120,9 @@ private:
     int ExecuteByTrxId(const std::string &sql, int64_t trxId, bool closeConnAfterExecute = false,
         const std::vector<ValueObject> &bindArgs = {});
     std::pair<int32_t, Results> HandleResults(
-        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
+        std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType);
     std::pair<int32_t, ValueObject> HandleDifferentSqlTypes(
-        std::shared_ptr<Statement> statement, const std::string &sql, int32_t code, int sqlType);
+        std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType);
     int CheckAttach(const std::string &sql);
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
@@ -151,7 +151,7 @@ private:
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
     static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
     static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
-    int32_t HandleSchemaDDL(std::shared_ptr<Statement> statement, const std::string &sql);
+    int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
@@ -194,6 +194,7 @@ private:
     std::shared_ptr<DistributedRdb::RdbKnowledgeSchema> knowledgeSchema_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
+    std::atomic<bool> isKnowledgeSchemaReady_{false};
 };
 } // namespace OHOS::NativeRdb
 #endif
