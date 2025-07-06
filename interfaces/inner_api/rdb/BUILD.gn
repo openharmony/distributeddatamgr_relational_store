@@ -423,7 +423,6 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
-
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -495,7 +494,6 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
-
     cflags_cc = [ "-std=c++17" ]
 
     public_configs = [ ":native_rdb_public_config" ]
