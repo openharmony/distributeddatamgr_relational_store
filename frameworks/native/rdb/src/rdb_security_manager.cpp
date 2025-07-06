@@ -384,12 +384,11 @@ RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile
             rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
             return rdbPasswd;
         }
-    } else {
-        if (LoadSecretKeyFromDisk(keyFileOld, keyData) && !keyData.secretKey.empty()) {
-            rdbPasswd.isKeyExpired = IsKeyExpired(keyData.timeValue);
-            rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
-            return rdbPasswd;
-        }
+    }
+    if (LoadSecretKeyFromDisk(keyFileOld, keyData) && !keyData.secretKey.empty()) {
+        rdbPasswd.isKeyExpired = IsKeyExpired(keyData.timeValue);
+        rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
+        return rdbPasswd;
     }
     return {};
 }
