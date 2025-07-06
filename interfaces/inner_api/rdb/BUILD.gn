@@ -328,6 +328,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
     cflags_cc = [ "-std=c++17" ]
@@ -344,7 +345,6 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
-      "${relational_store_mock_path}/frameworks/native/mac",
       "mock/include",
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -391,7 +391,6 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
-      "${relational_store_mock_path}/frameworks/native/mac/mac_mock.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
     ]
@@ -399,6 +398,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
     cflags_cc = [ "-std=c++17" ]
@@ -507,7 +507,6 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
-      "${relational_store_mock_path}/frameworks/native/mac",
       "${distributedfile_path}/mod_securitylabel",
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/rdb/mock/include",
@@ -553,7 +552,6 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
-      "${relational_store_mock_path}/frameworks/native/mac/mac_mock.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
       "${relational_store_native_path}/rdb/src/security_policy.cpp",
