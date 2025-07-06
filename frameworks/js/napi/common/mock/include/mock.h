@@ -15,14 +15,13 @@
 #ifndef SEND_EVENT_MOCK_H
 #define SEND_EVENT_MOCK_H
 #include <functional>
+
 #include "event_handler.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "uv.h"
 
-napi_status SendEventMock(napi_env env,
-                        const std::function<void()>& cb,
-                        napi_event_priority priority,
-                        const char* name);
+napi_status SendEventMock(
+    napi_env env, const std::function<void()> &cb, napi_event_priority priority, const char *name);
 #endif //SEND_EVENT_MOCK_H

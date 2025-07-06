@@ -18,9 +18,9 @@ struct UvEntry {
     std::function<void()> callback;
 };
 napi_status SendEventMock(napi_env env,
-                        const std::function<void()>& cb,
-                        napi_event_priority priority,
-                        const char* name)
+                          const std::function<void()>& cb,
+                          napi_event_priority priority,
+                          const char* name)
 {
     if (env == nullptr || cb == nullptr || priority < napi_eprio_vip || napi_eprio_vip > napi_eprio_idle) {
         return napi_status::napi_invalid_arg;
@@ -44,7 +44,9 @@ napi_status SendEventMock(napi_env env,
     entry->callback = cb;
     work->data = entry;
 
-    int ret = uv_queue_work(loop, work, [](uv_work_t *data){return;}, [](uv_work_t *work, int status){
+    int ret = uv_queue_work(loop, work, [](uv_work_t *data) {
+        return;
+    }, [](uv_work_t *work, int status) {
         if (work == nullptr || work->data == nullptr) {
             return;
         }
@@ -56,7 +58,7 @@ napi_status SendEventMock(napi_env env,
         delete work;
         return;
     });
-    if(ret < 0) {
+    if (ret < 0) {
         delete entry;
         delete work;
         return napi_status::napi_invalid_arg;
