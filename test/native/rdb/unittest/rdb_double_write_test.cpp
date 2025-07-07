@@ -33,6 +33,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "securec.h"
 #include "sqlite3.h"
 #include "sqlite_connection.h"
 #include "sqlite_utils.h"
@@ -1842,7 +1843,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_014, TestSize.Level0)
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 
-
     bool isSlaveDbFileExists = OHOS::FileExists(SLAVE_DATABASE_NAME);
     ASSERT_FALSE(isSlaveDbFileExists);
     errCode = store->Backup(std::string(""), {});
@@ -2044,7 +2044,7 @@ static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, si
     free(data);
     return totalCost;
 }
- 
+
 static int64_t GetUpdateTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
@@ -2058,9 +2058,9 @@ static int64_t GetUpdateTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     int64_t totalCost = 0;
     for (int i = 0; i < repeat; i++) {
         int start = i * batchSize;
-        int end = (i+1) * batchSize;
-        std::string sql = "update test set name = '" + std::string(data) +
-            "' where id >= " + std::to_string(start) + " and id < " + std::to_string(end) + ";";
+        int end = (i + 1) * batchSize;
+        std::string sql = "update test set name = '" + std::string(data) + "' where id >= " + std::to_string(start) +
+                          " and id < " + std::to_string(end) + ";";
         auto begin = std::chrono::high_resolution_clock::now();
         int ret = rdbStore->ExecuteSql(sql);
         auto stop = std::chrono::high_resolution_clock::now();
@@ -2070,16 +2070,16 @@ static int64_t GetUpdateTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     free(data);
     return totalCost;
 }
- 
+
 static int64_t GetDeleteTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize, int repeat)
 {
     LOG_INFO("---- start delete ----");
     int64_t totalCost = 0;
     for (int i = 0; i < repeat; i++) {
         int start = i * batchSize;
-        int end = (i+1) * batchSize;
-        std::string sql = "delete from test where id >= " +
-            std::to_string(start) + " and id < " + std::to_string(end) + ";";
+        int end = (i + 1) * batchSize;
+        std::string sql =
+            "delete from test where id >= " + std::to_string(start) + " and id < " + std::to_string(end) + ";";
         auto begin = std::chrono::high_resolution_clock::now();
         int ret = rdbStore->ExecuteSql(sql);
         auto stop = std::chrono::high_resolution_clock::now();
@@ -2088,12 +2088,12 @@ static int64_t GetDeleteTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     }
     return totalCost;
 }
- 
+
 static int MockSupportBinlogOff(void)
 {
     return SQLITE_ERROR;
 }
- 
+
 int64_t RdbDoubleWriteTest::GetRestoreTime(HAMode haMode)
 {
     InitDb(haMode);
@@ -2107,12 +2107,12 @@ int64_t RdbDoubleWriteTest::GetRestoreTime(HAMode haMode)
     int size = 1024;
     Insert(id, totalCount, size);
     store = nullptr;
- 
+
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     DoubleWriteTestOpenCallback helper;
     config.SetHaMode(haMode);
     DeleteDbFile(config);
-    
+
     int errCode = E_OK;
     auto begin = std::chrono::high_resolution_clock::now();
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -2120,7 +2120,7 @@ int64_t RdbDoubleWriteTest::GetRestoreTime(HAMode haMode)
     EXPECT_NE(store, nullptr);
     return std::chrono::duration_cast<std::chrono::microseconds>(stop - begin).count();
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_001
  * @tc.desc: test performance of insert, update, query and delete in main_replica
@@ -2142,7 +2142,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_001, TestSize.Level1)
     if (!CheckFolderExist(BINLOG_DATABASE_NAME)) {
         return;
     }
- 
+
     int totalCount = 20000;
     int dataSize = 1024;
     int batchSize = 10;
@@ -2153,23 +2153,21 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_001, TestSize.Level1)
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
     ASSERT_FALSE(CheckFolderExist(BINLOG_DATABASE_NAME));
- 
+
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
- 
+
     auto T1_2 = GetInsertTime(store, totalCount, dataSize);
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
- 
+
     EXPECT_LT(T1, T1_2 * 1.5);
     EXPECT_LT(T2, T2_2 * 1.5);
     EXPECT_LT(T3, T3_2 * 1.5);
-    LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}lld, %{public}lld, %{public}lld",
-        T1, T2, T3);
-    LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}lld, %{public}lld, %{public}lld",
-        T1_2, T2_2, T3_2);
+    LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}lld, %{public}lld, %{public}lld", T1, T2, T3);
+    LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}lld, %{public}lld, %{public}lld", T1_2, T2_2, T3_2);
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_002
  * @tc.desc: test performance of insert, update, query and delete in mannual_trigger
@@ -2193,7 +2191,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_002, TestSize.Level1)
     if (!CheckFolderExist(BINLOG_DATABASE_NAME)) {
         return;
     }
- 
+
     int totalCount = 20000;
     int dataSize = 200;
     int batchSize = 1;
@@ -2204,23 +2202,21 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_002, TestSize.Level1)
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
     ASSERT_FALSE(CheckFolderExist(BINLOG_DATABASE_NAME));
- 
+
     InitDb(HAMode::SINGLE);
     ASSERT_NE(store, nullptr);
- 
+
     auto T1_2 = GetInsertTime(store, totalCount, dataSize);
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
- 
+
     EXPECT_LT(T1, T1_2 * 1.5);
     EXPECT_LT(T2, T2_2 * 1.5);
     EXPECT_LT(T3, T3_2 * 1.5);
-    LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}lld, %{public}lld, %{public}lld",
-        T1, T2, T3);
-    LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}lld, %{public}lld, %{public}lld",
-        T1_2, T2_2, T3_2);
+    LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}lld, %{public}lld, %{public}lld", T1, T2, T3);
+    LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}lld, %{public}lld, %{public}lld", T1_2, T2_2, T3_2);
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_003
  * @tc.desc: test performance of insert, update, query and delete in main_replica with large data
@@ -2242,7 +2238,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_003, TestSize.Level2)
     if (!CheckFolderExist(BINLOG_DATABASE_NAME)) {
         return;
     }
- 
+
     int totalCount = 200;
     int dataSize = 1024 * 1024;
     int batchSize = 10;
@@ -2253,23 +2249,21 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_003, TestSize.Level2)
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
     ASSERT_FALSE(CheckFolderExist(BINLOG_DATABASE_NAME));
- 
+
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
- 
+
     auto T1_2 = GetInsertTime(store, totalCount, dataSize);
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
- 
+
     EXPECT_LT(T1, T1_2 * 1.5);
     EXPECT_LT(T2, T2_2 * 1.5);
     EXPECT_LT(T3, T3_2 * 1.5);
-    LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}lld, %{public}lld, %{public}lld",
-        T1, T2, T3);
-    LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}lld, %{public}lld, %{public}lld",
-        T1_2, T2_2, T3_2);
+    LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}lld, %{public}lld, %{public}lld", T1, T2, T3);
+    LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}lld, %{public}lld, %{public}lld", T1_2, T2_2, T3_2);
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_004
  * @tc.desc: test performance of insert, update, query and delete in mannual_trigger with large data
@@ -2293,7 +2287,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_004, TestSize.Level2)
     if (!CheckFolderExist(BINLOG_DATABASE_NAME)) {
         return;
     }
- 
+
     int totalCount = 200;
     int dataSize = 1024 * 1024;
     int batchSize = 10;
@@ -2304,23 +2298,21 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_004, TestSize.Level2)
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
     ASSERT_FALSE(CheckFolderExist(BINLOG_DATABASE_NAME));
- 
+
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
- 
+
     auto T1_2 = GetInsertTime(store, totalCount, dataSize);
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
- 
+
     EXPECT_LT(T1, T1_2 * 1.5);
     EXPECT_LT(T2, T2_2 * 1.5);
     EXPECT_LT(T3, T3_2 * 1.5);
-    LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}lld, %{public}lld, %{public}lld",
-        T1, T2, T3);
-    LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}lld, %{public}lld, %{public}lld",
-        T1_2, T2_2, T3_2);
+    LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}lld, %{public}lld, %{public}lld", T1, T2, T3);
+    LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}lld, %{public}lld, %{public}lld", T1_2, T2_2, T3_2);
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_005
  * @tc.desc: test performance of restore in main_replica
@@ -2340,7 +2332,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_005, TestSize.Level1)
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MAIN_REPLICA);
- 
+
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
@@ -2352,7 +2344,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_005, TestSize.Level1)
     EXPECT_GT(T1 * 1.5, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_005----, %{public}lld, %{public}lld", T1, T1_2);
 }
- 
+
 /**
  * @tc.name: RdbStore_Binlog_Performance_006
  * @tc.desc: test performance of restore in mannual_trigger
@@ -2372,7 +2364,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Binlog_Performance_006, TestSize.Level1)
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
- 
+
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
