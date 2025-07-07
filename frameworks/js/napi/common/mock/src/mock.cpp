@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "mock.h"
+#include "uv.h"
 
 struct UvEntry {
     std::function<void()> callback;
@@ -47,7 +48,11 @@ napi_status SendEventMock(napi_env env,
     int ret = uv_queue_work(loop, work, [](uv_work_t *data) {
         return;
     }, [](uv_work_t *work, int status) {
-        if (work == nullptr || work->data == nullptr) {
+        if (work == nullptr) {
+            return;
+        }
+        if (work->data == nullptr) {
+            delete work;
             return;
         }
         auto entry = static_cast<UvEntry*>(work->data);
