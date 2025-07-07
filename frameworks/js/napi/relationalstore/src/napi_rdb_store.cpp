@@ -41,6 +41,7 @@
 #include "rdb_sql_statistic.h"
 #include "rdb_perfStat.h"
 #include "securec.h"
+#include "rdb_types.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -50,6 +51,7 @@ using namespace OHOS::DataShare;
 using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::AppDataMgrJsKit::JSUtils;
+using namespace OHOS::DistributedRdb;
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
@@ -172,6 +174,8 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("detach", Detach),
             DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
             DECLARE_NAPI_FUNCTION("rekey", Rekey),
+            DECLARE_NAPI_FUNCTION("on", OnEvent),
+            DECLARE_NAPI_FUNCTION("off", OffEvent),
         };
 #if !defined(CROSS_PLATFORM)
         AddDistributedFunctions(properties);
@@ -1063,6 +1067,184 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
+napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
+{
+    size_t argc = 3;
+    napi_value argv[3]{};
+    napi_value self = nullptr;
+    int32_t status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    // 'argc == 3 || argc == 2' represents the number of parameters is three or two
+    RDB_NAPI_ASSERT(env, status == napi_ok && (argc == 3 || argc == 2), std::make_shared<ParamNumError>("2 or 3"));
+
+    auto proxy = GetNativeInstance(env, self);
+    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+
+    std::string event;
+    // 'argv[0]' represents a event
+    status = JSUtils::Convert2Value(env, argv[0], event);
+    RDB_NAPI_ASSERT(
+        env, status == napi_ok && !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
+    for (auto &eventInfo : onEventHandlers_) {
+        if (eventInfo.event == event) {
+            return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
+        }
+    }
+    bool valueBool = false;
+    status = JSUtils::Convert2Value(env, argv[1], valueBool);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
+    napi_valuetype type = napi_undefined;
+    // 'argv[2]' is observer function
+    napi_typeof(env, argv[2], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    DistributedRdb::SubscribeOption option;
+    option.event = event;
+    option.mode = valueBool ? DistributedRdb::SubscribeMode::LOCAL_SHARED : DistributedRdb::SubscribeMode::LOCAL;
+    // 'argv[2]' represents a callback function
+    return proxy->RegisteredObserver(env, option, argv[2]);
+}
+
+napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
+{
+    size_t argc = 3;
+    // 'argv[3]' represents an array containing three elements
+    napi_value argv[3] = { nullptr };
+    napi_value self = nullptr;
+    int32_t status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    // '1 <= argc && argc <= 3' represents the number of parameters is 1 - 3
+    RDB_NAPI_ASSERT(env, status == napi_ok && 1 <= argc && argc <= 3, std::make_shared<ParamNumError>("1 - 3"));
+
+    auto proxy = GetNativeInstance(env, self);
+    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
+    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+
+    std::string event;
+    status = JSUtils::Convert2Value(env, argv[0], event);
+    RDB_NAPI_ASSERT(
+        env, status == napi_ok && !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
+    for (auto &eventInfo : offEventHandlers_) {
+        if (eventInfo.event == event) {
+            return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
+        }
+    }
+
+    bool valueBool = false;
+    status = JSUtils::Convert2Value(env, argv[1], valueBool);
+    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
+
+    // 'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'
+    if (argc == 3) {
+        napi_valuetype type = napi_undefined;
+        // 'argv[2]' represents a callback function
+        napi_typeof(env, argv[2], &type);
+        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    }
+    SubscribeOption option;
+    option.event = event;
+    valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
+    // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
+    return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
+}
+
+napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("statistics", "function"));
+    bool result = std::any_of(statisticses_.begin(), statisticses_.end(),
+        [argv](std::shared_ptr<NapiStatisticsObserver> obs) { return obs && *obs == argv[0]; });
+    if (result) {
+        LOG_DEBUG("Duplicate subscribe.");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
+    int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    statisticses_.push_back(std::move(observer));
+    LOG_INFO("Statistics subscribe success.");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
+        std::make_shared<ParamError>("statistics", "function"));
+
+    auto it = statisticses_.begin();
+    while (it != statisticses_.end()) {
+        if (*it == nullptr) {
+            it = statisticses_.erase(it);
+            LOG_WARN("statisticsObserver is nullptr.");
+            continue;
+        }
+        if (type == napi_function && !(**it == argv[0])) {
+            ++it;
+            continue;
+        }
+        int errCode = DistributedRdb::SqlStatistic::Unsubscribe(*it);
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = statisticses_.erase(it);
+    }
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::RegisteredObserver(
+    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
+{
+    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
+    observers.try_emplace(option.event);
+    auto &list = observers.find(option.event)->second;
+    bool result =
+        std::any_of(list.begin(), list.end(), [callback](const auto &observer) { return *observer == callback; });
+    if (result) {
+        LOG_INFO("Duplicate subscribe event: %{public}s", option.event.c_str());
+        return nullptr;
+    }
+
+    auto uvQueue = std::make_shared<UvQueue>(env);
+    auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
+    int errCode = GetInstance()->Subscribe(option, localObserver);
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    observers[option.event].push_back(localObserver);
+    LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::UnRegisteredObserver(
+    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
+{
+    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
+    auto obs = observers.find(option.event);
+    if (obs == observers.end()) {
+        LOG_INFO("Observer not found, event: %{public}s", option.event.c_str());
+        return nullptr;
+    }
+
+    if (callback) {
+        auto &list = obs->second;
+        for (auto it = list.begin(); it != list.end(); it++) {
+            if (**it == callback) {
+                int errCode = GetInstance()->UnSubscribe(option, *it);
+                RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+                list.erase(it);
+                break;
+            }
+        }
+        if (list.empty()) {
+            observers.erase(option.event);
+        }
+    } else {
+        int errCode = GetInstance()->UnSubscribe(option, nullptr);
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        observers.erase(option.event);
+    }
+    LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
+    return nullptr;
+}
+
 #if !defined(CROSS_PLATFORM)
 void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor> &properties)
 {
@@ -1073,8 +1255,6 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
-    properties.push_back(DECLARE_NAPI_FUNCTION("on", OnEvent));
-    properties.push_back(DECLARE_NAPI_FUNCTION("off", OffEvent));
     properties.push_back(DECLARE_NAPI_FUNCTION("emit", Notify));
     properties.push_back(DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource));
     properties.push_back(DECLARE_NAPI_FUNCTION("lockRow", LockRow));
@@ -1361,28 +1541,6 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     return nullptr;
 }
 
-napi_value RdbStoreProxy::RegisteredObserver(
-    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
-{
-    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
-    observers.try_emplace(option.event);
-    auto &list = observers.find(option.event)->second;
-    bool result =
-        std::any_of(list.begin(), list.end(), [callback](const auto &observer) { return *observer == callback; });
-    if (result) {
-        LOG_INFO("Duplicate subscribe event: %{public}s", option.event.c_str());
-        return nullptr;
-    }
-
-    auto uvQueue = std::make_shared<UvQueue>(env);
-    auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
-    int errCode = GetInstance()->Subscribe(option, localObserver);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    observers[option.event].push_back(localObserver);
-    LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
-    return nullptr;
-}
-
 napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type = napi_undefined;
@@ -1424,118 +1582,6 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
         LOG_DEBUG("Observer unsubscribe success");
     }
     return nullptr;
-}
-
-napi_value RdbStoreProxy::UnRegisteredObserver(
-    napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback)
-{
-    auto &observers = option.mode == SubscribeMode::LOCAL ? localObservers_ : localSharedObservers_;
-    auto obs = observers.find(option.event);
-    if (obs == observers.end()) {
-        LOG_INFO("Observer not found, event: %{public}s", option.event.c_str());
-        return nullptr;
-    }
-
-    if (callback) {
-        auto &list = obs->second;
-        for (auto it = list.begin(); it != list.end(); it++) {
-            if (**it == callback) {
-                int errCode = GetInstance()->UnSubscribe(option, *it);
-                RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-                list.erase(it);
-                break;
-            }
-        }
-        if (list.empty()) {
-            observers.erase(option.event);
-        }
-    } else {
-        int errCode = GetInstance()->UnSubscribe(option, nullptr);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-        observers.erase(option.event);
-    }
-    LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
-    return nullptr;
-}
-
-napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
-{
-    size_t argc = 3;
-    napi_value argv[3]{};
-    napi_value self = nullptr;
-    int32_t status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    // 'argc == 3 || argc == 2' represents the number of parameters is three or two
-    RDB_NAPI_ASSERT(env, status == napi_ok && (argc == 3 || argc == 2), std::make_shared<ParamNumError>("2 or 3"));
-
-    auto proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-
-    std::string event;
-    // 'argv[0]' represents a event
-    status = JSUtils::Convert2Value(env, argv[0], event);
-    RDB_NAPI_ASSERT(
-        env, status == napi_ok && !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
-    for (auto &eventInfo : onEventHandlers_) {
-        if (eventInfo.event == event) {
-            return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
-        }
-    }
-
-    bool valueBool = false;
-    status = JSUtils::Convert2Value(env, argv[1], valueBool);
-    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
-    napi_valuetype type = napi_undefined;
-    // 'argv[2]' is observer function
-    napi_typeof(env, argv[2], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-    SubscribeOption option;
-    option.event = event;
-    option.mode = valueBool ? SubscribeMode::LOCAL_SHARED : SubscribeMode::LOCAL;
-    // 'argv[2]' represents a callback function
-    return proxy->RegisteredObserver(env, option, argv[2]);
-}
-
-napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
-{
-    size_t argc = 3;
-    // 'argv[3]' represents an array containing three elements
-    napi_value argv[3] = { nullptr };
-    napi_value self = nullptr;
-    int32_t status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    // '1 <= argc && argc <= 3' represents the number of parameters is 1 - 3
-    RDB_NAPI_ASSERT(env, status == napi_ok && 1 <= argc && argc <= 3, std::make_shared<ParamNumError>("1 - 3"));
-
-    auto proxy = GetNativeInstance(env, self);
-    RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
-    RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-
-    std::string event;
-    status = JSUtils::Convert2Value(env, argv[0], event);
-    RDB_NAPI_ASSERT(
-        env, status == napi_ok && !event.empty(), std::make_shared<ParamError>("event", "a not empty string."));
-    for (auto &eventInfo : offEventHandlers_) {
-        if (eventInfo.event == event) {
-            return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
-        }
-    }
-
-    bool valueBool = false;
-    status = JSUtils::Convert2Value(env, argv[1], valueBool);
-    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
-
-    // 'argc == 3' represents determine whether the value of variable 'argc' is equal to '3'
-    if (argc == 3) {
-        napi_valuetype type = napi_undefined;
-        // 'argv[2]' represents a callback function
-        napi_typeof(env, argv[2], &type);
-        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-    }
-    SubscribeOption option;
-    option.event = event;
-    valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
-    // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
-    return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
 }
 
 napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
@@ -1634,50 +1680,6 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
     return nullptr;
 }
 
-napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *argv)
-{
-    napi_valuetype type = napi_undefined;
-    napi_typeof(env, argv[0], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("statistics", "function"));
-    bool result = std::any_of(statisticses_.begin(), statisticses_.end(),
-        [argv](std::shared_ptr<NapiStatisticsObserver> obs) { return obs && *obs == argv[0]; });
-    if (result) {
-        LOG_DEBUG("Duplicate subscribe.");
-        return nullptr;
-    }
-    auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
-    int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    statisticses_.push_back(std::move(observer));
-    LOG_DEBUG("Statistics subscribe success.");
-    return nullptr;
-}
-
-napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *argv)
-{
-    napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function || type == napi_undefined || type == napi_null,
-        std::make_shared<ParamError>("statistics", "function"));
-
-    auto it = statisticses_.begin();
-    while (it != statisticses_.end()) {
-        if (*it == nullptr) {
-            it = statisticses_.erase(it);
-            LOG_WARN("statisticsObserver is nullptr.");
-            continue;
-        }
-        if (type == napi_function && !(**it == argv[0])) {
-            ++it;
-            continue;
-        }
-        int errCode = DistributedRdb::SqlStatistic::Unsubscribe(*it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-        (*it)->Clear();
-        it = statisticses_.erase(it);
-    }
-    return nullptr;
-}
 
 napi_value RdbStoreProxy::OnPerfStat(napi_env env, size_t argc, napi_value *argv)
 {

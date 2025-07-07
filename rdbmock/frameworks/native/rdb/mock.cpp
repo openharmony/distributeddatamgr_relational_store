@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,10 @@
 #include "mock.h"
 
 #include "relational_store_client.h"
+#include "share_block.h"
+#include "sqlite_errno.h"
+
+constexpr int RETRY_TIME = 50;
 
 namespace OHOS {
 __attribute__((visibility("default"))) bool PathToRealPath(const std::string &path, std::string &realPath)
@@ -30,8 +34,6 @@ __attribute__((visibility("default"))) std::string ExtractFilePath(const std::st
 }
 
 namespace NativeRdb {
-struct SharedBlockInfo;
-struct sqlite3_stmt;
 __attribute__((visibility("default"))) int gettid()
 {
     return 0;
@@ -41,16 +43,41 @@ extern "C" {
 #endif
 __attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    (void)info;
-    (void)stmt;
-    return 0;
+    return FillSharedBlock(info, stmt);
 }
 
 __attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
-    (void)info;
-    (void)stmt;
-    return 0;
+    int retryCount = 0;
+    info->totalRows = info->addedRows = 0;
+    bool isFull = false;
+    bool hasException = false;
+    while (!hasException && (!isFull || info->isCountAllRows)) {
+        int err = sqlite3_step(stmt);
+        if (err == SQLITE_ROW) {
+            retryCount = 0;
+            info->totalRows += 1;
+            if (info->startPos >= info->totalRows || isFull) {
+                continue;
+            }
+            info->isFull = true;
+            isFull = info->isFull;
+            hasException = info->hasException;
+        } else if (err == SQLITE_DONE) {
+            break;
+        } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
+            if (retryCount > RETRY_TIME) {
+                hasException = true;
+                return E_DATABASE_BUSY;
+            } else {
+                retryCount++;
+            }
+        } else {
+            hasException = true;
+            return SQLiteError::ErrNo(err);
+        }
+    }
+    return E_OK;
 }
 
 __attribute__((visibility("default"))) bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)

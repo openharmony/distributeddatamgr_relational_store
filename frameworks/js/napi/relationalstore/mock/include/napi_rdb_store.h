@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,8 @@
 namespace OHOS {
 namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
+class NapiRdbStoreObserver;
+class NapiStatisticsObserver;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -74,11 +76,33 @@ private:
     static napi_value Close(napi_env env, napi_callback_info info);
     static napi_value CreateTransaction(napi_env env, napi_callback_info info);
     static napi_value Rekey(napi_env env, napi_callback_info info);
+    static napi_value OnEvent(napi_env env, napi_callback_info info);
+    static napi_value OffEvent(napi_env env, napi_callback_info info);
+
+    static constexpr int EVENT_HANDLE_NUM = 5;
+    napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
+    napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
+    napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffStatistics(napi_env env, size_t argc, napi_value *argv);
+    using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
+    struct HandleInfo {
+        std::string_view event;
+        EventHandle handle;
+    };
+    static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "statistics", &RdbStoreProxy::OnStatistics },
+    };
+    static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "statistics", &RdbStoreProxy::OffStatistics },
+    };
     void UnregisterAll();
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
+    std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
     
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
