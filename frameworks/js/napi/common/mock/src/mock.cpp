@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "mock.h"
+#include "uv.h"
 
 struct UvEntry {
     std::function<void()> callback;
