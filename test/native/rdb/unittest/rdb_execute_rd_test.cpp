@@ -47,6 +47,7 @@ std::shared_ptr<RdbStore> RdbExecuteRdTest::store = nullptr;
 const bool IS_TESTING_PERFORMANCE = false;
 const int BATCH_TOTAL_SIZE = IS_TESTING_PERFORMANCE ? 12000 : 120;
 const int BATCH_SIZE = IS_TESTING_PERFORMANCE ? 100 : 10;
+const int MAX_VARIABLE_NUM = 32766;
 
 class ExecuteTestOpenRdCallback : public RdbOpenCallback {
 public:
@@ -1149,6 +1150,50 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_002, TestSize.Level1)
     std::chrono::duration<double> duration = end - start;
     std::cout << "Insert Cost Time: " << duration.count() << " seconds" << std::endl;
     std::cout << "Ops: " << BATCH_TOTAL_SIZE / (duration.count() * 1000) << " Kops/s" << std::endl;
+
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_BatchInsert_003
+ * @tc.desc: test RdbStore BatchInsert performance in vector mode
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_BatchInsert_003, TestSize.Level1)
+{
+    std::string testStr2k = R"({"$type":"root"})";
+
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT);";
+
+    std::pair<int32_t, ValueObject> res = {};
+    std::pair<int, int64_t> resBatch = {};
+    res = store->Execute(sqlCreateTable.c_str(), {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+
+    int id = 0;
+    std::cout << "Start BatchInsert" << std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
+    int maxVariableNum = MAX_VARIABLE_NUM / 2;
+
+    for (int32_t batch = 0; batch < 1; batch++) {
+        ValuesBuckets rows;
+        for (int32_t i = 0; i < maxVariableNum; i++) {
+            ValuesBucket row;
+            row.PutInt("id", id++);
+            row.PutString("name", testStr2k);
+            rows.Put(row);
+        }
+        resBatch = store->BatchInsert("test", rows);
+        EXPECT_EQ(resBatch.first, E_OK);
+        EXPECT_EQ(resBatch.second, maxVariableNum);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Insert Cost Time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "Ops: " << maxVariableNum / (duration.count() * 1000) << " Kops/s" << std::endl;
 
     res = store->Execute("DROP TABLE test;", {}, 0);
     EXPECT_EQ(res.first, E_OK);
