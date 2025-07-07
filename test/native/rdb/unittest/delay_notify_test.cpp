@@ -21,6 +21,7 @@
  #include "rdb_helper.h"
  #include "rdb_store_impl.h"
  #include "delay_notify.h"
+ #include "block_data.h"
  
  using namespace testing::ext;
  using namespace OHOS::NativeRdb;
@@ -58,12 +59,16 @@
  HWTEST_F(DelayNotifyTest, StartTimer_Test_001, TestSize.Level1)
  {
      auto delayNotifier = std::make_shared<DelayNotify>();
-     delayNotifier->pool_ = std::make_shared<OHOS::ExecutorPool>(5, 0);
-     delayNotifier->changedData_ = RdbChangedData();
-     delayNotifier->delaySyncTaskId_ = 0;
-     delayNotifier->StartTimer();
-     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-     EXPECT_EQ(delayNotifier->delaySyncTaskId_, 0);
+     delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(5, 0));
+     auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+     delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+         block->SetValue(true);
+         return 0;
+     });
+     delayNotifier->isFull_ = true;
+     delayNotifier->UpdateNotify(RdbChangedData());
+     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+     EXPECT_TRUE(block->GetValue());
  }
  
  /**
@@ -75,14 +80,16 @@
  HWTEST_F(DelayNotifyTest, StartTimer_Test_002, TestSize.Level1)
  {
      auto delayNotifier = std::make_shared<DelayNotify>();
-     auto pool = std::make_shared<OHOS::ExecutorPool>(5, 0);
-     delayNotifier->pool_ = pool;
-     delayNotifier->delaySyncTaskId_ = 0;
-     delayNotifier->changedData_ = RdbChangedData();
-     delayNotifier->autoSyncInterval_ = 500;
-     delayNotifier->StartTimer();
+     delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(5, 0));
+     auto pool = delayNotifier->pool_;
+     auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+     delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+         block->SetValue(true);
+         return 0;
+     });
+     delayNotifier->UpdateNotify(RdbChangedData());
      delayNotifier->delaySyncTaskId_ = 9999;
      delayNotifier.reset();
      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-     EXPECT_EQ(delayNotifier, nullptr);
+     ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(block->GetValue()));
  }
