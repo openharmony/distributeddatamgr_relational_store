@@ -48,8 +48,8 @@ public:
     void TearDown() override;
 
     static std::string RemoveSuffix(const std::string &name);
-    std::vector<uint8_t> EncryptV1(std::vector<uint8_t> &key, std::vector<uint8_t> rootKeyAlias);
-    bool SaveSecretKeyToV1(const std::string &keyPath, RdbSecretKeyData &keyData);
+    std::vector<uint8_t> EncryptV0(std::vector<uint8_t> &key, std::vector<uint8_t> rootKeyAlias);
+    bool SaveSecretKeyToV0(const std::string &keyPath, RdbSecretKeyData &keyData);
     int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet,
         const struct HksBlob *inData, struct HksBlob *outData);
     int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksParamSet *paramSet,
@@ -167,13 +167,13 @@ int32_t RdbEncryptUpgradeTest::HksEncryptThreeStage(const struct HksBlob *keyAli
     struct HksBlob handleBlob = { sizeof(uint64_t), handle };
     int32_t result = HksInit(keyAlias, paramSet, &handleBlob, nullptr);
     if (result != HKS_SUCCESS) {
-        LOG_ERROR("HksEncrypt failed with error %{public}d", result);
+        LOG_ERROR("bai: HksEncrypt failed with error %{public}d", result);
         return result;
     }
     return HksLoopUpdate(&handleBlob, paramSet, plainText, cipherText);
 }
 
-std::vector<uint8_t> RdbEncryptUpgradeTest::EncryptV1(std::vector<uint8_t> &key, std::vector<uint8_t> rootKeyAlias)
+std::vector<uint8_t> RdbEncryptUpgradeTest::EncryptV0(std::vector<uint8_t> &key, std::vector<uint8_t> rootKeyAlias)
 {
     std::vector<uint8_t> nonce_(RDB_HKS_BLOB_TYPE_NONCE, RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE));
     std::vector<uint8_t> aad_(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
@@ -215,14 +215,15 @@ std::vector<uint8_t> RdbEncryptUpgradeTest::EncryptV1(std::vector<uint8_t> &key,
     (void)HksFreeParamSet(&params);
     if (ret != HKS_SUCCESS) {
         encryptedKey.assign(encryptedKey.size(), 0);
-        LOG_ERROR("HksEncrypt failed with error %{public}d", ret);
+        LOG_ERROR("bai: HksEncrypt failed with error %{public}d", ret);
         return {};
     }
     encryptedKey.resize(cipherText.size);
+    LOG_ERROR("bai: EncryptOld success ");
     return encryptedKey;
 }
 
-bool RdbEncryptUpgradeTest::SaveSecretKeyToV1(const std::string &keyPath, RdbSecretKeyData &keyData)
+bool RdbEncryptUpgradeTest::SaveSecretKeyToV0(const std::string &keyPath, RdbSecretKeyData &keyData)
 {
     LOG_INFO("begin keyPath:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
 
@@ -234,7 +235,7 @@ bool RdbEncryptUpgradeTest::SaveSecretKeyToV1(const std::string &keyPath, RdbSec
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto fd = open(keyPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        if (fd > 0) {
+        if (fd >= 0) {
             ret = OHOS::SaveStringToFd(fd, secretKeyInString);
             close(fd);
         } else {
@@ -247,7 +248,7 @@ bool RdbEncryptUpgradeTest::SaveSecretKeyToV1(const std::string &keyPath, RdbSec
 
 /**
 * @tc.name: OTATest_001
-* @tc.desc: ota test
+* @tc.desc: getRdbStore ota test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_001, TestSize.Level1)
@@ -260,8 +261,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_001, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    std::string keyPathV2 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    bool isFileExists = OHOS::FileExists(keyPathV2);
+    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    bool isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_TRUE(isFileExists);
     store = nullptr;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -269,38 +270,38 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
     store = nullptr;
 
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV2, keyDataV2);
-    ASSERT_EQ(res, true);
-    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
     RdbSecretKeyData keyDataV1;
-    keyDataV1.timeValue = keyDataV2.timeValue;
-    keyDataV1.distributed = 0;
+    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV1, keyDataV1);
+    ASSERT_EQ(res, true);
+    std::string keyPathV0 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    RdbSecretKeyData keyDataV0;
+    keyDataV0.timeValue = keyDataV1.timeValue;
+    keyDataV0.distributed = 0;
     auto rootKeyAlias = RdbSecurityManager::GetInstance().GetRootKeyAlias();
     auto ret = RdbSecurityManager::GetInstance().CheckRootKeyExists(rootKeyAlias);
     ASSERT_NE(ret, HKS_ERROR_NOT_EXIST);
-    keyDataV1.secretKey = EncryptV1(keyDataV2.secretKey, rootKeyAlias);
-    res = SaveSecretKeyToV1(keyPathV1, keyDataV1);
+    keyDataV0.secretKey = EncryptV0(keyDataV1.secretKey, rootKeyAlias);
+    res = SaveSecretKeyToV0(keyPathV0, keyDataV0);
     ASSERT_EQ(res, true);
-    isFileExists = OHOS::FileExists(keyPathV1);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_TRUE(isFileExists);
 
-    SqliteUtils::DeleteFile(keyPathV2);
-    isFileExists = OHOS::FileExists(keyPathV2);
+    SqliteUtils::DeleteFile(keyPathV1);
+    isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_FALSE(isFileExists);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    isFileExists = OHOS::FileExists(keyPathV2);
-    ASSERT_TRUE(isFileExists);
     isFileExists = OHOS::FileExists(keyPathV1);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_FALSE(isFileExists);
 }
 
 
 /**
 * @tc.name: OTATest_002
-* @tc.desc: keyFileV1 corrupted test
+* @tc.desc: keyFileV1 corrupted ota test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_002, TestSize.Level1)
@@ -314,46 +315,46 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_002, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    std::string keyPathV2 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    bool isFileExists = OHOS::FileExists(keyPathV2);
+    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    bool isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_TRUE(isFileExists);
     store = nullptr;
 
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV2, keyDataV2);
-    ASSERT_EQ(res, true);
-    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
     RdbSecretKeyData keyDataV1;
-    keyDataV1.timeValue = keyDataV2.timeValue;
-    keyDataV1.distributed = 0;
+    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV1, keyDataV1);
+    ASSERT_EQ(res, true);
+    std::string keyPathV0 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    RdbSecretKeyData keyDataV0;
+    keyDataV0.timeValue = keyDataV1.timeValue;
+    keyDataV0.distributed = 0;
     auto rootKeyAlias = RdbSecurityManager::GetInstance().GetRootKeyAlias();
     auto ret = RdbSecurityManager::GetInstance().CheckRootKeyExists(rootKeyAlias);
     ASSERT_NE(ret, HKS_ERROR_NOT_EXIST);
-    keyDataV1.secretKey = EncryptV1(keyDataV2.secretKey, rootKeyAlias);
-    res = SaveSecretKeyToV1(keyPathV1, keyDataV1);
+    keyDataV0.secretKey = EncryptV0(keyDataV1.secretKey, rootKeyAlias);
+    res = SaveSecretKeyToV0(keyPathV0, keyDataV0);
     ASSERT_EQ(res, true);
-    isFileExists = OHOS::FileExists(keyPathV1);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_TRUE(isFileExists);
 
     std::vector<char> keyfileData;
-    ASSERT_TRUE(OHOS::LoadBufferFromFile(keyPathV2, keyfileData));
+    ASSERT_TRUE(OHOS::LoadBufferFromFile(keyPathV1, keyfileData));
     std::vector<char> keyCorrupted = keyfileData;
     for (size_t i = 10; i < 20 && i < keyCorrupted.size(); ++i) {
         keyCorrupted[i] = 0;
     }
-    ASSERT_TRUE(OHOS::SaveBufferToFile(keyPathV2, keyCorrupted));
+    ASSERT_TRUE(OHOS::SaveBufferToFile(keyPathV1, keyCorrupted));
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    isFileExists = OHOS::FileExists(keyPathV2);
-    ASSERT_TRUE(isFileExists);
     isFileExists = OHOS::FileExists(keyPathV1);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_FALSE(isFileExists);
 }
 
 /**
 * @tc.name: OTATest_003
-* @tc.desc: keyFileV1 and keyFile exit test
+* @tc.desc: keyFileV1 and keyFile exit ota test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_003, TestSize.Level1)
@@ -366,47 +367,47 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_003, TestSize.Level1)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    std::string keyPathV2 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    bool isFileExists = OHOS::FileExists(keyPathV2);
+    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    bool isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_TRUE(isFileExists);
     store = nullptr;
 
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV2, keyDataV2);
-    ASSERT_EQ(res, true);
-    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
     RdbSecretKeyData keyDataV1;
-    keyDataV1.timeValue = keyDataV2.timeValue;
-    keyDataV1.distributed = 0;
+    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV1, keyDataV1);
+    ASSERT_EQ(res, true);
+    std::string keyPathV0 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    RdbSecretKeyData keyDataV0;
+    keyDataV0.timeValue = keyDataV1.timeValue;
+    keyDataV0.distributed = 0;
     auto rootKeyAlias = RdbSecurityManager::GetInstance().GetRootKeyAlias();
     auto ret = RdbSecurityManager::GetInstance().CheckRootKeyExists(rootKeyAlias);
     ASSERT_NE(ret, HKS_ERROR_NOT_EXIST);
-    keyDataV1.secretKey = EncryptV1(keyDataV2.secretKey, rootKeyAlias);
-    res = SaveSecretKeyToV1(keyPathV1, keyDataV1);
+    keyDataV0.secretKey = EncryptV0(keyDataV1.secretKey, rootKeyAlias);
+    res = SaveSecretKeyToV0(keyPathV0, keyDataV0);
     ASSERT_EQ(res, true);
-    isFileExists = OHOS::FileExists(keyPathV1);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_TRUE(isFileExists);
     
-    SqliteUtils::DeleteFile(keyPathV2);
-    isFileExists = OHOS::FileExists(keyPathV2);
+    SqliteUtils::DeleteFile(keyPathV1);
+    isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_FALSE(isFileExists);
-    auto fd = open(keyPathV2.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    auto fd = open(keyPathV1.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     ASSERT_GT(fd, 0);
-    isFileExists = OHOS::FileExists(keyPathV2);
+    isFileExists = OHOS::FileExists(keyPathV1);
     ASSERT_TRUE(isFileExists);
 
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    isFileExists = OHOS::FileExists(keyPathV2);
-    ASSERT_TRUE(isFileExists);
     isFileExists = OHOS::FileExists(keyPathV1);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(keyPathV0);
     ASSERT_FALSE(isFileExists);
 }
 
 /**
 * @tc.name: OTATest_004
-* @tc.desc: ota test
+* @tc.desc: query after getRdbStore ota test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_004, TestSize.Level1)
@@ -429,24 +430,24 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_004, TestSize.Level1)
     int ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
-    std::string keyPathV2 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
     store = nullptr;
 
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV2, keyDataV2);
-    ASSERT_EQ(res, true);
-    std::string keyPathV1 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
     RdbSecretKeyData keyDataV1;
-    keyDataV1.timeValue = keyDataV2.timeValue;
-    keyDataV1.distributed = 0;
+    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(keyPathV1, keyDataV1);
+    ASSERT_EQ(res, true);
+    std::string keyPathV0 = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key";
+    RdbSecretKeyData keyDataV0;
+    keyDataV0.timeValue = keyDataV1.timeValue;
+    keyDataV0.distributed = 0;
     auto rootKeyAlias = RdbSecurityManager::GetInstance().GetRootKeyAlias();
     ret = RdbSecurityManager::GetInstance().CheckRootKeyExists(rootKeyAlias);
     ASSERT_NE(ret, HKS_ERROR_NOT_EXIST);
-    keyDataV1.secretKey = EncryptV1(keyDataV2.secretKey, rootKeyAlias);
-    res = SaveSecretKeyToV1(keyPathV1, keyDataV1);
+    keyDataV0.secretKey = EncryptV0(keyDataV1.secretKey, rootKeyAlias);
+    res = SaveSecretKeyToV0(keyPathV0, keyDataV0);
     ASSERT_EQ(res, true);
 
-    SqliteUtils::DeleteFile(keyPathV2);
+    SqliteUtils::DeleteFile(keyPathV1);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
