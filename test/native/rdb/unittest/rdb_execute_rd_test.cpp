@@ -954,6 +954,43 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_019, TestSize.Level1)
     EXPECT_EQ(rowCount, 1);
 }
 
+/**
+ * @tc.name: RdbStore_Execute_020
+ * @tc.desc: Vector database transaction testing. If the SQL execution fails, the transaction is not closed.
+ * @tc.type: FUNC
+*/
+HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_020, TestSize.Level0)
+{
+    std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, repr floatvector(8));";
+    std::string sqlInsert1 = "INSERT INTO test VALUES(1, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');";
+    std::string sqlInsert2 = "INSERT INTO test VALUES(2, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');";
+    std::string sqlQuery = "SELECT id FROM test order by repr <-> '[1.1, 0.3, 2.2, 6.6, 1.5, 3.1, 0.6, 0.2]' limit 3;";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable, {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+
+    auto [ret1, transId1] = store->BeginTrans();
+    EXPECT_EQ(ret1, E_OK);
+    EXPECT_GE(transId1, 0);
+
+    res = store->Execute(sqlInsert1, {}, transId1);
+    EXPECT_EQ(res.first, E_OK);
+
+    auto [ret2, transId2] = store->BeginTrans();
+    EXPECT_EQ(ret2, E_OK);
+    EXPECT_GE(transId2, 0);
+
+    res = store->Execute(sqlInsert2, {}, transId2);
+    EXPECT_EQ(res.first, E_DATABASE_BUSY);
+
+    EXPECT_EQ(store->Commit(transId2), E_OK);
+    EXPECT_EQ(store->Commit(transId1), E_OK);
+    res = store->Execute("DROP TABLE test;", {}, 0);
+    EXPECT_EQ(res.first, E_OK);
+}
+
 /* *
  * @tc.name: Rdb_BackupRestoreTest_001
  * @tc.desc: backup and restore
