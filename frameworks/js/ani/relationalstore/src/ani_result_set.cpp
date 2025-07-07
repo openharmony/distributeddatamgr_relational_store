@@ -109,16 +109,10 @@ ani_status ResultSetInit(ani_env *env)
         LOG_ERROR("env is nullptr.");
         return ANI_ERROR;
     }
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
-    ani_namespace ns;
-    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        LOG_ERROR("Not found '%{public}s", namespaceName);
-        return ANI_ERROR;
-    }
 
     ani_class cls;
-    const char *className = "LResultSetInner;";
-    if (ANI_OK != env->Namespace_FindClass(ns, className, &cls)) {
+    const char *className = "@ohos.data.relationalStore.relationalStore.ResultSetInner;";
+    if (ANI_OK != env->FindClass(className, &cls)) {
         LOG_ERROR("Not found '%{public}s", className);
         return ANI_ERROR;
     }

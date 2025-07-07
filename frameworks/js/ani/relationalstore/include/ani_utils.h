@@ -38,15 +38,10 @@ public:
             return nullobj;
         }
 
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            std::cerr << "[ANI] Not found namespace " << nsName << std::endl;
-            return nullobj;
-        }
-
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            std::cerr << "[ANI] Not found class " << clsName << std::endl;
+        const std::string fullClsName = std::string(nsName) + "." + clsName;
+        if (ANI_OK != env->FindClass(fullClsName.c_str(), &cls)) {
+            std::cerr << "[ANI] Not found class " << fullClsName << std::endl;
             return nullobj;
         }
 
@@ -135,17 +130,11 @@ public:
             return ANI_ERROR;
         }
 
-        ani_namespace nameSpace;
-        auto status = env->FindNamespace(ns, &nameSpace);
-        if (status != ANI_OK) {
-            std::cerr << "[ANI] Not found namespace " << ns << std::endl;
-            return status;
-        }
-
         ani_class clazz;
-        status = env->Namespace_FindClass(nameSpace, cls, &clazz);
+        const std::string fullClsName = std::string(ns) + "." + cls;
+        status = env->FindClass(fullClsName.c_str(), &clazz);
         if (status != ANI_OK) {
-            std::cerr << "[ANI] Not found class " << cls << std::endl;
+            std::cerr << "[ANI] Not found class " << fullClsName << std::endl;
             return status;
         }
 
