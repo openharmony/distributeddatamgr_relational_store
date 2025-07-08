@@ -67,7 +67,6 @@
      });
      delayNotifier->isFull_ = true;
      delayNotifier->UpdateNotify(RdbChangedData());
-     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
      EXPECT_TRUE(block->GetValue());
  }
  
@@ -90,6 +89,5 @@
      delayNotifier->UpdateNotify(RdbChangedData());
      delayNotifier->delaySyncTaskId_ = 9999;
      delayNotifier.reset();
-     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
      ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(block->GetValue()));
  }
