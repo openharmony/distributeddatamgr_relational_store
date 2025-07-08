@@ -63,7 +63,7 @@ public:
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
 
 private:
-    static constexpr int MAX_VARIABLE_NUM = 500;
+    static constexpr int MAX_VARIABLE_NUM = 32766;
     static constexpr const char *GRD_OPEN_CONFIG_STR =
         "\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
         "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500";
