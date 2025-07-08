@@ -84,7 +84,7 @@ HWTEST_F(DelayNotifyTest, StartTimer_Test_002, TestSize.Level1)
     auto pool = delayNotifier->pool_;
     auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
     delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
-    block->SetValue(true);
+        block->SetValue(true);
         return 0;
     });
     delayNotifier->UpdateNotify(RdbChangedData());
