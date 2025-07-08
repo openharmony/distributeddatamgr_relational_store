@@ -87,7 +87,7 @@
          return 0;
      });
      delayNotifier->UpdateNotify(RdbChangedData());
-     delayNotifier->delaySyncTaskId_ = 9999;
+     delayNotifier->delaySyncTaskId_ = OHOS::ExecutorPool::INVALID_TASK_ID;
      delayNotifier.reset();
      ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(block->GetValue()));
  }
