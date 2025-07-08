@@ -84,6 +84,7 @@ std::pair<int32_t, OHOS::NativeRdb::RdbStoreConfig> RdbNdkUtils::GetRdbStoreConf
     rdbStoreConfig.SetReadOnly(config->readOnly);
     rdbStoreConfig.SetPluginLibs(config->pluginLibs);
     rdbStoreConfig.SetCryptoParam(config->cryptoParam);
+    rdbStoreConfig.SetEnableSemanticIndex(config->enableSemanticIndex);
     return { OHOS::NativeRdb::E_OK, rdbStoreConfig };
 }
 } // namespace OHOS::RdbNdk
