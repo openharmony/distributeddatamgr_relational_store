@@ -193,6 +193,8 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_004, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 0));  // 0 is invalid db type level
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, 6));  // 6 is invalid db type level
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(config, -1)); // -1 is invalid db type level
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetSemanticIndex(config, true));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetSemanticIndex(config, false));
 
     const int *supportList = OH_Rdb_GetSupportedDbType(nullptr);
     EXPECT_EQ(nullptr, supportList);
