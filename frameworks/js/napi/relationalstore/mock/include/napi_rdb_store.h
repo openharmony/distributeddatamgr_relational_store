@@ -79,7 +79,7 @@ private:
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
 
-    static constexpr int EVENT_HANDLE_NUM = 5;
+    static constexpr int EVENT_HANDLE_NUM = 1;
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
     napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
     napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
