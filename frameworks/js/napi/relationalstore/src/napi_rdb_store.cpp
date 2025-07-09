@@ -1090,6 +1090,7 @@ napi_value RdbStoreProxy::OnEvent(napi_env env, napi_callback_info info)
             return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
         }
     }
+    RDB_NAPI_ASSERT(env, status == napi_ok && argc == 3, std::make_shared<ParamError>("3"));
     bool valueBool = false;
     status = JSUtils::Convert2Value(env, argv[1], valueBool);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
