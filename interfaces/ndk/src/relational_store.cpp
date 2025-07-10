@@ -163,8 +163,8 @@ int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area)
 int OH_Rdb_SetSemanticIndex(OH_Rdb_ConfigV2 *config, bool isEnable)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set area.", (config == nullptr),
-            (config == nullptr ? 0 : config->magicNum));
+        LOG_ERROR("config is null %{public}d or magic num not valid %{public}x when set SemanticIndex.",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     config->enableSemanticIndex = isEnable;
