@@ -372,14 +372,18 @@ bool UnionAccessor::GetObjectRefPropertyByName(const std::string clsName, const 
 {
     ani_class cls;
     env_->FindClass(clsName.c_str(), &cls);
+    std::string methodName("<get>");
+    methodName += name;
     ani_method getter;
-    if (ANI_OK != env_->Class_FindGetter(cls, name,  &getter)) {
-        LOG_ERROR("GetObjectRefPropertyByName Class_FindGetter failed");
+    ani_status status = env_->Class_FindMethod(cls, methodName.c_str(), nullptr, &getter);
+    if (status != ANI_OK) {
+        LOG_ERROR("GetObjectRefPropertyByName Class_FindMethod failed, status=%{public}d", status);
         return false;
     }
     ani_ref ref;
-    if (ANI_OK != env_->Object_CallMethod_Ref(obj_, getter, &ref)) {
-        LOG_ERROR("GetObjectRefPropertyByName Object_CallMethod_Ref failed");
+    status = env_->Object_CallMethod_Ref(obj_, getter, &ref);
+    if (status != ANI_OK) {
+        LOG_ERROR("GetObjectRefPropertyByName Object_CallMethod_Ref failed, status=%{public}d", status);
         return false;
     }
     val = ref;
