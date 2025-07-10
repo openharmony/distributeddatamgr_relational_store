@@ -37,5 +37,6 @@ struct OH_Rdb_ConfigV2 {
     bool readOnly = false;
     std::vector<std::string> pluginLibs{};
     OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
+    bool enableSemanticIndex = false;
 };
 #endif // RELATIONAL_STORE_INNER_TYPES_H

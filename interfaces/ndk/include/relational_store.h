@@ -321,6 +321,19 @@ int OH_Rdb_SetSecurityLevel(OH_Rdb_ConfigV2 *config, int securityLevel);
 int OH_Rdb_SetArea(OH_Rdb_ConfigV2 *config, int area);
 
 /**
+ * @brief Set whether the database enable the capabilities for semantic indexing processing.
+ *
+ * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
+ * Indicates the configuration of the database related to this RDB store.
+ * @param enableSemanticIndex Indicates whether the database enable the capabilities for semantic indexing processing.
+ * @return Returns the status code of the execution. Successful execution returns RDB_OK,
+ *     {@link RDB_OK} - success.
+ *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ * @since 20
+ */
+int OH_Rdb_SetSemanticIndex(OH_Rdb_ConfigV2 *config, bool enableSemanticIndex);
+
+/**
  * @brief Set property dbType into config
  * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.
  * @param dbType Indicates the dbType {@link Rdb_DBType} of the database
