@@ -53,6 +53,7 @@ ohos_fuzztest("RdbRdUtilsFuzzTest") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",

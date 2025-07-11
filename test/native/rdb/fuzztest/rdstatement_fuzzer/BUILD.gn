@@ -51,7 +51,7 @@ ohos_fuzztest("RdStatementFuzzTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
-    "cJSON:cjson",
+    "json:nlohmann_json_static",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
