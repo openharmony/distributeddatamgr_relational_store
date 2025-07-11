@@ -36,14 +36,14 @@ public:
 */
 HWTEST_F(DelayActuatorTest, Execute_001, TestSize.Level0)
 {
-    DelayActuator<int> delayActuator(nullptr, ActuatorBase::DEFAULT_MIN_EXECUTE_INTERVAL);
-    delayActuator.SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    auto delayActuator = std::make_shared<DelayActuator<int>>(nullptr, ActuatorBase::DEFAULT_MIN_EXECUTE_INTERVAL);
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
     auto blockData = std::make_shared<BlockData<int>>(2, 0);
-    delayActuator.SetTask([blockData](int data) {
+    delayActuator->SetTask([blockData](int data) {
         blockData->SetValue(data);
         return 0;
     });
-    delayActuator.Execute(1);
+    delayActuator->Execute(1);
     EXPECT_EQ(blockData->GetValue(), 1);
 }
 
@@ -59,14 +59,14 @@ HWTEST_F(DelayActuatorTest, Execute_002, TestSize.Level0)
     uint32_t firstDelay = 1500;
     uint32_t minInterval = 2000;
     uint32_t maxInterval = 3000;
-    DelayActuator<int> delayActuator(nullptr, firstDelay, minInterval, maxInterval);
-    delayActuator.SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    auto delayActuator = std::make_shared<DelayActuator<int>>(nullptr, firstDelay, minInterval, maxInterval);
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
     auto blockData = std::make_shared<BlockData<int>>(1, 0);
-    delayActuator.SetTask([blockData](int data) {
+    delayActuator->SetTask([blockData](int data) {
         blockData->SetValue(data);
         return 0;
     });
-    delayActuator.Execute(1);
+    delayActuator->Execute(1);
     EXPECT_EQ(blockData->GetValue(), 0);
     EXPECT_EQ(blockData->GetValue(), 1);
 }
@@ -83,15 +83,15 @@ HWTEST_F(DelayActuatorTest, Execute_003, TestSize.Level0)
     uint32_t firstDelay = 200;
     uint32_t minInterval = 200;
     uint32_t maxInterval = 600;
-    DelayActuator<int> delayActuator(nullptr, firstDelay, minInterval, maxInterval);
-    delayActuator.SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    auto delayActuator = std::make_shared<DelayActuator<int>>(nullptr, firstDelay, minInterval, maxInterval);
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
     auto blockData = std::make_shared<BlockData<int>>(0, 0);
-    delayActuator.SetTask([blockData](int data) {
+    delayActuator->SetTask([blockData](int data) {
         blockData->SetValue(data);
         return 0;
     });
     for (int i = 0; i < 5; i++) {
-        delayActuator.Execute(i);
+        delayActuator->Execute(i);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         EXPECT_EQ(blockData->GetValue(), 0);
     }
@@ -135,19 +135,19 @@ HWTEST_F(DelayActuatorTest, Execute_004, TestSize.Level0)
 */
 HWTEST_F(DelayActuatorTest, Execute_005, TestSize.Level0)
 {
-    DelayActuator<int> delayActuator(
+    auto delayActuator = std::make_shared<DelayActuator<int>>(
         [](int& out, int&& input) {
             out += input;
         },
         100, 100, 300);
-    delayActuator.SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
     auto blockData = std::make_shared<BlockData<int>>(0, 0);
-    delayActuator.SetTask([blockData](int data) {
+    delayActuator->SetTask([blockData](int data) {
         blockData->SetValue(data);
         return 0;
     });
     for (int i = 0; i < 5; i++) {
-        delayActuator.Execute(i);
+        delayActuator->Execute(i);
         EXPECT_EQ(blockData->GetValue(), 0);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -164,16 +164,16 @@ HWTEST_F(DelayActuatorTest, Execute_005, TestSize.Level0)
 HWTEST_F(DelayActuatorTest, Execute_006, TestSize.Level0)
 {
     using DelayActuatorT = DelayActuator<std::map<std::string, std::string>>;
-    DelayActuatorT delayActuator(
+    auto delayActuator = std::make_shared<DelayActuatorT>(
         [](auto& out, std::map<std::string, std::string>&& input) {
             for (auto& [k, v] : input) {
                 out[k] += std::move(v);
             }
         },
         100);
-    delayActuator.SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
     auto blockData = std::make_shared<BlockData<std::map<std::string, std::string>>>(3);
-    delayActuator.SetTask([blockData](const std::map<std::string, std::string>& data) {
+    delayActuator->SetTask([blockData](const std::map<std::string, std::string>& data) {
         blockData->SetValue(data);
         return 0;
     });
@@ -181,7 +181,7 @@ HWTEST_F(DelayActuatorTest, Execute_006, TestSize.Level0)
     int len = 10;
     for (int i = 0; i < len; i++) {
         data.insert_or_assign(std::to_string(i), "t");
-        delayActuator.Execute(data);
+        delayActuator->Execute(data);
     }
     auto val = blockData->GetValue();
     EXPECT_EQ(val.size(), len);

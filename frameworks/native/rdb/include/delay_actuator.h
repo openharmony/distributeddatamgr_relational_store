@@ -138,7 +138,7 @@ private:
     std::shared_ptr<ExecutorPool> pool_ = nullptr;
     bool isSuspend_ = false;
     static const uint32_t INVALID_INTERVAL = UINT32_MAX;
-    uint64_t lastExecuteTimePoint_ = 0;
+    std::atomic_uint32_t lastExecuteTimePoint_ = 0;
     uint32_t const firstDelayInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
     uint32_t const minExecuteInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
     uint32_t const maxExecuteInterval_ = DEFAULT_MAX_EXECUTE_INTERVAL;
@@ -182,13 +182,14 @@ private:
     void ExecuteTask() override
     {
         StopTimer(false);
+        T data;
         {
             std::lock_guard<std::mutex> lock(mutex_);
-            auto data = std::move(data_);
+            data = std::move(data_);
             data_ = T();
         }
         if (task_) {
-            task_(data);
+            task_(std::move(data));
         }
     }
 };
