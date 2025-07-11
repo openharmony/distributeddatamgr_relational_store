@@ -272,8 +272,8 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     if (clearActuator_ != nullptr) {
         clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
         clearActuator_->SetTask([dbHandle = dbHandle_](bool) {
-            if (dbHandle_ != nullptr) {
-                sqlite3_db_release_memory(dbHandle_);
+            if (dbHandle != nullptr) {
+                sqlite3_db_release_memory(dbHandle);
             }
             return E_OK;
         });
