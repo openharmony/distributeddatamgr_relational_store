@@ -182,11 +182,14 @@ private:
     void ExecuteTask() override
     {
         StopTimer(false);
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (task_) {
-            task_(std::move(data_));
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto data = std::move(data_);
+            data_ = T();
         }
-        data_ = T();
+        if (task_) {
+            task_(data);
+        }
     }
 };
 } // namespace OHOS
