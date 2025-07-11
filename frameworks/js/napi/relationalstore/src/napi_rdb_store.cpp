@@ -1129,7 +1129,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
             return (proxy->*(eventInfo.handle))(env, argc - 1, argv + 1);
         }
     }
-
+    // 'argc >= 2' represents the number of parameters is two or three
+    RDB_NAPI_ASSERT(env, status == napi_ok && argc >= 2, std::make_shared<ParamNumError>("2 or 3"));
     bool valueBool = false;
     status = JSUtils::Convert2Value(env, argv[1], valueBool);
     RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>("interProcess", "a boolean."));
