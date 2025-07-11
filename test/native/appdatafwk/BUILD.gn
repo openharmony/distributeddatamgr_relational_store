@@ -38,7 +38,7 @@ ohos_unittest("NativeAppDataFwkTest") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
-    "cJSON:cjson",
+    "json:nlohmann_json_static",
     "googletest:gtest_main",
     "hilog:libhilog",
     "relational_store:native_appdatafwk",

@@ -157,6 +157,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
+      "json:nlohmann_json_static",
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
@@ -226,6 +227,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
+      "json:nlohmann_json_static",
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
@@ -306,6 +308,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
+      "//third_party/json:nlohmann_json_static",
     ]
 
     cflags_cc = [ "-std=c++17" ]
@@ -330,6 +333,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
+      "//third_party/json:nlohmann_json_static",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -400,6 +404,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
+      "//third_party/json:nlohmann_json_static",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -423,6 +428,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
+      "//third_party/json:nlohmann_json_static",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -494,6 +500,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
+      "//third_party/json:nlohmann_json_static",
     ]
     cflags_cc = [ "-std=c++17" ]
 
@@ -561,6 +568,7 @@ if (is_ohos && !build_ohos_sdk) {
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
+      "//third_party/json:nlohmann_json_static",
     ]
 
     external_deps = [ "c_utils:utils" ]
