@@ -1023,6 +1023,7 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(
 int SqliteConnection::ClearCache()
 {
     if (dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
+        int usedBytes = 0;
         int nEntry = 0;
         int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEntry, 0);
         if (errCode == SQLITE_OK && usedBytes > config_.GetClearMemorySize()) {
