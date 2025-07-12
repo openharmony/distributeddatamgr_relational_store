@@ -111,7 +111,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
     EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
     EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
-
+    rdbStore = nullptr;
     EXPECT_TRUE(RdbHelper::Destroy());
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
@@ -146,6 +146,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     OHOS::NativeRdb::RdbHelper::DestroyOption destroyOption;
     destroyOption.cleanICU = true;
+    rdbStore = nullptr;
     EXPECT_TRUE(RdbHelper::Destroy(destroyOption));
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());

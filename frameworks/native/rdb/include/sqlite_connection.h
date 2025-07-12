@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "connection.h"
+#include "delay_actuator.h"
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
 #include "sqlite_statement.h"
@@ -161,6 +162,9 @@ private:
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
+    static constexpr uint32_t FIRST_DELAY_INTERVAL = 30000;
+    static constexpr uint32_t MIN_EXECUTE_INTERVAL = 30000;
+    static constexpr uint32_t MAX_EXECUTE_INTERVAL = UINT32_MAX;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
@@ -189,6 +193,7 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
+    std::shared_ptr<DelayActuator<bool>> clearActuator_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

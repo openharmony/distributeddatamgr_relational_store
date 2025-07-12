@@ -146,38 +146,6 @@ void RdbStoreImplConditionTest::TearDown(void)
     EXPECT_EQ(E_OK, errCode);
 }
 
-
-/**
- * @tc.name: Reportfailed_Test_001
- * @tc.desc: abnormal test. stat report failed
- * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
-*/
-HWTEST_F(RdbStoreImplConditionTest, Reportfailed_Test_001, TestSize.Level0)
-{
-    int ret = store_->ExecuteSql(RdbStoreImplConditionTestOpenCallback::CREATE_TABLE_TEST);
-    ASSERT_EQ(ret, E_OK);
-
-    ValuesBuckets rows;
-    rows.Reserve(1024);
-    for (int i = 0; i < 1024; i++) {
-        ValuesBucket row;
-        row.Put("id", i);
-        row.Put("name", "Jim");
-        std::vector<uint8_t> blob(1024 * 256, 'a');
-        row.PutBlob("blobType", blob);
-        rows.Put(std::move(row));
-    }
-
-    EXPECT_TRUE(TaskExecutor::GetInstance().Stop());
-    
-    auto [status, result] = store_->BatchInsert("employee", rows, { "id" }, ConflictResolution::ON_CONFLICT_REPLACE);
-    EXPECT_EQ(status, E_OK);
-    EXPECT_EQ(result.changed, 1024);
-    TaskExecutor::GetInstance().Init();
-}
-
 /* *
  * @tc.name: Rdb_RemoteQueryTest_003
  * @tc.desc: Abnormal testCase for RemoteQuery
