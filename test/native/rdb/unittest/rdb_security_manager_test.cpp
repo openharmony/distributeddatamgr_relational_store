@@ -159,6 +159,38 @@ HWTEST_F(RdbSecurityManagerTest, LoadSecretKeyFromDiskTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: LockNoBlockTest001
+ * @tc.desc: Abnormal test for LockNB
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSecurityManagerTest, LockNBTest001, TestSize.Level1)
+{
+    std::string lockPath = dbFile_ + "-LockNBTest001";
+    RdbSecurityManager::KeyFiles keyFiles(lockPath);
+    EXPECT_EQ(keyFiles.DestroyLock(), E_OK);
+    EXPECT_NE(keyFiles.Lock(false), E_OK);
+}
+
+/**
+ * @tc.name: LockNBTest002
+ * @tc.desc: test LockNB return E_ERROR when called from another fd
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSecurityManagerTest, LockNBTest002, TestSize.Level1)
+{
+    RdbSecurityManager::KeyFiles keyFiles(dbFile_);
+    EXPECT_EQ(keyFiles.Lock(false), E_OK);
+    std::thread thread([dbFile = dbFile_]() {
+        RdbSecurityManager::KeyFiles keyFiles(dbFile);
+        EXPECT_EQ(keyFiles.Lock(false), E_ERROR);
+        keyFiles.Unlock();
+    });
+    sleep(1);
+    thread.join();
+    keyFiles.Unlock();
+}
+
+/**
  * @tc.name: InitPathTest
  * @tc.desc: test init path test
  * @tc.type: FUNC

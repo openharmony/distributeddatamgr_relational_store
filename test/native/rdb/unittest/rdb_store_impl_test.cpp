@@ -20,16 +20,17 @@
 #include <map>
 #include <string>
 
-#include "types.h"
-#include "single_kvstore.h"
-#include "distributed_kv_data_manager.h"
 #include "common.h"
+#include "distributed_kv_data_manager.h"
+#include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "relational_store_delegate.h"
 #include "relational_store_manager.h"
+#include "single_kvstore.h"
 #include "sqlite_connection.h"
+#include "types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -491,6 +492,34 @@ HWTEST_F(RdbStoreImplTest, Rdb_SqlitConnectionTest_001, TestSize.Level2)
     EXPECT_NE(nullptr, connection);
 }
 
+/**
+ * @tc.name: Rdb_RdConnectionTest_001
+ * @tc.desc: The testCase of vector database for replica.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_RdConnectionTest_001, TestSize.Level2)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    const std::string databaseName = RDB_TEST_PATH + "RdConnectionOpenTest.db";
+    RdbStoreConfig config(databaseName);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
+    RdbStoreImplTestOpenCallback helper;
+    int openErr = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, openErr);
+    EXPECT_EQ(E_OK, openErr);
+
+    auto [errCode, connection] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(connection, nullptr);
+    auto [err, statement] = connection->CreateReplicaStatement("test", connection);
+    EXPECT_EQ(err, E_NOT_SUPPORT);
+    EXPECT_EQ(statement, nullptr);
+    EXPECT_EQ(connection->CheckReplicaForRestore(), E_NOT_SUPPORT);
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
 /* *
  * @tc.name: Rdb_ConnectionPoolTest_001
  * @tc.desc: Abnormal testCase for ConfigLocale
@@ -595,6 +624,58 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
     const std::string newPath2 = RDB_TEST_PATH + "tmp.db";
     errCode = connectionPool->ChangeDbFileForRestore(newPath2, backupPath, newKey, curStatus);
     EXPECT_EQ(E_ERROR, errCode);
+}
+
+/* *
+ * @tc.name: Rdb_ConnectionPoolTest_004
+ * @tc.desc: Abnormal testCase for ReopenConns
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_004, TestSize.Level2)
+{
+    const std::string databaseName = RDB_TEST_PATH + "ConnectionTest004.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(databaseName);
+    config.SetReadConSize(1);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    auto connectionPool = ConnectionPool::Create(config, errCode);
+    ASSERT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+
+    config.SetReadConSize(65);
+    EXPECT_NE(E_OK, connectionPool->ReopenConns());
+}
+
+/* *
+ * @tc.name: Rdb_ConnectionPoolTest_005
+ * @tc.desc: Abnormal repair when pool create fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_005, TestSize.Level2)
+{
+    const std::string databaseName = RDB_TEST_PATH + "ConnectionTest005.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+    int errCode = E_OK;
+    RdbStoreConfig config(databaseName);
+    config.SetReadConSize(1);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    store->ExecuteSql(CREATE_TABLE_TEST);
+    store = nullptr;
+
+    auto connectionPool = ConnectionPool::Create(config, errCode);
+    ASSERT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+    auto connection = connectionPool->AcquireConnection(false);
+    ASSERT_NE(nullptr, connection);
+
+    config.SetReadConSize(128);
+    EXPECT_EQ(E_OK, connection->Repair(config));
+    RdbHelper::DeleteRdbStore(databaseName);
 }
 
 HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)

@@ -414,6 +414,17 @@ int ConnPool::RestartConns()
     return errCode;
 }
 
+int ConnPool::ReopenConns()
+{
+    CloseAllConnections();
+    auto initRes = Init();
+    if (initRes.first != E_OK) {
+        LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
+        return initRes.first;
+    }
+    return E_OK;
+}
+
 /**
  * The database locale.
  */

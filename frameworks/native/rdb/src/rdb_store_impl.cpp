@@ -94,6 +94,7 @@ static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
+static constexpr const char *ASYNC_RESTORE = "-async.restore";
 constexpr int64_t TIME_OUT = 1500;
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
@@ -1056,6 +1057,34 @@ int32_t RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCall
     return openCallback.OnOpen(*this);
 }
 
+bool RdbStoreImpl::TryAsyncRepair()
+{
+    std::string slavePath = SqliteUtils::GetSlavePath(path_);
+    if (!IsUseAsyncRestore(path_, slavePath)) {
+        return false;
+    }
+
+    int errCode = Connection::CheckReplicaIntegrity(config_);
+    if (errCode != E_OK) {
+        return false;
+    }
+
+    SqliteUtils::DeleteDirtyFiles(path_);
+    auto pool = ConnectionPool::Create(config_, errCode);
+    if (errCode != E_OK) {
+        LOG_WARN("create new connection failed");
+        return false;
+    }
+    connectionPool_ = pool;
+    errCode = StartAsyncRestore(pool);
+    if (errCode != E_OK) {
+        return false;
+    }
+    rebuild_ = RebuiltType::REPAIRED;
+    
+    Reportor::ReportRestore(Reportor::Create(config_, E_OK, "RestoreType:Rebuild", false), false);
+    return true;
+}
 int32_t RdbStoreImpl::CreatePool(bool &created)
 {
     int32_t errCode = E_OK;
@@ -1078,7 +1107,12 @@ int32_t RdbStoreImpl::CreatePool(bool &created)
             RdbSecurityManager::GetInstance().RestoreKeyFile(path_, key);
             key.assign(key.size(), 0);
         }
-        std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
+        
+        if (TryAsyncRepair()) {
+            errCode = E_OK;
+        } else {
+            std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
+        }
         created = true;
 #if !defined(CROSS_PLATFORM)
         if (service != nullptr) {
@@ -1128,7 +1162,9 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
             return errCode;
         }
         (void) ExchangeSlaverToMaster();
+        SwitchOver(true);
         errCode = ProcessOpenCallback(version, openCallback);
+        SwitchOver(false);
         if (errCode != E_OK) {
             LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
             return errCode;
@@ -1813,7 +1849,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
     }
 
     std::vector<ValueObject> bindArgs = CreateBackupBindArgs(databasePath, destEncryptKey);
-    auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_BACKUP_SQL, conn);
+    auto [errCode, statement] = GetStatement(GlobalExpr::ATTACH_BACKUP_SQL, conn);
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         return errCode;
@@ -1847,7 +1883,7 @@ std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::
         return { E_DATABASE_BUSY, nullptr };
     }
 
-    auto [errCode, statement] = conn->CreateStatement(sql, conn);
+    auto [errCode, statement] = GetStatement(sql, conn);
     if (statement == nullptr) {
         return { errCode, nullptr };
     }
@@ -1903,7 +1939,7 @@ int RdbStoreImpl::SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, 
                       SqliteUtils::EncryptAlgoDescription(config.GetEncryptAlgo()) +
                       std::string(GlobalExpr::ALGO_SUFFIX);
     Suspender suspender(Suspender::SQL_LOG);
-    auto [errCode, statement] = conn->CreateStatement(sql, conn);
+    auto [errCode, statement] = GetStatement(sql, conn);
     errCode = SetDefaultEncryptSql(statement, sql, config);
     if (errCode != E_OK) {
         return errCode;
@@ -1970,7 +2006,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
             return ret;
         }
         bindArgs.emplace_back(ValueObject(key));
-        auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
+        auto [errCode, statement] = GetStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
         if (statement == nullptr || errCode != E_OK) {
             LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
             return E_ERROR;
@@ -1978,7 +2014,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
         return statement->Execute(bindArgs);
     }
 
-    auto [errCode, statement] = conn->CreateStatement(GlobalExpr::ATTACH_SQL, conn);
+    auto [errCode, statement] = GetStatement(GlobalExpr::ATTACH_SQL, conn);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
         return errCode;
@@ -2054,7 +2090,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(attachName));
 
-    auto [errCode, statement] = connection->CreateStatement(GlobalExpr::DETACH_SQL, connection);
+    auto [errCode, statement] = GetStatement(GlobalExpr::DETACH_SQL, connection);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Detach get statement failed, errCode %{public}d", errCode);
         return { errCode, 0 };
@@ -2493,6 +2529,93 @@ int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPa
     return E_OK;
 }
 
+void RdbStoreImpl::SwitchOver(bool isUseReplicaDb)
+{
+    isUseReplicaDb_ = isUseReplicaDb;
+}
+
+bool RdbStoreImpl::IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath)
+{
+    if (config_.GetPath() == backupPath || newPath == backupPath ||
+        config_.GetDBType() == DB_VECTOR || config_.GetHaMode() == HAMode::SINGLE ||
+        !SqliteUtils::IsSlaveDbName(backupPath) || !SqliteUtils::IsSlaveLarge(backupPath)) {
+        return false;
+    }
+    return true;
+}
+
+int32_t RdbStoreImpl::RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path)
+{
+    if (pool == nullptr) {
+        return E_OK;
+    }
+    auto connection = pool->AcquireConnection(false);
+    if (connection == nullptr) {
+        return E_DATABASE_BUSY;
+    }
+    pool->ReopenConns();
+    auto curStatus = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
+    return connection->Restore(path, {}, curStatus);
+}
+
+int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const
+{
+    auto keyFilesPtr = std::make_shared<RdbSecurityManager::KeyFiles>(path_ + ASYNC_RESTORE);
+    SqliteUtils::SetSlaveRestoring(path_);
+    auto err = keyFilesPtr->Lock(false);
+    if (err == E_OK) {
+        auto taskPool = TaskExecutor::GetInstance().GetExecutor();
+        if (taskPool == nullptr) {
+            LOG_ERROR("Get thread pool failed");
+            keyFilesPtr->Unlock();
+            return E_ERROR;
+        }
+        taskPool->Execute([keyFilesPtr, config = config_, pool] {
+            auto dbPath = config.GetPath();
+            LOG_INFO("async restore started for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+            auto result = RdbStoreImpl::RestoreWithPool(pool, dbPath);
+            if (result != E_OK) {
+                LOG_WARN("async restore failed, retry once, %{public}d", result);
+                result = RdbStoreImpl::RestoreWithPool(pool, dbPath);
+            }
+            if (result != E_OK) {
+                LOG_WARN("async restore failed, %{public}d", result);
+                SqliteUtils::SetSlaveInvalid(dbPath);
+            }
+            SqliteUtils::SetSlaveRestoring(dbPath, false);
+            if (pool != nullptr) {
+                pool->ReopenConns();
+            }
+            keyFilesPtr->Unlock();
+        });
+
+        return E_OK;
+    }
+    LOG_WARN("Get process lock failed. Async restore is started in another process, %{public}s",
+        SqliteUtils::Anonymous(path_).c_str());
+    return E_OK;
+}
+
+int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
+    std::shared_ptr<ConnectionPool> pool)
+{
+    if (!IsUseAsyncRestore(path_, destPath)) {
+        return pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    }
+
+    auto connection = pool->AcquireConnection(false);
+    if (connection == nullptr) {
+        LOG_WARN("Failed to obtain writer for async restore");
+        return E_DATABASE_BUSY;
+    }
+
+    int errCode = connection->CheckReplicaForRestore();
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return StartAsyncRestore(pool);
+}
+
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
 {
     LOG_INFO("Restore db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
@@ -2524,7 +2647,7 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     }
 #endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
-    int errCode = pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    int errCode = RestoreInner(destPath, newKey, pool);
     keyFiles.Unlock();
 #if !defined(CROSS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
@@ -2566,6 +2689,32 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
+
+    if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveRestoring(config_.GetPath())) {
+        auto keyFiles = RdbSecurityManager::KeyFiles(config_.GetPath() + ASYNC_RESTORE);
+        int32_t ret = keyFiles.Lock(false);
+        if (ret != E_OK) {
+            if (isUseReplicaDb_) {
+                LOG_INFO("Use replica statement, %{public}s", SqliteUtils::Anonymous(config_.GetPath()).c_str());
+                return conn->CreateReplicaStatement(sql, conn);
+            }
+            return { E_DATABASE_BUSY, nullptr };
+        }
+        SqliteUtils::SetSlaveRestoring(config_.GetPath(), false);
+        (void)keyFiles.Unlock();
+        auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+        LOG_WARN("Got lock file but process is not in restore, mark removed, st:%{public}d, %{public}s",
+            strategy, SqliteUtils::Anonymous(config_.GetPath()).c_str());
+        if (strategy != ExchangeStrategy::RESTORE) {
+            return conn->CreateStatement(sql, conn);
+        }
+        auto result = conn->CheckReplicaForRestore();
+        if (result == E_OK) {
+            result = StartAsyncRestore(GetPool());
+            return conn->CreateReplicaStatement(sql, conn);
+        }
+    }
+
     return conn->CreateStatement(sql, conn);
 }
 
@@ -2579,7 +2728,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(const 
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
-    return conn->CreateStatement(sql, conn);
+    return GetStatement(sql, conn);
 }
 
 int RdbStoreImpl::GetRebuilt(RebuiltType &rebuilt)
@@ -2645,7 +2794,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     int ret = E_OK;
-    if (strategy == ExchangeStrategy::RESTORE) {
+    if (strategy == ExchangeStrategy::RESTORE && !SqliteUtils::IsSlaveRestoring(config_.GetPath())) {
         conn = nullptr;
         // disable is required before restore
         ret = Restore({}, {});
