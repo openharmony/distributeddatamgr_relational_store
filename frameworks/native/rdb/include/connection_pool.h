@@ -54,6 +54,7 @@ public:
     int32_t Dump(bool isWriter, const char *header);
 
     int RestartConns();
+    int ReopenConns();
     int ConfigLocale(const std::string &localeStr);
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus);

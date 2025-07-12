@@ -44,6 +44,7 @@ public:
     static int32_t Delete(const std::string &path);
     static int32_t Repair(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
+    static int32_t CheckReplicaIntegrity(const RdbStoreConfig &config);
     static int32_t ClientCleanUp();
     static int32_t OpenSSLCleanUp();
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
@@ -56,6 +57,8 @@ public:
     int ResetKey(const RdbStoreConfig &config) override;
     int32_t GetJournalMode() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
+    std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) override;
+    int CheckReplicaForRestore() override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     bool IsWriter() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
@@ -122,12 +125,15 @@ private:
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus);
     int ExchangeVerify(bool isRestore);
+    int SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, std::shared_ptr<SlaveStatus> curStatus);
     int SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus);
     int VeritySlaveIntegrity();
     bool IsDbVersionBelowSlave();
     int RegisterStoreObs();
     int RegisterClientObs();
     int RegisterHookIfNecessary();
+    std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
+        sqlite3 *db, bool isFromReplica);
     void ReplayBinlog(const RdbStoreConfig &config);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite);
@@ -147,6 +153,7 @@ private:
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
+    static constexpr int RESTORE_PRE_WAIT_TIME = 100;
     static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647;       // 2147483647 = 2g - 1
     static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
     static constexpr unsigned short BINLOG_FILE_NUMS_LIMIT = 2;
@@ -158,6 +165,7 @@ private:
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
+    static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
     using EventHandle = int (SqliteConnection::*)();

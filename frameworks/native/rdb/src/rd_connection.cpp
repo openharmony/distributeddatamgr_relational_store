@@ -203,6 +203,17 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
     return { ret, stmt };
 }
 
+std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateReplicaStatement([[gnu::unused]] const std::string &sql,
+    [[gnu::unused]] Connection::SConn conn)
+{
+    return { E_NOT_SUPPORT, nullptr };
+}
+
+int RdConnection::CheckReplicaForRestore()
+{
+    return E_NOT_SUPPORT;
+}
+
 int32_t RdConnection::GetDBType() const
 {
     return DB_VECTOR;

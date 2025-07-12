@@ -163,7 +163,12 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0023, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
 {
-    EXPECT_EQ(0, SqliteUtils::DeleteFolder("random123"));
+    EXPECT_EQ(0, SqliteUtils::DeleteFolder("non_exist_folder/random123"));
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0025, TestSize.Level1)
+{
+    EXPECT_NE(0, SqliteUtils::SetSlaveRestoring("non_exist_folder/non_exist_file"));
 }
 
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)

@@ -55,6 +55,8 @@ public:
     static constexpr const char *REP = "#_";
     static constexpr const char *SLAVE_FAILURE = "-slaveFailure";
     static constexpr const char *SLAVE_INTERRUPT = "-syncInterrupt";
+    static constexpr const char *SLAVE_RESTORE = "-restoring";
+    static constexpr ssize_t SLAVE_ASYNC_REPAIR_CHECK_LIMIT = 1073741824; // 1073741824 = 1024 * 1024 * 1024
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSupportSqlForExecute(int sqlType);
@@ -74,6 +76,9 @@ public:
     static std::string GetSlavePath(const std::string &name);
     static int SetSlaveInvalid(const std::string &dbPath);
     static int SetSlaveInterrupted(const std::string &dbPath);
+    static int SetSlaveRestoring(const std::string &dbPath, bool isRestore = true);
+    static bool IsSlaveRestoring(const std::string &dbPath);
+    static bool IsSlaveLarge(const std::string &slavePath);
     static bool IsSlaveInvalid(const std::string &dbPath);
     static bool IsSlaveInterrupted(const std::string &dbPath);
     static void SetSlaveValid(const std::string &dbPath);

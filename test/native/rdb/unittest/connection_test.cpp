@@ -234,4 +234,53 @@ HWTEST_F(ConnectionTest, IsDbVersionBelowSlave_Test_001, TestSize.Level2)
     bool res = conn->IsDbVersionBelowSlave();
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.name: CheckReplicaIntegrity_Test_001
+ * @tc.desc: The testCase of CheckReplicaIntegrity.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, CheckReplicaIntegrity_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
+    EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_INVALID_ARGS);
+
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
+    EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: CheckReplicaIntegrity_Test_002
+ * @tc.desc: The testCase of CheckReplicaIntegrity.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, CheckReplicaIntegrity_Test_002, TestSize.Level2)
+{
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    config.SetHaMode(HAMode::SINGLE);
+    EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_NOT_SUPPORT);
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+}
+
+static int32_t MockReplicaChecker(const RdbStoreConfig &config)
+{
+    return E_OK;
+}
+
+/**
+ * @tc.name: RegisterReplicaChecker_Test_001
+ * @tc.desc: The testCase of RegisterReplicaChecker.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, RegisterReplicaChecker_Test_001, TestSize.Level2)
+{
+    EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_BUTT, nullptr), E_INVALID_ARGS);
+    EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_VECTOR, MockReplicaChecker), E_OK);
+    EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_VECTOR, MockReplicaChecker), E_OK);
+    EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_SQLITE, MockReplicaChecker), E_OK);
+    EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_SQLITE, MockReplicaChecker), E_OK);
+}
 } // namespace Test
