@@ -138,7 +138,7 @@ private:
     std::shared_ptr<ExecutorPool> pool_ = nullptr;
     bool isSuspend_ = false;
     static const uint32_t INVALID_INTERVAL = UINT32_MAX;
-    std::atomic_uint32_t lastExecuteTimePoint_ = 0;
+    std::atomic_uint64_t lastExecuteTimePoint_ = 0;
     uint32_t const firstDelayInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
     uint32_t const minExecuteInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
     uint32_t const maxExecuteInterval_ = DEFAULT_MAX_EXECUTE_INTERVAL;
