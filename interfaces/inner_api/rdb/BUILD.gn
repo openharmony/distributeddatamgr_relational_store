@@ -157,6 +157,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
+      "json:nlohmann_json_static",
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
@@ -226,6 +227,7 @@ if (is_ohos && !build_ohos_sdk) {
       "hisysevent:libhisysevent",
       "hitrace:hitrace_meter",
       "ipc:ipc_core",
+      "json:nlohmann_json_static",
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
@@ -273,6 +275,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
+      "//third_party/json/single_include",
     ]
     libs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib/libws2_32.a" ]
   }
@@ -370,6 +373,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs += [
       "//foundation/distributeddatamgr/kv_store/frameworks/common",
       "//third_party/sqlite/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -469,6 +473,7 @@ if (is_ohos && !build_ohos_sdk) {
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
+      "//third_party/json/single_include",
     ]
   }
 
@@ -537,6 +542,7 @@ if (is_ohos && !build_ohos_sdk) {
       "../cloud_data/include",
       "../common_type/include",
       "//commonlibrary/c_utils/base/include",
+      "//third_party/json/single_include",
     ]
   }
 

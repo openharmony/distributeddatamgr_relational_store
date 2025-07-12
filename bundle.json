@@ -67,7 +67,7 @@
                 "icu",
                 "sqlite",
                 "file_api",
-                "cJSON",
+                "json",
                 "runtime_core"
             ],
             "third_party": [ "sqlite" ]
