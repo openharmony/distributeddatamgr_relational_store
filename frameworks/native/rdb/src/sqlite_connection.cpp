@@ -152,6 +152,8 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
+    clearActuator_ = std::make_shared<DelayActuator<bool>>(
+        nullptr, FIRST_DELAY_INTERVAL, MIN_EXECUTE_INTERVAL, MAX_EXECUTE_INTERVAL);
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -269,6 +271,17 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     maxVariableNumber_ = sqlite3_limit(dbHandle_, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
+
+    if (clearActuator_ != nullptr) {
+        clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
+        clearActuator_->SetTask([dbHandle = dbHandle_](bool) {
+            if (dbHandle != nullptr) {
+                sqlite3_db_release_memory(dbHandle);
+            }
+            return E_OK;
+        });
+    }
+
     errCode = Configure(config, dbPath);
     isConfigured_ = true;
     if (errCode != E_OK) {
@@ -444,6 +457,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
 SqliteConnection::~SqliteConnection()
 {
+    clearActuator_ = nullptr;
     if (backupId_ != TaskExecutor::INVALID_TASK_ID) {
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool != nullptr) {
@@ -1063,10 +1077,13 @@ int SqliteConnection::ClearCache()
 {
     if (dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
         int usedBytes = 0;
-        int nEnyry = 0;
-        int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEnyry, 0);
+        int nEntry = 0;
+        int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEntry, 0);
         if (errCode == SQLITE_OK && usedBytes > config_.GetClearMemorySize()) {
             sqlite3_db_release_memory(dbHandle_);
+        }
+        if (clearActuator_ != nullptr) {
+            clearActuator_->Execute(true);
         }
     }
     if (slaveConnection_) {

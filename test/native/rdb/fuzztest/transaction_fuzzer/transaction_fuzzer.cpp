@@ -26,7 +26,6 @@
 #include "connection_pool.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
-#include "sqlite_connection.h"
 #include "trans_db.h"
 
 using namespace OHOS;
