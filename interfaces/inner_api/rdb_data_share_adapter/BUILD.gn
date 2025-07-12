@@ -62,6 +62,7 @@ ohos_shared_library("rdb_data_share_adapter") {
     "c_utils:utils",
     "data_share:datashare_common_lite",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
     "kv_store:datamgr_common",
   ]
 

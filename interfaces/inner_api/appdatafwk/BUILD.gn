@@ -64,7 +64,7 @@ if (is_android || is_ios) {
 
     deps = [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${target_os}",
-      "//third_party/cJSON:cjson_static",
+      "//third_party/json:nlohmann_json_static",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -103,7 +103,7 @@ if (is_android || is_ios) {
       ":appdatafwk_public_config",
     ]
     external_deps = [
-      "cJSON:cjson",
+      "json:nlohmann_json_static",
       "hilog:libhilog",
     ]
 
@@ -135,7 +135,7 @@ ohos_shared_library("native_appdatafwk") {
 
   external_deps = [
     "c_utils:utils",
-    "cJSON:cjson",
+    "json:nlohmann_json_static",
     "hilog:libhilog",
     "ipc:ipc_single",
   ]

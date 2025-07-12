@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <securec.h>
 
 #include <fstream>
 #include <iostream>
