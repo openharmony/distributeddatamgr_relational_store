@@ -831,11 +831,17 @@ void RdbStoreImpl::InitDelayNotifier()
         LOG_ERROR("Init delay notifier failed.");
         return;
     }
+    std::weak_ptr<NativeRdb::KnowledgeSchemaHelper> helper = GetKnowledgeSchemaHelper();
     delayNotifier_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
-    delayNotifier_->SetTask([param = syncerParam_, helper = GetKnowledgeSchemaHelper()](
+    delayNotifier_->SetTask([param = syncerParam_, helper = helper](
         const DistributedRdb::RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) -> int {
         if (IsKnowledgeDataChange(rdbChangedData)) {
-            helper->DonateKnowledgeData();
+            auto realHelper = helper.lock();
+            if (realHelper == nullptr) {
+                LOG_WARN("knowledge helper is nullptr");
+                return E_OK;
+            }
+            realHelper->DonateKnowledgeData();
         }
         if (!IsNotifyService(rdbChangedData)) {
             return E_OK;
