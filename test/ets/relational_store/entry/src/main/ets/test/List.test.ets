@@ -26,6 +26,7 @@ import RdbStoreTransactionTest from './RdbStoreTransaction.test.ets';
 import RdbstoreTransactionJsunit from './RdbstoreTransactionJsunit.test.ets';
 import RdbStoreTransInsertJsunit from './RdbStoreTransInsertJsunit.test.ets';
 import RdbStoreTransJsunit from './RdbStoreTransJsunit.test.ets';
+import RdbstoreCustomTokenizerTest from './RdbstoreCustomTokenizerEts.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -40,4 +41,5 @@ export default function testsuite() {
   RdbstoreTransactionJsunit();
   RdbStoreTransInsertJsunit();
   RdbStoreTransJsunit();
+  RdbstoreCustomTokenizerTest();
 }
