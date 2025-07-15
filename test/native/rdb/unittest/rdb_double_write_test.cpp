@@ -1189,6 +1189,55 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db
+ * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db reopen main db finish");
+
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+    LOG_INFO("RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db insert finish");
+
+    RdbDoubleWriteTest::CheckNumber(store, count);
+    store = nullptr;
+    
+    std::fstream file(RdbDoubleWriteTest::DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    file.seekp(0x2000, std::ios::beg);
+    ASSERT_TRUE(file.good());
+
+    char bytes[128];
+    std::fill_n(bytes, 128, 0xff);
+    file.write(bytes, 128);
+    file.flush();
+    file.close();
+    LOG_INFO("RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db corrupt db finish");
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    errCode = store->Backup(std::string(""));
+    EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
+
+    errCode = store->Backup(std::string(""), {}, false);
+    EXPECT_EQ(errCode, E_OK);
+    store = nullptr;
+}
+
+/**
  * @tc.name: RdbStore_DoubleWrite_Huge_DB_001
  * @tc.desc: test db is deleted while open huge database, in MANUAL_TRIGGER
  * @tc.type: FUNC

@@ -199,10 +199,14 @@ int OH_VBucket_PutFloatVector(OH_VBucket *bucket, const char *field, const float
 
 int OH_VBucket_PutUnlimitedInt(OH_VBucket *bucket, const char *field, int sign, const uint64_t *trueForm, size_t len)
 {
+    if (len > SIZE_LENGTH_REPORT) {
+        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
+            std::string("OH_VBucket_PutUnlimitedInt: ") + std::to_string(len)));
+    }
     auto self = RelationalValuesBucket::GetSelf(bucket);
-    if (self == nullptr || field == nullptr || trueForm == nullptr) {
-        LOG_ERROR("field is NULL: %{public}d, trueForm is NULL: %{public}d.",
-            field == nullptr, trueForm == nullptr);
+    if (self == nullptr || field == nullptr || trueForm == nullptr || len > SIZE_LENGTH) {
+        LOG_ERROR("field is NULL: %{public}d, trueForm is NULL: %{public}d, len is %{public}zu.",
+            field == nullptr, trueForm == nullptr, len);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     ValueObject::BigInt bigInt(sign, {trueForm, trueForm + len});

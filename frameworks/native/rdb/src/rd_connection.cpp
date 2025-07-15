@@ -308,7 +308,7 @@ int32_t RdConnection::Unsubscribe(const std::shared_ptr<DistributedDB::StoreObse
 }
 
 int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-    std::shared_ptr<SlaveStatus> slaveStatus)
+    std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb)
 {
     if (!destEncryptKey.empty() && !config_.IsEncrypt()) {
         return RdUtils::RdDbBackup(dbHandle_, databasePath.c_str(), destEncryptKey);
