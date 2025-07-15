@@ -218,7 +218,7 @@ export default namespace relationalStore {
     }
 
     batchInsert(table: string, values: Array<ValuesBucket>): Promise<number> {
-      let p = new Promise<number>((resolve: (value: number) => void, reject: (error: Object) => void): void => {
+      let p = new Promise<number>((resolve: (value: number) => void, reject: (error: Error) => void): void => {
         let cb = (): Object => {
             let num = this.batchInsertSync(table, values)
             return num as Object
@@ -238,7 +238,7 @@ export default namespace relationalStore {
     native deleteSync(predicates: RdbPredicates): number;
 
     delete(predicates: RdbPredicates): Promise<number> {
-      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Object) => void): void => {
+      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Error) => void): void => {
         let cb = (): Object => {
             let num = this.deleteSync(predicates)
             return num as Object
@@ -273,7 +273,7 @@ export default namespace relationalStore {
     private native deleteShareSync(table: string, predicates: dataSharePredicates.DataSharePredicates): number;
 
     delete(table: string, predicates: dataSharePredicates.DataSharePredicates): Promise<number> {
-      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Object) => void): void => {
+      let p = new Promise<number>((resolve: (data: number) => void, reject: (error: Error) => void): void => {
         let cb = (): Object => {
             let num = this.deleteShareSync(table, predicates)
             return num as Object
@@ -338,14 +338,14 @@ export default namespace relationalStore {
     }
 
     executeSql(sql: string, bindArgs?: Array<ValueType>): Promise<void> {
-      let p = new Promise<void>((resolve: (v: NullishType) => void, reject: (error: Object) => void): void => {
+      let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void): void => {
         let cb = (): undefined => {
             this.executeSqlSync(sql, bindArgs)
             return undefined
         }
         let p1 = taskpool.execute(cb);
         p1.then((v: NullishType): void => {
-          resolve(v);
+          resolve(v as PromiseLike<void>);
         });
         p1.catch((err: NullishType): void => {
           reject(err as Error);
@@ -378,13 +378,13 @@ export default namespace relationalStore {
     });
   }
   export function getRdbStore(context: Context, config: StoreConfig): Promise<RdbStore> {
-    let p = new Promise<RdbStore>((resolve: (value: RdbStore) => void, reject: (error: Object) => void): void => {
+    let p = new Promise<RdbStore>((resolve: (value: RdbStore) => void, reject: (error: Error) => void): void => {
       let p1 = taskpool.execute(getRdbStoreSync, context, config);
       p1.then((rdb: NullishType): void => {
         resolve(rdb as RdbStore);
       });
       p1.catch((err: NullishType): void => {
-        reject(err as Object);
+        reject(err as Error);
       });
     });
     return p
