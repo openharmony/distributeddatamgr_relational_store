@@ -58,7 +58,7 @@ public:
     MOCK_METHOD(int32_t, Unsubscribe, (const std::shared_ptr<DistributedDB::StoreObserver> &observer), (override));
     MOCK_METHOD(int32_t, Backup,
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-            std::shared_ptr<SlaveStatus> slaveStatus),
+            std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb),
         (override));
     MOCK_METHOD(int32_t, Restore,
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,

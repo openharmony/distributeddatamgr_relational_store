@@ -178,7 +178,7 @@ int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
     }
     size_t pathLength = asset->asset_.path.size();
     if (pathLength >= *length) {
-        LOG_ERROR("length is too small ? %{public}d.", (pathLength >= *length));
+        LOG_ERROR("length is too small pathLength: %{public}zu, length: %{public}zu.", pathLength, *length);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     errno_t result = strcpy_s(path, *length, asset->asset_.path.c_str());
