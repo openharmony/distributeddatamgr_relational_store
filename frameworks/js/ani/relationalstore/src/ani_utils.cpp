@@ -19,10 +19,11 @@
 #include "big_integer.h"
 #include "values_bucket.h"
 #include "logger.h"
+#include <ani_signature_builder.h>
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-
+using namespace arkts::ani_signature;
 
 template<>
 bool UnionAccessor::IsInstanceOfType<bool>()
@@ -304,10 +305,9 @@ bool UnionAccessor::GetObjectRefPropertyByName(std::string clsName, const char *
 {
     ani_class cls;
     env_->FindClass(clsName.c_str(), &cls);
-    std::string methodName("<get>");
-    methodName += name;
+    std::string methodName(name);
     ani_method getter;
-    ani_status status = env_->Class_FindMethod(cls, methodName.c_str(), nullptr, &getter);
+    ani_status status = env_->Class_FindMethod(cls, Builder::BuildGetterName(methodName).c_str(), nullptr, &getter);
     if (status != ANI_OK) {
         LOG_ERROR("GetObjectRefPropertyByName Class_FindMethod failed, status=%{public}d", status);
         return false;
