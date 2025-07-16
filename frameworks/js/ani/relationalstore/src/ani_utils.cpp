@@ -27,25 +27,25 @@ using namespace OHOS::Rdb;
 template<>
 bool UnionAccessor::IsInstanceOfType<bool>()
 {
-    return IsInstanceOf("Lstd/core/Boolean;");
+    return IsInstanceOf("std.core.Boolean");
 }
 
 template<>
 bool UnionAccessor::IsInstanceOfType<int>()
 {
-    return IsInstanceOf("Lstd/core/Int;");
+    return IsInstanceOf("std.core.Int");
 }
 
 template<>
 bool UnionAccessor::IsInstanceOfType<double>()
 {
-    return IsInstanceOf("Lstd/core/Double;");
+    return IsInstanceOf("std.core.Double");
 }
 
 template<>
 bool UnionAccessor::IsInstanceOfType<std::string>()
 {
-    return IsInstanceOf("Lstd/core/String;");
+    return IsInstanceOf("std.core.String");
 }
 
 template<>
@@ -58,7 +58,7 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
@@ -78,7 +78,7 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
@@ -103,7 +103,7 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
@@ -128,7 +128,7 @@ bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
@@ -197,7 +197,7 @@ bool UnionAccessor::TryConvertArray<std::string>(std::vector<std::string> &value
 
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "I:Lstd/core/Object;", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
             LOG_ERROR("Object_CallMethodByName_Ref failed");
             return false;
         }
@@ -364,7 +364,7 @@ bool UnionAccessor::GetObjectEnumValuePropertyByName(
 template<>
 bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
 {
-    std::string clsName = "L@ohos/data/relationalStore/relationalStore/Asset;";
+    std::string clsName = "@ohos.data.relationalStore.relationalStore.Asset";
     if (!IsInstanceOf(clsName)) {
         return false;
     }
@@ -409,7 +409,7 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> &value)
 {
-    std::string clsName = "[L@ohos/data/relationalStore/relationalStore/Asset;";
+    std::string clsName = "A{C{@ohos.data.relationalStore.relationalStore.Asset}}";
     if (!IsInstanceOf(clsName)) {
         return false;
     }
@@ -442,7 +442,7 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
 template<>
 bool UnionAccessor::TryConvert<std::vector<float>>(std::vector<float> &value)
 {
-    if (!IsInstanceOf("Lescompat/Float32Array;")) {
+    if (!IsInstanceOf("escompat.Float32Array")) {
         return false;
     }
     return TryConvertArray(value);
@@ -451,7 +451,7 @@ bool UnionAccessor::TryConvert<std::vector<float>>(std::vector<float> &value)
 template<>
 bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
 {
-    std::string clsName = "Lescompat/BigInt;";
+    std::string clsName = "escompat.BigInt";
     ani_class cls;
     auto status = env_->FindClass(clsName.c_str(), &cls);
     if (status != ANI_OK) {
@@ -466,7 +466,7 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
     }
 
     ani_method getLongMethod;
-    if (ANI_OK != env_->Class_FindMethod(cls, "getLong", ":J", &getLongMethod)) {
+    if (ANI_OK != env_->Class_FindMethod(cls, "getLong", ":l", &getLongMethod)) {
         LOG_ERROR("Class_FindMethod failed");
         return false;
     }
@@ -484,7 +484,7 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<ani_ref>>(std::vector<ani_ref> &value)
 {
-    if (!IsInstanceOf("Lescompat/Array;")) {
+    if (!IsInstanceOf("escompat.Array")) {
         return false;
     }
     return TryConvertArray(value);
@@ -514,11 +514,11 @@ ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
 template<>
 bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
 {
-    if (!IsInstanceOf("Lescompat/Record;")) {
+    if (!IsInstanceOf("escompat.Record")) {
         return false;
     }
     ani_ref keys;
-    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":Lescompat/IterableIterator;", &keys);
+    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":C{escompat.IterableIterator}", &keys);
     if (status != ANI_OK) {
         LOG_ERROR("Object_CallMethodByName_Ref failed");
     }
