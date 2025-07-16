@@ -34,6 +34,7 @@ ohos_unittest("NativeRdbNdkTest") {
   module_out_path = module_output_path
 
   sources = [
+    "unittest/oh_value_object_test.cpp",
     "unittest/rdb_asset_test.cpp",
     "unittest/rdb_crypto_param_test.cpp",
     "unittest/rdb_cursor_test.cpp",
