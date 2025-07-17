@@ -568,12 +568,12 @@ describe('RdbStoreDataChangeTest', function () {
 
     /**
      * @tc.name off parameters number error
-     * @tc.number testRdbStoreOn0001
-     * @tc.desc 1. Register and cancel registration concurrent testing
+     * @tc.number testRdbStoreDataChange0012
+     * @tc.desc UnRegister error parameters number test
      *
      */
     it('testRdbStoreDataChange0012', 0, async function (done) {
-        console.info(TAG + "************* testRdbStoreOn0001 start *************");
+        console.info(TAG + "************* testRdbStoreDataChange0012 start *************");
         function observer() {
             console.info(TAG + "observer1");
         };
@@ -585,17 +585,17 @@ describe('RdbStoreDataChangeTest', function () {
             expect(true).assertTrue()
         }
         done();
-        console.info(TAG + "************* testRdbStoreOn0001 end *************");
+        console.info(TAG + "************* testRdbStoreDataChange0012 end *************");
     })
 
     /**
      * @tc.name on parameters number error
-     * @tc.number testRdbStoreOn0001
-     * @tc.desc 1. Register and cancel registration concurrent testing
+     * @tc.number testRdbStoreDataChange0013
+     * @tc.desc Register error parameters number test
      *
      */
      it('testRdbStoreDataChange0013', 0, async function (done) {
-        console.info(TAG + "************* testRdbStoreOn0001 start *************");
+        console.info(TAG + "************* testRdbStoreDataChange0013 start *************");
         function observer() {
             console.info(TAG + "observer1");
         };
@@ -607,7 +607,7 @@ describe('RdbStoreDataChangeTest', function () {
             expect(true).assertTrue()
         }
         done();
-        console.info(TAG + "************* testRdbStoreOn0001 end *************");
+        console.info(TAG + "************* testRdbStoreDataChange0013 end *************");
     })
 
     console.info(TAG + "*************Unit Test End*************");
