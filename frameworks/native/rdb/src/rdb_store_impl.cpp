@@ -1056,7 +1056,8 @@ int32_t RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCall
     }
 
     if (errCode != E_OK) {
-        LOG_ERROR("ProcessOpenCallback set new version failed.");
+        LOG_ERROR("openCallback failed. version: %{public}d -> %{public}d, errCode:%{public}d",
+            currentVersion, version, errCode);
         return errCode;
     }
 

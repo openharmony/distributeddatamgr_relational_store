@@ -647,10 +647,13 @@ void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t time
 std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(
     Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire)
 {
-    InitMembers(creator, max, timeout, disable);
     std::shared_ptr<ConnNode> connNode = nullptr;
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = disable;
+        max_ = max;
+        creator_ = creator;
+        timeout_ = std::chrono::seconds(timeout);
         for (int i = 0; i < max_; ++i) {
             auto errCode = ExtendNode();
             if (errCode != E_OK) {
