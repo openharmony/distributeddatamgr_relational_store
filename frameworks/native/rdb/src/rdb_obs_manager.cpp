@@ -30,9 +30,12 @@ using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
 using namespace OHOS::Rdb;
 std::mutex RdbObsManager::mutex_;
 RdbObsManager::ObsAPIInfo RdbObsManager::apiInfo_;
-void *RdbObsManager::handle_ = nullptr;;
+void *RdbObsManager::handle_ = nullptr;
 RdbObsManager::~RdbObsManager()
 {
+    if (obs_.Empty()) {
+        return;
+    }
     auto handle = GetApiInfo();
     if (handle.unregisterFunc == nullptr) {
         LOG_ERROR("dlsym(Unregister) failed");
