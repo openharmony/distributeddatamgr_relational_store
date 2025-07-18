@@ -284,6 +284,56 @@ export default function () {
       console.log(TAG + "************* testRdbTransactionMulti0003 end *************");
     })
 
+    /**
+     * @tc.number testRdbTransactionSetVersion001
+     * @tc.name Normal test case of transaction, GetVersion before transaction submission
+     * @tc.desc 1.Execute beginTransaction
+     *          2.setVersion
+     *          3.GetVersion
+     *          4.commit
+     */
+    it('testRdbTransactionSetVersion001', 0, async function (done) {
+      console.log(TAG + "************* testRdbTransactionSetVersion001 start *************");
+      try {
+        rdbStore.beginTransaction()
+        let version:number = rdbStore.version;
+        rdbStore.version = version + 1;
+        expect(rdbStore.version).assertEqual(version + 1);
+        rdbStore.commit()
+      } catch (e) {
+        rdbStore.rollBack();
+        expect().assertFail();
+        console.log(TAG + "testRdbTransactionSetVersion001 rollback ***** " + e);
+      }
+      done()
+      console.log(TAG + "************* testRdbTransactionSetVersion001 end *************");
+    })
+
+    /**
+     * @tc.number testRdbTransactionSetVersion002
+     * @tc.name Normal test case of transaction, query version after transaction submission
+     * @tc.desc 1.Execute beginTransaction
+     *          2.setVersion
+     *          3.commit
+     *          4.GetVersion
+     */
+    it('testRdbTransactionSetVersion002', 0, async function (done) {
+      console.log(TAG + "************* testRdbTransactionSetVersion002 start *************");
+      try {
+        rdbStore.beginTransaction();
+        let version:number = rdbStore.version;
+        rdbStore.version = version + 1;
+        rdbStore.commit();
+        expect(rdbStore.version).assertEqual(version + 1);
+      } catch (e) {
+        rdbStore.rollBack()
+        expect().assertFail();
+        console.log(TAG + "testRdbTransactionSetVersion002 rollback ***** " + e);
+      }
+      done()
+      console.log(TAG + "************* testRdbTransactionSetVersion002 end *************");
+    })
+
     console.log(TAG + "*************Unit Test End*************");
   })
 }
