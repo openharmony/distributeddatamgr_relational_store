@@ -23,7 +23,7 @@ napi_status SendEventMock(napi_env env,
                           napi_event_priority priority,
                           const char* name)
 {
-    if (env == nullptr || cb == nullptr || priority < napi_eprio_vip || napi_eprio_vip > napi_eprio_idle) {
+    if (env == nullptr || !cb || priority < napi_eprio_vip || priority > napi_eprio_idle) {
         return napi_status::napi_invalid_arg;
     }
 
