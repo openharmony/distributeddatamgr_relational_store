@@ -1962,3 +1962,88 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_043, TestSize.Level1)
     ret = OH_VBucket_PutFloatVector(valueBucket, "data3", floatArr, len);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 }
+
+/**
+ * @tc.name: RDB_SubscribeAutoSyncProgress_test_001
+ * @tc.desc: Abnormal testCase for SubscribeAutoSyncProgress.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_SubscribeAutoSyncProgress_test_001, TestSize.Level1)
+{
+    RelationalStore ndkStore(nullptr);
+    auto ret = ndkStore.SubscribeAutoSyncProgress(&observer);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_UnsubscribeAutoSyncProgress_test_001
+ * @tc.desc: Abnormal testCase for UnsubscribeAutoSyncProgress.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_UnsubscribeAutoSyncProgress_test_001, TestSize.Level1)
+{
+    RelationalStore ndkStore(nullptr);
+    auto ret = ndkStore.UnsubscribeAutoSyncProgress(&observer);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Query_Abnormal_test_001
+ * @tc.desc: Abnormal testCase for OH_Rdb_Query.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Query_Abnormal_test_001, TestSize.Level1)
+{
+    ASSERT_NE(storeTestRdbStore_, nullptr);
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    ASSERT_NE(predicates, nullptr);
+
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    ASSERT_NE(valueObject, NULL);
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+
+    int length = INT_MAX;
+    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, nullptr, length);
+    EXPECT_EQ(cursor, nullptr);
+
+    valueObject->destroy(valueObject);
+    predicates->destroy(predicates);
+}
+
+/**
+ * @tc.name: RDB_QueryLockedRow_Abnormal_test_001
+ * @tc.desc: Abnormal testCase for OH_Rdb_QueryLockedRow.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_QueryLockedRow_Abnormal_test_001, TestSize.Level1)
+{
+    ASSERT_NE(storeTestRdbStore_, nullptr);
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
+    ASSERT_NE(predicates, nullptr);
+
+    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
+    ASSERT_NE(valueObject, NULL);
+    const char *data1Value = "zhangSan";
+    valueObject->putText(valueObject, data1Value);
+    predicates->equalTo(predicates, "data1", valueObject);
+
+    int length = INT_MAX;
+    OH_Cursor *cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, nullptr, length);
+    EXPECT_EQ(cursor, nullptr);
+
+    valueObject->destroy(valueObject);
+    predicates->destroy(predicates);
+}
+
+/**
+ * @tc.name: RDB_GetTableDetails_Abnormal_test_001
+ * @tc.desc: Abnormal testCase for OH_Rdb_GetTableDetails.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_GetTableDetails_Abnormal_test_001, TestSize.Level1)
+{
+    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(nullptr, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
+    EXPECT_EQ(tableDetails, nullptr);
+}

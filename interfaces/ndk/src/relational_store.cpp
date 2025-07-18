@@ -40,6 +40,7 @@
 #include "securec.h"
 #include "sqlite_global_config.h"
 #include "values_buckets.h"
+#include "sqlite_utils.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
@@ -47,6 +48,8 @@ using Reporter = OHOS::NativeRdb::RdbFaultHiViewReporter;
 constexpr int RDB_STORE_CID = 1234560;       // The class id used to uniquely identify the OH_Rdb_Store class.
 constexpr uint32_t SIZE_LENGTH_REPORT = 1073741823; // count to report 1073741823(1024 * 1024 * 1024 - 1).
 constexpr uint32_t SIZE_LENGTH = 4294967294; // length or count up to 4294967294(1024 * 1024 * 1024 * 4 - 2).
+constexpr int TABLE_MAX_COLUMN = INT_MAX - 1;
+constexpr int TABLE_COLUMN_REPORT = 2000;
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
@@ -310,6 +313,9 @@ int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callb
         return OH_Rdb_ErrCode::RDB_OK;
     }
     auto obs = std::make_shared<NDKDetailProgressObserver>(callback);
+    if (store_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
     int errCode = store_->RegisterAutoSyncCallback(obs);
     if (errCode == NativeRdb::E_OK) {
         LOG_ERROR("subscribe failed.");
@@ -322,6 +328,9 @@ int RelationalStore::SubscribeAutoSyncProgress(const Rdb_ProgressObserver *callb
 int RelationalStore::UnsubscribeAutoSyncProgress(const Rdb_ProgressObserver *callback)
 {
     std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (store_ == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
     for (auto it = callbacks_.begin(); it != callbacks_.end();) {
         if (callback != nullptr && !(**it == callback)) {
             ++it;
@@ -434,7 +443,7 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         OHOS::NativeRdb::RdbHelper::GetRdbStore(rdbStoreConfig, -1, callback, *errCode);
     *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
     if (store == nullptr) {
-        LOG_ERROR("Get RDB Store fail %{public}s", realPath.c_str());
+        LOG_ERROR("Get RDB Store fail %{public}s", OHOS::NativeRdb::SqliteUtils::Anonymous(realPath).c_str());
         return nullptr;
     }
     return new (std::nothrow) RelationalStore(store);
@@ -459,7 +468,8 @@ OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
         OHOS::NativeRdb::RdbHelper::GetRdbStore(rdbStoreConfig, -1, callback, *errCode);
     *errCode = ConvertorErrorCode::NativeToNdk(*errCode);
     if (store == nullptr) {
-        LOG_ERROR("Get RDB Store fail %{public}s", rdbStoreConfig.GetPath().c_str());
+        LOG_ERROR("Get RDB Store fail %{public}s",
+            OHOS::NativeRdb::SqliteUtils::Anonymous(rdbStoreConfig.GetPath()).c_str());
         return nullptr;
     }
     return new (std::nothrow) RelationalStore(store);
@@ -570,9 +580,14 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates)
 
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
 {
+    if (length > TABLE_COLUMN_REPORT) {
+        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
+            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("OH_Rdb_Query length is ") + std::to_string(length)));
+    }
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr) {
+    if (rdbStore == nullptr || predicate == nullptr || length > TABLE_MAX_COLUMN) {
+        LOG_ERROR("rdbStore or predicate is nullptr, length is %{public}d", length);
         return nullptr;
     }
     std::vector<std::string> columns;
@@ -967,6 +982,9 @@ static std::pair<int, RelationalProgressDetails *> GetDetails(Rdb_ProgressDetail
 
 Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version)
 {
+    if (progress == nullptr) {
+        return nullptr;
+    }
     auto [errCode, details] = GetDetails(progress);
     if (errCode == -1 || details == nullptr) {
         return nullptr;
@@ -1062,10 +1080,14 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
 OH_Cursor *OH_Rdb_QueryLockedRow(
     OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
 {
+    if (length > TABLE_COLUMN_REPORT) {
+        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
+            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("QueryLockedRow length is ") + std::to_string(length)));
+    }
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr) {
-        LOG_ERROR("rdbStore or predicate is nullptr.");
+    if (rdbStore == nullptr || predicate == nullptr || length > TABLE_MAX_COLUMN) {
+        LOG_ERROR("rdbStore or predicate is nullptr, length is %{public}d", length);
         return nullptr;
     }
     std::vector<std::string> columns;
@@ -1310,7 +1332,7 @@ void NDKStoreObserver::ConvertKeyInfoData(
 
 bool NDKStoreObserver::operator==(const Rdb_DataObserver *other)
 {
-    if (other == nullptr) {
+    if (other == nullptr || observer_ == nullptr) {
         return false;
     }
     return other->context == observer_->context && &(other->callback) == &(observer_->callback);
