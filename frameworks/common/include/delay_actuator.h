@@ -158,7 +158,7 @@ public:
     {
         task_ = std::move(task);
     }
-    template<class D>
+    template<class D = T>
     void Execute(D &&value)
     {
         {

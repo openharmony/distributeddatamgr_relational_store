@@ -91,7 +91,7 @@ HWTEST_F(DelayActuatorTest, Execute_003, TestSize.Level0)
         return 0;
     });
     for (int i = 0; i < 5; i++) {
-        delayActuator->Execute(i);
+        delayActuator->Execute(std::move(i));
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         EXPECT_EQ(blockData->GetValue(), 0);
     }
@@ -118,7 +118,7 @@ HWTEST_F(DelayActuatorTest, Execute_004, TestSize.Level0)
     {
         ActuatorBase::Defer defer(delayActuator);
         for (int i = 0; i < 3; i++) {
-            delayActuator->Execute(i);
+            delayActuator->Execute(std::move(i));
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             EXPECT_EQ(blockData->GetValue(), 0);
         }
@@ -147,7 +147,7 @@ HWTEST_F(DelayActuatorTest, Execute_005, TestSize.Level0)
         return 0;
     });
     for (int i = 0; i < 5; i++) {
-        delayActuator->Execute(i);
+        delayActuator->Execute(std::move(i));
         EXPECT_EQ(blockData->GetValue(), 0);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -181,7 +181,7 @@ HWTEST_F(DelayActuatorTest, Execute_006, TestSize.Level0)
     int len = 10;
     for (int i = 0; i < len; i++) {
         data.insert_or_assign(std::to_string(i), "t");
-        delayActuator->Execute(data);
+        delayActuator->Execute(std::move(data));
     }
     auto val = blockData->GetValue();
     EXPECT_EQ(val.size(), len);

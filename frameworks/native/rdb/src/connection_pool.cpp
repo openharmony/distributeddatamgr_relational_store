@@ -129,19 +129,17 @@ ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
         FIRST_DELAY_INTERVAL,
         MIN_EXECUTE_INTERVAL,
         MAX_EXECUTE_INTERVAL);
-    if (clearActuator_ != nullptr) {
-        clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
-        clearActuator_->SetTask([](std::vector<std::weak_ptr<ConnPool::ConnNode>> &&nodes) {
-            for (auto &node : nodes) {
-                auto realNode = node.lock();
-                if (realNode == nullptr || realNode->connect_ == nullptr) {
-                    continue;
-                }
-                realNode->connect_->ClearCache(true);
+    clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
+    clearActuator_->SetTask([](std::vector<std::weak_ptr<ConnPool::ConnNode>> &&nodes) {
+        for (auto &node : nodes) {
+            auto realNode = node.lock();
+            if (realNode == nullptr || realNode->connect_ == nullptr) {
+                continue;
             }
-            return E_OK;
-        });
-    }
+            realNode->connect_->ClearCache(true);
+        }
+        return E_OK;
+    });
 }
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bool needWriter)
