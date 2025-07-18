@@ -257,6 +257,7 @@ ohos_unittest("NativeRdbTest") {
     "ipc:ipc_core",
     "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
+    "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
