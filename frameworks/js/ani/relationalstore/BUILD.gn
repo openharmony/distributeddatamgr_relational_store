@@ -15,6 +15,7 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_shared_library("relationalstore_ani") {
+  shlib_type = "ani"
   sources = [
     "src/ani_rdb_entry.cpp",
     "src/ani_rdb_error.cpp",
