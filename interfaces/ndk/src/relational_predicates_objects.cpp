@@ -17,16 +17,27 @@
 
 #include "logger.h"
 #include "oh_value_object.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "relational_store_error_code.h"
+
+using Reporter = OHOS::NativeRdb::RdbFaultHiViewReporter;
 
 namespace OHOS {
 namespace RdbNdk {
 // The class id used to uniquely identify the OH_VObject class.
 constexpr int RDB_PREDICATES_OBJECTS_CID = 1234565;
+constexpr uint32_t COUNT_MAX = 4294967294; // length or count up to 4294967294(1024 * 1024 * 1024 * 4 - 2).
+constexpr uint32_t COUNT_REPORT = 1073741823; // count to report 1073741823(1024 * 1024 * 1024 - 1).
+
 int RelationalPredicatesObjects::PutInt64(OH_VObject *objects, int64_t *value, uint32_t count)
 {
+    if (count > COUNT_REPORT) {
+        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
+            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("PutInt64 count is ") + std::to_string(count)));
+    }
     auto self = GetSelf(objects);
-    if (self == nullptr || value == nullptr || count == 0) {
+    if (self == nullptr || value == nullptr || count == 0 || count > COUNT_MAX) {
+        LOG_ERROR("self or value is nullptr, count is %{public}u", count);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     self->values_.clear();
@@ -39,8 +50,13 @@ int RelationalPredicatesObjects::PutInt64(OH_VObject *objects, int64_t *value, u
 
 int RelationalPredicatesObjects::PutDouble(OH_VObject *objects, double *value, uint32_t count)
 {
+    if (count > COUNT_REPORT) {
+        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
+            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("PutDouble count is ") + std::to_string(count)));
+    }
     auto self = GetSelf(objects);
-    if (self == nullptr || value == nullptr || count == 0) {
+    if (self == nullptr || value == nullptr || count == 0 || count > COUNT_MAX) {
+        LOG_ERROR("self or value is nullptr, count is %{public}u", count);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     self->values_.clear();
@@ -65,8 +81,13 @@ int RelationalPredicatesObjects::PutText(OH_VObject *objects, const char *value)
 
 int RelationalPredicatesObjects::PutTexts(OH_VObject *objects, const char **value, uint32_t count)
 {
+    if (count > COUNT_REPORT) {
+        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
+            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("PutTexts count is ") + std::to_string(count)));
+    }
     auto self = GetSelf(objects);
-    if (self == nullptr || value == nullptr || count == 0) {
+    if (self == nullptr || value == nullptr || count == 0 || count > COUNT_MAX) {
+        LOG_ERROR("self or value is nullptr, count is %{public}u", count);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
