@@ -76,7 +76,7 @@ public:
     virtual int32_t SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int32_t GetMaxVariable() const = 0;
     virtual int32_t GetJournalMode() = 0;
-    virtual int32_t ClearCache() = 0;
+    virtual int32_t ClearCache(bool isForceClear = false) = 0;
     virtual int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,

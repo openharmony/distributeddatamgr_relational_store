@@ -292,7 +292,7 @@ int32_t RdConnection::GetJournalMode()
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::ClearCache()
+int32_t RdConnection::ClearCache(bool isForceClear)
 {
     return E_NOT_SUPPORT;
 }
