@@ -85,18 +85,6 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 }
 #endif
 
-bool IsOverLimit(const ValueObject &object)
-{
-    constexpr int64_t maxValue = 9007199254740991;
-    constexpr int64_t minValue = -9007199254740991;
-    if (object.GetType() != ValueObjectType::TYPE_INT) {
-        return false;
-    }
-    int64_t value = 0;
-    object.GetLong(value);
-    return (value < minValue) || (value > maxValue);
-}
-
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
