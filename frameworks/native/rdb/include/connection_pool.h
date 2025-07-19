@@ -140,8 +140,8 @@ private:
     static constexpr uint32_t ITERS_COUNT = 2;
     static constexpr uint32_t MAX_TRANS = 4;
     static constexpr std::chrono::steady_clock::duration TRANS_CLEAR_INTERVAL = std::chrono::seconds(150);
-    static constexpr uint32_t FIRST_DELAY_INTERVAL = UINT32_MAX;
-    static constexpr uint32_t MIN_EXECUTE_INTERVAL = UINT32_MAX;
+    static constexpr uint32_t FIRST_DELAY_INTERVAL = ActuatorBase::INVALID_INTERVAL;
+    static constexpr uint32_t MIN_EXECUTE_INTERVAL = ActuatorBase::INVALID_INTERVAL;
     static constexpr uint32_t MAX_EXECUTE_INTERVAL = 30000; // 30000ms
     std::shared_ptr<DelayActuator<std::vector<std::weak_ptr<ConnNode>>,
         std::function<void(std::vector<std::weak_ptr<ConnNode>> &out, std::shared_ptr<ConnNode> &&input)>>>
