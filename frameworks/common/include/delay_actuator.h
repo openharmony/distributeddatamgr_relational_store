@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
-#define NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
+#ifndef COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
+#define COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
 #include <functional>
 #include <memory>
 #include "executor_pool.h"
@@ -197,4 +197,4 @@ private:
     }
 };
 } // namespace OHOS
-#endif // NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
+#endif // COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
