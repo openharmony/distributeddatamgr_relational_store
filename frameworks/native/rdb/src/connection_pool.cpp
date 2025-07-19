@@ -385,10 +385,6 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool isTrans)
         trans_.Dump("WAL trans_", transCount);
         readers_.Dump("WAL readers_", transCount);
     }
-    if (clearActuator_ != nullptr) {
-        std::weak_ptr<ConnNode> weakNode = node;
-        clearActuator_->Execute(std::move(weakNode));
-    }
     if (node->IsWriter() && (errCode != E_INNER_WARNING && errCode != E_NOT_SUPPORT)) {
         failedTime_ = errCode != E_OK ? now : steady_clock::time_point();
     }

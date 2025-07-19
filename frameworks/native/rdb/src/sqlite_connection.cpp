@@ -1063,10 +1063,13 @@ std::pair<int32_t, ValueObject> SqliteConnection::ExecuteForValue(
 int SqliteConnection::ClearCache(bool isForceClear)
 {
     if (dbHandle_ != nullptr && mode_ == JournalMode::MODE_WAL) {
-        int usedBytes = 0;
-        int nEntry = 0;
-        int errCode = sqlite3_db_status(dbHandle_, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEntry, 0);
-        if (isForceClear || (errCode == SQLITE_OK && usedBytes > config_.GetClearMemorySize())) {
+        auto getUsedBytes = [dbHandle = dbHandle_]() -> int {
+            int usedBytes = 0;
+            int nEntry = 0;
+            sqlite3_db_status(dbHandle, SQLITE_DBSTATUS_CACHE_USED, &usedBytes, &nEntry, 0);
+            return usedBytes;
+        };
+        if (isForceClear || getUsedBytes() > config_.GetClearMemorySize()) {
             sqlite3_db_release_memory(dbHandle_);
         }
     }
