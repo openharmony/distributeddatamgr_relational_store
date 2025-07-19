@@ -52,7 +52,7 @@ public:
     int32_t SubscribeTableChanges(const Notifier &notifier) override;
     int32_t GetMaxVariable() const override;
     int32_t GetJournalMode() override;
-    int32_t ClearCache() override;
+    int32_t ClearCache(bool isForceClear = false) override;
     int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,

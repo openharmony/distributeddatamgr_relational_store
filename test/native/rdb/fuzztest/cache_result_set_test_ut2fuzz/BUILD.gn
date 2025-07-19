@@ -20,7 +20,10 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 ohos_fuzztest("cache_result_set_test_ut2fuzz") {
   module_out_path = "relational_store/relational_store"
 
-  include_dirs = [ "${relational_store_native_path}/rdb/include" ]
+  include_dirs = [
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_common_path}/include",
+  ]
 
   cflags = [
     "-g",
@@ -42,6 +45,7 @@ ohos_fuzztest("cache_result_set_test_ut2fuzz") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "sqlite:sqlite",
   ]

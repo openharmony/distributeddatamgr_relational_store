@@ -46,6 +46,7 @@ ohos_fuzztest("abspredicates_fuzzer") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "sqlite:sqlite",
   ]

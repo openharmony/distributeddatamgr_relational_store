@@ -53,7 +53,7 @@ public:
     MOCK_METHOD(int32_t, SubscribeTableChanges, (const Notifier &notifier), (override));
     MOCK_METHOD(int32_t, GetMaxVariable, (), (const, override));
     MOCK_METHOD(int32_t, GetJournalMode, (), (override));
-    MOCK_METHOD(int32_t, ClearCache, (), (override));
+    MOCK_METHOD(int32_t, ClearCache, (bool isForceClear), (override));
     MOCK_METHOD(int32_t, Subscribe, (const std::shared_ptr<DistributedDB::StoreObserver> &observer), (override));
     MOCK_METHOD(int32_t, Unsubscribe, (const std::shared_ptr<DistributedDB::StoreObserver> &observer), (override));
     MOCK_METHOD(int32_t, Backup,

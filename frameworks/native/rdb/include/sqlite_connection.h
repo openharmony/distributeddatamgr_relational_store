@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "connection.h"
-#include "delay_actuator.h"
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
 #include "sqlite_statement.h"
@@ -65,7 +64,7 @@ public:
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
-    int32_t ClearCache() override;
+    int32_t ClearCache(bool isForceClear = false) override;
     int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
@@ -162,9 +161,6 @@ private:
     static constexpr uint32_t NO_ITER = 0;
     static constexpr uint32_t DB_INDEX = 0;
     static constexpr uint32_t WAL_INDEX = 2;
-    static constexpr uint32_t FIRST_DELAY_INTERVAL = 30000;
-    static constexpr uint32_t MIN_EXECUTE_INTERVAL = 30000;
-    static constexpr uint32_t MAX_EXECUTE_INTERVAL = UINT32_MAX;
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
@@ -193,7 +189,6 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
-    std::shared_ptr<DelayActuator<bool>> clearActuator_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

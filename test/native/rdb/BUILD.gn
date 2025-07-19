@@ -88,6 +88,7 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "hilog:libhilog",
     "huks:libhukssdk",
     "ipc:ipc_core",
+    "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
