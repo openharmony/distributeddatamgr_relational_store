@@ -378,6 +378,12 @@ int RdbStore::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sq
 
 int RdbStore::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey)
 {
+    return Backup(databasePath, encryptKey, true);
+}
+
+int RdbStore::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb)
+{
+    (void)verifyDb;
     (void)databasePath;
     (void)encryptKey;
     return E_NOT_SUPPORT;

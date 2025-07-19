@@ -106,7 +106,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
-    int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey) override;
+    int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
@@ -194,7 +194,7 @@ private:
     static int InnerSync(const RdbParam &param, const Options &option, const Memo &predicates,
         const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
-        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
+        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);

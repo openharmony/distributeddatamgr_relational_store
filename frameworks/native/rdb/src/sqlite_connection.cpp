@@ -1217,7 +1217,7 @@ int32_t SqliteConnection::Unsubscribe(const std::shared_ptr<DistributedDB::Store
 }
 
 int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    bool isAsync, std::shared_ptr<SlaveStatus> slaveStatus)
+    bool isAsync, std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb)
 {
     if (*slaveStatus == SlaveStatus::BACKING_UP) {
         LOG_INFO("backing up, return:%{public}s", config_.GetName().c_str());
@@ -1234,7 +1234,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
             }
             slaveConnection_ = conn;
         }
-        return ExchangeSlaverToMaster(false, true, slaveStatus);
+        return ExchangeSlaverToMaster(false, verifyDb, slaveStatus);
     }
 
     if (backupId_ == TaskExecutor::INVALID_TASK_ID) {

@@ -80,7 +80,7 @@ public:
     virtual int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) = 0;
     virtual int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-        std::shared_ptr<SlaveStatus> slaveStatus) = 0;
+        std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) = 0;
     virtual int32_t Restore(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         std::shared_ptr<SlaveStatus> slaveStatus) = 0;
