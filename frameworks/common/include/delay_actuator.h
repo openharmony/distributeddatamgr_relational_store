@@ -98,8 +98,10 @@ protected:
                 }
             });
         }
-        if (delayTaskId_ == Executor::INVALID_TASK_ID && firstDelayInterval_ != INVALID_INTERVAL &&
-            minExecuteInterval_ != INVALID_INTERVAL) {
+        if (firstDelayInterval_ == INVALID_INTERVAL || minExecuteInterval_ == INVALID_INTERVAL) {
+            return;
+        }
+        if (delayTaskId_ == Executor::INVALID_TASK_ID) {
             delayTaskId_ =
                 pool_->Schedule(std::chrono::milliseconds(lastExecuteTimePoint_ <= GetTimeStamp() - minExecuteInterval_
                                                               ? firstDelayInterval_
@@ -111,6 +113,8 @@ protected:
                             self->lastExecuteTimePoint_ = GetTimeStamp();
                         }
                     });
+        } else {
+            delayTaskId_ = pool_->Reset(delayTaskId_, std::chrono::milliseconds(minExecuteInterval_));
         }
     }
     void StopTimer(bool wait)
