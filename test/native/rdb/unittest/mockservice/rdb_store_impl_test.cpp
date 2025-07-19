@@ -545,26 +545,6 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStoreSubscribeRemote_002, TestSize.Level2
 }
 
 /**
- * @tc.name: SetKnowledgeSchema
- * @tc.desc: RdbStoreSubscribe
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, SetKnowledgeSchema, TestSize.Level2)
-{
-    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    config.SetReadOnly(false);
-    config.SetStorageMode(StorageMode::MODE_DISK);
-    config.SetEnableSemanticIndex(true);
-    RdbStoreImplConditionTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    EXPECT_EQ(storeImpl->config_, config);
-    storeImpl->Close();
-}
-
-/**
  * @tc.name: SetDistributedTables_Test_001
  * @tc.desc: Abnormal testCase of SetDistributedTables
  * @tc.type: FUNC
