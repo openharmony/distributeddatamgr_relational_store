@@ -24,6 +24,7 @@ public:
     static constexpr uint32_t DEFAULT_FIRST_DELAY_INTERVAL = 0;
     static constexpr uint32_t DEFAULT_MIN_EXECUTE_INTERVAL = 200;
     static constexpr uint32_t DEFAULT_MAX_EXECUTE_INTERVAL = 500;
+    static const uint32_t INVALID_INTERVAL = UINT32_MAX;
     void SetExecutorPool(std::shared_ptr<ExecutorPool> pool)
     {
         pool_ = std::move(pool);
@@ -140,7 +141,6 @@ private:
     ExecutorPool::TaskId forceTaskId_ = ExecutorPool::INVALID_TASK_ID;
     std::shared_ptr<ExecutorPool> pool_ = nullptr;
     bool isSuspend_ = false;
-    static const uint32_t INVALID_INTERVAL = UINT32_MAX;
     std::atomic_uint64_t lastExecuteTimePoint_ = 0;
     uint32_t const firstDelayInterval_ = DEFAULT_FIRST_DELAY_INTERVAL;
     uint32_t const minExecuteInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
