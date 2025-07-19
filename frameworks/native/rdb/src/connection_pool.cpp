@@ -115,6 +115,31 @@ ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
     attachConfig_.SetJournalMode(JournalMode::MODE_TRUNCATE);
     trans_.right_ = Container::MIN_TRANS_ID;
     trans_.left_ = trans_.right_;
+    clearActuator_ = std::make_shared<DelayActuator<std::vector<std::weak_ptr<ConnPool::ConnNode>>,
+        std::function<void(
+            std::vector<std::weak_ptr<ConnPool::ConnNode>> & out, std::shared_ptr<ConnPool::ConnNode> && input)>>>(
+        [](auto &out, std::shared_ptr<ConnNode> &&input) {
+            for (auto &node : out) {
+                if (node.lock() == input) {
+                    return;
+                }
+            }
+            out.push_back(std::move(input));
+        },
+        FIRST_DELAY_INTERVAL,
+        MIN_EXECUTE_INTERVAL,
+        MAX_EXECUTE_INTERVAL);
+    clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
+    clearActuator_->SetTask([](std::vector<std::weak_ptr<ConnPool::ConnNode>> &&nodes) {
+        for (auto &node : nodes) {
+            auto realNode = node.lock();
+            if (realNode == nullptr || realNode->connect_ == nullptr) {
+                continue;
+            }
+            realNode->connect_->ClearCache(true);
+        }
+        return E_OK;
+    });
 }
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bool needWriter)
@@ -159,6 +184,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bo
 
 ConnPool::~ConnectionPool()
 {
+    clearActuator_ = nullptr;
     CloseAllConnections();
 }
 
@@ -359,7 +385,6 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool isTrans)
         trans_.Dump("WAL trans_", transCount);
         readers_.Dump("WAL readers_", transCount);
     }
-
     if (node->IsWriter() && (errCode != E_INNER_WARNING && errCode != E_NOT_SUPPORT)) {
         failedTime_ = errCode != E_OK ? now : steady_clock::time_point();
     }
@@ -369,6 +394,9 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool isTrans)
     } else {
         auto &container = node->IsWriter() ? writers_ : readers_;
         container.Release(node);
+    }
+    if (clearActuator_ != nullptr) {
+        clearActuator_->Execute<std::shared_ptr<ConnNode>>(std::move(node));
     }
 }
 

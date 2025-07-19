@@ -31,6 +31,7 @@
 #include "connection.h"
 #include "rdb_common.h"
 #include "rdb_store_config.h"
+#include "delay_actuator.h"
 namespace OHOS {
 class ExecutorPool;
 namespace NativeRdb {
@@ -73,7 +74,7 @@ private:
         int32_t tid_ = 0;
         int32_t id_ = 0;
         std::chrono::steady_clock::time_point time_ = std::chrono::steady_clock::now();
-        std::shared_ptr<Connection> connect_;
+        const std::shared_ptr<Connection> connect_;
 
         explicit ConnNode(std::shared_ptr<Connection> conn);
         std::shared_ptr<Connection> GetConnect();
@@ -139,6 +140,12 @@ private:
     static constexpr uint32_t ITERS_COUNT = 2;
     static constexpr uint32_t MAX_TRANS = 4;
     static constexpr std::chrono::steady_clock::duration TRANS_CLEAR_INTERVAL = std::chrono::seconds(150);
+    static constexpr uint32_t FIRST_DELAY_INTERVAL = ActuatorBase::INVALID_INTERVAL;
+    static constexpr uint32_t MIN_EXECUTE_INTERVAL = ActuatorBase::INVALID_INTERVAL;
+    static constexpr uint32_t MAX_EXECUTE_INTERVAL = 30000; // 30000ms
+    std::shared_ptr<DelayActuator<std::vector<std::weak_ptr<ConnNode>>,
+        std::function<void(std::vector<std::weak_ptr<ConnNode>> &out, std::shared_ptr<ConnNode> &&input)>>>
+        clearActuator_;
     const RdbStoreConfig &config_;
     RdbStoreConfig attachConfig_;
     Container writers_;

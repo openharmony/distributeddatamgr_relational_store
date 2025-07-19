@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
-#define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
+#ifndef COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
+#define COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
 #include <functional>
 #include <memory>
 #include "executor_pool.h"
@@ -24,6 +24,7 @@ public:
     static constexpr uint32_t DEFAULT_FIRST_DELAY_INTERVAL = 0;
     static constexpr uint32_t DEFAULT_MIN_EXECUTE_INTERVAL = 200;
     static constexpr uint32_t DEFAULT_MAX_EXECUTE_INTERVAL = 500;
+    static const uint32_t INVALID_INTERVAL = UINT32_MAX;
     void SetExecutorPool(std::shared_ptr<ExecutorPool> pool)
     {
         pool_ = std::move(pool);
@@ -98,6 +99,9 @@ protected:
                 }
             });
         }
+        if (firstDelayInterval_ == INVALID_INTERVAL || minExecuteInterval_ == INVALID_INTERVAL) {
+            return;
+        }
         if (delayTaskId_ == Executor::INVALID_TASK_ID) {
             delayTaskId_ =
                 pool_->Schedule(std::chrono::milliseconds(lastExecuteTimePoint_ <= GetTimeStamp() - minExecuteInterval_
@@ -137,9 +141,8 @@ private:
     ExecutorPool::TaskId forceTaskId_ = ExecutorPool::INVALID_TASK_ID;
     std::shared_ptr<ExecutorPool> pool_ = nullptr;
     bool isSuspend_ = false;
-    static const uint32_t INVALID_INTERVAL = UINT32_MAX;
     std::atomic_uint64_t lastExecuteTimePoint_ = 0;
-    uint32_t const firstDelayInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
+    uint32_t const firstDelayInterval_ = DEFAULT_FIRST_DELAY_INTERVAL;
     uint32_t const minExecuteInterval_ = DEFAULT_MIN_EXECUTE_INTERVAL;
     uint32_t const maxExecuteInterval_ = DEFAULT_MAX_EXECUTE_INTERVAL;
     mutable std::mutex mutex_;
@@ -160,14 +163,14 @@ public:
         task_ = std::move(task);
     }
     template<class D = T>
-    void Execute(D &&t)
+    void Execute(D &&value)
     {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (mergeFunc_) {
-                mergeFunc_(data_, std::forward<T>(t));
+                mergeFunc_(data_, std::forward<D>(value));
             } else {
-                data_ = t;
+                data_ = T{std::move(value)};
             }
         }
         StartTimer();
@@ -194,4 +197,4 @@ private:
     }
 };
 } // namespace OHOS
-#endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_DELAY_ACTUATOR_H
+#endif // COMMON_RDB_INCLUDE_DELAY_ACTUATOR_H
