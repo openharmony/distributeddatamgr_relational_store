@@ -56,7 +56,7 @@ public:
     int32_t Subscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Unsubscribe(const std::shared_ptr<DistributedDB::StoreObserver> &observer) override;
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
-        std::shared_ptr<SlaveStatus> slaveStatus) override;
+        std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         std::shared_ptr<SlaveStatus> slaveStatus) override;
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) override;

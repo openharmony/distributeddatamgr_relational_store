@@ -521,6 +521,15 @@ public:
     virtual int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey = {});
 
     /**
+     * @brief Restores a database from a specified encrypted or unencrypted database file.
+     *
+     * @param databasePath Indicates the database file path.
+     * @param encryptKey Indicates the database encrypt key.
+     * @param verifyDb Indicates whether to check the integrity of the database.
+     */
+    virtual int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb);
+
+    /**
      * @brief Attaches a database.
      *
      * @param alias Indicates the database alias.

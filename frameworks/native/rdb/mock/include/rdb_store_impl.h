@@ -72,7 +72,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
-    int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey) override;
+    int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
@@ -128,7 +128,7 @@ private:
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string& databasePath,
-        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>());
+        const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);

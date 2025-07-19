@@ -176,6 +176,10 @@ int OH_Value_PutAssets(OH_Data_Value *value, const Data_Asset * const * val, siz
     ValueObject::Assets assets;
     for (size_t i = 0; i < length; i++) {
         if (val[i] != nullptr) {
+            if (!val[i]->IsValid()) {
+                LOG_ERROR("val[%{public}zu] is invalid.", i);
+                return RDB_E_INVALID_ARGS;
+            }
             assets.push_back(val[i]->asset_);
         }
     }
@@ -318,8 +322,8 @@ int OH_Value_GetBlob(OH_Data_Value *value, const uint8_t **val, size_t *length)
 
 int OH_Value_GetAsset(OH_Data_Value *value, Data_Asset *val)
 {
-    if (val == nullptr) {
-        LOG_ERROR("val is nullptr.");
+    if (val == nullptr || !val->IsValid()) {
+        LOG_ERROR("val is %{public}s.", val == nullptr ? "nullptr" : "invalid");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_ASSET);

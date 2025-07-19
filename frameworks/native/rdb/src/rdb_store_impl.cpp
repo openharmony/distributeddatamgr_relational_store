@@ -1754,16 +1754,17 @@ int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFileP
 
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
+ * Support skipping verification.
  */
-int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey)
+int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb)
 {
-    LOG_INFO("Backup db: %{public}s.", SqliteUtils::Anonymous(config_.GetName()).c_str());
+    LOG_INFO("Backup db: %{public}s, verify: %{public}d.", SqliteUtils::Anonymous(config_.GetName()).c_str(), verifyDb);
     if (isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
     std::string backupFilePath;
     if (TryGetMasterSlaveBackupPath(databasePath, backupFilePath)) {
-        return InnerBackup(backupFilePath, encryptKey);
+        return InnerBackup(backupFilePath, encryptKey, verifyDb);
     }
 
     int ret = GetDataBasePath(databasePath, backupFilePath);
@@ -1827,7 +1828,8 @@ std::vector<ValueObject> RdbStoreImpl::CreateBackupBindArgs(
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey)
+int RdbStoreImpl::InnerBackup(
+    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool verifyDb)
 {
     if (isReadOnly_) {
         return E_NOT_SUPPORT;
@@ -1840,7 +1842,7 @@ int RdbStoreImpl::InnerBackup(const std::string &databasePath, const std::vector
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
         auto [errCode, conn] = GetConn(false);
-        return errCode != E_OK ? errCode : conn->Backup(databasePath, {}, false, slaveStatus_);
+        return errCode != E_OK ? errCode : conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
     }
     Suspender suspender(Suspender::SQL_LOG);
     auto [result, conn] = CreateWritableConn();
