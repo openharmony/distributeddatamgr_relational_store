@@ -33,6 +33,8 @@ namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
 class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
+class NapiPerfStatObserver;
+class NapiLogObserver;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -79,11 +81,15 @@ private:
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
 
-    static constexpr int EVENT_HANDLE_NUM = 1;
+    static constexpr int EVENT_HANDLE_NUM = 3;
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
     napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
     napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
     napi_value OffStatistics(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnErrorLog(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffErrorLog(napi_env env, size_t argc, napi_value *argv);
+    napi_value OnPerfStat(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffPerfStat(napi_env env, size_t argc, napi_value *argv);
     using EventHandle = napi_value (RdbStoreProxy::*)(napi_env, size_t, napi_value *);
     struct HandleInfo {
         std::string_view event;
@@ -91,9 +97,13 @@ private:
     };
     static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
         { "statistics", &RdbStoreProxy::OnStatistics },
+        { "perfStat", &RdbStoreProxy::OnPerfStat },
+        { "sqliteErrorOccurred", &RdbStoreProxy::OnErrorLog },
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
         { "statistics", &RdbStoreProxy::OffStatistics },
+        { "perfStat", &RdbStoreProxy::OffPerfStat },
+        { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog },
     };
     void UnregisterAll();
     int32_t dbType = NativeRdb::DB_SQLITE;
@@ -103,7 +113,9 @@ private:
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
-    
+    std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
+    std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
+
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 };
