@@ -216,7 +216,7 @@ FFI_EXPORT void FfiOHOSRelationalStoreExecuteSqlBindArgs(
 FFI_EXPORT ValuesBucket FfiOHOSRelationalStoreGetRow(int64_t id, int32_t *errCode);
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreOn(
-    int64_t id, const char *event, bool interProcess, void (*callback)(), void (*callbackRef)());
+    int64_t id, const char *event, bool interProcess, int64_t callback, void (*callbackRef)());
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreOnArrStr(int64_t id, int32_t subscribeType, int64_t callbackId);
 
@@ -224,7 +224,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreOnChangeInfo(int64_t id, int32_t subscr
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreOnProgressDetails(int64_t id, int64_t callbackId);
 
-FFI_EXPORT int32_t FfiOHOSRelationalStoreOff(int64_t id, const char *event, bool interProcess, void (*callback)());
+FFI_EXPORT int32_t FfiOHOSRelationalStoreOff(int64_t id, const char *event, bool interProcess, int64_t callback);
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreOffAll(int64_t id, const char *event, bool interProcess);
 
