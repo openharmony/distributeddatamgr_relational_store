@@ -462,7 +462,11 @@ int ConnPool::ConfigLocale(const std::string &localeStr)
     if (errCode != E_OK) {
         return errCode;
     }
-    return writers_.ConfigLocale(localeStr);
+    errCode = writers_.ConfigLocale(localeStr);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return trans_.ConfigLocale(localeStr);
 }
 
 /**
@@ -704,16 +708,17 @@ std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Ini
 int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    if (total_ != count_) {
-        return E_DATABASE_BUSY;
-    }
     for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
             it = details_.erase(it);
             continue;
         }
-        conn->connect_->ConfigLocale(locale);
+        int32_t errCode = conn->connect_->ConfigLocale(locale);
+        if (errCode != E_OK) {
+            LOG_ERROR("ConfigLocale failed %{public}d", errCode);
+            return errCode;
+        }
         ++it;
     }
     return E_OK;

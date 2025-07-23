@@ -153,6 +153,24 @@ private:
     std::mutex mutex_;
 };
 
+struct CollatorLocales {
+    CollatorLocales() {}
+    CollatorLocales(const CollatorLocales &collatorLocales) {}
+    std::string Get()
+    {
+        std::lock_guard<std::mutex> LockGuard(localesMutex_);
+        return locales_;
+    }
+    void Set(const std::string &locales)
+    {
+        std::lock_guard<std::mutex> LockGuard(localesMutex_);
+        locales_ = locales;
+    }
+    private:
+    std::string locales_;
+    std::mutex localesMutex_;
+};
+
 using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
 
 struct ScalarFunctionInfo {
@@ -398,7 +416,7 @@ private:
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
     int32_t clearMemorySize_;
-    std::string locales_;
+    mutable CollatorLocales collatorLocales_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;

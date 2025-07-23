@@ -1173,11 +1173,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_036, TestSize.Level2)
     std::string strValue;
     resultSet->GoToNextRow();
     resultSet->GetString(1, strValue);
-    EXPECT_EQ(strValue, "李四");
+    EXPECT_EQ(strValue, std::string("李四"));
 
     resultSet->GoToNextRow();
     resultSet->GetString(1, strValue);
-    EXPECT_EQ(strValue, "张三");
+    EXPECT_EQ(strValue, std::string("张三"));
 }
  
 /* *
@@ -1271,11 +1271,11 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_038, TestSize.Level2)
     std::string strValue1;
     resultSet1->GoToNextRow();
     resultSet1->GetString(1, strValue1);
-    EXPECT_EQ(strValue1, "李四");
+    EXPECT_EQ(strValue1, std::string("李四"));
 
     resultSet1->GoToNextRow();
     resultSet1->GetString(1, strValue1);
-    EXPECT_EQ(strValue1, "张三");
+    EXPECT_EQ(strValue1, std::string("张三"));
 }
 
 /* *
