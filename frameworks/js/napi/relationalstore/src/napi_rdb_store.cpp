@@ -173,6 +173,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("attach", Attach),
             DECLARE_NAPI_FUNCTION("detach", Detach),
             DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
+            DECLARE_NAPI_FUNCTION("setLocale", SetLocale),
             DECLARE_NAPI_FUNCTION("rekey", Rekey),
             DECLARE_NAPI_FUNCTION("on", OnEvent),
             DECLARE_NAPI_FUNCTION("off", OffEvent),
@@ -1604,6 +1605,31 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
         return rdbStore->CleanDirtyData(context->tableName, context->cursor);
+    };
+
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::SetLocale(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc ==1, std::make_shared<ParamNumError>("1"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        CHECK_RETURN(OK == ParseSrcName(env, argv[0], context));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
+        auto errCode = rdbStore->ConfigLocale(context->srcName);
+        return errCode;
     };
 
     auto output = [context](napi_env env, napi_value &result) {

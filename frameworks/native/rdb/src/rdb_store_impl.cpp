@@ -2517,6 +2517,7 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;
     }
+    config_.SetCollatorLocales(localeStr);
     return pool->ConfigLocale(localeStr);
 }
 
