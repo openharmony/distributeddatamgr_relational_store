@@ -360,7 +360,7 @@ public:
     int32_t GetClearMemorySize() const;
     void SetClearMemorySize(int32_t size);
     std::string GetCollatorLocales() const;
-    void SetCollatorLocales(const std::string &locales);
+    void SetCollatorLocales(const std::string &locales) const;
     int32_t GetSubUser() const;
     void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
