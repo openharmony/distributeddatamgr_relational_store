@@ -107,21 +107,21 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         return nullptr;
     }
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    rdbStore = GetStoreFromCache(path, config, errCode);
+    RdbStoreConfig modifyConfig = config;
+    if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
+        errCode = E_CONFIG_INVALID_CHANGE;
+        rdbStore = nullptr;
+        return rdbStore;
+    }
+    rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
     if (rdbStore == nullptr) {
         return rdbStore;
     }
     errCode = rdbStore->Init(version, openCallback);
     if (errCode != E_OK) {
-        RdbStoreConfig modifyConfig = config;
-        if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
-            errCode = E_CONFIG_INVALID_CHANGE;
-            rdbStore = nullptr;
-            return rdbStore;
-        }
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
             rdbStore = nullptr;
-            rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
+            rdbStore = GetStoreFromCache(path, config, errCode);
             if (rdbStore == nullptr) {
                 return rdbStore;
             }

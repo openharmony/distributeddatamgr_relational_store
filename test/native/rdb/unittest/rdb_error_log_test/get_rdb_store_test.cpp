@@ -42,6 +42,8 @@ static constexpr int32_t SLEEP_TIME = 500;
 static constexpr int32_t MAX_SLEEP_TIME = 2000;
 static constexpr int32_t JOURNAL_MAX_SIZE = 4096;
 static constexpr int32_t JOURNAL_MIN_SIZE = 1024;
+static constexpr double DEFAULT_SALARY = 100.5;
+static constexpr int32_t AGE_NUM = 18;
 
 class RdbStoreStoreMultiTest : public testing::Test {
 public:
@@ -54,6 +56,8 @@ public:
         bool encrypt = false, const std::string &bundleName = "");
     static std::shared_ptr<RdbStore> CreateRDBSleep(const std::string &path,
         bool encrypt = false, const std::string &bundleName = "");
+    static void InsertData(std::shared_ptr<RdbStore> rdbStore);
+    static void QueryData(std::shared_ptr<RdbStore> rdbStore);
 };
 
 
@@ -133,6 +137,41 @@ std::shared_ptr<RdbStore> RdbStoreStoreMultiTest::CreateRDBSleep(const std::stri
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
     EXPECT_NE(store, nullptr);
     return store;
+}
+
+void RdbStoreStoreMultiTest::InsertData(std::shared_ptr<RdbStore> rdbStore)
+{
+    const std::string createTable =
+    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                                  "name TEXT NOT NULL, age INTEGER, salary "
+                                                                  "REAL, blobType BLOB)");
+    rdbStore->Execute(createTable);
+    int64_t id;
+    ValuesBucket values;
+
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", AGE_NUM);
+    values.PutDouble("salary", DEFAULT_SALARY);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = rdbStore->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+}
+
+void RdbStoreStoreMultiTest::QueryData(std::shared_ptr<RdbStore> rdbStore)
+{
+    std::shared_ptr<ResultSet> resultSet = rdbStore->QuerySql("select * from test");
+    int ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_OK);
+    int columnIndex;
+    std::string strVal;
+
+    ret = resultSet->GetColumnIndex("name", columnIndex);
+    EXPECT_EQ(ret, E_OK);
+    ret = resultSet->GetString(columnIndex, strVal);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ("zhangsan", strVal);
 }
 
 std::string g_dbPaths[MAX_THREAD] = { "/data/test/store1.db", "/data/test/store2.db",
@@ -356,22 +395,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_007, TestSize.Level1)
     int errCode = E_OK;
     std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
     EXPECT_NE(storeA, nullptr);
-    const std::string createTable =
-    std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                                  "name TEXT NOT NULL, age INTEGER, salary "
-                                                                  "REAL, blobType BLOB)");
-    storeA->Execute(createTable);
-    int64_t id;
-    ValuesBucket values;
-
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 18);
-    values.PutDouble("salary", 100.5);
-    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
-    int ret = storeA->Insert(id, "test", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
+    RdbStoreStoreMultiTest::InsertData(storeA);
     storeA = nullptr;
 
     RdbStoreConfig configB(path);
@@ -379,22 +403,10 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_007, TestSize.Level1)
     configB.SetBundleName("com.ohos.test");
     std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
     EXPECT_NE(storeB, nullptr);
-
-    std::shared_ptr<ResultSet> resultSet = storeB->QuerySql("select * from test");
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-    int columnIndex;
-    std::string strVal;
-
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
+    RdbStoreStoreMultiTest::QueryData(storeB);
     
     RdbHelper::DeleteRdbStore(path);
 }
-
 
 /**
  * @tc.name: GetRdbStoreTest_008
@@ -424,5 +436,41 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_008, TestSize.Level1)
 
     std::shared_ptr<RdbStore> storeC = RdbHelper::GetRdbStore(configB, version, helper, errCode);
     EXPECT_EQ(storeB, storeC);
+    RdbHelper::DeleteRdbStore(path);
+}
+
+/**
+ * @tc.name: GetRdbStoreTest_009
+ * @tc.desc: test Multithreading calls GetRdbStore with diff config and allowRebuild
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_009, TestSize.Level1)
+{
+    std::string path = "/data/test/encrypt07store.db";
+    int version = 1;
+    RdbStoreConfig configA(path);
+    configA.SetEncryptStatus(false);
+    configA.SetAllowRebuild(true);
+    configA.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    RdbStoreStoreMultiTest::InsertData(storeA);
+    storeA = nullptr;
+
+    RdbStoreConfig configB(path);
+    configB.SetEncryptStatus(true);
+    configB.SetAllowRebuild(true);
+    configB.SetBundleName("com.ohos.test");
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    auto rebuilt = RebuiltType::NONE;
+    storeB->GetRebuilt(rebuilt);
+    EXPECT_EQ(rebuilt, RebuiltType::NONE);
+    RdbStoreStoreMultiTest::QueryData(storeB);
+    
     RdbHelper::DeleteRdbStore(path);
 }
