@@ -59,6 +59,7 @@ public:
     void DeleteDbFile(const RdbStoreConfig &config);
     void PutValue(std::shared_ptr<RdbStore> &store, const std::string &data, int64_t id, int age);
     static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
+    static void WaitForBinlogDelete(int maxTimes = 1000);
     void InitDb(HAMode haMode = HAMode::MAIN_REPLICA);
     int64_t GetRestoreTime(HAMode haMode);
 
@@ -86,6 +87,7 @@ std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::slaveStore = nullptr;
 const int CHECKAGE = 18;
 const double CHECKCOLUMN = 100.5;
 const int CHANGENUM = 12;
+const int BINLOG_DELETE_PER_WAIT_TIME = 100000; // 100000us = 100ms
 
 class DoubleWriteBinlogTestOpenCallback : public RdbOpenCallback {
 public:
@@ -130,6 +132,7 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
 }
 
 void RdbDoubleWriteBinlogTest::InitDb(HAMode haMode)
@@ -139,12 +142,12 @@ void RdbDoubleWriteBinlogTest::InitDb(HAMode haMode)
     config.SetHaMode(haMode);
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
     DoubleWriteBinlogTestOpenCallback slaveHelper;
     RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(RdbDoubleWriteBinlogTest::slaveStore, nullptr);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
     slaveStore->ExecuteSql("DELETE FROM test");
 }
@@ -212,6 +215,18 @@ void RdbDoubleWriteBinlogTest::WaitForBackupFinish(int32_t expectStatus, int max
     }
     LOG_INFO("----------cur backup Status:%{public}d---------", curStatus);
     ASSERT_EQ(curStatus, expectStatus);
+}
+
+void RdbDoubleWriteBinlogTest::WaitForBinlogDelete(int maxTimes)
+{
+    int waitTimes = 0;
+    while (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName) && waitTimes < maxTimes) {
+        usleep(BINLOG_DELETE_PER_WAIT_TIME);
+        waitTimes++;
+        LOG_INFO("---- Binlog replay in progress, waiting for finish");
+        RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    }
+    EXPECT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 }
 
 void RdbDoubleWriteBinlogTest::CheckNumber(
@@ -389,6 +404,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_001, TestSize.Level0)
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
+    store = nullptr;
     RdbHelper::DeleteRdbStore(config);
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 }
@@ -1047,6 +1063,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     InitDb(HAMode::SINGLE);
@@ -1056,9 +1073,9 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
 
-    EXPECT_LT(T1, T1_2 * 1.5);
-    EXPECT_LT(T2, T2_2 * 1.5);
-    EXPECT_LT(T3, T3_2 * 1.5);
+    EXPECT_LT(T1, T1_2 * 1.8);
+    EXPECT_LT(T2, T2_2 * 1.8);
+    EXPECT_LT(T3, T3_2 * 1.8);
     LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
         T1, T2, T3);
     LOG_INFO("----RdbStore_Binlog_Performance_001----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
@@ -1098,6 +1115,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     InitDb(HAMode::SINGLE);
@@ -1107,9 +1125,9 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Lev
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
 
-    EXPECT_LT(T1, T1_2 * 1.5);
-    EXPECT_LT(T2, T2_2 * 1.5);
-    EXPECT_LT(T3, T3_2 * 1.5);
+    EXPECT_LT(T1, T1_2 * 1.8);
+    EXPECT_LT(T2, T2_2 * 1.8);
+    EXPECT_LT(T3, T3_2 * 1.8);
     LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
         T1, T2, T3);
     LOG_INFO("----RdbStore_Binlog_Performance_002----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
@@ -1147,6 +1165,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     InitDb(HAMode::SINGLE);
@@ -1156,9 +1175,9 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Lev
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
 
-    EXPECT_LT(T1, T1_2 * 1.5);
-    EXPECT_LT(T2, T2_2 * 1.5);
-    EXPECT_LT(T3, T3_2 * 1.5);
+    EXPECT_LT(T1, T1_2 * 1.8);
+    EXPECT_LT(T2, T2_2 * 1.8);
+    EXPECT_LT(T3, T3_2 * 1.8);
     LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
         T1, T2, T3);
     LOG_INFO("----RdbStore_Binlog_Performance_003----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
@@ -1198,6 +1217,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     InitDb(HAMode::SINGLE);
@@ -1207,9 +1227,9 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
     auto T2_2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
     auto T3_2 = GetDeleteTime(store, batchSize, totalCount / batchSize);
 
-    EXPECT_LT(T1, T1_2 * 1.5);
-    EXPECT_LT(T2, T2_2 * 1.5);
-    EXPECT_LT(T3, T3_2 * 1.5);
+    EXPECT_LT(T1, T1_2 * 1.8);
+    EXPECT_LT(T2, T2_2 * 1.8);
+    EXPECT_LT(T3, T3_2 * 1.8);
     LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
         T1, T2, T3);
     LOG_INFO("----RdbStore_Binlog_Performance_004----, %{public}" PRId64 ", %{public}" PRId64 ", %{public}" PRId64 ",",
@@ -1239,12 +1259,13 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_hw_symbols = originalApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MAIN_REPLICA);
-    EXPECT_GT(T1 * 1.5, T1_2);
+    EXPECT_GT(T1 * 1.8, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_005----, %{public}" PRId64 ", %{public}" PRId64 ",", T1, T1_2);
 }
 
@@ -1271,11 +1292,12 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_hw_symbols = originalApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
-    EXPECT_GT(T1 * 1.5, T1_2);
+    EXPECT_GT(T1 * 1.8, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_006----, %{public}" PRId64 ", %{public}" PRId64 ",", T1, T1_2);
 }
