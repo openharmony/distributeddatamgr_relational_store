@@ -1621,7 +1621,7 @@ napi_value RdbStoreProxy::SetLocale(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc ==1, std::make_shared<ParamNumError>("1"));
+        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseSrcName(env, argv[0], context));
     };

@@ -676,7 +676,7 @@ std::string RdbStoreConfig::GetCollatorLocales() const
     return collatorLocales_.Get();
 }
 
-void RdbStoreConfig::SetCollatorLocales(const std::string &locales)
+void RdbStoreConfig::SetCollatorLocales(const std::string &locales) const
 {
     collatorLocales_.Set(locales);
 }

@@ -798,7 +798,7 @@ public:
 
     std::string GetCollatorLocales() const;
 
-    void SetCollatorLocales(const std::string &locales);
+    void SetCollatorLocales(const std::string &locales) const;
 
     int32_t GetHaMode() const;
 
