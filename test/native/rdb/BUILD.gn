@@ -105,6 +105,7 @@ ohos_unittest("NativeRdbLogTest") {
     "unittest/rdb_error_log_test/get_rdb_store_test.cpp",
     "unittest/rdb_error_log_test/rdb_error_log_test.cpp",
     "unittest/rdb_error_log_test/rdb_perfStat_test.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   ]
   sources += [ "../../../frameworks/native/rdb/src/suspender.cpp" ]
   include_dirs = [
