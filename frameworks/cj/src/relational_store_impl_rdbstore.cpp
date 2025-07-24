@@ -107,8 +107,14 @@ namespace Relational {
         int64_t mapSize = valuesBucket.size;
         NativeRdb::ValuesBucket nativeValuesBucket = NativeRdb::ValuesBucket();
 
+        if (valuesBucket.value == nullptr || valuesBucket.key == nullptr) {
+            return nativeValuesBucket;
+        }
         for (int64_t i = 0; i < mapSize; i++) {
             NativeRdb::ValueObject valueObject = ValueTypeToValueObject(valuesBucket.value[i]);
+            if (valuesBucket.key[i] == nullptr) {
+                return nativeValuesBucket;
+            }
             std::string keyStr = valuesBucket.key[i];
             nativeValuesBucket.Put(keyStr, valueObject);
         }
@@ -120,8 +126,14 @@ namespace Relational {
         int64_t mapSize = valuesBucket.size;
         NativeRdb::ValuesBucket nativeValuesBucket = NativeRdb::ValuesBucket();
 
+        if (valuesBucket.value == nullptr || valuesBucket.key == nullptr) {
+            return nativeValuesBucket;
+        }
         for (int64_t i = 0; i < mapSize; i++) {
             NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(valuesBucket.value[i]);
+            if (valuesBucket.key[i] == nullptr) {
+                return nativeValuesBucket;
+            }
             std::string keyStr = valuesBucket.key[i];
             nativeValuesBucket.Put(keyStr, valueObject);
         }
@@ -131,8 +143,14 @@ namespace Relational {
     std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &predicates, char** column,
         int64_t columnSize)
     {
+        if (column == nullptr) {
+            return nullptr;
+        }
         std::vector<std::string> columnsVector = std::vector<std::string>();
         for (int64_t i = 0; i < columnSize; i++) {
+            if (column[i] == nullptr) {
+                return nullptr;
+            }
             columnsVector.push_back(std::string(column[i]));
         }
         auto resultSet = rdbStore_->Query(*(predicates.GetPredicates()), columnsVector);
@@ -142,11 +160,20 @@ namespace Relational {
     std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::RemoteQuery(char* device, RdbPredicatesImpl &predicates,
         char** column, int64_t columnSize)
     {
+        if (column == nullptr) {
+            return nullptr;
+        }
         std::vector<std::string> columnsVector;
         for (int64_t i = 0; i < columnSize; i++) {
+            if (column[i] == nullptr) {
+                return nullptr;
+            }
             columnsVector.push_back(std::string(column[i]));
         }
         int32_t errCode;
+        if (predicates.GetPredicates() == nullptr) {
+            return nullptr;
+        }
         auto resultSet = rdbStore_->RemoteQuery(std::string(device), *(predicates.GetPredicates()), columnsVector,
             errCode);
         return resultSet;
@@ -155,6 +182,9 @@ namespace Relational {
     int32_t RdbStoreImpl::Update(ValuesBucket valuesBucket, RdbPredicatesImpl &predicates,
         NativeRdb::ConflictResolution conflictResolution, int32_t *errCode)
     {
+        if (errCode == nullptr || rdbStore_ == nullptr || predicates.GetPredicates() == nullptr) {
+            return -1;
+        }
         int32_t affectedRows;
         NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBucket);
         *errCode = rdbStore_->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
@@ -166,6 +196,9 @@ namespace Relational {
     int32_t RdbStoreImpl::UpdateEx(ValuesBucketEx valuesBucket, RdbPredicatesImpl &predicates,
         NativeRdb::ConflictResolution conflictResolution, int32_t *errCode)
     {
+        if (errCode == nullptr || rdbStore_ == nullptr || predicates.GetPredicates() == nullptr) {
+            return -1;
+        }
         int32_t affectedRows;
         NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBucket);
         *errCode = rdbStore_->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
@@ -176,6 +209,9 @@ namespace Relational {
 
     int RdbStoreImpl::Delete(RdbPredicatesImpl &predicates, int32_t *errCode)
     {
+        if (errCode == nullptr || rdbStore_ == nullptr || predicates.GetPredicates() == nullptr) {
+            return -1;
+        }
         int deletedRows = 0;
         *errCode = rdbStore_->Delete(deletedRows, *(predicates.GetPredicates()));
         return deletedRows;
@@ -183,8 +219,14 @@ namespace Relational {
 
     int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize)
     {
+        if (tables == nullptr || rdbStore_ == nullptr) {
+            return -1;
+        }
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
+            if (tables[i] == nullptr) {
+                return -1;
+            }
             tablesVector.push_back(std::string(tables[i]));
         }
         return rdbStore_->SetDistributedTables(tablesVector, DistributedRdb::DISTRIBUTED_DEVICE,
@@ -193,8 +235,14 @@ namespace Relational {
 
     int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type)
     {
+        if (tables == nullptr || rdbStore_ == nullptr) {
+            return -1;
+        }
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
+            if (tables[i] == nullptr) {
+                return -1;
+            }
             tablesVector.push_back(std::string(tables[i]));
         }
         return rdbStore_->SetDistributedTables(tablesVector, type, DistributedRdb::DistributedConfig{false});
@@ -203,8 +251,14 @@ namespace Relational {
     int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
         DistributedRdb::DistributedConfig &distributedConfig)
     {
+        if (tables == nullptr || rdbStore_ == nullptr) {
+            return -1;
+        }
         std::vector<std::string> tablesVector;
         for (int64_t i = 0; i < tablesSize; i++) {
+            if (tables[i] == nullptr) {
+                return -1;
+            }
             tablesVector.push_back(std::string(tables[i]));
         }
         return rdbStore_->SetDistributedTables(tablesVector, type, distributedConfig);
@@ -212,31 +266,49 @@ namespace Relational {
 
     int32_t RdbStoreImpl::RollBack()
     {
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         return rdbStore_->RollBack();
     }
 
     int32_t RdbStoreImpl::Commit()
     {
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         return rdbStore_->Commit();
     }
 
     int32_t RdbStoreImpl::BeginTransaction()
     {
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         return rdbStore_->BeginTransaction();
     }
 
     int32_t RdbStoreImpl::Backup(const char* destName)
     {
+        if (rdbStore_ == nullptr || destName == nullptr) {
+            return -1;
+        }
         return rdbStore_->Backup(destName, newKey);
     }
 
     int32_t RdbStoreImpl::Restore(const char* srcName)
     {
+        if (rdbStore_ == nullptr || srcName == nullptr) {
+            return -1;
+        }
         return rdbStore_->Restore(srcName, newKey);
     }
 
     char* RdbStoreImpl::ObtainDistributedTableName(const char* device, const char* table)
     {
+        if (rdbStore_ == nullptr || device == nullptr || table == nullptr) {
+            return nullptr;
+        }
         int errCode = RelationalStoreJsKit::E_INNER_ERROR;
         std::string tableName = rdbStore_->ObtainDistributedTableName(device, table, errCode);
         return MallocCString(tableName);
@@ -244,11 +316,17 @@ namespace Relational {
 
     int32_t RdbStoreImpl::Emit(const char* event)
     {
+        if (rdbStore_ == nullptr || event == nullptr) {
+            return -1;
+        }
         return rdbStore_->Notify(event);
     }
 
     int64_t RdbStoreImpl::Insert(const char* table, ValuesBucket valuesBucket, int32_t conflict, int32_t *errCode)
     {
+        if (rdbStore_ == nullptr || table == nullptr || errCode == nullptr) {
+            return -1;
+        }
         std::string tableName = table;
         int64_t result;
         NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBucket);
@@ -259,6 +337,9 @@ namespace Relational {
 
     int64_t RdbStoreImpl::InsertEx(const char* table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode)
     {
+        if (rdbStore_ == nullptr || table == nullptr || errCode == nullptr) {
+            return -1;
+        }
         std::string tableName = table;
         int64_t result;
         NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBucket);
@@ -269,12 +350,18 @@ namespace Relational {
 
     void RdbStoreImpl::ExecuteSql(const char* sql, int32_t *errCode)
     {
+        if (rdbStore_ == nullptr || sql == nullptr || errCode == nullptr) {
+            return;
+        }
         *errCode = rdbStore_->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>());
     }
 
 
     int32_t RdbStoreImpl::CleanDirtyData(const char* tableName, uint64_t cursor)
     {
+        if (rdbStore_ == nullptr || tableName == nullptr) {
+            return -1;
+        }
         int32_t rtnCode = rdbStore_->CleanDirtyData(tableName, cursor);
         return rtnCode;
     }
@@ -282,6 +369,9 @@ namespace Relational {
     int32_t RdbStoreImpl::BatchInsert(int64_t &insertNum, const char* tableName, ValuesBucket* valuesBuckets,
         int64_t valuesSize)
     {
+        if (rdbStore_ == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+            return -1;
+        }
         std::vector<NativeRdb::ValuesBucket> valuesVector;
         std::string tableNameStr = tableName;
         if (tableNameStr.empty()) {
@@ -298,6 +388,9 @@ namespace Relational {
     int32_t RdbStoreImpl::BatchInsertEx(int64_t &insertNum, const char* tableName, ValuesBucketEx* valuesBuckets,
         int64_t valuesSize)
     {
+        if (rdbStore_ == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+            return -1;
+        }
         std::vector<NativeRdb::ValuesBucket> valuesVector;
         std::string tableNameStr = tableName;
         if (tableNameStr.empty()) {
@@ -317,6 +410,9 @@ namespace Relational {
         option.mode = static_cast<DistributedRdb::SyncMode>(mode);
         option.isBlock = true;
         DistributedRdb::SyncResult resMap;
+        if (rdbStore_ == nullptr) {
+            return CArrSyncResult{nullptr, nullptr, -1};
+        }
         rdbStore_->Sync(option, *(predicates.GetPredicates()),
             [&resMap](const DistributedRdb::SyncResult &result) { resMap = result; });
         if (resMap.size() == 0) {
@@ -340,6 +436,9 @@ namespace Relational {
 
     std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::QuerySql(const char *sql, ValueType *bindArgs, int64_t size)
     {
+        if (sql == nullptr || bindArgs == nullptr || rdbStore_ == nullptr) {
+            return nullptr;
+        }
         std::string tmpSql = sql;
         std::vector<NativeRdb::ValueObject> tmpBindArgs = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < size; i++) {
@@ -351,6 +450,9 @@ namespace Relational {
 
     std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::QuerySqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t size)
     {
+        if (sql == nullptr || bindArgs == nullptr || rdbStore_ == nullptr) {
+            return nullptr;
+        }
         std::string tmpSql = sql;
         std::vector<NativeRdb::ValueObject> tmpBindArgs = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < size; i++) {
@@ -362,6 +464,9 @@ namespace Relational {
 
     void RdbStoreImpl::ExecuteSql(const char* sql, ValueType* bindArgs, int64_t bindArgsSize, int32_t *errCode)
     {
+        if (sql == nullptr || bindArgs == nullptr || rdbStore_ == nullptr || errCode == nullptr) {
+            return;
+        }
         std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < bindArgsSize; i++) {
             bindArgsObjects.push_back(ValueTypeToValueObject(bindArgs[i]));
@@ -371,6 +476,9 @@ namespace Relational {
 
     void RdbStoreImpl::ExecuteSqlEx(const char* sql, ValueTypeEx* bindArgs, int64_t bindArgsSize, int32_t *errCode)
     {
+        if (sql == nullptr || bindArgs == nullptr || rdbStore_ == nullptr || errCode == nullptr) {
+            return;
+        }
         std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < bindArgsSize; i++) {
             bindArgsObjects.push_back(ValueTypeExToValueObject(bindArgs[i]));
@@ -378,7 +486,7 @@ namespace Relational {
         *errCode = rdbStore_->ExecuteSql(sql, bindArgsObjects);
     }
 
-    int32_t RdbStoreImpl::RegisterObserver(const char *event, bool interProcess, std::function<void()> *callback,
+    int32_t RdbStoreImpl::RegisterObserver(const char *event, bool interProcess, int64_t callback,
         const std::function<void()>& callbackRef)
     {
         DistributedRdb::SubscribeOption option;
@@ -391,16 +499,19 @@ namespace Relational {
         return RegisteredObserver(option, localSharedObservers_, callback, callbackRef);
     }
 
-    bool isSameFunction(const std::function<void()> *f1, const std::function<void()> *f2)
+    bool isSameFunction(int64_t f1, int64_t f2)
     {
         return f1 == f2;
     }
 
     bool RdbStoreImpl::HasRegisteredObserver(
-        std::function<void()> *callback,
+        int64_t callback,
         std::list<std::shared_ptr<RdbStoreObserverImpl>> &observers)
     {
         for (auto &it : observers) {
+            if (it == nullptr) {
+                return false;
+            }
             if (isSameFunction(callback, it->GetCallBack())) {
                 return true;
             }
@@ -408,14 +519,14 @@ namespace Relational {
         return false;
     }
 
-    RdbStoreObserverImpl::RdbStoreObserverImpl(std::function<void()> *callback,
+    RdbStoreObserverImpl::RdbStoreObserverImpl(int64_t callback,
         const std::function<void()>& callbackRef)
     {
         m_callback = callback;
         m_callbackRef = callbackRef;
     }
 
-    std::function<void()> *RdbStoreObserverImpl::GetCallBack()
+    int64_t RdbStoreObserverImpl::GetCallBack()
     {
         return m_callback;
     }
@@ -423,11 +534,14 @@ namespace Relational {
     int32_t RdbStoreImpl::RegisteredObserver(
         DistributedRdb::SubscribeOption option,
         std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback, const std::function<void()>& callbackRef)
+        int64_t callback, const std::function<void()>& callbackRef)
     {
         observers.try_emplace(option.event);
         if (!HasRegisteredObserver(callback, observers[option.event])) {
             auto localObserver = std::make_shared<RdbStoreObserverImpl>(callback, callbackRef);
+            if (rdbStore_ == nullptr) {
+                return -1;
+            }
             int32_t errCode = rdbStore_->Subscribe(option, localObserver);
             if (errCode != NativeRdb::E_OK) {
                 return errCode;
@@ -448,6 +562,9 @@ namespace Relational {
         option.event = "dataChange";
         auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamArrStr, mode);
         int32_t errCode = NativeRdb::E_OK;
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
             errCode = rdbStore_->SubscribeObserver(option, observer);
         } else {
@@ -468,6 +585,9 @@ namespace Relational {
         option.event = "dataChange";
         auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamChangeInfo, mode);
         int32_t errCode = NativeRdb::E_OK;
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
             errCode = rdbStore_->SubscribeObserver(option, observer);
         } else {
@@ -483,6 +603,9 @@ namespace Relational {
     int32_t RdbStoreImpl::RegisterObserverProgressDetails(int64_t callbackId)
     {
         auto observer = std::make_shared<SyncObserverImpl>(callbackId);
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         int errCode = rdbStore_->RegisterAutoSyncCallback(observer);
         if (errCode == NativeRdb::E_OK) {
             syncObservers_.push_back(observer);
@@ -491,7 +614,7 @@ namespace Relational {
         return errCode;
     }
 
-    int32_t RdbStoreImpl::UnRegisterObserver(const char *event, bool interProcess, std::function<void()> *callback)
+    int32_t RdbStoreImpl::UnRegisterObserver(const char *event, bool interProcess, int64_t callback)
     {
         DistributedRdb::SubscribeOption option;
         option.event = event;
@@ -505,7 +628,7 @@ namespace Relational {
 
     int32_t RdbStoreImpl::UnRegisteredObserver(DistributedRdb::SubscribeOption option,
         std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback)
+        int64_t callback)
     {
         auto obs = observers.find(option.event);
         if (obs == observers.end()) {
@@ -534,6 +657,9 @@ namespace Relational {
     int32_t RdbStoreImpl::UnRegisterAllObserver(const char *event, bool interProcess)
     {
         DistributedRdb::SubscribeOption option;
+        if (event == nullptr) {
+            return -1;
+        }
         option.event = event;
         interProcess ? option.mode = DistributedRdb::SubscribeMode::LOCAL_SHARED : option.mode =
             DistributedRdb::SubscribeMode::LOCAL;
@@ -577,6 +703,9 @@ namespace Relational {
                 continue;
             }
             int errCode = NativeRdb::E_OK;
+            if (rdbStore_ == nullptr) {
+                return -1;
+            }
             if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
                 errCode = rdbStore_->UnsubscribeObserver(option, *it);
             } else {
@@ -602,6 +731,9 @@ namespace Relational {
                 continue;
             }
             int errCode = NativeRdb::E_OK;
+            if (rdbStore_ == nullptr) {
+                return -1;
+            }
             if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
                 errCode = rdbStore_->UnsubscribeObserver(option, *it);
             } else {
@@ -627,6 +759,9 @@ namespace Relational {
                 continue;
             }
 
+            if (rdbStore_ == nullptr) {
+                return -1;
+            }
             int32_t errCode = rdbStore_->UnregisterAutoSyncCallback(*it);
             if (errCode != NativeRdb::E_OK) {
                 return errCode;
@@ -642,6 +777,9 @@ namespace Relational {
             if (*it == nullptr) {
                 it = syncObservers_.erase(it);
                 continue;
+            }
+            if (rdbStore_ == nullptr) {
+                return -1;
             }
             int32_t errCode = rdbStore_->UnregisterAutoSyncCallback(*it);
             if (errCode != NativeRdb::E_OK) {
@@ -661,6 +799,9 @@ namespace Relational {
         auto cFunc = reinterpret_cast<void(*)(CProgressDetails details)>(callbackId);
         auto async = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Details &details) ->
             void { lambda(ToCProgressDetails(details)); };
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         int32_t errCode = rdbStore_->Sync(option, arr, async);
         return errCode;
     }
@@ -668,12 +809,18 @@ namespace Relational {
     int32_t RdbStoreImpl::GetVersion(int32_t& errCode)
     {
         int32_t version = 0;
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         errCode = rdbStore_->GetVersion(version);
         return version;
     }
 
     void RdbStoreImpl::SetVersion(int32_t value, int32_t &errCode)
     {
+        if (rdbStore_ == nullptr) {
+            return;
+        }
         errCode = rdbStore_->SetVersion(value);
     }
 
@@ -683,6 +830,9 @@ namespace Relational {
         std::string tableName = cTables;
         std::string columnName = cColumnName;
         std::vector<NativeRdb::RdbStore::PRIKey> keys = CArrPRIKeyTypeToPRIKeyArray(cPrimaryKeys);
+        if (rdbStore_ == nullptr) {
+            return ModifyTime{0};
+        }
         std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> map =
             rdbStore_->GetModifyTime(tableName, columnName, keys);
         if (map.empty()) {
@@ -695,6 +845,9 @@ namespace Relational {
     int32_t RdbStoreImpl::GetRebuilt()
     {
         auto rebuilt = NativeRdb::RebuiltType::NONE;
+        if (rdbStore_ == nullptr) {
+            return -1;
+        }
         rdbStore_->GetRebuilt(rebuilt);
         return static_cast<int32_t>(rebuilt);
     }
@@ -843,6 +996,9 @@ namespace Relational {
     int64_t GetRdbStore(OHOS::AbilityRuntime::Context* context, StoreConfig config,
         int32_t *errCode)
     {
+        if (errCode == nullptr) {
+            return -1;
+        }
         if (context == nullptr) {
             *errCode = -1;
             return -1;
@@ -875,6 +1031,9 @@ namespace Relational {
     int64_t GetRdbStoreEx(OHOS::AbilityRuntime::Context* context, const StoreConfigEx *config,
         int32_t *errCode)
     {
+        if (errCode == nullptr) {
+            return -1;
+        }
         if (context == nullptr) {
             *errCode = ERROR_VALUE;
             return ERROR_VALUE;
@@ -911,6 +1070,9 @@ namespace Relational {
     void DeleteRdbStore(OHOS::AbilityRuntime::Context* context, const char* name,
         int32_t *errCode)
     {
+        if (errCode == nullptr) {
+            return;
+        }
         if (context == nullptr) {
             *errCode = -1;
             return;
@@ -932,6 +1094,9 @@ namespace Relational {
     void DeleteRdbStoreConfig(OHOS::AbilityRuntime::Context* context, StoreConfig config,
         int32_t *errCode)
     {
+        if (errCode == nullptr) {
+            return;
+        }
         if (context == nullptr) {
             *errCode = -1;
             return;
@@ -953,7 +1118,10 @@ namespace Relational {
     void DeleteRdbStoreConfigEx(OHOS::AbilityRuntime::Context* context, const StoreConfigEx *config,
         int32_t *errCode)
     {
-        if (context == nullptr) {
+        if (errCode == nullptr) {
+            return;
+        }
+        if (context == nullptr || config == nullptr) {
             *errCode = ERROR_VALUE;
             return;
         }
