@@ -132,20 +132,20 @@ public:
     bool Get(RegisterType type)
     {
         uint8_t bit = type % sizeof(uint8_t);
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         return (1 << bit) & info_;
     }
 
     void Set(RegisterType type, bool state)
     {
         uint8_t bit = type % sizeof(uint8_t);
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         info_ |= 1 << bit;
     }
 
     bool operator==(const RegisterInfo& info)
     {
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         return info_ == info.info_;
     }
 private:
@@ -154,21 +154,29 @@ private:
 };
 
 struct CollatorLocales {
-    CollatorLocales() {}
-    CollatorLocales(const CollatorLocales &collatorLocales) {}
-    std::string Get()
+    CollatorLocales()
     {
-        std::lock_guard<std::mutex> LockGuard(localesMutex_);
+        locales_ = "";
+    }
+    CollatorLocales(const CollatorLocales &collatorLocales)
+    {
+        locales_ = collatorLocales.Get();
+    }
+    std::string Get() const
+    {
+        std::lock_guard<std::mutex> lockGuard(localesMutex_);
         return locales_;
     }
+
     void Set(const std::string &locales)
     {
-        std::lock_guard<std::mutex> LockGuard(localesMutex_);
+        std::lock_guard<std::mutex> lockGuard(localesMutex_);
         locales_ = locales;
     }
+
     private:
     std::string locales_;
-    std::mutex localesMutex_;
+    mutable std::mutex localesMutex_;
 };
 
 using ScalarFunction = std::function<std::string(const std::vector<std::string> &)>;
