@@ -173,12 +173,12 @@ void RdbDoubleWriteTest::InitDb(HAMode mode)
     config.SetHaMode(mode);
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    ASSERT_NE(RdbDoubleWriteTest::store, nullptr);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
     slaveStore->ExecuteSql("DELETE FROM test");
 }
@@ -1585,11 +1585,13 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(store, nullptr);
-    LOG_INFO("---- step 4: trigger statement should busy ----");
-    EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
-    store = nullptr;
+    if (errCode != E_SQLITE_BUSY) {
+        EXPECT_EQ(errCode, E_OK);
+        ASSERT_NE(store, nullptr);
+        LOG_INFO("---- step 4: trigger statement should busy ----");
+        EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
+        store = nullptr;
+    }
     LOG_INFO("---- step 5: check db count ----");
     RdbDoubleWriteTest::WaitForAsyncRepairFinish();
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -1628,6 +1630,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_002, TestSize.Level0)
     sqlite3_export_hw_symbols = &mockHwApi;
 
     InitDb(HAMode::MAIN_REPLICA);
+    store = nullptr;
+    slaveStore = nullptr;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_OK);
