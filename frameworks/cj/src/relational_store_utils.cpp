@@ -50,6 +50,9 @@ namespace Relational {
     NativeRdb::ValueObject ValueTypeToValueObjectBlob(const ValueType& value)
     {
         std::vector<uint8_t> blob = std::vector<uint8_t>();
+        if (value.Uint8Array.head == nullptr) {
+            return NativeRdb::ValueObject(blob);
+        }
         for (int64_t j = 0; j < value.Uint8Array.size; j++) {
             blob.push_back(value.Uint8Array.head[j]);
         }
@@ -76,6 +79,9 @@ namespace Relational {
     NativeRdb::ValueObject ValueTypeToValueObjectAssets(const ValueType& value)
     {
         std::vector<NativeRdb::ValueObject::Asset> assets = std::vector<NativeRdb::ValueObject::Asset>();
+        if (value.assets.head == nullptr) {
+            return assets;
+        }
         for (int64_t j = 0; j < value.assets.size; j++) {
             Asset asset = value.assets.head[j];
             std::string modifyTime = asset.modifyTime;
@@ -112,6 +118,10 @@ namespace Relational {
                 break;
             }
             case TYPE_STR: {
+                if (value.string == nullptr) {
+                    LOGE("string value is nullptr");
+                    break;
+                }
                 valueObject = NativeRdb::ValueObject(value.string);
                 break;
             }
@@ -141,6 +151,10 @@ namespace Relational {
     NativeRdb::ValueObject ValueTypeExToValueObjectBlob(const ValueTypeEx& value)
     {
         std::vector<uint8_t> blob = std::vector<uint8_t>();
+        if (value.uint8Array.head == nullptr) {
+            LOGE("the array head is nullptr");
+            return NativeRdb::ValueObject(blob);
+        }
         for (int64_t j = 0; j < value.uint8Array.size; j++) {
             blob.push_back(value.uint8Array.head[j]);
         }
@@ -167,6 +181,10 @@ namespace Relational {
     NativeRdb::ValueObject ValueTypeExToValueObjectAssets(const ValueTypeEx& value)
     {
         std::vector<NativeRdb::ValueObject::Asset> assets = std::vector<NativeRdb::ValueObject::Asset>();
+        if (value.assets.head == nullptr) {
+            LOGE("the assets head is nullptr");
+            return NativeRdb::ValueObject(assets);
+        }
         for (int64_t j = 0; j < value.assets.size; j++) {
             Asset asset = value.assets.head[j];
             std::string modifyTime = asset.modifyTime;
@@ -189,6 +207,10 @@ namespace Relational {
     NativeRdb::ValueObject ValueTypeExToValueObjectFloatArr(const ValueTypeEx& value)
     {
         std::vector<float> arr = std::vector<float>();
+        if (value.floatArray.head == nullptr) {
+            LOGE("the floatArray head is nullptr");
+            return NativeRdb::ValueObject(arr);
+        }
         for (int64_t j = 0; j < value.floatArray.size; j++) {
             arr.push_back(value.floatArray.head[j]);
         }
