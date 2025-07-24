@@ -30,6 +30,7 @@
 #include "rdb_types.h"
 #include "executor_pool.h"
 #include "shared_block.h"
+#include "sqlite_utils.h"
 #include "values_bucket.h"
 
 using namespace testing::ext;
@@ -448,7 +449,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_008, TestSize.Level1)
  */
 HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_009, TestSize.Level1)
 {
-    std::string path = "/data/test/encrypt07store.db";
+    std::string path = "/data/test/encrypt09store.db";
     int version = 1;
     RdbStoreConfig configA(path);
     configA.SetEncryptStatus(false);
@@ -473,4 +474,118 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_009, TestSize.Level1)
     RdbStoreStoreMultiTest::QueryData(storeB);
     
     RdbHelper::DeleteRdbStore(path);
+}
+
+/**
+ * @tc.name: GetRdbStoreTest_010
+ * @tc.desc: 1. Create encrypted and non-encrypted databases
+ *           2. Insert a piece of data into a non-encrypted database
+ *           3. Delete encrypted database
+ *           4. Rename the non-encrypted database as an encrypted database
+ *           5. Open with non-encrypted parameters to query data
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_010, TestSize.Level1)
+{
+    std::string path1 = "/data/test/encrypt10store.db";
+    std::string path1Wal = "/data/test/encrypt10store.db-wal";
+    std::string path1Shm = "/data/test/encrypt10store.db-shm";
+    std::string path2 = "/data/test/10store.db";
+    std::string path2Wal = "/data/test/10store.db-wal";
+    std::string path2Shm = "/data/test/10store.db-shm";
+    int version = 1;
+    RdbStoreConfig configA(path1);
+    configA.SetEncryptStatus(true);
+    configA.SetAllowRebuild(true);
+    configA.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    storeA = nullptr;
+
+    RdbStoreConfig configB(path2);
+    configB.SetEncryptStatus(false);
+    configB.SetAllowRebuild(true);
+    configB.SetBundleName("com.ohos.test");
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    RdbStoreStoreMultiTest::InsertData(storeB);
+    storeB = nullptr;
+    // Delete the encrypted database path1, rename the database path2 to path1.
+    SqliteUtils::DeleteFile(path1);
+    SqliteUtils::DeleteFile(path1Wal);
+    SqliteUtils::DeleteFile(path1Shm);
+    SqliteUtils::RenameFile(path2, path1);
+    SqliteUtils::RenameFile(path2Wal, path1Wal);
+    SqliteUtils::RenameFile(path2Shm, path1Shm);
+    // The current database of path1 is actually a non-encrypted database,
+    // and the data content is the original data content of path2.
+    configA.SetEncryptStatus(false);
+    storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    RdbStoreStoreMultiTest::QueryData(storeA);
+    storeA = nullptr;
+
+    RdbHelper::DeleteRdbStore(path1);
+}
+
+
+/**
+ * @tc.name: GetRdbStoreTest_011
+ * @tc.desc: 1. Create encrypted and non-encrypted databases
+ *           2. Insert a piece of data into a non-encrypted database
+ *           3. Delete encrypted database
+ *           4. Rename the non-encrypted database as an encrypted database
+ *           5. Open with encrypted parameters to query data
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_011, TestSize.Level1)
+{
+    std::string path1 = "/data/test/encrypt11store.db";
+    std::string path1Wal = "/data/test/encrypt11store.db-wal";
+    std::string path1Shm = "/data/test/encrypt11store.db-shm";
+    std::string path2 = "/data/test/11store.db";
+    std::string path2Wal = "/data/test/11store.db-wal";
+    std::string path2Shm = "/data/test/11store.db-shm";
+    int version = 1;
+    RdbStoreConfig configA(path1);
+    configA.SetEncryptStatus(true);
+    configA.SetAllowRebuild(true);
+    configA.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    storeA = nullptr;
+
+    RdbStoreConfig configB(path2);
+    configB.SetEncryptStatus(false);
+    configB.SetAllowRebuild(true);
+    configB.SetBundleName("com.ohos.test");
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(configB, version, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    RdbStoreStoreMultiTest::InsertData(storeB);
+    storeB = nullptr;
+    // Delete the encrypted database path1, rename the database path2 to path1, and open path1.
+    SqliteUtils::DeleteFile(path1);
+    SqliteUtils::DeleteFile(path1Wal);
+    SqliteUtils::DeleteFile(path1Shm);
+    SqliteUtils::RenameFile(path2, path1);
+    SqliteUtils::RenameFile(path2Wal, path1Wal);
+    SqliteUtils::RenameFile(path2Shm, path1Shm);
+    // The current database of path1 is actually a non-encrypted database, and it cannot be opened
+    // using encryption parameters. The reconstruction was successful, but there is no data in the table.
+    storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    std::shared_ptr<ResultSet> resultSet = storeA->QuerySql("select * from test");
+    int ret = resultSet->GoToNextRow();
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    storeA = nullptr;
+
+    RdbHelper::DeleteRdbStore(path1);
 }

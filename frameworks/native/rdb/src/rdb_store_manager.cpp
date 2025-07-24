@@ -153,6 +153,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     };
+    configCache_.Set(path, lastParam);
     // The lastParam is possible that the same named db parameters of different paths when GetParamFromService
     if (lastParam.customDir_ != config.GetCustomDir() || lastParam.hapName_ != config.GetModuleName() ||
         lastParam.area_ != config.GetArea()) {
@@ -171,6 +172,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         LOG_WARN("Reset encrypt, storePath %{public}s, input:%{public}d  original:%{public}d",
             SqliteUtils::Anonymous(path).c_str(), config.IsEncrypt(), lastParam.isEncrypt_);
         config.SetEncryptStatus(lastParam.isEncrypt_);
+        config.SetAllowRebuild(false);
     }
     return false;
 }
