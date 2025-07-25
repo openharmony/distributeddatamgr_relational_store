@@ -153,6 +153,9 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data == nullptr) {
+            return;
+        }
         auto tid = JSDFManager::GetInstance().GetFreedTid(data);
         if (tid != 0) {
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
@@ -744,8 +747,8 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() {
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         CHECK_RETURN_ERR(obj != nullptr && obj->rdbStore_ != nullptr);
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
         context->resultSet = obj->rdbStore_->QueryByStep(context->sql, context->columns);
         LOG_ERROR("RdbStoreProxy::QuerySql is nullptr ? %{public}d ", context->resultSet == nullptr);
         return (context->resultSet != nullptr) ? OK : ERR;
@@ -1053,7 +1056,7 @@ napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
-    NAPI_ASSERT(env, rdbStoreProxy != nullptr, "RdbStoreProxy is nullptr");
+    NAPI_ASSERT(env, rdbStoreProxy != nullptr && rdbStoreProxy->rdbStore_ != nullptr, "RdbStoreProxy is nullptr");
     bool out = rdbStoreProxy->rdbStore_->IsInTransaction();
     LOG_DEBUG("RdbStoreProxy::IsInTransaction out is : %{public}d.", out);
     return JSUtils::Convert2JSValue(env, out);
@@ -1113,7 +1116,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::SetDistributedTables Async.");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+        if (obj == nullptr || obj->rdbStore_ == nullptr) {
             return ERR;
         }
         int res = obj->rdbStore_->SetDistributedTables(context->tablesName);
@@ -1147,7 +1150,7 @@ napi_value RdbStoreProxy::ObtainDistributedTableName(napi_env env, napi_callback
         LOG_DEBUG("RdbStoreProxy::ObtainDistributedTableName Async.");
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         int errCode = E_ERROR;
-        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+        if (obj == nullptr || obj->rdbStore_ == nullptr) {
             return ERR;
         }
         auto name = obj->rdbStore_->ObtainDistributedTableName(context->device, context->tableName, errCode);
@@ -1186,9 +1189,11 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->enumArg);
         option.isBlock = true;
-        if (obj == nullptr || obj->rdbStore_.get() == nullptr) {
+        if (obj == nullptr || obj->rdbStore_ == nullptr || context->predicatesProxy == nullptr ||
+            context->predicatesProxy->GetPredicates() == nullptr) {
             return ERR;
         }
+
         int res = obj->rdbStore_->Sync(option, *context->predicatesProxy->GetPredicates(),
             [context](const SyncResult &result) { context->syncResult = result; });
         LOG_INFO("RdbStoreProxy::Sync res is : %{public}d.", res);

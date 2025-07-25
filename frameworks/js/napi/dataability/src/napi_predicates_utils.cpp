@@ -45,9 +45,11 @@ napi_value CreateRdbPredicates(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, valueType == napi_object, "Table name should be an object.");
     DataAbilityPredicatesProxy *dataAbilityPredicatesProxy = nullptr;
     NAPI_CALL(env, napi_unwrap(env, args[1], reinterpret_cast<void **>(&dataAbilityPredicatesProxy)));
-
+    NAPI_ASSERT(env, dataAbilityPredicatesProxy != nullptr, "napi_unwrap failed.");
     auto absPredicates = dataAbilityPredicatesProxy->GetPredicates();
-    auto predicates = new NativeRdb::RdbPredicates(tableName);
+    NAPI_ASSERT(env, absPredicates != nullptr, "absPredicates is nullptr.");
+    auto predicates = new (std::nothrow) NativeRdb::RdbPredicates(tableName);
+    NAPI_ASSERT(env, predicates != nullptr, "No memory for RdbPredicates.");
     NativeRdb::PredicatesUtils::SetWhereClauseAndArgs(
         predicates, absPredicates->GetWhereClause(), absPredicates->GetBindArgs());
     NativeRdb::PredicatesUtils::SetAttributes(predicates, absPredicates->IsDistinct(), absPredicates->GetIndex(),
