@@ -98,7 +98,7 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     auto path = config.GetPath();
     auto binlogFolder = GetBinlogFolderPath(path);
     size_t num = SqliteUtils::DeleteFolder(binlogFolder);
-    if (num > 0 && sqlite3_is_support_binlog()) {
+    if (num > 0) {
         LOG_INFO("removed %{public}zu binlog related items", num);
     }
     auto slavePath = SqliteUtils::GetSlavePath(path);
@@ -1836,7 +1836,7 @@ bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)
     if (sqlite3_is_support_binlog == nullptr) {
         return false;
     }
-    if (sqlite3_is_support_binlog() != SQLITE_OK) {
+    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
         return false;
     }
     return !config.IsEncrypt() && !config.IsMemoryRdb();
