@@ -397,7 +397,12 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return E_OK;
     }
 
-    auto errCode = RegDefaultFunctions(dbHandle_);
+    auto errCode = SetCrcCheck(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = RegDefaultFunctions(dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -771,6 +776,19 @@ int SqliteConnection::ResetKey(const RdbStoreConfig &config)
         return E_OK;
     }
     config.ChangeEncryptKey();
+    return E_OK;
+}
+
+int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
+{
+    if (config.IsEncrypt() || config.IsMemoryRdb()) {
+        return E_OK;
+    }
+    auto errCode = ExecuteSql(GlobalExpr::PRAGMA_CKSUM_PERSIST_ENABLE);
+    if (errCode != E_OK) {
+        LOG_ERROR("enable cksum persist failed,%{public}d", errCode);
+        return errCode;
+    }
     return E_OK;
 }
 
