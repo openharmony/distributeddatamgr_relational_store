@@ -86,12 +86,13 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE ||
         err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
-            LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+            LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::SqlAnonymous(msg).c_str());
         }
     } else if (errType == SQLITE_WARNING) {
-        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::SqlAnonymous(msg).c_str());
     } else {
-        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, SqliteUtils::Anonymous(msg).c_str());
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno,
+            SqliteUtils::SqlAnonymous(msg).c_str());
         SqliteErrReport(err, msg);
     }
 }
