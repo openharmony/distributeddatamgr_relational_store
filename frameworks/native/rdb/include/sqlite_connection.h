@@ -111,6 +111,7 @@ private:
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
     void SetDwrEnable(const RdbStoreConfig &config);
+    int SetCrcCheck(const RdbStoreConfig &config);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     int SetCustomFunctions(const RdbStoreConfig &config);
