@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifndef CROSS_PLATFORM
 #define LOG_TAG "RdbDoubleWriteBinlogTest"
 #include <gtest/gtest.h>
 #include <sys/stat.h>
@@ -33,6 +34,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "relational/relational_store_sqlite_ext.h"
 #include "sqlite3.h"
 #include "sqlite_connection.h"
 #include "sqlite_utils.h"
@@ -1000,7 +1002,7 @@ static int64_t GetDeleteTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     return totalCost;
 }
 
-static int MockSupportBinlogOff(void)
+static int MockSupportBinlogOff(const char *name)
 {
     return SQLITE_ERROR;
 }
@@ -1041,10 +1043,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
 {
     LOG_INFO("----RdbStore_Binlog_Performance_001 start----");
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
@@ -1091,10 +1089,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Lev
 {
     LOG_INFO("----RdbStore_Binlog_Performance_002 start----");
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
@@ -1143,10 +1137,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Lev
 {
     LOG_INFO("----RdbStore_Binlog_Performance_003 start----");
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
@@ -1193,10 +1183,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
 {
     LOG_INFO("----RdbStore_Binlog_Performance_004 start----");
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
@@ -1244,14 +1230,10 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Level1)
 {
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
-    struct sqlite3_api_routines_hw mockApi = *sqlite3_export_hw_symbols;
+    struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;
-    auto originalApi = sqlite3_export_hw_symbols;
-    sqlite3_export_hw_symbols = &mockApi;
+    auto originalApi = sqlite3_export_relational_symbols;
+    sqlite3_export_relational_symbols = &mockApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MAIN_REPLICA);
@@ -1261,7 +1243,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
-    sqlite3_export_hw_symbols = originalApi;
+    sqlite3_export_relational_symbols = originalApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MAIN_REPLICA);
@@ -1277,14 +1259,10 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Level1)
 {
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (sqlite3_is_support_binlog == nullptr || sqlite3_is_support_binlog() == SQLITE_ERROR) {
-        EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
-        return;
-    }
-    struct sqlite3_api_routines_hw mockApi = *sqlite3_export_hw_symbols;
+    struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;
-    auto originalApi = sqlite3_export_hw_symbols;
-    sqlite3_export_hw_symbols = &mockApi;
+    auto originalApi = sqlite3_export_relational_symbols;
+    sqlite3_export_relational_symbols = &mockApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
@@ -1294,10 +1272,11 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
-    sqlite3_export_hw_symbols = originalApi;
+    sqlite3_export_relational_symbols = originalApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
     EXPECT_GT(T1 * 1.8, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_006----, %{public}" PRId64 ", %{public}" PRId64 ",", T1, T1_2);
 }
+#endif // CROSS_PLATFORM
