@@ -1189,6 +1189,42 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_DoubleWrite_034
+ * @tc.desc: open db, close, open SINGLE db, create index, write, reopen, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_034, TestSize.Level1)
+{
+    InitDb();
+    store = nullptr;
+    slaveStore = nullptr;
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->ExecuteSql("CREATE index age_index ON test(age);"), E_OK);
+    int64_t id = 10;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+    store = nullptr;
+    slaveStore = nullptr;
+}
+
+/**
  * @tc.name: RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db
  * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
  * @tc.type: FUNC
