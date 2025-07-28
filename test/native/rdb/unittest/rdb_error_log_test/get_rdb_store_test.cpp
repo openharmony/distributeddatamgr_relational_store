@@ -582,6 +582,9 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_011, TestSize.Level1)
     // using encryption parameters. The reconstruction was successful, but there is no data in the table.
     storeA = RdbHelper::GetRdbStore(configA, version, helper, errCode);
     ASSERT_NE(storeA, nullptr);
+    RebuiltType rebuiltType;
+    storeA->GetRebuilt(rebuiltType);
+    EXPECT_EQ(rebuiltType, RebuiltType::REBUILT);
     std::shared_ptr<ResultSet> resultSet = storeA->QuerySql("select * from test");
     int ret = resultSet->GoToNextRow();
     EXPECT_EQ(ret, E_SQLITE_ERROR);
