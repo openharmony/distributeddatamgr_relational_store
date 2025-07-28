@@ -33,14 +33,15 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-static std::mutex memMutex;
+static std::mutex g_mutex;
 static std::unordered_set<void *> allocatedAddresses;
-static bool isMemoryRecord = false;
+static bool g_isRecord = false;
 
 void *operator new[](size_t size, const std::nothrow_t &tag) noexcept
 {
     void *ptr = std::malloc(size);
-    if (isMemoryRecord && ptr != nullptr) {
+    if (g_isRecord && ptr != nullptr) {
+        std::lock_guard<std::mutex> lock(g_mutex);
         allocatedAddresses.insert(ptr);
     }
     return ptr;
@@ -48,8 +49,8 @@ void *operator new[](size_t size, const std::nothrow_t &tag) noexcept
 
 void operator delete[](void *ptr) noexcept
 {
-    if (isMemoryRecord && ptr != nullptr) {
-        std::lock_guard<std::mutex> lock(memMutex);
+    if (g_isRecord && ptr != nullptr) {
+        std::lock_guard<std::mutex> lock(g_mutex);
         allocatedAddresses.erase(ptr);
     }
     std::free(ptr);
@@ -66,14 +67,14 @@ public:
 
 void RdUtilsTest::SetUpTestCase(void)
 {
-    std::lock_guard<std::mutex> lock(memMutex);
-    isMemoryRecord = true;
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_isRecord = true;
 }
 
 void RdUtilsTest::TearDownTestCase(void)
 {
-    std::lock_guard<std::mutex> lock(memMutex);
-    isMemoryRecord = false;
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_isRecord = false;
 }
 
 static void ScheduleMock(void *param)
