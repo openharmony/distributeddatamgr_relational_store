@@ -284,7 +284,12 @@ int RdUtils::RdSqlBindBlob(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (freeFunc == nullptr) {
         freeFunc = RdSqlFreeBlob;
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindBlob(stmt, idx, tmpVal, len, freeFunc));
+    int result = TransferGrdErrno(GRD_KVApiInfo.DBSqlBindBlob(stmt, idx, tmpVal, len, freeFunc));
+    if (result != E_OK) {
+        LOG_ERROR("DBSqlBindBlob failed, error code: %{public}d", result);
+        freeFunc(tmpVal);
+    }
+    return result;
 }
 
 void RdSqlFreeCharStr(void *charStr)
@@ -317,7 +322,12 @@ int RdUtils::RdSqlBindText(GRD_SqlStmt *stmt, uint32_t idx, const void *val, int
     if (freeFunc == nullptr) {
         freeFunc = RdSqlFreeCharStr;
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindText(stmt, idx, tmpVal, len, freeFunc));
+    int result = TransferGrdErrno(GRD_KVApiInfo.DBSqlBindText(stmt, idx, tmpVal, len, freeFunc));
+    if (result != E_OK) {
+        LOG_ERROR("DBSqlBindText failed, error code: %{public}d", result);
+        freeFunc(tmpVal);
+    }
+    return result;
 }
 
 int RdUtils::RdSqlBindInt(GRD_SqlStmt *stmt, uint32_t idx, int32_t val)
@@ -394,7 +404,12 @@ int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val, u
     if (freeFunc == nullptr) {
         freeFunc = RdSqlFreeFloatArr;
     }
-    return TransferGrdErrno(GRD_KVApiInfo.DBSqlBindFloatVector(stmt, idx, tmpVal, dim, freeFunc));
+    int result = TransferGrdErrno(GRD_KVApiInfo.DBSqlBindFloatVector(stmt, idx, tmpVal, dim, freeFunc));
+    if (result != E_OK) {
+        LOG_ERROR("DBSqlBindFloatVector failed, error code: %{public}d", result);
+        freeFunc(tmpVal);
+    }
+    return result;
 }
 
 int RdUtils::RdSqlStep(GRD_SqlStmt *stmt)
