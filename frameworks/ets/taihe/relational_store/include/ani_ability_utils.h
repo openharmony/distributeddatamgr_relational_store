@@ -25,8 +25,6 @@
 namespace ani_abilityutils {
 int32_t GetHapVersion(ani_env *env, ani_object value);
 std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env, ani_object value);
-std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetCurrentAbility(ani_env *env, ani_object value);
-int32_t GetCurrentAbilityParam(ani_env *env, ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param);
 int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param);
 }
 
