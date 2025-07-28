@@ -38,6 +38,8 @@ relational_store_napi_path = "${relational_store_base_path}/frameworks/js/napi"
 
 relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 
+relational_store_frameworks_path = "${relational_store_base_path}/frameworks"
+
 relational_store_innerapi_path =
     "${relational_store_base_path}/interfaces/inner_api"
 
