@@ -177,7 +177,7 @@ napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeR
 
     RdbPredicatesProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (status != napi_ok) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("RdbPredicatesProxy::NewInstance native instance is nullptr! napi_status:%{public}d!", status);
         return instance;
     }
@@ -193,6 +193,9 @@ void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
         LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
     }
     RdbPredicatesProxy *proxy = static_cast<RdbPredicatesProxy *>(nativeObject);
+    if (proxy == nullptr) {
+        return;
+    }
     proxy->predicates_ = std::move(nullptr);
     delete proxy;
 }

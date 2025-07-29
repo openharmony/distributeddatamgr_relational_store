@@ -145,7 +145,7 @@ napi_value UvQueue::Future(napi_env env, napi_callback_info info, bool exception
     napi_value argv[ARGC_MAX] = { nullptr };
     void *data = nullptr;
     auto status = napi_get_cb_info(env, info, &argc, argv, nullptr, &data);
-    if (status != napi_ok) {
+    if (status != napi_ok || data == nullptr) {
         return nullptr;
     }
     auto *entry = static_cast<Result *>(data);
@@ -158,6 +158,9 @@ napi_value UvQueue::Future(napi_env env, napi_callback_info info, bool exception
 
 void UvQueue::DoExecute(uv_work_t *work)
 {
+    if (work == nullptr) {
+        return;
+    }
     Task *task = static_cast<Task *>(work->data);
     work->data = nullptr;
     (*task)();
@@ -299,7 +302,11 @@ UvQueue::Result *UvQueue::UvEntry::StealResult()
     if (!result_) {
         return nullptr;
     }
-    auto *result = new Result();
+    auto *result = new (std::nothrow) Result();
+    if (result == nullptr) {
+        LOG_ERROR("No memory for Result.");
+        return nullptr;
+    }
     *result = std::move(result_);
     return result;
 }

@@ -180,6 +180,10 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    if (context == nullptr) {
+        LOG_ERROR("context is nullptr.");
+        return;
+    }
     if (context->executed_ != nullptr) {
         context->executed_->times_++;
         context->executed_->lastTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -194,6 +198,10 @@ void AsyncCall::OnExecute(napi_env env, void *data)
 void AsyncCall::OnComplete(napi_env env, void *data)
 {
     ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    if (context == nullptr) {
+        LOG_ERROR("context is nullptr.");
+        return;
+    }
     if (context->execCode_ != NativeRdb::E_OK) {
         context->SetError(std::make_shared<InnerError>(context->execCode_));
     }
@@ -217,6 +225,10 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
 {
     ContextBase *context = reinterpret_cast<ContextBase *>(data);
+    if (context == nullptr) {
+        LOG_ERROR("context is nullptr.");
+        return;
+    }
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (context->error == nullptr) {

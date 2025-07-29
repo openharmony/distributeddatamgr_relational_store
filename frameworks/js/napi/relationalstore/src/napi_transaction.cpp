@@ -282,6 +282,10 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data == nullptr) {
+            LOG_ERROR("data is nullptr.");
+            return;
+        }
         auto tid = JSDFManager::GetInstance().GetFreedTid(data);
         if (tid != 0) {
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
