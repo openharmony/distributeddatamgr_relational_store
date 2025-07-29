@@ -158,7 +158,6 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_corrupt_test.cpp",
     "unittest/rdb_delete_test.cpp",
     "unittest/rdb_distributed_test.cpp",
-    "unittest/rdb_double_write_binlog_test.cpp",
     "unittest/rdb_double_write_test.cpp",
     "unittest/rdb_encrypt_decrypt_test.cpp",
     "unittest/rdb_execute_rd_test.cpp",
@@ -198,6 +197,12 @@ ohos_unittest("NativeRdbTest") {
     "unittest/value_object_test.cpp",
     "unittest/delay_notify_test.cpp",
   ]
+
+  if (is_ohos) {
+    sources += [
+      "unittest/rdb_double_write_binlog_test.cpp",
+    ]
+  }
 
   sources += [
     "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
