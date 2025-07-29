@@ -1429,12 +1429,15 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return ExchangeStrategy::NOT_HANDLE;
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
-    if (mRet == E_SQLITE_CORRUPT) {
+    auto [mIdxRet, mIdxObj] = ExecuteForValue(qIndexSql);
+    if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {
         LOG_WARN("main abnormal, err:%{public}d", mRet);
         return ExchangeStrategy::RESTORE;
     }
     int64_t mCount = static_cast<int64_t>(mObj);
+    int64_t mIdxCount = static_cast<int64_t>(mIdxObj);
     // trigger mode only does restore, not backup
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
@@ -1443,7 +1446,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         SqliteConnection::AsyncReplayBinlog(config_.GetPath(), false);
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (sRet == E_SQLITE_CORRUPT) {
+    auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
+    if (sRet == E_SQLITE_CORRUPT || sInxRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
     }
@@ -1451,7 +1455,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return ExchangeStrategy::BACKUP;
     }
     int64_t sCount = static_cast<int64_t>(sObj);
-    if ((mCount == sCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
+    int64_t sIdxCount = static_cast<int64_t>(sInxObj);
+    if ((mCount == sCount && mIdxCount == sIdxCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
         LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::NOT_HANDLE;
     }
@@ -1459,7 +1464,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::RESTORE;
     }
-    LOG_INFO("backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+    LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
+        mCount, mIdxCount, sCount, sIdxCount);
     return ExchangeStrategy::BACKUP;
 }
 
