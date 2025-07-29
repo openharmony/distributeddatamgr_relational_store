@@ -39,7 +39,10 @@ napi_value JSUtils::Convert2Sendable(napi_env env, const std::vector<uint8_t> &v
         LOG_ERROR("napi_create_sendable_arraybuffer failed %{public}d", status);
         return nullptr;
     }
-    if (value.size() != 0) {
+    if (value.size() > 0) {
+        if (native == nullptr) {
+            return nullptr;
+        }
         std::copy(value.begin(), value.end(), static_cast<uint8_t *>(native));
     }
     status = napi_create_sendable_typedarray(env, napi_uint8_array, value.size(), buffer, 0, &jsValue);
@@ -85,7 +88,10 @@ napi_value JSUtils::Convert2Sendable(napi_env env, const std::vector<float> &val
         LOG_ERROR("napi_create_sendable_arraybuffer failed %{public}d", status);
         return nullptr;
     }
-    if (value.size() != 0) {
+    if (value.size() > 0) {
+        if (native == nullptr) {
+            return nullptr;
+        }
         std::copy(value.begin(), value.end(), static_cast<float *>(native));
     }
     status = napi_create_sendable_typedarray(env, napi_float32_array, value.size(), buffer, 0, &jsValue);
@@ -183,6 +189,9 @@ napi_value JSUtils::ToSendableTypedArray(napi_env env, napi_value jsValue)
     status = napi_create_sendable_arraybuffer(env, length, (void **)&native, &buffer);
     ASSERT(status == napi_ok, "napi_create_sendable_arraybuffer failed", nullptr);
     if (length > 0) {
+        if (native == nullptr || tmp == nullptr) {
+            return nullptr;
+        }
         errno_t result = memcpy_s(native, length, tmp, length);
         if (result != EOK) {
             LOG_ERROR("memcpy_s failed, result is %{public}d", result);
