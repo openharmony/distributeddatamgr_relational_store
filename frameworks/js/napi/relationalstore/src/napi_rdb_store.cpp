@@ -1619,8 +1619,8 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
     // argc must be greater than or equal to 2 to be valid
-    RDB_NAPI_ASSERT(
-        env, argc >= 2 && argv != nullptr, std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
+    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
+        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
     napi_valuetype type = napi_undefined;
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
