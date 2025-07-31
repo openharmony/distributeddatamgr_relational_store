@@ -118,7 +118,7 @@ int AbsResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
     }
     columnNames.resize(columnCount_);
     for (auto &[name, index] : columnMap_) {
-        if (index > columnCount_) {
+        if (index >= columnCount_) {
             continue;
         }
         columnNames[index] = name;
