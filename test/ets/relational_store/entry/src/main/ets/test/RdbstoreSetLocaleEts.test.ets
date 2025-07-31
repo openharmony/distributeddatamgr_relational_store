@@ -89,7 +89,7 @@ export default function SetLocaleEtsTest() {
         expect('王五').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
         resultSet?.goToNextRow()
         expect('张三').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
-      }catch (e){
+      } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
         expect().assertFail();
       }
@@ -105,7 +105,7 @@ export default function SetLocaleEtsTest() {
       try {
         await rdbStore?.close();
         await rdbStore?.setLocale("zh");
-      }catch (e){
+      } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
         expect(e.code).assertEqual("14800014");;
       }
@@ -120,9 +120,9 @@ export default function SetLocaleEtsTest() {
       console.log(TAG + "************* testRdbStoreSetLocale_0003 start *************");
       try {
         await rdbStore?.setLocale("111");
-      }catch (e){
+      } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
-        expect(e.code).assertEqual(14800001);;
+        expect(e.code).assertEqual(14800001);
       }
       console.log(TAG + "************* testRdbStoreSetLocale_0003 end *************");
     })
@@ -146,7 +146,7 @@ export default function SetLocaleEtsTest() {
         expect('王五').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
         resultSet?.goToNextRow()
         expect('张三').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
-      }catch (e){
+      } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
         expect().assertFail();
       }
@@ -171,11 +171,56 @@ export default function SetLocaleEtsTest() {
         resultSet?.goToNextRow()
         expect('张三').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
         await rdbTrans?.commit();
-      }catch (e){
+      } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
         expect().assertFail();
       }
       console.log(TAG + "************* testRdbStoreSetLocale_0005 end *************");
+    })
+
+    /**
+     * @tc.name Abnormal case
+     * @tc.number testRdbStoreSetLocale_0006
+     */
+    it('testRdbStoreSetLocale_0006',  0, async  () => {
+      console.log(TAG + "************* testRdbStoreSetLocale_0006 start *************");
+      try {
+        await rdbStore?.setLocale("");
+      } catch (e) {
+        console.error(`message is ${e.message}  code  ${e.code}`);
+        expect(e.code).assertEqual("401");
+      }
+      console.log(TAG + "************* testRdbStoreSetLocale_0006 end *************");
+    })
+
+    /**
+     * @tc.name Abnormal case
+     * @tc.number testRdbStoreSetLocale_0007
+     */
+    it('testRdbStoreSetLocale_0007',  0, async  () => {
+      console.log(TAG + "************* testRdbStoreSetLocale_0007 start *************");
+      try {
+        await rdbStore?.setLocale(null);
+      } catch (e) {
+        console.error(`message is ${e.message}  code  ${e.code}`);
+        expect(e.code).assertEqual("401");
+      }
+      console.log(TAG + "************* testRdbStoreSetLocale_0007 end *************");
+    })
+
+    /**
+     * @tc.name Abnormal case
+     * @tc.number testRdbStoreSetLocale_0008
+     */
+    it('testRdbStoreSetLocale_0008',  0, async  () => {
+      console.log(TAG + "************* testRdbStoreSetLocale_0008 start *************");
+      try {
+        await rdbStore?.setLocale(undefined);
+      } catch (e) {
+        console.error(`message is ${e.message}  code  ${e.code}`);
+        expect(e.code).assertEqual("401");
+      }
+      console.log(TAG + "************* testRdbStoreSetLocale_0008 end *************");
     })
   })
 }
