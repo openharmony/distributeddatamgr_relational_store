@@ -179,7 +179,7 @@ void RdbFaultHiViewReporter::CreateCorruptedFlag(const std::string &dbPath)
         return;
     }
     std::string flagFilename = dbPath + DB_CORRUPTED_POSTFIX;
-    int fd = creat(flagFilename.c_str(), S_IRWXU | S_IRWXG);
+    int fd = creat(flagFilename.c_str(), S_IRUSR | S_IWUSR);
     if (fd == -1) {
         LOG_WARN("Creat corrupted flg fail, flgname=%{public}s, errno=%{public}d",
             SqliteUtils::Anonymous(flagFilename).c_str(), errno);
