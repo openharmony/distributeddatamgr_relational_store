@@ -34,7 +34,7 @@ namespace Relational {
 class RdbStoreObserverImpl : public DistributedRdb::RdbStoreObserver {
 public:
     enum FuncType : int32_t { NoParam = 0, ParamArrStr, ParamChangeInfo };
-    RdbStoreObserverImpl(std::function<void()> *callback, const std::function<void()> &callbackRef);
+    RdbStoreObserverImpl(int64_t callback, const std::function<void()> &callbackRef);
     RdbStoreObserverImpl(int64_t id, FuncType type, int32_t mode = DistributedRdb::REMOTE);
     ~RdbStoreObserverImpl() override = default;
     void OnChange() override
@@ -59,10 +59,10 @@ public:
     {
         return callbackId;
     };
-    std::function<void()> *GetCallBack();
+    int64_t GetCallBack();
 
 private:
-    std::function<void()> *m_callback = nullptr;
+    int64_t m_callback = 0;
     std::function<void()> m_callbackRef = nullptr;
     int32_t mode_ = DistributedRdb::REMOTE;
     int64_t callbackId = 0;
@@ -126,21 +126,21 @@ public:
         NativeRdb::ConflictResolution conflictResolution, int32_t *errCode);
     std::shared_ptr<NativeRdb::ResultSet> QuerySql(const char *sql, ValueType *bindArgs, int64_t size);
     void ExecuteSql(const char *sql, ValueType *bindArgs, int64_t bindArgsSize, int32_t *errCode);
-    int32_t RegisterObserver(const char *event, bool interProcess, std::function<void()> *callback,
+    int32_t RegisterObserver(const char *event, bool interProcess, int64_t callback,
         const std::function<void()> &callbackRef);
     int32_t RegisteredObserver(DistributedRdb::SubscribeOption option,
         std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback, const std::function<void()> &callbackRef);
+        int64_t callback, const std::function<void()> &callbackRef);
     int32_t RegisterObserverArrStr(int32_t subscribeType, int64_t callbackId);
     int32_t RegisterObserverChangeInfo(int32_t subscribeType, int64_t callbackId);
     int32_t RegisterObserverProgressDetails(int64_t callbackId);
     bool HasRegisteredObserver(
-        std::function<void()> *callback, std::list<std::shared_ptr<RdbStoreObserverImpl>> &observers);
-    int32_t UnRegisterObserver(const char *event, bool interProcess, std::function<void()> *callback);
+        int64_t callback, std::list<std::shared_ptr<RdbStoreObserverImpl>> &observers);
+    int32_t UnRegisterObserver(const char *event, bool interProcess, int64_t callback);
     int32_t UnRegisterAllObserver(const char *event, bool interProcess);
     int32_t UnRegisteredObserver(DistributedRdb::SubscribeOption option,
         std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
-        std::function<void()> *callback);
+        int64_t callback);
     int32_t UnRegisteredAllObserver(DistributedRdb::SubscribeOption option,
         std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers);
     int32_t UnRegisterObserverArrStrChangeInfo(int32_t subscribeType, int64_t callbackId);

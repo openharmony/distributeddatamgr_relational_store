@@ -2609,8 +2609,12 @@ int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const
 int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
     std::shared_ptr<ConnectionPool> pool)
 {
-    if (!IsUseAsyncRestore(path_, destPath)) {
-        return pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+    bool isUseAsync = IsUseAsyncRestore(path_, destPath);
+    LOG_INFO("restore start, using async=%{public}d", isUseAsync);
+    if (!isUseAsync) {
+        auto err = pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
+        LOG_INFO("restore finished, sync mode rc=%{public}d", err);
+        return err;
     }
 
     auto connection = pool->AcquireConnection(false);
@@ -2623,7 +2627,9 @@ int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<ui
     if (errCode != E_OK) {
         return errCode;
     }
-    return StartAsyncRestore(pool);
+    errCode = StartAsyncRestore(pool);
+    LOG_INFO("restore finished, async mode rc=%{public}d", errCode);
+    return errCode;
 }
 
 int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey)

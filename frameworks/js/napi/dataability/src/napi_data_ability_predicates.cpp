@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
 #define LOG_TAG "DataAbilityPredicatesProxy"
 #include "napi_data_ability_predicates.h"
 
@@ -137,7 +138,7 @@ napi_value DataAbilityPredicatesProxy::NewInstance(
 
     DataAbilityPredicatesProxy *proxy = nullptr;
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&proxy));
-    if (status != napi_ok) {
+    if (status != napi_ok || proxy == nullptr) {
         LOG_ERROR("DataAbilityPredicatesProxy native instance is nullptr! napi_status:%{public}d!", status);
         return instance;
     }
@@ -168,6 +169,9 @@ void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, vo
         LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
     }
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
+    if (proxy == nullptr) {
+        return;
+    }
     proxy->predicates_ = std::move(nullptr);
     delete proxy;
 }
@@ -176,8 +180,9 @@ DataAbilityPredicatesProxy::~DataAbilityPredicatesProxy()
 {
 }
 
-DataAbilityPredicatesProxy::DataAbilityPredicatesProxy() : predicates_(new DataAbilityPredicates())
+DataAbilityPredicatesProxy::DataAbilityPredicatesProxy()
 {
+    predicates_ = std::make_shared<DataAbilityPredicates>();
 }
 
 std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::GetNativePredicates(

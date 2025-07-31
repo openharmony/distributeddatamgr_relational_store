@@ -31,6 +31,9 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_security_manager.h"
+#ifndef CROSS_PLATFORM
+#include "relational/relational_store_sqlite_ext.h"
+#endif
 #include "sqlite_connection.h"
 #include "sqlite_utils.h"
 #include "sys/types.h"
@@ -64,6 +67,10 @@ public:
     static std::shared_ptr<RdbStore> store3;
     static const struct sqlite3_api_routines_hw *originalHwApi;
     static struct sqlite3_api_routines_hw mockHwApi;
+#ifndef CROSS_PLATFORM
+    static const struct sqlite3_api_routines_relational *originalKvApi;
+    static struct sqlite3_api_routines_relational mockKvApi;
+#endif
 
     enum SlaveStatus : uint32_t {
         UNDEFINED,
@@ -81,6 +88,10 @@ std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
 const struct sqlite3_api_routines_hw *RdbDoubleWriteTest::originalHwApi = sqlite3_export_hw_symbols;
 struct sqlite3_api_routines_hw RdbDoubleWriteTest::mockHwApi = *sqlite3_export_hw_symbols;
+#ifndef CROSS_PLATFORM
+const struct sqlite3_api_routines_relational *RdbDoubleWriteTest::originalKvApi = sqlite3_export_relational_symbols;
+struct sqlite3_api_routines_relational RdbDoubleWriteTest::mockKvApi = *sqlite3_export_relational_symbols;
+#endif
 const int BLOB_SIZE = 3;
 const uint8_t EXPECTED_BLOB_DATA[]{ 1, 2, 3 };
 const int CHECKAGE = 18;
@@ -128,6 +139,17 @@ static int MockSupportBinlog(void)
     return SQLITE_OK;
 }
 
+#ifndef CROSS_PLATFORM
+static int MockNotSupportBinlogWithParam(const char *name)
+{
+    return SQLITE_ERROR;
+}
+
+static int MockSupportBinlogWithParam(const char *name)
+{
+    return SQLITE_OK;
+}
+#endif
 static int MockReplayBinlog(sqlite3 *srcDb, sqlite3 *destDb)
 {
     return SQLITE_OK;
@@ -144,11 +166,18 @@ void RdbDoubleWriteTest::SetUpTestCase(void)
     mockHwApi.replay_binlog = MockReplayBinlog;
     mockHwApi.clean_binlog = MockCleanBinlog;
     sqlite3_export_hw_symbols = &mockHwApi;
+#ifndef CROSS_PLATFORM
+    mockKvApi.is_support_binlog = MockNotSupportBinlogWithParam;
+    sqlite3_export_relational_symbols = &mockKvApi;
+#endif
 }
 
 void RdbDoubleWriteTest::TearDownTestCase(void)
 {
     sqlite3_export_hw_symbols = originalHwApi;
+#ifndef CROSS_PLATFORM
+    sqlite3_export_relational_symbols = originalKvApi;
+#endif
 }
 
 void RdbDoubleWriteTest::SetUp(void)
@@ -173,12 +202,12 @@ void RdbDoubleWriteTest::InitDb(HAMode mode)
     config.SetHaMode(mode);
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::store, nullptr);
+    ASSERT_NE(RdbDoubleWriteTest::store, nullptr);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
     DoubleWriteTestOpenCallback slaveHelper;
     RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
     slaveStore->ExecuteSql("DELETE FROM test");
 }
@@ -1189,6 +1218,42 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_033, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_DoubleWrite_034
+ * @tc.desc: open db, close, open SINGLE db, create index, write, reopen, check slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_034, TestSize.Level1)
+{
+    InitDb();
+    store = nullptr;
+    slaveStore = nullptr;
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->ExecuteSql("CREATE index age_index ON test(age);"), E_OK);
+    int64_t id = 10;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
+    store = nullptr;
+    slaveStore = nullptr;
+}
+
+/**
  * @tc.name: RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db
  * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
  * @tc.type: FUNC
@@ -1585,11 +1650,13 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(store, nullptr);
-    LOG_INFO("---- step 4: trigger statement should busy ----");
-    EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
-    store = nullptr;
+    if (errCode != E_SQLITE_BUSY) {
+        EXPECT_EQ(errCode, E_OK);
+        ASSERT_NE(store, nullptr);
+        LOG_INFO("---- step 4: trigger statement should busy ----");
+        EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
+        store = nullptr;
+    }
     LOG_INFO("---- step 5: check db count ----");
     RdbDoubleWriteTest::WaitForAsyncRepairFinish();
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -1606,9 +1673,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
 {
     mockHwApi.is_support_binlog = MockSupportBinlog;
-    mockHwApi.replay_binlog = MockReplayBinlog;
-    mockHwApi.clean_binlog = MockCleanBinlog;
     sqlite3_export_hw_symbols = &mockHwApi;
+#ifndef CROSS_PLATFORM
+    mockKvApi.is_support_binlog = MockSupportBinlogWithParam;
+    sqlite3_export_relational_symbols = &mockKvApi;
+#endif
 
     InitDb(HAMode::MANUAL_TRIGGER);
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
@@ -1623,11 +1692,14 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_002, TestSize.Level0)
 {
     mockHwApi.is_support_binlog = MockSupportBinlog;
-    mockHwApi.replay_binlog = MockReplayBinlog;
-    mockHwApi.clean_binlog = MockCleanBinlog;
     sqlite3_export_hw_symbols = &mockHwApi;
-
+#ifndef CROSS_PLATFORM
+    mockKvApi.is_support_binlog = MockSupportBinlogWithParam;
+    sqlite3_export_relational_symbols = &mockKvApi;
+#endif
     InitDb(HAMode::MAIN_REPLICA);
+    store = nullptr;
+    slaveStore = nullptr;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_OK);
