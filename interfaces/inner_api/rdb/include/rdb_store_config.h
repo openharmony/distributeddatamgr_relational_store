@@ -244,7 +244,7 @@ struct CollatorLocales {
     {
         locales_ = "";
     }
-    CollatorLocales(const CollatorLocales &collatorLocales)
+    explicit CollatorLocales(const CollatorLocales &collatorLocales)
     {
         locales_ = collatorLocales.Get();
     }
@@ -260,7 +260,7 @@ struct CollatorLocales {
         locales_ = locales;
     }
 
-    private:
+private:
     std::string locales_;
     mutable std::mutex localesMutex_;
 };

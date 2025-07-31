@@ -1674,11 +1674,13 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_001, TestSize.Level1)
     valuesBucket.PutString("data1", "张三");
     valuesBucket.PutInt("data2", 20);
     errCode = store->Insert(id, "test1", valuesBucket);
+    EXPECT_EQ(errCode, E_OK);
 
     ValuesBucket valuesBucket1;
     valuesBucket1.PutString("data1", "李四");
     valuesBucket1.PutInt("data2", 20);
     errCode = store->Insert(id, "test1", valuesBucket1);
+    EXPECT_EQ(errCode, E_OK);
 
     std::vector<std::string> columns;
     AbsRdbPredicates predicates("test1");
@@ -1721,6 +1723,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_002, TestSize.Level1)
     valuesBucket1.PutString("data1", "李四");
     valuesBucket1.PutInt("data2", 20);
     errCode = store->Insert(id, "test1", valuesBucket1);
+    EXPECT_EQ(errCode, E_OK);
 
     std::vector<std::string> columns;
     AbsRdbPredicates predicates("test1");
