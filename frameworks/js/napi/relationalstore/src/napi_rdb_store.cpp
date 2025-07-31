@@ -210,6 +210,10 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, NULL, NULL, &self, nullptr));
     auto finalize = [](napi_env env, void *data, void *hint) {
+        if (data == nullptr) {
+            LOG_ERROR("data is nullptr.");
+            return;
+        }
         auto tid = JSDFManager::GetInstance().GetFreedTid(data);
         if (tid != 0) {
             LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
@@ -1644,6 +1648,9 @@ napi_value RdbStoreProxy::SetLocale(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
+    // argc must be greater than or equal to 2 to be valid
+    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
+        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
     napi_valuetype type = napi_undefined;
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);

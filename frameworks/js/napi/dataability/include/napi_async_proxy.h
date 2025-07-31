@@ -113,6 +113,41 @@ public:
         parserThis(asyncContext->env, thisObj, asyncContext);
     }
 
+    static void OnComplete(napi_env env, napi_status status, void *data)
+    {
+        if (data == nullptr) {
+            return;
+        }
+        T *context = (T *)data;
+        napi_value output = nullptr;
+        int completeStatus = context->completeFunc(context, output);
+        napi_value result[RESULT_COUNT] = { 0 };
+        if (context->execStatus == OK && completeStatus == OK) {
+            napi_get_undefined(env, &result[0]);
+            result[1] = output;
+        } else {
+            napi_value message = nullptr;
+            napi_create_string_utf8(env, "async call failed", NAPI_AUTO_LENGTH, &message);
+            napi_create_error(env, nullptr, message, &result[0]);
+            napi_get_undefined(env, &result[1]);
+        }
+        if (context->deferred) {
+            // promise
+            if (context->execStatus == OK && completeStatus == OK) {
+                napi_resolve_deferred(env, context->deferred, result[1]);
+            } else {
+                napi_reject_deferred(env, context->deferred, result[0]);
+            }
+        } else {
+            // callback
+            napi_value callback = nullptr;
+            napi_get_reference_value(env, context->callbackRef, &callback);
+            napi_value callbackResult = nullptr;
+            napi_call_function(env, nullptr, callback, RESULT_COUNT, result, &callbackResult);
+        }
+        delete context;
+    }
+
     napi_value DoAsyncWork(std::string resourceName, NapiAsyncExecute execFunc, NapiAsyncComplete completeFunc)
     {
         if (asyncContext == nullptr) {
@@ -130,42 +165,18 @@ public:
         napi_create_string_utf8(asyncContext->env, resourceName.c_str(), NAPI_AUTO_LENGTH, &resource);
         asyncContext->execFunc = execFunc;
         asyncContext->completeFunc = completeFunc;
-        NAPI_CALL_BASE(asyncContext->env, napi_create_async_work(asyncContext->env, nullptr, resource,
-            [](napi_env env, void *data) {
-                T *context = (T *)data;
-                context->execStatus = context->execFunc(context);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                T *context = (T *)data;
-                napi_value output = nullptr;
-                int completeStatus = context->completeFunc(context, output);
-                napi_value result[RESULT_COUNT] = { 0 };
-                if (context->execStatus == OK && completeStatus == OK) {
-                    napi_get_undefined(env, &result[0]);
-                    result[1] = output;
-                } else {
-                    napi_value message = nullptr;
-                    napi_create_string_utf8(env, "async call failed", NAPI_AUTO_LENGTH, &message);
-                    napi_create_error(env, nullptr, message, &result[0]);
-                    napi_get_undefined(env, &result[1]);
-                }
-                if (context->deferred) {
-                    // promise
-                    if (context->execStatus == OK && completeStatus == OK) {
-                        napi_resolve_deferred(env, context->deferred, result[1]);
-                    } else {
-                        napi_reject_deferred(env, context->deferred, result[0]);
+        NAPI_CALL_BASE(asyncContext->env,
+            napi_create_async_work(
+                asyncContext->env, nullptr, resource,
+                [](napi_env env, void *data) {
+                    if (data == nullptr) {
+                        return;
                     }
-                } else {
-                    // callback
-                    napi_value callback = nullptr;
-                    napi_get_reference_value(env, context->callbackRef, &callback);
-                    napi_value callbackResult = nullptr;
-                    napi_call_function(env, nullptr, callback, RESULT_COUNT, result, &callbackResult);
-                }
-                delete context;
-            },
-            (void *)asyncContext, &asyncContext->work), ret);
+                    T *context = (T *)data;
+                    context->execStatus = context->execFunc(context);
+                },
+                OnComplete, (void *)asyncContext, &asyncContext->work),
+            ret);
         NAPI_CALL_BASE(asyncContext->env, napi_queue_async_work(asyncContext->env, asyncContext->work), ret);
         return ret;
     }

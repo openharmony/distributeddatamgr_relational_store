@@ -28,6 +28,7 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "sqlite_connection.h"
+#include "sqlite_global_config.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -75,6 +76,7 @@ void ConnectionTest::TearDownTestCase(void)
  */
 HWTEST_F(ConnectionTest, Connection_Test_001, TestSize.Level1)
 {
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
     RdbStoreConfig config(rdbStorePath);
     config.SetDBType(OHOS::NativeRdb::DBType::DB_BUTT);
     auto [errCode, connection] = Connection::Create(config, true);

@@ -98,7 +98,7 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     auto path = config.GetPath();
     auto binlogFolder = GetBinlogFolderPath(path);
     size_t num = SqliteUtils::DeleteFolder(binlogFolder);
-    if (num > 0 && sqlite3_is_support_binlog()) {
+    if (num > 0 && IsSupportBinlog(config)) {
         LOG_INFO("removed %{public}zu binlog related items", num);
     }
     auto slavePath = SqliteUtils::GetSlavePath(path);
@@ -397,7 +397,12 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return E_OK;
     }
 
-    auto errCode = RegDefaultFunctions(dbHandle_);
+    auto errCode = SetCrcCheck(config);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    errCode = RegDefaultFunctions(dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -579,10 +584,6 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInne
             return { E_OK, statement };
         }
         statement->slave_ = slaveStmt;
-    } else if (slaveConnection_ && IsWriter() && IsSupportBinlog(config_) && config_.GetHaMode() != HAMode::SINGLE &&
-        SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
-        sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
-        LOG_WARN("Slave invalid. Close binlog, %{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     return { E_OK, statement };
 }
@@ -775,6 +776,19 @@ int SqliteConnection::ResetKey(const RdbStoreConfig &config)
         return E_OK;
     }
     config.ChangeEncryptKey();
+    return E_OK;
+}
+
+int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
+{
+    if (config.IsEncrypt() || config.IsMemoryRdb()) {
+        return E_OK;
+    }
+    auto errCode = ExecuteSql(GlobalExpr::PRAGMA_CKSUM_PERSIST_ENABLE);
+    if (errCode != E_OK) {
+        LOG_ERROR("enable cksum persist failed,%{public}d", errCode);
+        return errCode;
+    }
     return E_OK;
 }
 
@@ -1351,10 +1365,13 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
     if (!isRestore && IsSupportBinlog(config_) && config_.GetHaMode() != HAMode::SINGLE) {
         LOG_INFO("reset binlog start");
         sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
-        auto binlogFolder = GetBinlogFolderPath(config_.GetPath());
-        size_t num = SqliteUtils::DeleteFolder(binlogFolder);
         SetBinlog();
-        LOG_INFO("reset binlog finished, %{public}zu", num);
+        err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE);
+        if (err != SQLITE_OK) {
+            sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+            SqliteUtils::SetSlaveInvalid(config_.GetPath());
+        }
+        LOG_INFO("reset binlog finished, %{public}d", err);
     }
     return E_OK;
 }
@@ -1429,12 +1446,15 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return ExchangeStrategy::NOT_HANDLE;
     }
     static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
-    if (mRet == E_SQLITE_CORRUPT) {
+    auto [mIdxRet, mIdxObj] = ExecuteForValue(qIndexSql);
+    if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {
         LOG_WARN("main abnormal, err:%{public}d", mRet);
         return ExchangeStrategy::RESTORE;
     }
     int64_t mCount = static_cast<int64_t>(mObj);
+    int64_t mIdxCount = static_cast<int64_t>(mIdxObj);
     // trigger mode only does restore, not backup
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
@@ -1443,7 +1463,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         SqliteConnection::AsyncReplayBinlog(config_.GetPath(), false);
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    if (sRet == E_SQLITE_CORRUPT) {
+    auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
+    if (sRet == E_SQLITE_CORRUPT || sInxRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
     }
@@ -1451,7 +1472,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return ExchangeStrategy::BACKUP;
     }
     int64_t sCount = static_cast<int64_t>(sObj);
-    if ((mCount == sCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
+    int64_t sIdxCount = static_cast<int64_t>(sInxObj);
+    if ((mCount == sCount && mIdxCount == sIdxCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
         LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::NOT_HANDLE;
     }
@@ -1459,7 +1481,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::RESTORE;
     }
-    LOG_INFO("backup, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+    LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
+        mCount, mIdxCount, sCount, sIdxCount);
     return ExchangeStrategy::BACKUP;
 }
 
@@ -1670,8 +1693,8 @@ bool SqliteConnection::IsDbVersionBelowSlave()
 
 void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath)
 {
-    if (pCtx == nullptr || dbPath == nullptr) {
-        LOG_WARN("context or path is null");
+    if (dbPath == nullptr) {
+        LOG_WARN("path is null");
         return;
     }
     std::string dbPathStr(dbPath);
@@ -1687,7 +1710,8 @@ int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHa
     }
     int err = sqlite3_open_v2(dbPath.c_str(), &dbHandle, static_cast<int>(openFileFlags), nullptr);
     if (err != SQLITE_OK) {
-        LOG_ERROR("open binlog handle error. err=%{public}d, errno=%{public}d", err, errno);
+        LOG_ERROR("open binlog handle error. rc=%{public}d, errno=%{public}d, p=%{public}s",
+            err, errno, SqliteUtils::Anonymous(dbPath).c_str());
         return E_INVALID_FILE_PATH;
     }
     return E_OK;
@@ -1733,8 +1757,8 @@ void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
 
 void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath)
 {
-    if (pCtx == nullptr || dbPath == nullptr) {
-        LOG_WARN("context or path is null");
+    if (dbPath == nullptr) {
+        LOG_WARN("path is null");
         return;
     }
     auto pool = TaskExecutor::GetInstance().GetExecutor();
@@ -1759,7 +1783,7 @@ int SqliteConnection::SetBinlog()
         .maxFileSize = BINLOG_FILE_SIZE_LIMIT,
         .xErrorCallback = &BinlogOnErrFunc,
         .xLogFullCallback = &BinlogOnFullFunc,
-        .callbackCtx = this,
+        .callbackCtx = nullptr,
     };
 
     LOG_INFO("binlog: open %{public}s", SqliteUtils::Anonymous(config_.GetPath()).c_str());
@@ -1787,7 +1811,6 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
     sqlite3 *dbFrom = nullptr;
     errCode = SqliteConnection::BinlogOpenHandle(dbPath, dbFrom, false);
     if (errCode != E_OK) {
-        LOG_WARN("binlog db open failed, %{public}d", errCode);
         return;
     }
     SqliteConnection::BinlogSetConfig(dbFrom);
@@ -1795,7 +1818,6 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
     errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, false);
     if (errCode != E_OK) {
         SqliteConnection::BinlogCloseHandle(dbFrom);
-        LOG_WARN("binlog db open failed, %{public}d", errCode);
         return;
     }
     errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, dbTo));
@@ -1803,7 +1825,7 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
         LOG_WARN("async replay err:%{public}d", errCode);
     } else if (isNeedClean) {
         errCode = SQLiteError::ErrNo(sqlite3_clean_binlog(dbFrom, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_READ_MODE));
-        LOG_INFO("clean finished, %{public}d", errCode);
+        LOG_INFO("clean finished, %{public}d, %{public}s", errCode, SqliteUtils::Anonymous(dbPath).c_str());
     }
     SqliteConnection::BinlogCloseHandle(dbFrom);
     SqliteConnection::BinlogCloseHandle(dbTo);
@@ -1836,7 +1858,7 @@ bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)
     if (sqlite3_is_support_binlog == nullptr) {
         return false;
     }
-    if (sqlite3_is_support_binlog() != SQLITE_OK) {
+    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
         return false;
     }
     return !config.IsEncrypt() && !config.IsMemoryRdb();

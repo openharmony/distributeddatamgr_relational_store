@@ -19,8 +19,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <atomic>
 #include <climits>
+#include <mutex>
 #include <string>
+#include <unordered_set>
 
 #include "grd_api_manager.h"
 #include "grd_type_export.h"
@@ -29,6 +32,29 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+
+static std::mutex g_mutex;
+static std::unordered_set<void *> allocatedAddresses;
+static bool g_isRecord = false;
+
+void *operator new[](size_t size, const std::nothrow_t &tag) noexcept
+{
+    void *ptr = std::malloc(size);
+    if (g_isRecord && ptr != nullptr) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        allocatedAddresses.insert(ptr);
+    }
+    return ptr;
+}
+
+void operator delete[](void *ptr) noexcept
+{
+    if (g_isRecord && ptr != nullptr) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        allocatedAddresses.erase(ptr);
+    }
+    std::free(ptr);
+}
 
 namespace Test {
 class RdUtilsTest : public testing::Test {
@@ -41,10 +67,14 @@ public:
 
 void RdUtilsTest::SetUpTestCase(void)
 {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_isRecord = true;
 }
 
 void RdUtilsTest::TearDownTestCase(void)
 {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_isRecord = false;
 }
 
 static void ScheduleMock(void *param)
@@ -126,5 +156,58 @@ HWTEST_F(RdUtilsTest, RdUtils_Test_004, TestSize.Level1)
     const char *str = "";
     EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, -1, nullptr), E_INVALID_ARGS);
     EXPECT_EQ(RdUtils::RdSqlBindText(stmt, idx, str, 0, nullptr), E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RdUtils_Test_005
+ * @tc.desc: Test RdSqlBindBlob
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdUtilsTest, RdUtils_Test_005, TestSize.Level0)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    GRD_SqlStmt *stmtHandle = nullptr;
+    const uint8_t testData[] = { 0x05, 0x06 };
+    const int32_t dataLen = sizeof(testData);
+    auto ret = RdUtils::RdSqlBindBlob(stmtHandle, 1, testData, dataLen, nullptr);
+    EXPECT_EQ(ret, E_INVALID_ARGS);
+    EXPECT_TRUE(allocatedAddresses.empty());
+}
+
+/**
+ * @tc.name: RdUtils_Test_006
+ * @tc.desc: Test RdSqlBindBlob
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdUtilsTest, RdUtils_Test_006, TestSize.Level0)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    GRD_SqlStmt *stmtHandle = nullptr;
+    const char *testStr = "Test";
+    auto ret = RdUtils::RdSqlBindText(stmtHandle, 1, testStr, strlen(testStr), nullptr);
+    EXPECT_EQ(ret, E_INVALID_ARGS);
+    EXPECT_TRUE(allocatedAddresses.empty());
+}
+
+/**
+ * @tc.name: RdUtils_Test_007
+ * @tc.desc: Test RdSqlBindFloatVector
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdUtilsTest, RdUtils_Test_007, TestSize.Level0)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    GRD_SqlStmt *stmtHandle = nullptr;
+    float testData[] = { 1.1f, 2.2f, 3.3f };
+    uint32_t dim = sizeof(testData) / sizeof(float);
+    auto ret = RdUtils::RdSqlBindFloatVector(stmtHandle, 2, testData, dim, nullptr);
+    EXPECT_EQ(ret, E_INVALID_ARGS);
+    EXPECT_TRUE(allocatedAddresses.empty());
 }
 } // namespace Test

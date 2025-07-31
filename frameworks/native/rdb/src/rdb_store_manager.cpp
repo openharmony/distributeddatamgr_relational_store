@@ -107,21 +107,21 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
         return nullptr;
     }
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
-    rdbStore = GetStoreFromCache(path, config, errCode);
+    RdbStoreConfig modifyConfig = config;
+    if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
+        errCode = E_CONFIG_INVALID_CHANGE;
+        rdbStore = nullptr;
+        return rdbStore;
+    }
+    rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
     if (rdbStore == nullptr) {
         return rdbStore;
     }
     errCode = rdbStore->Init(version, openCallback);
     if (errCode != E_OK) {
-        RdbStoreConfig modifyConfig = config;
-        if (config.GetRoleType() == OWNER && IsConfigInvalidChanged(path, modifyConfig)) {
-            errCode = E_CONFIG_INVALID_CHANGE;
-            rdbStore = nullptr;
-            return rdbStore;
-        }
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
             rdbStore = nullptr;
-            rdbStore = GetStoreFromCache(path, modifyConfig, errCode);
+            rdbStore = GetStoreFromCache(path, config, errCode);
             if (rdbStore == nullptr) {
                 return rdbStore;
             }
@@ -153,6 +153,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     };
+    configCache_.Set(path, lastParam);
     // The lastParam is possible that the same named db parameters of different paths when GetParamFromService
     if (lastParam.customDir_ != config.GetCustomDir() || lastParam.hapName_ != config.GetModuleName() ||
         lastParam.area_ != config.GetArea()) {
@@ -171,6 +172,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         LOG_WARN("Reset encrypt, storePath %{public}s, input:%{public}d  original:%{public}d",
             SqliteUtils::Anonymous(path).c_str(), config.IsEncrypt(), lastParam.isEncrypt_);
         config.SetEncryptStatus(lastParam.isEncrypt_);
+        config.SetAllowRebuild(false);
     }
     return false;
 }

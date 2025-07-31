@@ -27,6 +27,7 @@ import RdbStoreTransJsunit from './RdbStoreTransJsunit.test.ets';
 import RdbstoreCustomTokenizerTest from './RdbstoreCustomTokenizerEts.ets';
 import ExecuteSqlTest from './RdbStoreExecuteSql.test.ets';
 import SetLocaleEtsTest from './RdbstoreSetLocaleEts.test.ets';
+import RelationalStoreEtsTest from './RelationalStoreEtsTest.test.ets'
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -42,4 +43,5 @@ export default function testsuite() {
   RdbstoreCustomTokenizerTest();
   ExecuteSqlTest();
   SetLocaleEtsTest();
+  RelationalStoreEtsTest();
 }
