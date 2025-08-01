@@ -33,7 +33,7 @@ Context::Context()
 #ifdef WINDOWS_PLATFORM
     baseDir = getenv("TEMP");
     if (!baseDir.empty()) {
-        databaseDir_ = baseDir + "\\HuaweiDevEcoStudioDatabases";
+        databaseDir_ = baseDir + "\\DevEcoStudioDatabases";
     }
 #endif
 
@@ -41,7 +41,7 @@ Context::Context()
     baseDir = getenv("LOGNAME");
     baseDir = "/Users/" + baseDir + "/Library/Caches";
     if (!baseDir.empty()) {
-        databaseDir_ = baseDir + "/HuaweiDevEcoStudioDatabases";
+        databaseDir_ = baseDir + "/DevEcoStudioDatabases";
     }
 #endif
     bundleName_ = "com.example.myapplication";
