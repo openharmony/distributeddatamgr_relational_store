@@ -78,7 +78,8 @@ public:
     static int SetSlaveInterrupted(const std::string &dbPath);
     static int SetSlaveRestoring(const std::string &dbPath, bool isRestore = true);
     static bool IsSlaveRestoring(const std::string &dbPath);
-    static bool IsSlaveLarge(const std::string &slavePath);
+    static ssize_t GetDecompressedSize(const std::string &dbPath);
+    static bool IsSlaveLarge(const std::string &dbPath);
     static bool IsSlaveInvalid(const std::string &dbPath);
     static bool IsSlaveInterrupted(const std::string &dbPath);
     static void SetSlaveValid(const std::string &dbPath);
@@ -131,6 +132,7 @@ private:
     static std::string GetAnonymousName(const std::string &fileName);
     static std::string AnonyDigits(const std::string &fileName);
     static std::string GetModeInfo(uint32_t st_mode);
+    static int GetPageCountCallback(void *data, int argc, char **argv, char **azColName);
 };
 
 } // namespace NativeRdb

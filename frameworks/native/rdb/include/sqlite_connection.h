@@ -75,6 +75,9 @@ public:
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
+    void SetIsSlave(bool isSlave);
+    void SetIsSupportBinlog(bool isSupport);
+    bool GetIsSlave();
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
@@ -111,7 +114,6 @@ private:
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
     void SetDwrEnable(const RdbStoreConfig &config);
-    int SetCrcCheck(const RdbStoreConfig &config);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     int SetCustomFunctions(const RdbStoreConfig &config);
@@ -141,7 +143,7 @@ private:
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
-    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
+    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb, bool isSlave = false);
     static void BinlogSetConfig(sqlite3 *dbHandle);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
     static void AsyncReplayBinlog(const std::string &dbPath, bool isNeedClean);
@@ -149,7 +151,8 @@ private:
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
-        { ".corruptedflg", nullptr }, { "-compare", nullptr } };
+        { ".corruptedflg", nullptr }, { "-compare", nullptr }, { "-walcompress", nullptr },
+        { "-journalcompress", nullptr }, { "-shmcompress", nullptr } };
     static constexpr int CHECKPOINT_TIME = 500;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
@@ -184,6 +187,8 @@ private:
     bool isWriter_;
     bool isReadOnly_;
     bool isConfigured_ = false;
+    bool isSupportBinlog_ = false;
+    bool isSlave_ = false;
     bool isReplay_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
