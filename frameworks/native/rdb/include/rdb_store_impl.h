@@ -246,7 +246,7 @@ private:
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
-    static inline constexpr uint32_t INTERVAL = 10;
+    static inline constexpr uint32_t INTERVAL = 200;
     static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
