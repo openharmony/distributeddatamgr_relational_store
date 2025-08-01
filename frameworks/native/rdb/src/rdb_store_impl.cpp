@@ -2547,7 +2547,7 @@ bool RdbStoreImpl::IsUseAsyncRestore(const std::string &newPath, const std::stri
 {
     if (config_.GetPath() == backupPath || newPath == backupPath ||
         config_.GetDBType() == DB_VECTOR || config_.GetHaMode() == HAMode::SINGLE ||
-        !SqliteUtils::IsSlaveDbName(backupPath) || !SqliteUtils::IsSlaveLarge(backupPath)) {
+        !SqliteUtils::IsSlaveDbName(backupPath) || !SqliteUtils::IsSlaveLarge(config_.GetPath())) {
         return false;
     }
     return true;
