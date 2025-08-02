@@ -1,7 +1,7 @@
 {
     "app":{
         "bundleName":"com.clouddata.configtest",
-        "vendor":"huawei",
+        "vendor":"example",
         "versionCode":1000000,
         "versionName":"1.0.0",
         "debug":false,
