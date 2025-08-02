@@ -459,6 +459,10 @@ group("fuzztest") {
     "fuzztest/abssharedresultset_fuzzer:fuzztest",
     "fuzztest/abspredicates_fuzzer:fuzztest",
     "fuzztest/absresultset_fuzzer:fuzztest",
+    "fuzztest/rdbpredicates_fuzzer:fuzztest",
+    "fuzztest/valueobject_fuzzer:fuzztest",
+    "fuzztest/valuesbucket_fuzzer:fuzztest",
+    "fuzztest/valuesbuckets_fuzzer:fuzztest",
   ]
 }
 
