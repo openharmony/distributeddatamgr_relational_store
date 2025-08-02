@@ -218,25 +218,51 @@ public:
     bool Get(RegisterType type)
     {
         uint8_t bit = type % sizeof(uint8_t);
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         return (1 << bit) & info_;
     }
 
     void Set(RegisterType type, bool state)
     {
         uint8_t bit = type % sizeof(uint8_t);
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         info_ |= 1 << bit;
     }
 
     bool operator==(const RegisterInfo& info)
     {
-        std::lock_guard<std::mutex> LockGuard(mutex_);
+        std::lock_guard<std::mutex> lockGuard(mutex_);
         return info_ == info.info_;
     }
 private:
     uint8_t info_;
     std::mutex mutex_;
+};
+
+struct CollatorLocales {
+    CollatorLocales()
+    {
+        locales_ = "";
+    }
+    explicit CollatorLocales(const CollatorLocales &collatorLocales)
+    {
+        locales_ = collatorLocales.Get();
+    }
+    std::string Get() const
+    {
+        std::lock_guard<std::mutex> lockGuard(localesMutex_);
+        return locales_;
+    }
+
+    void Set(const std::string &locales)
+    {
+        std::lock_guard<std::mutex> lockGuard(localesMutex_);
+        locales_ = locales;
+    }
+
+private:
+    std::string locales_;
+    mutable std::mutex localesMutex_;
 };
 
 /**
@@ -780,7 +806,7 @@ public:
 
     std::string GetCollatorLocales() const;
 
-    void SetCollatorLocales(const std::string &locales);
+    void SetCollatorLocales(const std::string &locales) const;
 
     int32_t GetHaMode() const;
 
@@ -852,7 +878,7 @@ private:
     ssize_t checkpointSize_;
     ssize_t startCheckpointSize_;
     int32_t clearMemorySize_;
-    std::string locales_;
+    mutable CollatorLocales collatorLocales_;
     // distributed rdb
     std::string bundleName_;
     std::string moduleName_;
