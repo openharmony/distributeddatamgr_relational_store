@@ -52,9 +52,7 @@ std::vector<AssetValue> ConsumeRandomLengthAssetValueVector(FuzzedDataProvider &
 
 std::vector<float> ConsumeFloatingPointVector(FuzzedDataProvider &provider)
 {
-    const int loopsMin = 0;
-    const int loopsMax = 100;
-    size_t loops = provider.ConsumeIntegralInRange<size_t>(loopsMin, loopsMax);
+    size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
     std::vector<float> columns;
     for (size_t i = 0; i < loops; ++i) {
         float value = provider.ConsumeFloatingPoint<float>();
@@ -167,4 +165,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::ValueObjectGetAssetsFuzz(provider);
     OHOS::ValueObjectGetVecsFuzz(provider);
     return 0;
-}
+}
