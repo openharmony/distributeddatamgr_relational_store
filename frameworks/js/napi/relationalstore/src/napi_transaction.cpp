@@ -652,7 +652,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -698,7 +698,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        result = ResultSetProxy::NewInstance(env, context->resultSet);
+        result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);

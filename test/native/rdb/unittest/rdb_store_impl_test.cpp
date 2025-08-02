@@ -545,7 +545,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_001, TestSize.Level2)
     auto connection = connectionPool->AcquireConnection(true);
     EXPECT_NE(nullptr, connection);
     errCode = connectionPool->ConfigLocale("AbnormalTest");
-    EXPECT_EQ(OHOS::NativeRdb::E_DATABASE_BUSY, errCode);
+    EXPECT_EQ(OHOS::NativeRdb::E_INVALID_ARGS_NEW, errCode);
 
     store = nullptr;
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
@@ -1651,6 +1651,145 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
     EXPECT_EQ(errCode, E_OK);
 }
 
+/**
+ * @tc.name: RdbStore_ConfigLocale_001
+ * @tc.desc: test RdbStore ConfigLocale
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+    errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    EXPECT_EQ(errCode, E_OK);
+    errCode = store->ConfigLocale("111");
+    EXPECT_EQ(errCode, E_INVALID_ARGS_NEW);
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+    EXPECT_EQ(errCode, E_OK);
+
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket1);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet = store->Query(predicates, columns);
+    ASSERT_NE(resultSet, nullptr);
+    std::string strValue;
+    errCode = resultSet->GoToNextRow();
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_ConfigLocale_002
+ * @tc.desc: test RdbStore ConfigLocale
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_002, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+    errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    EXPECT_EQ(errCode, E_OK);
+    errCode = store->ConfigLocale("zh");
+    EXPECT_EQ(errCode, E_OK);
+    
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket);
+
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    errCode = store->Insert(id, "test1", valuesBucket1);
+    EXPECT_EQ(errCode, E_OK);
+
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    std::shared_ptr<ResultSet> resultSet = store->Query(predicates, columns);
+    ASSERT_NE(nullptr, resultSet);
+    std::string strValue;
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "李四");
+
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "张三");
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_ConfigLocale_003
+ * @tc.desc: test RdbStore ConfigLocale
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_003, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+    ASSERT_NE(store, nullptr);
+    errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
+                    "data2 INTEGER);");
+    EXPECT_EQ(errCode, E_OK);
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+    errCode = store->ConfigLocale("zh");
+    EXPECT_EQ(errCode, E_OK);
+    
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("data1", "张三");
+    valuesBucket.PutInt("data2", 20);
+    auto result = transaction->Insert("test1", valuesBucket);
+    EXPECT_EQ(result.first, E_OK);
+    ValuesBucket valuesBucket1;
+    valuesBucket1.PutString("data1", "李四");
+    valuesBucket1.PutInt("data2", 20);
+    result = transaction->Insert("test1", valuesBucket1);
+    EXPECT_EQ(result.first, E_OK);
+    std::vector<std::string> columns;
+    AbsRdbPredicates predicates("test1");
+    predicates.OrderByAsc("data1 COLLATE LOCALES");
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test1 order by data1 COLLATE LOCALES");;
+    ASSERT_NE(nullptr, resultSet);
+    std::string strValue;
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "李四");
+
+    resultSet->GoToNextRow();
+    resultSet->GetString(1, strValue);
+    EXPECT_EQ(strValue, "张三");
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
 /**
  * @tc.name: RdbStore_InitKnowledgeSchema_001
  * @tc.desc: test RdbStore InitKnowledgeSchema

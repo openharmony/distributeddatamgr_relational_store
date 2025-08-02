@@ -24,6 +24,7 @@
 #include "rdb_errno.h"
 #include "rdb_visibility.h"
 #include "sqlite3.h"
+#include "sqlite_errno.h"
 
 API_EXPORT int32_t ConfigICULocale(sqlite3 *, const std::string &str) asm("ConfigICULocale");
 API_EXPORT int32_t CleanUp() asm("CleanUp");
@@ -76,8 +77,14 @@ int32_t ICUCollect::Locale(sqlite3 *dbHandle, const std::string &str)
     SetHwIcuDirectory();
 
     UCollator *collator = ucol_open(str.c_str(), &status);
+    if (status == U_USING_DEFAULT_WARNING || status == U_ILLEGAL_ARGUMENT_ERROR) {
+        LOG_ERROR("A resource bundle lookup returned a result from the root locale, locale:%{public}s.", str.c_str());
+        ucol_close(collator);
+        return E_INVALID_ARGS_NEW;
+    }
     if (U_FAILURE(status)) {
         LOG_ERROR("Can not open collator, status:%{public}d.", status);
+        ucol_close(collator);
         return E_ERROR;
     }
     ucol_setAttribute(collator, UCOL_STRENGTH, UCOL_PRIMARY, &status);
@@ -91,7 +98,7 @@ int32_t ICUCollect::Locale(sqlite3 *dbHandle, const std::string &str)
     if (err != SQLITE_OK) {
         LOG_ERROR("SCreate collator in sqlite3 failed err:%{public}d.", err);
         ucol_close(collator);
-        return err;
+        return SQLiteError::ErrNo(err);
     }
     return E_OK;
 }

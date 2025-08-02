@@ -128,6 +128,7 @@ PerfStat::~PerfStat()
             break;
         case STEP_TOTAL:
             SetSize(0);
+            [[fallthrough]];
         case STEP_TOTAL_RES:
             execInfo_->totalTime_ += interval.count();
             execInfos_.Erase(key_);
@@ -153,6 +154,7 @@ PerfStat::Release PerfStat::GetRelease(int32_t step, uint32_t seqId, const std::
 {
     switch (step) {
         case STEP_TRANS:
+            [[fallthrough]];
         case STEP_TRANS_END:
             return [seqId](SqlExecInfo *execInfo) {
                 Merge(seqId, execInfo);
