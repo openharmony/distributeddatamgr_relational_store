@@ -182,6 +182,8 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
     }
 
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
+    connection->SetIsSlave(true);
+    connection->SetIsSupportBinlog(IsSupportBinlog(config_));
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
         SqliteUtils::SetSlaveInvalid(config_.GetPath());
@@ -298,10 +300,16 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
 {
-    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, nullptr);
+    const char *option = isSlave_ && isSupportBinlog_ ? "compressvfs" : nullptr;
+    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle_, openFileFlags, option);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("fail to open database errCode=%{public}d, dbPath=%{public}s, flags=%{public}d, errno=%{public}d",
             errCode, SqliteUtils::Anonymous(dbPath).c_str(), openFileFlags, errno);
+        if (isSlave_ && errCode == SQLITE_WARNING &&
+            sqlite3_extended_errcode(dbHandle_) == SQLITE_WARNING_NOTCOMPRESSDB) {
+            LOG_WARN("slave db is not using compress");
+            return E_SQLITE_CORRUPT;
+        }
         if (errCode == SQLITE_CANTOPEN) {
             std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(dbPath);
             if (fileInfo.first != E_OK) {
@@ -397,12 +405,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
         return E_OK;
     }
 
-    auto errCode = SetCrcCheck(config);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-
-    errCode = RegDefaultFunctions(dbHandle_);
+    auto errCode = RegDefaultFunctions(dbHandle_);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -776,19 +779,6 @@ int SqliteConnection::ResetKey(const RdbStoreConfig &config)
         return E_OK;
     }
     config.ChangeEncryptKey();
-    return E_OK;
-}
-
-int SqliteConnection::SetCrcCheck(const RdbStoreConfig &config)
-{
-    if (config.IsEncrypt() || config.IsMemoryRdb()) {
-        return E_OK;
-    }
-    auto errCode = ExecuteSql(GlobalExpr::PRAGMA_CKSUM_PERSIST_ENABLE);
-    if (errCode != E_OK) {
-        LOG_ERROR("enable cksum persist failed,%{public}d", errCode);
-        return errCode;
-    }
     return E_OK;
 }
 
@@ -1650,13 +1640,18 @@ int SqliteConnection::VeritySlaveIntegrity()
             mCount = static_cast<int64_t>(*val);
         }
     }
-    bool isSlaveDbOverLimit = bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end() &&
-                              bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_ > SLAVE_INTEGRITY_CHECK_LIMIT;
-    if (isSlaveDbOverLimit && mCount == 0L) {
+    ssize_t slaveSize = 0;
+    if (IsSupportBinlog(config_)) {
+        slaveSize = SqliteUtils::GetDecompressedSize(slaveCfg.GetPath());
+    }
+    if (slaveSize == 0 && bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end()) {
+        slaveSize = bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_;
+    }
+    if (slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) {
         return SqliteUtils::IsSlaveInvalid(config_.GetPath()) ? E_SQLITE_CORRUPT : E_OK;
     }
-
-    std::tie(err, obj) = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
+    std::string integritySql = IsSupportBinlog(config_) ? INTEGRITIES[1] : INTEGRITIES[2]; // 2 is integrity_check
+    std::tie(err, obj) = slaveConnection_->ExecuteForValue(integritySql);
     if (err == E_OK && (static_cast<std::string>(obj) != "ok")) {
         LOG_ERROR("slave corrupt, ret:%{public}s, cRet:%{public}d, %{public}d", static_cast<std::string>(obj).c_str(),
             err, errno);
@@ -1702,13 +1697,20 @@ void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, cons
     SqliteUtils::SetSlaveInvalid(dbPathStr);
 }
 
-int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb)
+int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb, bool isSlave)
 {
     uint32_t openFileFlags = (SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX);
     if (isMemoryRdb) {
         openFileFlags |= SQLITE_OPEN_URI;
     }
-    int err = sqlite3_open_v2(dbPath.c_str(), &dbHandle, static_cast<int>(openFileFlags), nullptr);
+    const char *option = isSlave && !isMemoryRdb ? "compressvfs" : nullptr;
+    int err = sqlite3_open_v2(dbPath.c_str(), &dbHandle, static_cast<int>(openFileFlags), option);
+    if (isSlave && err == SQLITE_WARNING &&
+        sqlite3_extended_errcode(dbHandle) == SQLITE_WARNING_NOTCOMPRESSDB) {
+        LOG_WARN("slave db is not compressed: %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        SqliteUtils::SetSlaveInvalid(dbPath);
+        return E_INVALID_FILE_PATH;
+    }
     if (err != SQLITE_OK) {
         LOG_ERROR("open binlog handle error. rc=%{public}d, errno=%{public}d, p=%{public}s",
             err, errno, SqliteUtils::Anonymous(dbPath).c_str());
@@ -1815,8 +1817,22 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
     }
     SqliteConnection::BinlogSetConfig(dbFrom);
     sqlite3 *dbTo = nullptr;
-    errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, false);
+    errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, false, true);
     if (errCode != E_OK) {
+        SqliteConnection::BinlogCloseHandle(dbFrom);
+        return;
+    }
+    errCode = sqlite3_busy_timeout(dbTo, DEFAULT_BUSY_TIMEOUT_MS);
+    if (errCode != SQLITE_OK) {
+        LOG_WARN("binlog replay set busy timeout failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
+        SqliteConnection::BinlogCloseHandle(dbTo);
+        SqliteConnection::BinlogCloseHandle(dbFrom);
+        return;
+    }
+    int opcode = 1;
+    if ((errCode = sqlite3_file_control(dbTo, "main", SQLITE_FCNTL_PERSIST_WAL, &opcode)) != SQLITE_OK) {
+        LOG_WARN("binlog replay set persist wal failed. errCode=%{public}d", errCode);
+        SqliteConnection::BinlogCloseHandle(dbTo);
         SqliteConnection::BinlogCloseHandle(dbFrom);
         return;
     }
@@ -1850,6 +1866,21 @@ void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
         LOG_WARN("replay err:%{public}d", err);
     }
     return;
+}
+
+bool SqliteConnection::GetIsSlave()
+{
+    return isSlave_;
+}
+
+void SqliteConnection::SetIsSlave(bool isSlave)
+{
+    isSlave_ = isSlave;
+}
+
+void SqliteConnection::SetIsSupportBinlog(bool isSupport)
+{
+    isSupportBinlog_ = isSupport;
 }
 
 bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)

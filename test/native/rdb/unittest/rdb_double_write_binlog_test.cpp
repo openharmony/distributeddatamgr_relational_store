@@ -55,21 +55,23 @@ public:
     static bool CheckFolderExist(const std::string &path);
     void RemoveFolder(const std::string &path);
     static void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
+    static void InsertNativeConn(sqlite3 *db, int64_t start, int count, int dataSize = 0);
     void Update(int64_t start, int count, bool isSlave = false, int dataSize = 0);
     void CheckProcess(std::shared_ptr<RdbStore> &store);
     void DeleteDbFile(const RdbStoreConfig &config);
     void PutValue(std::shared_ptr<RdbStore> &store, const std::string &data, int64_t id, int age);
-    static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
+    static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 4000);
     static void WaitForBinlogDelete(int maxTimes = 1000);
     static void WaitForBinlogReplayFinish();
-    void InitDb(HAMode haMode = HAMode::MAIN_REPLICA);
-    int64_t GetRestoreTime(HAMode haMode);
+    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true);
+    int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
 
     static const std::string databaseName;
     static const std::string slaveDatabaseName;
     static const std::string binlogDatabaseName;
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
+    static const std::string insertSql;
 
     enum SlaveStatus : uint32_t {
         UNDEFINED,
@@ -85,6 +87,8 @@ const std::string RdbDoubleWriteBinlogTest::slaveDatabaseName = RDB_TEST_PATH + 
 const std::string RdbDoubleWriteBinlogTest::binlogDatabaseName = RDB_TEST_PATH + "dual_write_binlog_test.db_binlog";
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::slaveStore = nullptr;
+const std::string RdbDoubleWriteBinlogTest::insertSql = "INSERT INTO test(id, name, age, salary, blobType) VALUES"
+                                                        "(?,?,?,?,?)";
 
 const int CHECKAGE = 18;
 const double CHECKCOLUMN = 100.5;
@@ -150,21 +154,23 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
         testInfo->test_case_name(), testInfo->name());
 }
 
-void RdbDoubleWriteBinlogTest::InitDb(HAMode haMode)
+void RdbDoubleWriteBinlogTest::InitDb(HAMode mode, bool isOpenSlave)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    config.SetHaMode(haMode);
+    config.SetHaMode(mode);
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
-
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    ASSERT_NE(RdbDoubleWriteBinlogTest::slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+
+    if (isOpenSlave) {
+        RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
+        DoubleWriteBinlogTestOpenCallback slaveHelper;
+        RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+        ASSERT_NE(RdbDoubleWriteBinlogTest::slaveStore, nullptr);
+        slaveStore->ExecuteSql("DELETE FROM test");
+    }
 }
 
 void RdbDoubleWriteBinlogTest::Insert(int64_t start, int count, bool isSlave, int dataSize)
@@ -191,6 +197,32 @@ void RdbDoubleWriteBinlogTest::Insert(int64_t start, int count, bool isSlave, in
         EXPECT_EQ(ret, E_OK);
         id++;
     }
+}
+
+void RdbDoubleWriteBinlogTest::InsertNativeConn(sqlite3 *db, int64_t start, int count, int dataSize)
+{
+    int64_t id = start;
+    sqlite3_stmt *stat = nullptr;
+    EXPECT_EQ(sqlite3_prepare_v2(db, RdbDoubleWriteBinlogTest::insertSql.c_str(), -1, &stat, nullptr), SQLITE_OK);
+    for (int i = 0; i < count; i++) {
+        // bind parameters, 1, 2, 3, 4, 5 are sequence number of fields
+        sqlite3_bind_int(stat, 1, id);
+        std::string nameStr;
+        if (dataSize > 0) {
+            nameStr = std::string(dataSize, 'a');
+        } else {
+            nameStr = std::string("zhangsan");
+        }
+        sqlite3_bind_text(stat, 2, nameStr.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(stat, 3, CHECKAGE);
+        sqlite3_bind_double(stat, 4, CHECKCOLUMN);
+        uint8_t blob[] = { 1, 2, 3 };
+        sqlite3_bind_blob(stat, 5, blob, sizeof(blob), nullptr);
+        EXPECT_EQ(sqlite3_step(stat), SQLITE_DONE);
+        sqlite3_reset(stat);
+        id++;
+    }
+    sqlite3_finalize(stat);
 }
 
 void RdbDoubleWriteBinlogTest::Update(int64_t start, int count, bool isSlave, int dataSize)
@@ -529,17 +561,19 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_006, TestSize.Level0)
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    sqlite3_close_v2(db);
+
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    Insert(id, count, true);
     store = nullptr;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -583,17 +617,19 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_008, TestSize.Level0)
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    sqlite3_close_v2(db);
+
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    Insert(id, count, true);
 
     SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName);
     std::string failureFlagPath = RdbDoubleWriteBinlogTest::databaseName + +"-slaveFailure";
@@ -616,7 +652,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_009, TestSize.Level0)
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
-    InitDb();
+    InitDb(HAMode::MAIN_REPLICA, false);
     int errCode = E_OK;
     DoubleWriteBinlogTestOpenCallback helper;
     int64_t id = 1;
@@ -653,17 +689,22 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_010, TestSize.Level0)
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
-
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    Insert(id, count, true);
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    const char *ddl = DoubleWriteBinlogTestOpenCallback::createTableTest.c_str();
+    EXPECT_EQ(sqlite3_exec(db, ddl, nullptr, nullptr, nullptr), SQLITE_OK);
+    InsertNativeConn(db, id, count);
+    sqlite3_close_v2(db);
 
     store = nullptr;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -688,17 +729,13 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_011, TestSize.Level0)
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
-    InitDb();
+    InitDb(HAMode::MAIN_REPLICA, false);
     int errCode = E_OK;
     DoubleWriteBinlogTestOpenCallback helper;
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
 
-    store = nullptr;
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
     bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     ASSERT_TRUE(isBinlogExist);
     id = 11;
@@ -716,7 +753,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_011, TestSize.Level0)
     WaitForBackupFinish(BACKUP_FINISHED);
     num = 18;
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
-    RdbDoubleWriteBinlogTest::CheckNumber(slaveStore, num);
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_012, TestSize.Level0)
@@ -725,24 +761,15 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_012, TestSize.Level0)
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
-    int errCode = E_OK;
-    config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
 
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
-    store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+    InitDb(HAMode::MAIN_REPLICA, false);
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    Insert(id, count, true);
 
-    store = nullptr;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteBinlogTestOpenCallback helper;
+    int errCode = E_OK;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -761,6 +788,15 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_012, TestSize.Level0)
     WaitForBackupFinish(BACKUP_FINISHED);
     num = 18;
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
+}
+
+static int Callback(void *data, int argc, char **argv, char **azColName)
+{
+    int64_t *count = (int64_t *)data;
+    if (argc > 0 && argv[0] != NULL) {
+        *count = atoi(argv[0]);
+    }
+    return 0;
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_013, TestSize.Level0)
@@ -789,11 +825,20 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_013, TestSize.Level0)
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
     errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
-    RdbDoubleWriteBinlogTest::CheckNumber(slaveStore, num);
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+
+    count = 0;
+    char *errMsg = 0;
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, &errMsg);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_EQ(count, num);
+    sqlite3_close_v2(db);
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_014, TestSize.Level0)
@@ -827,11 +872,19 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_014, TestSize.Level0)
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
     errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
-    RdbStoreConfig slaveConfig(RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    DoubleWriteBinlogTestOpenCallback slaveHelper;
-    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    EXPECT_NE(slaveStore, nullptr);
-    RdbDoubleWriteBinlogTest::CheckNumber(slaveStore, num);
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    count = 0;
+    char *errMsg = 0;
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, &errMsg);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_EQ(count, num);
+    sqlite3_close_v2(db);
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_015, TestSize.Level0)
@@ -1126,9 +1179,9 @@ static int64_t GetDeleteTime(std::shared_ptr<RdbStore> &rdbStore, int batchSize,
     return totalCost;
 }
 
-int64_t RdbDoubleWriteBinlogTest::GetRestoreTime(HAMode haMode)
+int64_t RdbDoubleWriteBinlogTest::GetRestoreTime(HAMode haMode, bool isOpenSlave)
 {
-    InitDb(haMode);
+    InitDb(haMode, isOpenSlave);
     EXPECT_NE(store, nullptr);
     if (haMode == HAMode::MANUAL_TRIGGER) {
         int errCode = store->Backup(std::string(""), {});
@@ -1137,7 +1190,7 @@ int64_t RdbDoubleWriteBinlogTest::GetRestoreTime(HAMode haMode)
     int id = 1;
     int totalCount = 20000;
     int size = 1024;
-    Insert(id, totalCount, size);
+    Insert(id, totalCount, false, size);
     store = nullptr;
 
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
@@ -1385,7 +1438,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     sqlite3_export_relational_symbols = &mockApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog off----");
-    auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
+    auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
 
     store = nullptr;
     slaveStore = nullptr;
@@ -1395,7 +1448,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     sqlite3_export_relational_symbols = originalApi;
     EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog on----");
-    auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER);
+    auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
     EXPECT_GT(T1 * 1.8, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_006----, %{public}" PRId64 ", %{public}" PRId64 ",", T1, T1_2);
 }

@@ -58,7 +58,7 @@ public:
     void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
     void WaitForAsyncRepairFinish(int maxTimes = 400);
     void TryInterruptBackup();
-    void InitDb(HAMode mode = HAMode::MAIN_REPLICA);
+    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true);
 
     static const std::string DATABASE_NAME;
     static const std::string SLAVE_DATABASE_NAME;
@@ -129,12 +129,12 @@ int DoubleWriteTestOpenCallback::OnOpen(RdbStore &rdbStore)
     return E_OK;
 }
 
-static int MockNotSupportBinlog(void)
+static int MockNotSupportBinlog(const char *notUsed)
 {
     return SQLITE_ERROR;
 }
 
-static int MockSupportBinlog(void)
+static int MockSupportBinlog(const char *notUsed)
 {
     return SQLITE_OK;
 }
@@ -195,7 +195,7 @@ void RdbDoubleWriteTest::TearDown(void)
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
 }
 
-void RdbDoubleWriteTest::InitDb(HAMode mode)
+void RdbDoubleWriteTest::InitDb(HAMode mode, bool isOpenSlave)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
@@ -203,13 +203,15 @@ void RdbDoubleWriteTest::InitDb(HAMode mode)
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(RdbDoubleWriteTest::store, nullptr);
-
-    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
-    DoubleWriteTestOpenCallback slaveHelper;
-    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    slaveStore->ExecuteSql("DELETE FROM test");
+
+    if (isOpenSlave) {
+        RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+        DoubleWriteTestOpenCallback slaveHelper;
+        RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+        ASSERT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+        slaveStore->ExecuteSql("DELETE FROM test");
+    }
 }
 
 /**
@@ -1672,6 +1674,9 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     mockHwApi.is_support_binlog = MockSupportBinlog;
     sqlite3_export_hw_symbols = &mockHwApi;
 #ifndef CROSS_PLATFORM
@@ -1679,7 +1684,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
     sqlite3_export_relational_symbols = &mockKvApi;
 #endif
 
-    InitDb(HAMode::MANUAL_TRIGGER);
+    InitDb(HAMode::MANUAL_TRIGGER, false);
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
     EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
 }
@@ -1691,15 +1696,28 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
  */
 HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_002, TestSize.Level0)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     mockHwApi.is_support_binlog = MockSupportBinlog;
     sqlite3_export_hw_symbols = &mockHwApi;
 #ifndef CROSS_PLATFORM
     mockKvApi.is_support_binlog = MockSupportBinlogWithParam;
     sqlite3_export_relational_symbols = &mockKvApi;
 #endif
-    InitDb(HAMode::MAIN_REPLICA);
+    InitDb(HAMode::MAIN_REPLICA, false);
     store = nullptr;
-    slaveStore = nullptr;
+
+    // open slave for conflict by compress
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteTest::SLAVE_DATABASE_NAME.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    const char *ddl = DoubleWriteTestOpenCallback::CREATE_TABLE_TEST.c_str();
+    EXPECT_EQ(sqlite3_exec(db, ddl, nullptr, nullptr, nullptr), SQLITE_OK);
+    sqlite3_close_v2(db);
+
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     EXPECT_EQ(Connection::CheckReplicaIntegrity(config), E_OK);
