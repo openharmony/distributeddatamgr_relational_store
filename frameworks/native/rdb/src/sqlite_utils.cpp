@@ -16,6 +16,7 @@
 #include "sqlite_utils.h"
 
 #include <fcntl.h>
+#include <sqlite3sym.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -29,6 +30,8 @@
 #include <cstring>
 #if !defined(CROSS_PLATFORM)
 #include <filesystem>
+#include <sqlite3.h>
+#include "relational/relational_store_sqlite_ext.h"
 #endif
 #include <fstream>
 #include <regex>
@@ -395,8 +398,48 @@ bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)
     return access((dbPath + SLAVE_INTERRUPT).c_str(), F_OK) == 0;
 }
 
-bool SqliteUtils::IsSlaveLarge(const std::string &slavePath)
+int SqliteUtils::GetPageCountCallback(void *data, int argc, char **argv, char **azColName)
 {
+    int64_t *count = (int64_t *)data;
+    if (argc > 0 && argv[0] != NULL) {
+        *count = atoi(argv[0]);
+    }
+    return 0;
+}
+
+ssize_t SqliteUtils::GetDecompressedSize(const std::string &dbPath)
+{
+    sqlite3 *dbHandle = nullptr;
+    int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nullptr);
+    if (errCode == SQLITE_ERROR) {
+        LOG_WARN("failed to open %{public}s to calculate size", Anonymous(dbPath).c_str());
+        return 0;
+    }
+    int64_t pageCount = 0;
+    char *errMsg = 0;
+    errCode = sqlite3_exec(dbHandle, "SELECT COUNT(1) FROM vfs_pages;", GetPageCountCallback, &pageCount, &errMsg);
+    sqlite3_close_v2(dbHandle);
+    if (errCode != SQLITE_OK) {
+        LOG_WARN("failed to get page count, %{public}s, err:%{public}s", Anonymous(dbPath).c_str(), errMsg);
+        return 0;
+    }
+    auto size = pageCount * 4096;
+    if (size > SSIZE_MAX) {
+        LOG_WARN("actual size overflow:%{public}" PRId64, size);
+        return SSIZE_MAX;
+    }
+    return (ssize_t)size;
+}
+
+bool SqliteUtils::IsSlaveLarge(const std::string &dbPath)
+{
+    auto slavePath = GetSlavePath(dbPath);
+    if (sqlite3_is_support_binlog(StringUtils::ExtractFileName(slavePath).c_str()) == SQLITE_OK) {
+        auto size = GetDecompressedSize(slavePath);
+        if (size > 0) {
+            return size > SLAVE_ASYNC_REPAIR_CHECK_LIMIT;
+        }
+    }
     std::pair<int32_t, DistributedRdb::RdbDebugInfo> fileInfo = Stat(slavePath);
     if (fileInfo.first == E_OK) {
         return fileInfo.second.size_ > SLAVE_ASYNC_REPAIR_CHECK_LIMIT;

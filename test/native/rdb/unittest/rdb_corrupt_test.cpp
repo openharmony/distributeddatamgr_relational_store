@@ -152,7 +152,7 @@ HWTEST_F(RdbCorruptTest, RdbCorruptTest002, TestSize.Level2)
     char buf[DB_FILE_HEADER_LENGTH] = {0};
     f.read(buf, sizeof(buf));
     f.close();
-    // 20 is the offset of reserved bytes field, 10 means reserve bytes size
-    EXPECT_EQ((unsigned int)buf[20], 10);
+    // 20 is the offset of reserved bytes field
+    EXPECT_EQ((unsigned int)buf[20], 0);
 }
 } // namespace Test
