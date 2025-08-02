@@ -149,6 +149,8 @@ public:
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
     void Close();
+    static void SetFilePermissions(const std::string &path);
+    static bool CheckFilePermissions(const std::string &path);
 
 protected:
     std::string GetLogTableName(const std::string &tableName) override;
@@ -171,7 +173,6 @@ private:
         std::set<std::string> tables_;
         std::set<std::string> changes_;
     };
-
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
@@ -267,6 +268,7 @@ private:
     DistributedRdb::RdbStatEvent statEvent_;
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
+    std::string basePath_;
     std::string name_;
     std::string fileType_;
     mutable std::shared_mutex rwMutex_;
