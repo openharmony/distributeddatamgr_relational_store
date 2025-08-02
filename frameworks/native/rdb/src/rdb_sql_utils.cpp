@@ -34,7 +34,6 @@ namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
 using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
 {
     std::string tempDirectory = databaseDir;
@@ -62,11 +61,6 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
                         "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
                 return E_CREATE_FOLDER_FAIL;
             }
-            // Set the default ACL attribute to the database root directory to ensure that files created by the server
-            // also have permission to operate on the client side.
-            Acl acl(databaseDirectory);
-            acl.SetDefaultUser(GetUid(), Acl::R_RIGHT | Acl::W_RIGHT);
-            acl.SetDefaultGroup(SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT);
         }
     }
     return E_OK;

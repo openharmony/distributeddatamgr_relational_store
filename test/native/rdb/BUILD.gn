@@ -265,6 +265,7 @@ ohos_unittest("NativeRdbTest") {
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "kv_store:datamgr_common",
+    "kv_store:database_utils",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",

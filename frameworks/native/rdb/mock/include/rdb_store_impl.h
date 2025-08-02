@@ -93,6 +93,8 @@ public:
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
     void Close();
+    static void SetFilePermissions(const std::string &path);
+    static bool CheckFilePermissions(const std::string &path);
 
 private:
     using Stmt = std::shared_ptr<Statement>;
@@ -187,6 +189,7 @@ private:
     DistributedRdb::RdbStatEvent statEvent_;
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
+    std::string basePath_;
     std::string name_;
     std::string fileType_;
     mutable std::shared_mutex poolMutex_;
