@@ -727,6 +727,15 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
         errCode = FillSharedBlock(info, stmt_);
     }
     if (errCode != E_OK) {
+        if (config_ != nullptr) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_,
+                "FillBlockInfo", true));
+        }
+        auto ret = (config_ != nullptr && errCode == E_SQLITE_CORRUPT);
+        if (ret) {
+            Reportor::ReportCorruptedOnce(Reportor::Create(*config_, errCode,
+                "FillBlockInfo: " + SqliteGlobalConfig::GetLastCorruptionMsg()));
+        }
         return errCode;
     }
     if (!ResetStatement(info, stmt_)) {
