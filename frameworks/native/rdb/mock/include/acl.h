@@ -85,7 +85,7 @@ public:
 
     bool HasAcl(const AclXattrEntry &entry)
     {
-        return 0;
+        return true;
     }
 };
 } // namespace DATABASE_UTILS

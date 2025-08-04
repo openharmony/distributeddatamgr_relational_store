@@ -41,78 +41,59 @@ void SqliteUtilsTest::SetUpTestCase(void)
 void SqliteUtilsTest::TearDownTestCase(void)
 {
 }
-/* *
- * @tc.name: CheckFilePermissionsTest_001
- * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
- * @tc.type: FUNC
- */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_001, TestSize.Level2)
 {
-    SqliteUtils::SetFilePermissions("/A/B/C");
-    auto ret = SqliteUtils::CheckFilePermissions("/A/B/C");
+    mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
+    mkdir("/data/test/abc", mode);
+    SqliteUtils::SetFilePermissions("/data/test/abc");
+    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
     EXPECT_EQ(ret, true);
+    remove("/data/test/abc");
 }
 
-/* *
- * @tc.name: CheckFilePermissionsTest_002
- * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
- * @tc.type: FUNC
- */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_002, TestSize.Level2)
 {
+    mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
+    mkdir("/data/test/abc", mode);
     AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
     AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    Acl aclDefault("/A/B/C", Acl::ACL_XATTR_DEFAULT);
+    Acl aclDefault("/data/test/abc", Acl::ACL_XATTR_DEFAULT);
     aclDefault.SetAcl(group);
     aclDefault.SetAcl(user);
-    Acl aclAccess("/A/B/C", Acl::ACL_XATTR_ACCESS);
+    Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(group);
     aclAccess.SetAcl(user);
-    auto ret = SqliteUtils::CheckFilePermissions("/A/B/C");
+    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
     EXPECT_EQ(ret, true);
+    remove("/data/test/abc");
 }
 
-/* *
- * @tc.name: CheckFilePermissionsTest_003
- * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
- * @tc.type: FUNC
- */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_003, TestSize.Level2)
 {
+    mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
+    mkdir("/data/test/abc", mode);
     AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    Acl aclDefault("/A/B/C", Acl::ACL_XATTR_DEFAULT);
+    Acl aclDefault("/data/test/abc", Acl::ACL_XATTR_DEFAULT);
     aclDefault.SetAcl(group);
-    Acl aclAccess("/A/B/C", Acl::ACL_XATTR_ACCESS);
+    Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(group);
-    auto ret = SqliteUtils::CheckFilePermissions("/A/B/C");
-    EXPECT_EQ(ret, false);
+    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    EXPECT_EQ(ret, true);
+    remove("/data/test/abc");
 }
 
-/* *
- * @tc.name: CheckFilePermissionsTest_004
- * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
- * @tc.type: FUNC
- */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_004, TestSize.Level2)
 {
+    mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
+    mkdir("/data/test/abc", mode);
     AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    Acl aclDefault("/A/B/C", Acl::ACL_XATTR_DEFAULT);
+    Acl aclDefault("/data/test/abc", Acl::ACL_XATTR_DEFAULT);
     aclDefault.SetAcl(user);
-    Acl aclAccess("/A/B/C", Acl::ACL_XATTR_ACCESS);
+    Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(user);
-    auto ret = SqliteUtils::CheckFilePermissions("/A/B/C");
-    EXPECT_EQ(ret, false);
-}
-
-/* *
- * @tc.name: CheckFilePermissionsTest_005
- * @tc.desc: Normal testCase for GetModifyTime, get timestamp by id
- * @tc.type: FUNC
- */
-HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_005, TestSize.Level2)
-{
-    auto ret = SqliteUtils::CheckFilePermissions("/A/B/C");
-    EXPECT_EQ(ret, false);
+    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    EXPECT_EQ(ret, true);
+    remove("/data/test/abc");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_001, TestSize.Level1)
