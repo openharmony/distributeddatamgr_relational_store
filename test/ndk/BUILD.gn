@@ -83,5 +83,9 @@ group("fuzztest") {
     "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/valueobject_fuzzer:fuzztest",
     "fuzztest/ohpredicates_fuzzer:fuzztest",
+    "fuzztest/dataasset_fuzzer:fuzztest",
+    "fuzztest/oh_cursor_fuzzer:fuzztest",
+    "fuzztest/oh_data_value_fuzzer:fuzztest",
+    "fuzztest/oh_data_values_buckets_fuzzer:fuzztest",
   ]
 }
