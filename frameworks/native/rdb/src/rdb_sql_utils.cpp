@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
@@ -32,6 +33,7 @@
 namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
+using namespace OHOS::DATABASE_UTILS;
 int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
 {
     std::string tempDirectory = databaseDir;
@@ -59,6 +61,11 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
                         "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
                 return E_CREATE_FOLDER_FAIL;
             }
+            AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
+            Acl aclDefault(databaseDirectory, Acl::ACL_XATTR_DEFAULT);
+            Acl aclAccess(databaseDirectory, Acl::ACL_XATTR_ACCESS);
+            aclDefault.SetAcl(user);
+            aclAccess.SetAcl(user);
         }
     }
     return E_OK;
