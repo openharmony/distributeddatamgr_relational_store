@@ -65,8 +65,8 @@ public:
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
     static std::shared_ptr<RdbStore> store3;
-    static const struct sqlite3_api_routines_hw *originalHwApi;
-    static struct sqlite3_api_routines_hw mockHwApi;
+    static const struct sqlite3_api_routines_extra *originalExtraApi;
+    static struct sqlite3_api_routines_extra mockExtraApi;
 #ifndef CROSS_PLATFORM
     static const struct sqlite3_api_routines_relational *originalKvApi;
     static struct sqlite3_api_routines_relational mockKvApi;
@@ -86,8 +86,8 @@ const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "dua
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
-const struct sqlite3_api_routines_hw *RdbDoubleWriteTest::originalHwApi = sqlite3_export_hw_symbols;
-struct sqlite3_api_routines_hw RdbDoubleWriteTest::mockHwApi = *sqlite3_export_hw_symbols;
+const struct sqlite3_api_routines_extra *RdbDoubleWriteTest::originalExtraApi = sqlite3_export_extra_symbols;
+struct sqlite3_api_routines_extra RdbDoubleWriteTest::mockExtraApi = *sqlite3_export_extra_symbols;
 #ifndef CROSS_PLATFORM
 const struct sqlite3_api_routines_relational *RdbDoubleWriteTest::originalKvApi = sqlite3_export_relational_symbols;
 struct sqlite3_api_routines_relational RdbDoubleWriteTest::mockKvApi = *sqlite3_export_relational_symbols;
@@ -162,10 +162,10 @@ static int MockCleanBinlog(sqlite3 *db, BinlogFileCleanModeE mode)
 
 void RdbDoubleWriteTest::SetUpTestCase(void)
 {
-    mockHwApi.is_support_binlog = MockNotSupportBinlog;
-    mockHwApi.replay_binlog = MockReplayBinlog;
-    mockHwApi.clean_binlog = MockCleanBinlog;
-    sqlite3_export_hw_symbols = &mockHwApi;
+    mockExtraApi.is_support_binlog = MockNotSupportBinlog;
+    mockExtraApi.replay_binlog = MockReplayBinlog;
+    mockExtraApi.clean_binlog = MockCleanBinlog;
+    sqlite3_export_extra_symbols = &mockExtraApi;
 #ifndef CROSS_PLATFORM
     mockKvApi.is_support_binlog = MockNotSupportBinlogWithParam;
     sqlite3_export_relational_symbols = &mockKvApi;
@@ -174,7 +174,7 @@ void RdbDoubleWriteTest::SetUpTestCase(void)
 
 void RdbDoubleWriteTest::TearDownTestCase(void)
 {
-    sqlite3_export_hw_symbols = originalHwApi;
+    sqlite3_export_extra_symbols = originalExtraApi;
 #ifndef CROSS_PLATFORM
     sqlite3_export_relational_symbols = originalKvApi;
 #endif
@@ -1677,8 +1677,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_001, TestSize.Level0)
     if (!IsUsingArkData()) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
-    mockHwApi.is_support_binlog = MockSupportBinlog;
-    sqlite3_export_hw_symbols = &mockHwApi;
+    mockExtraApi.is_support_binlog = MockSupportBinlog;
+    sqlite3_export_extra_symbols = &mockExtraApi;
 #ifndef CROSS_PLATFORM
     mockKvApi.is_support_binlog = MockSupportBinlogWithParam;
     sqlite3_export_relational_symbols = &mockKvApi;
@@ -1699,8 +1699,8 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_Mock_Binlog_002, TestSize.Level0)
     if (!IsUsingArkData()) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
-    mockHwApi.is_support_binlog = MockSupportBinlog;
-    sqlite3_export_hw_symbols = &mockHwApi;
+    mockExtraApi.is_support_binlog = MockSupportBinlog;
+    sqlite3_export_extra_symbols = &mockExtraApi;
 #ifndef CROSS_PLATFORM
     mockKvApi.is_support_binlog = MockSupportBinlogWithParam;
     sqlite3_export_relational_symbols = &mockKvApi;
