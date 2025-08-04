@@ -70,6 +70,8 @@ constexpr unsigned short SqliteConnection::BINLOG_FILE_NUMS_LIMIT;
 constexpr uint32_t SqliteConnection::BINLOG_FILE_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
+std::recursive_mutex SqliteConnection::slaveMapMutex_;
+std::map<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::pathToSlaveMap_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -147,11 +149,42 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
     return collection;
 }
 
-SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection)
-    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), maxVariableNumber_(0),
+SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection, bool isSlave)
+    : dbHandle_(nullptr), isWriter_(isWriteConnection), isReadOnly_(false), isSlave_(isSlave), maxVariableNumber_(0),
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
+}
+
+std::shared_ptr<SqliteConnection> SqliteConnection::GetSlaveConnFromMap(const std::string &slavePath)
+{
+    auto iter = pathToSlaveMap_.find(slavePath);
+    if (iter == pathToSlaveMap_.end()) {
+        return nullptr;
+    }
+    auto conn = iter->second.lock();
+    if (conn == nullptr) {
+        pathToSlaveMap_.erase(iter);
+    }
+    return conn;
+}
+
+std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::GetSlaveConnection(
+    const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy)
+{
+    std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
+    auto connection = GetSlaveConnFromMap(config.GetPath());
+    if (connection != nullptr) {
+        return {E_OK, connection};
+    }
+
+    auto result = CreateSlaveConnection(config, slaveOpenPolicy);
+    auto &[errCode, conn] = result;
+    if (errCode == E_OK) {
+        std::weak_ptr<SqliteConnection> slaveWeakConn(conn);
+        pathToSlaveMap_.emplace(config.GetPath(), slaveWeakConn);
+    }
+    return result;
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -181,8 +214,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
         return result;
     }
 
-    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
-    connection->SetIsSlave(true);
+    std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true, true);
     connection->SetIsSupportBinlog(IsSupportBinlog(config_));
     errCode = connection->InnerOpen(config);
     if (errCode != E_OK) {
@@ -465,6 +497,13 @@ SqliteConnection::~SqliteConnection()
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }
     }
+    if (isSlave_) {
+        std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
+        auto iter = pathToSlaveMap_.find(config_.GetPath());
+        if (iter != pathToSlaveMap_.end()) {
+            pathToSlaveMap_.erase(config_.GetPath());
+        }
+    }
 }
 
 int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
@@ -521,13 +560,13 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     if (access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) != 0) {
         return E_NOT_SUPPORT;
     }
-    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+    auto [ret, conn] = connection->GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
     if (ret != E_OK) {
         return ret;
     }
     connection->slaveConnection_ = conn;
     if (IsSupportBinlog(config)) {
-        SqliteConnection::AsyncReplayBinlog(config.GetPath(), false);
+        SqliteConnection::AsyncReplayBinlog(config.GetPath(), conn, false);
     }
     return connection->VeritySlaveIntegrity();
 }
@@ -549,7 +588,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateReplicaStatem
     sqlite3 *db = dbHandle_;
     RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
     if (slaveConnection_ == nullptr && access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) == 0) {
-        auto [errCode, slaveConn] = CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+        auto [errCode, slaveConn] = GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
         if (errCode == E_OK) {
             slaveConnection_ = slaveConn;
             db = slaveConnection_->dbHandle_;
@@ -1219,7 +1258,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     if (!isAsync) {
         if (slaveConnection_ == nullptr) {
             RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
-            auto [errCode, conn] = CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+            auto [errCode, conn] = GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
             if (errCode != E_OK) {
                 return errCode;
             }
@@ -1450,7 +1489,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
     if (IsSupportBinlog(config_)) {
-        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), false);
+        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), slaveConnection_, false);
     }
     auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
     auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
@@ -1515,13 +1554,13 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) != 0) {
         return E_NOT_SUPPORT;
     }
-    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+    auto [ret, conn] = connection->GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
     if (ret != E_OK) {
         return ret;
     }
     connection->slaveConnection_ = conn;
     if (IsSupportBinlog(config)) {
-        SqliteConnection::AsyncReplayBinlog(config.GetPath(), false);
+        SqliteConnection::AsyncReplayBinlog(config.GetPath(), conn, false);
     }
     ret = connection->VeritySlaveIntegrity();
     if (ret != E_OK) {
@@ -1599,7 +1638,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     conn = connection;
     if (isWrite && config.GetHaMode() != HAMode::SINGLE) {
         RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
-        auto [err, slaveConn] = connection->CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
+        auto [err, slaveConn] = connection->GetSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
         if (err != E_OK) {
             return result;
         }
@@ -1647,11 +1686,11 @@ int SqliteConnection::VeritySlaveIntegrity()
     if (slaveSize == 0 && bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end()) {
         slaveSize = bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_;
     }
-    if (slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) {
+    if ((slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) || IsSupportBinlog(config_)) {
         return SqliteUtils::IsSlaveInvalid(config_.GetPath()) ? E_SQLITE_CORRUPT : E_OK;
     }
-    std::string integritySql = IsSupportBinlog(config_) ? INTEGRITIES[1] : INTEGRITIES[2]; // 2 is integrity_check
-    std::tie(err, obj) = slaveConnection_->ExecuteForValue(integritySql);
+
+    std::tie(err, obj) = slaveConnection_->ExecuteForValue(INTEGRITIES[2]); // 2 is integrity_check
     if (err == E_OK && (static_cast<std::string>(obj) != "ok")) {
         LOG_ERROR("slave corrupt, ret:%{public}s, cRet:%{public}d, %{public}d", static_cast<std::string>(obj).c_str(),
             err, errno);
@@ -1697,25 +1736,21 @@ void SqliteConnection::BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, cons
     SqliteUtils::SetSlaveInvalid(dbPathStr);
 }
 
-int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb, bool isSlave)
+int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb)
 {
     uint32_t openFileFlags = (SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX);
     if (isMemoryRdb) {
         openFileFlags |= SQLITE_OPEN_URI;
     }
-    const char *option = isSlave && !isMemoryRdb ? "compressvfs" : nullptr;
-    int err = sqlite3_open_v2(dbPath.c_str(), &dbHandle, static_cast<int>(openFileFlags), option);
-    if (isSlave && err == SQLITE_WARNING &&
-        sqlite3_extended_errcode(dbHandle) == SQLITE_WARNING_NOTCOMPRESSDB) {
-        LOG_WARN("slave db is not compressed: %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
-        SqliteUtils::SetSlaveInvalid(dbPath);
-        return E_INVALID_FILE_PATH;
-    }
+    sqlite3 *db = nullptr;
+    int err = sqlite3_open_v2(dbPath.c_str(), &db, static_cast<int>(openFileFlags), nullptr);
     if (err != SQLITE_OK) {
         LOG_ERROR("open binlog handle error. rc=%{public}d, errno=%{public}d, p=%{public}s",
             err, errno, SqliteUtils::Anonymous(dbPath).c_str());
+        sqlite3_close_v2(db);
         return E_INVALID_FILE_PATH;
     }
+    dbHandle = db;
     return E_OK;
 }
 
@@ -1769,8 +1804,14 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         return;
     }
     std::string dbPathStr(dbPath);
-    pool->Execute([dbPathStr] {
-        SqliteConnection::AsyncReplayBinlog(dbPathStr, true);
+    std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
+    auto slaveConn = GetSlaveConnFromMap(SqliteUtils::GetSlavePath(dbPath));
+    if (slaveConn == nullptr) {
+        LOG_WARN("no connection for replica of %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        return;
+    }
+    pool->Execute([dbPathStr, slaveConn] {
+        SqliteConnection::AsyncReplayBinlog(dbPathStr, slaveConn, true);
     });
 }
 
@@ -1797,17 +1838,16 @@ int SqliteConnection::SetBinlog()
     return E_OK;
 }
 
-void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedClean)
+void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath,
+    std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean)
 {
     auto errCode = SqliteConnection::CheckPathExist(dbPath);
     if (errCode != E_OK) {
         LOG_WARN("main db does not exist, %{public}d", errCode);
         return;
     }
-    auto slavePath = SqliteUtils::GetSlavePath(dbPath);
-    errCode = SqliteConnection::CheckPathExist(slavePath);
-    if (errCode != E_OK) {
-        LOG_WARN("backup db does not exist, %{public}d", errCode);
+    if (slaveConn == nullptr || slaveConn->dbHandle_ == nullptr) {
+        LOG_WARN("backup db does not exist, %{public}d", slaveConn == nullptr);
         return;
     }
     sqlite3 *dbFrom = nullptr;
@@ -1816,27 +1856,7 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
         return;
     }
     SqliteConnection::BinlogSetConfig(dbFrom);
-    sqlite3 *dbTo = nullptr;
-    errCode = SqliteConnection::BinlogOpenHandle(slavePath, dbTo, false, true);
-    if (errCode != E_OK) {
-        SqliteConnection::BinlogCloseHandle(dbFrom);
-        return;
-    }
-    errCode = sqlite3_busy_timeout(dbTo, DEFAULT_BUSY_TIMEOUT_MS);
-    if (errCode != SQLITE_OK) {
-        LOG_WARN("binlog replay set busy timeout failed, errCode=%{public}d, errno=%{public}d", errCode, errno);
-        SqliteConnection::BinlogCloseHandle(dbTo);
-        SqliteConnection::BinlogCloseHandle(dbFrom);
-        return;
-    }
-    int opcode = 1;
-    if ((errCode = sqlite3_file_control(dbTo, "main", SQLITE_FCNTL_PERSIST_WAL, &opcode)) != SQLITE_OK) {
-        LOG_WARN("binlog replay set persist wal failed. errCode=%{public}d", errCode);
-        SqliteConnection::BinlogCloseHandle(dbTo);
-        SqliteConnection::BinlogCloseHandle(dbFrom);
-        return;
-    }
-    errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, dbTo));
+    errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, slaveConn->dbHandle_));
     if (errCode != E_OK) {
         LOG_WARN("async replay err:%{public}d", errCode);
     } else if (isNeedClean) {
@@ -1844,7 +1864,6 @@ void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath, bool isNeedC
         LOG_INFO("clean finished, %{public}d, %{public}s", errCode, SqliteUtils::Anonymous(dbPath).c_str());
     }
     SqliteConnection::BinlogCloseHandle(dbFrom);
-    SqliteConnection::BinlogCloseHandle(dbTo);
     return;
 }
 
@@ -1866,16 +1885,6 @@ void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
         LOG_WARN("replay err:%{public}d", err);
     }
     return;
-}
-
-bool SqliteConnection::GetIsSlave()
-{
-    return isSlave_;
-}
-
-void SqliteConnection::SetIsSlave(bool isSlave)
-{
-    isSlave_ = isSlave;
 }
 
 void SqliteConnection::SetIsSupportBinlog(bool isSupport)
