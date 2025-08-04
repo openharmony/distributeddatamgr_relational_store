@@ -17,15 +17,15 @@
 
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "oh_data_value.h"
-#include "oh_data_values_buckets.h"
 #include "grd_api_manager.h"
 #include "oh_data_value.h"
+#include "oh_data_values_buckets.h"
 #include "oh_value_object.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+
 
 #define LENGTH_MIN 1
 #define LENGTH_MAX 10

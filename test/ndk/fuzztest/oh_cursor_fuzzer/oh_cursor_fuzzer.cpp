@@ -16,17 +16,18 @@
 #include "oh_cursor_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-#include "oh_cursor.h"
 #include "grd_api_manager.h"
+#include "oh_cursor.h"
 #include "oh_value_object.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+
 
 #define COLUMN_INDEX_MIN 0
 #define COLUMN_INDEX_MAX 10
@@ -41,18 +42,18 @@ namespace OHOS {
 OH_Cursor *GetOH_Cursor()
 {
     OH_Rdb_Config config;
-	config.dataBaseDir = RDB_TEST_PATH;
-	config.storeName = "rdb_store_oh_cursor_fuzzer_test.db";
-	config.bundleName = "com.ohos.example.distributedndk";
-	config.moduleName = "";
-	config.securityLevel = OH_Rdb_SecurityLevel::S1;
-	config.isEncrypt = false;
-	config.selfSize = sizeof(OH_Rdb_Config);
-	config.area = RDB_SECURITY_AREA_EL1;
-	int chmodValue = 0770;
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_store_oh_cursor_fuzzer_test.db";
+    config.bundleName = "com.ohos.example.distributedndk";
+    config.moduleName = "";
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.isEncrypt = false;
+    config.selfSize = sizeof(OH_Rdb_Config);
+    config.area = RDB_SECURITY_AREA_EL1;
+    int chmodValue = 0770;
     mkdir(config.dataBaseDir, chmodValue);
-	
-	int errCode = 0;
+
+    int errCode = 0;
     char table[] = "test";
     static OH_Rdb_Store *ndkStore = OH_Rdb_GetOrOpen(&config, &errCode);
 
@@ -72,12 +73,11 @@ OH_Cursor *GetOH_Cursor()
     valueBucket->putBlob(valueBucket, "data4", arr, len);
     valueBucket->putText(valueBucket, "data5", "ABCDEFG");
     OH_Rdb_Insert(ndkStore, table, valueBucket);
-	
+
     char querySql[] = "SELECT * FROM test";
     static OH_Cursor *cursor = OH_Rdb_ExecuteQuery(ndkStore, querySql);
     return cursor;
 }
-
 
 OH_ColumnType GetOH_ColumnType(FuzzedDataProvider &provider)
 {
