@@ -83,5 +83,8 @@ group("fuzztest") {
     "fuzztest/valuebucket_fuzzer:fuzztest",
     "fuzztest/valueobject_fuzzer:fuzztest",
     "fuzztest/ohpredicates_fuzzer:fuzztest",
+    "fuzztest/oh_data_values_fuzzer:fuzztest",
+    "fuzztest/oh_predicates_fuzzer:fuzztest",
+    "fuzztest/oh_rdb_crypto_param_fuzzer:fuzztest",
   ]
 }
