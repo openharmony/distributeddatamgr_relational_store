@@ -17,13 +17,14 @@
 
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "oh_data_value.h"
 #include "grd_api_manager.h"
+#include "oh_data_value.h"
 #include "oh_value_object.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+
 
 #define BLOBSIZE_MIN 1
 #define BLOBSIZE_MAX 10
@@ -33,12 +34,14 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
 
 namespace OHOS {
-void OH_Value_DestroyFuzz(FuzzedDataProvider &provider) {
+void OH_Value_DestroyFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = provider.ConsumeBool() ? OH_Value_Create() : nullptr;
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutNullFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutNullFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -47,7 +50,8 @@ void OH_Value_PutNullFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutIntFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutIntFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -57,7 +61,8 @@ void OH_Value_PutIntFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutRealFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutRealFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -67,7 +72,8 @@ void OH_Value_PutRealFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutTextFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutTextFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -77,7 +83,8 @@ void OH_Value_PutTextFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutBlobFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutBlobFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -89,7 +96,8 @@ void OH_Value_PutBlobFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutAssetFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutAssetFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -102,8 +110,8 @@ void OH_Value_PutAssetFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutAssetsFuzz(FuzzedDataProvider &provider) {
-
+void OH_Value_PutAssetsFuzz(FuzzedDataProvider &provider)
+{
     size_t count = provider.ConsumeIntegralInRange<size_t>(BLOBSIZE_MIN, BLOBSIZE_MAX);
     Data_Asset **assets = OH_Data_Asset_CreateMultiple(count);
     if (assets == nullptr) {
@@ -121,7 +129,8 @@ void OH_Value_PutAssetsFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutFloatVectorFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutFloatVectorFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     size_t length = provider.ConsumeIntegralInRange<size_t>(BLOBSIZE_MIN, BLOBSIZE_MAX);
     float floatArr[length];
@@ -133,7 +142,8 @@ void OH_Value_PutFloatVectorFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_PutUnlimitedIntFuzz(FuzzedDataProvider &provider) {
+void OH_Value_PutUnlimitedIntFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -149,7 +159,8 @@ void OH_Value_PutUnlimitedIntFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetTypeFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetTypeFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -159,7 +170,8 @@ void OH_Value_GetTypeFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_IsNullFuzz(FuzzedDataProvider &provider) {
+void OH_Value_IsNullFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -169,7 +181,8 @@ void OH_Value_IsNullFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetIntFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetIntFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -179,7 +192,8 @@ void OH_Value_GetIntFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetRealFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetRealFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -189,7 +203,8 @@ void OH_Value_GetRealFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetTextFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetTextFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -199,7 +214,8 @@ void OH_Value_GetTextFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetBlobFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetBlobFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -210,7 +226,8 @@ void OH_Value_GetBlobFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetAssetFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetAssetFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -219,18 +236,20 @@ void OH_Value_GetAssetFuzz(FuzzedDataProvider &provider) {
     if (asset == nullptr) {
         return;
     }
-    OH_Value_GetAsset(value,asset);
+    OH_Value_GetAsset(value, asset);
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetAssetsCountFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetAssetsCountFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     size_t length = provider.ConsumeIntegral<size_t>();
     OH_Value_GetAssetsCount(value, &length);
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetAssetsFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetAssetsFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -245,7 +264,8 @@ void OH_Value_GetAssetsFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetFloatVectorCountFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetFloatVectorCountFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -255,7 +275,8 @@ void OH_Value_GetFloatVectorCountFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetFloatVectorFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetFloatVectorFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -268,7 +289,8 @@ void OH_Value_GetFloatVectorFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetUnlimitedIntBandFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetUnlimitedIntBandFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
@@ -278,7 +300,8 @@ void OH_Value_GetUnlimitedIntBandFuzz(FuzzedDataProvider &provider) {
     OH_Value_Destroy(value);
 }
 
-void OH_Value_GetUnlimitedIntFuzz(FuzzedDataProvider &provider) {
+void OH_Value_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
+{
     OH_Data_Value *value = OH_Value_Create();
     if (value == nullptr) {
         return;
