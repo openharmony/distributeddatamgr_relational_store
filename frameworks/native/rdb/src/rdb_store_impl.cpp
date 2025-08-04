@@ -30,7 +30,6 @@
 #include <sys/stat.h>
 #include <string>
 
-#include "acl.h"
 #include "cache_result_set.h"
 #include "connection_pool.h"
 #include "delay_notify.h"
@@ -42,7 +41,6 @@
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
 #include "rdb_perfStat.h"
-#include "rdb_platform.h"
 #include "rdb_radar_reporter.h"
 #include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
@@ -82,7 +80,6 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-using namespace OHOS::DATABASE_UTILS;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
@@ -90,7 +87,6 @@ using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
 
 #if !defined(CROSS_PLATFORM)
-constexpr int32_t SERVICE_GID = 3012;
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
 
@@ -100,48 +96,6 @@ static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 static constexpr const char *ASYNC_RESTORE = "-async.restore";
 constexpr int64_t TIME_OUT = 1500;
-
-bool RdbStoreImpl::CheckFilePermissions(const std::string &path)
-{
-#if !defined(CROSS_PLATFORM)
-    AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    Acl aclDefault(path, Acl::ACL_XATTR_DEFAULT);
-    if (aclDefault.HasAcl(group) && aclDefault.HasAcl(user)) {
-        return true;
-    }
-#endif
-    return false;
-}
-
-void RdbStoreImpl::SetFilePermissions(const std::string &path)
-{
-#if !defined(CROSS_PLATFORM)
-    if (CheckFilePermissions(path)) {
-        return;
-    }
-    AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
-    Acl aclDefault(path, Acl::ACL_XATTR_DEFAULT);
-    // If the permissions are missing, first complete the default and access permissions of the root directory.
-    aclDefault.SetAcl(group);
-    aclDefault.SetAcl(user);
-    Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
-    aclAccess.SetAcl(group);
-    aclAccess.SetAcl(user);
-    // Continue to complete the permissions of all files and subfolders under the path.
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
-        Acl aclAccess(entry.path(), Acl::ACL_XATTR_ACCESS);
-        aclAccess.SetAcl(group);
-        aclAccess.SetAcl(user);
-        if (entry.is_directory()) {
-            Acl aclDefault(entry.path(), Acl::ACL_XATTR_DEFAULT);
-            aclDefault.SetAcl(group);
-            aclDefault.SetAcl(user);
-        }
-    }
-#endif
-}
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -440,7 +394,7 @@ int RdbStoreImpl::SetDistributedTables(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
-    SetFilePermissions(basePath_);
+    SqliteUtils::SetFilePermissions(basePath_);
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
@@ -594,7 +548,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
-    SetFilePermissions(basePath_);
+    SqliteUtils::SetFilePermissions(basePath_);
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
 }
@@ -894,7 +848,7 @@ void RdbStoreImpl::InitDelayNotifier()
         if (!IsNotifyService(rdbChangedData)) {
             return E_OK;
         }
-        SetFilePermissions(path);
+        SqliteUtils::SetFilePermissions(path);
         auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (errCode == E_NOT_SUPPORT) {
             return errCode;
@@ -2546,7 +2500,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
             DistributedRdb::RdbService::Option option = {DistributedRdb::TIME_FIRST, 0, true, true};
             auto memo =
                 AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
-            SetFilePermissions(path);
+            SqliteUtils::SetFilePermissions(path);
             InnerSync(param, option, memo, nullptr);
         });
 #endif

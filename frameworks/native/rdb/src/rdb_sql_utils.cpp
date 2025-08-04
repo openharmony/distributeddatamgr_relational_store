@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
@@ -33,7 +32,6 @@
 namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
-using namespace OHOS::DATABASE_UTILS;
 int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
 {
     std::string tempDirectory = databaseDir;

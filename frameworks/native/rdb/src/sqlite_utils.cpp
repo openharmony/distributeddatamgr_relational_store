@@ -36,8 +36,10 @@
 #include <sstream>
 #include <iomanip>
 
+#include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_platform.h"
 #include "rdb_store_config.h"
 #include "string_utils.h"
 #include "rdb_time_utils.h"
@@ -45,6 +47,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using namespace OHOS::DATABASE_UTILS;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -55,9 +58,48 @@ constexpr int32_t PRE_OFFSET_SIZE = 1;
 constexpr int32_t DISPLAY_BYTE = 2;
 constexpr int32_t PREFIX_LENGTH = 3;
 constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
+constexpr int32_t SERVICE_GID = 3012;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
+
+bool SqliteUtils::CheckFilePermissions(const std::string &path)
+{
+    AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
+    AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
+    Acl aclDefault(path, Acl::ACL_XATTR_DEFAULT);
+    if (aclDefault.HasAcl(group) && aclDefault.HasAcl(user)) {
+        return true;
+    }
+    return false;
+}
+
+void SqliteUtils::SetFilePermissions(const std::string &path)
+{
+    if (CheckFilePermissions(path)) {
+        return;
+    }
+    AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
+    AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
+    Acl aclDefault(path, Acl::ACL_XATTR_DEFAULT);
+    // If the permissions are missing, first complete the default and access permissions of the root directory.
+    aclDefault.SetAcl(group);
+    aclDefault.SetAcl(user);
+    Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
+    aclAccess.SetAcl(group);
+    aclAccess.SetAcl(user);
+    // Continue to complete the permissions of all files and subfolders under the path.
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(path)) {
+        Acl aclAccess(entry.path().string(), Acl::ACL_XATTR_ACCESS);
+        aclAccess.SetAcl(group);
+        aclAccess.SetAcl(user);
+        if (entry.is_directory()) {
+            Acl aclDefault(entry.path().string(), Acl::ACL_XATTR_DEFAULT);
+            aclDefault.SetAcl(group);
+            aclDefault.SetAcl(user);
+        }
+    }
+}
 
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {

@@ -149,8 +149,6 @@ public:
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
     void Close();
-    static void SetFilePermissions(const std::string &path);
-    static bool CheckFilePermissions(const std::string &path);
 
 protected:
     std::string GetLogTableName(const std::string &tableName) override;

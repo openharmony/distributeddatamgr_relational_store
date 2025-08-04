@@ -93,8 +93,6 @@ public:
     std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
     void Close();
-    static void SetFilePermissions(const std::string &path);
-    static bool CheckFilePermissions(const std::string &path);
 
 private:
     using Stmt = std::shared_ptr<Statement>;
