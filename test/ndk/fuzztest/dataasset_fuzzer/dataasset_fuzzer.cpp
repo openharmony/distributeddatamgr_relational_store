@@ -112,7 +112,7 @@ void OH_Data_Asset_SetSizeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_SetSize(asset, size);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_SetSize(nullptr, size);
+    OH_Data_Asset_SetSize(nullptr, 0);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -128,7 +128,7 @@ void OH_Data_Asset_SetStatusFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_SetStatus(asset, status);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_SetStatus(nullptr, status);
+    OH_Data_Asset_SetStatus(nullptr, 0);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -143,7 +143,7 @@ void OH_Data_Asset_GetNameFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetName(asset, name, &length);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetName(nullptr, nullptr, &length);
+    OH_Data_Asset_GetName(nullptr, nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -158,7 +158,7 @@ void OH_Data_Asset_GetUriFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetUri(asset, uri, &length);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetUri(nullptr, nullptr, &length);
+    OH_Data_Asset_GetUri(nullptr, nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -173,7 +173,7 @@ void OH_Data_Asset_GetPathFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetPath(asset, path, &length);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetPath(nullptr, nullptr, &length);
+    OH_Data_Asset_GetPath(nullptr, nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -187,7 +187,7 @@ void OH_Data_Asset_GetCreateTimeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetCreateTime(asset, &createTime);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetCreateTime(nullptr, &createTime);
+    OH_Data_Asset_GetCreateTime(nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -201,7 +201,7 @@ void OH_Data_Asset_GetModifyTimeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetModifyTime(asset, &modifyTime);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetModifyTime(nullptr, &modifyTime);
+    OH_Data_Asset_GetModifyTime(nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -215,7 +215,7 @@ void OH_Data_Asset_GetSizeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetSize(asset, &size);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetSize(nullptr, &size);
+    OH_Data_Asset_GetSize(nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
@@ -229,7 +229,7 @@ void OH_Data_Asset_GetStatusFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_GetStatus(asset, &status);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_GetStatus(nullptr, &status);
+    OH_Data_Asset_GetStatus(nullptr, nullptr);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 } // namespace OHOS

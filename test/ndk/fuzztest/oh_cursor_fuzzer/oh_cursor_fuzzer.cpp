@@ -192,6 +192,7 @@ void OH_Cursor_GetAssetFuzz(FuzzedDataProvider &provider)
         return;
     }
     cursor->getAsset(cursor, columnIndex, asset);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 void OH_Cursor_GetAssetsFuzz(FuzzedDataProvider &provider)
@@ -204,6 +205,7 @@ void OH_Cursor_GetAssetsFuzz(FuzzedDataProvider &provider)
     }
     uint32_t length = provider.ConsumeIntegral<uint32_t>();
     cursor->getAssets(cursor, columnIndex, &asset, &length);
+    OH_Data_Asset_DestroyOne(asset);
 }
 
 void OH_Cursor_GetAssetsCountFuzz(FuzzedDataProvider &provider)
