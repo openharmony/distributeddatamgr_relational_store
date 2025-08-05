@@ -47,6 +47,7 @@ OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
     std::string column = provider.ConsumeRandomLengthString(STRING_MAX);
     int64_t value = provider.ConsumeIntegral<int64_t>();
     if (column.empty()) {
+        vBucket->destroy(vBucket);
         return nullptr;
     }
     vBucket->putInt64(vBucket, column.c_str(), value);
@@ -78,6 +79,8 @@ void OH_VBuckets_PutRowFuzz(FuzzedDataProvider &provider)
         OH_VBuckets_PutRow(vBuckets, vBucket);
     }
     OH_VBuckets_Destroy(vBuckets);
+
+    OH_VBuckets_Destroy(nullptr);
 }
 
 void OH_VBuckets_PutRowsFuzz(FuzzedDataProvider &provider)
