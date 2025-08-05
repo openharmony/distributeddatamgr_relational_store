@@ -288,6 +288,7 @@ void OH_Value_GetAssetFuzz(FuzzedDataProvider &provider)
     }
     OH_Value_GetAsset(value, asset);
     OH_Value_Destroy(value);
+    OH_Data_Asset_DestroyOne(asset);
 
     OH_Value_GetAsset(nullptr, nullptr);
     OH_Value_Destroy(nullptr);
@@ -319,6 +320,7 @@ void OH_Value_GetAssetsFuzz(FuzzedDataProvider &provider)
     size_t outLen = provider.ConsumeIntegral<size_t>();
     OH_Value_GetAssets(value, &val, inLen, &outLen);
     OH_Value_Destroy(value);
+    OH_Data_Asset_DestroyOne(val);
 
     OH_Value_GetAssets(nullptr, nullptr, 0, nullptr);
     OH_Value_Destroy(nullptr);
