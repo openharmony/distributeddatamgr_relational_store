@@ -664,7 +664,7 @@ public:
         return thiz;
     }
 
-    RdbPredicates In(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
+    RdbPredicates InValues(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
     {
         std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
         std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
@@ -677,7 +677,7 @@ public:
         return thiz;
     }
 
-    RdbPredicates NotIn(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
+    RdbPredicates NotInValues(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
     {
         std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
         std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
@@ -1599,18 +1599,18 @@ public:
         nativeRdbStore_ = nullptr;
     }
 
-    int32_t AttachWithWaitTime(string_view fullPath, string_view attachName, int32_t waitTime)
+    int32_t AttachWithWaitTime(string_view fullPath, string_view attachName, int64_t waitTime)
     {
         TH_THROW(std::runtime_error, "attachWithWaitTime not implemented");
     }
 
     int32_t AttachWithContext(uintptr_t context, StoreConfig const &config,
-        string_view attachName, optional_view<int32_t> waitTime)
+        string_view attachName, optional_view<int64_t> waitTime)
     {
         TH_THROW(std::runtime_error, "attachWithContext not implemented");
     }
 
-    int32_t DetachSync(string_view attachName, optional_view<int32_t> waitTime)
+    int32_t DetachSync(string_view attachName, optional_view<int64_t> waitTime)
     {
         TH_THROW(std::runtime_error, "detachSync not implemented");
     }
