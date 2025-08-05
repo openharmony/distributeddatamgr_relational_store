@@ -1080,15 +1080,15 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_020, TestSize.Level0)
     Insert(id, count);
     
     LOG_INFO("---- let binlog clean return ERROR");
-    auto originalApi = sqlite3_export_hw_symbols;
-    struct sqlite3_api_routines_hw mockApi = *sqlite3_export_hw_symbols;
+    auto originalApi = sqlite3_export_extra_symbols;
+    struct sqlite3_api_routines_extra mockApi = *sqlite3_export_extra_symbols;
     mockApi.clean_binlog = MockCleanBinlog;
-    sqlite3_export_hw_symbols = &mockApi;
+    sqlite3_export_extra_symbols = &mockApi;
 
     LOG_INFO("---- binlog clean failed should mark invalid");
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
     EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName));
-    sqlite3_export_hw_symbols = originalApi;
+    sqlite3_export_extra_symbols = originalApi;
 }
 
 /**
