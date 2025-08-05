@@ -128,7 +128,7 @@ void OH_Data_Asset_SetStatusFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_SetStatus(asset, status);
     OH_Data_Asset_DestroyOne(asset);
 
-    OH_Data_Asset_SetStatus(nullptr, 0);
+    OH_Data_Asset_SetStatus(nullptr, Data_AssetStatus::ASSET_NULL);
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
