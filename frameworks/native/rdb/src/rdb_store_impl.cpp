@@ -55,6 +55,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "string_utils.h"
 #include "suspender.h"
 #include "task_executor.h"
 #include "traits.h"
@@ -394,6 +395,7 @@ int RdbStoreImpl::SetDistributedTables(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
+    SqliteUtils::SetDDMSAcl(basePath_);
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
@@ -547,6 +549,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
+    SqliteUtils::SetDDMSAcl(basePath_);
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
 }
@@ -833,7 +836,7 @@ void RdbStoreImpl::InitDelayNotifier()
     }
     std::weak_ptr<NativeRdb::KnowledgeSchemaHelper> helper = GetKnowledgeSchemaHelper();
     delayNotifier_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
-    delayNotifier_->SetTask([param = syncerParam_, helper = helper](
+    delayNotifier_->SetTask([param = syncerParam_, helper = helper, path = basePath_](
         const DistributedRdb::RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig) -> int {
         if (IsKnowledgeDataChange(rdbChangedData)) {
             auto realHelper = helper.lock();
@@ -846,6 +849,7 @@ void RdbStoreImpl::InitDelayNotifier()
         if (!IsNotifyService(rdbChangedData)) {
             return E_OK;
         }
+        SqliteUtils::SetDDMSAcl(path);
         auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (errCode == E_NOT_SUPPORT) {
             return errCode;
@@ -1022,6 +1026,7 @@ RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
       fileType_(config.GetDatabaseFileType())
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
+    basePath_ = StringUtils::ExtractFilePath(path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
 }
 
@@ -2483,19 +2488,22 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
     }
     auto interval =
         std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::milliseconds(INTERVAL));
-    pool->Schedule(interval, [cloudInfo = std::weak_ptr<CloudTables>(cloudInfo_), param = syncerParam_]() {
-        auto changeInfo = cloudInfo.lock();
-        if (changeInfo == nullptr) {
-            return;
-        }
-        auto tables = changeInfo->Steal();
-        if (tables.empty()) {
-            return;
-        }
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
-        auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
-        InnerSync(param, option, memo, nullptr);
-    });
+    pool->Schedule(
+        interval, [cloudInfo = std::weak_ptr<CloudTables>(cloudInfo_), param = syncerParam_, path = basePath_]() {
+            auto changeInfo = cloudInfo.lock();
+            if (changeInfo == nullptr) {
+                return;
+            }
+            auto tables = changeInfo->Steal();
+            if (tables.empty()) {
+                return;
+            }
+            DistributedRdb::RdbService::Option option = {DistributedRdb::TIME_FIRST, 0, true, true};
+            auto memo =
+                AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
+            SqliteUtils::SetDDMSAcl(path);
+            InnerSync(param, option, memo, nullptr);
+        });
 #endif
 }
 std::string RdbStoreImpl::GetFileType()
