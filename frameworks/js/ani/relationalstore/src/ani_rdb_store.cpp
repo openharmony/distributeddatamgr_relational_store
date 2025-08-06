@@ -296,7 +296,7 @@ ani_status RdbStoreInit(ani_env *env)
     std::array methods = {
         ani_native_function {"batchInsertSync", nullptr, reinterpret_cast<void *>(BatchInsert)},
         ani_native_function {"beginTransaction", nullptr, reinterpret_cast<void *>(BeginTransaction)},
-        ani_native_function {"commit", ":V", reinterpret_cast<void *>(Commit)},
+        ani_native_function {"commit", ":", reinterpret_cast<void *>(Commit)},
         ani_native_function {"rollBack", nullptr, reinterpret_cast<void *>(RollBack)},
         ani_native_function {"executeSqlSync", nullptr, reinterpret_cast<void *>(ExecuteSqlSync)},
         ani_native_function {"deleteSync", nullptr, reinterpret_cast<void *>(DeleteSync)},
