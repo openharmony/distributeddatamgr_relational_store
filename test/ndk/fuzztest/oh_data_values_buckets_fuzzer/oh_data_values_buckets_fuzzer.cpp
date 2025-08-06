@@ -77,6 +77,7 @@ void OH_VBuckets_PutRowFuzz(FuzzedDataProvider &provider)
     OH_VBucket *vBucket = CreateRandomVBucket(provider);
     if (vBucket != nullptr) {
         OH_VBuckets_PutRow(vBuckets, vBucket);
+        vBucket->destroy(vBucket);
     }
     OH_VBuckets_Destroy(vBuckets);
 
