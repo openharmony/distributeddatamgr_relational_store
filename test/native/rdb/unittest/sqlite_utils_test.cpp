@@ -41,16 +41,27 @@ void SqliteUtilsTest::SetUpTestCase(void)
 void SqliteUtilsTest::TearDownTestCase(void)
 {
 }
+/**
+ * @tc.name: CheckFilePermissionsTest_001
+ * @tc.desc: after SetACL, check if the file permissions are set correctly.
+ * the WAL size will not exceed the default limit.
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_001, TestSize.Level2)
 {
     mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
     mkdir("/data/test/abc", mode);
-    SqliteUtils::SetFilePermissions("/data/test/abc");
-    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    SqliteUtils::SetDDMSAcl("/data/test/abc");
+    auto ret = SqliteUtils::HasDDMSAcl("/data/test/abc");
     EXPECT_EQ(ret, true);
     remove("/data/test/abc");
 }
-
+/**
+ * @tc.name: CheckFilePermissionsTest_002
+ * @tc.desc: after SetACL, check if the file permissions are set correctly.
+ * the WAL size will not exceed the default limit.
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_002, TestSize.Level2)
 {
     mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
@@ -63,11 +74,16 @@ HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_002, TestSize.Level2)
     Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(group);
     aclAccess.SetAcl(user);
-    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    auto ret = SqliteUtils::HasDDMSAcl("/data/test/abc");
     EXPECT_EQ(ret, true);
     remove("/data/test/abc");
 }
-
+/**
+ * @tc.name: CheckFilePermissionsTest_003
+ * @tc.desc: after SetACL, check if the file permissions are set correctly.
+ * the WAL size will not exceed the default limit.
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_003, TestSize.Level2)
 {
     mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
@@ -77,11 +93,16 @@ HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_003, TestSize.Level2)
     aclDefault.SetAcl(group);
     Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(group);
-    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    auto ret = SqliteUtils::HasDDMSAcl("/data/test/abc");
     EXPECT_EQ(ret, true);
     remove("/data/test/abc");
 }
-
+/**
+ * @tc.name: CheckFilePermissionsTest_004
+ * @tc.desc: after SetACL, check if the file permissions are set correctly.
+ * the WAL size will not exceed the default limit.
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_004, TestSize.Level2)
 {
     mode_t mode = S_IRWXU | S_IRWXG | S_IXOTH;
@@ -91,7 +112,7 @@ HWTEST_F(SqliteUtilsTest, CheckFilePermissionsTest_004, TestSize.Level2)
     aclDefault.SetAcl(user);
     Acl aclAccess("/data/test/abc", Acl::ACL_XATTR_ACCESS);
     aclAccess.SetAcl(user);
-    auto ret = SqliteUtils::CheckFilePermissions("/data/test/abc");
+    auto ret = SqliteUtils::HasDDMSAcl("/data/test/abc");
     EXPECT_EQ(ret, true);
     remove("/data/test/abc");
 }
