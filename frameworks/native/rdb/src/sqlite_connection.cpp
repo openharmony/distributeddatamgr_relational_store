@@ -70,8 +70,7 @@ constexpr unsigned short SqliteConnection::BINLOG_FILE_NUMS_LIMIT;
 constexpr uint32_t SqliteConnection::BINLOG_FILE_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
-std::recursive_mutex SqliteConnection::slaveMapMutex_;
-std::map<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::pathToSlaveMap_ = {};
+ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::reusableReplicas_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -91,7 +90,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> SqliteConnection::Create(const R
 {
     std::pair<int32_t, std::shared_ptr<Connection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
-    std::tie(errCode, conn) = InnerCreate(config, isWrite);
+    std::tie(errCode, conn) = InnerCreate(config, isWrite, true);
     return result;
 }
 
@@ -154,37 +153,6 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
-}
-
-std::shared_ptr<SqliteConnection> SqliteConnection::GetSlaveConnFromMap(const std::string &slavePath)
-{
-    auto iter = pathToSlaveMap_.find(slavePath);
-    if (iter == pathToSlaveMap_.end()) {
-        return nullptr;
-    }
-    auto conn = iter->second.lock();
-    if (conn == nullptr) {
-        pathToSlaveMap_.erase(iter);
-    }
-    return conn;
-}
-
-std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::GetSlaveConnection(
-    const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy)
-{
-    std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
-    auto connection = GetSlaveConnFromMap(config.GetPath());
-    if (connection != nullptr) {
-        return {E_OK, connection};
-    }
-
-    auto result = CreateSlaveConnection(config, slaveOpenPolicy);
-    auto &[errCode, conn] = result;
-    if (errCode == E_OK) {
-        std::weak_ptr<SqliteConnection> slaveWeakConn(conn);
-        pathToSlaveMap_.emplace(config.GetPath(), slaveWeakConn);
-    }
-    return result;
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -497,13 +465,6 @@ SqliteConnection::~SqliteConnection()
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }
     }
-    if (isSlave_) {
-        std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
-        auto iter = pathToSlaveMap_.find(config_.GetPath());
-        if (iter != pathToSlaveMap_.end()) {
-            pathToSlaveMap_.erase(config_.GetPath());
-        }
-    }
 }
 
 int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
@@ -560,7 +521,7 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     if (access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) != 0) {
         return E_NOT_SUPPORT;
     }
-    auto [ret, conn] = connection->GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
     if (ret != E_OK) {
         return ret;
     }
@@ -588,7 +549,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateReplicaStatem
     sqlite3 *db = dbHandle_;
     RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
     if (slaveConnection_ == nullptr && access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) == 0) {
-        auto [errCode, slaveConn] = GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+        auto [errCode, slaveConn] = CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
         if (errCode == E_OK) {
             slaveConnection_ = slaveConn;
             db = slaveConnection_->dbHandle_;
@@ -1258,11 +1219,12 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     if (!isAsync) {
         if (slaveConnection_ == nullptr) {
             RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
-            auto [errCode, conn] = GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+            auto [errCode, conn] = CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
             if (errCode != E_OK) {
                 return errCode;
             }
             slaveConnection_ = conn;
+            reusableReplicas_.InsertOrAssign(rdbSlaveStoreConfig.GetPath(), conn);
         }
         return ExchangeSlaverToMaster(false, verifyDb, slaveStatus);
     }
@@ -1554,7 +1516,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (access(rdbSlaveStoreConfig.GetPath().c_str(), F_OK) != 0) {
         return E_NOT_SUPPORT;
     }
-    auto [ret, conn] = connection->GetSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
+    auto [ret, conn] = connection->CreateSlaveConnection(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
     if (ret != E_OK) {
         return ret;
     }
@@ -1621,7 +1583,7 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCreate(
-    const RdbStoreConfig &config, bool isWrite)
+    const RdbStoreConfig &config, bool isWrite, bool isReusableReplica)
 {
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> result = { E_ERROR, nullptr };
     auto &[errCode, conn] = result;
@@ -1638,12 +1600,15 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     conn = connection;
     if (isWrite && config.GetHaMode() != HAMode::SINGLE) {
         RdbStoreConfig slaveCfg = connection->GetSlaveRdbStoreConfig(config);
-        auto [err, slaveConn] = connection->GetSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
+        auto [err, slaveConn] = connection->CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
         if (err != E_OK) {
             return result;
         }
         conn->slaveConnection_ = slaveConn;
         conn->SetBinlog();
+        if (isReusableReplica) {
+            reusableReplicas_.InsertOrAssign(slaveCfg.GetPath(), slaveConn);
+        }
     }
     return result;
 }
@@ -1804,10 +1769,14 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         return;
     }
     std::string dbPathStr(dbPath);
-    std::lock_guard<std::recursive_mutex> lock(slaveMapMutex_);
-    auto slaveConn = GetSlaveConnFromMap(SqliteUtils::GetSlavePath(dbPath));
+    auto [found, weakPtr] = reusableReplicas_.Find(SqliteUtils::GetSlavePath(dbPathStr));
+    if (!found) {
+        LOG_WARN("no replica connection for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        return;
+    }
+    auto slaveConn = weakPtr.lock();
     if (slaveConn == nullptr) {
-        LOG_WARN("no connection for replica of %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        LOG_WARN("replica connection expired for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
         return;
     }
     pool->Execute([dbPathStr, slaveConn] {
