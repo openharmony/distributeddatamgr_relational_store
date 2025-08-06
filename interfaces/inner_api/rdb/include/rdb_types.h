@@ -74,6 +74,7 @@ struct RdbSyncerParam {
     bool isEncrypt_ = false;
     bool isAutoClean_ = true;
     bool isSearchable_ = false;
+    bool isNeedSetAcl_ = false;
     std::vector<uint8_t> password_;
     std::map<std::string, RdbDebugInfo> infos_;
     std::vector<uint32_t> tokenIds_;
