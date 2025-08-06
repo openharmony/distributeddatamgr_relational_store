@@ -63,7 +63,7 @@ constexpr int32_t SERVICE_GID = 3012;
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 
-bool SqliteUtils::CheckFilePermissions(const std::string &path)
+bool SqliteUtils::HasDDMSAcl(const std::string &path)
 {
     AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
     AclXattrEntry user = {ACL_TAG::USER, GetUid(), Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};
@@ -74,9 +74,9 @@ bool SqliteUtils::CheckFilePermissions(const std::string &path)
     return false;
 }
 
-void SqliteUtils::SetFilePermissions(const std::string &path)
+void SqliteUtils::SetDDMSAcl(const std::string &path)
 {
-    if (CheckFilePermissions(path)) {
+    if (HasDDMSAcl(path)) {
         return;
     }
     AclXattrEntry group = {ACL_TAG::GROUP, SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT};

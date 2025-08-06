@@ -100,8 +100,8 @@ public:
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
     static std::string GetParentModes(const std::string &path, int pathDepth = PATH_DEPTH);
     static std::string GetFileStatInfo(const DebugInfo &debugInfo);
-    static void SetFilePermissions(const std::string &path);
-    static bool CheckFilePermissions(const std::string &path);
+    static void SetDDMSAcl(const std::string &path);
+    static bool HasDDMSAcl(const std::string &path);
 
 private:
     struct SqlType {
