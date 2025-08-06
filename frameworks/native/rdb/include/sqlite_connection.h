@@ -47,7 +47,7 @@ public:
     static int32_t CheckReplicaIntegrity(const RdbStoreConfig &config);
     static int32_t ClientCleanUp();
     static int32_t OpenSSLCleanUp();
-    SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection);
+    SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection, bool isSlave = false);
     ~SqliteConnection();
     int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
     int TryCheckPoint(bool timeout) override;
@@ -75,9 +75,6 @@ public:
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
-    void SetIsSlave(bool isSlave);
-    void SetIsSupportBinlog(bool isSupport);
-    bool GetIsSlave();
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
@@ -114,6 +111,7 @@ private:
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
     void SetDwrEnable(const RdbStoreConfig &config);
+    void SetIsSupportBinlog(bool isSupport);
 
     int RegDefaultFunctions(sqlite3 *dbHandle);
     int SetCustomFunctions(const RdbStoreConfig &config);
@@ -124,6 +122,9 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
+    static std::shared_ptr<SqliteConnection> GetSlaveConnFromMap(const std::string &slavePath);
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> GetSlaveConnection(
+        const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus);
@@ -143,10 +144,11 @@ private:
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
-    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb, bool isSlave = false);
+    static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
     static void BinlogSetConfig(sqlite3 *dbHandle);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
-    static void AsyncReplayBinlog(const std::string &dbPath, bool isNeedClean);
+    static void AsyncReplayBinlog(const std::string &dbPath,
+        std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
@@ -172,6 +174,8 @@ private:
     static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
+    static std::recursive_mutex slaveMapMutex_;
+    static std::map<std::string, std::weak_ptr<SqliteConnection>> pathToSlaveMap_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;
