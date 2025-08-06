@@ -1186,3 +1186,424 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_024, TestSize.Level1)
     ret = OH_RdbTrans_Destroy(trans);
     EXPECT_EQ(ret, RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_025
+ * @tc.desc: Abnormal testCase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_025, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_026
+ * @tc.desc: Abnormal testCase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_026, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_027
+ * @tc.desc: Normal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_027, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createTableSql[] = "CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int ret = OH_Rdb_Execute(g_transStore, createTableSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    const char *sql = "DROP TABLE test1";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Commit(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_028
+ * @tc.desc: Abnormal testCase of drop the index before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_028, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createIndexSql[] = "CREATE INDEX test_index ON test(data2);";
+    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP INDEX test_index";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    char dropIndexSql[] = "DROP INDEX test_index;";
+    ret = OH_Rdb_Execute(g_transStore, dropIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_029
+ * @tc.desc: Abnormal testCase of drop the index before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_029, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createIndexSql[] = "CREATE INDEX test_index ON test(data2);";
+    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP INDEX test_index";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    char dropIndexSql[] = "DROP INDEX test_index;";
+    ret = OH_Rdb_Execute(g_transStore, dropIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_030
+ * @tc.desc: Abnormal testCase of drop the index after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_030, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createIndexSql[] = "CREATE index test_index ON test(data2);";
+    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    const char *sql = "DROP INDEX test_index";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Commit(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_031
+ * @tc.desc: Normal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_031, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createTableSql[] = "CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int ret = OH_Rdb_Execute(g_transStore, createTableSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test1";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_NE(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test1";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Commit(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_032
+ * @tc.desc: Normal testCase of drop the index after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_032, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createIndexSql[] = "CREATE index test_index ON test(data2);";
+    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test1";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_NE(ret, RDB_OK);
+
+    const char *sql = "DROP INDEX test_index";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Commit(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_033
+ * @tc.desc: Abnormal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_033, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createTableSql[] = "CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    int ret = OH_Rdb_Execute(g_transStore, createTableSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test1";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_NE(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_034
+ * @tc.desc: Abnormal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_034, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    const char *sql = "DROP TABLE test1";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_035
+ * @tc.desc: Normal testCase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_035, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    int rowCount = 0;
+    ret = cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(ret, RDB_OK);
+
+    for (int i = 0; i < rowCount; i++) {
+        ret = cursor->goToNextRow(cursor);
+        EXPECT_EQ(ret, RDB_OK);
+    }
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_NE(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_OK);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Commit(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
