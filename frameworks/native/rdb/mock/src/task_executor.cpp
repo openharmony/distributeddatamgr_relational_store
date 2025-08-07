@@ -18,7 +18,6 @@
 namespace OHOS::NativeRdb {
 TaskExecutor::TaskExecutor()
 {
-    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS, "TaskExecutorRDB");
 }
 
 TaskExecutor::~TaskExecutor()
@@ -34,7 +33,7 @@ TaskExecutor &TaskExecutor::GetInstance()
 
 void TaskExecutor::Init()
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     if (pool_ != nullptr) {
         return;
     }
@@ -43,19 +42,22 @@ void TaskExecutor::Init()
 
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
-    std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (pool_ == nullptr) {
+        pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS, "TaskExecutorRDB");
+    }
     return pool_;
 }
 
 void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     pool_ = executor;
 };
 
 bool TaskExecutor::Stop()
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     pool_ = nullptr;
     return true;
 }

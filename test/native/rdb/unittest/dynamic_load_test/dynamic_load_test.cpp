@@ -175,6 +175,9 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
     std::shared_ptr<RdbStoreObserver> observer;
     auto status = rdbStore->Subscribe({ SubscribeMode::LOCAL_SHARED, "observer" }, observer);
     EXPECT_EQ(status, E_OK);
+    ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(RdbHelper::Destroy()));
+    ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(RdbHelper::Destroy()));
+    rdbStore = nullptr;
     ASSERT_NO_FATAL_FAILURE(EXPECT_TRUE(RdbHelper::Destroy()));
     auto rdbStoreNew = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(rdbStore, rdbStoreNew);
