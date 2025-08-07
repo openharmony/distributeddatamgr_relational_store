@@ -54,7 +54,7 @@ RdbStoreManager::~RdbStoreManager()
     Clear();
 }
 
-RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE)
+RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE), promiseInfoCache_(PROMISEINFO_CACHE_SIZE)
 {
 }
 
@@ -97,12 +97,12 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback)
 {
-    errCode = CheckConfig(config);
+    std::string path;
+    errCode = SqliteGlobalConfig::GetDbPath(config, path);
     if (errCode != E_OK) {
         return nullptr;
     }
-    std::string path;
-    errCode = SqliteGlobalConfig::GetDbPath(config, path);
+    errCode = CheckConfig(config, path);
     if (errCode != E_OK) {
         return nullptr;
     }
@@ -216,9 +216,14 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
     return E_ERROR;
 }
 
-bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param)
+bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param, const std::string &path)
 {
 #if !defined(CROSS_PLATFORM)
+    bool result = false;
+    // ToDo: Scenario for handling cache refresh
+    if (promiseInfoCache_.Get(path, result)) {
+        return true;
+    };
     auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
         return false;
@@ -229,6 +234,7 @@ bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param)
     }
     err = service->VerifyPromiseInfo(param);
     if (err == DistributedRdb::RDB_OK) {
+        promiseInfoCache_.Set(path, true);
         return true;
     }
     LOG_ERROR("failed, bundleName:%{public}s, store:%{public}s, err:%{public}d.", param.bundleName_.c_str(),
@@ -241,6 +247,8 @@ void RdbStoreManager::Clear()
 {
     configCache_.ResetCapacity(0);
     configCache_.ResetCapacity(BUCKET_MAX_SIZE);
+    promiseInfoCache_.ResetCapacity(0);
+    promiseInfoCache_.ResetCapacity(PROMISEINFO_CACHE_SIZE);
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
@@ -340,9 +348,9 @@ int32_t RdbStoreManager::Collector(const RdbStoreConfig &config, DebugInfos &deb
     return E_OK;
 }
 
-int32_t RdbStoreManager::CheckConfig(const RdbStoreConfig &config)
+int32_t RdbStoreManager::CheckConfig(const RdbStoreConfig &config, const std::string &path)
 {
-    if (config.GetRoleType() == VISITOR_WRITE && !IsPermitted(GetSyncParam(config))) {
+    if (config.GetRoleType() == VISITOR_WRITE && !IsPermitted(GetSyncParam(config), path)) {
         return E_NOT_SUPPORT;
     }
     if (config.IsMemoryRdb()) {
