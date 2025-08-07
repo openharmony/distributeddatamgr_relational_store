@@ -188,7 +188,7 @@ export default function SetLocaleEtsTest() {
         await rdbStore?.setLocale("");
       } catch (e) {
         console.error(`message is ${e.message}  code  ${e.code}`);
-        expect(e.code).assertEqual("401");
+        expect(e.code).assertEqual("14800001");
       }
       console.log(TAG + "************* testRdbStoreSetLocale_0006 end *************");
     })
