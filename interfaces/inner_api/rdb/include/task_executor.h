@@ -15,6 +15,7 @@
 #ifndef DISTRIBUTED_NATIVE_RDB_TASK_EXECUTOR_H
 #define DISTRIBUTED_NATIVE_RDB_TASK_EXECUTOR_H
 #include "executor_pool.h"
+#include "rdb_visibility.h"
 namespace OHOS::NativeRdb {
 class TaskExecutor {
 public:
@@ -23,9 +24,9 @@ public:
     using Duration = std::chrono::steady_clock::duration;
     static constexpr TaskId INVALID_TASK_ID = ExecutorPool::INVALID_TASK_ID;
 
-    static TaskExecutor &GetInstance();
+    API_EXPORT static TaskExecutor &GetInstance();
     std::shared_ptr<ExecutorPool> GetExecutor();
-    void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+    API_EXPORT void SetExecutor(std::shared_ptr<ExecutorPool> executor);
     void Init();
     bool Stop();
 
@@ -34,7 +35,7 @@ private:
     size_t MIN_THREADS = 0;
     TaskExecutor();
     ~TaskExecutor();
-    mutable std::shared_mutex rwMutex_;
+    std::mutex mutex_;
     std::shared_ptr<ExecutorPool> pool_;
 };
 } // namespace OHOS::NativeRdb
