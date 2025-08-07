@@ -85,13 +85,8 @@ int ParseString(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
 {
     std::string value = "";
     int32_t res = JSUtils::Convert2Value(env, arg, value);
+    CHECK_RETURN_SET(res == OK, std::make_shared<ParamError>("srcName", "not null"));
     context->srcName = value;
-    if (res == OK) {
-        CHECK_RETURN_SET(!value.empty(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "srcName cannot be empty"));
-    } else {
-        CHECK_RETURN_SET(!value.empty(), std::make_shared<ParamError>("srcName", "not null"));
-    }
     return OK;
 }
 
