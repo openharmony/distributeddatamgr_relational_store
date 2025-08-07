@@ -68,8 +68,9 @@ void RdbSqliteStatementTest::TearDown(void)
  */
 HWTEST_F(RdbSqliteStatementTest, SqliteStatement001, TestSize.Level0)
 {
-    sqlite3 *db;
+    sqlite3 *db = nullptr;
     int rc = sqlite3_open("/data/test/SqliteStatement001.db", &db);
+    ASSERT_NE(db, nullptr);
     EXPECT_EQ(rc, SQLITE_OK);
     const char *sqlCreate = "CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY)";
     char *errMsg = nullptr;
@@ -101,8 +102,9 @@ HWTEST_F(RdbSqliteStatementTest, SqliteStatement002, TestSize.Level0)
 {
     const char *dbPath = "/data/test/SqliteStatement002.db";
     RdbStoreConfig rdbConfig(dbPath);
-    sqlite3 *db;
+    sqlite3 *db = nullptr;
     int rc = sqlite3_open(dbPath, &db);
+    ASSERT_NE(db, nullptr);
     EXPECT_EQ(rc, SQLITE_OK);
     const char *sqlCreate = "CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY)";
     char *errMsg = nullptr;
