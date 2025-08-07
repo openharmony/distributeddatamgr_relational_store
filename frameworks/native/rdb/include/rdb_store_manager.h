@@ -49,18 +49,20 @@ private:
     using DfxInfo = DistributedRdb::RdbDfxInfo;
     bool IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config);
     int32_t GetParamFromService(DistributedRdb::RdbSyncerParam &param);
-    static bool IsPermitted(const DistributedRdb::RdbSyncerParam &param);
-    static int32_t CheckConfig(const RdbStoreConfig &config);
+    bool IsPermitted(const DistributedRdb::RdbSyncerParam &param, const std::string &path);
+    int32_t CheckConfig(const RdbStoreConfig &config, const std::string &path);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static int32_t Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo);
     std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path,
         const RdbStoreConfig &config, int &errCode);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
+    static constexpr uint32_t PROMISEINFO_CACHE_SIZE = 32;
     static const bool regCollector_;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
     LRUBucket<std::string, Param> configCache_;
+    LRUBucket<std::string, bool> promiseInfoCache_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
