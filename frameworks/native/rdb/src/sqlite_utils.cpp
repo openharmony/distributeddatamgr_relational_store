@@ -402,7 +402,8 @@ int SqliteUtils::GetPageCountCallback(void *data, int argc, char **argv, char **
 {
     int64_t *count = (int64_t *)data;
     if (argc > 0 && argv[0] != NULL) {
-        *count = atoi(argv[0]);
+        char *endptr = nullptr;
+        *count = static_cast<int64_t>(strtoll(argv[0], &endptr, 10)); // 10 means decimal
     }
     return 0;
 }
@@ -411,16 +412,16 @@ ssize_t SqliteUtils::GetDecompressedSize(const std::string &dbPath)
 {
     sqlite3 *dbHandle = nullptr;
     int errCode = sqlite3_open_v2(dbPath.c_str(), &dbHandle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nullptr);
-    if (errCode == SQLITE_ERROR) {
+    if (errCode != SQLITE_OK) {
         LOG_WARN("failed to open %{public}s to calculate size", Anonymous(dbPath).c_str());
+        sqlite3_close_v2(dbHandle);
         return 0;
     }
     int64_t pageCount = 0;
-    char *errMsg = 0;
-    errCode = sqlite3_exec(dbHandle, "SELECT COUNT(1) FROM vfs_pages;", GetPageCountCallback, &pageCount, &errMsg);
+    errCode = sqlite3_exec(dbHandle, "SELECT COUNT(1) FROM vfs_pages;", GetPageCountCallback, &pageCount, nullptr);
     sqlite3_close_v2(dbHandle);
     if (errCode != SQLITE_OK) {
-        LOG_WARN("failed to get page count, %{public}s, err:%{public}s", Anonymous(dbPath).c_str(), errMsg);
+        LOG_WARN("failed to get page count, %{public}s", Anonymous(dbPath).c_str());
         return 0;
     }
     auto size = pageCount * 4096;
@@ -434,7 +435,7 @@ ssize_t SqliteUtils::GetDecompressedSize(const std::string &dbPath)
 bool SqliteUtils::IsSlaveLarge(const std::string &dbPath)
 {
     auto slavePath = GetSlavePath(dbPath);
-    if (sqlite3_is_support_binlog(StringUtils::ExtractFileName(slavePath).c_str()) == SQLITE_OK) {
+    if (sqlite3_is_support_binlog(StringUtils::ExtractFileName(dbPath).c_str()) == SQLITE_OK) {
         auto size = GetDecompressedSize(slavePath);
         if (size > 0) {
             return size > SLAVE_ASYNC_REPAIR_CHECK_LIMIT;
