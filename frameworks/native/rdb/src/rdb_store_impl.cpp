@@ -128,7 +128,7 @@ int RdbStoreImpl::InnerOpen()
     isOpen_ = true;
 #if !defined(CROSS_PLATFORM)
     // Only owner mode can store metadata information.
-    if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam() || (config_.GetRoleType() == VISITOR_WRITE)) {
+    if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam() || (config_.GetRoleType() != OWNER)) {
         return E_OK;
     }
     if (config_.GetEnableSemanticIndex()) {
