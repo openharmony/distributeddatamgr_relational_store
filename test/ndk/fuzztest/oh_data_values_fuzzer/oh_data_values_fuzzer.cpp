@@ -425,11 +425,11 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
         }
         size_t outLen;
         OH_Values_GetAssets(values, index, &asset, inLen, &outLen);
+        OH_Data_Asset_DestroyOne(asset);
     }
 
     OH_Values_Destroy(values);
-    OH_Data_Asset_DestroyOne(asset);
-
+    
     OH_Values_GetAssets(nullptr, 0, nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
