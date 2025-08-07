@@ -149,16 +149,10 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         return false;
     }
     Param lastParam = GetSyncParam(config);
-    std::string basePath = StringUtils::ExtractFilePath(config.GetPath());
-    bool hasAcl = SqliteUtils::HasDDMSAcl(basePath);
-    lastParam.isNeedSetAcl_ = hasAcl;
     if (!configCache_.Get(path, lastParam) && GetParamFromService(lastParam) != E_OK) {
         LOG_WARN("Not found config cache, path: %{public}s", SqliteUtils::Anonymous(path).c_str());
         return false;
     };
-    if (lastParam.isNeedSetAcl_ && !hasAcl) {
-        SqliteUtils::SetDDMSAcl(basePath);
-    }
     configCache_.Set(path, lastParam);
     // The lastParam is possible that the same named db parameters of different paths when GetParamFromService
     if (lastParam.customDir_ != config.GetCustomDir() || lastParam.hapName_ != config.GetModuleName() ||

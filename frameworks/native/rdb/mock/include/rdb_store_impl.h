@@ -187,7 +187,6 @@ private:
     DistributedRdb::RdbStatEvent statEvent_;
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
-    std::string basePath_;
     std::string name_;
     std::string fileType_;
     mutable std::shared_mutex poolMutex_;
