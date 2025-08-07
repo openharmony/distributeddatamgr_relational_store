@@ -205,7 +205,7 @@ void RdbDoubleWriteBinlogTest::InsertNativeConn(sqlite3 *db, int64_t start, int 
     sqlite3_stmt *stat = nullptr;
     EXPECT_EQ(sqlite3_prepare_v2(db, RdbDoubleWriteBinlogTest::insertSql.c_str(), -1, &stat, nullptr), SQLITE_OK);
     for (int i = 0; i < count; i++) {
-        // bind parameters, 1, 2, 3, 4, 5 are sequence number of fields
+        // bind parameters, 1 is the sequence number of field
         sqlite3_bind_int(stat, 1, id);
         std::string nameStr;
         if (dataSize > 0) {
@@ -213,10 +213,14 @@ void RdbDoubleWriteBinlogTest::InsertNativeConn(sqlite3 *db, int64_t start, int 
         } else {
             nameStr = std::string("zhangsan");
         }
+        // bind parameters, 2 is the sequence number of field
         sqlite3_bind_text(stat, 2, nameStr.c_str(), -1, SQLITE_STATIC);
+        // bind parameters, 3 is the sequence number of field
         sqlite3_bind_int(stat, 3, CHECKAGE);
+        // bind parameters, 4 is the sequence number of field
         sqlite3_bind_double(stat, 4, CHECKCOLUMN);
         uint8_t blob[] = { 1, 2, 3 };
+        // bind parameters, 5 is the sequence number of field
         sqlite3_bind_blob(stat, 5, blob, sizeof(blob), nullptr);
         EXPECT_EQ(sqlite3_step(stat), SQLITE_DONE);
         sqlite3_reset(stat);
@@ -834,8 +838,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_013, TestSize.Level0)
     EXPECT_NE(db, nullptr);
 
     count = 0;
-    char *errMsg = 0;
-    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, &errMsg);
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, nullptr);
     EXPECT_EQ(rc, SQLITE_OK);
     EXPECT_EQ(count, num);
     sqlite3_close_v2(db);
@@ -880,8 +883,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_014, TestSize.Level0)
     EXPECT_EQ(rc, SQLITE_OK);
     EXPECT_NE(db, nullptr);
     count = 0;
-    char *errMsg = 0;
-    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, &errMsg);
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, nullptr);
     EXPECT_EQ(rc, SQLITE_OK);
     EXPECT_EQ(count, num);
     sqlite3_close_v2(db);
@@ -1080,15 +1082,15 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_020, TestSize.Level0)
     Insert(id, count);
     
     LOG_INFO("---- let binlog clean return ERROR");
-    auto originalApi = sqlite3_export_hw_symbols;
-    struct sqlite3_api_routines_hw mockApi = *sqlite3_export_hw_symbols;
+    auto originalApi = sqlite3_export_extra_symbols;
+    struct sqlite3_api_routines_extra mockApi = *sqlite3_export_extra_symbols;
     mockApi.clean_binlog = MockCleanBinlog;
-    sqlite3_export_hw_symbols = &mockApi;
+    sqlite3_export_extra_symbols = &mockApi;
 
     LOG_INFO("---- binlog clean failed should mark invalid");
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
     EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName));
-    sqlite3_export_hw_symbols = originalApi;
+    sqlite3_export_extra_symbols = originalApi;
 }
 
 /**
