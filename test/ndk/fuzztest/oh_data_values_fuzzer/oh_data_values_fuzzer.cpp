@@ -67,9 +67,12 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
     OH_Data_Value *dataValue = OH_Value_Create();
     if (dataValue != nullptr) {
         OH_Values_Put(values, dataValue);
+        OH_Values_Put(values, nullptr);
+        OH_Values_Put(nullptr, dataValue);
     }
 
     OH_Values_Destroy(values);
+    OH_Value_Destroy(dataValue);
 
     OH_Values_Put(nullptr, nullptr);
     OH_Values_Destroy(nullptr);
@@ -128,6 +131,8 @@ void OH_Values_PutTextFuzz(FuzzedDataProvider &provider)
 
     std::string textValue = provider.ConsumeRandomLengthString();
     OH_Values_PutText(values, textValue.c_str());
+    OH_Values_PutText(values, nullptr);
+    OH_Values_PutText(nullptr, textValue.c_str());
     OH_Values_Destroy(values);
 
     OH_Values_PutText(nullptr, nullptr);
@@ -163,6 +168,7 @@ void OH_Values_PutAssetFuzz(FuzzedDataProvider &provider)
     }
     OH_Values_PutAsset(values, asset);
     OH_Values_Destroy(values);
+    OH_Data_Asset_DestroyOne(asset);
 
     OH_Values_PutAsset(nullptr, nullptr);
     OH_Values_Destroy(nullptr);
@@ -189,6 +195,10 @@ void OH_Values_PutAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
+    for (size_t i = 0; i < loops; ++i) {
+        Data_Asset *asset = assets[i];
+        OH_Data_Asset_DestroyOne(asset);
+    }
 
     OH_Values_PutAssets(nullptr, nullptr, 0);
     OH_Values_Destroy(nullptr);
@@ -375,6 +385,7 @@ void OH_Values_GetAssetFuzz(FuzzedDataProvider &provider)
         OH_Values_GetAsset(values, index, asset);
     }
     OH_Values_Destroy(values);
+    OH_Data_Asset_DestroyOne(asset);
 
     OH_Values_GetAsset(nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
@@ -416,6 +427,7 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
+    OH_Data_Asset_DestroyOne(asset);
 
     OH_Values_GetAssets(nullptr, 0, nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
