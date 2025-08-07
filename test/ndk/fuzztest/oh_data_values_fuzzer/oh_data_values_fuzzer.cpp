@@ -17,15 +17,16 @@
 
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "oh_data_values.h"
 #include "grd_api_manager.h"
 #include "oh_data_value.h"
+#include "oh_data_values.h"
 #include "oh_data_values_buckets.h"
 #include "oh_value_object.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
+
 
 #define LOOPS_MIN 1
 #define LOOPS_MAX 10
