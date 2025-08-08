@@ -45,6 +45,7 @@ void OH_Rdb_DestroyCryptoParamFuzz(FuzzedDataProvider &provider)
     if (param != nullptr) {
         OH_Rdb_DestroyCryptoParam(param);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetEncryptionKeyFuzz(FuzzedDataProvider &provider)
@@ -55,6 +56,7 @@ void OH_Crypto_SetEncryptionKeyFuzz(FuzzedDataProvider &provider)
         std::vector<uint8_t> blobData = provider.ConsumeBytes<uint8_t>(bytesSize);
         OH_Crypto_SetEncryptionKey(param, blobData.data(), blobData.size());
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetIterationFuzz(FuzzedDataProvider &provider)
@@ -64,6 +66,7 @@ void OH_Crypto_SetIterationFuzz(FuzzedDataProvider &provider)
         const int64_t iteration = provider.ConsumeIntegral<int64_t>();
         OH_Crypto_SetIteration(param, iteration);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetEncryptionAlgoFuzz(FuzzedDataProvider &provider)
@@ -73,6 +76,7 @@ void OH_Crypto_SetEncryptionAlgoFuzz(FuzzedDataProvider &provider)
         const int32_t algo = provider.ConsumeIntegral<int32_t>();
         OH_Crypto_SetEncryptionAlgo(param, algo);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetHmacAlgoFuzz(FuzzedDataProvider &provider)
@@ -82,6 +86,7 @@ void OH_Crypto_SetHmacAlgoFuzz(FuzzedDataProvider &provider)
         const int32_t algo = provider.ConsumeIntegral<int32_t>();
         OH_Crypto_SetHmacAlgo(param, algo);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetKdfAlgoFuzz(FuzzedDataProvider &provider)
@@ -91,6 +96,7 @@ void OH_Crypto_SetKdfAlgoFuzz(FuzzedDataProvider &provider)
         const int32_t algo = provider.ConsumeIntegral<int32_t>();
         OH_Crypto_SetKdfAlgo(param, algo);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 
 void OH_Crypto_SetCryptoPageSizeFuzz(FuzzedDataProvider &provider)
@@ -100,6 +106,7 @@ void OH_Crypto_SetCryptoPageSizeFuzz(FuzzedDataProvider &provider)
         const int64_t size = provider.ConsumeIntegral<int64_t>();
         OH_Crypto_SetCryptoPageSize(param, size);
     }
+    OH_Rdb_DestroyCryptoParam(param);
 }
 } // namespace OHOS
 

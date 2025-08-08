@@ -65,6 +65,7 @@ void TestOH_Predicates_equalTo(FuzzedDataProvider &provider)
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->equalTo(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_notEqualTo(FuzzedDataProvider &provider)
@@ -82,6 +83,7 @@ void TestOH_Predicates_notEqualTo(FuzzedDataProvider &provider)
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->notEqualTo(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_beginWrap(FuzzedDataProvider &provider)
@@ -92,6 +94,7 @@ void TestOH_Predicates_beginWrap(FuzzedDataProvider &provider)
         return;
     }
     predicates->beginWrap(predicates);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_endWrap(FuzzedDataProvider &provider)
@@ -102,6 +105,7 @@ void TestOH_Predicates_endWrap(FuzzedDataProvider &provider)
         return;
     }
     predicates->endWrap(predicates);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_orOperate(FuzzedDataProvider &provider)
@@ -112,6 +116,7 @@ void TestOH_Predicates_orOperate(FuzzedDataProvider &provider)
         return;
     }
     predicates->orOperate(predicates);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_andOperate(FuzzedDataProvider &provider)
@@ -122,6 +127,7 @@ void TestOH_Predicates_andOperate(FuzzedDataProvider &provider)
         return;
     }
     predicates->andOperate(predicates);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_isNull(FuzzedDataProvider &provider)
@@ -133,6 +139,7 @@ void TestOH_Predicates_isNull(FuzzedDataProvider &provider)
     }
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->isNull(predicates, field.c_str());
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_isNotNull(FuzzedDataProvider &provider)
@@ -144,6 +151,7 @@ void TestOH_Predicates_isNotNull(FuzzedDataProvider &provider)
     }
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->isNotNull(predicates, field.c_str());
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_like(FuzzedDataProvider &provider)
@@ -155,12 +163,15 @@ void TestOH_Predicates_like(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->like(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_between(FuzzedDataProvider &provider)
@@ -172,12 +183,15 @@ void TestOH_Predicates_between(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->between(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_notBetween(FuzzedDataProvider &provider)
@@ -189,12 +203,15 @@ void TestOH_Predicates_notBetween(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->notBetween(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_greaterThan(FuzzedDataProvider &provider)
@@ -206,12 +223,15 @@ void TestOH_Predicates_greaterThan(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->greaterThan(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_lessThan(FuzzedDataProvider &provider)
@@ -223,12 +243,15 @@ void TestOH_Predicates_lessThan(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->lessThan(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_greaterThanOrEqualTo(FuzzedDataProvider &provider)
@@ -240,12 +263,15 @@ void TestOH_Predicates_greaterThanOrEqualTo(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->greaterThanOrEqualTo(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_lessThanOrEqualTo(FuzzedDataProvider &provider)
@@ -257,12 +283,15 @@ void TestOH_Predicates_lessThanOrEqualTo(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     obj->putText(obj, value.c_str());
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     predicates->lessThanOrEqualTo(predicates, field.c_str(), obj);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_orderBy(FuzzedDataProvider &provider)
@@ -274,6 +303,7 @@ void TestOH_Predicates_orderBy(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
@@ -281,6 +311,8 @@ void TestOH_Predicates_orderBy(FuzzedDataProvider &provider)
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     OH_OrderType type = static_cast<OH_OrderType>(provider.ConsumeIntegral<int>());
     predicates->orderBy(predicates, field.c_str(), type);
+    predicates->destroy(predicates);
+    obj->destroy(obj);
 }
 
 void TestOH_Predicates_distinct(FuzzedDataProvider &provider)
@@ -291,6 +323,7 @@ void TestOH_Predicates_distinct(FuzzedDataProvider &provider)
         return;
     }
     predicates->distinct(predicates);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_limit(FuzzedDataProvider &provider)
@@ -302,6 +335,7 @@ void TestOH_Predicates_limit(FuzzedDataProvider &provider)
     }
     unsigned int value = provider.ConsumeIntegral<unsigned int>();
     predicates->limit(predicates, value);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_offset(FuzzedDataProvider &provider)
@@ -313,6 +347,7 @@ void TestOH_Predicates_offset(FuzzedDataProvider &provider)
     }
     unsigned int rowOffset = provider.ConsumeIntegral<unsigned int>();
     predicates->offset(predicates, rowOffset);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_groupBy(FuzzedDataProvider &provider)
@@ -329,6 +364,7 @@ void TestOH_Predicates_groupBy(FuzzedDataProvider &provider)
         fields[i] = fieldsString.c_str();
     }
     predicates->groupBy(predicates, fields, loops);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_in(FuzzedDataProvider &provider)
@@ -343,6 +379,7 @@ void TestOH_Predicates_in(FuzzedDataProvider &provider)
     for (auto value : values) {
         predicates->in(predicates, field.c_str(), value);
     }
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_notIn(FuzzedDataProvider &provider)
@@ -357,6 +394,7 @@ void TestOH_Predicates_notIn(FuzzedDataProvider &provider)
     for (auto value : values) {
         predicates->notIn(predicates, field.c_str(), value);
     }
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_Having(FuzzedDataProvider &provider)
@@ -369,6 +407,7 @@ void TestOH_Predicates_Having(FuzzedDataProvider &provider)
     std::string conditions = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     OH_Data_Values *values = OH_Values_Create();
     OH_Predicates_Having(predicates, conditions.c_str(), values);
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_NotLike(FuzzedDataProvider &provider)
@@ -381,6 +420,7 @@ void TestOH_Predicates_NotLike(FuzzedDataProvider &provider)
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     std::string pattern = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     OH_Predicates_NotLike(predicates, field.c_str(), pattern.c_str());
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_Glob(FuzzedDataProvider &provider)
@@ -393,6 +433,7 @@ void TestOH_Predicates_Glob(FuzzedDataProvider &provider)
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     std::string pattern = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     OH_Predicates_Glob(predicates, field.c_str(), pattern.c_str());
+    predicates->destroy(predicates);
 }
 
 void TestOH_Predicates_NotGlob(FuzzedDataProvider &provider)
@@ -405,6 +446,7 @@ void TestOH_Predicates_NotGlob(FuzzedDataProvider &provider)
     std::string field = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     std::string pattern = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
     OH_Predicates_NotGlob(predicates, field.c_str(), pattern.c_str());
+    predicates->destroy(predicates);
 }
 } // namespace OHOS
 
