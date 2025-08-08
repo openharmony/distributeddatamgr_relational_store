@@ -81,11 +81,11 @@ int ParseDevice(const napi_env env, const napi_value arg, std::shared_ptr<RdbSto
     return OK;
 }
 
-int ParseString(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+int ParseSrcType(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     std::string value = "";
-    int32_t res = JSUtils::Convert2Value(env, arg, value);
-    CHECK_RETURN_SET(res == OK, std::make_shared<ParamError>("srcName", "not null"));
+    int32_t status = JSUtils::Convert2Value(env, arg, value);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("srcName", "not null"));
     context->srcName = value;
     return OK;
 }

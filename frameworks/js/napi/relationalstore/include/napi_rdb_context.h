@@ -118,7 +118,7 @@ int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared
 
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
-int ParseString(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+int ParseSrcType(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
 int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
