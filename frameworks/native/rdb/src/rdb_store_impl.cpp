@@ -1846,7 +1846,10 @@ int RdbStoreImpl::InnerBackup(
         return errCode != E_OK ? errCode : conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
     }
     Suspender suspender(Suspender::SQL_LOG);
-    auto [result, conn] = CreateWritableConn();
+    auto config = config_;
+    config.SetHaMode(HAMode::SINGLE);
+    config.SetCreateNecessary(false);
+    auto [result, conn] = CreateWritableConn(config);
     if (result != E_OK) {
         return result;
     }
@@ -2607,6 +2610,29 @@ int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const
     return E_OK;
 }
 
+int RdbStoreImpl::StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus)
+{
+    auto taskPool = TaskExecutor::GetInstance().GetExecutor();
+    if (taskPool == nullptr) {
+        LOG_ERROR("Get thread pool failed");
+        return E_ERROR;
+    }
+    auto config = config_;
+    config.SetCreateNecessary(false);
+    taskPool->Execute([config, slaveStatus] {
+        auto [result, conn] = CreateWritableConn(config);
+        if (result != E_OK || conn == nullptr) {
+            return;
+        }
+        auto strategy = conn->GenerateExchangeStrategy(slaveStatus);
+        LOG_INFO("async exchange st:%{public}d,", strategy);
+        if (strategy == ExchangeStrategy::BACKUP) {
+            (void)conn->Backup({}, {}, false, slaveStatus);
+        }
+    });
+    return E_OK;
+}
+
 int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
     std::shared_ptr<ConnectionPool> pool)
 {
@@ -2687,11 +2713,8 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     return errCode;
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn()
+std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn(const RdbStoreConfig &config)
 {
-    auto config = config_;
-    config.SetHaMode(HAMode::SINGLE);
-    config.SetCreateNecessary(false);
     auto [result, conn] = Connection::Create(config, true);
     if (result != E_OK || conn == nullptr) {
         LOG_ERROR("create connection failed, err:%{public}d", result);
@@ -2806,7 +2829,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     if (errCode != E_OK) {
         return errCode;
     }
-    auto strategy = conn->GenerateExchangeStrategy(slaveStatus_);
+    auto strategy = conn->GenerateExchangeStrategy(slaveStatus_, false);
     if (strategy != ExchangeStrategy::NOT_HANDLE) {
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
@@ -2818,6 +2841,8 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     } else if (strategy == ExchangeStrategy::BACKUP) {
         // async backup
         ret = conn->Backup({}, {}, true, slaveStatus_);
+    } else if (strategy == ExchangeStrategy::PENDING_BACKUP) {
+        ret = StartAsyncBackupIfNeed(slaveStatus_);
     }
     return ret;
 }
