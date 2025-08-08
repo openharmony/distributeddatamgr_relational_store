@@ -59,6 +59,7 @@ void TestOH_Predicates_equalTo(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);
@@ -77,6 +78,7 @@ void TestOH_Predicates_notEqualTo(FuzzedDataProvider &provider)
     }
     OH_VObject *obj = OH_Rdb_CreateValueObject();
     if (obj == nullptr) {
+        predicates->destroy(predicates);
         return;
     }
     std::string value = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX);

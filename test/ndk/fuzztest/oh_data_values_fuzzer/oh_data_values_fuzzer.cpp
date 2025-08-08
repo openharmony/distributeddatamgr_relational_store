@@ -183,10 +183,10 @@ void OH_Values_PutAssetsFuzz(FuzzedDataProvider &provider)
     }
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
     std::vector<Data_Asset *> assets;
-    for (size_t i = 0; i < loops; ++i) {
+    for (size_t i = 0; i < loops; i++) {
         Data_Asset *asset = OH_Data_Asset_CreateOne();
         if (asset == nullptr) {
-            return;
+            continue;
         }
         assets.push_back(asset);
     }
@@ -196,7 +196,7 @@ void OH_Values_PutAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    for (size_t i = 0; i < loops; ++i) {
+    for (size_t i = 0; i < assets.size(); i++) {
         Data_Asset *asset = assets[i];
         OH_Data_Asset_DestroyOne(asset);
     }
@@ -421,6 +421,7 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
     if (inLen > 0) {
         Data_Asset *asset = OH_Data_Asset_CreateOne();
         if (asset == nullptr) {
+            OH_Values_Destroy(values);
             return;
         }
         size_t outLen;
