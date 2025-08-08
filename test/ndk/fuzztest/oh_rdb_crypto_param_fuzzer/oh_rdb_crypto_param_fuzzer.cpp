@@ -42,7 +42,10 @@ namespace OHOS {
 void OH_Rdb_DestroyCryptoParamFuzz(FuzzedDataProvider &provider)
 {
     OH_Rdb_CryptoParam *param = OH_Rdb_CreateCryptoParam();
-    OH_Rdb_DestroyCryptoParam(param);
+    if (param != nullptr) {
+        OH_Rdb_DestroyCryptoParam(param);
+    }
+    OH_Rdb_DestroyCryptoParam(nullptr);
 }
 
 void OH_Crypto_SetEncryptionKeyFuzz(FuzzedDataProvider &provider)
