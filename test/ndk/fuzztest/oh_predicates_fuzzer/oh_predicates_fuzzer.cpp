@@ -380,6 +380,7 @@ void TestOH_Predicates_in(FuzzedDataProvider &provider)
     std::vector<OH_VObject *> values = ConsumeRandomLengthValueObjectVector(provider);
     for (auto value : values) {
         predicates->in(predicates, field.c_str(), value);
+        value->destroy(value);
     }
     predicates->destroy(predicates);
 }
@@ -395,6 +396,7 @@ void TestOH_Predicates_notIn(FuzzedDataProvider &provider)
     std::vector<OH_VObject *> values = ConsumeRandomLengthValueObjectVector(provider);
     for (auto value : values) {
         predicates->notIn(predicates, field.c_str(), value);
+        value->destroy(value);
     }
     predicates->destroy(predicates);
 }
