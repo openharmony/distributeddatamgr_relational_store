@@ -62,7 +62,6 @@ union ValuesBucket {
 
 union PRIKeyType {
     INT64: i64;
-    F64: f64;
     STRING: String;
 }
 
@@ -85,6 +84,7 @@ struct StoreConfig {
     vector: Optional<bool>;
     isReadOnly: Optional<bool>;
     pluginLibs: Optional<Array<String>>;
+    haMode: Optional<HAMode>;
     cryptoParam: Optional<CryptoParam>;
 }
 
@@ -261,7 +261,7 @@ struct SqlInfo {
 
 union StringOrNumberArray {
     STRINGARRAY : Array<String>;
-    Int32Array : Array<i32>;
+    Int64Array : Array<i64>;
 }
 
  interface ResultSet {
@@ -353,8 +353,8 @@ interface RdbPredicates {
     OffsetAs(@sts_this thiz : RdbPredicates, rowOffset: i32): RdbPredicates;
     GroupBy(@sts_this thiz : RdbPredicates, fields: Array<String>): RdbPredicates;
     IndexedBy(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    In(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
-    NotIn(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
+    InValues(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
+    NotInValues(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
     NotContains(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
     NotLike(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
 }
@@ -679,13 +679,13 @@ interface RdbStore {
     CloseSync(): void;
 
     @gen_promise("attach")
-    AttachWithWaitTime(fullPath: String, attachName: String, waitTime: i32) : i32;
+    AttachWithWaitTime(fullPath: String, attachName: String, waitTime: i64) : i32;
 
     @gen_promise("attach")
-    AttachWithContext(context: @sts_type("BaseContext") Opaque, config: StoreConfig, attachName: String, waitTime: Optional<i32>) : i32;
+    AttachWithContext(context: @sts_type("BaseContext") Opaque, config: StoreConfig, attachName: String, waitTime: Optional<i64>) : i32;
 
     @gen_promise("detach")
-    DetachSync(attachName: String, waitTime: Optional<i32>) : i32;
+    DetachSync(attachName: String, waitTime: Optional<i64>) : i32;
 
     @gen_promise("lockRow")
     LockRowSync(predicates: RdbPredicates): void;
