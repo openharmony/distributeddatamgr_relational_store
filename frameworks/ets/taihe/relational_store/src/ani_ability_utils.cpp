@@ -70,45 +70,10 @@ std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env
     return std::make_shared<OHOS::AppDataMgrJsKit::Context>(stageContext);
 }
 
-std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetCurrentAbility(ani_env *env, ani_object value)
-{
-    LOG_DEBUG("Get context as feature ability mode.");
-    auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
-    if (ability == nullptr) {
-        LOG_ERROR("GetCurrentAbility failed.");
-        return nullptr;
-    }
-    auto abilityContext = ability->GetAbilityContext();
-    if (abilityContext == nullptr) {
-        LOG_ERROR("GetAbilityContext failed.");
-        return nullptr;
-    }
-    return std::make_shared<OHOS::AppDataMgrJsKit::Context>(abilityContext);
-}
-
-int32_t GetCurrentAbilityParam(ani_env *env, ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param)
-{
-    std::shared_ptr<OHOS::AppDataMgrJsKit::Context> context = GetCurrentAbility(env, jsValue);
-    if (context == nullptr) {
-        return ANI_INVALID_ARGS;
-    }
-    param.baseDir = context->GetDatabaseDir();
-    param.moduleName = context->GetModuleName();
-    param.area = context->GetArea();
-    param.bundleName = context->GetBundleName();
-    param.isSystemApp = context->IsSystemAppCalled();
-    return ANI_OK;
-}
-
 int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param)
 {
     LOG_INFO("AniGetContext");
     ani_env *env = taihe::get_env();
-    if (jsValue == nullptr) {
-        LOG_INFO("hasProp is false -> fa stage");
-        param.isStageMode = false;
-        return GetCurrentAbilityParam(env, jsValue, param);
-    }
     param.isStageMode = true;
 
     int32_t status = ani_utils::AniGetProperty(env, jsValue, "databaseDir", param.baseDir);
