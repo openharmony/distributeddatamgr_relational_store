@@ -47,6 +47,7 @@ private:
     void *dlHandle_ = nullptr;
 #endif
     std::string bundleName_ = "";
+    std::string dbName_ = "";
 };
 }
 #endif // DISTRIBUTED_RDB_KNOWLEDGE_SCHEMA_HELPER_H
