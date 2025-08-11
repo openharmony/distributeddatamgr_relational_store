@@ -162,6 +162,14 @@ static int MockCleanBinlog(sqlite3 *db, BinlogFileCleanModeE mode)
 
 void RdbDoubleWriteTest::SetUpTestCase(void)
 {
+}
+
+void RdbDoubleWriteTest::TearDownTestCase(void)
+{
+}
+
+void RdbDoubleWriteTest::SetUp(void)
+{
     mockExtraApi.is_support_binlog = MockNotSupportBinlog;
     mockExtraApi.replay_binlog = MockReplayBinlog;
     mockExtraApi.clean_binlog = MockCleanBinlog;
@@ -170,18 +178,6 @@ void RdbDoubleWriteTest::SetUpTestCase(void)
     mockKvApi.is_support_binlog = MockNotSupportBinlogWithParam;
     sqlite3_export_relational_symbols = &mockKvApi;
 #endif
-}
-
-void RdbDoubleWriteTest::TearDownTestCase(void)
-{
-    sqlite3_export_extra_symbols = originalExtraApi;
-#ifndef CROSS_PLATFORM
-    sqlite3_export_relational_symbols = originalKvApi;
-#endif
-}
-
-void RdbDoubleWriteTest::SetUp(void)
-{
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
@@ -193,6 +189,10 @@ void RdbDoubleWriteTest::TearDown(void)
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
+    sqlite3_export_extra_symbols = originalExtraApi;
+#ifndef CROSS_PLATFORM
+    sqlite3_export_relational_symbols = originalKvApi;
+#endif
 }
 
 void RdbDoubleWriteTest::InitDb(HAMode mode, bool isOpenSlave)
