@@ -39,7 +39,7 @@ KnowledgeSchemaHelper::~KnowledgeSchemaHelper()
 {
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
     if (schemaManager_ != nullptr) {
-        schemaManager_->StopTask();
+        schemaManager_->StopTask(dbName_);
         delete schemaManager_;
         schemaManager_ = nullptr;
     }
@@ -65,6 +65,7 @@ void KnowledgeSchemaHelper::Init(const RdbStoreConfig &config, const Distributed
     }
     schemaManager_->Init(config, schema);
     bundleName_ = config.GetBundleName();
+    dbName_ = config.GetName();
     inited_ = true;
 }
 
@@ -119,9 +120,14 @@ void KnowledgeSchemaHelper::DonateKnowledgeData()
         LOG_WARN("skip donate data by miss manager");
         return;
     }
-    auto helper = shared_from_this();
+    std::weak_ptr<KnowledgeSchemaHelper> helper = shared_from_this();
     executor->Execute([helper]() {
-        helper->StartTask();
+        auto realHelper = helper.lock();
+        if (realHelper == nullptr) {
+            LOG_WARN("knowledge helper is null");
+            return;
+        }
+        realHelper->StartTask();
     });
 }
 
@@ -181,14 +187,14 @@ void KnowledgeSchemaHelper::StartTask()
         }
         manager = schemaManager_;
     }
-    manager->StartTask();
+    manager->StartTask(dbName_);
 }
 
 void KnowledgeSchemaHelper::Close()
 {
     std::unique_lock<std::shared_mutex> writeLock(libMutex_);
     if (schemaManager_ != nullptr) {
-        schemaManager_->StopTask();
+        schemaManager_->StopTask(dbName_);
     }
 }
 }

@@ -86,12 +86,12 @@ public:
     /**
      * @brief Start build knowledge data task.
      */
-    API_EXPORT virtual void StartTask() = 0;
+    API_EXPORT virtual void StartTask(const std::string &dbName) = 0;
 
     /**
      * @brief Stop build knowledge data task.
      */
-    API_EXPORT virtual void StopTask() = 0;
+    API_EXPORT virtual void StopTask(const std::string &dbName) = 0;
 
     /**
      * @brief Get rdb knowledge schema.
