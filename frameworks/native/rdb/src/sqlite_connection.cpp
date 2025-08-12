@@ -290,7 +290,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
                     SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
-                    SqliteUtils::Anonymous(sql).c_str());
+                    SqliteUtils::SqlAnonymous(sql).c_str());
                 Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
             }
         }
@@ -1211,7 +1211,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     bool isAsync, std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb)
 {
     if (*slaveStatus == SlaveStatus::BACKING_UP) {
-        LOG_INFO("backing up, return:%{public}s", config_.GetName().c_str());
+        LOG_INFO("backing up, return:%{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
         return E_OK;
     }
     LOG_INFO(
@@ -1674,7 +1674,7 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     auto [cRet, cObj] = ExecuteForValue("SELECT COUNT(*) FROM sqlite_master WHERE type='table';");
     auto cVal = std::get_if<int64_t>(&cObj.value);
     if (cRet == E_SQLITE_CORRUPT || (cVal != nullptr && (static_cast<int64_t>(*cVal) == 0L))) {
-        LOG_INFO("main empty, %{public}d, %{public}s", cRet, config_.GetName().c_str());
+        LOG_INFO("main empty, %{public}d, %{public}s", cRet, SqliteUtils::Anonymous(config_.GetName()).c_str());
         return true;
     }
 
