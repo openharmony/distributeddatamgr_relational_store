@@ -59,8 +59,76 @@ constexpr int32_t DISPLAY_BYTE = 2;
 constexpr int32_t PREFIX_LENGTH = 3;
 constexpr int32_t FILE_MAX_SIZE = 20 * 1024;
 
+constexpr int32_t HEAD_SIZE = 3;
+constexpr int32_t END_SIZE = 3;
+constexpr int32_t MIN_SIZE = HEAD_SIZE + END_SIZE + 3;
+constexpr const char *REPLACE_CHAIN = "***";
+constexpr const unsigned char MAX_PRINTABLE_BYTE = 0x7F;
+
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
+
+constexpr const char *SQL_KEYWORD[] = { "ABORT", "ABS", "ACTION", "ADD", "AFTER", "ALIAS", "ALL", "ALTER", "ALWAYS",
+    "AMBIGUOUS", "ANALYZE", "AND", "AS", "ASC", "ATTACH", "AUTOINCREMENT", "AVG", "BEFORE", "BEGIN", "BETWEEN", "BIG",
+    "BIGINT", "BLOB", "BOOLEAN", "BY", "CASCADE", "CASE", "CAST", "CEIL", "CEILING", "CHARACTER", "CHECK", "CLOB",
+    "COALESCE", "COLLATE", "COLUMN", "COMMIT", "CONCAT", "CONFLICT", "CONSTRAINT", "COUNT", "CREATE", "CROSS",
+    "CURRENT", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "DATABASE", "DATE", "DATETIME", "DECIMAL",
+    "DEFAULT", "DEFERRABLE", "DEFERRED", "DELETE", "DESC", "DETACH", "DIGIT", "DISTINCT", "DO", "DOUBLE",
+    "DOUBLE PRECISION", "DROP", "E", "EACH", "ELSE", "END", "ESCAPE", "EXCEPT", "EXCLUDE", "EXCLUSIVE", "EXISTS", "EXP",
+    "EXPLAIN", "EXPR", "FAIL", "FALSE", "FILENAME", "FILTER", "FIRST", "FLOAT", "FLOOR", "FOLLOWING", "FOR", "FOREIGN",
+    "FROM", "FULL", "GENERATED", "GLOB", "GROUP", "GROUPS", "GROUP_CONCAT", "HAVING", "HEXDIGIT", "IF", "IFNULL",
+    "IGNORE", "IMMEDIATE", "IN", "INDEX", "INDEXED", "INITIALLY", "INNER", "INSERT", "INSTEAD", "INSTR", "INT", "INT2",
+    "INT8", "INTEGER", "INTERSECT", "INTO", "IS", "ISNULL", "JOIN", "JULIANDAY", "KEY", "LAST", "LEFT", "LENGTH",
+    "LIKE", "LIMIT", "LN", "LOG", "LOWER", "LTRIM", "MATCH", "MATERIALIZED", "MAX", "MEDIUMINT", "MIN", "NAME",
+    "NATIVE", "NATURAL", "NCHAR", "NEWLINE", "NO", "NOT", "NOTHING", "NOTNULL", "NULL", "NULLIF", "NULLS", "NUMERIC",
+    "NVARCHAR", "OF", "OFFSET", "ON", "OR", "ORDER", "OTHERS", "OUTER", "OVER", "PARTITION", "PLAN", "POWER", "PRAGMA",
+    "PRECEDING", "PRIMARY", "QUERY", "RAISE", "RANDOM", "RANGE", "REAL", "RECURSIVE", "REFERENCES", "REGEXP",
+    "REINDEX", "RELEASE", "RENAME", "REPLACE", "RESTRICT", "RETURNING", "RIGHT", "ROLLBACK", "ROUND", "ROW", "ROWID",
+    "ROWS", "RTRIM", "SAVEPOINT", "SELECT", "SET", "SMALLINT", "SQRT", "STORED", "STRFTIME", "STRICT", "SUBSTR", "SUM",
+    "TABLE", "TEMP", "TEMPORARY", "TEXT", "THEN", "TIES", "TIME", "TINYINT", "TO", "TOTAL", "TRANSACTION", "TRIGGER",
+    "TRIM", "TRUE", "TYPEOF", "UNBOUNDED", "UNION", "UNIQUE", "UNSIGNED", "UPDATE", "UPPER", "USING", "VACUUM",
+    "VALUES", "VARCHAR", "VARYING", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WINDOW", "WITH", "WITHOUT" };
+
+constexpr const char *WHILE_KEYWORDS[] = { "ABORT", "ABORTS", "ACQLOCK", "ALREADY", "AT", "BUSYLINE", "CHANGED",
+    "COLUMN", "CONSTRAINT", "CURLOCK", "DATABASE", "DBREF", "DEL", "DOUBLE", "DUPLICATE", "ENABLE", "ERRNO", "ERROR",
+    "EXISTS", "FAILED", "FD", "FILE", "FILELOCK", "FRAMES", "FROM", "F_RDLCK", "F_WRLCK", "GO", "HANDLELOCKS", "HAS",
+    "IDX", "IN", "INDEX", "IS", "LEN", "LINE", "LITERAL", "LOCKCNT", "LOCKS", "MISUSE", "MONITOR", "NAME", "NEAR",
+    "NO", "NONE", "OF", "PID", "PROCESSLOCK", "QUOTED", "READ", "RECOVERED", "SCHEMA", "SHARED_FIRST", "SQLITE",
+    "STATEMENT", "STRING", "SUCH", "SYNTAX", "TABLE", "TID", "TRX", "TYPE", "UNIQUE", "WAL", "WAL_DMS", "WARNING",
+    "WRITE", "WRONG" };
+
+constexpr int32_t WordCompare(const char *a, const char *b)
+{
+    while (*a && *b && (*a == *b)) {
+        ++a;
+        ++b;
+    }
+    return static_cast<unsigned char>(*a) - static_cast<unsigned char>(*b);
+}
+
+constexpr bool IsLexSorted(const char *const *keyword, size_t size)
+{
+    for (size_t i = 1; i < size; ++i) {
+        if (WordCompare(keyword[i - 1], keyword[i]) >= 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool IsMatchKeyword(const char *const *keyword, size_t size, const char *str)
+{
+    auto it = std::lower_bound(
+        keyword, keyword + size, str, [](const char *a, const char *b) { return WordCompare(a, b) < 0; });
+    if (it != keyword + size && WordCompare(*it, str) == 0) {
+        return true;
+    }
+    return false;
+}
+
+// ensure lexicographical order
+static_assert(IsLexSorted(SQL_KEYWORD, sizeof(SQL_KEYWORD) / sizeof(char*)));
+static_assert(IsLexSorted(WHILE_KEYWORDS, sizeof(WHILE_KEYWORDS) / sizeof(char*)));
 
 int SqliteUtils::GetSqlStatementType(const std::string &sql)
 {
@@ -196,53 +264,38 @@ size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
 #endif
 }
 
-std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
+bool SqliteUtils::IsKeyword(const std::string &word)
 {
-    std::vector<std::string> alnum;
-    std::vector<std::string> noAlnum;
-    std::string alnumStr;
-    std::string noAlnumStr;
-    for (const auto &letter : fileName) {
-        if (isxdigit(letter)) {
-            if (!noAlnumStr.empty()) {
-                noAlnum.push_back(noAlnumStr);
-                noAlnumStr.clear();
-                alnum.push_back("");
-            }
-            alnumStr += letter;
-        } else {
-            if (!alnumStr.empty()) {
-                alnum.push_back(alnumStr);
-                alnumStr.clear();
-                noAlnum.push_back("");
-            }
-            noAlnumStr += letter;
-        }
-    }
-    if (!alnumStr.empty()) {
-        alnum.push_back(alnumStr);
-        noAlnum.push_back("");
-    }
-    if (!noAlnumStr.empty()) {
-        noAlnum.push_back(noAlnumStr);
-        alnum.push_back("");
-    }
-    std::string res = "";
-    for (size_t i = 0; i < alnum.size(); ++i) {
-        res += (AnonyDigits(alnum[i]) + noAlnum[i]);
-    }
-    return res;
+    return IsMatchKeyword(SQL_KEYWORD, sizeof(SQL_KEYWORD) / sizeof(char *), StrToUpper(word).c_str()) ||
+           IsMatchKeyword(WHILE_KEYWORDS, sizeof(WHILE_KEYWORDS) / sizeof(char *), StrToUpper(word).c_str());
 }
 
-std::string SqliteUtils::AnonyDigits(const std::string &fileName)
+std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
 {
-    std::string::size_type digitsNum = fileName.size();
+    if (fileName.empty()) {
+        return "";
+    }
+
+    if (fileName.length() <= HEAD_SIZE) {
+        return fileName.substr(0, 1) + "**";
+    }
+
+    if (fileName.length() < MIN_SIZE) {
+        return (fileName.substr(0, HEAD_SIZE) + REPLACE_CHAIN);
+    }
+
+    return (fileName.substr(0, HEAD_SIZE) + REPLACE_CHAIN + fileName.substr(fileName.length() - END_SIZE, END_SIZE));
+}
+
+std::string SqliteUtils::AnonymousDigits(const std::string &digits)
+{
+    std::string::size_type digitsNum = digits.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
-        return fileName;
+        return digits;
     }
     std::string::size_type endDigitsNum = 4;
     std::string::size_type shortEndDigitsNum = 3;
-    std::string name = fileName;
+    std::string name = digits;
     std::string last = "";
     if (digitsNum == CONTINUOUS_DIGITS_MINI_SIZE) {
         last = name.substr(name.size() - shortEndDigitsNum);
@@ -250,6 +303,53 @@ std::string SqliteUtils::AnonyDigits(const std::string &fileName)
         last = name.substr(name.size() - endDigitsNum);
     }
     return "***" + last;
+}
+
+std::string ByteAnonymous(const std::string &input)
+{
+    std::string output;
+    bool maskCurrent = false;
+    for (unsigned char byte : input) {
+        if (byte > MAX_PRINTABLE_BYTE) {
+            if (!maskCurrent) {
+                output += "***";
+                maskCurrent = true;
+            }
+        } else {
+            output.push_back(static_cast<char>(byte));
+            maskCurrent = false;
+        }
+    }
+    return output;
+}
+
+std::string SqliteUtils::SqlAnonymous(const std::string &sql)
+{
+    std::string result;
+    std::regex idRegex(R"(\b[a-zA-Z0-9_]+\b)");
+    auto begin = std::sregex_iterator(sql.begin(), sql.end(), idRegex);
+    auto end = std::sregex_iterator();
+
+    size_t lastPos = 0;
+    for (auto it = begin; it != end; ++it) {
+        std::smatch match = *it;
+        std::string word = match.str();
+        size_t pos = match.position();
+
+        result.append(ByteAnonymous(sql.substr(lastPos, pos - lastPos)));
+
+        lastPos = pos + word.length();
+        if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
+            result.append(AnonymousDigits(word));
+        } else if (IsKeyword(word)) {
+            result.append(std::move(word));
+        } else {
+            result.append(GetAnonymousName(word));
+        }
+    }
+
+    result.append(ByteAnonymous(sql.substr(lastPos)));
+    return result;
 }
 
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
@@ -268,9 +368,9 @@ std::string SqliteUtils::Anonymous(const std::string &srcFile)
     } else {
         path = path.substr(area, AREA_MINI_SIZE);
     }
-    std::string fileName = srcFile.substr(end); // rdb file name
+    std::string fileName = srcFile.substr(end + 1); // rdb file name
     fileName = GetAnonymousName(fileName);
-    return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + fileName;
+    return srcFile.substr(0, pre + PRE_OFFSET_SIZE) + "***" + path + "/" + fileName;
 }
 
 std::string SqliteUtils::GetArea(const std::string &srcFile)
