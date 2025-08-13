@@ -22,6 +22,8 @@ var context = globalThis.abilityContext;
 const TAG = "[RELATIONAL_STORE_TRANSACTION_JSKITS_TEST]"
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY, " +
   "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+const CREATE_TABLE_TEST1 = "CREATE TABLE IF NOT EXISTS test1 (" + "id INTEGER PRIMARY KEY, " +
+  "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
 
 const STORE_CONFIG = {
   name: "TransactionTest.db",
@@ -2239,6 +2241,488 @@ export default function () {
       await transaction.rollback();
       done()
       console.log(TAG + "************* testBatchInsertWithConflictResolutionInTransactionWithInvalidArgs0035 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0001
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0001', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0001 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        await transaction.execute('DROP TABLE test');
+        console.error(TAG + 'drop table success but testSqliteLocked0001 failed');
+        await transaction.commit();
+        expect(null).assertFail()
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(String(err.code)).assertEqual(String(14800025))
+        console.info(TAG + "testSqliteLocked0001 success");
+      }
+      resultSet.close();
+      done()
+      console.log(TAG + "************* testSqliteLocked0001 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0002
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0002', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0002 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount - 1; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        await transaction.execute('DROP TABLE test');
+        console.error(TAG + 'drop table success but testSqliteLocked0002 failed');
+        await transaction.commit();
+        expect(null).assertFail()
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(String(err.code)).assertEqual(String(14800025))
+        console.info(TAG + "testSqliteLocked0002 success");
+      }
+      resultSet.close();
+      done()
+      console.log(TAG + "************* testSqliteLocked0002 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0003
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table after querying the data and closing the resultSet
+     */
+    it('testSqliteLocked0003', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0003 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        resultSet.close();
+
+        await transaction.execute('DROP TABLE test');
+        console.info(TAG + 'testSqliteLocked0003 success');
+        await transaction.commit();
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail()
+        console.error(TAG + "testSqliteLocked0003 failed");
+      }
+      done()
+      console.log(TAG + "************* testSqliteLocked0003 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0004
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the index before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0004', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0004 start *************");
+
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute('CREATE INDEX test_index ON test(age)');
+
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        await transaction.execute('DROP INDEX test_index');
+        console.error(TAG + 'drop table success but testSqliteLocked0004 failed');
+        await transaction.commit();
+        expect(null).assertFail()
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(String(err.code)).assertEqual(String(14800025))
+        console.info(TAG + "testSqliteLocked0004 success");
+      }
+      resultSet.close();
+      await rdbStore.execute('DROP INDEX test_index');
+      done()
+      console.log(TAG + "************* testSqliteLocked0004 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0005
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the index before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0005', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0005 start *************");
+
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute('CREATE INDEX test_index ON test(age)');
+
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount - 1; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        await transaction.execute('DROP INDEX test_index');
+        console.error(TAG + 'drop table success but testSqliteLocked0005 failed');
+        await transaction.commit();
+        expect(null).assertFail()
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(String(err.code)).assertEqual(String(14800025))
+        console.info(TAG + "testSqliteLocked0005 success");
+      }
+      resultSet.close();
+      await rdbStore.execute('DROP INDEX test_index');
+      done()
+      console.log(TAG + "************* testSqliteLocked0005 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0006
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the index after querying the data and closing the resultSet
+     */
+    it('testSqliteLocked0006', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0006 start *************");
+
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute('CREATE INDEX test_index ON test(age)');
+
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        resultSet.close();
+
+        await transaction.execute('DROP INDEX test_index');
+        console.info(TAG + 'testSqliteLocked0006 success');
+        await transaction.commit();
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail()
+        console.error(TAG + "testSqliteLocked0006 failed");
+      }
+      done()
+      console.log(TAG + "************* testSqliteLocked0006 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0007
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0007', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0007 start *************");
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        resultSet.close();
+
+        await transaction.execute('DROP TABLE test');
+        console.info(TAG + 'testSqliteLocked0007 success');
+        await transaction.commit();
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail();
+        console.error(TAG + "testSqliteLocked0007 failed");
+      }
+      done()
+      console.log(TAG + "************* testSqliteLocked0007 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0008
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the index before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0008', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0008 start *************");
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute('CREATE INDEX test_index ON test(age)');
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        resultSet.close();
+
+        await transaction.execute('DROP INDEX test_index');
+        console.info(TAG + 'testSqliteLocked0008 success');
+        await transaction.commit();
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail();
+        console.error(TAG + "testSqliteLocked0008 failed");
+      }
+      done()
+      console.log(TAG + "************* testSqliteLocked0008 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0009
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0009', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0009 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute(CREATE_TABLE_TEST1);
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        await transaction.execute('DROP TABLE test1');
+        console.error(TAG + 'drop table success but testSqliteLocked0009 failed');
+        await transaction.commit();
+        expect(null).assertFail()
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(String(err.code)).assertEqual(String(14800025))
+        console.info(TAG + "testSqliteLocked0009 success");
+      }
+      resultSet.close();
+      done()
+      console.log(TAG + "************* testSqliteLocked0009 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0010
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0010', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0010 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        await rdbStore.execute(CREATE_TABLE_TEST1);
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+
+        await transaction.execute('DROP TABLE test1');
+        console.info(TAG + 'testSqliteLocked0010 success');
+        await transaction.commit();
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail()
+        console.error(TAG + "testSqliteLocked0010 failed");
+      }
+      resultSet.close();
+      done()
+      console.log(TAG + "************* testSqliteLocked0010 end *************");
+    })
+
+    /**
+     * @tc.number testSqliteLocked0011
+     * @tc.name testSqliteLocked
+     * @tc.desc Drop the table before closing the resultSet after querying the data
+     */
+    it('testSqliteLocked0011', 0, async function (done) {
+      console.log(TAG + "************* testSqliteLocked0011 start *************");
+      let u8 = new Uint8Array([1, 2, 3])
+      const valueBucket: relationalStore.ValueBucket = {
+          "name": "aaa",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+      }
+
+      let transaction: relationalStore.Transaction;
+      let resultSet: relationalStore.ResultSet;
+      try {
+        let rowId = await rdbStore.insert('test', valueBucket);
+        expect(1).assertEqual(rowId);
+        rowId = await rdbStore.insert('test', valueBucket);
+        expect(2).assertEqual(rowId);
+
+        transaction = await rdbStore.createTransaction();
+        resultSet = await transaction.querySql('SELECT * FROM test');
+        for (let i = 0; i < resultSet.rowCount; i++) {
+          let ret = resultSet.goToNextRow();
+          expect(true).assertEqual(ret);
+        }
+
+        let ret = resultSet.goToNextRow();
+        expect(false).assertEqual(ret);
+
+        await transaction.execute('DROP TABLE test');
+        console.error(TAG + 'testSqliteLocked0011 success');
+        await transaction.commit();
+      } catch (err) {
+        console.info(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        await transaction.rollback();
+        expect(null).assertFail()
+        console.info(TAG + "testSqliteLocked0011 failed");
+      }
+      resultSet.close();
+      done()
+      console.log(TAG + "************* testSqliteLocked0011 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
   })

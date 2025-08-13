@@ -31,6 +31,9 @@ static const std::string DATABASE_NAME = RDB_TEST_PATH + "transaction_test.db";
 static const char CREATE_TABLE_SQL[] =
     "CREATE TABLE IF NOT EXISTS test "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
+static const char CREATE_TABLE1_SQL[] =
+    "CREATE TABLE IF NOT EXISTS test1 "
+    "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)";
 
 class TransactionTest : public testing::Test {
 public:
@@ -2169,4 +2172,435 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_052, TestSize.Level1)
     
     transaction->Execute("Drop TABLE articles");
     EXPECT_EQ(transaction->Rollback(), E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_053
+ * @tc.desc: abnormal testcase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_053, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test");
+    ASSERT_EQ(rs, E_SQLITE_LOCKED);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_054
+ * @tc.desc: abnormal testcase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_054, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount - 1; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test");
+    ASSERT_EQ(rs, E_SQLITE_LOCKED);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_055
+ * @tc.desc: normal testcase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_055, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute(CREATE_TABLE1_SQL);
+    ASSERT_EQ(rt, E_OK);
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test1", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test1", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test1");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    ret = resultSet->Close();
+    ASSERT_EQ(ret, E_OK);
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test1");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = transaction->Commit();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_056
+ * @tc.desc: abnormal testcase of drop the index before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_056, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute("CREATE INDEX test_index ON test(age)");
+    ASSERT_EQ(rt, E_OK);
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rs, E_SQLITE_LOCKED);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+
+    std::tie(rt, object) = store->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rt, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_057
+ * @tc.desc: abnormal testcase of drop the index before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_057, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute("CREATE INDEX test_index ON test(age)");
+    ASSERT_EQ(rt, E_OK);
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount - 1; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rs, E_SQLITE_LOCKED);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+
+    std::tie(rt, object) = store->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rt, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_058
+ * @tc.desc: normal testcase of drop the index after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_058, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute("CREATE INDEX test_index ON test(age)");
+    ASSERT_EQ(rt, E_OK);
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    ret = resultSet->Close();
+    ASSERT_EQ(ret, E_OK);
+
+    auto [rs, obj] = transaction->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = transaction->Commit();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_059
+ * @tc.desc: normal testcase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_059, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute(CREATE_TABLE1_SQL);
+    ASSERT_EQ(rt, E_OK);
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test1");
+    int rowCount = 0;
+    auto ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test1");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+
+    rs = transaction->Commit();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_060
+ * @tc.desc: normal testcase of drop the index after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_060, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute("CREATE INDEX test_index ON test(age)");
+    ASSERT_EQ(rt, E_OK);
+
+    auto [res, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(res, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    auto ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP INDEX test_index");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+
+    rs = transaction->Commit();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_061
+ * @tc.desc: abnormal testcase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_061, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    auto [rt, object] = store->Execute(CREATE_TABLE1_SQL);
+    ASSERT_EQ(rt, E_OK);
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test1");
+    ASSERT_EQ(rs, E_SQLITE_LOCKED);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_062
+ * @tc.desc: abnormal testcase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_062, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_063
+ * @tc.desc: normal testcase of drop the table before closing the resultSet after querying the data.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, RdbStore_Transaction_063, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+
+    ValuesBucket row;
+    row.Put("name", "Jim");
+    auto res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+    res = store->Insert("test", row);
+    ASSERT_EQ(res.first, E_OK);
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    int rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    for (int i = 0; i < rowCount; i++) {
+        ret = resultSet->GoToNextRow();
+        ASSERT_EQ(ret, E_OK);
+    }
+
+    ret = resultSet->GoToNextRow();
+    ASSERT_NE(ret, E_OK);
+
+    auto [rs, obj] = transaction->Execute("DROP TABLE test");
+    ASSERT_EQ(rs, E_OK);
+
+    rs = resultSet->Close();
+    ASSERT_EQ(rs, E_OK);
+    rs = transaction->Rollback();
+    ASSERT_EQ(rs, E_OK);
 }
