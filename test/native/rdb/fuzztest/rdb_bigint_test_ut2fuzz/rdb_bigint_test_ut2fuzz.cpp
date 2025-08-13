@@ -70,9 +70,6 @@ void BigIntegerFuzzTest(FuzzedDataProvider &fdp)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < 1) {
-        return 0;
-    }
     FuzzedDataProvider fdp(data, size);
     OHOS::BigIntegerFuzzTest(fdp);
     return 0;

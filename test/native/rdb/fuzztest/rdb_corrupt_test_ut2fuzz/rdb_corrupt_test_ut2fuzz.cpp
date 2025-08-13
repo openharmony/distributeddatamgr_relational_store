@@ -123,12 +123,7 @@ void RdbCorruptTestRdbCorruptTest001(FuzzedDataProvider &fdp)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    constexpr size_t maxInputSize = 1024;
-    if (size > maxInputSize) {
-        return 0;
-    }
-
-    FuzzedDataProvider fdp(data, std::min(size, maxInputSize));
+    FuzzedDataProvider fdp(data, size);
     OHOS::RdbCorruptTestRdbCorruptTest001(fdp);
     return 0;
 }
