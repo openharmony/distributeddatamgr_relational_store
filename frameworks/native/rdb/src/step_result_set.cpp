@@ -67,7 +67,7 @@ StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, cons
         int64_t countCost = std::chrono::duration_cast<std::chrono::milliseconds>(queryEnd - prepareEnd).count();
         LOG_WARN("total[%{public}" PRId64 "]<%{public}" PRId64 ",%{public}" PRId64 ",%{public}" PRId64
                  "> count[%{public}d] sql[%{public}s]",
-            totalCost, acquireCost, prepareCost, countCost, rowCount_, SqliteUtils::Anonymous(sql_).c_str());
+            totalCost, acquireCost, prepareCost, countCost, rowCount_, SqliteUtils::SqlAnonymous(sql_).c_str());
     }
 }
 
@@ -93,7 +93,7 @@ int StepResultSet::PrepareStep()
 
     auto type = SqliteUtils::GetSqlStatementType(sql_);
     if (type == SqliteUtils::STATEMENT_ERROR) {
-        LOG_ERROR("invalid sql_ %{public}s!", SqliteUtils::Anonymous(sql_).c_str());
+        LOG_ERROR("invalid sql_ %{public}s!", SqliteUtils::SqlAnonymous(sql_).c_str());
         lastErr_ = E_INVALID_ARGS;
         return lastErr_;
     }
@@ -101,12 +101,12 @@ int StepResultSet::PrepareStep()
     auto [errCode, statement] = conn_->CreateStatement(sql_, conn_);
     if (statement == nullptr || errCode != E_OK) {
         lastErr_ = errCode;
-        LOG_ERROR("CreateStatement failed. sql_ %{public}s!", SqliteUtils::Anonymous(sql_).c_str());
+        LOG_ERROR("CreateStatement failed. sql_ %{public}s!", SqliteUtils::SqlAnonymous(sql_).c_str());
         return E_STATEMENT_NOT_PREPARED;
     }
 
     if (!statement->ReadOnly()) {
-        LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::Anonymous(sql_).c_str());
+        LOG_ERROR("failed, %{public}s is not query sql!", SqliteUtils::SqlAnonymous(sql_).c_str());
         lastErr_ = E_NOT_SELECT;
         return lastErr_;
     }

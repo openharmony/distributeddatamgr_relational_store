@@ -57,10 +57,13 @@ SqliteGlobalConfig::SqliteGlobalConfig()
     sqlite3_soft_heap_limit(GlobalExpr::SOFT_HEAP_LIMIT);
 
     sqlite3_initialize();
+
+    sqlite3_register_cksumvfs(0);
 }
 
 SqliteGlobalConfig::~SqliteGlobalConfig()
 {
+    sqlite3_unregister_cksumvfs();
     sqlite3_config(SQLITE_CONFIG_CORRUPTION, nullptr, nullptr);
     sqlite3_config(SQLITE_CONFIG_LOG, nullptr, nullptr);
     LOG_INFO("Destruct.");
@@ -83,12 +86,13 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
     if (errType == 0 || errType == SQLITE_CONSTRAINT || errType == SQLITE_SCHEMA || errType == SQLITE_NOTICE ||
         err == SQLITE_WARNING_AUTOINDEX) {
         if (verboseLog) {
-            LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+            LOG_INFO("Error(%{public}d) %{public}s ", err, SqliteUtils::SqlAnonymous(msg).c_str());
         }
     } else if (errType == SQLITE_WARNING) {
-        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::Anonymous(msg).c_str());
+        LOG_WARN("WARNING(%{public}d) %{public}s ", err, SqliteUtils::SqlAnonymous(msg).c_str());
     } else {
-        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno, SqliteUtils::Anonymous(msg).c_str());
+        LOG_ERROR("Error(%{public}d) errno is:%{public}d %{public}s.", err, errno,
+            SqliteUtils::SqlAnonymous(msg).c_str());
         SqliteErrReport(err, msg);
     }
 }

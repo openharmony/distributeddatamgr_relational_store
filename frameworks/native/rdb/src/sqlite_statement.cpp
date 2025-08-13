@@ -262,7 +262,7 @@ int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObje
         auto errCode = action(stmt_, index, arg.get().value);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("Bind has error: %{public}d, sql: %{public}s, errno %{public}d",
-                errCode, SqliteUtils::Anonymous(sql_).c_str(), errno);
+                errCode, SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
             return SQLiteError::ErrNo(errCode);
         }
         index++;
@@ -328,7 +328,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
 
     if (count > numParameters_) {
         LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql: %{public}s", count, numParameters_,
-            SqliteUtils::Anonymous(sql_).c_str());
+            SqliteUtils::SqlAnonymous(sql_).c_str());
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -444,7 +444,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
     int count = static_cast<int>(args.size());
     if (count != numParameters_) {
         LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", count, numParameters_,
-            SqliteUtils::Anonymous(sql_).c_str());
+            SqliteUtils::SqlAnonymous(sql_).c_str());
         return E_INVALID_BIND_ARGS_COUNT;
     }
 
@@ -469,7 +469,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
     errCode = InnerStep();
     if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d",
-            errCode, SqliteUtils::Anonymous(sql_).c_str(), errno);
+            errCode, SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
         auto db = sqlite3_db_handle(stmt_);
         // errno: 28 No space left on device
         return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
@@ -479,7 +479,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         int errCode = slave_->Execute(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave execute error:%{public}d, sql is %{public}s, errno %{public}d",
-                errCode, SqliteUtils::Anonymous(sql_).c_str(), errno);
+                errCode, SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
         }
     }
@@ -727,6 +727,15 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
         errCode = FillSharedBlock(info, stmt_);
     }
     if (errCode != E_OK) {
+        if (config_ != nullptr) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_,
+                "FillBlockInfo", true));
+        }
+        auto ret = (config_ != nullptr && errCode == E_SQLITE_CORRUPT);
+        if (ret) {
+            Reportor::ReportCorruptedOnce(Reportor::Create(*config_, errCode,
+                "FillBlockInfo: " + SqliteGlobalConfig::GetLastCorruptionMsg()));
+        }
         return errCode;
     }
     if (!ResetStatement(info, stmt_)) {

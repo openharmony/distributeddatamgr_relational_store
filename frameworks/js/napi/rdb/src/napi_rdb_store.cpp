@@ -589,7 +589,6 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) -> int {
         napi_status status = napi_create_int64(env, context->insertNum, &result);
-        LOG_DEBUG("RdbStoreProxy::BatchInsert end. tableName is: %{public}s.", context->tableName.c_str());
         return (status == napi_ok) ? OK : ERR;
     };
     context->SetAction(env, info, input, exec, output);
