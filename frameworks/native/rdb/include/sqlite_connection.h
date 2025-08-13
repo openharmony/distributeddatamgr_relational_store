@@ -72,7 +72,7 @@ public:
         std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         std::shared_ptr<SlaveStatus> slaveStatus) override;
-    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) override;
+    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
@@ -137,6 +137,7 @@ private:
     std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
         sqlite3 *db, bool isFromReplica);
     void ReplayBinlog(const RdbStoreConfig &config);
+    ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
@@ -145,7 +146,7 @@ private:
     static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
     static void BinlogSetConfig(sqlite3 *dbHandle);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
-    static void AsyncReplayBinlog(const std::string &dbPath,
+    static void ReplayBinlog(const std::string &dbPath,
         std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";

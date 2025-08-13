@@ -59,7 +59,7 @@ public:
         std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         std::shared_ptr<SlaveStatus> slaveStatus) override;
-    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) override;
+    ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;

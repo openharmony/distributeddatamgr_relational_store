@@ -355,7 +355,7 @@ int32_t RdConnection::Restore(
     return ret;
 }
 
-ExchangeStrategy RdConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status)
+ExchangeStrategy RdConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay)
 {
     return ExchangeStrategy::NOT_HANDLE;
 }

@@ -527,7 +527,7 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     }
     connection->slaveConnection_ = conn;
     if (IsSupportBinlog(config)) {
-        SqliteConnection::AsyncReplayBinlog(config.GetPath(), conn, false);
+        SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
     return connection->VeritySlaveIntegrity();
 }
@@ -1430,13 +1430,13 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
     return E_OK;
 }
 
-ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status)
+ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay)
 {
     if (dbHandle_ == nullptr || slaveConnection_ == nullptr || slaveConnection_->dbHandle_ == nullptr ||
         config_.GetHaMode() == HAMode::SINGLE || *status == SlaveStatus::BACKING_UP) {
         return ExchangeStrategy::NOT_HANDLE;
     }
-    static const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
     const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
     auto [mRet, mObj] = ExecuteForValue(querySql);
     auto [mIdxRet, mIdxObj] = ExecuteForValue(qIndexSql);
@@ -1450,31 +1450,20 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
     }
+    if (*status == SlaveStatus::BACKUP_INTERRUPT) {
+        return ExchangeStrategy::BACKUP;
+    }
     if (IsSupportBinlog(config_)) {
-        SqliteConnection::AsyncReplayBinlog(config_.GetPath(), slaveConnection_, false);
+        if (isRelpay) {
+            SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
+        } else if (mCount == 0) {
+            LOG_INFO("main empty");
+            return ExchangeStrategy::RESTORE;
+        } else {
+            return ExchangeStrategy::PENDING_BACKUP;
+        }
     }
-    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
-    if (sRet == E_SQLITE_CORRUPT || sInxRet == E_SQLITE_CORRUPT) {
-        LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
-        return ExchangeStrategy::BACKUP;
-    }
-    if (*status == SlaveStatus::DB_NOT_EXITS || *status == SlaveStatus::BACKUP_INTERRUPT) {
-        return ExchangeStrategy::BACKUP;
-    }
-    int64_t sCount = static_cast<int64_t>(sObj);
-    int64_t sIdxCount = static_cast<int64_t>(sInxObj);
-    if ((mCount == sCount && mIdxCount == sIdxCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
-        LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
-        return ExchangeStrategy::NOT_HANDLE;
-    }
-    if (mCount == 0) {
-        LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
-        return ExchangeStrategy::RESTORE;
-    }
-    LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
-        mCount, mIdxCount, sCount, sIdxCount);
-    return ExchangeStrategy::BACKUP;
+    return CompareWithSlave(mCount, mIdxCount);
 }
 
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
@@ -1522,7 +1511,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     }
     connection->slaveConnection_ = conn;
     if (IsSupportBinlog(config)) {
-        SqliteConnection::AsyncReplayBinlog(config.GetPath(), conn, false);
+        SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
     ret = connection->VeritySlaveIntegrity();
     if (ret != E_OK) {
@@ -1780,7 +1769,7 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         return;
     }
     pool->Execute([dbPathStr, slaveConn] {
-        SqliteConnection::AsyncReplayBinlog(dbPathStr, slaveConn, true);
+        SqliteConnection::ReplayBinlog(dbPathStr, slaveConn, true);
     });
 }
 
@@ -1807,7 +1796,7 @@ int SqliteConnection::SetBinlog()
     return E_OK;
 }
 
-void SqliteConnection::AsyncReplayBinlog(const std::string &dbPath,
+void SqliteConnection::ReplayBinlog(const std::string &dbPath,
     std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean)
 {
     auto errCode = SqliteConnection::CheckPathExist(dbPath);
@@ -1880,6 +1869,31 @@ std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
 {
     std::string suffix(BINLOG_FOLDER_SUFFIX);
     return dbPath + suffix;
+}
+
+ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdxCount)
+{
+    const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
+    const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
+    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
+    auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
+    if (sRet == E_SQLITE_CORRUPT || sInxRet == E_SQLITE_CORRUPT) {
+        LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
+        return ExchangeStrategy::BACKUP;
+    }
+    int64_t sCount = static_cast<int64_t>(sObj);
+    int64_t sIdxCount = static_cast<int64_t>(sInxObj);
+    if ((mCount == sCount && mIdxCount == sIdxCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
+        LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+        return ExchangeStrategy::NOT_HANDLE;
+    }
+    if (mCount == 0) {
+        LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
+        return ExchangeStrategy::RESTORE;
+    }
+    LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
+        mCount, mIdxCount, sCount, sIdxCount);
+    return ExchangeStrategy::BACKUP;
 }
 
 int SqliteConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
