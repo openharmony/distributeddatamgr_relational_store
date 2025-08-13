@@ -70,6 +70,7 @@ public:
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static size_t DeleteFolder(const std::string &folderPath);
     API_EXPORT static std::string Anonymous(const std::string &srcFile);
+    static std::string SqlAnonymous(const std::string &sql);
     static std::string GetArea(const std::string &srcFile);
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
@@ -130,7 +131,8 @@ private:
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
 
     static std::string GetAnonymousName(const std::string &fileName);
-    static std::string AnonyDigits(const std::string &fileName);
+    static std::string AnonymousDigits(const std::string &digits);
+    static bool IsKeyword(const std::string& word);
     static std::string GetModeInfo(uint32_t st_mode);
     static int GetPageCountCallback(void *data, int argc, char **argv, char **azColName);
 };

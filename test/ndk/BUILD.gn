@@ -87,5 +87,8 @@ group("fuzztest") {
     "fuzztest/oh_cursor_fuzzer:fuzztest",
     "fuzztest/oh_data_value_fuzzer:fuzztest",
     "fuzztest/oh_data_values_buckets_fuzzer:fuzztest",
+    "fuzztest/oh_data_values_fuzzer:fuzztest",
+    "fuzztest/oh_predicates_fuzzer:fuzztest",
+    "fuzztest/oh_rdb_crypto_param_fuzzer:fuzztest",
   ]
 }

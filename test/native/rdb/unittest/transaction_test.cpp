@@ -2560,16 +2560,16 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_062, TestSize.Level1)
 
     rs = resultSet->Close();
     ASSERT_EQ(rs, E_OK);
-    rs = transaction->Commit();
+    rs = transaction->Rollback();
     ASSERT_EQ(rs, E_OK);
 }
 
 /**
- * @tc.name: RdbStore_Transaction_054
+ * @tc.name: RdbStore_Transaction_063
  * @tc.desc: normal testcase of drop the table before closing the resultSet after querying the data.
  * @tc.type: FUNC
  */
-HWTEST_F(TransactionTest, RdbStore_Transaction_054, TestSize.Level1)
+HWTEST_F(TransactionTest, RdbStore_Transaction_063, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = TransactionTest::store_;
 

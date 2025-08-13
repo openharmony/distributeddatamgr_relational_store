@@ -23,6 +23,7 @@
 #include <mutex>
 #include <vector>
 
+#include "concurrent_map.h"
 #include "connection.h"
 #include "rdb_store_config.h"
 #include "sqlite3sym.h"
@@ -122,9 +123,6 @@ private:
     int32_t OpenDatabase(const std::string &dbPath, int openFileFlags);
     int LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle);
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
-    static std::shared_ptr<SqliteConnection> GetSlaveConnFromMap(const std::string &slavePath);
-    std::pair<int32_t, std::shared_ptr<SqliteConnection>> GetSlaveConnection(
-        const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus);
@@ -140,7 +138,7 @@ private:
         sqlite3 *db, bool isFromReplica);
     void ReplayBinlog(const RdbStoreConfig &config);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
-        const RdbStoreConfig &config, bool isWrite);
+        const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
@@ -174,8 +172,7 @@ private:
     static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
-    static std::recursive_mutex slaveMapMutex_;
-    static std::map<std::string, std::weak_ptr<SqliteConnection>> pathToSlaveMap_;
+    static ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> reusableReplicas_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;

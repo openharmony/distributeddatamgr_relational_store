@@ -22,7 +22,6 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 TaskExecutor::TaskExecutor()
 {
-    pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS, "TaskExecutorRDB");
 }
 
 TaskExecutor::~TaskExecutor()
@@ -38,7 +37,7 @@ TaskExecutor &TaskExecutor::GetInstance()
 
 void TaskExecutor::Init()
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     if (pool_ != nullptr) {
         return;
     }
@@ -47,29 +46,28 @@ void TaskExecutor::Init()
 
 std::shared_ptr<ExecutorPool> TaskExecutor::GetExecutor()
 {
-    std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (pool_ == nullptr) {
+        pool_ = std::make_shared<ExecutorPool>(MAX_THREADS, MIN_THREADS, "TaskExecutorRDB");
+    }
     return pool_;
 }
 
 void TaskExecutor::SetExecutor(std::shared_ptr<ExecutorPool> executor)
 {
-    std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
     pool_ = executor;
 }
 
 bool TaskExecutor::Stop()
 {
-    std::shared_ptr<ExecutorPool> pool;
-    {
-        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        pool = std::move(pool_);
-        pool_ = nullptr;
-    }
-    if (pool.use_count() > 1) {
-        LOG_WARN("There are other threads using the thread pool. count:%{public}ld", pool.use_count());
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (pool_ != nullptr && pool_.use_count() > 1) {
+        LOG_WARN("There are other threads using the thread pool. count:%{public}ld", pool_.use_count());
         return false;
     }
+    pool_ = nullptr;
     return true;
-};
+}
 
 } // namespace OHOS::NativeRdb

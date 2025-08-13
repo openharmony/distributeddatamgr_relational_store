@@ -127,7 +127,8 @@ int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
 #if !defined(CROSS_PLATFORM)
-    if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam()) {
+    // Only owner mode can store metadata information.
+    if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam() || (config_.GetRoleType() != OWNER)) {
         return E_OK;
     }
     if (config_.GetEnableSemanticIndex()) {
@@ -1681,7 +1682,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
         LOG_WARN("total[%{public}" PRId64 "] stmt[%{public}" PRId64 "] exec[%{public}" PRId64
                  "] result[%{public}" PRId64 "] "
                  "sql[%{public}s]",
-            totalCostTime, prepareCost, execCost, resultCost, SqliteUtils::Anonymous(sql).c_str());
+            totalCostTime, prepareCost, execCost, resultCost, SqliteUtils::SqlAnonymous(sql).c_str());
     }
     return E_OK;
 }
@@ -2069,7 +2070,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Attach(
     } else if (err != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach fileName"
                   "[%{public}s]",
-            err, SqliteUtils::Anonymous(config_.GetName()).c_str(), attachName.c_str(),
+            err, SqliteUtils::Anonymous(config_.GetName()).c_str(), SqliteUtils::Anonymous(attachName).c_str(),
             SqliteUtils::Anonymous(config.GetName()).c_str());
         return { err, 0 };
     }
@@ -2107,7 +2108,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     errCode = statement->Execute(bindArgs);
     if (errCode != E_OK) {
         LOG_ERROR("failed, errCode[%{public}d] fileName[%{public}s] attachName[%{public}s] attach", errCode,
-            SqliteUtils::Anonymous(config_.GetName()).c_str(), attachName.c_str());
+            SqliteUtils::Anonymous(config_.GetName()).c_str(), SqliteUtils::Anonymous(attachName).c_str());
         return { errCode, 0 };
     }
 
@@ -2356,7 +2357,7 @@ int RdbStoreImpl::Commit()
     if (sqlStr.size() <= 1) {
         LOG_WARN("id: %{public}zu, storeName: %{public}s, sql: %{public}s", transactionId,
             SqliteUtils::Anonymous(name_).c_str(),
-            SqliteUtils::Anonymous(sqlStr).c_str());
+            SqliteUtils::SqlAnonymous(sqlStr).c_str());
         pool->GetTransactionStack().pop();
         return E_OK;
     }
