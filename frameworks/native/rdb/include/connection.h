@@ -84,7 +84,7 @@ public:
     virtual int32_t Restore(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
         std::shared_ptr<SlaveStatus> slaveStatus) = 0;
-    virtual ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status) = 0;
+    virtual ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay = true) = 0;
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;

@@ -129,7 +129,7 @@ private:
     void DoCloudSync(const std::string &table);
     int InnerBackup(const std::string& databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
-    std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn();
+    static std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn(const RdbStoreConfig &config);
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     std::pair<int32_t, Stmt> GetStatement(const std::string &sql, std::shared_ptr<Connection> conn) const;
@@ -159,6 +159,7 @@ private:
     bool TryAsyncRepair();
     bool IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath);
     int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
+    int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
         std::shared_ptr<ConnectionPool> pool);
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);

@@ -42,7 +42,6 @@ enum RebuiltType : uint32_t {
 
 enum SlaveStatus : uint32_t {
     UNDEFINED,
-    DB_NOT_EXITS,
     BACKING_UP,
     BACKUP_INTERRUPT,
     BACKUP_FINISHED,
@@ -52,6 +51,7 @@ enum ExchangeStrategy : uint32_t {
     NOT_HANDLE,
     BACKUP,
     RESTORE,
+    PENDING_BACKUP,
 };
 } // namespace NativeRdb
 } // namespace OHOS

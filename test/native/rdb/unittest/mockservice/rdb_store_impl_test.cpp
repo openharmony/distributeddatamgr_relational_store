@@ -1669,21 +1669,6 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: InterruptBackup_Test_002
- * @tc.desc: Abnormal testCase of InterruptBackup
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_002, TestSize.Level2)
-{
-    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
-    *(storeImpl->slaveStatus_) = DB_NOT_EXITS;
-    auto res = storeImpl->InterruptBackup();
-    EXPECT_EQ(E_CANCEL, res);
-}
-
-/**
  * @tc.name: InterruptBackup_Test_003
  * @tc.desc: Abnormal testCase of InterruptBackup
  * @tc.type: FUNC
