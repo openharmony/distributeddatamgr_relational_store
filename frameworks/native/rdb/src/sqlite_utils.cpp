@@ -73,29 +73,27 @@ constexpr const char *SQL_KEYWORD[] = { "ABORT", "ABS", "ACTION", "ADD", "AFTER"
     "BIGINT", "BLOB", "BOOLEAN", "BY", "CASCADE", "CASE", "CAST", "CEIL", "CEILING", "CHARACTER", "CHECK", "CLOB",
     "COALESCE", "COLLATE", "COLUMN", "COMMIT", "CONCAT", "CONFLICT", "CONSTRAINT", "COUNT", "CREATE", "CROSS",
     "CURRENT", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "DATABASE", "DATE", "DATETIME", "DECIMAL",
-    "DEFAULT", "DEFERRABLE", "DEFERRED", "DELETE", "DESC", "DETACH", "DIGIT", "DISTINCT", "DO", "DOUBLE",
-    "DOUBLE PRECISION", "DROP", "E", "EACH", "ELSE", "END", "ESCAPE", "EXCEPT", "EXCLUDE", "EXCLUSIVE", "EXISTS", "EXP",
-    "EXPLAIN", "EXPR", "FAIL", "FALSE", "FILENAME", "FILTER", "FIRST", "FLOAT", "FLOOR", "FOLLOWING", "FOR", "FOREIGN",
-    "FROM", "FULL", "GENERATED", "GLOB", "GROUP", "GROUPS", "GROUP_CONCAT", "HAVING", "HEXDIGIT", "IF", "IFNULL",
-    "IGNORE", "IMMEDIATE", "IN", "INDEX", "INDEXED", "INITIALLY", "INNER", "INSERT", "INSTEAD", "INSTR", "INT", "INT2",
-    "INT8", "INTEGER", "INTERSECT", "INTO", "IS", "ISNULL", "JOIN", "JULIANDAY", "KEY", "LAST", "LEFT", "LENGTH",
-    "LIKE", "LIMIT", "LN", "LOG", "LOWER", "LTRIM", "MATCH", "MATERIALIZED", "MAX", "MEDIUMINT", "MIN", "NAME",
-    "NATIVE", "NATURAL", "NCHAR", "NEWLINE", "NO", "NOT", "NOTHING", "NOTNULL", "NULL", "NULLIF", "NULLS", "NUMERIC",
-    "NVARCHAR", "OF", "OFFSET", "ON", "OR", "ORDER", "OTHERS", "OUTER", "OVER", "PARTITION", "PLAN", "POWER", "PRAGMA",
-    "PRECEDING", "PRIMARY", "QUERY", "RAISE", "RANDOM", "RANGE", "REAL", "RECURSIVE", "REFERENCES", "REGEXP",
-    "REINDEX", "RELEASE", "RENAME", "REPLACE", "RESTRICT", "RETURNING", "RIGHT", "ROLLBACK", "ROUND", "ROW", "ROWID",
-    "ROWS", "RTRIM", "SAVEPOINT", "SELECT", "SET", "SMALLINT", "SQRT", "STORED", "STRFTIME", "STRICT", "SUBSTR", "SUM",
-    "TABLE", "TEMP", "TEMPORARY", "TEXT", "THEN", "TIES", "TIME", "TINYINT", "TO", "TOTAL", "TRANSACTION", "TRIGGER",
-    "TRIM", "TRUE", "TYPEOF", "UNBOUNDED", "UNION", "UNIQUE", "UNSIGNED", "UPDATE", "UPPER", "USING", "VACUUM",
-    "VALUES", "VARCHAR", "VARYING", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WINDOW", "WITH", "WITHOUT" };
+    "DEFAULT", "DEFERRABLE", "DEFERRED", "DELETE", "DESC", "DETACH", "DIGIT", "DISTINCT", "DO", "DOUBLE", "DROP", "E",
+    "EACH", "ELSE", "END", "ESCAPE", "EXCEPT", "EXCLUDE", "EXCLUSIVE", "EXISTS", "EXP", "EXPLAIN", "EXPR", "FAIL",
+    "FALSE", "FILENAME", "FILTER", "FIRST", "FLOAT", "FLOOR", "FOLLOWING", "FOR", "FOREIGN", "FROM", "FULL",
+    "GENERATED", "GLOB", "GROUP", "GROUPS", "GROUP_CONCAT", "HAVING", "HEXDIGIT", "IF", "IFNULL", "IGNORE", "IMMEDIATE",
+    "IN", "INDEX", "INDEXED", "INITIALLY", "INNER", "INSERT", "INSTEAD", "INSTR", "INT", "INT2", "INT8", "INTEGER",
+    "INTERSECT", "INTO", "IS", "ISNULL", "JOIN", "JULIANDAY", "KEY", "LAST", "LEFT", "LENGTH", "LIKE", "LIMIT", "LN",
+    "LOG", "LOWER", "LTRIM", "MATCH", "MATERIALIZED", "MAX", "MEDIUMINT", "MIN", "NAME", "NATIVE", "NATURAL", "NCHAR",
+    "NEWLINE", "NO", "NOT", "NOTHING", "NOTNULL", "NULL", "NULLIF", "NULLS", "NUMERIC", "NVARCHAR", "OF", "OFFSET",
+    "ON", "OR", "ORDER", "OTHERS", "OUTER", "OVER", "PARTITION", "PLAN", "POWER", "PRAGMA", "PRECEDING", "PRECISION",
+    "PRIMARY", "QUERY", "RAISE", "RANDOM", "RANGE", "REAL", "RECURSIVE", "REFERENCES", "REGEXP", "REINDEX", "RELEASE",
+    "RENAME", "REPLACE", "RESTRICT", "RETURNING", "RIGHT", "ROLLBACK", "ROUND", "ROW", "ROWID", "ROWS", "RTRIM",
+    "SAVEPOINT", "SELECT", "SET", "SMALLINT", "SQRT", "STORED", "STRFTIME", "STRICT", "SUBSTR", "SUM", "TABLE", "TEMP",
+    "TEMPORARY", "TEXT", "THEN", "TIES", "TIME", "TINYINT", "TO", "TOTAL", "TRANSACTION", "TRIGGER", "TRIM", "TRUE",
+    "TYPEOF", "UNBOUNDED", "UNION", "UNIQUE", "UNSIGNED", "UPDATE", "UPPER", "USING", "VACUUM", "VALUES", "VARCHAR",
+    "VARYING", "VIEW", "VIRTUAL", "WHEN", "WHERE", "WINDOW", "WITH", "WITHOUT" };
 
-constexpr const char *WHILE_KEYWORDS[] = { "ABORT", "ABORTS", "ACQLOCK", "ALREADY", "AT", "BUSYLINE", "CHANGED",
-    "COLUMN", "CONSTRAINT", "CURLOCK", "DATABASE", "DBREF", "DEL", "DOUBLE", "DUPLICATE", "ENABLE", "ERRNO", "ERROR",
-    "EXISTS", "FAILED", "FD", "FILE", "FILELOCK", "FRAMES", "FROM", "F_RDLCK", "F_WRLCK", "GO", "HANDLELOCKS", "HAS",
-    "IDX", "IN", "INDEX", "IS", "LEN", "LINE", "LITERAL", "LOCKCNT", "LOCKS", "MISUSE", "MONITOR", "NAME", "NEAR",
-    "NO", "NONE", "OF", "PID", "PROCESSLOCK", "QUOTED", "READ", "RECOVERED", "SCHEMA", "SHARED_FIRST", "SQLITE",
-    "STATEMENT", "STRING", "SUCH", "SYNTAX", "TABLE", "TID", "TRX", "TYPE", "UNIQUE", "WAL", "WAL_DMS", "WARNING",
-    "WRITE", "WRONG" };
+constexpr const char *WHILE_KEYWORDS[] = { "ABORTS", "ACQLOCK", "ALREADY", "AT", "BUSYLINE", "CHANGED", "CURLOCK",
+    "DBREF", "DEL", "DUPLICATE", "ENABLE", "ERRNO", "ERROR", "FAILED", "FD", "FILE", "FILELOCK", "FRAMES", "F_RDLCK",
+    "F_WRLCK", "GO", "HANDLELOCKS", "HAS", "IDX", "LEN", "LINE", "LITERAL", "LOCKCNT", "LOCKS", "MISUSE", "MONITOR",
+    "NEAR", "NONE", "PID", "PROCESSLOCK", "QUOTED", "READ", "RECOVERED", "SCHEMA", "SHARED_FIRST", "SQLITE",
+    "STATEMENT", "STRING", "SUCH", "SYNTAX", "TID", "TRX", "TYPE", "WAL", "WAL_DMS", "WARNING", "WRITE", "WRONG" };
 
 constexpr int32_t WordCompare(const char *a, const char *b)
 {
@@ -325,7 +323,7 @@ std::string ByteAnonymous(const std::string &input)
 
 std::string SqliteUtils::SqlAnonymous(const std::string &sql)
 {
-    std::string result;
+    std::ostringstream result;
     std::regex idRegex(R"(\b[a-zA-Z0-9_]+\b)");
     auto begin = std::sregex_iterator(sql.begin(), sql.end(), idRegex);
     auto end = std::sregex_iterator();
@@ -334,22 +332,22 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
     for (auto it = begin; it != end; ++it) {
         std::smatch match = *it;
         std::string word = match.str();
-        size_t pos = match.position();
+        size_t pos = static_cast<size_t>(match.position());
 
-        result.append(ByteAnonymous(sql.substr(lastPos, pos - lastPos)));
+        result << ByteAnonymous(sql.substr(lastPos, pos - lastPos));
 
         lastPos = pos + word.length();
         if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
-            result.append(AnonymousDigits(word));
+            result << AnonymousDigits(word);
         } else if (IsKeyword(word)) {
-            result.append(std::move(word));
+            result << std::move(word);
         } else {
-            result.append(GetAnonymousName(word));
+            result << GetAnonymousName(word);
         }
     }
 
-    result.append(ByteAnonymous(sql.substr(lastPos)));
-    return result;
+    result << ByteAnonymous(sql.substr(lastPos));
+    return result.str();
 }
 
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
