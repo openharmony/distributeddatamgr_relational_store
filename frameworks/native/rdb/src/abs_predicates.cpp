@@ -46,6 +46,8 @@ void AbsPredicates::Clear()
 bool AbsPredicates::IsNeedAnd() const
 {
     return isNeedAnd;
+
+    
 }
 
 /**
