@@ -31,7 +31,6 @@
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_sql_utils.h"
-#include "rdb_store_manager.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -160,7 +159,6 @@ std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
         LOG_ERROR("dlsym GenerateRandomNum failed(%{public}d)!", errno);
         return {};
     }
-    auto rootKeyAlias = GetRootKeyAlias();
     auto ret = generateRandomNum(len);
     return ret;
 }
@@ -192,7 +190,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
         key.assign(key.size(), 0);
         return false;
     }
-    if (secretContent.encryptValue.empty()) {
+    if (secretContent.encrypt_.empty()) {
         Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
         LOG_ERROR("Key size is 0");
         keyContent.assign(keyContent.size(), 0);
@@ -218,9 +216,9 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const R
     std::string secretKeyInString;
     secretKeyInString.append(reinterpret_cast<const char *>(&secretContent.magicNum), sizeof(uint32_t));
     secretKeyInString.append(
-        reinterpret_cast<const char *>(secretContent.nonceValue.data()), secretContent.nonceValue.size());
+        reinterpret_cast<const char *>(secretContent.nonce_.data()), secretContent.nonce_.size());
     secretKeyInString.append(
-        reinterpret_cast<const char *>(secretContent.encryptValue.data()), secretContent.encryptValue.size());
+        reinterpret_cast<const char *>(secretContent.encrypt_.data()), secretContent.encrypt_.size());
 
     bool ret;
     {
@@ -267,7 +265,9 @@ int32_t RdbSecurityManager::Init(const std::string &bundleName)
             break;
         }
         retryCount++;
-        usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+        if (ret != HKS_SUCCESS) {
+            usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+        }
     }
     LOG_INFO("bundleName:%{public}s, retry:%{public}u, error:%{public}d", bundleName.c_str(), retryCount, ret);
     return ret;
@@ -321,13 +321,13 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::EncryptWorkKey(const std::
     RDBCryptoParam param;
     param.KeyValue = key;
     param.rootAlias = rootKeyAlias;
-    param.nonceValue = GenerateRandomNum(RdbSecretContent::NONCE_VALUE_SIZE);
-    if (param.nonceValue.empty()) {
+    param.nonce_ = GenerateRandomNum(RdbSecretContent::NONCE_VALUE_SIZE);
+    if (param.nonce_.empty()) {
         return { false, rdbSecretContent };
     }
     auto encryptKey = encrypt(param, rdbFault);
-    rdbSecretContent.nonceValue = param.nonceValue;
-    rdbSecretContent.encryptValue = encryptKey;
+    rdbSecretContent.nonce_ = param.nonce_;
+    rdbSecretContent.encrypt_ = encryptKey;
     ReportCryptFault(rdbFault.code, rdbFault.message);
     return { true, rdbSecretContent };
 }
@@ -347,7 +347,7 @@ std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(
     }
     RDBCryptoParam param;
     param.KeyValue = key;
-    param.nonceValue = nonce;
+    param.nonce_ = nonce;
     param.rootAlias = GetRootKeyAlias();
     auto decryptKey = decrypt(param, rdbFault);
     ReportCryptFault(rdbFault.code, rdbFault.message);
@@ -595,9 +595,9 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV1(const std::vector
 {
     RdbSecretContent rdbSecretContent;
     rdbSecretContent.magicNum = 0;
-    rdbSecretContent.nonceValue = { RDB_HKS_BLOB_TYPE_NONCE,
+    rdbSecretContent.nonce_ = { RDB_HKS_BLOB_TYPE_NONCE,
         RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE) };
-    rdbSecretContent.encryptValue = { content.begin(), content.end() };
+    rdbSecretContent.encrypt_ = { content.begin(), content.end() };
     return { true, rdbSecretContent };
 }
  
@@ -615,10 +615,10 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV2(const std::vector
     if (offset + RdbSecretContent::NONCE_VALUE_SIZE >= static_cast<std::size_t>(size)) {
         return result;
     }
-    rdbSecretContent.nonceValue = { content.begin() + offset,
+    rdbSecretContent.nonce_ = { content.begin() + offset,
         content.begin() + offset + RdbSecretContent::NONCE_VALUE_SIZE };
     offset += RdbSecretContent::NONCE_VALUE_SIZE;
-    rdbSecretContent.encryptValue = { content.begin() + offset, content.end() };
+    rdbSecretContent.encrypt_ = { content.begin() + offset, content.end() };
     res = true;
     return result;
 }
@@ -626,9 +626,9 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV2(const std::vector
 std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretContent &content)
 {
     RdbSecretKeyData keyData;
-    auto size = content.encryptValue.size();
+    auto size = content.encrypt_.size();
     std::size_t offset = 0;
-    auto iter = content.encryptValue.begin();
+    auto iter = content.encrypt_.begin();
     if (offset + 1 >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
@@ -653,8 +653,8 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretC
     if (offset + AEAD_LEN >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
-    std::vector<uint8_t> key = { iter, content.encryptValue.end() };
-    keyData.secretKey = DecryptWorkKey(key, content.nonceValue);
+    std::vector<uint8_t> key = { iter, content.encrypt_.end() };
+    keyData.secretKey = DecryptWorkKey(key, content.nonce_);
     key.assign(key.size(), 0);
     return { true, keyData };
 }
@@ -662,7 +662,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretC
 std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretContent &content)
 {
     RdbSecretKeyData keyData;
-    std::vector<uint8_t> value = DecryptWorkKey(content.encryptValue, content.nonceValue);
+    std::vector<uint8_t> value = DecryptWorkKey(content.encrypt_, content.nonce_);
     std::shared_ptr<const char> autoClean =
         std::shared_ptr<const char>("autoClean", [&value](const char *) mutable { value.assign(value.size(), 0); });
     auto size = value.size();
