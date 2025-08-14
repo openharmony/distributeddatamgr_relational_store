@@ -45,13 +45,13 @@ struct RdbSecretContent {
     static constexpr uint32_t MAGIC_NUMBER_V2 = 0x6B6B6B6B;
     static constexpr uint32_t NONCE_VALUE_SIZE = 12;
     uint32_t magicNum = MAGIC_NUMBER_V2;
-    std::vector<uint8_t> nonceValue{};
-    std::vector<uint8_t> encryptValue{};
+    std::vector<uint8_t> nonce_{};
+    std::vector<uint8_t> encrypt_{};
     RdbSecretContent() = default;
     ~RdbSecretContent()
     {
-        nonceValue.assign(nonceValue.size(), 0);
-        encryptValue.assign(encryptValue.size(), 0);
+        nonce_.assign(nonce_.size(), 0);
+        encrypt_.assign(encrypt_.size(), 0);
     }
 };
 
@@ -149,7 +149,7 @@ private:
     static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_v1";
     static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
     static constexpr const char *SUFFIX_PUB_KEY_OLD = ".pub_key";
-    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key.new.bk";
+    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key_v1.new";
     static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
     static constexpr uint32_t TIMES = 4;

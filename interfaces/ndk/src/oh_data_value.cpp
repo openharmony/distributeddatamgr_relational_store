@@ -18,12 +18,10 @@
 #include "oh_data_define.h"
 #include "relational_store_error_code.h"
 #include "relational_asset.h"
-#include "rdb_fault_hiview_reporter.h"
 #include "logger.h"
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::NativeRdb;
-using Reporter = RdbFaultHiViewReporter;
 
 constexpr int32_t TO_OH_TYPE[] = {
     OH_ColumnType::TYPE_NULL,
@@ -39,13 +37,10 @@ constexpr int32_t TO_OH_TYPE[] = {
 };
 
 static constexpr int32_t TO_OH_TYPE_SIZE = sizeof(TO_OH_TYPE) / sizeof(TO_OH_TYPE[0]);
-constexpr size_t SIZE_LENGTH_REPORT = 1073741823; // count to report 1073741823(1024 * 1024 * 1024 - 1).
-constexpr size_t SIZE_LENGTH = 4294967294; // length or count up to 4294967294(1024 * 1024 * 1024 * 4 - 2).
 
 static int CheckValueType(const OH_Data_Value *value, int32_t type)
 {
     if (value == nullptr || !value->IsValid()) {
-        LOG_ERROR("Check value type error: value is %{public}s.", value == nullptr ? "null" : "invalid");
         return RDB_E_INVALID_ARGS;
     }
     int32_t valueType = value->value_.GetType();
@@ -63,15 +58,6 @@ static int CheckValueType(const OH_Data_Value *value, int32_t type)
     return RDB_OK;
 }
 
-static bool IsValid(OH_Data_Value *value)
-{
-    if (value == nullptr || !value->IsValid()) {
-        LOG_ERROR("value is %{public}s.", value == nullptr ? "null" : "invalid");
-        return false;
-    }
-    return true;
-}
-
 OH_Data_Value *OH_Value_Create(void)
 {
     OH_Data_Value *value = new (std::nothrow) OH_Data_Value;
@@ -83,7 +69,7 @@ OH_Data_Value *OH_Value_Create(void)
 
 int OH_Value_Destroy(OH_Data_Value *value)
 {
-    if (!IsValid(value)) {
+    if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
     delete value;
@@ -92,7 +78,7 @@ int OH_Value_Destroy(OH_Data_Value *value)
 
 int OH_Value_PutNull(OH_Data_Value *value)
 {
-    if (!IsValid(value)) {
+    if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = ValueObject::Nil{};
@@ -101,7 +87,7 @@ int OH_Value_PutNull(OH_Data_Value *value)
 
 int OH_Value_PutInt(OH_Data_Value *value, int64_t val)
 {
-    if (!IsValid(value)) {
+    if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = val;
@@ -110,7 +96,7 @@ int OH_Value_PutInt(OH_Data_Value *value, int64_t val)
 
 int OH_Value_PutReal(OH_Data_Value *value, double val)
 {
-    if (!IsValid(value)) {
+    if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = val;
@@ -119,12 +105,8 @@ int OH_Value_PutReal(OH_Data_Value *value, double val)
 
 int OH_Value_PutText(OH_Data_Value *value, const char *val)
 {
-    if (!IsValid(value)) {
+    if (value == nullptr || !value->IsValid()) {
         return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr) {
-        value->value_.value = std::string();
-        return RDB_OK;
     }
     value->value_.value = std::string(val);
     return RDB_OK;
@@ -132,15 +114,7 @@ int OH_Value_PutText(OH_Data_Value *value, const char *val)
 
 int OH_Value_PutBlob(OH_Data_Value *value, const unsigned char *val, size_t length)
 {
-    if (length > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
-            std::string("OH_Value_PutBlob: ") + std::to_string(length)));
-    }
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr || length > SIZE_LENGTH) {
-        LOG_ERROR("val is NULL: %{public}d, length is %{public}zu.", val == nullptr, length);
+    if (value == nullptr || !value->IsValid() || val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = std::vector<uint8_t>{ val, val + length };
@@ -149,11 +123,7 @@ int OH_Value_PutBlob(OH_Data_Value *value, const unsigned char *val, size_t leng
 
 int OH_Value_PutAsset(OH_Data_Value *value, const Data_Asset *val)
 {
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr) {
-        LOG_ERROR("val is nullptr");
+    if (value == nullptr || !value->IsValid() || val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = val->asset_;
@@ -162,24 +132,12 @@ int OH_Value_PutAsset(OH_Data_Value *value, const Data_Asset *val)
 
 int OH_Value_PutAssets(OH_Data_Value *value, const Data_Asset * const * val, size_t length)
 {
-    if (length > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
-            std::string("OH_Value_PutAssets: ") + std::to_string(length)));
-    }
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr || length == 0 || length > SIZE_LENGTH) {
-        LOG_ERROR("val is NULL: %{public}d, length is %{public}zu.", val == nullptr, length);
+    if (value == nullptr || !value->IsValid() || val == nullptr || length == 0) {
         return RDB_E_INVALID_ARGS;
     }
     ValueObject::Assets assets;
     for (size_t i = 0; i < length; i++) {
         if (val[i] != nullptr) {
-            if (!val[i]->IsValid()) {
-                LOG_ERROR("val[%{public}zu] is invalid.", i);
-                return RDB_E_INVALID_ARGS;
-            }
             assets.push_back(val[i]->asset_);
         }
     }
@@ -189,15 +147,7 @@ int OH_Value_PutAssets(OH_Data_Value *value, const Data_Asset * const * val, siz
 
 int OH_Value_PutFloatVector(OH_Data_Value *value, const float *val, size_t length)
 {
-    if (length > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
-            std::string("OH_Value_PutFloatVector: ") + std::to_string(length)));
-    }
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr || length > SIZE_LENGTH) {
-        LOG_ERROR("val is NULL: %{public}d, length is %{public}zu.", val == nullptr, length);
+    if (value == nullptr || !value->IsValid() || val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     std::vector<float> valVec = std::vector<float>{ val, val + length };
@@ -207,16 +157,7 @@ int OH_Value_PutFloatVector(OH_Data_Value *value, const float *val, size_t lengt
 
 int OH_Value_PutUnlimitedInt(OH_Data_Value *value, int sign, const uint64_t *trueForm, size_t length)
 {
-    if (length > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
-            std::string("OH_Value_PutUnlimitedInt: ") + std::to_string(length)));
-    }
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if ((sign != 0 && sign != 1) || trueForm == nullptr || length == 0 || length > SIZE_LENGTH) {
-        LOG_ERROR("sign is %{public}d, trueForm is NULL: %{public}d, length is %{public}zu.",
-            sign, trueForm == nullptr, length);
+    if (value == nullptr || !value->IsValid() || (sign != 0 && sign != 1) || trueForm == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     ValueObject::BigInt bigNumber(sign, {trueForm, trueForm + length});
@@ -226,11 +167,7 @@ int OH_Value_PutUnlimitedInt(OH_Data_Value *value, int sign, const uint64_t *tru
 
 int OH_Value_GetType(OH_Data_Value *value, OH_ColumnType *type)
 {
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (type == nullptr) {
-        LOG_ERROR("type is nullptr.");
+    if (value == nullptr || !value->IsValid() || type == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     auto valueType = value->value_.GetType();
@@ -243,11 +180,7 @@ int OH_Value_GetType(OH_Data_Value *value, OH_ColumnType *type)
 
 int OH_Value_IsNull(OH_Data_Value *value, bool *val)
 {
-    if (!IsValid(value)) {
-        return RDB_E_INVALID_ARGS;
-    }
-    if (val == nullptr) {
-        LOG_ERROR("val is nullptr.");
+    if (value == nullptr || !value->IsValid() || val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     *val = (value->value_.GetType() == ValueObject::TYPE_NULL);
@@ -257,7 +190,6 @@ int OH_Value_IsNull(OH_Data_Value *value, bool *val)
 int OH_Value_GetInt(OH_Data_Value *value, int64_t *val)
 {
     if (val == nullptr) {
-        LOG_ERROR("val is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_INT);
@@ -271,7 +203,6 @@ int OH_Value_GetInt(OH_Data_Value *value, int64_t *val)
 int OH_Value_GetReal(OH_Data_Value *value, double *val)
 {
     if (val == nullptr) {
-        LOG_ERROR("val is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_DOUBLE);
@@ -285,7 +216,6 @@ int OH_Value_GetReal(OH_Data_Value *value, double *val)
 int OH_Value_GetText(OH_Data_Value *value, const char **val)
 {
     if (val == nullptr) {
-        LOG_ERROR("val is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_STRING);
@@ -303,8 +233,6 @@ int OH_Value_GetText(OH_Data_Value *value, const char **val)
 int OH_Value_GetBlob(OH_Data_Value *value, const uint8_t **val, size_t *length)
 {
     if (val == nullptr || length == nullptr) {
-        LOG_ERROR("val is NULL: %{public}d, length is NULL: %{public}d.", val == nullptr,
-            length == nullptr);
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_BLOB);
@@ -322,8 +250,7 @@ int OH_Value_GetBlob(OH_Data_Value *value, const uint8_t **val, size_t *length)
 
 int OH_Value_GetAsset(OH_Data_Value *value, Data_Asset *val)
 {
-    if (val == nullptr || !val->IsValid()) {
-        LOG_ERROR("val is %{public}s.", val == nullptr ? "nullptr" : "invalid");
+    if (val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_ASSET);
@@ -337,7 +264,6 @@ int OH_Value_GetAsset(OH_Data_Value *value, Data_Asset *val)
 int OH_Value_GetAssetsCount(OH_Data_Value *value, size_t *size)
 {
     if (size == nullptr) {
-        LOG_ERROR("size is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_ASSETS);
@@ -350,13 +276,7 @@ int OH_Value_GetAssetsCount(OH_Data_Value *value, size_t *size)
 
 int OH_Value_GetAssets(OH_Data_Value *value, Data_Asset **val, size_t inLen, size_t *outLen)
 {
-    if (inLen > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(RdbFaultEvent(FT_LENGTH_PARAM, E_DFX_LENGTH_PARAM_CHECK_FAIL, BUNDLE_NAME_COMMON,
-            std::string("OH_Value_GetAssets: ") + std::to_string(inLen)));
-    }
-    if (val == nullptr || outLen == nullptr || inLen > SIZE_LENGTH) {
-        LOG_ERROR("val is NULL: %{public}d, outLen is NULL: %{public}d, inLen is %{public}zu.",
-            val == nullptr, outLen == nullptr, inLen);
+    if (val == nullptr || outLen == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_ASSETS);
@@ -383,7 +303,6 @@ int OH_Value_GetAssets(OH_Data_Value *value, Data_Asset **val, size_t inLen, siz
 int OH_Value_GetFloatVectorCount(OH_Data_Value *value, size_t *length)
 {
     if (length == nullptr) {
-        LOG_ERROR("length is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_VECS);
@@ -397,8 +316,6 @@ int OH_Value_GetFloatVectorCount(OH_Data_Value *value, size_t *length)
 int OH_Value_GetFloatVector(OH_Data_Value *value, float *val, size_t inLen, size_t *outLen)
 {
     if (val == nullptr || inLen == 0 || outLen == nullptr) {
-        LOG_ERROR("val is NULL: %{public}d, inLen is ? %{public}zu, outLen is NULL: %{public}d.", val == nullptr,
-            inLen, outLen == nullptr);
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_VECS);
@@ -417,7 +334,6 @@ int OH_Value_GetFloatVector(OH_Data_Value *value, float *val, size_t inLen, size
 int OH_Value_GetUnlimitedIntBand(OH_Data_Value *value, size_t *length)
 {
     if (length == nullptr) {
-        LOG_ERROR("length is nullptr.");
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_BIGINT);
@@ -431,9 +347,6 @@ int OH_Value_GetUnlimitedIntBand(OH_Data_Value *value, size_t *length)
 int OH_Value_GetUnlimitedInt(OH_Data_Value *value, int *sign, uint64_t *trueForm, size_t inLen, size_t *outLen)
 {
     if (sign == nullptr || trueForm == nullptr || inLen == 0 || outLen == nullptr) {
-        LOG_ERROR(
-            "sign is NULL: %{public}d, trueForm is NULL: %{public}d, inLen is %{public}zu, outLen is NULL: %{public}d.",
-            sign == nullptr, trueForm == nullptr, inLen, outLen == nullptr);
         return RDB_E_INVALID_ARGS;
     }
     int checkRet = CheckValueType(value, ValueObject::TYPE_BIGINT);

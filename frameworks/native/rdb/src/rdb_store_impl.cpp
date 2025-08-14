@@ -840,9 +840,9 @@ void RdbStoreImpl::InitDelayNotifier()
             auto realHelper = helper.lock();
             if (realHelper == nullptr) {
                 LOG_WARN("knowledge helper is nullptr");
-                return E_OK;
+            } else {
+                realHelper->DonateKnowledgeData();
             }
-            realHelper->DonateKnowledgeData();
         }
         if (!IsNotifyService(rdbChangedData)) {
             return E_OK;
@@ -2975,7 +2975,7 @@ bool RdbStoreImpl::CloudTables::Change(const std::string &table)
         if (tables_.empty() || (!table.empty() && tables_.find(table) == tables_.end())) {
             return needSync;
         }
-        // from empty, then need schedule the cloud sync, others only wait the schedule execute
+        // from empty, then need schedule the cloud sync, others only wait the schedule execute.
         needSync = changes_.empty();
         if (!table.empty()) {
             changes_.insert(table);

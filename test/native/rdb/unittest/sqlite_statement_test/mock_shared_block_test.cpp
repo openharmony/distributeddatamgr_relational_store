@@ -99,12 +99,6 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return E_ERROR;
 }
 
-int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock)
-{
-    (void)sharedBlock;
-    return E_ERROR;
-}
-
 int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
 {
     (void)sharedBlock;
