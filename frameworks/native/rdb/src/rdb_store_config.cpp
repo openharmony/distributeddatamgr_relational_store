@@ -350,12 +350,6 @@ void RdbStoreConfig::SetEncryptKey(const std::vector<uint8_t> &encryptKey)
     cryptoParam_.encryptKey_ = encryptKey;
 }
 
-void RdbStoreConfig::ResetEncryptKey(const std::vector<uint8_t> &encryptKey) const
-{
-    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
-    cryptoParam_.encryptKey_ = encryptKey;
-}
-
 void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) const
 {
     RdbSecurityManager::GetInstance().RestoreKeyFile(GetPath(), encryptKey);
@@ -367,6 +361,12 @@ void RdbStoreConfig::RestoreEncryptKey(const std::vector<uint8_t> &encryptKey) c
 std::vector<uint8_t> RdbStoreConfig::GetEncryptKey() const
 {
     return cryptoParam_.encryptKey_;
+}
+
+void RdbStoreConfig::ResetEncryptKey(const std::vector<uint8_t> &encryptKey) const
+{
+    cryptoParam_.encryptKey_.assign(cryptoParam_.encryptKey_.size(), 0);
+    cryptoParam_.encryptKey_ = encryptKey;
 }
 
 void RdbStoreConfig::ChangeEncryptKey() const
@@ -576,16 +576,6 @@ IntegrityCheck RdbStoreConfig::GetIntegrityCheck() const
     return checkType_;
 }
 
-void RdbStoreConfig::SetPluginLibs(const std::vector<std::string> &pluginLibs)
-{
-    pluginLibs_ = pluginLibs;
-}
-
-std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
-{
-    return pluginLibs_;
-}
-
 int32_t RdbStoreConfig::GetIter() const
 {
     return cryptoParam_.iterNum;
@@ -594,6 +584,16 @@ int32_t RdbStoreConfig::GetIter() const
 void RdbStoreConfig::SetIter(int32_t iter) const
 {
     cryptoParam_.iterNum = iter;
+}
+
+void RdbStoreConfig::SetPluginLibs(const std::vector<std::string> &pluginLibs)
+{
+    pluginLibs_ = pluginLibs;
+}
+
+std::vector<std::string> RdbStoreConfig::GetPluginLibs() const
+{
+    return pluginLibs_;
 }
 
 int32_t RdbStoreConfig::GetHaMode() const
@@ -615,7 +615,6 @@ void RdbStoreConfig::SetPromiseInfo(PromiseInfo promiseInfo)
 {
     promiseInfo_ = promiseInfo;
 }
-
 
 Tokenizer RdbStoreConfig::GetTokenizer() const
 {
