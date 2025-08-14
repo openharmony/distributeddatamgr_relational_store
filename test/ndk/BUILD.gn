@@ -58,8 +58,8 @@ ohos_unittest("NativeRdbNdkTest") {
   ]
 
   deps = [
-    "${relational_store_base_path}/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
     "${relational_store_base_path}/interfaces/ndk:native_rdb_ndk",
+    "${relational_store_base_path}/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
     "${relational_store_innerapi_path}/rdb:native_rdb",
   ]
 }
@@ -75,19 +75,19 @@ group("fuzztest") {
   testonly = true
   deps = []
   deps += [
-    "fuzztest/datavalue_fuzzer:fuzztest",
-    "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
-    "fuzztest/relationalstore_fuzzer:fuzztest",
-    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
-    "fuzztest/valuebucket_fuzzer:fuzztest",
-    "fuzztest/valueobject_fuzzer:fuzztest",
-    "fuzztest/ohpredicates_fuzzer:fuzztest",
     "fuzztest/dataasset_fuzzer:fuzztest",
+    "fuzztest/datavalue_fuzzer:fuzztest",
     "fuzztest/oh_cursor_fuzzer:fuzztest",
     "fuzztest/oh_data_value_fuzzer:fuzztest",
     "fuzztest/oh_data_values_buckets_fuzzer:fuzztest",
     "fuzztest/oh_data_values_fuzzer:fuzztest",
     "fuzztest/oh_predicates_fuzzer:fuzztest",
     "fuzztest/oh_rdb_crypto_param_fuzzer:fuzztest",
+    "fuzztest/ohpredicates_fuzzer:fuzztest",
+    "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
+    "fuzztest/relationalstore_fuzzer:fuzztest",
+    "fuzztest/relationalstorecapi_fuzzer:fuzztest",
+    "fuzztest/valuebucket_fuzzer:fuzztest",
+    "fuzztest/valueobject_fuzzer:fuzztest",
   ]
 }

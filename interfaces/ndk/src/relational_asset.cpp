@@ -189,7 +189,7 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
     char *endPtr;
     *size = strtol(asset->asset_.size.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
     if (*endPtr != '\0') {
-        LOG_ERROR("GetModifyTime failed.");
+        LOG_ERROR("GetSize failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
