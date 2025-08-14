@@ -579,6 +579,8 @@ std::string RdbStoreImpl::GetUri(const std::string &event)
         rdbUri = SCHEME_RDB + config_.GetBundleName() + "/" + path_ + "/" + event;
     } else {
         rdbUri = SCHEME_RDB + config_.GetDataGroupId() + "/" + path_ + "/" + event;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_GROUPID_INFO, config_.GetBundleName(),
+            "GetUri GroupId db:[" + SqliteUtils::Anonymous(name_) + "]"));
     }
     return rdbUri;
 }
