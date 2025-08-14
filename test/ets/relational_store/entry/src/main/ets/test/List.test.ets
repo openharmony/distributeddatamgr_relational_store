@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,36 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import RdbPredicatesEtsTest from './RdbstorePredicatesEts.test.ets';
 import RdbPredicatesPrefEtsTest from './RdbPredicatesPerfEts.test.ets';
 import RelationalStoreDataGroupId from './RdbGroupIdEts.test.ets';
-import RdbStoreErrorlogTest from './RdbOnErrorLog.test.ets';
 import PerfStatEtsTest from './RdbstorePerfStatEts.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
+import RdbStoreErrorlogTest from './RdbOnErrorLog.test.ets';
 import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
 import RdbStoreTransactionTest from './RdbStoreTransaction.test.ets';
 import RdbstoreTransactionJsunit from './RdbstoreTransactionJsunit.test.ets';
 import RdbStoreTransInsertJsunit from './RdbStoreTransInsertJsunit.test.ets';
 import RdbStoreTransJsunit from './RdbStoreTransJsunit.test.ets';
-import RdbstoreCustomTokenizerTest from './RdbstoreCustomTokenizerEts.ets';
 import ExecuteSqlTest from './RdbStoreExecuteSql.test.ets';
+import RdbstoreCustomTokenizerTest from './RdbstoreCustomTokenizerEts.ets';
 import SetLocaleEtsTest from './RdbstoreSetLocaleEts.test.ets';
 import RelationalStoreEtsTest from './RelationalStoreEtsTest.test.ets'
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
   RelationalStoreDataGroupId();
-  RdbStoreErrorlogTest();
   PerfStatEtsTest();
   RdbRekeyEtsTest();
+  RdbStoreErrorlogTest();
   RDBstoreGetSqlInfoTest();
   RdbStoreTransactionTest();
   RdbstoreTransactionJsunit();
   RdbStoreTransInsertJsunit();
   RdbStoreTransJsunit();
-  RdbstoreCustomTokenizerTest();
   ExecuteSqlTest();
+  RdbstoreCustomTokenizerTest();
   SetLocaleEtsTest();
   RelationalStoreEtsTest();
 }

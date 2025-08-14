@@ -108,15 +108,15 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     rdbStore = nullptr;
     EXPECT_TRUE(RdbHelper::Destroy());
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
     EXPECT_TRUE(RdbHelper::Init());
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
@@ -141,8 +141,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     OHOS::NativeRdb::RdbHelper::DestroyOption destroyOption;
     destroyOption.cleanICU = true;
@@ -150,8 +150,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
     EXPECT_TRUE(RdbHelper::Destroy(destroyOption));
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
 }
 
@@ -212,7 +212,7 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
  * @tc.desc: Destroy ICU
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level1)
+HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "ICUManager001.db";
     RdbStoreConfig config(dbPath);
@@ -275,7 +275,7 @@ void SubObserver::RegisterCallback(const CheckOnChangeFunc &callback)
  * @tc.desc: Destroy DbClient
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level1)
+HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "DbClient001.db";
     RdbStoreConfig config(dbPath);
