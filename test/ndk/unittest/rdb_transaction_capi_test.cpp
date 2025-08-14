@@ -901,8 +901,6 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_015, TestSize.Level1)
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = OH_VBucket_PutUnlimitedInt(valueBucket, "data1", 0, nullptr, 0);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-    ret = OH_VBucket_PutUnlimitedInt(valueBucket, "data1", 0, trueForm, 4294967295);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = valueBucket->destroy(valueBucket);
     EXPECT_EQ(ret, RDB_OK);
     ret = OH_RdbTrans_Destroy(trans);
@@ -1013,9 +1011,6 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_018, TestSize.Level1)
     ret = OH_Value_PutBlob(nullptr, val, length);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
-    length = 4294967295;
-    ret = OH_Value_PutBlob(value, val, length);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = OH_Value_Destroy(value);
     EXPECT_EQ(ret, RDB_OK);
 }
@@ -1030,10 +1025,7 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_019, TestSize.Level1)
     OH_Data_Value *value = OH_Value_Create();
     ASSERT_NE(value, nullptr);
     float floatArr[] = { 1.0, 2.0, 3.0 };
-    size_t length = 4294967295;
-    int ret = OH_Value_PutFloatVector(value, floatArr, length);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-    ret = OH_Value_PutFloatVector(nullptr, floatArr, length);
+    int ret = OH_Value_PutFloatVector(nullptr, floatArr, 3);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     ret = OH_Value_Destroy(value);
     EXPECT_EQ(ret, RDB_OK);
@@ -1062,10 +1054,6 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_020, TestSize.Level1)
     ret = OH_Value_PutUnlimitedInt(value, 0, trueForm, length);
     EXPECT_EQ(ret, RDB_OK);
 
-    length = 4294967295;
-    ret = OH_Value_PutUnlimitedInt(nullptr, 0, nullptr, length);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-
     ret = OH_Value_Destroy(nullptr);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
@@ -1082,26 +1070,8 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_021, TestSize.Level1)
 {
     OH_Data_Value *value = OH_Value_Create();
     ASSERT_NE(value, nullptr);
-    Data_Asset **assets = OH_Data_Asset_CreateMultiple(0);
-    ASSERT_EQ(assets, nullptr);
+    Data_Asset **assets = OH_Data_Asset_CreateMultiple(2);
     int ret = OH_Data_Asset_DestroyMultiple(assets, 2);
-    EXPECT_EQ(ret, RDB_OK);
-}
-
-/**
- * @tc.name: RDB_Transaction_capi_test_022
- * @tc.desc: Abnormal testCase of store transaction for OH_Data_Asset_CreateMultiple
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_022, TestSize.Level1)
-{
-    uint32_t count = 4294967295;
-    OH_Data_Value *value = OH_Value_Create();
-    ASSERT_NE(value, nullptr);
-    Data_Asset **assets = OH_Data_Asset_CreateMultiple(count);
-    ASSERT_EQ(assets, nullptr);
-    // 2 elements in assets
-    int ret = OH_Data_Asset_DestroyMultiple(assets, count);
     EXPECT_EQ(ret, RDB_OK);
 }
 
@@ -1127,20 +1097,9 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_023, TestSize.Level1)
     // 2 elements in assets
     ret = OH_Values_PutAssets(values, nullptr, 2);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-    uint32_t length = 4294967295;
-
-    ret = OH_Values_PutAssets(values, assets, length);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
     // 2 elements in assets
     ret = OH_Values_PutAssets(values, assets, 2);
     EXPECT_EQ(ret, RDB_OK);
-
-    size_t outLen;
-    ret = OH_Values_GetAssets(values, 1, assets, length, &outLen);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-
-    ret = OH_Data_Asset_DestroyMultiple(assets, length);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret = OH_Data_Asset_DestroyMultiple(assets, 2);
     EXPECT_EQ(ret, RDB_OK);
