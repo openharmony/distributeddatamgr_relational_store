@@ -81,6 +81,7 @@ taihe_shared_library("relationalstore_ani") {
     "ability_runtime:napi_base_context",
     "data_share:datashare_common_lite",
     "hilog:libhilog",
+    "runtime_core:ani_helpers",
   ]
 }
 
