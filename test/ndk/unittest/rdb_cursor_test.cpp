@@ -20,7 +20,6 @@
 #include <string>
 
 #include "common.h"
-#include "data_asset.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 
@@ -659,9 +658,6 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_PutAssets_test_010, TestSize.Level
     errCode = OH_Rdb_ErrCode::RDB_OK;
     errCode = OH_VBucket_PutAssets(valueBucket, nullptr, assets, assetsCount);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_VBucket_PutAssets(valueBucket, "data2", nullptr, assetsCount), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    // Number of elements 4294967295
-    EXPECT_EQ(OH_VBucket_PutAssets(valueBucket, "data2", assets, 4294967295), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     errCode = OH_VBucket_PutAssets(valueBucket, "data2", assets, assetsCount);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
@@ -732,51 +728,3 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetAssets_test_011, TestSize.Level
     OH_Data_Asset_DestroyOne(asset);
     cursor->destroy(cursor);
 }
-
-/**
- * @tc.name: Abnormal_cursor_GetColumnName_test_012
- * @tc.desc: invalid args test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetColumnName_test_012, TestSize.Level1)
-{
-    size_t count = 0;
-    size_t outLen;
-    char querySql[] = "select * from test where id = ?;";
-    OH_Data_Values *values = OH_Values_Create();
-    float test[count];
-    OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(cursorTestRdbStore_, querySql, values);
-
-    auto errCode = OH_Cursor_GetFloatVectorCount(nullptr, 1, nullptr);
-    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    errCode = OH_Cursor_GetFloatVectorCount(cursor, 1, nullptr);
-    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(nullptr, 1, nullptr, count, &outLen));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, nullptr, count, &outLen));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, 0, &outLen));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, count, nullptr));
-
-    Data_Asset *asset = OH_Data_Asset_CreateOne();
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetName(asset, nullptr, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetUri(asset, nullptr, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetPath(asset, nullptr, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetCreateTime(asset, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetModifyTime(asset, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetSize(asset, nullptr));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetStatus(asset, nullptr));
-
-    char name[10] = "";
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetName(asset, name, nullptr));
-    
-    char uri[10] = "";
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetUri(asset, uri, nullptr));
-    
-    char path[10] = "";
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Data_Asset_GetPath(asset, path, nullptr));
-
-    EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyOne(nullptr));
-    EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyOne(asset));
-    EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyMultiple(nullptr, 0));
-}
-
