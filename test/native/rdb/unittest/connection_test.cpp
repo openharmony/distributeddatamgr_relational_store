@@ -220,7 +220,7 @@ HWTEST_F(ConnectionTest, VeritySlaveIntegrity_Test_001, TestSize.Level2)
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    errCode = conn->VeritySlaveIntegrity();
+    errCode = conn->VerifySlaveIntegrity();
     EXPECT_EQ(errCode, E_ALREADY_CLOSED);
 }
 
