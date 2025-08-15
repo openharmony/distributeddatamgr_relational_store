@@ -45,7 +45,7 @@ RdbObsManager::~RdbObsManager()
         for (auto &obs : value) {
             handle.unregisterFunc(key, obs);
         }
-        return !value.empty();
+        return false;
     });
 }
 
