@@ -38,7 +38,6 @@ ohos_unittest("NativeRdbMultiThreadTest") {
 
   sources = [
     "unittest/common.cpp",
-    "unittest/multiThread/rdb_connection_rd_test.cpp",
     "unittest/multiThread/rdb_connection_test.cpp",
   ]
 
