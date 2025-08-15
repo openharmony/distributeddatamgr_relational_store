@@ -529,7 +529,7 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     if (IsSupportBinlog(config)) {
         SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
-    return connection->VeritySlaveIntegrity();
+    return connection->VerifySlaveIntegrity();
 }
 
 int SqliteConnection::CheckReplicaForRestore()
@@ -1513,7 +1513,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (IsSupportBinlog(config)) {
         SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
-    ret = connection->VeritySlaveIntegrity();
+    ret = connection->VerifySlaveIntegrity();
     if (ret != E_OK) {
         return ret;
     }
@@ -1540,7 +1540,7 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
 {
     if (isRestore) {
         SqliteConnection::ReplayBinlog(config_);
-        int err = VeritySlaveIntegrity();
+        int err = VerifySlaveIntegrity();
         if (err != E_OK) {
             return err;
         }
@@ -1602,7 +1602,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     return result;
 }
 
-int SqliteConnection::VeritySlaveIntegrity()
+int SqliteConnection::VerifySlaveIntegrity()
 {
     if (slaveConnection_ == nullptr) {
         return E_ALREADY_CLOSED;
@@ -1640,7 +1640,7 @@ int SqliteConnection::VeritySlaveIntegrity()
     if (slaveSize == 0 && bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end()) {
         slaveSize = bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_;
     }
-    if ((slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) || IsSupportBinlog(config_)) {
+    if (slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) {
         return SqliteUtils::IsSlaveInvalid(config_.GetPath()) ? E_SQLITE_CORRUPT : E_OK;
     }
 
