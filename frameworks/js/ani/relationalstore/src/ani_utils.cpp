@@ -425,9 +425,9 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
     }
     for (int i = 0; i < int(arrayLength); i++) {
         ani_ref result;
-        status = env_->Array_Get_Ref(static_cast<ani_array_ref>(obj_), i, &result);
+        status = env_->Array_Get(static_cast<ani_array>(obj_), i, &result);
         if (status != ANI_OK) {
-            LOG_ERROR("Array_Get_Ref failed");
+            LOG_ERROR("Array_Get failed");
             return false;
         }
         ani_object asset = static_cast<ani_object>(result);
