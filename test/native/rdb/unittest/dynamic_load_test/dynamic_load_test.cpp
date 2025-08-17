@@ -94,7 +94,7 @@ int RdbDynamicLoadTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, i
  * @tc.desc: Dynamic loading test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level1)
 {
     EXPECT_TRUE(RdbHelper::Init());
 
@@ -127,7 +127,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
  * @tc.desc: Dynamic loading test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level1)
 {
     EXPECT_TRUE(RdbHelper::Init());
 
@@ -160,7 +160,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
  * @tc.desc: Destroy when the subscription is not cancelled
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ObsManger001.db";
     RdbStoreConfig config(dbPath);
@@ -188,7 +188,7 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
  * @tc.desc: Destroy after the database is closed
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ObsManger002.db";
     RdbStoreConfig config(dbPath);
@@ -212,7 +212,7 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
  * @tc.desc: Destroy ICU
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ICUManager001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ICUManager001.db";
     RdbStoreConfig config(dbPath);
@@ -275,7 +275,7 @@ void SubObserver::RegisterCallback(const CheckOnChangeFunc &callback)
  * @tc.desc: Destroy DbClient
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DbClient001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "DbClient001.db";
     RdbStoreConfig config(dbPath);
@@ -341,7 +341,7 @@ HWTEST_F(RdbDynamicLoadTest, OpenSSL001, TestSize.Level1)
  * @tc.desc: GlobalResource CleanUp invalid args
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, GlobalResource001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, GlobalResource001, TestSize.Level1)
 {
     EXPECT_EQ(GlobalResource::CleanUp(-1), E_INVALID_ARGS);
     EXPECT_EQ(GlobalResource::CleanUp(GlobalResource::CLEAN_BUTT), E_INVALID_ARGS);
