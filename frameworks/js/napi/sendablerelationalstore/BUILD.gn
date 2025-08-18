@@ -51,6 +51,7 @@ ohos_shared_library("sendablerelationalstore") {
     "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "ipc:ipc_single",
     "napi:ace_napi",
   ]
 
