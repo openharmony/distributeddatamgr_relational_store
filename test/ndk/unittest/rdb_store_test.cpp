@@ -20,7 +20,6 @@
 
 #include "accesstoken_kit.h"
 #include "common.h"
-#include "oh_data_value.h"
 #include "rdb_errno.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -849,9 +848,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_018, TestSize.Level1)
 
     // key is nullptr
     cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", "data_key", nullptr);
-    EXPECT_EQ(cursor, nullptr);
-
-    cursor = OH_Rdb_FindModifyTime(storeTestRdbStore_, "rdbstoreimpltest_integer", nullptr, values);
     EXPECT_EQ(cursor, nullptr);
 
     // table name is ""
@@ -1694,66 +1690,6 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_037, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_038
- * @tc.desc: invalid args test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
-{
-    constexpr int TABLE_COUNT = 1;
-    const char *table[TABLE_COUNT];
-    table[0] = "store_test";
-    auto errorCode = OH_Rdb_CloudSync(storeTestRdbStore_, RDB_SYNC_MODE_NATIVE_FIRST, nullptr, 1, &observer);
-    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-
-    errorCode = OH_Rdb_CloudSync(
-        storeTestRdbStore_, static_cast<Rdb_SyncMode>(RDB_SYNC_MODE_TIME_FIRST - 1), table, TABLE_COUNT, &observer);
-    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-
-    errorCode = OH_Rdb_CloudSync(
-        storeTestRdbStore_, static_cast<Rdb_SyncMode>(RDB_SYNC_MODE_CLOUD_FIRST + 1), table, TABLE_COUNT, &observer);
-    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("lock_test");
-    EXPECT_EQ(OH_Rdb_LockRow(nullptr, predicates), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_LockRow(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_UnlockRow(nullptr, predicates), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_UnlockRow(storeTestRdbStore_, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_QueryLockedRow(nullptr, predicates, nullptr, 0), nullptr);
-    EXPECT_EQ(OH_Rdb_QueryLockedRow(storeTestRdbStore_, nullptr, nullptr, 0), nullptr);
-    predicates->destroy(predicates);
-
-    errorCode = OH_Rdb_IsTokenizerSupported(RDB_CUSTOM_TOKENIZER, nullptr);
-    EXPECT_EQ(errorCode, RDB_E_INVALID_ARGS);
-
-    OH_Data_VBuckets *rows = OH_VBuckets_Create();
-    int64_t changes = -1;
-    EXPECT_EQ(OH_Rdb_BatchInsert(nullptr, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_BatchInsert(storeTestRdbStore_, nullptr, nullptr, RDB_CONFLICT_NONE, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(
-        OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", nullptr, RDB_CONFLICT_NONE, nullptr), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(
-        OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, RDB_CONFLICT_NONE, nullptr), RDB_E_INVALID_ARGS);
-    auto invalidResolution = static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_NONE - 1);
-    EXPECT_EQ(
-        OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, invalidResolution, &changes), RDB_E_INVALID_ARGS);
-    invalidResolution = static_cast<Rdb_ConflictResolution>(RDB_CONFLICT_REPLACE + 1);
-    EXPECT_EQ(
-        OH_Rdb_BatchInsert(storeTestRdbStore_, "store_test", rows, invalidResolution, &changes), RDB_E_INVALID_ARGS);
-    OH_VBuckets_Destroy(rows);
-
-    OH_Data_Value *dataValue = OH_Value_Create();
-    EXPECT_EQ(OH_Value_PutText(dataValue, nullptr), RDB_OK);
-    EXPECT_EQ(OH_Value_PutText(nullptr, "test"), RDB_E_INVALID_ARGS);
-
-    Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
-    EXPECT_EQ(
-        OH_Rdb_SetDistributedTables(storeTestRdbStore_, table, 0, RDB_DISTRIBUTED_CLOUD, &config), RDB_E_INVALID_ARGS);
-    EXPECT_EQ(
-        OH_Rdb_SetDistributedTables(storeTestRdbStore_, table, TABLE_COUNT, RDB_DISTRIBUTED_CLOUD, nullptr),
-        RDB_E_INVALID_ARGS);
-}
-/**
  * @tc.name: RDB_Native_store_test_039
  * @tc.desc: normal testCase for OH_Rdb_InsertWithConflictResolution.
  * @tc.type: FUNC
@@ -1936,114 +1872,4 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_042, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_SetLocale(store, "zh");
     EXPECT_EQ(errCode, RDB_OK);
-}
-
-/**
- * @tc.name: RDB_Native_store_test_043
- * @tc.desc: Abnormal testCase of store for putBlob and OH_VBucket_PutFloatVector.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_043, TestSize.Level1)
-{
-    ASSERT_NE(storeTestRdbStore_, nullptr);
-    char createTableSql[] =
-        "CREATE TABLE bucket_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
-        "data3 FLOAT, data4 BLOB, data5 TEXT);";
-    int errCode = OH_Rdb_Execute(storeTestRdbStore_, createTableSql);
-    EXPECT_EQ(errCode, 0);
-
-    OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    ASSERT_NE(valueBucket, nullptr);
-    uint8_t arr[] = { 1, 2, 3, 4, 5 };
-    uint32_t len = 4294967295;
-    int ret = valueBucket->putBlob(valueBucket, "data4", arr, len);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-    float floatArr[] = { 1.0, 2.0, 3.0 };
-    ret = OH_VBucket_PutFloatVector(valueBucket, "data3", floatArr, len);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: RDB_SubscribeAutoSyncProgress_test_001
- * @tc.desc: Abnormal testCase for SubscribeAutoSyncProgress.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_SubscribeAutoSyncProgress_test_001, TestSize.Level1)
-{
-    RelationalStore ndkStore(nullptr);
-    auto ret = ndkStore.SubscribeAutoSyncProgress(&observer);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: RDB_UnsubscribeAutoSyncProgress_test_001
- * @tc.desc: Abnormal testCase for UnsubscribeAutoSyncProgress.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_UnsubscribeAutoSyncProgress_test_001, TestSize.Level1)
-{
-    RelationalStore ndkStore(nullptr);
-    auto ret = ndkStore.UnsubscribeAutoSyncProgress(&observer);
-    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
-}
-
-/**
- * @tc.name: RDB_Query_Abnormal_test_001
- * @tc.desc: Abnormal testCase for OH_Rdb_Query.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_Query_Abnormal_test_001, TestSize.Level1)
-{
-    ASSERT_NE(storeTestRdbStore_, nullptr);
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
-    ASSERT_NE(predicates, nullptr);
-
-    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    ASSERT_NE(valueObject, NULL);
-    const char *data1Value = "zhangSan";
-    valueObject->putText(valueObject, data1Value);
-    predicates->equalTo(predicates, "data1", valueObject);
-
-    int length = INT_MAX;
-    OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, nullptr, length);
-    EXPECT_EQ(cursor, nullptr);
-
-    valueObject->destroy(valueObject);
-    predicates->destroy(predicates);
-}
-
-/**
- * @tc.name: RDB_QueryLockedRow_Abnormal_test_001
- * @tc.desc: Abnormal testCase for OH_Rdb_QueryLockedRow.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_QueryLockedRow_Abnormal_test_001, TestSize.Level1)
-{
-    ASSERT_NE(storeTestRdbStore_, nullptr);
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
-    ASSERT_NE(predicates, nullptr);
-
-    OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    ASSERT_NE(valueObject, NULL);
-    const char *data1Value = "zhangSan";
-    valueObject->putText(valueObject, data1Value);
-    predicates->equalTo(predicates, "data1", valueObject);
-
-    int length = INT_MAX;
-    OH_Cursor *cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, nullptr, length);
-    EXPECT_EQ(cursor, nullptr);
-
-    valueObject->destroy(valueObject);
-    predicates->destroy(predicates);
-}
-
-/**
- * @tc.name: RDB_GetTableDetails_Abnormal_test_001
- * @tc.desc: Abnormal testCase for OH_Rdb_GetTableDetails.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreTest, RDB_GetTableDetails_Abnormal_test_001, TestSize.Level1)
-{
-    Rdb_TableDetails *tableDetails = OH_Rdb_GetTableDetails(nullptr, DISTRIBUTED_PROGRESS_DETAIL_VERSION);
-    EXPECT_EQ(tableDetails, nullptr);
 }

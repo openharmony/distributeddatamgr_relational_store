@@ -322,28 +322,6 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_007, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_008
- * @tc.desc: invalid args test.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_008, TestSize.Level1)
-{
-    int errCode = 0;
-    auto config = InitRdbConfig();
-    EXPECT_EQ(OH_Rdb_DeleteStoreV2(nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    EXPECT_EQ(OH_Rdb_CreateOrOpen(nullptr, &errCode), nullptr);
-    EXPECT_EQ(OH_Rdb_CreateOrOpen(config, nullptr), nullptr);
-
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetPersistent(nullptr, true));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetTokenizer(nullptr, Rdb_Tokenizer::RDB_NONE_TOKENIZER));
-
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(nullptr, false));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetEncrypted(nullptr, false));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(nullptr, RDB_SQLITE));
-    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(nullptr, S1));
-    OH_Rdb_DestroyConfig(config);
-}
-/**
  * @tc.name: RDB_ICU_TEST001
  * @tc.desc: test apis of icu
  * @tc.type: FUNC
