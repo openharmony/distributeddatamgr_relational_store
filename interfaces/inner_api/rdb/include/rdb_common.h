@@ -45,6 +45,7 @@ enum SlaveStatus : uint32_t {
     BACKING_UP,
     BACKUP_INTERRUPT,
     BACKUP_FINISHED,
+    DB_CLOSING,
 };
 
 enum ExchangeStrategy : uint32_t {
