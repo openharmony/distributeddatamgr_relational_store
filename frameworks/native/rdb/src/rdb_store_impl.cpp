@@ -1196,6 +1196,7 @@ RdbStoreImpl::~RdbStoreImpl()
     if (knowledgeSchemaHelper_ != nullptr) {
         knowledgeSchemaHelper_->Close();
     }
+    *slaveStatus_ = SlaveStatus::DB_CLOSING;
 }
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
@@ -2620,11 +2621,17 @@ int RdbStoreImpl::StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatu
     auto config = config_;
     config.SetCreateNecessary(false);
     taskPool->Execute([config, slaveStatus] {
+        if (*slaveStatus == SlaveStatus::DB_CLOSING) {
+            return;
+        }
         auto [result, conn] = CreateWritableConn(config);
         if (result != E_OK || conn == nullptr) {
             return;
         }
         auto strategy = conn->GenerateExchangeStrategy(slaveStatus);
+        if (*slaveStatus == SlaveStatus::DB_CLOSING) {
+            return;
+        }
         LOG_INFO("async exchange st:%{public}d,", strategy);
         if (strategy == ExchangeStrategy::BACKUP) {
             (void)conn->Backup({}, {}, false, slaveStatus);

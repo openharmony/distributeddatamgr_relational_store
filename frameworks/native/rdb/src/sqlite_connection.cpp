@@ -1376,7 +1376,7 @@ int SqliteConnection::SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, 
     }
     int rc = SQLITE_OK;
     do {
-        if (!isRestore && *curStatus == SlaveStatus::BACKUP_INTERRUPT) {
+        if (!isRestore && (*curStatus == SlaveStatus::BACKUP_INTERRUPT || *curStatus == SlaveStatus::DB_CLOSING)) {
             rc = E_CANCEL;
             break;
         }
@@ -1449,6 +1449,9 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
     // trigger mode only does restore, not backup
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
         return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
+    }
+    if (*status == SlaveStatus::DB_CLOSING) {
+        return ExchangeStrategy::NOT_HANDLE;
     }
     if (*status == SlaveStatus::BACKUP_INTERRUPT) {
         return ExchangeStrategy::BACKUP;
