@@ -51,6 +51,7 @@ describe('rdbStoreReadOnlyTest', function () {
         try {
             await relationalStore.deleteRdbStore(context, STORE_CONFIG);
             let rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+            expect(rdbStore === null).assertFalse();
 
             const CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, age INTEGER, salary REAL, blobType BLOB)";
@@ -69,6 +70,7 @@ describe('rdbStoreReadOnlyTest', function () {
 
     beforeEach(async function () {
         store = await relationalStore.getRdbStore(context, STORE_CONFIG2);
+        expect(rdbStore === null).assertFalse();
         console.info(TAG + 'beforeEach');
     })
 

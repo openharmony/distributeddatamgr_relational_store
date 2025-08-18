@@ -94,7 +94,7 @@ int RdbDynamicLoadTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, i
  * @tc.desc: Dynamic loading test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level1)
 {
     EXPECT_TRUE(RdbHelper::Init());
 
@@ -108,15 +108,15 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     rdbStore = nullptr;
     EXPECT_TRUE(RdbHelper::Destroy());
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
     EXPECT_TRUE(RdbHelper::Init());
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
@@ -127,7 +127,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level0)
  * @tc.desc: Dynamic loading test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level1)
 {
     EXPECT_TRUE(RdbHelper::Init());
 
@@ -141,8 +141,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     OHOS::NativeRdb::RdbHelper::DestroyOption destroyOption;
     destroyOption.cleanICU = true;
@@ -150,8 +150,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
     EXPECT_TRUE(RdbHelper::Destroy(destroyOption));
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(OHOS::DistributedRdb::RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
 }
 
@@ -160,7 +160,7 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level0)
  * @tc.desc: Destroy when the subscription is not cancelled
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ObsManger001.db";
     RdbStoreConfig config(dbPath);
@@ -188,7 +188,7 @@ HWTEST_F(RdbDynamicLoadTest, ObsManger001, TestSize.Level0)
  * @tc.desc: Destroy after the database is closed
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, ObsManger002, TestSize.Level1)
 {
     const std::string dbPath = RDB_TEST_PATH + "ObsManger002.db";
     RdbStoreConfig config(dbPath);
@@ -341,7 +341,7 @@ HWTEST_F(RdbDynamicLoadTest, OpenSSL001, TestSize.Level1)
  * @tc.desc: GlobalResource CleanUp invalid args
  * @tc.type: FUNC
  */
-HWTEST_F(RdbDynamicLoadTest, GlobalResource001, TestSize.Level0)
+HWTEST_F(RdbDynamicLoadTest, GlobalResource001, TestSize.Level1)
 {
     EXPECT_EQ(GlobalResource::CleanUp(-1), E_INVALID_ARGS);
     EXPECT_EQ(GlobalResource::CleanUp(GlobalResource::CLEAN_BUTT), E_INVALID_ARGS);
