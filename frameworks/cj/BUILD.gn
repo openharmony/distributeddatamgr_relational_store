@@ -55,6 +55,7 @@ ohos_shared_library("cj_relational_store_ffi") {
       "common_event_service:cesfwk_innerkits",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
+      "ipc:ipc_single",
       "napi:ace_napi",
       "napi:cj_bind_ffi",
       "napi:cj_bind_native",
