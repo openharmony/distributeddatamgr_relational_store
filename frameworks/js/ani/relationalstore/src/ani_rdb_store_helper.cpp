@@ -55,10 +55,14 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     auto proxy = new RdbStoreProxy();
     if (proxy == nullptr) {
         LOG_ERROR("new RdbStoreProxy failed.");
-        ThrowBusinessError(env, E_INNER_ERROR, "Proxy is nullptr.");
         return nullptr;
     }
-    RdbSqlUtils::CreateDirectory("/data/storage/el2/database/rdb");
+    int errorCode = RdbSqlUtils::CreateDirectory("/data/storage/el2/database/rdb");
+    if (errorCode != E_OK) {
+        delete proxy;
+        ThrowBusinessError(env, E_INNER_ERROR, "CreateDirectory failed.");
+        return nullptr;
+    }
     auto rdbConfig = RdbStoreConfig("/data/storage/el2/database/rdb/test.db");
     proxy->nativeRdb = RdbHelper::GetRdbStore(rdbConfig, -1, callback, errCode);
     if (proxy->nativeRdb == nullptr) {

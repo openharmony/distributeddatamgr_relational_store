@@ -56,6 +56,7 @@ private:
     static napi_value BatchInsertWithConflictResolution(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
+    static napi_value QuerySync(napi_env env, napi_callback_info info);
     static napi_value ExecuteSql(napi_env env, napi_callback_info info);
     static napi_value Execute(napi_env env, napi_callback_info info);
     static napi_value Backup(napi_env env, napi_callback_info info);
@@ -107,6 +108,7 @@ private:
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog },
     };
     void UnregisterAll();
+
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;

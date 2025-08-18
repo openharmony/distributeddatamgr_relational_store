@@ -295,23 +295,6 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
     return OK;
 }
 
-int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
-{
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    CHECK_RETURN_SET(obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
-    PredicatesProxy *proxy = nullptr;
-    napi_status status = napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-    bool checked = (status == napi_ok) && (proxy != nullptr) && (proxy->predicates_ != nullptr);
-    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("predicates", "an DataShare Predicates."));
-
-    std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-    RdbPredicates rdbPredicates = RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName);
-    context->rdbPredicates = std::make_shared<RdbPredicates>(rdbPredicates);
-#endif
-    return OK;
-}
-
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
@@ -401,6 +384,23 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
     context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
+}
+
+int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+{
+#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    CHECK_RETURN_SET(obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+    PredicatesProxy *proxy = nullptr;
+    napi_status status = napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
+    bool checked = (status == napi_ok) && (proxy != nullptr) && (proxy->predicates_ != nullptr);
+    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("predicates", "an DataShare Predicates."));
+
+    std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
+    RdbPredicates rdbPredicates = RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName);
+    context->rdbPredicates = std::make_shared<RdbPredicates>(rdbPredicates);
+#endif
+    return OK;
 }
 
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
@@ -1080,7 +1080,7 @@ napi_value RdbStoreProxy::SetLocale(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseSrcType(env, argv[0], context));
         CHECK_RETURN_SET_E(!context->srcName.empty(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "src cannot be empty"));
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "locale cannot be empty"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
