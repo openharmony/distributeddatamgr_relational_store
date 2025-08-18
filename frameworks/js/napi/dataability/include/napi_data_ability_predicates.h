@@ -90,8 +90,9 @@ private:
 } // namespace OHOS
 
 EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates);
+__attribute__((visibility("default")))
+    napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
+        OHOS::NativeRdb::DataAbilityPredicates *predicates);
 
 __attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
 NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg);

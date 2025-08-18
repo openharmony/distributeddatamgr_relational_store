@@ -267,7 +267,7 @@ napi_value GetInsertSqlInfo(napi_env env, napi_callback_info info)
         auto status = ParseConflictResolution(env, argv[2], context);
         RDB_NAPI_ASSERT(env,
             (OK == status),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "ConflictResolution is invaild."));
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "ConflictResolution is invalid."));
         conflict = context->conflictResolution;
     }
 
@@ -301,7 +301,7 @@ napi_value GetUpdateSqlInfo(napi_env env, napi_callback_info info)
         auto status = ParseConflictResolution(env, argv[2], context);
         RDB_NAPI_ASSERT(env,
             (OK == status),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "ConflictResolution is invaild."));
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "ConflictResolution is invalid."));
         conflict = context->conflictResolution;
     }
     auto predicates = context->rdbPredicates;
@@ -310,7 +310,7 @@ napi_value GetUpdateSqlInfo(napi_env env, napi_callback_info info)
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "The table must be not empty string."));
     RDB_NAPI_ASSERT(env,
         (OK == CheckPredicatesWhereClause(predicates->GetWhereClause())),
-        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Cloumns in predicates is too much."));
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Columns in predicates is too much."));
     RDB_NAPI_ASSERT(
         env, (OK == CheckTableName(predicates->GetTableName())),
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Table is too long."));
@@ -345,7 +345,7 @@ napi_value GetDeleteSqlInfo(napi_env env, napi_callback_info info)
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Table is too long."));
     RDB_NAPI_ASSERT(env,
         (OK == CheckPredicatesWhereClause(predicates->GetWhereClause())),
-        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Cloumns in predicates is too much."));
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Columns in predicates is too much."));
     auto [errcode, sqlInfo] = RdbSqlUtils::GetDeleteSqlInfo(*predicates);
     RDB_NAPI_ASSERT(
         env, errcode == E_OK, std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, GetErrorString(errcode)));
@@ -380,7 +380,7 @@ napi_value GetQuerySqlInfo(napi_env env, napi_callback_info info)
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "The table must be not empty string."));
     RDB_NAPI_ASSERT(env,
         (OK == CheckPredicatesWhereClause(predicates->GetWhereClause())),
-        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Cloumns in predicates is too much."));
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Columns in predicates is too much."));
     RDB_NAPI_ASSERT(env,
         (OK == CheckTableName(predicates->GetTableName())),
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Table is too long."));
