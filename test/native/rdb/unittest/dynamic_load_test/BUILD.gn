@@ -130,7 +130,6 @@ ohos_unittest("DynamicLoadTest") {
     "kv_store:database_utils",
     "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
-    "kv_store:distributeddb",
     "kv_store:distributeddb_client",
     "samgr:samgr_proxy",
     "sqlite:sqlite",

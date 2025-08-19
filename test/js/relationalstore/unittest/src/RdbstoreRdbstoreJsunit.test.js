@@ -239,9 +239,9 @@ describe('rdbStoreTest', function () {
         }
 
         await data_relationalStore.getRdbStore(context, config1);
-
         try {
             await data_relationalStore.getRdbStore(context, config2);
+            done();
         } catch (err) {
             console.log(TAG + "************* testRdbStore0009 end   *************");
         }
@@ -1387,7 +1387,7 @@ describe('rdbStoreTest', function () {
             done();
         }
     })
-    
+
     /**
      * @tc.name tokenizer supported test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_RdbStore_0051
