@@ -77,6 +77,7 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_GET_JOURNAL_FAIL, 0 },
     { E_DFX_SET_JOURNAL_FAIL, 0 },
     { E_DFX_DUMP_INFO, 0 },
+    { E_DFX_GROUPID_INFO, 0 }
 };
 
 bool RdbFaultHiViewReporter::memCorruptReportedFlg_ = false;
