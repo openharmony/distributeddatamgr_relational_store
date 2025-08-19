@@ -78,6 +78,7 @@ public:
         BACKING_UP,
         BACKUP_INTERRUPT,
         BACKUP_FINISHED,
+        DB_CLOSING,
     };
 };
 
@@ -670,6 +671,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_009, TestSize.Level0)
     ASSERT_TRUE(isBinlogExist);
     id = 11;
     Insert(id, count);
+    WaitForBinlogReplayFinish();
     store = nullptr;
     DeleteDbFile(config);
 
@@ -677,6 +679,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_009, TestSize.Level0)
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     WaitForBackupFinish(BACKUP_FINISHED);
+    WaitForBinlogReplayFinish();
     int32_t num = 20;
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
 }
@@ -712,6 +715,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_010, TestSize.Level0)
     store = nullptr;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
+    WaitForBinlogReplayFinish();
     bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     ASSERT_TRUE(isBinlogExist);
     id = 11;
@@ -754,6 +758,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_011, TestSize.Level0)
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
     WaitForBackupFinish(BACKUP_FINISHED);
+    WaitForBinlogReplayFinish();
     num = 18;
     RdbDoubleWriteBinlogTest::CheckNumber(store, num);
 }

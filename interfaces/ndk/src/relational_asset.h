@@ -22,7 +22,6 @@ constexpr int32_t DATA_ASSET_V0 = 10002451;
 struct Data_Asset {
     int32_t cid = DATA_ASSET_V0;
     AssetValue asset_;
-    bool IsValid() const;
 };
 
 #endif // RELATIONAL_ASSET_IMPL_H
