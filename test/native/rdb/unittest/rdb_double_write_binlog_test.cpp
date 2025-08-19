@@ -1124,6 +1124,41 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_021, TestSize.Level0)
     sqlite3_export_relational_symbols = originalApi;
 }
 
+/**
+ * @tc.name: RdbStore_Binlog_022
+ * @tc.desc: test exist slaveFailure flag but slave db integrity check ok
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_022, TestSize.Level0)
+{
+    ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+    slaveStore = nullptr;
+
+    LOG_INFO("---- Create flag file:-slaveFailure, simulate main db lost");
+    EXPECT_EQ(SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName), E_OK);
+    EXPECT_TRUE(SqliteUtils::DeleteFile(databaseName));
+
+    LOG_INFO("---- Reopen db, restore from slave");
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    bool isDbFileExist = OHOS::FileExists(RdbDoubleWriteBinlogTest::databaseName);
+    ASSERT_TRUE(isDbFileExist);
+    RdbDoubleWriteBinlogTest::CheckNumber(RdbDoubleWriteBinlogTest::store, count);
+}
+
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
