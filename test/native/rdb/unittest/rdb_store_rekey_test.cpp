@@ -1170,7 +1170,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 
 /**
 * @tc.name: DecryptV1Test_001
-* @tc.desc: decryptV1 test
+* @tc.desc: RdbSecurityManager DecryptV1 test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
@@ -1212,7 +1212,7 @@ HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
  
 /**
 * @tc.name: DecryptV1Test_002
-* @tc.desc: decryptV1 test
+* @tc.desc: RdbSecurityManager decryptV1 key length invalid test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
