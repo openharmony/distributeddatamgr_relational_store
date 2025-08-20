@@ -206,9 +206,6 @@ class UnionAccessor {
 public:
     UnionAccessor(ani_env *env, ani_object &obj) : env_(env), obj_(obj)
     {
-        if (env == nullptr) {
-            throw std::runtime_error("env is nullptr");
-        }
     }
 
     bool IsInstanceOf(const std::string& cls_name)
@@ -268,9 +265,6 @@ class OptionalAccessor {
 public:
     OptionalAccessor(ani_env *env, ani_object &obj) : env_(env), obj_(obj)
     {
-        if (env == nullptr) {
-            throw std::runtime_error("env is nullptr");
-        }
     }
 
     bool IsUndefined()
