@@ -322,6 +322,29 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_007, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RDB_Native_store_test_008
+ * @tc.desc: invalid args test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_008, TestSize.Level1)
+{
+    int errCode = 0;
+    auto config = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_DeleteStoreV2(nullptr), OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Rdb_CreateOrOpen(nullptr, &errCode), nullptr);
+    EXPECT_EQ(OH_Rdb_CreateOrOpen(config, nullptr), nullptr);
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetPersistent(nullptr, true));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetTokenizer(nullptr, Rdb_Tokenizer::RDB_NONE_TOKENIZER));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetArea(nullptr, false));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetEncrypted(nullptr, false));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetDbType(nullptr, RDB_SQLITE));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetSecurityLevel(nullptr, S1));
+    OH_Rdb_DestroyConfig(config);
+}
+
+/**
  * @tc.name: RDB_ICU_TEST001
  * @tc.desc: test apis of icu
  * @tc.type: FUNC
@@ -347,7 +370,6 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST001, TestSize.Level1)
     if (numType == 2) {
         EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetDbType(config, RDB_CAYLEY));
         EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED,
-
             OH_Rdb_SetTokenizer(config, Rdb_Tokenizer::RDB_ICU_TOKENIZER));
     }
 
@@ -556,6 +578,9 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_014, TestSize.Level1)
         [config](const char *) {
             OH_Rdb_DestroyConfig(config);
         });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_store_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
     config->securityLevel = -1;
     auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
@@ -579,7 +604,11 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_015, TestSize.Level1)
         [config](const char *) {
             OH_Rdb_DestroyConfig(config);
         });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_store_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetPersistent(config, false), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
     config->area = -1;
     auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
@@ -602,8 +631,12 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_016, TestSize.Level1)
         [config](const char *) {
             OH_Rdb_DestroyConfig(config);
         });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_store_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1), RDB_OK);
     config->dbType = -1;
     auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
@@ -626,8 +659,12 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_017, TestSize.Level1)
         [config](const char *) {
             OH_Rdb_DestroyConfig(config);
         });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_store_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
     EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1), RDB_OK);
     config->token = -1;
     auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
@@ -635,4 +672,45 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_017, TestSize.Level1)
     config->token = 10;
     auto [errCode2, __] = RdbNdkUtils::GetRdbStoreConfig(config);
     EXPECT_EQ(errCode2, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_018
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when magicNum error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_018, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_018",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_store_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetPersistent(config, true), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetSecurityLevel(config, S1), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1), RDB_OK);
+    config->magicNum = 0;
+    auto [errCode1, _] = RdbNdkUtils::GetRdbStoreConfig(config);
+    EXPECT_EQ(errCode1, OHOS::NativeRdb::E_INVALID_ARGS);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_019
+ * @tc.desc: abnormal test of RdbNdkUtils::GetRdbStoreConfig, when magicNum error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_019, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    std::shared_ptr<const char> autoRelease = std::shared_ptr<const char>("RDB_Native_store_test_019",
+        [config](const char *) {
+            OH_Rdb_DestroyConfig(config);
+        });
+    EXPECT_EQ(OH_Rdb_SetSemanticIndex(config, true), RDB_OK);
+    EXPECT_NE(OH_Rdb_SetSemanticIndex(nullptr, true), RDB_OK);
 }

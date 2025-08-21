@@ -285,7 +285,7 @@ std::vector<uint8_t> RDBCrypto::Encrypt(const RDBCryptoParam &param, RDBCryptoFa
     struct HksBlob blobAad = { uint32_t(g_add.size()), g_add.data() };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksBlob plainKey = { uint32_t(tempKey.size()), tempKey.data() };
-    struct HksBlob blobNonce = { uint32_t(param.nonceValue.size()), const_cast<uint8_t*>(&(param.nonceValue[0])) };
+    struct HksBlob blobNonce = { uint32_t(param.nonce_.size()), const_cast<uint8_t*>(&(param.nonce_[0])) };
 
     auto hksParams = CreateEncryptHksParams(blobNonce, blobAad);
     ret = HksAddParams(params, hksParams.data(), hksParams.size());
@@ -324,7 +324,7 @@ std::vector<uint8_t> RDBCrypto::Decrypt(const RDBCryptoParam &param, RDBCryptoFa
     std::vector<uint8_t> tempRootKeyAlias(param.rootAlias);
     std::vector<uint8_t> source(param.KeyValue);
     struct HksBlob blobAad = { uint32_t(g_add.size()), &(g_add[0]) };
-    struct HksBlob blobNonce = { uint32_t(param.nonceValue.size()), const_cast<uint8_t*>(&(param.nonceValue[0])) };
+    struct HksBlob blobNonce = { uint32_t(param.nonce_.size()), const_cast<uint8_t*>(&(param.nonce_[0])) };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), &(tempRootKeyAlias[0]) };
     struct HksBlob encryptedKeyBlob = { uint32_t(source.size() - AEAD_LEN), source.data() };
     struct HksBlob blobAead = { AEAD_LEN, source.data() + source.size() - AEAD_LEN };

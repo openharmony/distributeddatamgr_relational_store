@@ -202,12 +202,20 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_007, TestSize.Level1)
     ret = OH_Crypto_SetCryptoPageSize(obj, pageSize);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
+    EXPECT_EQ(OH_Crypto_SetCryptoPageSize(obj, 512), RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_Crypto_SetCryptoPageSize(obj, 131072), RDB_E_INVALID_ARGS);
+    
     pageSize = 1024;
     ret = OH_Crypto_SetCryptoPageSize(obj, pageSize);
     EXPECT_EQ(ret, RDB_OK);
     EXPECT_EQ(obj->cryptoParam.cryptoPageSize, pageSize);
 
     pageSize = 4096;
+    ret = OH_Crypto_SetCryptoPageSize(obj, pageSize);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(obj->cryptoParam.cryptoPageSize, pageSize);
+
+    pageSize = 65536;
     ret = OH_Crypto_SetCryptoPageSize(obj, pageSize);
     EXPECT_EQ(ret, RDB_OK);
     EXPECT_EQ(obj->cryptoParam.cryptoPageSize, pageSize);
