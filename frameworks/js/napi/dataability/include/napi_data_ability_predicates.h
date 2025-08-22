@@ -22,6 +22,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "rdb_visibility.h"
 
 namespace OHOS {
 namespace DataAbilityJsKit {
@@ -90,11 +91,10 @@ private:
 } // namespace OHOS
 
 EXTERN_C_START
-__attribute__((visibility("default")))
-    napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
-        OHOS::NativeRdb::DataAbilityPredicates *predicates);
+API_EXPORT napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
+    OHOS::NativeRdb::DataAbilityPredicates *predicates);
 
-__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
+API_EXPORT OHOS::NativeRdb::DataAbilityPredicates *
 NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg);
 EXTERN_C_END
 #endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H

@@ -809,15 +809,14 @@ napi_value DataAbilityPredicatesProxy::IsSorted(napi_env env, napi_callback_info
 } // namespace OHOS
 
 EXTERN_C_START
-__attribute__((visibility("default")))
-    napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
-        napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates)
+API_EXPORT napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
+    OHOS::NativeRdb::DataAbilityPredicates *predicates)
 {
     return OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::NewInstance(
         env, std::shared_ptr<OHOS::NativeRdb::DataAbilityPredicates>(predicates));
 }
 
-__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
+API_EXPORT OHOS::NativeRdb::DataAbilityPredicates *
 NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg)
 {
     auto predicates = OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::GetNativePredicates(env, arg);
