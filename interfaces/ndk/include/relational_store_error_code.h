@@ -308,7 +308,7 @@ typedef enum OH_Rdb_ErrCode {
     RDB_E_CON_OVER_LIMIT = (E_BASE + 48),
 
     /**
-     * @brief The key parameter is invalid.
+     * @brief The secret key is corrupted or lost.
      */
     RDB_E_INVALID_SECRET_KEY = (E_BASE + 49),
 
