@@ -48,6 +48,7 @@
 #include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store.h"
+#include "rdb_time_utils.h"
 #include "rdb_trace.h"
 #include "rdb_types.h"
 #include "relational_store_client.h"
@@ -55,6 +56,7 @@
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
 #include "step_result_set.h"
+#include "string_utils.h"
 #include "suspender.h"
 #include "task_executor.h"
 #include "traits.h"
@@ -95,7 +97,10 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 static constexpr const char *ASYNC_RESTORE = "-async.restore";
+constexpr char const *SUFFIX_BINLOG = "_binlog/";
+constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
+
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -211,6 +216,35 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
         return { E_DATABASE_BUSY, nullptr };
     }
     return { E_OK, connection };
+}
+
+bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
+{
+    bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false);
+    if (!setDir) {
+        LOG_ERROR("SetDbDir fail, bundleName is %{public}s, store is %{public}s.",
+            config.GetBundleName().c_str(),
+            SqliteUtils::Anonymous(config.GetName()).c_str());
+    }
+    std::vector<std::string> dbFiles = Connection::GetDbFiles(config);
+    bool setDbFile = SqliteUtils::SetDbFileGid(config.GetPath(), dbFiles, gid);
+    if (!setDbFile) {
+        LOG_ERROR("SetDbFile fail, bundleName is %{public}s, store is %{public}s.",
+            config.GetBundleName().c_str(),
+            SqliteUtils::Anonymous(config.GetName()).c_str());
+    }
+
+    if (config.GetHaMode() == HAMode::SINGLE || config.IsEncrypt() || config.IsMemoryRdb()) {
+        return setDir && setDbFile;
+    }
+    std::string binlogDir = config.GetPath() + SUFFIX_BINLOG;
+    bool setBinlog = SqliteUtils::SetDbDirGid(binlogDir, gid, true);
+    if (!setBinlog) {
+        LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.",
+            config.GetBundleName().c_str(),
+            SqliteUtils::Anonymous(config.GetName()).c_str());
+    }
+    return setDir && setDbFile && setBinlog;
 }
 
 #if !defined(CROSS_PLATFORM)
@@ -395,6 +429,8 @@ int RdbStoreImpl::SetDistributedTables(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
+    isNeedSetAcl_ = true;
+    SetFileGid(config_, SERVICE_GID);
     if (tables.empty()) {
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
@@ -1145,7 +1181,7 @@ int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
     return E_OK;
 }
 
-int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
+int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl)
 {
     if (initStatus_ != -1) {
         return initStatus_;
@@ -1182,6 +1218,10 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback)
         }
     }
     initStatus_ = errCode;
+    if (isNeedSetAcl) {
+        isNeedSetAcl_ = true;
+        SetFileGid(config_, SERVICE_GID);
+    }
     return initStatus_;
 }
 
@@ -1847,7 +1887,14 @@ int RdbStoreImpl::InnerBackup(
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
         auto [errCode, conn] = GetConn(false);
-        return errCode != E_OK ? errCode : conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+        errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
+        if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
+            SetFileGid(config_, SERVICE_GID);
+        }
+        return errCode;
     }
     Suspender suspender(Suspender::SQL_LOG);
     auto config = config_;
@@ -2588,7 +2635,8 @@ int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const
             keyFilesPtr->Unlock();
             return E_ERROR;
         }
-        taskPool->Execute([keyFilesPtr, config = config_, pool] {
+        bool isNeedSetAcl = isNeedSetAcl_ || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID);
+        taskPool->Execute([keyFilesPtr, config = config_, pool, isNeedSetAcl] {
             auto dbPath = config.GetPath();
             LOG_INFO("async restore started for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
             auto result = RdbStoreImpl::RestoreWithPool(pool, dbPath);
@@ -2603,6 +2651,9 @@ int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const
             SqliteUtils::SetSlaveRestoring(dbPath, false);
             if (pool != nullptr) {
                 pool->ReopenConns();
+            }
+            if (isNeedSetAcl) {
+                SetFileGid(config, SERVICE_GID);
             }
             keyFilesPtr->Unlock();
         });
@@ -2649,8 +2700,12 @@ int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<ui
     bool isUseAsync = IsUseAsyncRestore(path_, destPath);
     LOG_INFO("restore start, using async=%{public}d", isUseAsync);
     if (!isUseAsync) {
+        bool isNeedSetAcl = isNeedSetAcl_ || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID);
         auto err = pool->ChangeDbFileForRestore(path_, destPath, newKey, slaveStatus_);
         LOG_INFO("restore finished, sync mode rc=%{public}d", err);
+        if (isNeedSetAcl) {
+            SetFileGid(config_, SERVICE_GID);
+        }
         return err;
     }
 
@@ -2675,7 +2730,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
     if (isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
-
     auto pool = GetPool();
     if (pool == nullptr || !isOpen_) {
         LOG_ERROR("The pool is: %{public}d, pool is null: %{public}d", isOpen_, pool == nullptr);

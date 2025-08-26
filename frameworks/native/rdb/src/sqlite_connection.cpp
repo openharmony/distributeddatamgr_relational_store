@@ -38,11 +38,13 @@
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "relational_store_client.h"
+#include "rdb_time_utils.h"
 #include "sqlite3.h"
 #include "sqlite_default_function.h"
 #include "sqlite_errno.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 #include "suspender.h"
 #include "value_object.h"
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -79,6 +81,8 @@ __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 __attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
+__attribute__((used)) const int32_t SqliteConnection::regGetDbFileser_ =
+    Connection::RegisterGetDbFileser(DB_SQLITE, SqliteConnection::GetDbFiles);
 __attribute__((used)) const int32_t SqliteConnection::regReplicaChecker_ =
     Connection::RegisterReplicaChecker(DB_SQLITE, SqliteConnection::CheckReplicaIntegrity);
 __attribute__((used)) const int32_t SqliteConnection::regDbClientCleaner_ =
@@ -146,6 +150,35 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
         collection.insert(std::pair{ "newKey", fileInfo.second });
     }
     return collection;
+}
+
+std::vector<std::string> SqliteConnection::GetDbFiles(const RdbStoreConfig &config)
+{
+    std::vector<std::string> dbFiles;
+    if (config.IsMemoryRdb()) {
+        return dbFiles;
+    }
+    std::string path;
+    SqliteGlobalConfig::GetDbPath(config, path);
+    for (auto &suffix : FILE_SUFFIXES) {
+        auto file = path + suffix.suffix_;
+        struct stat fileStat;
+        if (stat(file.c_str(), &fileStat) == 0) {
+            dbFiles.push_back(StringUtils::ExtractFileName(file));
+        }
+    }
+    if (config.GetHaMode() == HAMode::SINGLE) {
+        return dbFiles;
+    }
+    path = SqliteUtils::GetSlavePath(path);
+    for (auto &suffix : FILE_SUFFIXES) {
+        auto file = path + suffix.suffix_;
+        struct stat fileStat;
+        if (stat(file.c_str(), &fileStat) == 0) {
+            dbFiles.push_back(StringUtils::ExtractFileName(file));
+        }
+    }
+    return dbFiles;
 }
 
 SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection, bool isSlave)

@@ -98,6 +98,7 @@ enum class RdbServiceInterfaceCode {
     RDB_SERVICE_CMD_VERIFY_PROMISE_INFO,
     RDB_SERVICE_CMD_REPORT_STAT,
     RDB_SERVICE_CMD_GET_DFX_INFO,
+    RDB_SERVICE_CMD_GET_ISSILENT,
     RDB_SERVICE_CMD_MAX
 };
 } // namespace RelationalStore
