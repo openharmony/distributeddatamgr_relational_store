@@ -18,7 +18,6 @@
 #include <climits>
 #include <string>
 
-#include "abs_predicates.h"
 #include "cache_result_set.h"
 #include "common.h"
 #include "rdb_errno.h"

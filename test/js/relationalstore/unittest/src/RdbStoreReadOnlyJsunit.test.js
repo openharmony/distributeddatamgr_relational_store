@@ -70,7 +70,7 @@ describe('rdbStoreReadOnlyTest', function () {
 
     beforeEach(async function () {
         store = await relationalStore.getRdbStore(context, STORE_CONFIG2);
-        expect(rdbStore === null).assertFalse();
+        expect(store === null).assertFalse();
         console.info(TAG + 'beforeEach');
     })
 
