@@ -84,7 +84,7 @@ ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string 
         return nullptr;
     }
 
-    static const char *businessErrorName = "L@ohos/base/BusinessError;";
+    static const char *businessErrorName = "@ohos.base.BusinessError";
     ani_class cls;
     auto status = env->FindClass(businessErrorName, &cls);
     if (ANI_OK != status) {

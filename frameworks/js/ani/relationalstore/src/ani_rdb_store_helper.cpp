@@ -67,7 +67,7 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
         return nullptr;
     }
     static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
-    static const char *className = "LRdbStoreInner;";
+    static const char *className = "RdbStoreInner";
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
