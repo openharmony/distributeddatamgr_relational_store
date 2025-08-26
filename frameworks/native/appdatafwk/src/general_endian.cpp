@@ -21,8 +21,6 @@ namespace OHOS {
 uint16_t Endian::LeToH(uint16_t value)
 {
     return le16toh(value);
-
-    
 }
 
 uint16_t Endian::HToLe(uint16_t value)
