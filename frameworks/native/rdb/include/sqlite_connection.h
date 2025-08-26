@@ -45,6 +45,7 @@ public:
     static int32_t Delete(const std::string &path);
     static int32_t Repair(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
+    static std::vector<std::string> GetDbFiles(const RdbStoreConfig &config);
     static int32_t CheckReplicaIntegrity(const RdbStoreConfig &config);
     static int32_t ClientCleanUp();
     static int32_t OpenSSLCleanUp();
@@ -170,6 +171,7 @@ private:
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
     static const int32_t regCollector_;
+    static const int32_t regGetDbFileser_;
     static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;

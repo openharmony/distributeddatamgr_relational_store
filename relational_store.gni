@@ -19,6 +19,7 @@ declare_args() {
   } else {
     arkdata_db_core_is_exists = false
   }
+  relational_store_config = true
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"

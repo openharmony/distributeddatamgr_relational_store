@@ -518,16 +518,6 @@ RdbSecurityManager &RdbSecurityManager::GetInstance()
     return instance;
 }
 
-static std::string RemoveSuffix(const std::string &name)
-{
-    std::string suffix(".db");
-    auto pos = name.rfind(suffix);
-    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
-        return name;
-    }
-    return { name, 0, pos };
-}
-
 bool RdbSecurityManager::IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType)
 {
     KeyFiles keyFiles(dbPath, false);
@@ -699,7 +689,7 @@ RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
     const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
     bool isDirCreate = InitPath(lockDir);
-    const std::string dbName = RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
     lock_ = lockDir + dbName + SUFFIX_KEY_LOCK;
     keys_[PUB_KEY_FILE] = dbKeyDir + dbName + SUFFIX_PUB_KEY;
     keys_[PUB_KEY_FILE_NEW_KEY] = dbKeyDir + dbName + SUFFIX_PUB_KEY_NEW;
