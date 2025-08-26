@@ -56,11 +56,11 @@ public:
     int ConfigLocale(const std::string &localeStr) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
     int ResetKey(const RdbStoreConfig &config) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t GetJournalMode() override;
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) override;
     int CheckReplicaForRestore() override;
-    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     bool IsWriter() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
@@ -100,8 +100,8 @@ private:
     int SetEncryptKey(const std::vector<uint8_t> &key, const RdbStoreConfig &config);
     int SetServiceKey(const RdbStoreConfig &config, int32_t errCode);
     int SetEncryptAgo(const RdbStoreConfig &config);
-    int SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam);
     int SetJournalMode(const RdbStoreConfig &config);
+    int SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam);
     int SetAutoCheckpoint(const RdbStoreConfig &config);
     int SetWalFile(const RdbStoreConfig &config);
     int SetWalSyncMode(const std::string &syncMode);
