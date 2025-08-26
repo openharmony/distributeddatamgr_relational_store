@@ -220,8 +220,8 @@ private:
     int SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
     int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
-    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     void NotifyDataChange();
+    bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     int GetDestPath(const std::string &backupPath, std::string &destPath);
     std::shared_ptr<ConnectionPool> GetPool() const;
     int HandleCloudSyncAfterSetDistributedTables(
