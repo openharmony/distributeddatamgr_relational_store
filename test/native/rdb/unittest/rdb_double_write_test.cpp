@@ -77,6 +77,7 @@ public:
         BACKING_UP,
         BACKUP_INTERRUPT,
         BACKUP_FINISHED,
+        DB_CLOSING,
     };
 };
 
