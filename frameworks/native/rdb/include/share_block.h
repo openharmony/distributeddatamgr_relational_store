@@ -77,7 +77,6 @@ int SeriPutDouble(void *pCtx, int addedRows, int column, double value);
 int SeriPutBlob(void *pCtx, int addedRows, int column, const void *blob, int len);
 int SeriPutNull(void *pCtx, int addedRows, int column);
 int SeriPutOther(void *pCtx, int addedRows, int column);
-int ClearSharedBlock(AppDataFwk::SharedBlock *sharedBlock);
 int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum);
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt);
 FillOneRowResult FillOneRowOfString(

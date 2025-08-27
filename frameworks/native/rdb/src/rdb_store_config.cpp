@@ -709,7 +709,7 @@ void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
 {
     cryptoParam_ = cryptoParam;
     if (!(cryptoParam_.encryptKey_.empty())) {
-        customEncryptParam_  = true;
+        customEncryptParam_ = true;
     }
 }
 

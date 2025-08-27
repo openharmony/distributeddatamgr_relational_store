@@ -29,12 +29,12 @@ struct RDBCryptoFault {
 };
 struct RDBCryptoParam {
     std::vector<uint8_t> rootAlias;
-    std::vector<uint8_t> nonceValue;
+    std::vector<uint8_t> nonce_;
     std::vector<uint8_t> KeyValue;
     RDBCryptoParam() = default;
     ~RDBCryptoParam()
     {
-        nonceValue.assign(nonceValue.size(), 0);
+        nonce_.assign(nonce_.size(), 0);
         KeyValue.assign(KeyValue.size(), 0);
     }
 };

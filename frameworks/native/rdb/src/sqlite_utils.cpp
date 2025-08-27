@@ -91,9 +91,10 @@ constexpr const char *SQL_KEYWORD[] = { "ABORT", "ABS", "ACTION", "ADD", "AFTER"
 
 constexpr const char *WHILE_KEYWORDS[] = { "ABORTS", "ACQLOCK", "ALREADY", "AT", "BUSYLINE", "CHANGED", "CURLOCK",
     "DBREF", "DEL", "DUPLICATE", "ENABLE", "ERRNO", "ERROR", "FAILED", "FD", "FILE", "FILELOCK", "FRAMES", "F_RDLCK",
-    "F_WRLCK", "GO", "HANDLELOCKS", "HAS", "IDX", "LEN", "LINE", "LITERAL", "LOCKCNT", "LOCKS", "MISUSE", "MONITOR",
-    "NEAR", "NONE", "PID", "PROCESSLOCK", "QUOTED", "READ", "RECOVERED", "SCHEMA", "SHARED_FIRST", "SQLITE",
-    "STATEMENT", "STRING", "SUCH", "SYNTAX", "TID", "TRX", "TYPE", "WAL", "WAL_DMS", "WARNING", "WRITE", "WRONG" };
+    "F_WRLCK", "GO", "HANDLELOCKS", "HAS", "IDX", "INCOMPLETE", "INPUT", "LEN", "LINE", "LITERAL", "LOCKCNT", "LOCKS",
+    "MISUSE", "MONITOR", "NEAR", "NONE", "PID", "PROCESSLOCK", "QUOTED", "READ", "RECOVERED", "SCHEMA", "SHARED_FIRST",
+    "SQLITE", "STATEMENT", "STRING", "SUCH", "SYNTAX", "TID", "TRX", "TYPE", "WAL", "WAL_DMS", "WARNING", "WRITE",
+    "WRONG" };
 
 constexpr int32_t WordCompare(const char *a, const char *b)
 {
