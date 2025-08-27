@@ -41,7 +41,7 @@ SqliteSqlBuilder::~SqliteSqlBuilder() {}
  */
 int SqliteSqlBuilder::BuildQueryString(bool distinct, const std::string &table, const std::string &joinClause,
     const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
-    const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset, std::string &outSql)
+    const std::string &indexName, const std::string &orderBy, int limit, int offset, std::string &outSql)
 {
     if (table.empty()) {
         return E_EMPTY_TABLE_NAME;

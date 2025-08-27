@@ -44,9 +44,9 @@ public:
     int32_t GetDBType() const override;
     bool IsWriter() const override;
     int32_t ResetKey(const RdbStoreConfig &config) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t TryCheckPoint(bool timeout) override;
     int32_t LimitWalSize() override;
-    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t ConfigLocale(const std::string &localeStr) override;
     int32_t CleanDirtyData(const std::string &table, uint64_t cursor) override;
     int32_t SubscribeTableChanges(const Notifier &notifier) override;

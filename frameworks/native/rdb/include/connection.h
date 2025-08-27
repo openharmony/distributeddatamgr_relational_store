@@ -65,11 +65,11 @@ public:
     virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
     virtual std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) = 0;
     virtual int CheckReplicaForRestore() = 0;
+    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
     virtual int32_t ResetKey(const RdbStoreConfig &config) = 0;
     virtual int32_t TryCheckPoint(bool timeout) = 0;
-    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t LimitWalSize() = 0;
     virtual int32_t ConfigLocale(const std::string &localeStr) = 0;
     virtual int32_t CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
