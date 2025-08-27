@@ -28,8 +28,7 @@ relational_store_base_path = "//foundation/distributeddatamgr/relational_store"
 
 relational_store_mock_path = "${relational_store_base_path}/rdbmock"
 
-relational_store_mock_test_path =
-    "${relational_store_base_path}/test/native/rdb/mock"
+relational_store_mock_test_path = "${relational_store_base_path}/test/native/rdb/mock"
 
 relational_store_js_common_path =
     "${relational_store_base_path}/frameworks/js/napi/common"
@@ -62,10 +61,6 @@ distributedfile_path =
 sdk_c_path = "//interface/sdk_c/distributeddatamgr"
 
 plugins_path = "//plugins"
-
-foundation_systemabilitymgr_path = "//foundation/systemabilitymgr/"
-
-base_security_dataclassification_path = "//base/security/dataclassification"
 
 datashare_base_path = "//foundation/distributeddatamgr/data_share"
  
