@@ -129,6 +129,7 @@ void SqliteStatement::HandleErrMsg(const std::string &errMsg, const std::string 
         }
     }
 }
+
 void SqliteStatement::TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, const std::string &sql)
 {
     if (errCode == SQLITE_ROW || errCode == SQLITE_DONE || errCode == SQLITE_OK) {
@@ -380,9 +381,9 @@ int SqliteStatement::InnerStep()
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
-    int ret = SQLiteError::ErrNo(errCode);
     auto db = sqlite3_db_handle(stmt_);
     TryNotifyErrorLog(errCode, db, sql_);
+    int ret = SQLiteError::ErrNo(errCode);
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep")));

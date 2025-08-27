@@ -726,6 +726,25 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
     return E_OK;
 }
 
+int SqliteConnection::ResetKey(const RdbStoreConfig &config)
+{
+    if (!IsWriter()) {
+        return E_OK;
+    }
+    LOG_INFO(
+        "name = %{public}s, iter = %{public}d", SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetIter());
+    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
+    int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
+    newKey.assign(newKey.size(), 0);
+    if (errCode != SQLITE_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
+        RdbSecurityManager::GetInstance().DelKeyFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
+        return E_OK;
+    }
+    config.ChangeEncryptKey();
+    return E_OK;
+}
+
 int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     std::vector<uint8_t> key;
@@ -760,25 +779,6 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         RdbSecurityManager::GetInstance().ChangeKeyFile(config_.GetPath());
     }
     key.assign(key.size(), 0);
-    return E_OK;
-}
-
-int SqliteConnection::ResetKey(const RdbStoreConfig &config)
-{
-    if (!IsWriter()) {
-        return E_OK;
-    }
-    LOG_INFO(
-        "name = %{public}s, iter = %{public}d", SqliteUtils::Anonymous(config.GetName()).c_str(), config.GetIter());
-    std::vector<uint8_t> newKey = config.GetNewEncryptKey();
-    int errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(newKey.data()), static_cast<int>(newKey.size()));
-    newKey.assign(newKey.size(), 0);
-    if (errCode != SQLITE_OK) {
-        LOG_ERROR("ReKey failed, err = %{public}d, errno = %{public}d", errCode, errno);
-        RdbSecurityManager::GetInstance().DelKeyFile(config.GetPath(), RdbKeyFile::PUB_KEY_FILE_NEW_KEY);
-        return E_OK;
-    }
-    config.ChangeEncryptKey();
     return E_OK;
 }
 

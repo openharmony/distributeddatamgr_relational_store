@@ -23,7 +23,6 @@
 #include "oh_data_utils.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
-#include "rdb_fault_hiview_reporter.h"
 #include "rdb_helper.h"
 #include "rdb_ndk_utils.h"
 #include "rdb_predicates.h"
@@ -44,12 +43,7 @@
 
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
-using Reporter = OHOS::NativeRdb::RdbFaultHiViewReporter;
 constexpr int RDB_STORE_CID = 1234560;       // The class id used to uniquely identify the OH_Rdb_Store class.
-constexpr uint32_t SIZE_LENGTH_REPORT = 1073741823; // count to report 1073741823(1024 * 1024 * 1024 - 1).
-constexpr uint32_t SIZE_LENGTH = 4294967294; // length or count up to 4294967294(1024 * 1024 * 1024 * 4 - 2).
-constexpr int TABLE_MAX_COLUMN = INT_MAX - 1;
-constexpr int TABLE_COLUMN_REPORT = 2000;
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
@@ -414,8 +408,8 @@ RelationalStore *GetRelationalStore(OH_Rdb_Store *store)
 OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 {
     if (config == nullptr || config->selfSize > RDB_CONFIG_SIZE_V1 || errCode == nullptr) {
-        LOG_ERROR("Parameters set error:config is NULL: %{public}d and config size is %{public}zu or "
-                  "errCode is NULL: %{public}d ",
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d and config size is %{public}zu or "
+                  "errCode is NULL ? %{public}d ",
             (config == nullptr), sizeof(OH_Rdb_Config), (errCode == nullptr));
         return nullptr;
     }
@@ -452,8 +446,8 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
 OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE) || errCode == nullptr) {
-        LOG_ERROR("Parameters set error:config is NULL: %{public}d or magicNum is not valid %{public}d or"
-                  " errCode is NULL: %{public}d ",
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or"
+                  " errCode is NULL ? %{public}d ",
             (config == nullptr), (config == nullptr ? 0 : config->magicNum), (errCode == nullptr));
         return nullptr;
     }
@@ -488,7 +482,7 @@ int OH_Rdb_CloseStore(OH_Rdb_Store *store)
 int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
 {
     if (config == nullptr || config->dataBaseDir == nullptr || config->storeName == nullptr) {
-        LOG_ERROR("Parameters set error:path is NULL: %{public}d", (config == nullptr));
+        LOG_ERROR("Parameters set error:path is NULL ? %{public}d", (config == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int errCode = OHOS::NativeRdb::E_OK;
@@ -503,7 +497,7 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
 int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
-        LOG_ERROR("config is NULL: %{public}d, config is invalid ? %{public}d", (config == nullptr),
+        LOG_ERROR("config is NULL ? %{public}d, config is invalid ? %{public}d", (config == nullptr),
             (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
@@ -580,14 +574,9 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates)
 
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
 {
-    if (length > TABLE_COLUMN_REPORT) {
-        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
-            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("OH_Rdb_Query length is ") + std::to_string(length)));
-    }
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr || length > TABLE_MAX_COLUMN) {
-        LOG_ERROR("rdbStore or predicate is nullptr, length is %{public}d", length);
+    if (rdbStore == nullptr || predicate == nullptr) {
         return nullptr;
     }
     std::vector<std::string> columns;
@@ -737,10 +726,6 @@ int OH_Rdb_SetVersion(OH_Rdb_Store *store, int version)
 static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedConfig *config)
 {
     std::pair<int32_t, Rdb_DistributedConfig> result = { OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, {} };
-    if (config == nullptr) {
-        LOG_ERROR("config is nullptr");
-        return result;
-    }
     auto &[errCode, cfg] = result;
     switch (config->version) {
         case DISTRIBUTED_CONFIG_V0: {
@@ -759,18 +744,8 @@ static std::pair<int32_t, Rdb_DistributedConfig> Convert(const Rdb_DistributedCo
 int OH_Rdb_SetDistributedTables(OH_Rdb_Store *store, const char *tables[], uint32_t count, Rdb_DistributedType type,
     const Rdb_DistributedConfig *config)
 {
-    if (count > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
-            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("OH_Rdb_SetDistributedTables: ") + std::to_string(count)));
-    }
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD ||
-        (count > 0 && tables == nullptr) || config == nullptr || count > SIZE_LENGTH) {
-        LOG_ERROR("rdbStore is NULL: %{public}d, type is %{public}d, "
-                  "count is %{public}d, tables is NULL: %{public}d, "
-                  "config is NULL: %{public}d.",
-            rdbStore == nullptr, type, count, tables == nullptr,
-            config == nullptr);
+    if (rdbStore == nullptr || type != Rdb_DistributedType::RDB_DISTRIBUTED_CLOUD || (count > 0 && tables == nullptr)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
@@ -794,10 +769,7 @@ OH_Cursor *OH_Rdb_FindModifyTime(OH_Rdb_Store *store, const char *tableName, con
 {
     auto rdbStore = GetRelationalStore(store);
     auto selfObjects = RelationalPredicatesObjects::GetSelf(values);
-    if (rdbStore == nullptr || selfObjects == nullptr || tableName == nullptr || columnName == nullptr) {
-        LOG_ERROR("rdbStore is NULL: %{public}d, selfObjects is NULL: %{public}d, "
-                  "tableName is NULL: %{public}d, columnName is NULL: %{public}d.",
-            rdbStore == nullptr, selfObjects == nullptr, tableName == nullptr, columnName == nullptr);
+    if (rdbStore == nullptr || selfObjects == nullptr || tableName == nullptr) {
         return nullptr;
     }
     std::vector<ValueObject> objects = selfObjects->Get();
@@ -982,9 +954,6 @@ static std::pair<int, RelationalProgressDetails *> GetDetails(Rdb_ProgressDetail
 
 Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version)
 {
-    if (progress == nullptr) {
-        return nullptr;
-    }
     auto [errCode, details] = GetDetails(progress);
     if (errCode == -1 || details == nullptr) {
         return nullptr;
@@ -995,21 +964,9 @@ Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t 
 int OH_Rdb_CloudSync(
     OH_Rdb_Store *store, Rdb_SyncMode mode, const char *tables[], uint32_t count, const Rdb_ProgressObserver *observer)
 {
-    if (count > SIZE_LENGTH_REPORT) {
-        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
-            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("OH_Rdb_CloudSync: ") + std::to_string(count)));
-    }
     auto rdbStore = GetRelationalStore(store);
     if (rdbStore == nullptr || mode < RDB_SYNC_MODE_TIME_FIRST || mode > RDB_SYNC_MODE_CLOUD_FIRST ||
-        observer == nullptr || observer->callback == nullptr || (count > 0 && tables == nullptr) ||
-        count > SIZE_LENGTH) {
-        LOG_ERROR("rdbStore is NULL: %{public}d, mode is %{public}d, "
-                  "observer is %{public}s, tables is NULL: %{public}d, count is %{public}d.",
-            rdbStore == nullptr, mode,
-            observer == nullptr             ? "nullptr"
-            : observer->callback == nullptr ? "invalid"
-                                            : "valid",
-            tables == nullptr, count);
+        observer == nullptr || observer->callback == nullptr || (count > 0 && tables == nullptr)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     SyncOption syncOption{ .mode = NDKUtils::TransformMode(mode), .isBlock = false };
@@ -1080,14 +1037,9 @@ int OH_Rdb_UnlockRow(OH_Rdb_Store *store, OH_Predicates *predicates)
 OH_Cursor *OH_Rdb_QueryLockedRow(
     OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
 {
-    if (length > TABLE_COLUMN_REPORT) {
-        Reporter::ReportFault(OHOS::NativeRdb::RdbFaultEvent(OHOS::NativeRdb::FT_LENGTH_PARAM, RDB_E_INVALID_ARGS,
-            OHOS::NativeRdb::BUNDLE_NAME_COMMON, std::string("QueryLockedRow length is ") + std::to_string(length)));
-    }
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr || length > TABLE_MAX_COLUMN) {
-        LOG_ERROR("rdbStore or predicate is nullptr, length is %{public}d", length);
+    if (rdbStore == nullptr || predicate == nullptr) {
         return nullptr;
     }
     std::vector<std::string> columns;
