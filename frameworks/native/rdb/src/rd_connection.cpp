@@ -252,6 +252,11 @@ int32_t RdConnection::ResetKey(const RdbStoreConfig &config)
     return E_OK;
 }
 
+int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    return E_NOT_SUPPORT;
+}
+
 int32_t RdConnection::TryCheckPoint(bool timeout)
 {
     return E_NOT_SUPPORT;
@@ -268,11 +273,6 @@ int32_t RdConnection::ConfigLocale(const std::string &localeStr)
 }
 
 int32_t RdConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
-{
-    return E_NOT_SUPPORT;
-}
-
-int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     return E_NOT_SUPPORT;
 }
