@@ -203,6 +203,7 @@ std::shared_ptr<RdbStore> RdbStoreSubTest::CreateRDB(int version)
     Callback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
+    EXPECT_NE(store, nullptr);
     return store;
 }
 
