@@ -12,6 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 #define LOG_TAG "RdbRekeyTest"
 #include <gtest/gtest.h>
 #include <sys/stat.h>
@@ -1131,14 +1132,14 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
         RdbStoreConfig::CryptoParam cryptoParam;
         cryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
         int ret1 = store->Rekey(cryptoParam);
-        LOG_INFO("Rdb_Rekey_020 thread Rekey finish, code:%{public}d", ret1);
+        LOG_INFO("Rdb_Rekey_019 thread Rekey finish, code:%{public}d", ret1);
         blockResult->SetValue(true);
     });
     thread.detach();
     RdbStoreConfig::CryptoParam cryptoParam2;
     cryptoParam2.encryptKey_ = std::vector<uint8_t>{ 6, 5, 3, 4, 2, 1 };
     int ret2 = store->Rekey(cryptoParam2);
-    LOG_INFO("Rdb_Rekey_020 main Rekey finish, code:%{public}d", ret2);
+    LOG_INFO("Rdb_Rekey_019 main Rekey finish, code:%{public}d", ret2);
     EXPECT_TRUE(blockResult->GetValue());
 
     store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
