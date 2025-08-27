@@ -16,15 +16,14 @@
 #define LOG_TAG "RdUtils"
 #include "rd_utils.h"
 
-#include <securec.h>
-
 #include <iomanip>
 #include <iostream>
+#include <securec.h>
 #include <sstream>
 #include <string>
 
-#include "grd_api_manager.h"
 #include "grd_error.h"
+#include "grd_api_manager.h"
 #include "logger.h"
 #include "remote_result_set.h"
 #include "task_executor.h"
@@ -379,7 +378,8 @@ void RdSqlFreeFloatArr(void *floatElement)
     delete[] ((float *)floatElement);
 }
 
-int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val, uint32_t dim, void (*freeFunc)(void *))
+int RdUtils::RdSqlBindFloatVector(GRD_SqlStmt *stmt, uint32_t idx, float *val,
+    uint32_t dim, void (*freeFunc)(void *))
 {
     if (GRD_KVApiInfo.DBSqlBindFloatVector == nullptr) {
         GRD_KVApiInfo = GetApiInfoInstance();
