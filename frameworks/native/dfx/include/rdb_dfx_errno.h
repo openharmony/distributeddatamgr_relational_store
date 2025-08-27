@@ -68,6 +68,10 @@ static constexpr int E_DFX_SET_JOURNAL_FAIL = (E_DFX_BASE + 0x8);
  */
 static constexpr int E_DFX_DUMP_INFO = (E_DFX_BASE + 0x9);
 
+/**
+ * @brief Only use for dfx, print group id info.
+ */
+static constexpr int E_DFX_GROUPID_INFO = (E_DFX_BASE + 0xA);
 } // namespace NativeRdb
 } // namespace OHOS
 
