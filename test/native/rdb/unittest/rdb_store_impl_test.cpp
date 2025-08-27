@@ -904,12 +904,12 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, resultSet->Close());
     EXPECT_LT(sqlite3_memory_used(), currentMemory);
 }
- 
+
 /* *
-* @tc.name: ClearCacheTest_002
-* @tc.desc: Normal testCase for ClearCache
-* @tc.type: FUNC
-*/
+ * @tc.name: ClearCacheTest_002
+ * @tc.desc: Normal testCase for ClearCache
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_002, TestSize.Level2)
 {
     RdbHelper::DeleteRdbStore(RdbStoreImplTest::DATABASE_NAME);
@@ -1836,4 +1836,53 @@ HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_002, TestSize.Level1)
 
     ret = store->Execute(std::string(CREATE_TABLE_TEST));
     ASSERT_EQ(ret.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_InitKnowledgeSchema_003
+ * @tc.desc: test set schema then insert data
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_003, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    config.SetEnableSemanticIndex(true);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    std::pair<int32_t, ValueObject> ret = store->Execute(std::string(CREATE_TABLE_TEST));
+    ASSERT_EQ(ret.first, E_OK);
+
+    std::string insertSql = "INSERT INTO test (name, age) VALUES ('name1', 20);";
+    ret = store->Execute(insertSql);
+    ASSERT_EQ(ret.first, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_InitKnowledgeSchema_004
+ * @tc.desc: test set schema then create multiple knowledge tasks
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_004, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    std::pair<int32_t, ValueObject> ret = store->Execute(std::string(CREATE_TABLE_TEST));
+    ASSERT_EQ(ret.first, E_OK);
+
+    std::string insertSql = "INSERT INTO test (name, age) VALUES ('name1', 20);";
+    for (uint16_t i = 0; i < 10; i++) {
+        ret = store->Execute(insertSql);
+        ASSERT_EQ(ret.first, E_OK);
+    }
 }
