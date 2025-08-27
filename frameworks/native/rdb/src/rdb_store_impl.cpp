@@ -579,6 +579,8 @@ std::string RdbStoreImpl::GetUri(const std::string &event)
         rdbUri = SCHEME_RDB + config_.GetBundleName() + "/" + path_ + "/" + event;
     } else {
         rdbUri = SCHEME_RDB + config_.GetDataGroupId() + "/" + path_ + "/" + event;
+        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_GROUPID_INFO, config_.GetBundleName(),
+            "GetUri GroupId db:[" + SqliteUtils::Anonymous(name_) + "]"));
     }
     return rdbUri;
 }
@@ -2103,7 +2105,6 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     }
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(attachName));
-
     auto [errCode, statement] = GetStatement(GlobalExpr::DETACH_SQL, connection);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Detach get statement failed, errCode %{public}d", errCode);
@@ -2115,7 +2116,6 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
             SqliteUtils::Anonymous(config_.GetName()).c_str(), SqliteUtils::Anonymous(attachName).c_str());
         return { errCode, 0 };
     }
-
     attachedInfo_.Erase(attachName);
     if (!attachedInfo_.Empty()) {
         return { E_OK, attachedInfo_.Size() };
@@ -2446,7 +2446,6 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
         LOG_ERROR("RdbStoreImpl attach is not supported in WAL mode");
         return E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE;
     }
-
     return E_OK;
 }
 
