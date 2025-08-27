@@ -32,8 +32,7 @@ public:
     ~SqliteSqlBuilder();
     static int BuildQueryString(bool distinct, const std::string &table, const std::string &joinClause,
         const std::vector<std::string> &columns, const std::string &whereClause, const std::string &groupBy,
-        const std::string &indexName, const std::string &orderBy, const int &limit, const int &offset,
-        std::string &outSql);
+        const std::string &indexName, const std::string &orderBy, int limit, int offset, std::string &outSql);
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     static std::string BuildCountString(const AbsRdbPredicates &predicates);
     static std::string BuildClauseFromPredicates(const AbsRdbPredicates &predicates);
