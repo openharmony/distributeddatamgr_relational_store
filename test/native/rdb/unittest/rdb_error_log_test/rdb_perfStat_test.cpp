@@ -126,7 +126,9 @@ std::shared_ptr<RdbStore> RdbPerfStatTest::CreateRDB(int version)
     PerfStatCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
-    EXPECT_NE(store, nullptr);
+    if (store == nullptr) {
+        return nullptr;
+    }
     constexpr const char *createTableTest = "CREATE TABLE IF NOT EXISTS perfStat_test "
                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                             "name TEXT NOT NULL, age INTEGER)";
