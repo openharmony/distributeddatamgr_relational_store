@@ -1148,38 +1148,20 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_024, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Transaction_capi_test_025
- * @tc.desc: Abnormal testCase of drop the table before closing the resultSet after querying the data.
+ * @tc.desc: test invalid options
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_025, TestSize.Level1)
 {
-    OH_Rdb_Transaction *trans = nullptr;
-    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
-    EXPECT_EQ(ret, RDB_OK);
-    EXPECT_NE(trans, nullptr);
-
-    const char *querySql = "SELECT * FROM test";
-    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
-    EXPECT_NE(cursor, nullptr);
-
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-
-    const char *sql = "DROP TABLE test";
-    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
-    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
-
-    cursor->destroy(cursor);
-
-    ret = OH_RdbTrans_Rollback(trans);
-    EXPECT_EQ(ret, RDB_OK);
-
-    ret = OH_RdbTrans_Destroy(trans);
-    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(OH_RdbTransOption_SetType(nullptr, RDB_TRANS_DEFERRED), RDB_E_INVALID_ARGS);
+    OH_RDB_TransOptions *options = OH_RdbTrans_CreateOptions();
+    auto ret = OH_RdbTransOption_SetType(options, static_cast<OH_RDB_TransType>(RDB_TRANS_DEFERRED - 1));
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = 0;
+    ret = OH_RdbTransOption_SetType(options, static_cast<OH_RDB_TransType>(RDB_TRANS_BUTT + 1));
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    EXPECT_EQ(OH_RdbTrans_DestroyOptions(options), RDB_OK);
+    EXPECT_EQ(OH_RdbTrans_DestroyOptions(nullptr), RDB_E_INVALID_ARGS);
 }
 
 /**
@@ -1202,6 +1184,8 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_026, TestSize.Level1)
     EXPECT_EQ(ret, RDB_OK);
     ret = cursor->goToNextRow(cursor);
     EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
 
     const char *sql = "DROP TABLE test";
     ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
@@ -1218,10 +1202,44 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_026, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Transaction_capi_test_027
- * @tc.desc: Normal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.desc: Abnormal testCase of drop the table before closing the resultSet after querying the data.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_027, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP TABLE test";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_028
+ * @tc.desc: Normal testCase of drop the table after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_028, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1250,51 +1268,6 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_027, TestSize.Level1)
     EXPECT_EQ(ret, RDB_OK);
 
     ret = OH_RdbTrans_Commit(trans);
-    EXPECT_EQ(ret, RDB_OK);
-
-    ret = OH_RdbTrans_Destroy(trans);
-    EXPECT_EQ(ret, RDB_OK);
-}
-
-/**
- * @tc.name: RDB_Transaction_capi_test_028
- * @tc.desc: Abnormal testCase of drop the index before closing the resultSet after querying the data.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_028, TestSize.Level1)
-{
-    OH_Rdb_Transaction *trans = nullptr;
-
-    char createIndexSql[] = "CREATE INDEX test_index ON test(data2);";
-    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
-    EXPECT_EQ(ret, RDB_OK);
-
-    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
-    EXPECT_EQ(ret, RDB_OK);
-    EXPECT_NE(trans, nullptr);
-
-    const char *querySql = "SELECT * FROM test";
-    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
-    EXPECT_NE(cursor, nullptr);
-
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-    ret = cursor->goToNextRow(cursor);
-    EXPECT_EQ(ret, RDB_OK);
-
-    const char *sql = "DROP INDEX test_index";
-    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
-    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
-
-    cursor->destroy(cursor);
-
-    ret = OH_RdbTrans_Rollback(trans);
-    EXPECT_EQ(ret, RDB_OK);
-
-    char dropIndexSql[] = "DROP INDEX test_index;";
-    ret = OH_Rdb_Execute(g_transStore, dropIndexSql);
     EXPECT_EQ(ret, RDB_OK);
 
     ret = OH_RdbTrans_Destroy(trans);
@@ -1326,6 +1299,8 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_029, TestSize.Level1)
     EXPECT_EQ(ret, RDB_OK);
     ret = cursor->goToNextRow(cursor);
     EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
 
     const char *sql = "DROP INDEX test_index";
     ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
@@ -1346,10 +1321,53 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_029, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Transaction_capi_test_030
- * @tc.desc: Abnormal testCase of drop the index after querying the data and closing the resultSet.
+ * @tc.desc: Abnormal testCase of drop the index before closing the resultSet after querying the data.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_030, TestSize.Level1)
+{
+    OH_Rdb_Transaction *trans = nullptr;
+
+    char createIndexSql[] = "CREATE INDEX test_index ON test(data2);";
+    int ret = OH_Rdb_Execute(g_transStore, createIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_NE(trans, nullptr);
+
+    const char *querySql = "SELECT * FROM test";
+    OH_Cursor *cursor = OH_RdbTrans_QuerySql(trans, querySql, nullptr);
+    EXPECT_NE(cursor, nullptr);
+
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = cursor->goToNextRow(cursor);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const char *sql = "DROP INDEX test_index";
+    ret = OH_RdbTrans_Execute(trans, sql, nullptr, nullptr);
+    EXPECT_EQ(ret, RDB_E_SQLITE_LOCKED);
+
+    cursor->destroy(cursor);
+
+    ret = OH_RdbTrans_Rollback(trans);
+    EXPECT_EQ(ret, RDB_OK);
+
+    char dropIndexSql[] = "DROP INDEX test_index;";
+    ret = OH_Rdb_Execute(g_transStore, dropIndexSql);
+    EXPECT_EQ(ret, RDB_OK);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Transaction_capi_test_031
+ * @tc.desc: Abnormal testCase of drop the index after querying the data and closing the resultSet.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_031, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1384,11 +1402,11 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_030, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Transaction_capi_test_031
+ * @tc.name: RDB_Transaction_capi_test_032
  * @tc.desc: Normal testCase of drop the table after querying the data and closing the resultSet.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_031, TestSize.Level1)
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_032, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1422,11 +1440,11 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_031, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Transaction_capi_test_032
+ * @tc.name: RDB_Transaction_capi_test_033
  * @tc.desc: Normal testCase of drop the index after querying the data and closing the resultSet.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_032, TestSize.Level1)
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_033, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1459,11 +1477,11 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_032, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Transaction_capi_test_033
+ * @tc.name: RDB_Transaction_capi_test_034
  * @tc.desc: Abnormal testCase of drop the table after querying the data and closing the resultSet.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_033, TestSize.Level1)
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_034, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1497,11 +1515,11 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_033, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Transaction_capi_test_034
+ * @tc.name: RDB_Transaction_capi_test_035
  * @tc.desc: Abnormal testCase of drop the table after querying the data and closing the resultSet.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_034, TestSize.Level1)
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_035, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -1527,11 +1545,11 @@ HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_034, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Transaction_capi_test_035
+ * @tc.name: RDB_Transaction_capi_test_036
  * @tc.desc: Normal testCase of drop the table before closing the resultSet after querying the data.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_035, TestSize.Level1)
+HWTEST_F(RdbTransactionCapiTest, RDB_Transaction_capi_test_036, TestSize.Level1)
 {
     OH_Rdb_Transaction *trans = nullptr;
     int ret = OH_Rdb_CreateTransaction(g_transStore, g_options, &trans);
