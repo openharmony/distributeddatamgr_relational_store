@@ -1562,7 +1562,7 @@ HWTEST_F(RdbStoreImplConditionTest, Attach_Test_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_GetValues_002
- * @tc.desc: test RdbStore GetValues
+ * @tc.desc: test RdbStore GetValues, mock abnormal branch
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_GetValues_002, TestSize.Level1)
@@ -1581,7 +1581,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_GetValues_002, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_GetValues_003
- * @tc.desc: test RdbStore GetValues
+ * @tc.desc: test RdbStore GetValues, mock abnormal branch
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_GetValues_003, TestSize.Level1)
