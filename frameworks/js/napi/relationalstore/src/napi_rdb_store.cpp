@@ -93,12 +93,27 @@ void RdbStoreProxy::UnregisterAll()
             rdbStore->UnSubscribe({ static_cast<SubscribeMode>(mode) }, obs);
         }
     }
-    rdbStore->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL }, nullptr);
+    for (auto &obs : observers_[SubscribeMode::LOCAL_DETAIL]) {
+        if (obs == nullptr) {
+            continue;
+        }
+        rdbStore->UnsubscribeObserver({ SubscribeMode::LOCAL_DETAIL }, obs);
+    }
     for (const auto &[event, observers] : localObservers_) {
-        rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL), event }, nullptr);
+        for (const auto &obs : observers) {
+            if (obs == nullptr) {
+                continue;
+            }
+            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL), event }, obs);
+        }
     }
     for (const auto &[event, observers] : localSharedObservers_) {
-        rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL_SHARED), event }, nullptr);
+        for (const auto &obs : observers) {
+            if (obs == nullptr) {
+                continue;
+            }
+            rdbStore->UnSubscribe({ static_cast<SubscribeMode>(DistributedRdb::LOCAL_SHARED), event }, obs);
+        }
     }
     for (const auto &obs : syncObservers_) {
         rdbStore->UnregisterAutoSyncCallback(obs);
