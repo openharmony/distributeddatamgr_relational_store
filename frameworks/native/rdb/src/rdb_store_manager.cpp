@@ -201,15 +201,13 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromProxy(const RdbStor
         isContain = true;
         for (auto &name : silentProxy.storeNames) {
             if (name == dbName) {
-                temp[name] = true;
                 isSilent = true;
-                continue;
             }
             temp[name] = true;
         }
         break;
     }
-    if (!isContain) {
+    if (!isContain || !isSilent) {
         temp[dbName] = false;
     }
     isSilentCache_.Set(key, temp);
