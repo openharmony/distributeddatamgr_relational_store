@@ -42,11 +42,11 @@ public:
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateReplicaStatement,
         (const std::string &sql, SConn conn), (override));
     MOCK_METHOD(int, CheckReplicaForRestore, (), (override));
+    MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));
     MOCK_METHOD(bool, IsWriter, (), (const, override));
     MOCK_METHOD(int32_t, ResetKey, (const RdbStoreConfig &config), (override));
     MOCK_METHOD(int32_t, TryCheckPoint, (bool timeout), (override));
-    MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, LimitWalSize, (), (override));
     MOCK_METHOD(int32_t, ConfigLocale, (const std::string &localeStr), (override));
     MOCK_METHOD(int32_t, CleanDirtyData, (const std::string &table, uint64_t cursor), (override));
