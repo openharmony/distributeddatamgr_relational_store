@@ -205,7 +205,7 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromProxy(const RdbStor
                 isSilent = true;
                 continue;
             }
-            temp[name] = false;
+            temp[name] = true;
         }
         break;
     }
