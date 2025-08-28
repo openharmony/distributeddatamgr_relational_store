@@ -88,12 +88,4 @@ private:
 };
 } // namespace DataAbilityJsKit
 } // namespace OHOS
-
-EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates);
-
-__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
-NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg);
-EXTERN_C_END
 #endif // DATAABILITY_JSKIT_NAPI_DATA_ABILITY_PREDICATES_H

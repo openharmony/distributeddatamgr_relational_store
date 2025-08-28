@@ -19,7 +19,6 @@
 #include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
-#include "napi_async_proxy.h"
 #include "napi_predicates_utils.h"
 
 using namespace OHOS::Rdb;
@@ -810,15 +809,15 @@ napi_value DataAbilityPredicatesProxy::IsSorted(napi_env env, napi_callback_info
 } // namespace OHOS
 
 EXTERN_C_START
-__attribute__((visibility("default"))) napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(
-    napi_env env, OHOS::NativeRdb::DataAbilityPredicates *predicates)
+API_EXPORT napi_value NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_NewInstance(napi_env env,
+    DataAbilityPredicates *predicates)
 {
     return OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::NewInstance(
-        env, std::shared_ptr<OHOS::NativeRdb::DataAbilityPredicates>(predicates));
+        env, std::shared_ptr<DataAbilityPredicates>(predicates));
 }
 
-__attribute__((visibility("default"))) OHOS::NativeRdb::DataAbilityPredicates *
-NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(const napi_env env, const napi_value arg)
+API_EXPORT DataAbilityPredicates *NAPI_OHOS_Data_DataAbilityJsKit_DataAbilityPredicatesProxy_GetNativeObject(
+    const napi_env env, const napi_value arg)
 {
     auto predicates = OHOS::DataAbilityJsKit::DataAbilityPredicatesProxy::GetNativePredicates(env, arg);
     return predicates.get();
