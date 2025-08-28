@@ -332,7 +332,7 @@ export default function RdbPredicatesEtsTest() {
         predicates.groupBy(["customer_id"]);
         predicates.having("total > ? AND count >= ?", [5000, 3]);
         let count:number = 200;
-        for (let i = 0; i < 200; ++i) {
+        for (let i = 0; i <= count; ++i) {
           rdbStore?.query(predicates, ["customer_id", "COUNT(*) AS count", "SUM(amount) AS total"])
             .then((resultSet:relationalStore.ResultSet)=>{
               expect(2).assertEqual(resultSet.rowCount);
