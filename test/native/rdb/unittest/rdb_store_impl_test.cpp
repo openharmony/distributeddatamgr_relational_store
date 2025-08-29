@@ -1818,10 +1818,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_001, TestSize.Level1)
  */
 HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_002, TestSize.Level1)
 {
-    store_ = nullptr;
-    int errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
-    EXPECT_EQ(E_OK, errCode);
-
+    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
     config.SetBundleName("");
     config.SetEnableSemanticIndex(true);
