@@ -406,7 +406,6 @@ int OH_Rdb_SetCryptoParam(OH_Rdb_ConfigV2 *config, const OH_Rdb_CryptoParam *cry
  */
 int OH_Rdb_IsTokenizerSupported(Rdb_Tokenizer tokenizer, bool *isSupported);
 
-
 /**
  * @brief Set property tokenizer into config
  * @param config Represents a pointer to {@link OH_Rdb_ConfigV2} instance.

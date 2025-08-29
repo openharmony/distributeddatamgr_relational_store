@@ -454,7 +454,7 @@ OH_Rdb_Store *OH_Rdb_CreateOrOpen(const OH_Rdb_ConfigV2 *config, int *errCode)
 
     auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
     if (ret != OHOS::NativeRdb::E_OK) {
-	    *errCode = ret;
+        *errCode = ConvertorErrorCode::NativeToNdk(ret);
         return nullptr;
     }
     MainOpenCallback callback;
