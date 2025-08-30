@@ -307,6 +307,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -331,6 +332,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -402,6 +404,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -425,6 +428,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_mac",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
@@ -497,6 +501,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
@@ -565,6 +570,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
+      "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
