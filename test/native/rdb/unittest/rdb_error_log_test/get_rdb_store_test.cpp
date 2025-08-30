@@ -472,7 +472,7 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_009, TestSize.Level1)
     storeB->GetRebuilt(rebuilt);
     EXPECT_EQ(rebuilt, RebuiltType::NONE);
     RdbStoreStoreMultiTest::QueryData(storeB);
-    
+
     RdbHelper::DeleteRdbStore(path);
 }
 
@@ -531,7 +531,6 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_010, TestSize.Level1)
 
     RdbHelper::DeleteRdbStore(path1);
 }
-
 
 /**
  * @tc.name: GetRdbStoreTest_011
