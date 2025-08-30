@@ -704,6 +704,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
+    Suspender suspender(Suspender::SQL_LOG);
     if (!cryptoParam.IsValid()) {
         LOG_ERROR("Invalid crypto param: %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             cryptoParam.iterNum, cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo,

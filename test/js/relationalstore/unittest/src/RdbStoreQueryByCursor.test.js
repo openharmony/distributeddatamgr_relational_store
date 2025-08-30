@@ -119,6 +119,7 @@ describe('rdbStoreQueryByCursorTest', function () {
         });
         done();
     })
+
     /**
      * @tc.name query with cursor
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_QUERY_WITH_CURSOR_0002

@@ -508,7 +508,6 @@ bool RdbRegisterAlgoFuzz(FuzzedDataProvider &provider)
     }
     return result;
 }
-
 } // namespace OHOS
 
 /* Fuzzer entry point */
