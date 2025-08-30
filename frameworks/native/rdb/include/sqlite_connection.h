@@ -129,7 +129,7 @@ private:
     int ExchangeVerify(bool isRestore);
     int SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, std::shared_ptr<SlaveStatus> curStatus);
     int SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus);
-    int VeritySlaveIntegrity();
+    int VerifySlaveIntegrity();
     bool IsDbVersionBelowSlave();
     int RegisterStoreObs();
     int RegisterClientObs();
