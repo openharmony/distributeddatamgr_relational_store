@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <sys/stat.h>
 
 #include "rdb_types.h"
 #include "rdb_store_config.h"
@@ -70,6 +71,7 @@ public:
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
     static size_t DeleteFolder(const std::string &folderPath);
     API_EXPORT static std::string Anonymous(const std::string &srcFile);
+    static std::string RemoveSuffix(const std::string &name);
     static std::string SqlAnonymous(const std::string &sql);
     static std::string GetArea(const std::string &srcFile);
     static ssize_t GetFileSize(const std::string &fileName);
@@ -102,6 +104,10 @@ public:
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
     static std::string GetParentModes(const std::string &path, int pathDepth = PATH_DEPTH);
     static std::string GetFileStatInfo(const DebugInfo &debugInfo);
+    static bool HasDefaultAcl(const std::string &path, int32_t gid);
+    static bool HasAccessAcl(const std::string &path, int32_t gid);
+    static bool SetDbFileGid(const std::string &dbPath, const std::vector<std::string> &files, int32_t gid);
+    static bool SetDbDirGid(const std::string &path, int32_t gid, bool isDefault = false);
 
 private:
     struct SqlType {
@@ -135,6 +141,8 @@ private:
     static bool IsKeyword(const std::string& word);
     static std::string GetModeInfo(uint32_t st_mode);
     static int GetPageCountCallback(void *data, int argc, char **argv, char **azColName);
+    static bool HasPermit(const std::string &path, mode_t mode);
+    static bool SetDefaultGid(const std::string &path, int32_t gid);
 };
 
 } // namespace NativeRdb
