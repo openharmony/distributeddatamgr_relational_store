@@ -60,8 +60,20 @@ public:
         config2_.selfSize = sizeof(OH_Rdb_Config);
         config2_.area = RDB_SECURITY_AREA_EL1;
     }
+    static void InitRdbConfig3()
+    {
+        config3_.dataBaseDir = RDB_TEST_PATH;
+        config3_.storeName = "rdb_store_test.db";
+        config3_.bundleName = "com.ohos.example.distributedndk";
+        config3_.moduleName = "";
+        config3_.securityLevel = OH_Rdb_SecurityLevel::S1;
+        config3_.isEncrypt = false;
+        config3_.selfSize = sizeof(OH_Rdb_Config);
+        config3_.area = RDB_SECURITY_AREA_EL1;
+    }
     static OH_Rdb_Config config1_;
     static OH_Rdb_Config config2_;
+    static OH_Rdb_Config config3_;
     static void MockHap(void);
 };
 
@@ -69,6 +81,7 @@ OH_Rdb_Store *store1_;
 OH_Rdb_Store *store2_;
 OH_Rdb_Config RdbStoreConfigTest::config1_ = { 0 };
 OH_Rdb_Config RdbStoreConfigTest::config2_ = { 0 };
+OH_Rdb_Config RdbStoreConfigTest::config3_ = { 0 };
 
 void RdbStoreConfigTest::SetUpTestCase(void)
 {
