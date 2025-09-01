@@ -351,7 +351,7 @@ HWTEST_F(SerializableTest, BoundaryTest, TestSize.Level1)
     in.uint32Val = UINT32_MAX;
     in.int64Val = INT64_MAX;
     in.uint64Val = UINT64_MAX;
- 
+
     json = to_string(in.Marshall());
     out.Unmarshall(json);
     EXPECT_EQ(out.int32Val, in.int32Val);

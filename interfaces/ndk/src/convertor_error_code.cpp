@@ -95,7 +95,6 @@ static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
     { OHOS::NativeRdb::E_SQLITE_TOOBIG, RDB_E_SQLITE_TOO_BIG },
     { OHOS::NativeRdb::E_SQLITE_CONSTRAINT, RDB_E_SQLITE_CONSTRAINT },
     { OHOS::NativeRdb::E_SQLITE_MISMATCH, RDB_E_SQLITE_MISMATCH },
-    { OHOS::NativeRdb::E_SQLITE_IOERR_FULL, RDB_E_SQLITE_IOERR },
 };
 
 int ConvertorErrorCode::ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode)

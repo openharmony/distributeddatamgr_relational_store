@@ -523,6 +523,7 @@ ssize_t SqliteUtils::GetDecompressedSize(const std::string &dbPath)
         LOG_WARN("failed to get page count, %{public}s", Anonymous(dbPath).c_str());
         return 0;
     }
+    // 4096 is the pageSize, which is 4K
     auto size = pageCount * 4096;
     if (size > SSIZE_MAX) {
         LOG_WARN("actual size overflow:%{public}" PRId64, size);

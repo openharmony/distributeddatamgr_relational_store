@@ -592,7 +592,7 @@ export default function PerfStatEtsTest() {
       };
       rdbStore?.on('perfStat', observer);
       const rdbTrans = await rdbStore?.createTransaction();
- 
+
       let valueBuckets : relationalStore.ValuesBucket[] = new Array();
       const valueBucket1: relationalStore.ValuesBucket = {
         'name': 'zhangsan',

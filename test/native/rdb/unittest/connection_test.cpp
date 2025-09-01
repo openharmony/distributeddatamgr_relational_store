@@ -211,16 +211,16 @@ HWTEST_F(ConnectionTest, ExchangeVerify_Test_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: VeritySlaveIntegrity_Test_001
- * @tc.desc: The testCase of VeritySlaveIntegrity.
+ * @tc.name: VerifySlaveIntegrity_Test_001
+ * @tc.desc: The testCase of VerifySlaveIntegrity.
  * @tc.type: FUNC
  */
-HWTEST_F(ConnectionTest, VeritySlaveIntegrity_Test_001, TestSize.Level2)
+HWTEST_F(ConnectionTest, VerifySlaveIntegrity_Test_001, TestSize.Level2)
 {
     int errCode;
     RdbStoreConfig config(rdbStorePath);
     auto conn = std::make_shared<SqliteConnection>(config, true);
-    errCode = conn->VeritySlaveIntegrity();
+    errCode = conn->VerifySlaveIntegrity();
     EXPECT_EQ(errCode, E_ALREADY_CLOSED);
 }
 
