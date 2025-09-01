@@ -1383,7 +1383,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     if (status != E_OK) {
         return { status, -1 };
     }
-    
+
     auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs());
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());

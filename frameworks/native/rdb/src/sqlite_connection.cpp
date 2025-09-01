@@ -529,7 +529,7 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     if (IsSupportBinlog(config)) {
         SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
-    return connection->VeritySlaveIntegrity();
+    return connection->VerifySlaveIntegrity();
 }
 
 int SqliteConnection::CheckReplicaForRestore()
@@ -671,6 +671,7 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig &config)
 
 int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
+    Suspender suspender(Suspender::SQL_LOG);
     if (!cryptoParam.IsValid()) {
         LOG_ERROR("Invalid crypto param: %{public}d, %{public}d, %{public}d, %{public}d, %{public}u",
             cryptoParam.iterNum, cryptoParam.encryptAlgo, cryptoParam.hmacAlgo, cryptoParam.kdfAlgo,
@@ -1516,7 +1517,7 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     if (IsSupportBinlog(config)) {
         SqliteConnection::ReplayBinlog(config.GetPath(), conn, false);
     }
-    ret = connection->VeritySlaveIntegrity();
+    ret = connection->VerifySlaveIntegrity();
     if (ret != E_OK) {
         return ret;
     }
@@ -1543,7 +1544,7 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
 {
     if (isRestore) {
         SqliteConnection::ReplayBinlog(config_);
-        int err = VeritySlaveIntegrity();
+        int err = VerifySlaveIntegrity();
         if (err != E_OK) {
             return err;
         }
@@ -1605,7 +1606,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     return result;
 }
 
-int SqliteConnection::VeritySlaveIntegrity()
+int SqliteConnection::VerifySlaveIntegrity()
 {
     if (slaveConnection_ == nullptr) {
         return E_ALREADY_CLOSED;
