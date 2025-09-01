@@ -1644,7 +1644,7 @@ int SqliteConnection::VerifySlaveIntegrity()
     if (slaveSize == 0 && bugInfo.find(FILE_SUFFIXES[DB_INDEX].debug_) != bugInfo.end()) {
         slaveSize = bugInfo[FILE_SUFFIXES[DB_INDEX].debug_].size_;
     }
-    if ((slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) || IsSupportBinlog(config_)) {
+    if (slaveSize > SLAVE_INTEGRITY_CHECK_LIMIT && mCount == 0L) {
         return SqliteUtils::IsSlaveInvalid(config_.GetPath()) ? E_SQLITE_CORRUPT : E_OK;
     }
 
