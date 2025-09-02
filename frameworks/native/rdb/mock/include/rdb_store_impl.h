@@ -159,6 +159,7 @@ private:
     void SwitchOver(bool isUseReplicaDb);
     bool TryAsyncRepair();
     bool IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath);
+    bool IsInAsyncRestore(const std::string &dbPath);
     int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
