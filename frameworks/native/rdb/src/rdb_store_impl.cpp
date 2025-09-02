@@ -2880,6 +2880,21 @@ bool RdbStoreImpl::IsSlaveDiffFromMaster() const
     return SqliteUtils::IsSlaveInvalid(config_.GetPath()) || (access(slaveDbPath.c_str(), F_OK) != 0);
 }
 
+bool RdbStoreImpl::IsInAsyncRestore(const std::string &dbPath)
+{
+    if (!SqliteUtils::IsSlaveRestoring(dbPath)) {
+        return false;
+    }
+    auto keyFilesPtr = std::make_shared<RdbSecurityManager::KeyFiles>(dbPath + ASYNC_RESTORE);
+    auto err = keyFilesPtr->Lock(false);
+    if (err == E_OK) {
+        SqliteUtils::SetSlaveRestoring(dbPath, false);
+        keyFilesPtr->Unlock();
+        return false;
+    }
+    return errno == EWOULDBLOCK;
+}
+
 int32_t RdbStoreImpl::ExchangeSlaverToMaster()
 {
     if (isReadOnly_ || isMemoryRdb_ || rebuild_ != RebuiltType::NONE) {
@@ -2894,7 +2909,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     int ret = E_OK;
-    if (strategy == ExchangeStrategy::RESTORE && !SqliteUtils::IsSlaveRestoring(config_.GetPath())) {
+    if (strategy == ExchangeStrategy::RESTORE && !IsInAsyncRestore(config_.GetPath())) {
         conn = nullptr;
         // disable is required before restore
         ret = Restore({}, {});
