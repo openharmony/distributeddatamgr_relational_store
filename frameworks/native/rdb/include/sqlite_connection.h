@@ -150,6 +150,7 @@ private:
     static void ReplayBinlog(const std::string &dbPath,
         std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
+    static void InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn);
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },

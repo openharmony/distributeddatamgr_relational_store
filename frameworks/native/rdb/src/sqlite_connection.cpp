@@ -1258,7 +1258,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
                 return errCode;
             }
             slaveConnection_ = conn;
-            reusableReplicas_.InsertOrAssign(rdbSlaveStoreConfig.GetPath(), conn);
+            InsertReusableReplica(rdbSlaveStoreConfig.GetPath(), conn);
         }
         return ExchangeSlaverToMaster(false, verifyDb, slaveStatus);
     }
@@ -1633,7 +1633,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         conn->slaveConnection_ = slaveConn;
         conn->SetBinlog();
         if (isReusableReplica) {
-            reusableReplicas_.InsertOrAssign(slaveCfg.GetPath(), slaveConn);
+            InsertReusableReplica(slaveCfg.GetPath(), slaveConn);
         }
     }
     return result;
@@ -1781,6 +1781,17 @@ void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
     if (err != SQLITE_OK) {
         LOG_ERROR("set binlog config error. err=%{public}d, errno=%{public}d", err, errno);
     }
+}
+
+void SqliteConnection::InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn)
+{
+    reusableReplicas_.Compute(dbPath, [slaveConn](auto &key, auto &weakPtr) {
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            weakPtr = slaveConn;
+        }
+        return true;
+    });
 }
 
 void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath)

@@ -72,6 +72,7 @@ public:
     static const std::string databaseName;
     static const std::string slaveDatabaseName;
     static const std::string binlogDatabaseName;
+    static const std::string binlogFirstFile;
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
     static const std::string insertSql;
@@ -88,6 +89,8 @@ public:
 const std::string RdbDoubleWriteBinlogTest::databaseName = RDB_TEST_PATH + "dual_write_binlog_test.db";
 const std::string RdbDoubleWriteBinlogTest::slaveDatabaseName = RDB_TEST_PATH + "dual_write_binlog_test_slave.db";
 const std::string RdbDoubleWriteBinlogTest::binlogDatabaseName = RDB_TEST_PATH + "dual_write_binlog_test.db_binlog";
+const std::string RdbDoubleWriteBinlogTest::binlogFirstFile =
+    RdbDoubleWriteBinlogTest::binlogDatabaseName + "/binlog_default.00000";
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::slaveStore = nullptr;
 const std::string RdbDoubleWriteBinlogTest::insertSql = "INSERT INTO test(id, name, age, salary, blobType) VALUES"
@@ -98,6 +101,7 @@ const double CHECKCOLUMN = 100.5;
 const int CHANGENUM = 12;
 const int BINLOG_DELETE_PER_WAIT_TIME = 100000; // 100000us = 100ms
 const int BINLOG_REPLAY_WAIT_TIME = 2; // 2s
+const int BINLOG_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 
 class DoubleWriteBinlogTestOpenCallback : public RdbOpenCallback {
 public:
@@ -147,6 +151,7 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
 {
     store = nullptr;
     slaveStore = nullptr;
+    WaitForBinlogReplayFinish();
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
     WaitForBinlogDelete();
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -804,7 +809,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_012, TestSize.Level0)
 static int Callback(void *data, int argc, char **argv, char **azColName)
 {
     int64_t *count = (int64_t *)data;
-    if (argc > 0 && argv[0] != NULL) {
+    if (argc > 0 && argv[0] != nullptr) {
         *count = atoi(argv[0]);
     }
     return 0;
@@ -1219,6 +1224,40 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_023, TestSize.Level0)
     EXPECT_EQ(ret, true);
 
     WaitForBinlogReplayFinish();
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_024
+ * @tc.desc: test binlog will replay and clean after re-open
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_024, TestSize.Level0)
+{
+    ASSERT_FALSE(CheckFolderExist(binlogDatabaseName));
+    int errCode = E_OK;
+    RdbStoreConfig config(databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    LOG_INFO("---- step1 close db and binlog should be created");
+    store = nullptr;
+    ASSERT_TRUE(CheckFolderExist(binlogDatabaseName));
+    ASSERT_TRUE(CheckFolderExist(binlogFirstFile));
+
+    LOG_INFO("---- step2 Reopen db and insert large data");
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    WaitForBinlogReplayFinish();
+    int64_t id = 1;
+    int count = 3;
+    Insert(id, count, false, BINLOG_FILE_SIZE);
+    store = nullptr;
+
+    LOG_INFO("---- step3 binlog should be replayed");
+    WaitForBinlogReplayFinish();
+    ASSERT_FALSE(CheckFolderExist(binlogFirstFile));
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
