@@ -33,6 +33,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_security_manager.h"
 #include "relational/relational_store_sqlite_ext.h"
 #include "sqlite3.h"
 #include "sqlite_connection.h"
@@ -66,6 +67,7 @@ public:
     static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 4000);
     static void WaitForBinlogDelete(int maxTimes = 1000);
     static void WaitForBinlogReplayFinish();
+    static void WaitForAsyncRepairFinish(int maxTimes = 400);
     void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true);
     int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
 
@@ -96,12 +98,13 @@ std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::slaveStore = nullptr;
 const std::string RdbDoubleWriteBinlogTest::insertSql = "INSERT INTO test(id, name, age, salary, blobType) VALUES"
                                                         "(?,?,?,?,?)";
 
-const int CHECKAGE = 18;
-const double CHECKCOLUMN = 100.5;
-const int CHANGENUM = 12;
-const int BINLOG_DELETE_PER_WAIT_TIME = 100000; // 100000us = 100ms
-const int BINLOG_REPLAY_WAIT_TIME = 2; // 2s
-const int BINLOG_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+static const int CHECKAGE = 18;
+static const double CHECKCOLUMN = 100.5;
+static const int CHANGENUM = 12;
+static const int BINLOG_DELETE_PER_WAIT_TIME = 100000; // 100000us = 100ms
+static const int BINLOG_REPLAY_WAIT_TIME = 2; // 2s
+static const int BINLOG_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+static const int SIZE_MB = 1024 * 1024; // 1MB
 
 class DoubleWriteBinlogTestOpenCallback : public RdbOpenCallback {
 public:
@@ -291,6 +294,18 @@ void RdbDoubleWriteBinlogTest::WaitForBinlogDelete(int maxTimes)
 void RdbDoubleWriteBinlogTest::WaitForBinlogReplayFinish()
 {
     sleep(BINLOG_REPLAY_WAIT_TIME);
+}
+
+void RdbDoubleWriteBinlogTest::WaitForAsyncRepairFinish(int maxTimes)
+{
+    LOG_INFO("---- start wait for async finish----");
+    sleep(1);
+    int tryTimes = 0;
+    auto keyFiles = RdbSecurityManager::KeyFiles(databaseName + "-async.restore");
+    while (keyFiles.Lock(false) != E_OK && (++tryTimes <= maxTimes)) {
+        sleep(1);
+    }
+    LOG_INFO("---- end wait for async finish ----, %{public}d", tryTimes);
 }
 
 void RdbDoubleWriteBinlogTest::CheckNumber(
@@ -1258,6 +1273,39 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_024, TestSize.Level0)
     LOG_INFO("---- step3 binlog should be replayed");
     WaitForBinlogReplayFinish();
     ASSERT_FALSE(CheckFolderExist(binlogFirstFile));
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_025
+ * @tc.desc: test restore when restoring mark exists but no one is restoring
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_025, TestSize.Level0)
+{
+    ASSERT_FALSE(CheckFolderExist(binlogDatabaseName));
+    int errCode = E_OK;
+    RdbStoreConfig config(databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    LOG_INFO("---- step1 insert 1.2 GB data");
+    int64_t id = 1;
+    int count = 1200; // data size
+    Insert(id, count, false, SIZE_MB);
+    CheckNumber(store, count);
+    store = nullptr;
+    LOG_INFO("---- step2 create restoring mark and corrupt db");
+    WaitForBinlogReplayFinish();
+    SqliteUtils::DeleteFile(databaseName);
+    EXPECT_EQ(SqliteUtils::SetSlaveRestoring(databaseName), E_OK);
+    EXPECT_TRUE(SqliteUtils::IsSlaveRestoring(databaseName));
+    LOG_INFO("---- step3 open should trigger restore");
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    WaitForAsyncRepairFinish();
+    CheckNumber(store, count);
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
