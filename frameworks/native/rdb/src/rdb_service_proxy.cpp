@@ -208,6 +208,16 @@ int32_t RdbServiceProxy::Sync(
     return DoSync(param, option, predicates, async);
 }
 
+std::string RdbServiceProxy::RemoveSuffix(const std::string &name)
+{
+    std::string suffix(".db");
+    auto pos = name.rfind(suffix);
+    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
+        return name;
+    }
+    return { name, 0, pos };
+}
+
 int32_t RdbServiceProxy::Subscribe(
     const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
@@ -221,7 +231,7 @@ int32_t RdbServiceProxy::Subscribe(
     if (DoSubscribe(param, option) != RDB_OK) {
         return RDB_ERROR;
     }
-    auto name = SqliteUtils::RemoveSuffix(param.storeName_);
+    auto name = RemoveSuffix(param.storeName_);
     observers_.Compute(name, [observer, &param, &option](const auto &key, std::list<ObserverParam> &value) {
         for (const auto &element : value) {
             if (element.observer.lock() == observer) {
@@ -256,7 +266,7 @@ int32_t RdbServiceProxy::UnSubscribe(
     if (DoUnSubscribe(param, option) != RDB_OK) {
         return RDB_ERROR;
     }
-    auto name = SqliteUtils::RemoveSuffix(param.storeName_);
+    auto name = RemoveSuffix(param.storeName_);
     observers_.ComputeIfPresent(name, [observer](const auto &key, std::list<ObserverParam> &value) {
         LOG_INFO("before remove size=%{public}d", static_cast<int>(value.size()));
         value.remove_if([observer](const ObserverParam &param) { return param.observer.lock() == observer; });
@@ -358,24 +368,6 @@ int32_t RdbServiceProxy::BeforeOpen(RdbSyncerParam &param)
     return status;
 }
 
-std::pair<int32_t, bool> RdbServiceProxy::IsSupportSilent(const RdbSyncerParam &param)
-{
-    MessageParcel reply;
-    bool isSilent = false;
-    int32_t status =
-        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_ISSILENT), reply, param, isSilent);
-    if (status != RDB_OK) {
-        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
-            SqliteUtils::Anonymous(param.storeName_).c_str());
-        return {status, isSilent};
-    }
-    if (!ITypesUtil::Unmarshal(reply, isSilent)) {
-        LOG_ERROR("read result failed.");
-        status = RDB_ERROR;
-    }
-    return {status, isSilent};
-}
-
 int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
 {
     MessageParcel reply;
@@ -443,7 +435,7 @@ int32_t RdbServiceProxy::RegisterAutoSyncCallback(
         return RDB_ERROR;
     }
     int32_t status = RDB_OK;
-    auto name = SqliteUtils::RemoveSuffix(param.storeName_);
+    auto name = RemoveSuffix(param.storeName_);
     syncObservers_.Compute(name, [this, &param, &status, observer](const auto &store, auto &observers) {
         for (const auto &element : observers) {
             if (element.syncObserver.get() == observer.get()) {
@@ -481,7 +473,7 @@ int32_t RdbServiceProxy::UnregisterAutoSyncCallback(
         return RDB_ERROR;
     }
     int32_t status = RDB_OK;
-    auto name = SqliteUtils::RemoveSuffix(param.storeName_);
+    auto name = RemoveSuffix(param.storeName_);
     syncObservers_.ComputeIfPresent(name, [this, &param, &status, observer](const auto &storeName, auto &observers) {
         for (auto it = observers.begin(); it != observers.end();) {
             if (it->syncObserver.get() != observer.get()) {
@@ -517,7 +509,7 @@ void RdbServiceProxy::OnDataChange(
         SqliteUtils::Anonymous(origin.store).c_str(),
         origin.id.empty() ? "empty" : SqliteUtils::Anonymous(*origin.id.begin()).c_str(), origin.dataType,
         origin.origin);
-    auto name = SqliteUtils::RemoveSuffix(origin.store);
+    auto name = RdbServiceProxy::RemoveSuffix(origin.store);
     observers_.ComputeIfPresent(name, [&origin, &primaries, info = std::move(changeInfo)](
                                           const auto &key, const std::list<ObserverParam> &value) mutable {
         auto size = value.size();

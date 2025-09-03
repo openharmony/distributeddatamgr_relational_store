@@ -20,17 +20,13 @@
 
 #include <iostream>
 #include <string>
-#include "acl.h"
+
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "rdb_platform.h"
-#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 static std::shared_ptr<RdbStore> rdbStore;
 
@@ -274,36 +270,4 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2
     EXPECT_EQ(E_INVALID_ARGS, errCode);
 
     RdbHelper::DeleteRdbStore(path);
-}
-
-/**
- * @tc.name: RdbStore_Distributed_Test_006
- * @tc.desc: SetAcl testCase of SetDistributedTables
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_006, TestSize.Level2)
-{
-    int errCode;
-    std::string pathAcl = RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME;
-    RdbStoreConfig config(pathAcl);
-    config.SetSearchable(true);
-    config.SetBundleName("com.example.distributed.rdb");
-    config.SetName(RdbStoreDistributedTest::DRDB_NAME);
-    TestOpenCallback callback;
-    rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
-    EXPECT_NE(nullptr, rdbStore);
-    std::vector<std::string> tables;
-    OHOS::DistributedRdb::DistributedConfig distributedConfig;
-
-    // if tabels empty, return ok
-    errCode = rdbStore->SetDistributedTables(tables, 1, distributedConfig);
-    EXPECT_EQ(E_OK, errCode);
-    bool ret = SqliteUtils::HasAccessAcl(pathAcl, SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
 }

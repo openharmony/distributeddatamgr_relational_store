@@ -69,7 +69,7 @@ class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
-    int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false);
+    int32_t Init(int version, RdbOpenCallback &openCallback);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
@@ -178,7 +178,6 @@ private:
     static void RegisterDataChangeCallback(
         std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry);
     int InnerOpen();
-    static bool SetFileGid(const RdbStoreConfig &config, int32_t gid);
     void InitReportFunc(const RdbParam &param);
     void InitSyncerParam(const RdbStoreConfig &config, bool created);
     int32_t SetSecurityLabel(const RdbStoreConfig &config);
@@ -258,7 +257,6 @@ private:
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
     bool isUseReplicaDb_ = false;
-    bool isNeedSetAcl_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);

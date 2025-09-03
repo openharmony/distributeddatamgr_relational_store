@@ -21,7 +21,7 @@
 
 #include <fstream>
 #include <string>
-#include "acl.h"
+
 #include "common.h"
 #include "file_ex.h"
 #include "grd_api_manager.h"
@@ -37,14 +37,10 @@
 #include "sqlite_connection.h"
 #include "sqlite_utils.h"
 #include "sys/types.h"
-#include "rdb_platform.h"
-#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 class RdbDoubleWriteTest : public testing::Test {
 public:
@@ -58,12 +54,11 @@ public:
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
     void CheckNumber(
         std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK, const std::string &tableName = "test");
-    void CheckAccess();
     void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
     void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 400);
     void WaitForAsyncRepairFinish(int maxTimes = 400);
     void TryInterruptBackup();
-    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true, bool isSearchable = false);
+    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true);
 
     static const std::string DATABASE_NAME;
     static const std::string SLAVE_DATABASE_NAME;
@@ -200,12 +195,11 @@ void RdbDoubleWriteTest::TearDown(void)
 #endif
 }
 
-void RdbDoubleWriteTest::InitDb(HAMode mode, bool isOpenSlave, bool isSearchable)
+void RdbDoubleWriteTest::InitDb(HAMode mode, bool isOpenSlave)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
     config.SetHaMode(mode);
-    config.SetSearchable(isSearchable);
     DoubleWriteTestOpenCallback helper;
     RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(RdbDoubleWriteTest::store, nullptr);
@@ -436,22 +430,6 @@ void RdbDoubleWriteTest::CheckNumber(
     int ret = resultSet->GetRowCount(countNum);
     EXPECT_EQ(ret, errCode);
     EXPECT_EQ(num, countNum);
-}
-
-void RdbDoubleWriteTest::CheckAccess()
-{
-    bool ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::DATABASE_NAME), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::DATABASE_NAME) + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::DATABASE_NAME) + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::DATABASE_NAME) + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME) + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -1275,57 +1253,6 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_034, TestSize.Level1)
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
     store = nullptr;
     slaveStore = nullptr;
-}
-
-/**
- * @tc.name: RdbStore_DoubleWrite_035
- * @tc.desc: open MANUAL_TRIGGER db, open slave, write, slave & check acl after back and after restore
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_035, TestSize.Level1)
-{
-    InitDb(HAMode::MANUAL_TRIGGER, true, true);
-    
-    int64_t id = 10;
-    int count = 100;
-    Insert(id, count);
-    LOG_INFO("RdbStore_DoubleWrite_035 insert finish");
-
-    RdbDoubleWriteTest::CheckNumber(slaveStore, 0);
-    int errCode = E_OK;
-    errCode = store->Backup(std::string(""), {});
-    EXPECT_EQ(errCode, E_OK);
-    LOG_INFO("RdbStore_DoubleWrite_035 backup finish");
-
-    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
-
-    id = 1000;
-    Insert(id, count);
-    LOG_INFO("RdbStore_DoubleWrite_035 insert finish");
-    RdbDoubleWriteTest::CheckNumber(slaveStore, 200); // 200 is all count
-    RdbDoubleWriteTest::CheckAccess();
-    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
-    RdbDoubleWriteTest::CheckAccess();
-}
-
-/**
- * @tc.name: RdbStore_DoubleWrite_036
- * @tc.desc: open MAIN_REPLICA db, write, slave db & check acl after back and after restore
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_036, TestSize.Level1)
-{
-    InitDb(HAMode::MAIN_REPLICA, true, true);
-    int64_t id = 10;
-    Insert(id, 100);
-    id = 200;
-    Insert(id, 100, true);
-    RdbDoubleWriteTest::CheckNumber(store, 100);
-    RdbDoubleWriteTest::CheckNumber(slaveStore, 200);
-    RdbDoubleWriteTest::CheckAccess();
-    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
-    RdbDoubleWriteTest::CheckNumber(store, 200);
-    RdbDoubleWriteTest::CheckAccess();
 }
 
 /**
