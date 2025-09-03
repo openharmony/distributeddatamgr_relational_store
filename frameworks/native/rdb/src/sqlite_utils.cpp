@@ -39,10 +39,8 @@
 #include <sstream>
 #include <iomanip>
 
-#include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
-#include "rdb_platform.h"
 #include "rdb_store_config.h"
 #include "string_utils.h"
 #include "rdb_time_utils.h"
@@ -50,7 +48,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using namespace OHOS::DATABASE_UTILS;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -70,141 +67,6 @@ constexpr const unsigned char MAX_PRINTABLE_BYTE = 0x7F;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
-constexpr char const *DATABASE = "database";
-
-bool SqliteUtils::HasPermit(const std::string &path, mode_t mode)
-{
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) == 0) {
-        if (S_ISDIR(fileStat.st_mode) && ((fileStat.st_mode & mode) == mode)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool SqliteUtils::HasAccessAcl(const std::string &path, int32_t gid)
-{
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) != 0) {
-        return false;
-    }
-    Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
-    if (aclAccess.HasAccessGroup(gid, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT)) {
-        return true;
-    }
-    return false;
-}
-
-bool SqliteUtils::HasDefaultAcl(const std::string &path, int32_t gid)
-{
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) != 0) {
-        return false;
-    }
-    Acl aclAccess(path, Acl::ACL_XATTR_DEFAULT);
-    if (aclAccess.HasDefaultGroup(gid, Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT)) {
-        return true;
-    }
-    return false;
-}
-
-bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
-{
-    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) != 0) {
-        return false;
-    }
-    Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
-    Acl aclDefault(path, Acl::ACL_XATTR_DEFAULT);
-    if (aclAccess.HasAccessGroup(gid, mode) && aclDefault.HasDefaultGroup(gid, mode)) {
-        return true;
-    }
-    if ((aclAccess.SetAccessGroup(gid, mode) != E_OK) || (aclDefault.SetDefaultGroup(gid, mode) != E_OK)) {
-        return false;
-    }
-    std::error_code ec;
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(path, ec)) {
-        if (ec) {
-            ec.clear();
-            continue;
-        }
-        Acl aclAccess(entry.path().string(), Acl::ACL_XATTR_ACCESS);
-        if ((aclAccess.SetAccessGroup(gid, mode) != E_OK)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SqliteUtils::SetDbFileGid(const std::string &dbPath, const std::vector<std::string> &files, int32_t gid)
-{
-    if (files.empty()) {
-        return false;
-    }
-    bool ret = true;
-    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    std::string dbDir = StringUtils::ExtractFilePath(dbPath);
-    for (const auto &file : files) {
-        std::string dbPath = dbDir + file;
-        struct stat fileStat;
-        if (stat((dbPath).c_str(), &fileStat) != 0) {
-            continue;
-        }
-        Acl aclAccess(dbPath, Acl::ACL_XATTR_ACCESS);
-        
-        if (aclAccess.HasAccessGroup(gid, mode)) {
-            continue;
-        }
-        if ((aclAccess.SetAccessGroup(gid, mode) != E_OK)) {
-            ret = false;
-        }
-    }
-    return ret;
-}
-
-bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault)
-{
-    if (path.empty()) {
-        return false;
-    }
-    if (isDefault) {
-        return SetDefaultGid(path, gid);
-    }
-    bool ret = true;
-    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    std::string tempDirectory = path;
-    std::string dbDir = "";
-    bool isSetAcl = false;
-    size_t pos = tempDirectory.find('/');
-    while (pos != std::string::npos) {
-        std::string directory = tempDirectory.substr(0, pos);
-        tempDirectory = tempDirectory.substr(pos + 1);
-        pos = tempDirectory.find('/');
-        if (directory.empty()) {
-            continue;
-        }
-        if (directory == DATABASE) {
-            isSetAcl = true;
-        }
-        dbDir = dbDir + "/" + directory;
-        if (!isSetAcl) {
-            continue;
-        }
-        if (HasPermit(dbDir, S_IXOTH)) {
-            continue;
-        }
-        Acl aclAccess(dbDir, Acl::ACL_XATTR_ACCESS);
-        if (aclAccess.HasAccessGroup(gid, mode)) {
-            continue;
-        }
-        if ((aclAccess.SetAccessGroup(gid, mode) != E_OK)) {
-            ret = false;
-        }
-    }
-    return ret;
-}
 
 constexpr const char *SQL_KEYWORD[] = { "ABORT", "ABS", "ACTION", "ADD", "AFTER", "ALIAS", "ALL", "ALTER", "ALWAYS",
     "AMBIGUOUS", "ANALYZE", "AND", "AS", "ASC", "ATTACH", "AUTOINCREMENT", "AVG", "BEFORE", "BEGIN", "BETWEEN", "BIG",
@@ -382,16 +244,6 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     src.close();
     dst.close();
     return true;
-}
-
-std::string SqliteUtils::RemoveSuffix(const std::string &name)
-{
-    std::string suffix(".db");
-    auto pos = name.rfind(suffix);
-    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
-        return name;
-    }
-    return { name, 0, pos };
 }
 
 size_t SqliteUtils::DeleteFolder(const std::string &folderPath)

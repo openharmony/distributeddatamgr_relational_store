@@ -39,10 +39,7 @@
             "SystemCapability.DistributedDataManager.RelationalStore.Core",
             "SystemCapability.DistributedDataManager.CommonType"
         ],
-        "features": [
-            "relational_store_rdb_support_icu",
-            "relational_store_config"
-        ],
+        "features": ["relational_store_rdb_support_icu"],
         "adapted_system_type": [
             "standard"
         ],
@@ -94,8 +91,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/obs_mgr_adapter:rdb_obs_mgr_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb_crypt:relational_store_crypt",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/ani/relationalstore:relationalstore_ani_package",
-                "//foundation/distributeddatamgr/relational_store/conf:build_module"
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/ani/relationalstore:relationalstore_ani_package"
             ],
             "inner_kits": [
                 {
