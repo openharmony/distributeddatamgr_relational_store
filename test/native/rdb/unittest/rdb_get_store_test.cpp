@@ -16,19 +16,15 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include "acl.h"
+
 #include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_manager.h"
-#include "rdb_platform.h"
-#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 class RdbGetStoreTest : public testing::Test {
 public:
@@ -38,7 +34,6 @@ public:
     void TearDown();
     void QueryCheck1(std::shared_ptr<RdbStore> &store) const;
     void QueryCheck2(std::shared_ptr<RdbStore> &store) const;
-    void CheckAccess(const std::string &dbPath);
 
     static const std::string MAIN_DATABASE_NAME;
     static const std::string MAIN_DATABASE_NAME_RELEASE;
@@ -184,18 +179,6 @@ void RdbGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
     ret = resultSet->GetString(columnIndex, strVal);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(strVal, "lisi");
-}
-
-void RdbGetStoreTest::CheckAccess(const std::string &dbPath)
-{
-    bool ret = SqliteUtils::HasAccessAcl(dbPath, SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -484,42 +467,4 @@ HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_013, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
     EXPECT_EQ(store, nullptr);
-}
-
-/**
- * @tc.name: RdbStore_GetStore_014
- * @tc.desc: createRDB & setAcl check bundle and db from proxylist
- * @tc.type: FUNC
- * @tc.require: issue
- * @tc.author: zd
- */
-HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_014, TestSize.Level0)
-{
-    std::string dbPath = "/data/test/settingsdata.db";
-    RdbStoreConfig config(dbPath);
-    config.SetBundleName("com.ohos.settingsdata");
-    GetOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    RdbGetStoreTest::CheckAccess(dbPath);
-    RdbHelper::DeleteRdbStore(dbPath);
-}
-
-/**
- * @tc.name: RdbStore_GetStore_015
- * @tc.desc: createRDB & search setAcl
- * @tc.type: FUNC
- * @tc.require: issue
- * @tc.author: zd
- */
-HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_015, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
-    config.SetSearchable(true);
-    GetOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    RdbGetStoreTest::CheckAccess(std::string(RdbGetStoreTest::MAIN_DATABASE_NAME));
 }

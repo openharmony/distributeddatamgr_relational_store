@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
-#include "acl.h"
+
 #include "common.h"
 #include "file_ex.h"
 #include "logger.h"
@@ -39,13 +39,10 @@
 #include "sqlite_utils.h"
 #include "sqlite_global_config.h"
 #include "sys/types.h"
-#include "rdb_platform.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 class RdbDoubleWriteBinlogTest : public testing::Test {
 public:
@@ -1160,65 +1157,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_022, TestSize.Level0)
     bool isDbFileExist = OHOS::FileExists(RdbDoubleWriteBinlogTest::databaseName);
     ASSERT_TRUE(isDbFileExist);
     RdbDoubleWriteBinlogTest::CheckNumber(RdbDoubleWriteBinlogTest::store, count);
-}
-
-/**
- * @tc.name: RdbStore_Binlog_023
- * @tc.desc: test setacl when open binlog
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_023, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
-        RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
-    }
-    InitDb();
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    store = nullptr;
-
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetSearchable(true);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
-    ASSERT_TRUE(isBinlogExist);
-
-    size_t bigSize = 1024 * 1024 * 128;
-    std::string data(bigSize, 'a');
-    PutValue(store, data, 11, 18);
-    PutValue(store, data, 12, 19);
-
-    store = nullptr;
-    id = 13;
-    for (int i = 0; i < count; i++) {
-        config.SetHaMode(HAMode::MAIN_REPLICA);
-        RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-        EXPECT_NE(store, nullptr);
-        PutValue(store, data, id, CHECKAGE);
-        store = nullptr;
-        id++;
-    }
-
-    bool ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasDefaultAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-
-    WaitForBinlogReplayFinish();
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)

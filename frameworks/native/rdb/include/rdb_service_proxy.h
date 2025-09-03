@@ -76,8 +76,6 @@ public:
     void ImportObservers(Observers &observers);
 
     int32_t BeforeOpen(RdbSyncerParam &param) override;
-    
-    std::pair<int32_t, bool> IsSupportSilent(const RdbSyncerParam &param) override;
 
     int32_t AfterOpen(const RdbSyncerParam &param) override;
 
@@ -139,6 +137,8 @@ private:
     void OnSyncComplete(const std::string &storeName, Details &&result);
 
     void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
+
+    static std::string RemoveSuffix(const std::string &name);
 
     std::atomic<uint32_t> seqNum_{};
     Observers observers_;
