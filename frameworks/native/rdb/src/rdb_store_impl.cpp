@@ -1464,7 +1464,11 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
+#if !defined(CROSS_PLATFORM)
     return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, preCount);
+#else
+    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, false);
+#endif
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
@@ -2573,11 +2577,9 @@ int32_t RdbStoreImpl::SetTokenizer(Tokenizer tokenizer)
     if (tokenizer < NONE_TOKENIZER || tokenizer >= TOKENIZER_END) {
         return E_INVALID_ARGS_NEW;
     }
-    if (!isOpen_) {
-        LOG_ERROR("The connection pool has been closed.");
-        return E_ALREADY_CLOSED;
+    if (tokenizer == ICU_TOKENIZER) {
+        return E_NOT_SUPPORT;
     }
-
     auto pool = GetPool();
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;

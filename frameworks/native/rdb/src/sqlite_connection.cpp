@@ -1145,10 +1145,6 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
 
 int32_t SqliteConnection::SetTokenizer(Tokenizer tokenizer)
 {
-    if (tokenizer == ICU_TOKENIZER) {
-        sqlite3_config(SQLITE_CONFIG_ENABLE_ICU, 1);
-        return E_OK;
-    }
     if (tokenizer != CUSTOM_TOKENIZER) {
         return E_OK;
     }

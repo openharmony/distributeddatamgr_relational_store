@@ -1971,3 +1971,26 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_003, TestSize.Level0)
     RdbHelper::DeleteRdbStore(config);
     ASSERT_EQ(store->SetTokenizer(Tokenizer::ICU_TOKENIZER), E_ALREADY_CLOSED);
 }
+
+/**
+ * @tc.name: RdbStore_SetTokenizer_004
+ * @tc.desc: test set tokenizer
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_004, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    ASSERT_EQ(store->SetTokenizer(Tokenizer::NONE_TOKENIZER), E_OK);
+    std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
+        "tokenize = 'customtokenizer cut_mode short_words')";
+    auto [status, val] = store->Execute(createSql);
+    ASSERT_NE(status, E_OK);
+
+    ASSERT_EQ(store->SetTokenizer(Tokenizer::ICU_TOKENIZER), E_NOT_SUPPORT);
+}
