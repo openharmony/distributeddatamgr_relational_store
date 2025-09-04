@@ -1883,3 +1883,91 @@ HWTEST_F(RdbStoreImplTest, RdbStore_InitKnowledgeSchema_004, TestSize.Level1)
         ASSERT_EQ(ret.first, E_OK);
     }
 }
+
+/**
+ * @tc.name: RdbStore_SetTokenizer_001
+ * @tc.desc: test set tokenizer
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_001, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
+        "tokenize = 'customtokenizer cut_mode short_words')";
+    auto [status, val] = store->Execute(createSql);
+    ASSERT_NE(status, E_OK);
+
+    if (!RdbHelper::IsSupportedTokenizer(Tokenizer::CUSTOM_TOKENIZER)) {
+        return;
+    }
+    ASSERT_EQ(store->SetTokenizer(Tokenizer::CUSTOM_TOKENIZER), E_OK);
+    std::tie(status, val) = store->Execute(createSql);
+    ASSERT_EQ(status, E_OK);
+    ASSERT_EQ(store->SetTokenizer(Tokenizer::CUSTOM_TOKENIZER), E_OK);
+
+    std::string insertValueSql = "INSERT INTO example VALUES('电子邮件')";
+    std::tie(status, val) = store->Execute(insertValueSql);
+    ASSERT_EQ(status, E_OK);
+
+    std::vector<std::string> words = {"电子", "邮件", "电子邮件"};
+    for (auto word: words) {
+        auto resultSet =
+            store->QuerySql("SELECT * FROM example WHERE content MATCH ?;", std::vector<std::string>{word});
+        ASSERT_NE(resultSet, nullptr);
+        int count = 0;
+        ASSERT_EQ(resultSet->GetRowCount(count), E_OK);
+        ASSERT_EQ(count, 1);
+    }
+}
+
+/**
+ * @tc.name: RdbStore_SetTokenizer_002
+ * @tc.desc: test set tokenizer
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_002, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
+        "tokenize = 'customtokenizer cut_mode short_words')";
+    auto [status, val] = store->Execute(createSql);
+    ASSERT_NE(status, E_OK);
+    Tokenizer tokenizer = static_cast<Tokenizer>(-1); // -1 is a value outside the boundary of the tokenizer.
+    ASSERT_EQ(store->SetTokenizer(tokenizer), E_INVALID_ARGS_NEW);
+    tokenizer = static_cast<Tokenizer>(5); // 5 is a value outside the boundary of the tokenizer.
+    ASSERT_EQ(store->SetTokenizer(tokenizer), E_INVALID_ARGS_NEW);
+}
+
+/**
+ * @tc.name: RdbStore_SetTokenizer_003
+ * @tc.desc: test set tokenizer
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_003, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
+        "tokenize = 'customtokenizer cut_mode short_words')";
+    auto [status, val] = store->Execute(createSql);
+    ASSERT_NE(status, E_OK);
+    RdbHelper::DeleteRdbStore(config);
+    ASSERT_EQ(store->SetTokenizer(Tokenizer::ICU_TOKENIZER), E_ALREADY_CLOSED);
+}
