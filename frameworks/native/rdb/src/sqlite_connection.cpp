@@ -1143,6 +1143,30 @@ int SqliteConnection::ConfigLocale(const std::string &localeStr)
     return RdbICUManager::GetInstance().ConfigLocale(dbHandle_, localeStr);
 }
 
+int32_t SqliteConnection::SetTokenizer(Tokenizer tokenizer)
+{
+    if (tokenizer != CUSTOM_TOKENIZER) {
+        return E_OK;
+    }
+    int err = sqlite3_db_config(
+        dbHandle_, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::ENABLE_LOAD_EXTENSION, nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("enable failed, err=%{public}d, errno=%{public}d", err, errno);
+        return SQLiteError::ErrNo(err);
+    }
+    err = sqlite3_load_extension(dbHandle_, "libcustomtokenizer.z.so", nullptr, nullptr);
+    if (err != SQLITE_OK) {
+        LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s", err, errno,
+            sqlite3_errmsg(dbHandle_));
+    }
+    int ret = sqlite3_db_config(
+        dbHandle_, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::DISABLE_LOAD_EXTENSION, nullptr);
+    if (ret != SQLITE_OK) {
+        LOG_ERROR("disable failed, err=%{public}d, errno=%{public}d", err, errno);
+    }
+    return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
+}
+
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (table.empty()) {

@@ -75,6 +75,7 @@ public:
     virtual int32_t TryCheckPoint(bool timeout) = 0;
     virtual int32_t LimitWalSize() = 0;
     virtual int32_t ConfigLocale(const std::string &localeStr) = 0;
+    virtual int32_t SetTokenizer(Tokenizer tokenizer) = 0;
     virtual int32_t CleanDirtyData(const std::string &table, uint64_t cursor) = 0;
     virtual int32_t SubscribeTableChanges(const Notifier &notifier) = 0;
     virtual int32_t GetMaxVariable() const = 0;
