@@ -791,6 +791,13 @@ public:
     virtual int ConfigLocale(const std::string &localeStr);
 
     /**
+     * @brief Specify which tokenizer the user should use in the fts scenario.
+     *
+     * @param tokenizer Describe the tokenizer enumeration used in the FTS (full-text search) scenario
+     */
+    virtual int32_t SetTokenizer(Tokenizer tokenizer);
+
+    /**
      * @brief Register a customized cluster algo to db
      *
      * @param clstAlgoName name of function

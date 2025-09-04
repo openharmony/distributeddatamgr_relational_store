@@ -1127,8 +1127,8 @@ describe('rdbStoreMemoryDbTest', function () {
         let sql = "";
         try {
             rdbStore.on('statistics', (SqlExeInfo) => {
-                sql = SqlExeInfo.sql[0];
                 console.info(TAG + "on statistics success, sql:" + sql);
+                sql = SqlExeInfo.sql[0];
             })
         } catch (err) {
             console.error(TAG + `on statistics fail, code:${err.code}, message: ${err.message}`);

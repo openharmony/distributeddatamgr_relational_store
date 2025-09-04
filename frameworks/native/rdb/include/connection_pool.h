@@ -54,6 +54,7 @@ public:
     int32_t EnableWal();
     int32_t Dump(bool isWriter, const char *header);
 
+    int32_t SetTokenizer(Tokenizer tokenizer);
     int RestartConns();
     int ReopenConns();
     int ConfigLocale(const std::string &localeStr);
@@ -103,6 +104,7 @@ private:
         std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
             Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire = false);
         int32_t ConfigLocale(const std::string &locale);
+        int32_t SetTokenizer(Tokenizer tokenizer);
         std::pair<int, std::shared_ptr<ConnNode>> Acquire(std::chrono::milliseconds milliS);
         std::pair<bool, std::list<std::shared_ptr<ConnNode>>> AcquireAll(std::chrono::milliseconds milliS);
         std::pair<int32_t, std::shared_ptr<ConnNode>> Create();
