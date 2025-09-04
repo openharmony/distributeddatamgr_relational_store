@@ -156,6 +156,9 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     slaveStore = nullptr;
     WaitForBinlogReplayFinish();
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    std::string lockCompressName = RdbDoubleWriteBinlogTest::slaveDatabaseName + "-lockcompress";
+    bool isLockCompressFileExist = OHOS::FileExists(lockCompressName);
+    ASSERT_FALSE(isLockCompressFileExist);
     WaitForBinlogDelete();
     testing::UnitTest *test = testing::UnitTest::GetInstance();
     ASSERT_NE(test, nullptr);
@@ -484,7 +487,12 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_001, TestSize.Level0)
     EXPECT_NE(store, nullptr);
     ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     store = nullptr;
+    std::string lockCompressName = RdbDoubleWriteBinlogTest::slaveDatabaseName + "-lockcompress";
+    bool isLockCompressFileExist = OHOS::FileExists(lockCompressName);
+    ASSERT_TRUE(isLockCompressFileExist);
     RdbHelper::DeleteRdbStore(config);
+    isLockCompressFileExist = OHOS::FileExists(lockCompressName);
+    ASSERT_FALSE(isLockCompressFileExist);
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 }
 
