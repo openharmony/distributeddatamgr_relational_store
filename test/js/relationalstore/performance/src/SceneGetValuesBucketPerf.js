@@ -142,56 +142,56 @@ describe('SceneGetValuesBucketPerf', function () {
    * @tc.number SUB_DDM_RDB_JS_RdbBackupRestoreTest_0010
    * @tc.desc RDB backup and restore function test
    */
-  // it('Scene_GetValuesBucket_0002', 0, async function (done) {
-  //   console.log(TAG + "************* Scene_GetValuesBucket_0002 start *************");
-  //   let predicates = await new dataRdb.RdbPredicates("test")
-  //   let resultSet = await rdbStore.query(predicates)
-  //   expect(2000).assertEqual(resultSet.rowCount);
+  it('Scene_GetValuesBucket_0002', 0, async function (done) {
+    console.log(TAG + "************* Scene_GetValuesBucket_0002 start *************");
+    let predicates = await new dataRdb.RdbPredicates("test")
+    let resultSet = await rdbStore.query(predicates)
+    expect(2000).assertEqual(resultSet.rowCount);
 
-  //   let startTime = new Date().getTime();
-  //   let allValues = new Array(2000);
+    let startTime = new Date().getTime();
+    let allValues = new Array(2000);
 
-  //   let i = 0;
-  //   let indexes = new Array(20);
-  //   while (resultSet.goToNextRow()) {
-  //     let values = new Array();
+    let i = 0;
+    let indexes = new Array(20);
+    while (resultSet.goToNextRow()) {
+      let values = new Array();
 
-  //     if (i == 0) {
-  //       for (let i = 0; i < 20; i++) {
-  //         indexes[i] = resultSet.getColumnIndex(FIELDS[i]);
-  //       }
-  //     }
+      if (i == 0) {
+        for (let i = 0; i < 20; i++) {
+          indexes[i] = resultSet.getColumnIndex(FIELDS[i]);
+        }
+      }
 
-  //     for (let i = 0; i < 20; i++) {
-  //       switch (resultSet.getColumnTypeSync(indexes[i])) {
-  //         case 0: // TYPE_NULL
-  //           values[FIELDS[i]] = null;
-  //           break;
-  //         case 1: // TYPE_INTEGER
-  //           values[FIELDS[i]] = resultSet.getInt(indexes[i]);
-  //           break;
-  //         case 2: // TYPE_FLOAT
-  //           values[FIELDS[i]] = resultSet.getDouble(indexes[i]);
-  //           break;
-  //         case 3: // TYPE_STRING
-  //           values[FIELDS[i]] = resultSet.getString(indexes[i]);
-  //           break;
-  //         case 4: // TYPE_BLOB
-  //           values[FIELDS[i]] = resultSet.getBlob(indexes[i]);
-  //           break;
-  //       }
-  //     }
-  //     allValues[i++] = values;
-  //   }
-  //   resultSet.close();
-  //   let endTime = new Date().getTime();
-  //   let averageTime = (endTime - startTime);
-  //   console.info(TAG + " the Scene_GetValuesBucket_0002 average time is: " + averageTime + " ms");
-  //   expect(2000).assertEqual(allValues.length);
-  //   expect(averageTime).assertLess(2000);
+      for (let i = 0; i < 20; i++) {
+        switch (resultSet.getColumnTypeSync(indexes[i])) {
+          case 0: // TYPE_NULL
+            values[FIELDS[i]] = null;
+            break;
+          case 1: // TYPE_INTEGER
+            values[FIELDS[i]] = resultSet.getInt(indexes[i]);
+            break;
+          case 2: // TYPE_FLOAT
+            values[FIELDS[i]] = resultSet.getDouble(indexes[i]);
+            break;
+          case 3: // TYPE_STRING
+            values[FIELDS[i]] = resultSet.getString(indexes[i]);
+            break;
+          case 4: // TYPE_BLOB
+            values[FIELDS[i]] = resultSet.getBlob(indexes[i]);
+            break;
+        }
+      }
+      allValues[i++] = values;
+    }
+    resultSet.close();
+    let endTime = new Date().getTime();
+    let averageTime = (endTime - startTime);
+    console.info(TAG + " the Scene_GetValuesBucket_0002 average time is: " + averageTime + " ms");
+    expect(2000).assertEqual(allValues.length);
+    expect(averageTime).assertLess(2000);
 
-  //   expect(CONST_STRING_VALUE).assertEqual(allValues[0]["data01"]);
-  //   done();
-  //   console.log(TAG + "************* Scene_GetValuesBucket_0002 end   *************");
-  // })
+    expect(CONST_STRING_VALUE).assertEqual(allValues[0]["data01"]);
+    done();
+    console.log(TAG + "************* Scene_GetValuesBucket_0002 end   *************");
+  })
 })
