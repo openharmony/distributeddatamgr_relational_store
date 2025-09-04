@@ -415,6 +415,13 @@ struct Results {
     int32_t changed = -1;
     std::shared_ptr<ResultSet> results;
 };
+
+enum Tokenizer : int32_t {
+    NONE_TOKENIZER = 0,
+    ICU_TOKENIZER,
+    CUSTOM_TOKENIZER,
+    TOKENIZER_END
+};
 } // namespace NativeRdb
 } // namespace OHOS
 #endif

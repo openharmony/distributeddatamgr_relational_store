@@ -667,6 +667,12 @@ int RdbStore::ConfigLocale(const std::string &localeStr)
     return E_NOT_SUPPORT;
 }
 
+int32_t RdbStore::SetTokenizer(Tokenizer tokenizer)
+{
+    (void)tokenizer;
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     return E_NOT_SUPPORT;

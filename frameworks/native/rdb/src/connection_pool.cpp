@@ -469,6 +469,19 @@ int ConnPool::ConfigLocale(const std::string &localeStr)
     return trans_.ConfigLocale(localeStr);
 }
 
+int32_t ConnPool::SetTokenizer(Tokenizer tokenizer)
+{
+    auto errCode = readers_.SetTokenizer(tokenizer);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    errCode = writers_.SetTokenizer(tokenizer);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    return trans_.SetTokenizer(tokenizer);
+}
+
 /**
  * Rename the backed up database.
  */
@@ -717,6 +730,25 @@ int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
         int32_t errCode = conn->connect_->ConfigLocale(locale);
         if (errCode != E_OK) {
             LOG_ERROR("ConfigLocale failed %{public}d", errCode);
+            return errCode;
+        }
+        ++it;
+    }
+    return E_OK;
+}
+
+int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    for (auto it = details_.begin(); it != details_.end();) {
+        auto conn = it->lock();
+        if (conn == nullptr || conn->connect_ == nullptr) {
+            it = details_.erase(it);
+            continue;
+        }
+        int32_t errCode = conn->connect_->SetTokenizer(tokenizer);
+        if (errCode != E_OK) {
+            LOG_ERROR("SetTokenizer failed %{public}d", errCode);
             return errCode;
         }
         ++it;

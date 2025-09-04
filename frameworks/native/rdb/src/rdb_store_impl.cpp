@@ -1465,9 +1465,9 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         return nullptr;
     }
 #if !defined(CROSS_PLATFORM)
-    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, preCount);
+    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, preCount);
 #else
-    return std::make_shared<StepResultSet>(start, connectionPool_->AcquireRef(true), sql, args, false);
+    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, false);
 #endif
 }
 
@@ -2570,6 +2570,25 @@ int RdbStoreImpl::ConfigLocale(const std::string &localeStr)
     }
     config_.SetCollatorLocales(localeStr);
     return pool->ConfigLocale(localeStr);
+}
+
+int32_t RdbStoreImpl::SetTokenizer(Tokenizer tokenizer)
+{
+    if (tokenizer < NONE_TOKENIZER || tokenizer >= TOKENIZER_END) {
+        return E_INVALID_ARGS_NEW;
+    }
+    if (tokenizer == ICU_TOKENIZER) {
+        return E_NOT_SUPPORT;
+    }
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return E_ALREADY_CLOSED;
+    }
+    if (config_.GetTokenizer() == tokenizer) {
+        return E_OK;
+    }
+    config_.SetTokenizer(tokenizer);
+    return pool->SetTokenizer(tokenizer);
 }
 
 int RdbStoreImpl::GetDestPath(const std::string &backupPath, std::string &destPath)

@@ -621,7 +621,7 @@ Tokenizer RdbStoreConfig::GetTokenizer() const
     return tokenizer_;
 }
 
-void RdbStoreConfig::SetTokenizer(Tokenizer tokenizer)
+void RdbStoreConfig::SetTokenizer(Tokenizer tokenizer) const
 {
     tokenizer_ = tokenizer;
 }

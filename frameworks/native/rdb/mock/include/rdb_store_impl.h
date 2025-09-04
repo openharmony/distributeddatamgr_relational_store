@@ -66,6 +66,7 @@ public:
     int Commit() override;
     int Commit(int64_t trxId) override;
     bool IsInTransaction() override;
+    int32_t SetTokenizer(Tokenizer tokenizer) override;
     bool IsOpen() const override;
     std::string GetPath() override;
     bool IsReadOnly() const override;

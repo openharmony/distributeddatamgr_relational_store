@@ -55,6 +55,7 @@ public:
     int TryCheckPoint(bool timeout) override;
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
+    int32_t SetTokenizer(Tokenizer tokenizer) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
     int ResetKey(const RdbStoreConfig &config) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;

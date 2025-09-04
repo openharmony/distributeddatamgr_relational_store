@@ -108,13 +108,6 @@ enum EncryptAlgo : int32_t {
     AES_256_CBC
 };
 
-enum Tokenizer : int32_t {
-    NONE_TOKENIZER = 0,
-    ICU_TOKENIZER,
-    CUSTOM_TOKENIZER,
-    TOKENIZER_END
-};
-
 enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
 
 struct RegisterInfo {
@@ -310,7 +303,7 @@ public:
     void SetCustomDir(const std::string &customDir);
     std::string GetCustomDir() const;
     Tokenizer GetTokenizer() const;
-    void SetTokenizer(Tokenizer tokenizer);
+    void SetTokenizer(Tokenizer tokenizer) const;
     void SetVisitorDir(const std::string &visitorDir);
     std::string GetVisitorDir() const;
     bool operator==(const RdbStoreConfig &config) const
@@ -412,7 +405,7 @@ private:
     DistributedType distributedType_ = DistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
-    Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
+    mutable Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
     CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
