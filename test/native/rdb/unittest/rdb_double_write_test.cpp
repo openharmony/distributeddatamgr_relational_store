@@ -194,6 +194,9 @@ void RdbDoubleWriteTest::TearDown(void)
     store = nullptr;
     slaveStore = nullptr;
     RdbHelper::DeleteRdbStore(RdbDoubleWriteTest::DATABASE_NAME);
+    std::string lockCompressName = RdbDoubleWriteTest::SLAVE_DATABASE_NAME + "-lockcompress";
+    bool isLockCompressFileExist = OHOS::FileExists(lockCompressName);
+    ASSERT_FALSE(isLockCompressFileExist);
     sqlite3_export_extra_symbols = originalExtraApi;
 #ifndef CROSS_PLATFORM
     sqlite3_export_relational_symbols = originalKvApi;

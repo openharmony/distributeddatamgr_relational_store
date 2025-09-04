@@ -156,7 +156,7 @@ private:
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr }, { "-compare", nullptr }, { "-walcompress", nullptr },
-        { "-journalcompress", nullptr }, { "-shmcompress", nullptr } };
+        { "-journalcompress", nullptr }, { "-shmcompress", nullptr }, { "-lockcompress", nullptr } };
     static constexpr int CHECKPOINT_TIME = 500;
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
