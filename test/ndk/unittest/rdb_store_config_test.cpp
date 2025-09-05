@@ -38,6 +38,16 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static void InitRdbConfig()
+    {
+        config_.dataBaseDir = RDB_TEST_PATH;
+        config_.storeName = "rdb_store_test.db";
+        config_.bundleName = "com.ohos.example.distributedndk";
+        config_.securityLevel = OH_Rdb_SecurityLevel::S1;
+        config_.isEncrypt = false;
+        config_.selfSize = sizeof(OH_Rdb_Config);
+        config_.area = RDB_SECURITY_AREA_EL1;
+    }
     static void InitRdbConfig1()
     {
         config1_.dataBaseDir = RDB_TEST_PATH;
@@ -71,6 +81,7 @@ public:
         config3_.selfSize = sizeof(OH_Rdb_Config);
         config3_.area = RDB_SECURITY_AREA_EL1;
     }
+    static OH_Rdb_Config config_;
     static OH_Rdb_Config config1_;
     static OH_Rdb_Config config2_;
     static OH_Rdb_Config config3_;
@@ -79,6 +90,7 @@ public:
 
 OH_Rdb_Store *store1_;
 OH_Rdb_Store *store2_;
+OH_Rdb_Config RdbStoreConfigTest::config_ = { 0 };
 OH_Rdb_Config RdbStoreConfigTest::config1_ = { 0 };
 OH_Rdb_Config RdbStoreConfigTest::config2_ = { 0 };
 OH_Rdb_Config RdbStoreConfigTest::config3_ = { 0 };
@@ -263,4 +275,35 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_005, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1_));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2_));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStore(&config1_));
+}
+
+/**
+ * @tc.name: RDB_store_config_test_006
+ * @tc.desc: normal test of config, when moduleName is nullptr, or moduleName is "entry1" and encrypt is false.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_006, TestSize.Level1)
+{
+    InitRdbConfig();
+    mkdir(config_.dataBaseDir, 0770);
+
+    int errCode = 0;
+    EXPECT_EQ(config_.moduleName, nullptr);
+    store1_ = OH_Rdb_GetOrOpen(&config_, &errCode);
+    EXPECT_NE(store1_, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1_, createTableSql));
+
+    config2_.moduleName = "entry1";
+    store2_ = OH_Rdb_GetOrOpen(&config2_, &errCode);
+    EXPECT_NE(store2_, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2_, dropTableSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1_));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2_));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStore(&config_));
 }
