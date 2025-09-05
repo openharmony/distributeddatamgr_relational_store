@@ -1659,6 +1659,14 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         if (isReusableReplica) {
             InsertReusableReplica(slaveCfg.GetPath(), slaveConn);
         }
+        if (!IsSupportBinlog(config)) {
+            auto binlogFolder = GetBinlogFolderPath(config.GetPath());
+            if (access(binlogFolder.c_str(), F_OK) == 0) {
+                SqliteUtils::SetSlaveInvalid(config.GetPath());
+                size_t num = SqliteUtils::DeleteFolder(binlogFolder);
+                LOG_INFO("binlog files found, %{public}zu deleted", num);
+            }
+        }
     }
     return result;
 }

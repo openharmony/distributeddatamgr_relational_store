@@ -1316,6 +1316,45 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_025, TestSize.Level0)
     CheckNumber(store, count);
 }
 
+/**
+ * @tc.name: RdbStore_Binlog_026
+ * @tc.desc: test after binlog is turned off, main and replica is the same
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_026, TestSize.Level0)
+{
+    LOG_INFO("---- step1 open db with binlog enabled");
+    RdbStoreConfig config(databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    int errCode = E_OK;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    LOG_INFO("---- step2 insert data");
+    int64_t id = 1;
+    int count = 20; // data size
+    Insert(id, count);
+    CheckNumber(store, count);
+    LOG_INFO("---- step3 close db and turn off binlog");
+    store = nullptr;
+    WaitForBinlogReplayFinish();
+    struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
+    mockApi.is_support_binlog = MockSupportBinlogOff;
+    auto originalApi = sqlite3_export_relational_symbols;
+    sqlite3_export_relational_symbols = &mockApi;
+    LOG_INFO("---- step4 open db with binlog turned off");
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    LOG_INFO("---- step5 check replica count");
+    RdbStoreConfig slaveConfig(slaveDatabaseName);
+    DoubleWriteBinlogTestOpenCallback slaveHelper;
+    RdbDoubleWriteBinlogTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(slaveStore, nullptr);
+    CheckNumber(slaveStore, count);
+    sqlite3_export_relational_symbols = originalApi;
+}
+
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
