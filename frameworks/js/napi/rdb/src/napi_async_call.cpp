@@ -107,6 +107,7 @@ napi_value AsyncCall::Call(napi_env env, std::shared_ptr<BaseContext> context)
     auto status = napi_queue_async_work_with_qos(env, context->work_, napi_qos_user_initiated);
     if (status != napi_ok) {
         napi_get_undefined(env, &promise);
+        napi_reject_deferred(env, context->defer_, promise);
     }
     return promise;
 }
