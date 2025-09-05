@@ -39,9 +39,6 @@ namespace Relational {
     CArrStr ResultSetImpl::GetAllColumnNames()
     {
         std::vector<std::string> colNames;
-        if (resultSetValue == nullptr) {
-            return CArrStr{nullptr, 0};
-        }
         int errCode = resultSetValue->GetAllColumnNames(colNames);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("GetAllColumnNames failed code: %{public}d", errCode);
@@ -70,9 +67,6 @@ namespace Relational {
     int32_t ResultSetImpl::GetColumnCount()
     {
         int32_t count = 0;
-        if (resultSetValue == nullptr) {
-            return count;
-        }
         int errCode = resultSetValue->GetColumnCount(count);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("GetColumnCount failed code:%{public}d", errCode);
@@ -83,9 +77,6 @@ namespace Relational {
     int32_t ResultSetImpl::GetRowCount()
     {
         int32_t result;
-        if (resultSetValue == nullptr) {
-            return -1;
-        }
         int errCode = resultSetValue->GetRowCount(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("GetRowCount failed code:%{public}d", errCode);
@@ -96,9 +87,6 @@ namespace Relational {
     int32_t ResultSetImpl::GetRowIndex()
     {
         int32_t result;
-        if (resultSetValue == nullptr) {
-            return -1;
-        }
         int errCode = resultSetValue->GetRowIndex(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("GetRowIndex failed code:%{public}d", errCode);
@@ -109,9 +97,6 @@ namespace Relational {
     bool ResultSetImpl::IsAtFirstRow()
     {
         bool result = false;
-        if (resultSetValue == nullptr) {
-            return result;
-        }
         int errCode = resultSetValue->IsAtFirstRow(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("IsAtFirstRow failed code:%{public}d", errCode);
@@ -122,9 +107,6 @@ namespace Relational {
     bool ResultSetImpl::IsAtLastRow()
     {
         bool result = false;
-        if (resultSetValue == nullptr) {
-            return result;
-        }
         int errCode = resultSetValue->IsAtLastRow(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("IsAtLastRow failed code:%{public}d", errCode);
@@ -135,9 +117,6 @@ namespace Relational {
     bool ResultSetImpl::IsEnded()
     {
         bool result = false;
-        if (resultSetValue == nullptr) {
-            return result;
-        }
         int errCode = resultSetValue->IsEnded(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("IsEnded failed code:%{public}d", errCode);
@@ -149,9 +128,6 @@ namespace Relational {
     bool ResultSetImpl::IsStarted()
     {
         bool result = false;
-        if (resultSetValue == nullptr) {
-            return result;
-        }
         int errCode = resultSetValue->IsStarted(result);
         if (errCode != RelationalStoreJsKit::OK) {
             LOGE("IsBegin failed code:%{public}d", errCode);
@@ -161,45 +137,30 @@ namespace Relational {
 
     bool ResultSetImpl::IsClosed()
     {
-        if (resultSetValue == nullptr) {
-            return false;
-        }
         return resultSetValue->IsClosed();
     }
 
     double ResultSetImpl::GetDouble(int32_t columnIndex, int32_t* rtnCode)
     {
         double result = 0.0;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return result;
-        }
         *rtnCode = resultSetValue->GetDouble(columnIndex, result);
         return result;
     }
 
     bool ResultSetImpl::GoToRow(int32_t position, int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoToRow(position);
         return *rtnCode == RelationalStoreJsKit::OK;
     }
 
     bool ResultSetImpl::GoToPreviousRow(int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoToPreviousRow();
         return *rtnCode == RelationalStoreJsKit::OK;
     }
 
     bool ResultSetImpl::GoToLastRow(int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoToLastRow();
         return *rtnCode == RelationalStoreJsKit::OK;
     }
@@ -207,9 +168,6 @@ namespace Relational {
     char* ResultSetImpl::GetColumnName(int32_t columnIndex, int32_t* rtnCode)
     {
         std::string result;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return nullptr;
-        }
         *rtnCode = resultSetValue->GetColumnName(columnIndex, result);
         if (*rtnCode != RelationalStoreJsKit::OK) {
             LOGE("IsAtLastRow failed code:%{public}d", *rtnCode);
@@ -220,9 +178,6 @@ namespace Relational {
     bool ResultSetImpl::IsColumnNull(int32_t columnIndex, int32_t* rtnCode)
     {
         bool result;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->IsColumnNull(columnIndex, result);
         return result;
     }
@@ -230,9 +185,6 @@ namespace Relational {
     Asset ResultSetImpl::GetAsset(int32_t columnIndex, int32_t* rtnCode)
     {
         NativeRdb::ValueObject::Asset asset;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return Asset{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0};
-        }
         *rtnCode = resultSetValue->GetAsset(columnIndex, asset);
         if (*rtnCode != RelationalStoreJsKit::OK) {
             return Asset{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0};
@@ -251,18 +203,12 @@ namespace Relational {
 
     int32_t ResultSetImpl::Close()
     {
-        if (resultSetValue == nullptr) {
-            return -1;
-        }
         return resultSetValue->Close();
     }
 
     int32_t ResultSetImpl::GetColumnIndex(char* columnName, int32_t* rtnCode)
     {
         int32_t result = -1;
-        if (resultSetValue == nullptr || rtnCode == nullptr || columnName == nullptr) {
-            return result;
-        }
         *rtnCode = resultSetValue->GetColumnIndex(columnName, result);
         // If the API version is less than 13, directly return.
         if (AppDataMgrJsKit::JSUtils::GetHapVersion() < 13 || (*rtnCode == NativeRdb::E_INVALID_ARGS)) {
@@ -274,27 +220,18 @@ namespace Relational {
     char* ResultSetImpl::GetString(int32_t columnIndex, int32_t* rtnCode)
     {
         std::string result;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return nullptr;
-        }
         *rtnCode = resultSetValue->GetString(columnIndex, result);
         return MallocCString(result);
     }
 
     bool ResultSetImpl::GoToFirstRow(int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoToFirstRow();
         return *rtnCode == RelationalStoreJsKit::OK;
     }
 
     int64_t ResultSetImpl::GetLong(int32_t columnIndex, int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return -1;
-        }
         int64_t result;
         *rtnCode = resultSetValue->GetLong(columnIndex, result);
         return result;
@@ -302,9 +239,6 @@ namespace Relational {
 
     bool ResultSetImpl::GoToNextRow(int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoToNextRow();
         return *rtnCode == RelationalStoreJsKit::OK;
     }
@@ -312,9 +246,6 @@ namespace Relational {
     CArrUI8 ResultSetImpl::GetBlob(int32_t columnIndex, int32_t* rtnCode)
     {
         std::vector<uint8_t> vec;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return CArrUI8{nullptr, 0};
-        }
         *rtnCode = resultSetValue->GetBlob(columnIndex, vec);
         if (*rtnCode != RelationalStoreJsKit::OK || vec.size() == 0) {
             return CArrUI8{nullptr, 0};
@@ -331,9 +262,6 @@ namespace Relational {
 
     bool ResultSetImpl::GoTo(int32_t offset, int32_t* rtnCode)
     {
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return false;
-        }
         *rtnCode = resultSetValue->GoTo(offset);
         return *rtnCode == RelationalStoreJsKit::OK;
     }
@@ -341,9 +269,6 @@ namespace Relational {
     Assets ResultSetImpl::GetAssets(int32_t columnIndex, int32_t* rtnCode)
     {
         std::vector<NativeRdb::ValueObject::Asset> assets;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return Assets{nullptr, 0};
-        }
         *rtnCode = resultSetValue->GetAssets(columnIndex, assets);
         if (*rtnCode != RelationalStoreJsKit::OK || assets.size() == 0) {
             return Assets{nullptr, 0};
@@ -369,9 +294,6 @@ namespace Relational {
     ValuesBucket ResultSetImpl::GetRow(int32_t* rtnCode)
     {
         NativeRdb::RowEntity rowEntity;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return ValuesBucket{nullptr, nullptr, 0};
-        }
         *rtnCode = resultSetValue->GetRow(rowEntity);
         if (*rtnCode != E_OK) {
             return ValuesBucket{nullptr, nullptr, 0};
@@ -403,9 +325,6 @@ namespace Relational {
     ValuesBucketEx ResultSetImpl::GetRowEx(int32_t* rtnCode)
     {
         NativeRdb::RowEntity rowEntity;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return ValuesBucketEx{nullptr, nullptr, 0};
-        }
         *rtnCode = resultSetValue->GetRow(rowEntity);
         if (*rtnCode != E_OK) {
             return ValuesBucketEx{nullptr, nullptr, 0};
@@ -437,9 +356,6 @@ namespace Relational {
     ValueTypeEx ResultSetImpl::GetValue(int32_t columnIndex, int32_t* rtnCode)
     {
         NativeRdb::ValueObject object;
-        if (resultSetValue == nullptr || rtnCode == nullptr) {
-            return ValueTypeEx{ 0 };
-        }
         *rtnCode = NativeRdb::E_ALREADY_CLOSED;
         if (resultSetValue != nullptr) {
             *rtnCode = resultSetValue->Get(columnIndex, object);

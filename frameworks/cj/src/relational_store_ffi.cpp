@@ -471,9 +471,6 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreNotEqualToEx(int64_t id, const char *fi
 int64_t FfiOHOSRelationalStoreQuery(
     int64_t id, int64_t predicatesId, char **columns, int64_t columnsSize, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -523,9 +520,6 @@ int64_t FfiOHOSRelationalStoreRemoteQuery(
 
 int64_t FfiOHOSRelationalStoreDelete(int64_t id, int64_t predicatesId, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -625,9 +619,6 @@ int32_t FfiOHOSRelationalStoreBeginTransaction(int64_t id)
 int64_t FfiOHOSRelationalStoreInsert(
     int64_t id, const char *table, ValuesBucket valuesBucket, int32_t conflict, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -639,9 +630,6 @@ int64_t FfiOHOSRelationalStoreInsert(
 FFI_EXPORT int64_t FfiOHOSRelationalStoreInsertEx(
     int64_t id, const char *table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -653,9 +641,6 @@ FFI_EXPORT int64_t FfiOHOSRelationalStoreInsertEx(
 int64_t FfiOHOSRelationalStoreUpdate(int64_t id, ValuesBucket valuesBucket, int64_t predicatesId,
     NativeRdb::ConflictResolution conflictResolution, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     auto nativeRdbSPredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
     if (nativeRdbStore == nullptr || nativeRdbSPredicates == nullptr) {
@@ -668,9 +653,6 @@ int64_t FfiOHOSRelationalStoreUpdate(int64_t id, ValuesBucket valuesBucket, int6
 FFI_EXPORT int64_t FfiOHOSRelationalStoreUpdateEx(int64_t id, ValuesBucketEx valuesBucket, int64_t predicatesId,
     NativeRdb::ConflictResolution conflictResolution, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     auto nativeRdbSPredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
     if (nativeRdbStore == nullptr || nativeRdbSPredicates == nullptr) {
@@ -682,9 +664,6 @@ FFI_EXPORT int64_t FfiOHOSRelationalStoreUpdateEx(int64_t id, ValuesBucketEx val
 
 void FfiOHOSRelationalStoreExecuteSql(int64_t id, const char *sql, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -695,9 +674,6 @@ void FfiOHOSRelationalStoreExecuteSql(int64_t id, const char *sql, int32_t *errC
 
 CArrSyncResult FfiOHOSRelationalStoreSync(int64_t id, int32_t mode, int64_t predicatesId, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return CArrSyncResult{ nullptr, nullptr, 0 };
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
     if (nativeRdbStore == nullptr || nativeRdbPredicates == nullptr) {
@@ -718,9 +694,6 @@ CArrStr FfiOHOSRelationalStoreGetAllColumnNames(int64_t id)
 
 int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -731,9 +704,6 @@ int32_t FfiOHOSRelationalStoreGetColumnCount(int64_t id, int32_t *errCode)
 
 int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -744,9 +714,6 @@ int32_t FfiOHOSRelationalStoreGetRowCount(int64_t id, int32_t *errCode)
 
 int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -757,9 +724,6 @@ int32_t FfiOHOSRelationalStoreGetRowIndex(int64_t id, int32_t *errCode)
 
 bool FfiOHOSRelationalStoreIsAtFirstRow(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -771,9 +735,6 @@ bool FfiOHOSRelationalStoreIsAtFirstRow(int64_t id, int32_t *errCode)
 
 bool FfiOHOSRelationalStoreIsAtLastRow(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -785,9 +746,6 @@ bool FfiOHOSRelationalStoreIsAtLastRow(int64_t id, int32_t *errCode)
 
 bool FfiOHOSRelationalStoreIsEnded(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -799,9 +757,6 @@ bool FfiOHOSRelationalStoreIsEnded(int64_t id, int32_t *errCode)
 
 bool FfiOHOSRelationalStoreIsStarted(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -813,9 +768,6 @@ bool FfiOHOSRelationalStoreIsStarted(int64_t id, int32_t *errCode)
 
 bool FfiOHOSRelationalStoreIsClosed(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -827,9 +779,6 @@ bool FfiOHOSRelationalStoreIsClosed(int64_t id, int32_t *errCode)
 
 double FfiOHOSRelationalStoreGetDouble(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -840,9 +789,6 @@ double FfiOHOSRelationalStoreGetDouble(int64_t id, int32_t columnIndex, int32_t 
 
 bool FfiOHOSRelationalStoreGoToRow(int64_t id, int32_t position, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -853,9 +799,6 @@ bool FfiOHOSRelationalStoreGoToRow(int64_t id, int32_t position, int32_t *rtnCod
 
 bool FfiOHOSRelationalStoreGoToPreviousRow(int64_t id, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -866,9 +809,6 @@ bool FfiOHOSRelationalStoreGoToPreviousRow(int64_t id, int32_t *rtnCode)
 
 bool FfiOHOSRelationalStoreGoToLastRow(int64_t id, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -879,9 +819,6 @@ bool FfiOHOSRelationalStoreGoToLastRow(int64_t id, int32_t *rtnCode)
 
 char *FfiOHOSRelationalStoreGetColumnName(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return nullptr;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -892,9 +829,6 @@ char *FfiOHOSRelationalStoreGetColumnName(int64_t id, int32_t columnIndex, int32
 
 bool FfiOHOSRelationalStoreIsColumnNull(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -905,9 +839,6 @@ bool FfiOHOSRelationalStoreIsColumnNull(int64_t id, int32_t columnIndex, int32_t
 
 Asset FfiOHOSRelationalStoreGetAsset(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return Asset{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -927,9 +858,6 @@ int32_t FfiOHOSRelationalStoreClose(int64_t id)
 
 int32_t FfiOHOSRelationalStoreGetColumnIndex(int64_t id, char *columnName, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -940,9 +868,6 @@ int32_t FfiOHOSRelationalStoreGetColumnIndex(int64_t id, char *columnName, int32
 
 char *FfiOHOSRelationalStoreGetString(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return nullptr;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -953,9 +878,6 @@ char *FfiOHOSRelationalStoreGetString(int64_t id, int32_t columnIndex, int32_t *
 
 bool FfiOHOSRelationalStoreGoToFirstRow(int64_t id, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -966,9 +888,6 @@ bool FfiOHOSRelationalStoreGoToFirstRow(int64_t id, int32_t *rtnCode)
 
 int64_t FfiOHOSRelationalStoreGetLong(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return -1;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -979,9 +898,6 @@ int64_t FfiOHOSRelationalStoreGetLong(int64_t id, int32_t columnIndex, int32_t *
 
 bool FfiOHOSRelationalStoreGoToNextRow(int64_t id, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -992,9 +908,6 @@ bool FfiOHOSRelationalStoreGoToNextRow(int64_t id, int32_t *rtnCode)
 
 CArrUI8 FfiOHOSRelationalStoreGetBlob(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return CArrUI8{ nullptr, 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -1005,9 +918,6 @@ CArrUI8 FfiOHOSRelationalStoreGetBlob(int64_t id, int32_t columnIndex, int32_t *
 
 bool FfiOHOSRelationalStoreGoTo(int64_t id, int32_t offset, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return false;
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -1018,9 +928,6 @@ bool FfiOHOSRelationalStoreGoTo(int64_t id, int32_t offset, int32_t *rtnCode)
 
 Assets FfiOHOSRelationalStoreGetAssets(int64_t id, int32_t columnIndex, int32_t *rtnCode)
 {
-    if (rtnCode == nullptr) {
-        return Assets{ nullptr, 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *rtnCode = -1;
@@ -1031,9 +938,6 @@ Assets FfiOHOSRelationalStoreGetAssets(int64_t id, int32_t columnIndex, int32_t 
 
 ValuesBucket FfiOHOSRelationalStoreGetRow(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return ValuesBucket{ nullptr, nullptr, 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -1044,9 +948,6 @@ ValuesBucket FfiOHOSRelationalStoreGetRow(int64_t id, int32_t *errCode)
 
 FFI_EXPORT ValuesBucketEx FfiOHOSRelationalStoreGetRowEx(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return ValuesBucketEx{ nullptr, nullptr, 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -1057,9 +958,6 @@ FFI_EXPORT ValuesBucketEx FfiOHOSRelationalStoreGetRowEx(int64_t id, int32_t *er
 
 FFI_EXPORT ValueTypeEx FfiOHOSRelationalStoreResultSetGetValue(int64_t id, int32_t columnIndex, int32_t* errCode)
 {
-    if (errCode == nullptr) {
-        return ValueTypeEx{ 0 };
-    }
     auto nativeResultSet = FFIData::GetData<ResultSetImpl>(id);
     if (nativeResultSet == nullptr) {
         *errCode = -1;
@@ -1080,9 +978,6 @@ int32_t FfiOHOSRelationalStoreCleanDirtyData(int64_t id, const char *tableName, 
 int32_t FfiOHOSRelationalStoreBatchInsert(
     int64_t id, const char *tableName, ValuesBucket *values, int64_t valuesSize, int64_t *insertNum)
 {
-    if (insertNum == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         return -1;
@@ -1093,9 +988,6 @@ int32_t FfiOHOSRelationalStoreBatchInsert(
 FFI_EXPORT int32_t FfiOHOSRelationalStoreBatchInsertEx(
     int64_t id, const char *tableName, ValuesBucketEx *values, int64_t valuesSize, int64_t *insertNum)
 {
-    if (insertNum == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         return -1;
@@ -1105,9 +997,6 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreBatchInsertEx(
 
 int64_t FfiOHOSRelationalStoreQuerySql(int64_t id, const char *sql, ValueType *bindArgs, int64_t size, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = RelationalStoreJsKit::E_INNER_ERROR;
@@ -1131,9 +1020,6 @@ int64_t FfiOHOSRelationalStoreQuerySql(int64_t id, const char *sql, ValueType *b
 FFI_EXPORT int64_t FfiOHOSRelationalStoreQuerySqlEx(int64_t id, const char *sql, ValueTypeEx *bindArgs, int64_t size,
     int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = RelationalStoreJsKit::E_INNER_ERROR;
@@ -1157,9 +1043,6 @@ FFI_EXPORT int64_t FfiOHOSRelationalStoreQuerySqlEx(int64_t id, const char *sql,
 void FfiOHOSRelationalStoreExecuteSqlBindArgs(
     int64_t id, char *sql, ValueType *bindArgs, int64_t bindArgsSize, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -1171,9 +1054,6 @@ void FfiOHOSRelationalStoreExecuteSqlBindArgs(
 FFI_EXPORT void FfiOHOSRelationalStoreExecuteSqlBindArgsEx(
     int64_t id, char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -1294,9 +1174,6 @@ int32_t FfiOHOSRelationalStoreCloudSync(int64_t id, int32_t mode, CArrStr tables
 
 int32_t FfiOHOSRelationalStoreGetVersion(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -1307,9 +1184,6 @@ int32_t FfiOHOSRelationalStoreGetVersion(int64_t id, int32_t *errCode)
 
 void FfiOHOSRelationalStoreSetVersion(int64_t id, int32_t value, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -1321,9 +1195,6 @@ void FfiOHOSRelationalStoreSetVersion(int64_t id, int32_t value, int32_t *errCod
 ModifyTime FfiOHOSRelationalStoreGetModifyTime(
     int64_t id, char *cTable, char *cColumnName, CArrPRIKeyType cPrimaryKeys, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return ModifyTime{ 0 };
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
@@ -1354,9 +1225,6 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreRdbPredicatesNotLike(int64_t id, const 
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreRdbStoreGetRebuilt(int64_t id, int32_t *errCode)
 {
-    if (errCode == nullptr) {
-        return -1;
-    }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
         *errCode = -1;
