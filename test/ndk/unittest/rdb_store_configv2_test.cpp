@@ -913,3 +913,28 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_025, TestSize.Level1)
     OH_Rdb_DestroyConfig(config1);
     OH_Rdb_DestroyConfig(config2);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_026
+ * @tc.desc: normal test of OH_Rdb_SetModuleName
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_026, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    OH_Rdb_SetEncrypted(config1, true);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, "entry2"));
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config1);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, ret);
+    EXPECT_EQ(rdbStoreConfig.GetModuleName(), "entry2");
+
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+}
