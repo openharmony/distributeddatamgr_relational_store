@@ -1392,7 +1392,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_001, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1409,15 +1409,13 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_001, TestSize.Level3)
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    if (errCode != E_SQLITE_BUSY) {
-        EXPECT_EQ(errCode, E_OK);
-        ASSERT_NE(store, nullptr);
-        LOG_INFO("---- step 5: execute sql while restore ----");
-        EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
-        LOG_INFO("---- step 6: check db count ----");
-        RdbDoubleWriteTest::WaitForAsyncRepairFinish();
-        RdbDoubleWriteTest::CheckNumber(store, count);
-    }
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("---- step 5: execute sql while restore ----");
+    EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
+    LOG_INFO("---- step 6: check db count ----");
+    RdbDoubleWriteTest::WaitForAsyncRepairFinish();
+    RdbDoubleWriteTest::CheckNumber(store, count);
     LOG_INFO("---- end RdbStore_DoubleWrite_Huge_DB_001 ----");
 }
 
@@ -1434,7 +1432,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_002, TestSize.Level3)
     LOG_INFO("---- start RdbStore_DoubleWrite_Huge_DB_002 ----");
     InitDb();
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1452,15 +1450,13 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_002, TestSize.Level3)
     config.SetHaMode(HAMode::MAIN_REPLICA);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    if (errCode != E_SQLITE_BUSY) {
-        EXPECT_EQ(errCode, E_OK);
-        ASSERT_NE(store, nullptr);
-        LOG_INFO("---- step 5: execute sql while restore ----");
-        EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
-        LOG_INFO("---- step 6: check db count ----");
-        RdbDoubleWriteTest::WaitForAsyncRepairFinish();
-        RdbDoubleWriteTest::CheckNumber(store, count);
-    }
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("---- step 5: execute sql while restore ----");
+    EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
+    LOG_INFO("---- step 6: check db count ----");
+    RdbDoubleWriteTest::WaitForAsyncRepairFinish();
+    RdbDoubleWriteTest::CheckNumber(store, count);
     LOG_INFO("---- end RdbStore_DoubleWrite_Huge_DB_002 ----");
 }
 
@@ -1477,7 +1473,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_003, TestSize.Level3)
     LOG_INFO("---- start RdbStore_DoubleWrite_Huge_DB_003 ----");
     InitDb();
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1515,7 +1511,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_004, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1553,7 +1549,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_005, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1593,7 +1589,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_006, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1630,7 +1626,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_007, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1669,7 +1665,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_008, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1712,7 +1708,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
     int64_t id = 10;
-    int count = 200;
+    int count = 60;  // as 6MB for each entry, 60 means 360MB in total
     LOG_INFO("---- step 1: insert huge data ----");
     Insert(id, count, false, HUGE_DATA_SIZE);
     RdbDoubleWriteTest::CheckNumber(store, count);
@@ -1728,13 +1724,11 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Huge_DB_009, TestSize.Level3)
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
     DoubleWriteTestOpenCallback helper;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    if (errCode != E_SQLITE_BUSY) {
-        EXPECT_EQ(errCode, E_OK);
-        ASSERT_NE(store, nullptr);
-        LOG_INFO("---- step 4: trigger statement should busy ----");
-        EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
-        store = nullptr;
-    }
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("---- step 4: trigger statement should busy ----");
+    EXPECT_EQ(store->ExecuteSql("select * from test;"), E_DATABASE_BUSY);
+    store = nullptr;
     LOG_INFO("---- step 5: check db count ----");
     RdbDoubleWriteTest::WaitForAsyncRepairFinish();
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);

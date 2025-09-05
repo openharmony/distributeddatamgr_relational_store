@@ -161,7 +161,7 @@ private:
     static constexpr int DEFAULT_BUSY_TIMEOUT_MS = 2000;
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
-    static constexpr int RESTORE_PRE_WAIT_TIME = 100;
+    static constexpr int RESTORE_PRE_WAIT_TIME = 120;
     static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647;       // 2147483647 = 2g - 1
     static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
     static constexpr unsigned short BINLOG_FILE_NUMS_LIMIT = 2;
