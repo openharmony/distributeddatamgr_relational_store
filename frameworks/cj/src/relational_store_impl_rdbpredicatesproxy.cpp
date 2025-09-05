@@ -20,9 +20,6 @@ namespace OHOS {
 namespace Relational {
     RdbPredicatesImpl::RdbPredicatesImpl(const char* tableName)
     {
-        if (tableName == nullptr) {
-            return;
-        }
         std::string str = tableName;
         predicates_ = std::make_shared<NativeRdb::RdbPredicates>(str);
     }
@@ -50,57 +47,36 @@ namespace Relational {
         for (int64_t i = 0; i < devicesSize; i++) {
             devices.push_back(devicesArray[i]);
         }
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->InDevices(devices);
     }
 
     void RdbPredicatesImpl::InAllDevices()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->InAllDevices();
     }
 
     void RdbPredicatesImpl::BeginWrap()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->BeginWrap();
     }
 
     void RdbPredicatesImpl::EndWrap()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->EndWrap();
     }
 
     void RdbPredicatesImpl::Or()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->Or();
     }
 
     void RdbPredicatesImpl::And()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->And();
     }
 
     void RdbPredicatesImpl::Contains(const char* field, const char* value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->Contains(cfield, cvalue);
@@ -108,9 +84,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::BeginsWith(const char* field, const char* value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->BeginsWith(cfield, cvalue);
@@ -118,9 +91,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::EndsWith(const char* field, const char* value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->EndsWith(cfield, cvalue);
@@ -128,27 +98,18 @@ namespace Relational {
 
     void RdbPredicatesImpl::IsNull(const char* field)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         predicates_->IsNull(cfield);
     }
 
     void RdbPredicatesImpl::IsNotNull(const char* field)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         predicates_->IsNotNull(cfield);
     }
 
     void RdbPredicatesImpl::Like(const char* field, const char* value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->Like(cfield, cvalue);
@@ -156,9 +117,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::Glob(const char* field, const char* value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->Glob(cfield, cvalue);
@@ -166,56 +124,35 @@ namespace Relational {
 
     void RdbPredicatesImpl::OrderByAsc(const char* field)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         predicates_->OrderByAsc(cfield);
     }
 
     void RdbPredicatesImpl::OrderByDesc(const char* field)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         predicates_->OrderByDesc(cfield);
     }
 
     void RdbPredicatesImpl::Distinct()
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->Distinct();
     }
 
     void RdbPredicatesImpl::LimitAs(int32_t value)
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->Limit(value);
     }
 
     void RdbPredicatesImpl::OffsetAs(int32_t rowOffset)
     {
-        if (predicates_ == nullptr) {
-            return;
-        }
         predicates_->Offset(rowOffset);
     }
 
     void RdbPredicatesImpl::GroupBy(const char** fieldsArray, int64_t fieldsSize)
     {
-        if (fieldsArray == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::vector<std::string> fields;
         for (int64_t i = 0; i < fieldsSize; i++) {
-            if (fieldsArray[i] == nullptr) {
-                return;
-            }
             fields.push_back(fieldsArray[i]);
         }
         predicates_->GroupBy(fields);
@@ -223,18 +160,12 @@ namespace Relational {
 
     void RdbPredicatesImpl::IndexedBy(const char* field)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         predicates_->IndexedBy(cfield);
     }
 
     void RdbPredicatesImpl::LessThanOrEqualTo(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->LessThanOrEqualTo(cfield, valueObject);
@@ -242,9 +173,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::LessThanOrEqualToEx(const char* field, const ValueTypeEx *value)
     {
-        if (field == nullptr || value == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->LessThanOrEqualTo(cfield, valueObject);
@@ -252,9 +180,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::EqualTo(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->EqualTo(cfield, valueObject);
@@ -262,9 +187,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::EqualToEx(const char* field, const ValueTypeEx *value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->EqualTo(cfield, valueObject);
@@ -272,9 +194,6 @@ namespace Relational {
     
     void RdbPredicatesImpl::GreaterThanOrEqualTo(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->GreaterThanOrEqualTo(cfield, valueObject);
@@ -282,9 +201,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::GreaterThanOrEqualToEx(const char* field, const ValueTypeEx *value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->GreaterThanOrEqualTo(cfield, valueObject);
@@ -292,9 +208,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::GreaterThan(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->GreaterThan(cfield, valueObject);
@@ -302,9 +215,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::GreaterThanEx(const char* field, const ValueTypeEx *value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->GreaterThan(cfield, valueObject);
@@ -312,9 +222,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotBetween(const char* field, ValueType lowValue, ValueType highValue)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject lowValueObject = ValueTypeToValueObject(lowValue);
         NativeRdb::ValueObject highValueObject = ValueTypeToValueObject(highValue);
@@ -323,9 +230,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotBetweenEx(const char* field, const ValueTypeEx *lowValue, const ValueTypeEx *highValue)
     {
-        if (field == nullptr || predicates_ == nullptr || lowValue == nullptr || highValue == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject lowValueObject = ValueTypeExToValueObject(*lowValue);
         NativeRdb::ValueObject highValueObject = ValueTypeExToValueObject(*highValue);
@@ -334,9 +238,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::Between(const char* field, ValueType lowValue, ValueType highValue)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject lowValueObject = ValueTypeToValueObject(lowValue);
         NativeRdb::ValueObject highValueObject = ValueTypeToValueObject(highValue);
@@ -345,9 +246,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::BetweenEx(const char* field, const ValueTypeEx *lowValue, const ValueTypeEx *highValue)
     {
-        if (field == nullptr || predicates_ == nullptr || lowValue == nullptr || highValue == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject lowValueObject = ValueTypeExToValueObject(*lowValue);
         NativeRdb::ValueObject highValueObject = ValueTypeExToValueObject(*highValue);
@@ -356,9 +254,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::LessThan(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->LessThan(cfield, valueObject);
@@ -366,9 +261,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::LessThanEx(const char *field, const ValueTypeEx *value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->LessThan(cfield, valueObject);
@@ -376,9 +268,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::In(const char* field, ValueType* values, int64_t valuesSize)
     {
-        if (field == nullptr || predicates_ == nullptr || values == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::vector<NativeRdb::ValueObject> valueObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < valuesSize; i++) {
@@ -389,9 +278,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::InEx(const char* field, ValueTypeEx* values, int64_t valuesSize)
     {
-        if (field == nullptr || predicates_ == nullptr || values == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::vector<NativeRdb::ValueObject> valueObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < valuesSize; i++) {
@@ -402,9 +288,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotIn(const char* field, ValueType* values, int64_t valuesSize)
     {
-        if (field == nullptr || predicates_ == nullptr || values == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::vector<NativeRdb::ValueObject> valueObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < valuesSize; i++) {
@@ -415,9 +298,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotInEx(const char* field, ValueTypeEx* values, int64_t valuesSize)
     {
-        if (field == nullptr || predicates_ == nullptr || values == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::vector<NativeRdb::ValueObject> valueObjects = std::vector<NativeRdb::ValueObject>();
         for (int64_t i = 0; i < valuesSize; i++) {
@@ -428,9 +308,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotEqualTo(const char* field, ValueType value)
     {
-        if (field == nullptr || predicates_ == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeToValueObject(value);
         predicates_->NotEqualTo(cfield, valueObject);
@@ -438,9 +315,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotEqualToEx(const char* field, const ValueTypeEx *value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
         predicates_->NotEqualTo(cfield, valueObject);
@@ -448,9 +322,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotContains(const char* field, const char* value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->NotContains(cfield, cvalue);
@@ -458,9 +329,6 @@ namespace Relational {
 
     void RdbPredicatesImpl::NotLike(const char* field, const char* value)
     {
-        if (field == nullptr || predicates_ == nullptr || value == nullptr) {
-            return;
-        }
         std::string cfield = field;
         std::string cvalue = value;
         predicates_->NotLike(field, value);
