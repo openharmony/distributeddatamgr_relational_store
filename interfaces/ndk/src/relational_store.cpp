@@ -431,6 +431,9 @@ OH_Rdb_Store *OH_Rdb_GetOrOpen(const OH_Rdb_Config *config, int *errCode)
         rdbStoreConfig.SetBundleName(config->bundleName);
     }
     rdbStoreConfig.SetName(config->storeName);
+    if (config->moduleName != nullptr) {
+        rdbStoreConfig.SetModuleName(config->moduleName);
+    }
 
     MainOpenCallback callback;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> store =

@@ -714,3 +714,236 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_019, TestSize.Level1)
     EXPECT_EQ(OH_Rdb_SetSemanticIndex(config, true), RDB_OK);
     EXPECT_NE(OH_Rdb_SetSemanticIndex(nullptr, true), RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_020
+ * @tc.desc: abnormal test of OH_Rdb_SetModuleName,
+ * when config or modleName is nullptr or magicNum is not RDB_CONFIG_V2_MAGIC_CODE.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_020, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetModuleName(nullptr, "entry"));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetModuleName(config, nullptr));
+
+    config->magicNum = 0;
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_E_INVALID_ARGS, OH_Rdb_SetModuleName(config, "entry"));
+    OH_Rdb_DestroyConfig(config);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_021
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "entry" and close store, expected success,
+ * open non-encrypted database when moduleName is "entry" and close store, expected success,
+ * open non-encrypted database when moduleName is "entry1" and close store, expected fail.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_021, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    OH_Rdb_SetEncrypted(config1, true);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, "entry"));
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, createTableSql));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+
+    auto config2 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config2, "entry"));
+    auto store2 = OH_Rdb_CreateOrOpen(config2, &errCode);
+    EXPECT_NE(store2, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, dropTableSql));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2));
+
+    auto config3 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config3, "entry1"));
+    auto store3 = OH_Rdb_CreateOrOpen(config3, &errCode);
+    EXPECT_EQ(store3, NULL);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+    OH_Rdb_DestroyConfig(config2);
+    OH_Rdb_DestroyConfig(config3);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_022
+ * @tc.desc: normal test of config,
+ * open database when moduleName is "", expected success,
+ * open database when moduleName is "entry", expected success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_022, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, ""));
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, createTableSql));
+
+    auto config2 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config2, "entry"));
+    auto store2 = OH_Rdb_CreateOrOpen(config2, &errCode);
+    EXPECT_NE(store2, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, dropTableSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+    OH_Rdb_DestroyConfig(config2);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_023
+ * @tc.desc: normal test of config,
+ * open database when moduleName is "entry", expected success,
+ * open database when moduleName is "entry1", expected success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_023, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, "entry"));
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, createTableSql));
+
+    auto config2 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config2, "entry1"));
+    auto store2 = OH_Rdb_CreateOrOpen(config2, &errCode);
+    EXPECT_NE(store2, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, dropTableSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+    OH_Rdb_DestroyConfig(config2);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_024
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "", expected success,
+ * open non-encrypted database when moduleName is "entry", expected success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_024, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    OH_Rdb_SetEncrypted(config1, true);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, ""));
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, createTableSql));
+
+    auto config2 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config2, "entry"));
+    auto store2 = OH_Rdb_CreateOrOpen(config2, &errCode);
+    EXPECT_NE(store2, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, dropTableSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+    OH_Rdb_DestroyConfig(config2);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_025
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "entry", expected success,
+ * open non-encrypted database when moduleName is "entry1", expected success.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_025, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+
+    auto config1 = InitRdbConfig();
+    OH_Rdb_SetEncrypted(config1, true);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, "entry"));
+    auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    EXPECT_NE(store1, NULL);
+
+    char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
+                            "data3 FLOAT, data4 BLOB, data5 TEXT);";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, createTableSql));
+
+    auto config2 = InitRdbConfig();
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config2, "entry1"));
+    auto store2 = OH_Rdb_CreateOrOpen(config2, &errCode);
+    EXPECT_NE(store2, NULL);
+
+    char dropTableSql[] = "DROP TABLE store_test";
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, dropTableSql));
+
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+    OH_Rdb_DestroyConfig(config2);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_026
+ * @tc.desc: normal test of OH_Rdb_SetModuleName,
+   check the properties of RdbStoreConfig are consistent with OH_Rdb_ConfigV2.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_026, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    auto config1 = InitRdbConfig();
+    OH_Rdb_SetEncrypted(config1, true);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetModuleName(config1, "entry2"));
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config1);
+    EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, ret);
+    EXPECT_EQ(rdbStoreConfig.GetName(), "rdb_store_test.db");
+    EXPECT_EQ(rdbStoreConfig.GetBundleName(), "com.ohos.example.distributedndk");
+    EXPECT_EQ(rdbStoreConfig.GetModuleName(), "entry2");
+    EXPECT_EQ(rdbStoreConfig.IsEncrypt(), true);
+    EXPECT_EQ(rdbStoreConfig.GetSecurityLevel(), SecurityLevel::S1);
+    EXPECT_EQ(rdbStoreConfig.GetArea(), 1);
+    EXPECT_EQ(rdbStoreConfig.GetDBType(), DB_SQLITE);
+    EXPECT_EQ(rdbStoreConfig.GetTokenizer(), NONE_TOKENIZER);
+    EXPECT_EQ(rdbStoreConfig.GetCustomDir(), "");
+    EXPECT_EQ(rdbStoreConfig.IsReadOnly(), false);
+    OH_Rdb_DestroyConfig(config1);
+}
