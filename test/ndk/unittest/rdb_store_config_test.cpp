@@ -115,9 +115,10 @@ void RdbStoreConfigTest::TearDown(void)
 
 /**
  * @tc.name: RDB_store_config_test_001
- * @tc.desc: normal test of config, open the same database
-   when moduleName is "entry" and encrypt is true, or moduleName is "entry" and encrypt is false,
-   or moduleName is "entry1" and encrypt is false.
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "entry" and close store, expected success,
+ * open non-encrypted database when moduleName is "entry" and close store, expected success,
+ * open non-encrypted database when moduleName is "entry1" and close store, expected fail.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_001, TestSize.Level1)
@@ -153,7 +154,9 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_001, TestSize.Level1)
 
 /**
  * @tc.name: RDB_store_config_test_002
- * @tc.desc: normal test of config, open the same database when moduleName is "" or "entry".
+ * @tc.desc: normal test of config,
+ * open database when moduleName is "", expected success,
+ * open database when moduleName is "entry", expected success.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_002, TestSize.Level1)
@@ -183,7 +186,9 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_002, TestSize.Level1)
 
 /**
  * @tc.name: RDB_store_config_test_003
- * @tc.desc: normal test of config, open the same database when moduleName is "entry" or "entry1".
+ * @tc.desc: normal test of config,
+ * open database when moduleName is "entry", expected success,
+ * open database when moduleName is "entry1", expected success.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_003, TestSize.Level1)
@@ -214,8 +219,9 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_003, TestSize.Level1)
 
 /**
  * @tc.name: RDB_store_config_test_004
- * @tc.desc: normal test of config, open the same database
-   when moduleName is "" and encrypt is true, or moduleName is "entry" and encrypt is false.
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "", expected success,
+ * open non-encrypted database when moduleName is "entry", expected success.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_004, TestSize.Level1)
@@ -246,8 +252,9 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_004, TestSize.Level1)
 
 /**
  * @tc.name: RDB_store_config_test_005
- * @tc.desc: normal test of config, open the same database
-   when moduleName is "entry" and encrypt is true, or moduleName is "entry1" and encrypt is false.
+ * @tc.desc: normal test of config,
+ * open encrypted database when moduleName is "entry", expected success,
+ * open non-encrypted database when moduleName is "entry1", expected success.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_005, TestSize.Level1)
@@ -279,7 +286,9 @@ HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_005, TestSize.Level1)
 
 /**
  * @tc.name: RDB_store_config_test_006
- * @tc.desc: normal test of config, when moduleName is nullptr, or moduleName is "entry1" and encrypt is false.
+ * @tc.desc: normal test of config,
+ * open database when moduleName is nullptr, expected success,
+ * open non-encrypted database when moduleName is "entry1", expected success.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreConfigTest, RDB_store_config_test_006, TestSize.Level1)
