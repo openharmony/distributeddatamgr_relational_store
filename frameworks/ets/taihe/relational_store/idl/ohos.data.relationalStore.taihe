@@ -281,11 +281,11 @@ union StringOrNumberArray {
 
     @get GetIsClosed() : bool;
 
+    @get GetColumnNames() : Array<String>;
+
     GetColumnIndex(columnName: String): i32;
 
     GetColumnName(columnIndex: i32): String;
-
-    GetColumnNames() : Array<String>;
 
     GoTo(offset: i32): bool;
 
