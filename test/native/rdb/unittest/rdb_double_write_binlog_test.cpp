@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
-#include "acl.h"
+
 #include "common.h"
 #include "file_ex.h"
 #include "logger.h"
@@ -40,13 +40,10 @@
 #include "sqlite_utils.h"
 #include "sqlite_global_config.h"
 #include "sys/types.h"
-#include "rdb_platform.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 class RdbDoubleWriteBinlogTest : public testing::Test {
 public:
