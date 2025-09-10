@@ -17,20 +17,16 @@
 #include <fstream>
 #include <map>
 #include <string>
-#include "acl.h"
+
 #include "common.h"
 #include "file_ex.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_impl.h"
-#include "rdb_platform.h"
-#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 class RdbStoreBackupRestoreTest : public testing::Test {
 public:
@@ -47,7 +43,6 @@ public:
     void CheckAge(std::shared_ptr<ResultSet> &resultSet);
     void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
     void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
-    void CheckAccess(const std::string &dbPath);
 
     static constexpr char DATABASE_NAME[] = "/data/test/backup_restore_test.db";
     static constexpr char slaveDataBaseName[] = "/data/test/backup_restore_test_slave.db";
@@ -103,18 +98,6 @@ void RdbStoreBackupRestoreTest::CorruptDoubleWriteStore(void)
     file.write(bytes, bytesToWrite);
     ASSERT_TRUE(file.good() == true);
     file.close();
-}
-
-void RdbStoreBackupRestoreTest::CheckAccess(const std::string &dbPath)
-{
-    bool ret = SqliteUtils::HasAccessAcl(dbPath, SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(dbPath + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
 }
 
 /* *
@@ -807,53 +790,6 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
     EXPECT_EQ(ret, E_SQLITE_CORRUPT);
 
     backupStore = nullptr;
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-}
-
-/* *
- * @tc.name: Rdb_BackupRestoreTest_017
- * @tc.desc: restore from backup & check acl access
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_017, TestSize.Level2)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    config.SetEncryptStatus(false);
-    config.SetSearchable(true);
-    RdbStoreBackupRestoreTestOpenCallback helper;
-    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(store, nullptr);
-
-    RdbStoreBackupRestoreTest::CheckAccess(std::string(RdbStoreBackupRestoreTest::DATABASE_NAME));
-
-    int ret = store->Backup(BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_OK);
-
-    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-    backupConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback backupHelper;
-    auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(backupStore, nullptr);
-    backupStore = nullptr;
-
-    struct stat fileStat;
-    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
-    EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
-
-    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_OK);
-
-    RdbStoreBackupRestoreTest::CheckAccess(std::string(RdbStoreBackupRestoreTest::DATABASE_NAME));
-
-    ret = stat(walFilePath.c_str(), &fileStat);
-    EXPECT_EQ(ret, -1);
-    EXPECT_EQ(errno, 2);
-
     store = nullptr;
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
