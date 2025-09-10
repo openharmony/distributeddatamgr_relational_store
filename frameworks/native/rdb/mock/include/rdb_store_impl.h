@@ -39,7 +39,7 @@ class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
-    int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false);
+    int32_t Init(int version, RdbOpenCallback &openCallback);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
@@ -113,7 +113,6 @@ private:
     };
 
     int InnerOpen();
-    static bool SetFileGid(const RdbStoreConfig &config, int32_t gid);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
     void InitReportFunc(const RdbParam &param);
@@ -181,7 +180,6 @@ private:
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;
     bool isUseReplicaDb_ = false;
-    bool isNeedSetAcl_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
