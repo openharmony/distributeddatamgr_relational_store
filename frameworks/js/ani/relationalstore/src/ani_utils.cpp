@@ -295,7 +295,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<uint8_t>>(std::vector<uint8_t> &value)
 {
-    if (!IsInstanceOf("Lescompat/Uint8Array;")) {
+    if (!IsInstanceOf("escompat.Uint8Array")) {
         return false;
     }
     return TryConvertArray(value);
