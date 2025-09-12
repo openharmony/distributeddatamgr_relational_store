@@ -41,6 +41,7 @@
 #include "sqlite_global_config.h"
 #include "sys/types.h"
 #include "rdb_platform.h"
+#include "task_executor.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -166,6 +167,7 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     ASSERT_NE(testInfo, nullptr);
     LOG_INFO("---- double writebinlog test: %{public}s.%{public}s run end.",
         testInfo->test_case_name(), testInfo->name());
+    TaskExecutor::GetInstance().Stop();
 }
 
 void RdbDoubleWriteBinlogTest::InitDb(HAMode mode, bool isOpenSlave, bool isSearchable)
