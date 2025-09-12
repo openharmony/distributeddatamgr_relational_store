@@ -1832,6 +1832,10 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         LOG_WARN("path is null");
         return;
     }
+    if (SqliteUtils::IsSlaveInvalid(dbPath)) {
+        LOG_WARN("replica invalid, skip binlog replay. count:%{public}" PRIu16, currentCount);
+        return;
+    }
     auto pool = TaskExecutor::GetInstance().GetExecutor();
     if (pool == nullptr) {
         LOG_WARN("get pool failed");
@@ -1849,6 +1853,7 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         return;
     }
     pool->Execute([dbPathStr, slaveConn] {
+        LOG_INFO("task start: binlog replay for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
         SqliteConnection::ReplayBinlog(dbPathStr, slaveConn, true);
     });
 }

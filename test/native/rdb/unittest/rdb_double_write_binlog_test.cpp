@@ -75,6 +75,7 @@ public:
     static const std::string slaveDatabaseName;
     static const std::string binlogDatabaseName;
     static const std::string binlogFirstFile;
+    static const std::string binlogSecondFile;
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
     static const std::string insertSql;
@@ -93,6 +94,8 @@ const std::string RdbDoubleWriteBinlogTest::slaveDatabaseName = RDB_TEST_PATH + 
 const std::string RdbDoubleWriteBinlogTest::binlogDatabaseName = RDB_TEST_PATH + "dual_write_binlog_test.db_binlog";
 const std::string RdbDoubleWriteBinlogTest::binlogFirstFile =
     RdbDoubleWriteBinlogTest::binlogDatabaseName + "/binlog_default.00000";
+const std::string RdbDoubleWriteBinlogTest::binlogSecondFile =
+    RdbDoubleWriteBinlogTest::binlogDatabaseName + "/binlog_default.00001";
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteBinlogTest::slaveStore = nullptr;
 const std::string RdbDoubleWriteBinlogTest::insertSql = "INSERT INTO test(id, name, age, salary, blobType) VALUES"
@@ -1353,6 +1356,33 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_026, TestSize.Level0)
     ASSERT_NE(slaveStore, nullptr);
     CheckNumber(slaveStore, count);
     sqlite3_export_relational_symbols = originalApi;
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_027
+ * @tc.desc: test binlog will not replay if replica is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_027, TestSize.Level0)
+{
+    LOG_INFO("---- step1 open db and binlog should be created");
+    ASSERT_FALSE(CheckFolderExist(binlogDatabaseName));
+    InitDb(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    ASSERT_TRUE(CheckFolderExist(binlogDatabaseName));
+    EXPECT_TRUE(CheckFolderExist(binlogFirstFile));
+    LOG_INFO("---- step2 insert data, first file should be replayed and second is left");
+    int64_t id = 1;
+    int count = 2;
+    Insert(id, count, false, BINLOG_FILE_SIZE);
+    WaitForBinlogReplayFinish();
+    EXPECT_FALSE(CheckFolderExist(binlogFirstFile));
+    EXPECT_TRUE(CheckFolderExist(binlogSecondFile));
+    LOG_INFO("---- step3 insert data when invalid, binlog should not be replayed");
+    SqliteUtils::SetSlaveInvalid(databaseName);
+    id += count;
+    Insert(id, count, false, BINLOG_FILE_SIZE);
+    EXPECT_TRUE(CheckFolderExist(binlogSecondFile));
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
