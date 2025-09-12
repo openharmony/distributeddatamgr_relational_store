@@ -107,6 +107,7 @@ ohos_unittest("NativeRdbLogTest") {
     "unittest/rdb_error_log_test/rdb_perfStat_test.cpp",
   ]
   sources += [
+    "${relational_store_native_path}/rdb/src/rdb_file.cpp",
     "${relational_store_native_path}/rdb/src/suspender.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
   ]
@@ -225,6 +226,7 @@ ohos_unittest("NativeRdbTest") {
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
     "${relational_store_native_path}/rdb/src/rd_statement.cpp",
     "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file.cpp",
     "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
     "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
@@ -319,6 +321,7 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
     "${relational_store_native_path}/rdb/src/rd_statement.cpp",
     "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file.cpp",
     "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
     "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
