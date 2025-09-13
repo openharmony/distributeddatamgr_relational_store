@@ -41,6 +41,7 @@
 #include "sqlite_global_config.h"
 #include "sys/types.h"
 #include "rdb_platform.h"
+#include "task_executor.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -68,7 +69,7 @@ public:
     static void WaitForBinlogDelete(int maxTimes = 1000);
     static void WaitForBinlogReplayFinish();
     static void WaitForAsyncRepairFinish(int maxTimes = 400);
-    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true);
+    void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true, bool isSearchable = false);
     int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
 
     static const std::string databaseName;
@@ -169,13 +170,15 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     ASSERT_NE(testInfo, nullptr);
     LOG_INFO("---- double writebinlog test: %{public}s.%{public}s run end.",
         testInfo->test_case_name(), testInfo->name());
+    TaskExecutor::GetInstance().Stop();
 }
 
-void RdbDoubleWriteBinlogTest::InitDb(HAMode mode, bool isOpenSlave)
+void RdbDoubleWriteBinlogTest::InitDb(HAMode mode, bool isOpenSlave, bool isSearchable)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     config.SetHaMode(mode);
+    config.SetSearchable(isSearchable);
     DoubleWriteBinlogTestOpenCallback helper;
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
@@ -1204,17 +1207,10 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_023, TestSize.Level0)
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
     }
-    InitDb();
+    InitDb(HAMode::MAIN_REPLICA, false, true);
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    store = nullptr;
-
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetSearchable(true);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 
     bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -1224,17 +1220,6 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_023, TestSize.Level0)
     std::string data(bigSize, 'a');
     PutValue(store, data, 11, 18);
     PutValue(store, data, 12, 19);
-
-    store = nullptr;
-    id = 13;
-    for (int i = 0; i < count; i++) {
-        config.SetHaMode(HAMode::MAIN_REPLICA);
-        RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-        EXPECT_NE(store, nullptr);
-        PutValue(store, data, id, CHECKAGE);
-        store = nullptr;
-        id++;
-    }
 
     bool ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName), SERVICE_GID);
     EXPECT_EQ(ret, true);
