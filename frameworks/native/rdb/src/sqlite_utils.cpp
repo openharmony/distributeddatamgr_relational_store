@@ -124,7 +124,8 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
     if ((aclAccess.SetAccessGroup(gid, mode) != E_OK) || (aclDefault.SetDefaultGroup(gid, mode) != E_OK)) {
         return false;
     }
-    for (const auto &entry : RdbFile::GetEntries(path)) {
+    auto entries = RDBFileSystem::GetEntries(path);
+    for (const auto &entry : entries) {
         Acl aclAccess(entry, Acl::ACL_XATTR_ACCESS);
         if ((aclAccess.SetAccessGroup(gid, mode) != E_OK)) {
             return false;
@@ -391,7 +392,7 @@ std::string SqliteUtils::RemoveSuffix(const std::string &name)
 
 size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
 {
-    auto [count, ec] = RdbFile::RemoveAll(folderPath);
+    auto [count, ec] = RDBFileSystem::RemoveAll(folderPath);
     auto errorCount = static_cast<std::uintmax_t>(-1);
     if (count == errorCount) {
         LOG_WARN("remove folder, %{public}d, %{public}s", ec, Anonymous(folderPath).c_str());

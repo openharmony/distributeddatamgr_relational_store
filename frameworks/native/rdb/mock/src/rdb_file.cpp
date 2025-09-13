@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,11 +19,11 @@
 
 namespace OHOS {
 namespace NativeRdb {
-std::vector<std::string> RdbFile::GetEntries(const std::string &path)
+std::vector<std::string> RDBFileSystem::GetEntries(const std::string &path)
 {
     return {};
 }
-std::pair<size_t, int32_t> RdbFile::RemoveAll(const std::string &path)
+std::pair<size_t, int32_t> RDBFileSystem::RemoveAll(const std::string &path)
 {
     return std::make_pair(0, 0);
 }
