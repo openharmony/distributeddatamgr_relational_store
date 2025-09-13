@@ -92,7 +92,7 @@ ani_object CreateBusinessErrorObj(ani_env *env, int32_t code, const std::string 
         return nullptr;
     }
     ani_method ctor;
-    status = env->Class_FindMethod(cls, "<ctor>", ":V", &ctor);
+    status = env->Class_FindMethod(cls, "<ctor>", ":", &ctor);
     if (ANI_OK != status) {
         LOG_ERROR("Not found ctor of '%{public}s' errcode %{public}d.", businessErrorName, status);
         return nullptr;

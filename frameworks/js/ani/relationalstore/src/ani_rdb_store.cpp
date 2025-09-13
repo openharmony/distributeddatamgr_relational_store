@@ -257,7 +257,7 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     }
 
     static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
-    static const char *className = "LResultSetInner;";
+    static const char *className = "ResultSetInner";
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
