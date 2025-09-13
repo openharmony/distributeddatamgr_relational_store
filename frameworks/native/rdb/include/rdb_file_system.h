@@ -12,21 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_FILE_SYSTEM_H
+#define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_FILE_SYSTEM_H
 
-#include "rdb_file.h"
-
+#include <string>
 #include <vector>
-
 namespace OHOS {
 namespace NativeRdb {
-std::vector<std::string> RDBFileSystem::GetEntries(const std::string &path)
-{
-    return {};
-}
-std::pair<size_t, int32_t> RDBFileSystem::RemoveAll(const std::string &path)
-{
-    return std::make_pair(0, 0);
-}
-
+class RdbFileSystem {
+public:
+    static std::vector<std::string> GetEntries(const std::string &path);
+    static std::pair<size_t, int32_t> RemoveAll(const std::string &path);
+};
 } // namespace NativeRdb
 } // namespace OHOS
+#endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_FILE_SYSTEM_H

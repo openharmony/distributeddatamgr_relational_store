@@ -73,7 +73,7 @@ ohos_unittest("SqliteStatementTest") {
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
     "${relational_store_native_path}/rdb/src/rd_statement.cpp",
     "${relational_store_native_path}/rdb/src/rd_utils.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_file.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
     "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",

@@ -13,33 +13,20 @@
  * limitations under the License.
  */
 
-#include "rdb_file.h"
+#include "rdb_file_system.h"
 
-#include <filesystem>
+#include <string>
 #include <vector>
 
 namespace OHOS {
 namespace NativeRdb {
-std::vector<std::string> RDBFileSystem::GetEntries(const std::string &path)
+std::vector<std::string> RdbFileSystem::GetEntries(const std::string &path)
 {
-    std::vector<std::string> paths;
-    std::error_code ec;
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(path, ec)) {
-        if (ec) {
-            ec.clear();
-            continue;
-        }
-        paths.push_back(entry.path().string());
-    }
-
-    return paths;
+    return {};
 }
-
-std::pair<size_t, int32_t> RDBFileSystem::RemoveAll(const std::string &path)
+std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path)
 {
-    std::error_code ec;
-    size_t count =  std::filesystem::remove_all(path, ec);
-    return std::make_pair(count, ec.value());
+    return std::make_pair(0, 0);
 }
 
 } // namespace NativeRdb
