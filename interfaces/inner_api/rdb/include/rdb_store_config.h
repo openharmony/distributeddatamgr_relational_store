@@ -738,22 +738,32 @@ public:
     void SetSearchable(bool searchable);
 
     /**
-     * @brief Sets the timeout to get write connection for the object.
+     * @brief Gets the timeout to get write connection for the object.
      */
     int GetWriteTime() const;
 
     /**
-     * @brief Gets the timeout to get write connection for the object.
+     * @brief Sets the timeout to get write connection for the object.
      */
     void SetWriteTime(int timeout);
 
     /**
-     * @brief Sets the timeout to get read connection for the object.
+     * @brief Gets the timeout to get transaction connection for the object.
+     */
+    int GetTransactionTime() const;
+
+    /**
+     * @brief Sets the timeout to get transaction connection for the object.
+     */
+    void SetTransactionTime(int timeout);
+
+    /**
+     * @brief Gets the timeout to get read connection for the object.
      */
     int GetReadTime() const;
 
     /**
-     * @brief Gets the timeout to get read connection for the object.
+     * @brief Sets the timeout to get read connection for the object.
      */
     void SetReadTime(int timeout);
 
@@ -851,6 +861,7 @@ private:
     int32_t readConSize_ = 4;
     int32_t area_ = 0;
     int32_t writeTimeout_ = 2; // seconds
+    int32_t transactionTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1;  // seconds
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
