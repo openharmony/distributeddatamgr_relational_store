@@ -27,9 +27,7 @@
 namespace OHOS {
 namespace RelationalStoreJsKit {
 
-class SyncObserver
-    : public DistributedRdb::DetailProgressObserver
-    , public std::enable_shared_from_this<SyncObserver> {
+class SyncObserver : public DistributedRdb::DetailProgressObserver, public std::enable_shared_from_this<SyncObserver> {
 public:
     SyncObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
     virtual ~SyncObserver();
