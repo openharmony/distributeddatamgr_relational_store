@@ -16,17 +16,37 @@
 #ifndef NAPI_RDB_CONTEXT_H
 #define NAPI_RDB_CONTEXT_H
 
+#include <list>
+#include <memory>
+#include <mutex>
+
 #include "napi_async_call.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
 #include "rdb_store.h"
 #include "transaction.h"
 #include "values_buckets.h"
+#include "napi_sync_observer.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
 class ResultSetProxy;
+class NapiRdbStoreObserver;
+class NapiStatisticsObserver;
+class NapiPerfStatObserver;
+class NapiLogObserver;
 using namespace OHOS::NativeRdb;
+
+struct NAPIRdbStoreData {
+    std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
+    std::list<std::shared_ptr<SyncObserver>> syncObservers_;
+    std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
+    std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
+    std::string rdbStorePath_;
+};
+
 struct RdbStoreContextBase : public ContextBase {
     std::shared_ptr<NativeRdb::RdbStore> StealRdbStore();
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
@@ -69,6 +89,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
     bool isQuerySql = false;
     uint32_t expiredTime = 0;
     NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
+    std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData = nullptr;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
