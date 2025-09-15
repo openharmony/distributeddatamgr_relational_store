@@ -40,6 +40,7 @@ struct RdbKnowledgeField {
     std::vector<std::string> type;
     std::vector<RdbKnowledgeParser> parser;
     std::string description;
+    bool createIndex = false;
 };
 
 struct RdbKnowledgeTable {
