@@ -1974,7 +1974,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
         obj->SetInstance(nullptr);
     };
     auto exec = [context]() -> int {
-        std::shared_ptr<NativeRdb::RdbStore> rdbStore = context->rdbStore;
+        std::shared_ptr<NativeRdb::RdbStore> rdbStore = std::move(context->rdbStore);
         if (rdbStore == nullptr) {
             return ERR;
         }
