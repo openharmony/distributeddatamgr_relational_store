@@ -2724,6 +2724,40 @@ export default function () {
       done()
       console.log(TAG + "************* testSqliteLocked0011 end *************");
     })
+
+    /**
+     * @tc.number testConcurrentTransction0001
+     * @tc.name testConcurrentTransction
+     * @tc.desc Concurrent of creating transaction and executing DDL
+     */
+    it('testConcurrentTransction0001', 0, async function (done) {
+      console.log(TAG + "************* testConcurrentTransction0001 start *************");
+
+      const CREATE_TABLE_SQL_PRE = "CREATE TABLE IF NOT EXISTS ";
+      const CREATE_TABLE_SQL_SUF = " (id INTEGER PRIMARY KEY, " +
+        "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "blobType BLOB)";
+      const CONFIG = {
+        name: "ConcurrentTransction.db",
+        securityLevel: data_relationalStore.SecurityLevel.S1,
+      }
+      try {
+        let store = await data_relationalStore.getRdbStore(context, CONFIG);
+        for (let i = 0; i < 1000; i++) {
+          store.execute(CREATE_TABLE_SQL_PRE + "test" + i + CREATE_TABLE_SQL_SUF);
+          store.execute('DROP TABLE IF EXISTS test' + i);
+          let transaction = await store.createTransaction();
+          await transaction.commit();
+        }
+        console.info(TAG + 'testConcurrentTransction0001 success');
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        console.error(TAG + "testConcurrentTransction0001 failed");
+        expect(null).assertFail()
+      }
+      await data_relationalStore.deleteRdbStore(context, CONFIG);
+      done()
+      console.log(TAG + "************* testConcurrentTransction0001 end *************");
+    })
     console.log(TAG + "*************Unit Test End*************");
   })
 }
