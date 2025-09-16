@@ -74,8 +74,7 @@ RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NAPIRdbStore
 
 RdbStoreProxy::~RdbStoreProxy()
 {
-    auto rdbStore = GetInstance();
-    UnregisterAll(rdbStore, GetNAPIRdbStoreData());
+    UnregisterAll(GetInstance(), GetNAPIRdbStoreData());
 }
 
 void RdbStoreProxy::UnregisterAll(
