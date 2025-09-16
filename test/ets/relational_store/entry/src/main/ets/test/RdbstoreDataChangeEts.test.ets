@@ -92,7 +92,7 @@ export default function RdbStoreDataChangeTestEts() {
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testDataChange001
+     * @tc.number testDataChange002
      * @tc.desc 1. Register callback for dataChange
      */
     it('testDataChange002',  0, async  (done:Function) => {
@@ -190,7 +190,7 @@ export default function RdbStoreDataChangeTestEts() {
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testStatistics001
      * @tc.desc 1. Register callback for statistics
      */
     it('testStatistics001',  0, async  (done:Function) => {
@@ -226,7 +226,7 @@ export default function RdbStoreDataChangeTestEts() {
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testStatistics002
      * @tc.desc 1. Register callback for statistics
      */
     it('testStatistics002',  0, async  (done:Function) => {
@@ -262,7 +262,7 @@ export default function RdbStoreDataChangeTestEts() {
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testSqliteErrorOccurred001
      * @tc.desc 1. Register callback for sqliteErrorOccurred
      */
     it('testSqliteErrorOccurred001',  0, async  (done:Function) => {
@@ -300,11 +300,11 @@ export default function RdbStoreDataChangeTestEts() {
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testSqliteErrorOccurred002
      * @tc.desc 1. Register callback for sqliteErrorOccurred
      */
     it('testSqliteErrorOccurred002',  0, async  (done:Function) => {
-      console.log(TAG + "************* testSqliteErrorOccurred001 start *************");
+      console.log(TAG + "************* testSqliteErrorOccurred002 start *************");
       let status1 = 0;
       let status2 = 0;
       let storeObserver1 = (exceptionMessage: relationalStore.ExceptionMessage) => {
@@ -332,17 +332,17 @@ export default function RdbStoreDataChangeTestEts() {
       expect(status1).assertEqual(1);
       expect(status2).assertEqual(0);
       rdbStore?.off('sqliteErrorOccurred', storeObserver1);
-      console.log(TAG + "************* testSqliteErrorOccurred001 end *************");
+      console.log(TAG + "************* testSqliteErrorOccurred002 end *************");
       done();
     })
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testPerfStat001
      * @tc.desc 1. Register callback for perfStat
      */
     it('testPerfStat001',  0, async  (done:Function) => {
-      console.log(TAG + "************* testSqliteErrorOccurred001 start *************");
+      console.log(TAG + "************* testPerfStat001 start *************");
       let status1 = 0;
       let status2 = 0;
       let storeObserver1 = (sqlExecutionInfo: relationalStore.SqlExecutionInfo) => {
@@ -368,17 +368,17 @@ export default function RdbStoreDataChangeTestEts() {
       expect(status2).assertEqual(1);
       rdbStore?.off('perfStat', storeObserver1);
       rdbStore2?.off('perfStat', storeObserver2);
-      console.log(TAG + "************* testSqliteErrorOccurred001 end *************");
+      console.log(TAG + "************* testPerfStat001 end *************");
       done();
     })
 
     /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
-     * @tc.number testEvent001
+     * @tc.number testPerfStat002
      * @tc.desc 1. Register callback for perfStat
      */
     it('testPerfStat002',  0, async  (done:Function) => {
-      console.log(TAG + "************* testSqliteErrorOccurred001 start *************");
+      console.log(TAG + "************* testPerfStat002 start *************");
       let status1 = 0;
       let status2 = 0;
       let storeObserver1 = (sqlExecutionInfo: relationalStore.SqlExecutionInfo) => {
@@ -404,7 +404,7 @@ export default function RdbStoreDataChangeTestEts() {
       expect(status1).assertEqual(1);
       expect(status2).assertEqual(1);
       rdbStore?.off('perfStat', storeObserver1);
-      console.log(TAG + "************* testSqliteErrorOccurred001 end *************");
+      console.log(TAG + "************* testPerfStat002 end *************");
       done();
     })
   })
