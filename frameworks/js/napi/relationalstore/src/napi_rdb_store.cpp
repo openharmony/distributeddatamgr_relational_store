@@ -122,7 +122,7 @@ void RdbStoreProxy::UnregisterAll(
         DistributedRdb::SqlStatistic::Unsubscribe(obs);
     }
     for (const auto &obs : napiRdbStoreData->logObservers_) {
-        NativeRdb::SqlLog::Unsubscribe(napiRdbStoreData->rdbStorePath_, obs);
+        NativeRdb::SqlLog::Unsubscribe(rdbStore->GetPath(), obs);
     }
 #endif
 }
@@ -1369,7 +1369,6 @@ napi_value RdbStoreProxy::RegisteredObserver(
     auto uvQueue = std::make_shared<UvQueue>(env);
     auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
     int errCode = GetInstance()->Subscribe(option, localObserver);
-    napiRdbStoreData_->rdbStorePath_ = GetInstance()->GetPath();
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
     observers[option.event].push_back(localObserver);
     LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());

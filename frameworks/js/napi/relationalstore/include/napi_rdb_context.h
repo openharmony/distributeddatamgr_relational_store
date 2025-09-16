@@ -44,7 +44,6 @@ struct NAPIRdbStoreData {
     std::list<std::shared_ptr<SyncObserver>> syncObservers_;
     std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
     std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
-    std::string rdbStorePath_;
 };
 
 struct RdbStoreContextBase : public ContextBase {
