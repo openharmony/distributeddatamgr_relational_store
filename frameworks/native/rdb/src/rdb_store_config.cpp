@@ -28,8 +28,6 @@
 
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-// this is modifications to be made in the future.
-static std::mutex g_mutex;
 
 RdbStoreConfig::RdbStoreConfig(const std::string &name, StorageMode storageMode, bool isReadOnly,
     const std::vector<uint8_t> &encryptKey, const std::string &journalMode, const std::string &syncMode,
@@ -402,7 +400,6 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         name = std::string(path_).substr(0, path_.rfind("/") + 1);
     }
     using KeyFileType = RdbSecurityManager::KeyFileType;
-    std::lock_guard<std::mutex> lock(g_mutex);
     auto errCode = RdbSecurityManager::GetInstance().Init(name);
     if (errCode != E_OK) {
         RdbFaultHiViewReporter::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_ROOT_KEY_FAULT, *this,
@@ -415,8 +412,8 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
         cryptoParam_.encryptKey_ = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
     }
     rdbPwd.Clear();
-    if ((rdbPwd.isKeyExpired && autoRekey_) ||
-        RdbSecurityManager::GetInstance().IsKeyFileExists(path_, KeyFileType::PUB_KEY_FILE_NEW_KEY)) {
+    if (RdbSecurityManager::GetInstance().IsNewKeyFilesExists(path_)) {
+        LOG_ERROR("new key is not empty");
         auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path_, KeyFileType::PUB_KEY_FILE_NEW_KEY);
         if (rdbNewPwd.IsValid()) {
             newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());
