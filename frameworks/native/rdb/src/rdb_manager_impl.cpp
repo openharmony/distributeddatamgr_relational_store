@@ -34,7 +34,7 @@ using RdbServiceProxy = DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 constexpr int32_t MAX_RETRY = 100;
-constexpr int32_t LOAD_SA_TIMEOUT_SECONDS = 4;
+constexpr int32_t LOAD_SA_TIMEOUT_SECONDS = 1;
 class DeathStub : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");

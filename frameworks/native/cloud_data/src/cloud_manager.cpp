@@ -17,7 +17,6 @@
 
 #include "cloud_service_proxy.h"
 #include "icloud_service.h"
-#include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "itypes_util.h"
 #include "logger.h"
@@ -26,7 +25,7 @@
 namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
-constexpr int32_t LOAD_SA_TIMEOUT_SECONDS = 4;
+
 class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
 public:
     explicit DataMgrService(const sptr<IRemoteObject> &impl);
@@ -67,12 +66,8 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
-        LOG_ERROR("Get distributed data manager CheckSystemAbility failed.");
-        dataMgrObject = saMgr->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
-        if (dataMgrObject == nullptr) {
-            LOG_ERROR("Get distributed data manager LoadSystemAbility failed.");
-            return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
-        }
+        LOG_ERROR("Get distributed data manager failed.");
+        return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
     sptr<DataMgrService> dataMgr = new (std::nothrow) DataMgrService(dataMgrObject);
