@@ -29,12 +29,15 @@
 #include "rdb_helper.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
-#include "napi_rdb_context.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
 using Descriptor = std::function<std::vector<napi_property_descriptor>(void)>;
-
+class NapiRdbStoreObserver;
+class NapiStatisticsObserver;
+class NapiPerfStatObserver;
+class NapiLogObserver;
+struct NAPIRdbStoreData;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
