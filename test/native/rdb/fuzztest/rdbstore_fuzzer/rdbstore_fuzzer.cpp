@@ -319,40 +319,40 @@ void RdbQueryLockedRowFuzz2(FuzzedDataProvider &provider)
     std::string tableName = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
     ValueObject valAge(provider.ConsumeIntegral<int>());
     ValueObject valAgeChange(provider.ConsumeIntegral<int>());
-    std::vector<std::string> bindaArgs({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
+    std::vector<std::string> bindArgs({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
     std::vector<ValueObject> vectorElem({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
     AbsRdbPredicates predicates(tableName);
     RdbSetLockedRowPredicates(predicates);
     predicates.Between("age", valAge, valAgeChange);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.NotBetween("age", valAge, valAgeChange);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.GreaterThan("age", valAge);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.LessThan("age", valAgeChange);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.GreaterThanOrEqualTo("age", valAge);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.In("name", vectorElem);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
 
     RdbSetLockedRowPredicates(predicates);
     predicates.NotIn("name", vectorElem);
-    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->QueryByStep(predicates, bindArgs);
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
@@ -422,42 +422,42 @@ void RdbQueryFuzz2(FuzzedDataProvider &provider)
     std::string tableName = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
     ValueObject valAge(provider.ConsumeIntegral<int>());
     ValueObject valAgeChange(provider.ConsumeIntegral<int>());
-    std::vector<std::string> bindaArgs({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
+    std::vector<std::string> bindArgs({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
     std::vector<ValueObject> vectorElem({ provider.ConsumeRandomLengthString(MAX_STRING_LENGTH) });
 
     AbsRdbPredicates predicates(tableName);
 
     predicates.Clear();
     predicates.Between("age", valAge, valAgeChange);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.NotBetween("age", valAge, valAgeChange);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.GreaterThan("age", valAge);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.LessThan("age", valAgeChange);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.GreaterThanOrEqualTo("age", valAge);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.LessThanOrEqualTo("age", valAgeChange);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.In("name", vectorElem);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
 
     predicates.Clear();
     predicates.NotIn("name", vectorElem);
-    RdbStoreFuzzTest::store_->Query(predicates, bindaArgs);
+    RdbStoreFuzzTest::store_->Query(predicates, bindArgs);
     RdbStoreFuzzTest::store_->ExecuteSql("DELETE FROM test");
 }
 
