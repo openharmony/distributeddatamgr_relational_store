@@ -27,6 +27,7 @@
 #include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
+#include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_log_observer.h"
@@ -41,7 +42,6 @@
 #include "rdb_perfStat.h"
 #include "securec.h"
 #include "rdb_types.h"
-#include "napi_rdb_context.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
