@@ -68,7 +68,7 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
         LOG_ERROR("Check distributed data manager failed");
-        dataMgrObject = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
+        dataMgrObject = saMgr->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
     }
     if (dataMgrObject == nullptr) {
         LOG_ERROR("Get distributed data manager failed.");
