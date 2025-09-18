@@ -72,6 +72,8 @@ constexpr unsigned short SqliteConnection::BINLOG_FILE_NUMS_LIMIT;
 constexpr uint32_t SqliteConnection::BINLOG_FILE_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
+constexpr int32_t SERVICE_GID = 3012;
+constexpr char const *SUFFIX_BINLOG = "_binlog/";
 ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::reusableReplicas_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
@@ -1400,6 +1402,8 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 
 int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus)
 {
+    bool isNeedSetAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
+                        SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID);
     *curStatus = SlaveStatus::BACKING_UP;
     int err = verifyDb ? ExchangeVerify(isRestore) : E_OK;
     if (err != E_OK) {
@@ -1407,7 +1411,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
         return err;
     }
 
-    err = SqliteNativeBackup(isRestore, curStatus);
+    err = SqliteNativeBackup(isRestore, curStatus, isNeedSetAcl);
     if (err != E_OK) {
         return err;
     }
@@ -1419,6 +1423,14 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
         if (err != SQLITE_OK) {
             sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
+        }
+        if (isNeedSetAcl) {
+            std::string binlogDir = config_.GetPath() + SUFFIX_BINLOG;
+            bool setBinlog = SqliteUtils::SetDbDirGid(binlogDir, SERVICE_GID, true);
+            if (!setBinlog) {
+                LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.",
+                    config_.GetBundleName().c_str(), SqliteUtils::Anonymous(config_.GetName()).c_str());
+            }
         }
         LOG_INFO("reset binlog finished, %{public}d", err);
     }
@@ -1450,7 +1462,7 @@ int SqliteConnection::SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, 
     return rc;
 }
 
-int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus)
+int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveStatus> curStatus, bool isNeedSetAcl)
 {
     sqlite3 *dbFrom = isRestore ? dbHandle_ : slaveConnection_->dbHandle_;
     sqlite3 *dbTo = isRestore ? slaveConnection_->dbHandle_ : dbHandle_;
@@ -1461,6 +1473,13 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
         return E_OK;
     }
     int rc = SqliteBackupStep(isRestore, pBackup, curStatus);
+    if (isNeedSetAcl) {
+        std::vector<std::string> dbFiles = Connection::GetDbFiles(config_);
+        if (!SqliteUtils::SetDbFileGid(config_.GetPath(), dbFiles, SERVICE_GID)) {
+            LOG_ERROR("SetDbFile fail when backup, bundleName is %{public}s, store is %{public}s.",
+                config_.GetBundleName().c_str(), SqliteUtils::Anonymous(config_.GetName()).c_str());
+        }
+    }
     if (rc != SQLITE_DONE) {
         LOG_ERROR("backup slave err:%{public}d, isRestore:%{public}d", rc, isRestore);
         if (!isRestore) {

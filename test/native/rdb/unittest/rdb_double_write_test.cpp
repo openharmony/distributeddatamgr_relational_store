@@ -67,6 +67,7 @@ public:
 
     static const std::string DATABASE_NAME;
     static const std::string SLAVE_DATABASE_NAME;
+    static const std::string binlogDatabaseName;
     static std::shared_ptr<RdbStore> store;
     static std::shared_ptr<RdbStore> slaveStore;
     static std::shared_ptr<RdbStore> store3;
@@ -88,6 +89,7 @@ public:
 
 const std::string RdbDoubleWriteTest::DATABASE_NAME = RDB_TEST_PATH + "dual_write_test.db";
 const std::string RdbDoubleWriteTest::SLAVE_DATABASE_NAME = RDB_TEST_PATH + "dual_write_test_slave.db";
+const std::string RdbDoubleWriteTest::binlogDatabaseName = RDB_TEST_PATH + "dual_write_test.db_binlog";
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::slaveStore = nullptr;
 std::shared_ptr<RdbStore> RdbDoubleWriteTest::store3 = nullptr;
@@ -454,6 +456,10 @@ void RdbDoubleWriteTest::CheckAccess()
     ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME), SERVICE_GID);
     EXPECT_EQ(ret, true);
     ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME) + "-dwr", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME) + "-shm", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteTest::SLAVE_DATABASE_NAME) + "-wal", SERVICE_GID);
     EXPECT_EQ(ret, true);
 }
 
@@ -1328,6 +1334,54 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_036, TestSize.Level1)
     RdbDoubleWriteTest::CheckAccess();
     EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
     RdbDoubleWriteTest::CheckNumber(store, 200);
+    RdbDoubleWriteTest::CheckAccess();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_037
+ * @tc.desc: open MAIN_REPLICA db, write, close all, corrupt slave, open MAIN_REPLICA db, slave returns to normal,
+ * checkacl
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_037, TestSize.Level1)
+{
+    InitDb(HAMode::MAIN_REPLICA, true, true);
+    int64_t id = 10;
+    int count = 100;
+    Insert(id, count);
+    LOG_INFO("RdbStore_DoubleWrite_037 insert finish");
+    RdbDoubleWriteTest::CheckAccess();
+    slaveStore = nullptr;
+    store = nullptr;
+
+    std::fstream file(SLAVE_DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = { 0x6, 0x6 };
+    file.write(bytes, 2);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
+    LOG_INFO("RdbStore_DoubleWrite_037 corrupt db finish");
+    SqliteUtils::DeleteFile(RdbDoubleWriteTest::DATABASE_NAME + "-dwr");
+    SqliteUtils::DeleteFile(RdbDoubleWriteTest::SLAVE_DATABASE_NAME + "-dwr");
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_037 reopen main db finish");
+    WaitForBackupFinish(BACKUP_FINISHED);
+    RdbDoubleWriteTest::CheckAccess();
+    RdbStoreConfig slaveConfig(RdbDoubleWriteTest::SLAVE_DATABASE_NAME);
+    DoubleWriteTestOpenCallback slaveHelper;
+    RdbDoubleWriteTest::slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    EXPECT_NE(RdbDoubleWriteTest::slaveStore, nullptr);
+    LOG_INFO("RdbStore_DoubleWrite_037 reopen slave db finish");
+    RdbDoubleWriteTest::CheckNumber(slaveStore, count);
     RdbDoubleWriteTest::CheckAccess();
 }
 
