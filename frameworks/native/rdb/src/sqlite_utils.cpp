@@ -134,14 +134,14 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
     return true;
 }
 
-bool SqliteUtils::SetDbFileGid(const std::string &dbPath, const std::vector<std::string> &files, int32_t gid)
+bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::string> &files, int32_t gid)
 {
     if (files.empty()) {
         return false;
     }
     bool ret = true;
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    std::string dbDir = StringUtils::ExtractFilePath(dbPath);
+    std::string dbDir = StringUtils::ExtractFilePath(path);
     for (const auto &file : files) {
         std::string dbPath = dbDir + file;
         struct stat fileStat;

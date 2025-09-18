@@ -106,7 +106,7 @@ public:
     static std::string GetFileStatInfo(const DebugInfo &debugInfo);
     static bool HasDefaultAcl(const std::string &path, int32_t gid);
     static bool HasAccessAcl(const std::string &path, int32_t gid);
-    static bool SetDbFileGid(const std::string &dbPath, const std::vector<std::string> &files, int32_t gid);
+    static bool SetDbFileGid(const std::string &path, const std::vector<std::string> &files, int32_t gid);
     static bool SetDbDirGid(const std::string &path, int32_t gid, bool isDefault = false);
 
 private:

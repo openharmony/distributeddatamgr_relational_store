@@ -65,6 +65,7 @@ public:
     void CheckProcess(std::shared_ptr<RdbStore> &store);
     void DeleteDbFile(const RdbStoreConfig &config);
     void PutValue(std::shared_ptr<RdbStore> &store, const std::string &data, int64_t id, int age);
+    void CheckAccess();
     static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 4000);
     static void WaitForBinlogDelete(int maxTimes = 1000);
     static void WaitForBinlogReplayFinish();
@@ -158,6 +159,7 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
 {
     store = nullptr;
     slaveStore = nullptr;
+    TaskExecutor::GetInstance().Stop();
     WaitForBinlogReplayFinish();
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
     std::string lockCompressName = RdbDoubleWriteBinlogTest::slaveDatabaseName + "-lockcompress";
@@ -170,7 +172,6 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     ASSERT_NE(testInfo, nullptr);
     LOG_INFO("---- double writebinlog test: %{public}s.%{public}s run end.",
         testInfo->test_case_name(), testInfo->name());
-    TaskExecutor::GetInstance().Stop();
 }
 
 void RdbDoubleWriteBinlogTest::InitDb(HAMode mode, bool isOpenSlave, bool isSearchable)
@@ -478,6 +479,45 @@ void RdbDoubleWriteBinlogTest::PutValue(std::shared_ptr<RdbStore> &store, const 
     values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
     int ret = store->Insert(id, "test", values);
     EXPECT_EQ(ret, E_OK);
+}
+
+void RdbDoubleWriteBinlogTest::CheckAccess()
+{
+    bool ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName), SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-dwr", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-shm", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-wal", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::slaveDatabaseName), SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::slaveDatabaseName) + "-dwr", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(
+        std::string(RdbDoubleWriteBinlogTest::slaveDatabaseName) + "-shmcompress", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(
+        std::string(RdbDoubleWriteBinlogTest::slaveDatabaseName) + "-walcompress", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(
+        std::string(RdbDoubleWriteBinlogTest::slaveDatabaseName) + "-lockcompress", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasDefaultAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    std::error_code ec;
+    for (const auto &entry :
+        std::filesystem::recursive_directory_iterator(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), ec)) {
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+        ret = SqliteUtils::HasAccessAcl(entry.path().string(), SERVICE_GID);
+        EXPECT_EQ(ret, true);
+    }
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_001, TestSize.Level0)
@@ -1220,20 +1260,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_023, TestSize.Level0)
     std::string data(bigSize, 'a');
     PutValue(store, data, 11, 18);
     PutValue(store, data, 12, 19);
-
-    bool ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::databaseName) + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasDefaultAcl(std::string(RdbDoubleWriteBinlogTest::binlogDatabaseName), SERVICE_GID);
-    EXPECT_EQ(ret, true);
-
+    RdbDoubleWriteBinlogTest::CheckAccess();
     WaitForBinlogReplayFinish();
 }
 
@@ -1368,6 +1395,66 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_027, TestSize.Level0)
     id += count;
     Insert(id, count, false, BINLOG_FILE_SIZE);
     EXPECT_TRUE(CheckFolderExist(binlogSecondFile));
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_028
+ * @tc.desc: open MAIN_REPLICA db, write, close all, corrupt slave, open MAIN_REPLICA db, slave returns to normal,
+ * checkacl
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_028, TestSize.Level0)
+{
+    InitDb(HAMode::MAIN_REPLICA, false, true);
+    int64_t id = 1;
+    int count = 20;
+    Insert(id, count);
+    CheckProcess(store);
+    int64_t num = 18;
+    RdbDoubleWriteBinlogTest::CheckNumber(store, num);
+    LOG_INFO("RdbStore_Binlog_028 insert finish");
+    RdbDoubleWriteBinlogTest::CheckAccess();
+    slaveStore = nullptr;
+    store = nullptr;
+
+    std::fstream file(slaveDatabaseName, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg);
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = { 0x6, 0x6 };
+    file.write(bytes, 2);
+    ASSERT_TRUE(file.good() == true);
+    file.close();
+    LOG_INFO("RdbStore_Binlog_028 corrupt db finish");
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::databaseName + "-dwr");
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::slaveDatabaseName + "-dwr");
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    LOG_INFO("RdbStore_Binlog_028 reopen main db finish");
+    WaitForBinlogReplayFinish();
+    RdbDoubleWriteBinlogTest::CheckAccess();
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(db, nullptr);
+    count = 0;
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &count, nullptr);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_EQ(count, num);
+    LOG_INFO("RdbStore_Binlog_028 reopen slave db finish");
+    RdbDoubleWriteBinlogTest::CheckAccess();
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
