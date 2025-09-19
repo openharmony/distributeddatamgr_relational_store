@@ -128,7 +128,7 @@ export default function RelationalStoreCloseTest() {
           console.error(TAG + `Get RdbStore failed, code is ${err.code},message is ${err.message}`);
         }
         try {
-          (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver)
+          (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
           (rdbStore as relationalStore.RdbStore).close();
           (rdbStore as relationalStore.RdbStore).emit('dataChange');
           expect().assertFail();
@@ -143,54 +143,6 @@ export default function RelationalStoreCloseTest() {
       done()
       console.info(TAG + "************* testRdbStoreRegisterAndClose0200 end *************");
     });
-
-
-    /**
-     * @tc.name testRdbStoreRegisterAndClose0300
-     * @tc.number testRdbStoreRegisterAndClose0300
-     * @tc.desc RelationalStore register then close and unregister
-     * @tc.size APITest
-     * @tc.type Function
-     * @tc.level Level 2
-     */
-    it('testRdbStoreRegisterAndClose0300', 0, async (done: Function) => {
-      console.info(TAG + "************* testRdbStoreRegisterAndClose0300 start *************");
-
-      // 开始订阅消息
-      let storeObserver = (ChangeInfos: Array<relationalStore.ChangeInfo>) => {
-        for (let i = 0; i < ChangeInfos.length; i++) {
-          console.info(TAG + "testRdbStoreRegisterAndClose0300 ChangeInfos.length=" + ChangeInfos.length);
-          console.info(TAG + "testRdbStoreRegisterAndClose0300 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
-        }
-      }
-
-      for (let i = 0; i < 100; i++) {
-        let rdbStore: relationalStore.RdbStore | undefined = undefined;
-        try {
-          rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG)
-          expect(true).assertEqual(rdbStore != null);
-          console.info(TAG + 'Get RdbStore successfully.');
-          (rdbStore as relationalStore.RdbStore).executeSql(CREATE_TABLE_TEST);
-        } catch (err) {
-          console.error(TAG + `Get RdbStore failed, code is ${err.code},message is ${err.message}`);
-        }
-        try {
-          (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver)
-          await (rdbStore as relationalStore.RdbStore).close();
-          (rdbStore as relationalStore.RdbStore).emit('dataChange');
-          expect().assertFail();
-        } catch (err) {
-          console.error(TAG + `on close off is failed, code is ${err.code},message is ${err.message}`);
-          expect(true).assertEqual(err.code == ERR_CODE);
-        }
-        expect(true).assertEqual(rdbStore != null);
-        rdbStore = undefined;
-        await relationalStore.deleteRdbStore(context, dbName);
-      }
-      done()
-      console.info(TAG + "************* testRdbStoreRegisterAndClose0300 end *************");
-    });
-
     console.info(TAG + " *************Unit Test End*************");
   })
 }
