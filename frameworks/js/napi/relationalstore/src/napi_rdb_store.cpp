@@ -125,8 +125,6 @@ void RdbStoreProxy::UnregisterAll(
         NativeRdb::SqlLog::Unsubscribe(rdbStore->GetPath(), obs);
     }
 #endif
-    rdbStore = nullptr;
-    napiRdbStoreData = nullptr;
 }
 
 RdbStoreProxy::RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore)
