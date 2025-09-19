@@ -413,7 +413,6 @@ int32_t RdbStoreConfig::GenerateEncryptedKey() const
     }
     rdbPwd.Clear();
     if (RdbSecurityManager::GetInstance().IsNewKeyFilesExists(path_)) {
-        LOG_ERROR("new key is not empty");
         auto rdbNewPwd = RdbSecurityManager::GetInstance().GetRdbPassword(path_, KeyFileType::PUB_KEY_FILE_NEW_KEY);
         if (rdbNewPwd.IsValid()) {
             newEncryptKey_ = std::vector<uint8_t>(rdbNewPwd.GetData(), rdbNewPwd.GetData() + rdbNewPwd.GetSize());

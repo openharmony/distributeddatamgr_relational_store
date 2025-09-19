@@ -20,7 +20,7 @@ unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len, const un
     return nullptr;
 };
 
-EVP_MD *EVP_sha256()
+const EVP_MD *EVP_sha256()
 {
     return nullptr;
-};
+}

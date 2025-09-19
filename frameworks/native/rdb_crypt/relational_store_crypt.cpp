@@ -30,11 +30,35 @@
 using RDBCryptoFault = OHOS::NativeRdb::RDBCryptoFault;
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
+
+API_EXPORT std::shared_ptr<OHOS::NativeRdb::RDBCrypto> Create(
+    const std::vector<uint8_t> &rootKeyAlias) asm("CreateRdbCryptoDelegate");
+
+API_EXPORT std::vector<uint8_t> GenerateRandomNum(const uint32_t len, RDBCryptoFault &rdbFault) asm(
+    "GenerateRdbRandomNum");
+
+RDBCryptoFault GetDfxFault(int32_t code, const std::string &message)
+{
+    RDBCryptoFault rdbDfxFault;
+    rdbDfxFault.code = code;
+    rdbDfxFault.message = message;
+    return rdbDfxFault;
+}
+
 namespace OHOS {
 namespace NativeRdb {
 RDBCrypto::~RDBCrypto()
 {
 }
+constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
+constexpr uint32_t TIMES = 4;
+constexpr uint32_t MAX_UPDATE_SIZE = 64;
+constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+constexpr uint8_t AEAD_LEN = 16;
+constexpr uint32_t RETRY_MAX_TIMES = 5;
+constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000;
+static std::vector<uint8_t> g_add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
+
 class RDBCryptoImpl : public RDBCrypto {
 public:
     explicit RDBCryptoImpl(const std::vector<uint8_t> &rootKeyAlias);
@@ -51,51 +75,6 @@ private:
     std::mutex mutex_;
     bool isInit = false;
 };
-} // namespace NativeRdb
-} // namespace OHOS
-
-API_EXPORT std::shared_ptr<OHOS::NativeRdb::RDBCrypto> Create(
-    const std::vector<uint8_t> &rootKeyAlias) asm("CreateRdbCryptoDelegate");
-
-API_EXPORT std::vector<uint8_t> GenerateRandomNum(const uint32_t len, RDBCryptoFault &rdbFault) asm(
-    "GenerateRdbRandomNum");
-
-RDBCryptoFault GetDfxFault(int32_t code, const std::string &message)
-{
-    RDBCryptoFault rdbDfxFault;
-    rdbDfxFault.code = code;
-    rdbDfxFault.message = message;
-    return rdbDfxFault;
-}
-
-std::shared_ptr<OHOS::NativeRdb::RDBCrypto> Create(const std::vector<uint8_t> &rootKeyAlias)
-{
-    return std::make_shared<OHOS::NativeRdb::RDBCryptoImpl>(rootKeyAlias);
-}
-
-std::vector<uint8_t> GenerateRandomNum(const uint32_t len, RDBCryptoFault &rdbFault)
-{
-    std::vector<uint8_t> value(len, 0);
-    struct HksBlob blobValue = { .size = len, .data = value.data() };
-    auto ret = HksGenerateRandom(nullptr, &blobValue);
-    if (ret != HKS_SUCCESS || value.empty()) {
-        LOG_ERROR("HksGenerateRandom failed, status: %{public}d", ret);
-        rdbFault = GetDfxFault(E_DFX_HUKS_GEN_RANDOM_FAIL, "HksGenerateRandom ret=" + std::to_string(ret));
-        return {};
-    }
-    return value;
-}
-
-namespace OHOS {
-namespace NativeRdb {
-constexpr const char *RDB_HKS_BLOB_TYPE_AAD = "RdbClientAAD";
-constexpr uint32_t TIMES = 4;
-constexpr uint32_t MAX_UPDATE_SIZE = 64;
-constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
-constexpr uint8_t AEAD_LEN = 16;
-constexpr uint32_t RETRY_MAX_TIMES = 5;
-constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000;
-static std::vector<uint8_t> g_add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
 
 int32_t HksLoopUpdate(const struct HksBlob *handle, const struct HksParamSet *paramSet, const struct HksBlob *inData,
     struct HksBlob *outData, RDBCryptoFault &rdbFault)
@@ -183,7 +162,7 @@ int32_t RDBCryptoImpl::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias,
 {
     LOG_INFO("RDB GenerateRootKey begin. alia size:%{public}zu", rootKeyAlias.size());
     std::vector<uint8_t> tempRootKeyAlias = rootKeyAlias;
-    struct HksBlob rootKeyName = { uint32_t(rootKeyAlias.size()), tempRootKeyAlias.data() };
+    struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
@@ -416,6 +395,23 @@ std::vector<uint8_t> RDBCryptoImpl::Decrypt(const RDBCryptoParam &param, RDBCryp
     decryptKey.resize(plainKeyBlob.size);
     return decryptKey;
 }
-
 } // namespace NativeRdb
 } // namespace OHOS
+
+std::shared_ptr<OHOS::NativeRdb::RDBCrypto> Create(const std::vector<uint8_t> &rootKeyAlias)
+{
+    return std::make_shared<OHOS::NativeRdb::RDBCryptoImpl>(rootKeyAlias);
+}
+
+std::vector<uint8_t> GenerateRandomNum(const uint32_t len, RDBCryptoFault &rdbFault)
+{
+    std::vector<uint8_t> value(len, 0);
+    struct HksBlob blobValue = { .size = len, .data = value.data() };
+    auto ret = HksGenerateRandom(nullptr, &blobValue);
+    if (ret != HKS_SUCCESS || value.empty()) {
+        LOG_ERROR("HksGenerateRandom failed, status: %{public}d", ret);
+        rdbFault = GetDfxFault(E_DFX_HUKS_GEN_RANDOM_FAIL, "HksGenerateRandom ret=" + std::to_string(ret));
+        return {};
+    }
+    return value;
+}

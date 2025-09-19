@@ -24,11 +24,6 @@ static bool SaveBufferToFile(const std::string &filePath, const std::vector<char
     return true;
 }
 
-static bool SaveStringToFd(int fd, const std::string& content)
-{
-    return true;
-}
-
 static bool LoadBufferFromFile(const std::string &filePath, std::vector<char> &content)
 {
     return true;

@@ -252,6 +252,7 @@ std::shared_ptr<RDBCrypto> RdbSecurityManager::GetDelegate()
     auto ret = rdbCrypto_->Init(fault);
     if (ret != E_OK) {
         ReportCryptFault(fault.code, fault.message);
+        rdbCrypto_ = nullptr;
         return nullptr;
     }
     return rdbCrypto_;
@@ -311,12 +312,12 @@ std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(
         std::vector<uint8_t> rootKeyAlias =
             std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS, RDB_ROOT_KEY_ALIAS + strlen(RDB_ROOT_KEY_ALIAS));
         rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
-        auto rdbCrypto = CreateDelegate(rootKeyAlias);
-        if (rdbCrypto == nullptr) {
+        auto rdbBundleCrypto = CreateDelegate(rootKeyAlias);
+        if (rdbBundleCrypto == nullptr) {
             continue;
         }
-        if (rdbCrypto->RootKeyExists()) {
-            decryptKey = rdbCrypto->Decrypt(param, rdbFault);
+        if (rdbBundleCrypto->RootKeyExists()) {
+            decryptKey = rdbBundleCrypto->Decrypt(param, rdbFault);
         }
         if (!decryptKey.empty()) {
             return decryptKey;
@@ -345,114 +346,13 @@ bool RdbSecurityManager::CreateDir(const std::string &fileDir)
     return true;
 }
 
-bool RdbSecurityManager::LoadSecretKeyFromDiskV0(const std::string &keyPath, RdbSecretKeyData &keyData)
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(const std::string &keyPath)
 {
-    LOG_ERROR("UnpackV0 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    LOG_INFO("load secret key V0path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    RdbSecretKeyData keyData;
     if (access(keyPath.c_str(), F_OK) != 0) {
-        return false;
+        return { false, keyData };
     }
-    std::vector<char> content;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
-                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
-            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-            return false;
-        }
-    }
-
-    auto [res, rdbSecretContent] = UnpackV0(content);
-    if (!res) {
-        LOG_ERROR("UnpackV0 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return false;
-    }
-    std::tie(res, keyData) = DecryptV0(rdbSecretContent);
-    if (!res) {
-        LOG_ERROR("DecryptV0 %{public}s failed, size:%{public}zu.", SqliteUtils::Anonymous(keyPath).c_str(),
-            rdbSecretContent.encrypt_.size());
-    }
-    return res;
-}
-
-bool RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData)
-{
-    LOG_ERROR("UnpackV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-    std::vector<char> content;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
-                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
-            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-            return false;
-        }
-    }
-
-    auto [res, rdbSecretContent] = UnpackV1(content);
-    if (!res) {
-        LOG_ERROR("Unpack failed:%{public}s. [m:%{public}d, n:%{public}zu, k:%{public}zu]",
-            SqliteUtils::Anonymous(keyPath).c_str(), rdbSecretContent.magicNum, rdbSecretContent.nonce_.size(),
-            rdbSecretContent.encrypt_.size());
-        return false;
-    }
-    std::tie(res, keyData) = DecryptV1(rdbSecretContent);
-    if (!res) {
-        LOG_ERROR("Decrypt failed:%{public}s. [m:%{public}d, n:%{public}zu, k:%{public}zu]",
-            SqliteUtils::Anonymous(keyPath).c_str(), rdbSecretContent.magicNum, rdbSecretContent.nonce_.size(),
-            rdbSecretContent.encrypt_.size());
-        return false;
-    }
-    return true;
-}
-
-void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType)
-{
-    RdbSecretKeyData keyData;
-    auto suffixes = (keyFileType == PUB_KEY_FILE) ? OLD_PUB_KEY_SUFFIXES : OLD_PUB_NEW_KEY_SUFFIXES;
-    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
-    const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
-    std::vector<std::string> oldKeyPaths;
-    for (int32_t i = 0; i < PUB_KEY_FILE_BUTT; i++) {
-        std::string oldKeyPath = dbKeyDir + dbName + suffixes[i];
-        oldKeyPaths.push_back(oldKeyPath);
-    }
-    if (SqliteUtils::IsKeyFilesEmpty(oldKeyPaths)) {
-        LOG_INFO("No  need to upgrade");
-        return;
-    }
-    for (int32_t type = PUB_KEY_FILE; type < PUB_KEY_FILE_BUTT; type++) {
-        auto ret = (this->*LOAD_KEY_HANDLERS[type])(oldKeyPaths[type], keyData);
-        if (!ret) {
-            continue;
-        }
-        if (keyData.secretKey.empty()) {
-            continue;
-        }
-        if (SaveSecretKeyToFile(keyPath, keyData.secretKey)) {
-            SqliteUtils::DeleteFiles(oldKeyPaths);
-            LOG_INFO("UpgradeKey success");
-            return;
-        }
-    }
-}
-
-RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyPath)
-{
-    RdbSecretKeyData keyData;
-    RdbPassword rdbPasswd;
-    std::shared_ptr<const char> autoClean = std::shared_ptr<const char>("autoClean",
-        [&keyData](const char *) mutable { keyData.secretKey.assign(keyData.secretKey.size(), 0); });
-    if (LoadSecretKeyFromDisk(keyPath, keyData)) {
-        rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
-        return rdbPasswd;
-    }
-    return {};
-}
-
-bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
-{
-    LOG_INFO("LoadSecretKeyFromDisk keyPath:%{public}s", keyPath.c_str());
     std::vector<char> content;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -460,24 +360,119 @@ bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSe
             Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-            return false;
+            return { false, keyData };
+        }
+    }
+
+    auto [res, rdbSecretContent] = UnpackV0(content);
+    if (!res) {
+        LOG_ERROR("UnpackV0 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+        return { false, keyData };
+    }
+    std::tie(res, keyData) = DecryptV0(rdbSecretContent);
+    if (!res) {
+        LOG_ERROR("DecryptV0 %{public}s failed, size:%{public}zu.", SqliteUtils::Anonymous(keyPath).c_str(),
+            rdbSecretContent.encrypt_.size());
+    }
+    return { res, keyData };
+}
+
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath)
+{
+    LOG_INFO("load secret key V1path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    RdbSecretKeyData keyData;
+    if (access(keyPath.c_str(), F_OK) != 0) {
+        return { false, keyData };
+    }
+    std::vector<char> content;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!LoadBufferFromFile(keyPath, content)) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
+            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+            return { false, keyData };
+        }
+    }
+
+    auto [res, rdbSecretContent] = UnpackV1(content);
+    if (!res) {
+        LOG_ERROR("UnpackV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+        return { false, keyData };
+    }
+    std::tie(res, keyData) = DecryptV1(rdbSecretContent);
+    if (!res) {
+        LOG_ERROR("DecryptV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    }
+    return { res, keyData };
+}
+
+void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType)
+{
+    auto suffixes = (keyFileType == PUB_KEY_FILE) ? OLD_PUB_KEY_SUFFIXES : OLD_PUB_NEW_KEY_SUFFIXES;
+    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
+    const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    std::vector<std::string> oldKeyPaths;
+    for (int32_t i = 0; i < PUB_KEY_FILE_BUTT; i++) {
+        std::string oldKeyPath = dbKeyDir + dbName + suffixes[i];
+        oldKeyPaths.push_back(std::move(oldKeyPath));
+    }
+    if (SqliteUtils::IsKeyFilesEmpty(oldKeyPaths)) {
+        return;
+    }
+    for (int32_t type = PUB_KEY_FILE; type < PUB_KEY_FILE_BUTT; type++) {
+        auto [ret, keyData] = (this->*LOAD_KEY_HANDLERS[type])(oldKeyPaths[type]);
+        if (!ret || keyData.secretKey.empty()) {
+            continue;
+        }
+        LOG_INFO("begin to upgrade key path:%{public}s", SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
+        if (SaveSecretKeyToFile(keyPath, keyData.secretKey)) {
+            SqliteUtils::DeleteFiles(oldKeyPaths);
+            keyData.secretKey.assign(keyData.secretKey.size(), 0);
+            LOG_INFO("UpgradeKey success oldversion:%{public}d, path:%{public}s", type,
+                SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
+            return;
+        }
+        keyData.secretKey.assign(keyData.secretKey.size(), 0);
+    }
+}
+
+RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyPath)
+{
+    RdbPassword rdbPasswd;
+    auto [res, keyData] = LoadSecretKeyFromDisk(keyPath);
+    if (!keyData.secretKey.empty()) {
+        rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
+        keyData.secretKey.assign(keyData.secretKey.size(), 0);
+        return rdbPasswd;
+    }
+    return {};
+}
+
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath)
+{
+    LOG_INFO("LoadSecretKeyFromDisk keyPath:%{public}s", SqliteUtils::Anonymous(keyPath).c_str());
+    RdbSecretKeyData keyData;
+    std::vector<char> content;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!LoadBufferFromFile(keyPath, content)) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
+            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+            return { false, keyData };
         }
     }
     auto [res, rdbSecretContent] = Unpack(content);
     if (!res) {
-        LOG_ERROR("Unpack failed:%{public}s. [m:%{public}d, n:%{public}zu, k:%{public}zu]",
-            SqliteUtils::Anonymous(keyPath).c_str(), rdbSecretContent.version, rdbSecretContent.nonce_.size(),
-            rdbSecretContent.encrypt_.size());
-        return false;
+        LOG_ERROR("Unpack failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+        return { false, keyData };
     }
     std::tie(res, keyData) = Decrypt(rdbSecretContent);
     if (!res) {
-        LOG_ERROR("Decrypt failed:%{public}s. [m:%{public}d, n:%{public}zu, k:%{public}zu]",
-            SqliteUtils::Anonymous(keyPath).c_str(), rdbSecretContent.version, rdbSecretContent.nonce_.size(),
-            rdbSecretContent.encrypt_.size());
-        return false;
+        LOG_ERROR("Decrypt failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     }
-    return true;
+    return { res, keyData };
 }
 
 RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, KeyFileType keyFileType)
