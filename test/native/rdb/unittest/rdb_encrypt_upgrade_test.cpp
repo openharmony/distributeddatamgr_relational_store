@@ -80,7 +80,7 @@ public:
     static std::vector<uint8_t> GetRootKeyAlias(const std::string& bundleName);
     std::vector<uint8_t> Encrypt(std::vector<uint8_t> &key, std::vector<uint8_t> rootKeyAlias);
     std::vector<uint8_t> Encryptv1(const RDBCryptoParam &param, std::vector<uint8_t> rootKeyAlias);
-    void GetRDBStore(const RdbStoreConfig &config);
+    bool GetRDBStore(const RdbStoreConfig &config);
     void InitRootAlias(std::vector<uint8_t> &rootKeyAlias);
     RdbStoreConfig GetConfig(const std::string &dbPath, const std::string &bundleName);
     bool SaveSecretV0KeyToFile(const std::string &keyPath, RdbSecretKeyDataV0 &keyData);
@@ -91,8 +91,8 @@ public:
         const struct HksBlob *plainText, struct HksBlob *cipherText);
     int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
     int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
-    void GetKeyFileV0FromV2(const std::string keyPathV2, const std::string keyPathV0, const std::string& bundleName);
-    void GetKeyFileV1FromV2(const std::string keyPathV2, const std::string keyPathV1, const std::string& bundleName);
+    void GetKeyFileV0FromV2(const std::string &keyPathV2, const std::string &keyPathV0, const std::string& bundleName);
+    void GetKeyFileV1FromV2(const std::string &keyPathV2, const std::string &keyPathV1, const std::string& bundleName);
     std::mutex mutex_;
 };
 
@@ -169,14 +169,17 @@ void RdbEncryptUpgradeTest::InitRootAlias(std::vector<uint8_t> &rootKeyAlias)
     EXPECT_EQ(ret, HKS_SUCCESS);
 }
 
-void RdbEncryptUpgradeTest::GetRDBStore(const RdbStoreConfig &config)
+bool RdbEncryptUpgradeTest::GetRDBStore(const RdbStoreConfig &config)
 {
     RdbEncryptUpgradeTestOpenCallback helper;
     int errCode = E_OK;
+    bool ret = false;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
+    if (store) {
+        ret = true;
+    }
     store = nullptr;
+    return ret;
 }
 
 RdbStoreConfig RdbEncryptUpgradeTest::GetConfig(const std::string &dbPath, const std::string &bundleName)
@@ -292,14 +295,14 @@ std::vector<uint8_t> RdbEncryptUpgradeTest::Encryptv1(const RDBCryptoParam &para
 {
     std::vector<uint8_t> tempRootKeyAlias(rootKeyAlias);
     std::vector<uint8_t> tempKey(param.KeyValue);
-    std::vector<uint8_t> g_add(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
+    std::vector<uint8_t> hksAdd(RDB_HKS_BLOB_TYPE_AAD, RDB_HKS_BLOB_TYPE_AAD + strlen(RDB_HKS_BLOB_TYPE_AAD));
     struct HksParamSet *params = nullptr;
     int32_t ret = HksInitParamSet(&params);
     if (ret != HKS_SUCCESS) {
         tempKey.assign(tempKey.size(), 0);
         return {};
     }
-    struct HksBlob blobAad = { uint32_t(g_add.size()), g_add.data() };
+    struct HksBlob blobAad = { uint32_t(hksAdd.size()), hksAdd.data() };
     struct HksBlob rootKeyName = { uint32_t(tempRootKeyAlias.size()), tempRootKeyAlias.data() };
     struct HksBlob plainKey = { uint32_t(tempKey.size()), tempKey.data() };
     struct HksBlob blobNonce = { uint32_t(param.nonce_.size()), const_cast<uint8_t *>(&(param.nonce_[0])) };
@@ -462,13 +465,12 @@ int32_t RdbEncryptUpgradeTest::GenerateRootKey(const std::vector<uint8_t> &rootK
 }
 
 void RdbEncryptUpgradeTest::GetKeyFileV0FromV2(
-    const std::string keyPathV2, const std::string keyPathV0, const std::string &bundleName)
+    const std::string &keyPathV2, const std::string &keyPathV0, const std::string &bundleName)
 {
     bool isFileExists = OHOS::FileExists(keyPathV2);
     ASSERT_TRUE(isFileExists);
 
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(keyPathV2, keyDataV2);
+    auto [res, keyDataV2] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(keyPathV2);
     ASSERT_TRUE(res);
     RdbSecretKeyDataV0 keyDataV0;
     keyDataV0.timeValue = keyDataV2.timeValue;
@@ -483,10 +485,9 @@ void RdbEncryptUpgradeTest::GetKeyFileV0FromV2(
 }
 
 void RdbEncryptUpgradeTest::GetKeyFileV1FromV2(
-    const std::string keyPathV2, const std::string keyPathV1, const std::string &bundleName)
+    const std::string &keyPathV2, const std::string &keyPathV1, const std::string &bundleName)
 {
-    RdbSecretKeyData keyDataV2;
-    auto res = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(keyPathV2, keyDataV2);
+    auto [res, keyDataV2] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(keyPathV2);
     ASSERT_TRUE(res);
     std::vector<char> content;
     EXPECT_TRUE(OHOS::LoadBufferFromFile(keyPathV2, content));
@@ -516,9 +517,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0toV2_001, TestSize.Level1)
 {
     // Create a key using version 3.
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version1 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -538,8 +539,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0toV2_001, TestSize.Level1)
     ASSERT_FALSE(OHOS::FileExists(keyPathV2));
     ASSERT_FALSE(OHOS::FileExists(keyPathV2_1));
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -554,9 +555,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0toV2_002, TestSize.Level1)
     // Create a key using version 3.
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version1 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -576,8 +577,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0toV2_002, TestSize.Level1)
     ASSERT_FALSE(OHOS::FileExists(keyPathV2));
     ASSERT_FALSE(OHOS::FileExists(keyPathV2_1));
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -591,9 +592,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1toV2_001, TestSize.Level1)
 {
     // Create a key using version 2.
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version1 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -611,8 +612,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1toV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -627,9 +628,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1toV2_002, TestSize.Level1)
     // Create a key using version 2.
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version1 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -647,8 +648,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1toV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -661,9 +662,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1toV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -680,8 +681,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV2ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -696,9 +697,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV2ToV2_002, TestSize.Level1)
     // Create a key using version 3.
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -715,8 +716,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV2ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -729,9 +730,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV2ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -752,8 +753,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -768,9 +769,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1ToV2_002, TestSize.Level1)
     // Create a key using version 3.
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -791,8 +792,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -805,12 +806,12 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -827,8 +828,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1AndV2ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -842,9 +843,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1AndV2ToV2_002, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -861,8 +862,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1AndV2ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -875,12 +876,12 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V1AndV2ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -901,8 +902,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1AndV2ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -916,9 +917,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1AndV2ToV2_002, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     // Get key from key file save to version0 key file
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPathV2);
@@ -939,8 +940,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1AndV2ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -953,9 +954,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_V0AndV1AndV2ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -981,8 +982,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -996,9 +997,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_002, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1024,8 +1025,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1038,9 +1039,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1066,8 +1067,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_003, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1081,9 +1082,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_004, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1109,8 +1110,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_004, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1123,9 +1124,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0ToV2_004, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1149,8 +1150,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_001, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1164,9 +1165,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_002, TestSize.Lev
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1190,8 +1191,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_002, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1204,9 +1205,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_002, TestSize.Lev
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1230,8 +1231,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_003, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1245,9 +1246,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_004, TestSize.Lev
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV0 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key";
@@ -1271,8 +1272,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_004, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1285,9 +1286,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV2ToV2_004, TestSize.Lev
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1313,8 +1314,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1328,9 +1329,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_002, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1356,8 +1357,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1370,9 +1371,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1398,8 +1399,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_003, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1413,9 +1414,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_004, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1441,8 +1442,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_004, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1455,9 +1456,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1ToV2_004, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1481,8 +1482,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_001, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1496,9 +1497,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_002, TestSize.Lev
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1522,8 +1523,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_002, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1536,9 +1537,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_002, TestSize.Lev
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1549,7 +1550,7 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_003, TestSize.Lev
     GetKeyFileV1FromV2(newKeyPathV2, keyPathV1, BUNDLE_NAME);
     SqliteUtils::RenameFile(newKeyPathV2, keyPathV2);
     RdbStoreManager::GetInstance().Delete(config, true);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbHelper::DeleteRdbStore(config);
 
     std::string keyPathV2_1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME_1) + ".pub_key_v2";
@@ -1564,7 +1565,7 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_003, TestSize.Lev
 
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config1);
 }
 
@@ -1577,9 +1578,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_004, TestSize.Lev
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1603,8 +1604,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_004, TestSize.Lev
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1617,9 +1618,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV1AndV1AndV2ToV2_004, TestSize.Lev
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string newKeyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2.new";
@@ -1633,8 +1634,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_001, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1648,9 +1649,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_002, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string newKeyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2.new";
@@ -1664,8 +1665,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_002, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1678,9 +1679,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_002, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string newKeyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2.new";
@@ -1696,8 +1697,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_003, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1711,9 +1712,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_004, TestSize.Level1)
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string newKeyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2.new";
@@ -1729,8 +1730,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_004, TestSize.Level1)
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1743,9 +1744,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV2AndV2ToV2_004, TestSize.Level1)
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_001, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1773,8 +1774,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_001, TestSiz
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1788,9 +1789,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_002, TestSiz
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1818,8 +1819,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_002, TestSiz
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1831,9 +1832,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_002, TestSiz
 HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_003, TestSize.Level1)
 {
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, BUNDLE_NAME_1);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1863,8 +1864,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_003, TestSiz
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
@@ -1878,9 +1879,9 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_004, TestSiz
 {
     std::string bundleNameTmp = "";
     RdbStoreConfig config = GetConfig(ENCRYPT_PATH, bundleNameTmp);
-    GetRDBStore(config);
+    EXPECT_TRUE(GetRDBStore(config));
     RdbStoreConfig config1 = GetConfig(ENCRYPT_PATH_1, bundleNameTmp);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config1));
 
     std::string keyPathV2 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v2";
     std::string keyPathV1 = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + ".pub_key_v1";
@@ -1910,8 +1911,8 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_004, TestSiz
     RdbStoreManager::GetInstance().Delete(config, true);
     RdbStoreManager::GetInstance().Delete(config1, true);
 
-    GetRDBStore(config);
-    GetRDBStore(config1);
+    EXPECT_TRUE(GetRDBStore(config));
+    EXPECT_TRUE(GetRDBStore(config1));
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }

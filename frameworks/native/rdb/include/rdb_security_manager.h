@@ -132,8 +132,8 @@ private:
     std::shared_ptr<RDBCrypto> GetDelegate();
     void UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType);
     std::vector<char> GenerateHMAC(std::vector<char> &data, const std::string &key);
-    bool LoadSecretKeyFromDiskV0(const std::string &keyPath, RdbSecretKeyData &keyData);
-    bool LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV0(const std::string &keyPath);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV1(const std::string &keyPath);
     std::pair<bool, RdbSecretContent> UnpackV0(const std::vector<char> &content);
     std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
     std::pair<bool, RdbSecretKeyData> DecryptV0(const RdbSecretContent &content);
@@ -148,10 +148,10 @@ private:
     bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
     std::string GetBundleName();
     RdbPassword LoadSecretKeyFromFile(const std::string &keyPath);
-    bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDisk(const std::string &keyPath);
     std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
     std::pair<bool, RdbSecretKeyData> Decrypt(const RdbSecretContent &content);
-    using LoadKeyHandler = bool (RdbSecurityManager::*)(const std::string &keyPath, RdbSecretKeyData &keyData);
+    using LoadKeyHandler = std::pair<bool, RdbSecretKeyData> (RdbSecurityManager::*)(const std::string &keyPath);
     static constexpr LoadKeyHandler LOAD_KEY_HANDLERS[PUB_KEY_FILE_BUTT] = {
         &RdbSecurityManager::LoadSecretKeyFromDiskV0,
         &RdbSecurityManager::LoadSecretKeyFromDiskV1

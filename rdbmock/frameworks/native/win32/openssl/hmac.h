@@ -14,6 +14,8 @@
  */
 #ifndef MOCK_HMAC_H
 #define MOCK_HMAC_H
+struct evp_md_st {
+};
 typedef struct evp_md_st EVP_MD;
 
 #ifdef __cplusplus
@@ -22,7 +24,7 @@ extern "C" {
 #define EVP_MAX_MD_SIZE 64
 unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len, const unsigned char *d, size_t n,
     unsigned char *md, unsigned int *md_len);
-EVP_MD *EVP_sha256();
+const EVP_MD *EVP_sha256();
 #ifdef __cplusplus
 }
 #endif
