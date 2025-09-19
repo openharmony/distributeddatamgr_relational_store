@@ -71,15 +71,15 @@ struct PredicatesProxy {
 };
 #endif
 
-RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NAPIRdbStoreData>()) {}
+RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>()) {}
 
 RdbStoreProxy::~RdbStoreProxy()
 {
-    UnregisterAll(GetInstance(), GetNAPIRdbStoreData());
+    UnregisterAll(GetInstance(), StealNapiRdbStoreData());
 }
 
 void RdbStoreProxy::UnregisterAll(
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData)
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NapiRdbStoreData> napiRdbStoreData)
 {
     if (rdbStore == nullptr || napiRdbStoreData == nullptr) {
         return;
@@ -125,6 +125,8 @@ void RdbStoreProxy::UnregisterAll(
         NativeRdb::SqlLog::Unsubscribe(rdbStore->GetPath(), obs);
     }
 #endif
+    rdbStore = nullptr;
+    napiRdbStoreData = nullptr;
 }
 
 RdbStoreProxy::RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore)
@@ -149,9 +151,11 @@ bool RdbStoreProxy::IsSystemAppCalled()
     return isSystemAppCalled_;
 }
 
-std::shared_ptr<NAPIRdbStoreData> RdbStoreProxy::GetNAPIRdbStoreData()
+std::shared_ptr<NapiRdbStoreData> RdbStoreProxy::StealNapiRdbStoreData()
 {
-    return std::move(napiRdbStoreData_);
+    auto napiRdbStore = std::move(napiRdbStoreData_);
+    napiRdbStoreData_ = std::make_shared<NapiRdbStoreData>();
+    return napiRdbStore;
 }
 
 bool IsNapiTypeString(napi_env env, size_t argc, napi_value *argv, size_t arg)
@@ -244,7 +248,7 @@ napi_value RdbStoreProxy::Initialize(napi_env env, napi_callback_info info)
             return;
         }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
-        proxy->UnregisterAll(proxy->GetInstance(), proxy->GetNAPIRdbStoreData());
+        proxy->UnregisterAll(proxy->GetInstance(), proxy->StealNapiRdbStoreData());
         proxy->SetInstance(nullptr);
         delete proxy;
     };
@@ -1969,7 +1973,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-        context->napiRdbStoreData = obj->GetNAPIRdbStoreData();
+        context->napiRdbStoreData = obj->StealNapiRdbStoreData();
         obj->SetInstance(nullptr);
     };
     auto exec = [context]() -> int {
