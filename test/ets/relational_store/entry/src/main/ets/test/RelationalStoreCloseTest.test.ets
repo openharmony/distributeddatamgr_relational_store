@@ -133,7 +133,7 @@ export default function RelationalStoreCloseTest() {
           (rdbStore as relationalStore.RdbStore).emit('dataChange');
           expect().assertFail();
         } catch (err) {
-          console.error(TAG + `on close off is failed, code is ${err.code},message is ${err.message}`);
+          console.error(TAG + `on close emit is failed, code is ${err.code},message is ${err.message}`);
           expect(true).assertEqual(err.code == ERR_CODE);
         }
         expect(true).assertEqual(rdbStore != null);
