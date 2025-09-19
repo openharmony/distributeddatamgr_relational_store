@@ -66,8 +66,8 @@ export default function RelationalStoreCloseTest() {
       // 开始订阅消息
       let storeObserver = (ChangeInfos: Array<relationalStore.ChangeInfo>) => {
         for (let i = 0; i < ChangeInfos.length; i++) {
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos.length=" + ChangeInfos.length);
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
+          console.info(TAG + "testRdbStoreRegisterAndClose0100 ChangeInfos.length=" + ChangeInfos.length);
+          console.info(TAG + "testRdbStoreRegisterAndClose0100 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
         }
       }
 
@@ -112,8 +112,8 @@ export default function RelationalStoreCloseTest() {
       // 开始订阅消息
       let storeObserver = (ChangeInfos: Array<relationalStore.ChangeInfo>) => {
         for (let i = 0; i < ChangeInfos.length; i++) {
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos.length=" + ChangeInfos.length);
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
+          console.info(TAG + "testRdbStoreRegisterAndClose0200 ChangeInfos.length=" + ChangeInfos.length);
+          console.info(TAG + "testRdbStoreRegisterAndClose0200 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
         }
       }
 
@@ -159,8 +159,8 @@ export default function RelationalStoreCloseTest() {
       // 开始订阅消息
       let storeObserver = (ChangeInfos: Array<relationalStore.ChangeInfo>) => {
         for (let i = 0; i < ChangeInfos.length; i++) {
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos.length=" + ChangeInfos.length);
-          console.info(TAG + "testRdbStoreDataChange0100 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
+          console.info(TAG + "testRdbStoreRegisterAndClose0300 ChangeInfos.length=" + ChangeInfos.length);
+          console.info(TAG + "testRdbStoreRegisterAndClose0300 ChangeInfos[i].inserted[0]=" + ChangeInfos[i].inserted[0]);
         }
       }
 
