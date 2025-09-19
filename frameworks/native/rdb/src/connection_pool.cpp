@@ -164,7 +164,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bo
         if (errCode != E_OK) {
             return result;
         }
-        trans_.InitMembers(create, MAX_TRANS, 0, false);
+        trans_.InitMembers(create, MAX_TRANS, config.GetTransactionTime(), false);
     }
     isAttach_ = isAttach;
     maxReader_ = GetMaxReaders(config);
@@ -438,7 +438,7 @@ int ConnPool::RestartConns()
             const RdbStoreConfig &config = isAttach_ ? attachConfig_ : config_;
             return Connection::Create(config, true);
         },
-        MAX_TRANS, 0, false);
+        MAX_TRANS, config.GetTransactionTime(), false);
     return errCode;
 }
 
@@ -669,11 +669,14 @@ bool ConnPool::ConnNode::IsWriter() const
 
 void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t timeout, bool disable)
 {
-    std::unique_lock<decltype(mutex_)> lock(mutex_);
-    disable_ = disable;
-    max_ = max;
-    creator_ = creator;
-    timeout_ = std::chrono::seconds(timeout);
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = disable;
+        max_ = max;
+        creator_ = creator;
+        timeout_ = std::chrono::seconds(timeout);
+    }
+    cond_.notify_all();
 }
 
 std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(

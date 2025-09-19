@@ -521,6 +521,16 @@ void RdbStoreConfig::SetWriteTime(int timeout)
     writeTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
 }
 
+int RdbStoreConfig::GetTransactionTime() const
+{
+    return transactionTimeout_;
+}
+
+void RdbStoreConfig::SetTransactionTime(int timeout)
+{
+    transactionTimeout_ = std::max(MIN_TIMEOUT, std::min(MAX_TIMEOUT, timeout));
+}
+
 bool RdbStoreConfig::IsCustomEncryptParam() const
 {
     return customEncryptParam_;
