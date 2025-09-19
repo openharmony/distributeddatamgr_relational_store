@@ -83,7 +83,7 @@ export default function RelationalStoreCloseTest() {
         }
         try {
           (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
-          await (rdbStore as relationalStore.RdbStore).close();
+          (rdbStore as relationalStore.RdbStore).close();
           (rdbStore as relationalStore.RdbStore).off('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver);
           expect().assertFail();
         } catch (err) {
@@ -129,7 +129,7 @@ export default function RelationalStoreCloseTest() {
         }
         try {
           (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver)
-          await (rdbStore as relationalStore.RdbStore).close();
+          (rdbStore as relationalStore.RdbStore).close();
           (rdbStore as relationalStore.RdbStore).emit('dataChange');
           expect().assertFail();
         } catch (err) {
@@ -176,7 +176,7 @@ export default function RelationalStoreCloseTest() {
         }
         try {
           (rdbStore as relationalStore.RdbStore).on('dataChange', relationalStore.SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS, storeObserver)
-          await (rdbStore as relationalStore.RdbStore).close();
+          (rdbStore as relationalStore.RdbStore).close();
           (rdbStore as relationalStore.RdbStore).emit('dataChange');
           expect().assertFail();
         } catch (err) {
