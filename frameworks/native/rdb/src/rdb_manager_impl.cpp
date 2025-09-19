@@ -20,7 +20,6 @@
 #include "global_resource.h"
 #include "ipc_skeleton.h"
 #include "irdb_service.h"
-#include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "itypes_util.h"
 #include "logger.h"
@@ -49,7 +48,7 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
     }
     auto dataMgr = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgr == nullptr) {
-        LOG_ERROR("Get distributed data manager CheckSystemAbility failed.");
+        LOG_WARN("Get distributed data manager CheckSystemAbility failed.");
         dataMgr = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
         if (dataMgr == nullptr) {
             LOG_ERROR("Get distributed data manager LoadSystemAbility failed.");
