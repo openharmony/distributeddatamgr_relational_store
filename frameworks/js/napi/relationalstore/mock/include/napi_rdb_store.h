@@ -44,7 +44,6 @@ public:
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
-    std::shared_ptr<NAPIRdbStoreData> GetNAPIRdbStoreData();
 
 private:
     static Descriptor GetDescriptors();
@@ -109,14 +108,15 @@ private:
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog },
     };
     static void UnregisterAll(
-        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData);
+        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NapiRdbStoreData> napiRdbStoreData);
+    std::shared_ptr<NapiRdbStoreData> StealNapiRdbStoreData();
 
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
-    std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData_ = nullptr;
+    std::shared_ptr<NapiRdbStoreData> napiRdbStoreData_ = nullptr;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 };

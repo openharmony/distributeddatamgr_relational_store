@@ -37,7 +37,7 @@ class NapiPerfStatObserver;
 class NapiLogObserver;
 using namespace OHOS::NativeRdb;
 
-struct NAPIRdbStoreData {
+struct NapiRdbStoreData {
     std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
     std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
@@ -88,7 +88,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
     bool isQuerySql = false;
     uint32_t expiredTime = 0;
     NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
-    std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData = nullptr;
+    std::shared_ptr<NapiRdbStoreData> napiRdbStoreData = nullptr;
 
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),

@@ -37,7 +37,7 @@ class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
 class NapiPerfStatObserver;
 class NapiLogObserver;
-struct NAPIRdbStoreData;
+struct NapiRdbStoreData;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -47,7 +47,6 @@ public:
     RdbStoreProxy(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     RdbStoreProxy &operator=(std::shared_ptr<NativeRdb::RdbStore> rdbStore);
     bool IsSystemAppCalled();
-    std::shared_ptr<NAPIRdbStoreData> GetNAPIRdbStoreData();
 
 private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
@@ -103,7 +102,8 @@ private:
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     static void UnregisterAll(
-        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData);
+        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NapiRdbStoreData> napiRdbStoreData);
+    std::shared_ptr<NapiRdbStoreData> StealNapiRdbStoreData();
 
     static constexpr int EVENT_HANDLE_NUM = 5;
     static constexpr int WAIT_TIME_DEFAULT = 2;
@@ -147,7 +147,7 @@ private:
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
     std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
-    std::shared_ptr<NAPIRdbStoreData> napiRdbStoreData_ = nullptr;
+    std::shared_ptr<NapiRdbStoreData> napiRdbStoreData_ = nullptr;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
