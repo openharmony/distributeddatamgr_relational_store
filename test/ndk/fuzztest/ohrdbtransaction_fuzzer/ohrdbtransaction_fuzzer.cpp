@@ -28,17 +28,17 @@
 using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
 
-#define STRING_SIZE_MAX 15
+static const int STRING_MAX_LENGTH = 15;
 
 // Helper function to create an OH_Rdb_Config structure with random data
 OH_Rdb_Config *CreateRandomConfig(FuzzedDataProvider &provider)
 {
     OH_Rdb_Config *config = new OH_Rdb_Config();
     config->selfSize = sizeof(OH_Rdb_Config);
-    config->dataBaseDir = strdup(provider.ConsumeRandomLengthString(STRING_SIZE_MAX).c_str());
-    config->storeName = strdup(provider.ConsumeRandomLengthString(STRING_SIZE_MAX).c_str());
-    config->bundleName = strdup(provider.ConsumeRandomLengthString(STRING_SIZE_MAX).c_str());
-    config->moduleName = strdup(provider.ConsumeRandomLengthString(STRING_SIZE_MAX).c_str());
+    config->dataBaseDir = strdup(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH).c_str());
+    config->storeName = strdup(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH).c_str());
+    config->bundleName = strdup(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH).c_str());
+    config->moduleName = strdup(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH).c_str());
     config->isEncrypt = provider.ConsumeBool();
     config->securityLevel = provider.ConsumeIntegralInRange<int>(S1, S4);
     config->area = provider.ConsumeIntegralInRange<int>(RDB_SECURITY_AREA_EL1, RDB_SECURITY_AREA_EL5);
@@ -88,7 +88,7 @@ OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
     const int maxLen = 50;
     size_t len = provider.ConsumeIntegralInRange<size_t>(minLen, maxLen);
     for (size_t i = 0; i < len; i++) {
-        std::string column = provider.ConsumeRandomLengthString(STRING_SIZE_MAX);
+        std::string column = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         int64_t value = provider.ConsumeIntegral<int64_t>();
         vBucket->putInt64(vBucket, column.c_str(), value);
     }
@@ -128,7 +128,7 @@ OH_VObject *CreateTransVObject(FuzzedDataProvider &provider)
     if (valueObject == nullptr) {
         return nullptr;
     }
-    std::string value = provider.ConsumeRandomLengthString(STRING_SIZE_MAX);
+    std::string value = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     valueObject->putText(valueObject, value.c_str());
     return valueObject;
 }
@@ -139,7 +139,7 @@ OH_Predicates* GetCapiTransPredicates(FuzzedDataProvider &provider, std::string 
     if (predicates == nullptr) {
         return nullptr;
     }
-    std::string value = provider.ConsumeRandomLengthString(STRING_SIZE_MAX);
+    std::string value = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     OH_VObject *valueObject = CreateTransVObject(provider);
     if (valueObject == nullptr) {
         predicates->destroy(predicates);
@@ -169,12 +169,12 @@ void TransactionFuzzTest(FuzzedDataProvider &provider)
     OH_Rdb_CreateTransaction(store, options, &trans);
     OH_RdbTrans_Commit(trans);
     OH_RdbTrans_Rollback(trans);
-    std::string table = provider.ConsumeRandomLengthString(STRING_SIZE_MAX);
+    std::string table = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int64_t rowId = 0;
     OH_VBucket *valueBucket = CreateRandomVBucket(provider);
     OH_RdbTrans_Insert(trans, table.c_str(), valueBucket, &rowId);
     OH_Data_VBuckets *list = CreateRandomVBuckets(provider);
-    std::string batchTable = provider.ConsumeRandomLengthString(STRING_SIZE_MAX);
+    std::string batchTable = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int64_t changes;
     Rdb_ConflictResolution resolution = static_cast<Rdb_ConflictResolution>(
         provider.ConsumeIntegralInRange<int>(RDB_CONFLICT_NONE, RDB_CONFLICT_REPLACE));
