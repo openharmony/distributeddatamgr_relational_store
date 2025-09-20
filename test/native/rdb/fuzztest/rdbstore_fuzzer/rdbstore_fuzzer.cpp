@@ -526,6 +526,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbQueryLockedRowFuzz2(provider);
     OHOS::RdbInitKnowledgeSchemaFuzz(provider);
     OHOS::RdbRegisterAlgoFuzz(provider);
-    OHOS::RdbStoreFuzzTest::TearDownTestCase();
     return 0;
 }
