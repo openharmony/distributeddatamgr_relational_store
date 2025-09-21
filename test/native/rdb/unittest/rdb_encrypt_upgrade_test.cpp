@@ -1916,3 +1916,179 @@ HWTEST_F(RdbEncryptUpgradeTest, OTATest_NewKeyV0AndV0AndV1AndV2ToV2_004, TestSiz
     RdbHelper::DeleteRdbStore(config);
     RdbHelper::DeleteRdbStore(config1);
 }
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest001
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest001, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pub";
+    std::vector<unsigned char> data(57, 0xAA);
+    std::ofstream fsDb(filePath, std::ios_base::binary);
+    fsDb.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDb.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest002
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest002, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV2";
+    std::vector<unsigned char> data(73, 0xAA);
+    std::ofstream fsDbV1(filePath, std::ios_base::binary);
+    fsDbV1.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDbV1.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest003
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest003, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV3";
+    std::vector<unsigned char> data(69, 0xAA);
+    std::ofstream fsDbV2(filePath, std::ios_base::binary);
+    fsDbV2.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDbV2.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest004
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest004, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV4";
+    std::vector<unsigned char> data(10, 0xAA);
+    std::ofstream fsDb(filePath, std::ios_base::binary);
+    fsDb.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDb.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest005
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest005, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV5";
+    std::vector<unsigned char> data(5, 0xAA);
+    std::ofstream fsDb(filePath, std::ios_base::binary);
+    fsDb.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDb.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest006
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest006, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV6";
+    std::vector<unsigned char> data(15, 0xAA);
+    std::ofstream fsDb(filePath, std::ios_base::binary);
+    fsDb.write(reinterpret_cast<const char *>(data.data()), data.size());
+    fsDb.close();
+    auto [res, keyData] = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV0(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDiskV1(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(keyData.secretKey.empty());
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: LoadSecretKeyFromDiskTest007
+ * @tc.desc: Abnormal test for LoadSecretKeyFromDisk
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest007, TestSize.Level1)
+{
+    RdbStoreConfig config = GetConfig(ENCRYPT_PATH, BUNDLE_NAME);
+    EXPECT_TRUE(GetRDBStore(config));
+    std::string filePath = ENCRYPT_DATABASE_KEY_DIR + SqliteUtils::RemoveSuffix(ENCRYPT_NAME) + "key.pubV7";
+    auto ret = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(filePath);
+    EXPECT_TRUE(ret);
+    std::ofstream fsDb(filePath, std::ios_base::binary | std::ios_base::out);
+    fsDb.write("hello", 5);
+    fsDb.close();
+    auto rdbPassword = RdbSecurityManager::GetInstance().LoadSecretKeyFromFile(filePath);
+    EXPECT_FALSE(rdbPassword.IsValid());
+    RdbHelper::DeleteRdbStore(config);
+}

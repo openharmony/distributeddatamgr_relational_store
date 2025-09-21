@@ -203,15 +203,4 @@ HWTEST_F(RdbSecurityManagerTest, KeyFilesLockTest001, TestSize.Level1)
     EXPECT_EQ(keyFiles.Lock(false), E_INVALID_FILE_PATH);
 }
 
-/**
- * @tc.name: GetBundleNameTest001
- * @tc.desc: Abnormal test for GetBundleName
- * @tc.type: FUNC
- */
-HWTEST_F(RdbSecurityManagerTest, GetBundleNameTest001, TestSize.Level1)
-{
-    std::string bundleName = RdbSecurityManager::GetInstance.GetBundleName();
-    EXPECT_TRUE(bundleName.empty());
-}
-
 } // namespace Test

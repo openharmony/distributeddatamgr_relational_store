@@ -350,7 +350,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(co
 {
     LOG_INFO("load secret key V0path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     RdbSecretKeyData keyData;
-    if (access(keyPath.c_str(), F_OK) != 0) {
+    if (SqliteUtils::IsKeyFileEmpty(keyPath)) {
         return { false, keyData };
     }
     std::vector<char> content;
@@ -365,10 +365,6 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(co
     }
 
     auto [res, rdbSecretContent] = UnpackV0(content);
-    if (!res) {
-        LOG_ERROR("UnpackV0 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return { false, keyData };
-    }
     std::tie(res, keyData) = DecryptV0(rdbSecretContent);
     if (!res) {
         LOG_ERROR("DecryptV0 %{public}s failed, size:%{public}zu.", SqliteUtils::Anonymous(keyPath).c_str(),
@@ -381,7 +377,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV1(co
 {
     LOG_INFO("load secret key V1path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     RdbSecretKeyData keyData;
-    if (access(keyPath.c_str(), F_OK) != 0) {
+    if (SqliteUtils::IsKeyFileEmpty(keyPath)) {
         return { false, keyData };
     }
     std::vector<char> content;
@@ -631,25 +627,13 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<c
         LOG_ERROR("hmac check failed");
         return { false, rdbSecretContent };
     }
-    auto size = originalData.size();
-    if (size < sizeof(rdbSecretContent.version)) {
-        return { false, rdbSecretContent };
-    }
     std::size_t offset = 0;
     rdbSecretContent.version = static_cast<uint8_t>(originalData[offset]);
     offset += sizeof(rdbSecretContent.version);
 
-    if (offset + RdbSecretContent::NONCE_VALUE_SIZE > size) {
-        return { false, rdbSecretContent };
-    }
-
     rdbSecretContent.nonce_.assign(
         originalData.begin() + offset, originalData.begin() + offset + RdbSecretContent::NONCE_VALUE_SIZE);
     offset += RdbSecretContent::NONCE_VALUE_SIZE;
-
-    if (offset + RDB_KEY_SIZE > size) {
-        return { false, rdbSecretContent };
-    }
 
     rdbSecretContent.encrypt_.assign(originalData.begin() + offset, originalData.end());
     return { true, rdbSecretContent };
