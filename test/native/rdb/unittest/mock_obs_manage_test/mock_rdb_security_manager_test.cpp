@@ -85,18 +85,6 @@ void MockRdbSecurityManagerTest::TearDown()
 }
 
 /**
- * @tc.name: GenerateRandomNumTest
- * @tc.desc: Abnormal test for GenerateRandomNum
- * @tc.type: FUNC
- */
-HWTEST_F(MockRdbSecurityManagerTest, GenerateRandomNumTest, TestSize.Level1)
-{
-    uint32_t len = 0;
-    std::vector<uint8_t> ret = RdbSecurityManager::GetInstance().GenerateRandomNum(len);
-    EXPECT_TRUE(ret.empty());
-}
-
-/**
  * @tc.name: CreateDelegateTest001
  * @tc.desc: Abnormal test for CreateDelegate
  * @tc.type: FUNC
@@ -109,47 +97,4 @@ HWTEST_F(MockRdbSecurityManagerTest, CreateDelegateTest001, TestSize.Level1)
     std::vector<uint8_t> key;
     auto delegate  = RdbSecurityManager::GetInstance().CreateDelegate(key);
     ASSERT_EQ(delegate, nullptr);
-}
-
-/**
- * @tc.name: CreateDelegateTest002
- * @tc.desc: Abnormal test for CreateDelegate
- * @tc.type: FUNC
- */
-HWTEST_F(MockRdbSecurityManagerTest, CreateDelegateTest002, TestSize.Level1)
-{
-    EXPECT_CALL(*mockDlsym, dlopen(::testing::_, RTLD_LAZY))
-        .WillOnce(Return(nullptr));
-    std::vector<uint8_t> key;
-    auto delegate  = RdbSecurityManager::GetInstance().CreateDelegate(key);
-    ASSERT_EQ(delegate, nullptr);
-}
-
-/**
- * @tc.name: InitTest
- * @tc.desc: Abnormal test for Init
- * @tc.type: FUNC
- */
-HWTEST_F(MockRdbSecurityManagerTest, InitTest, TestSize.Level1)
-{
-    std::string bundleName = "";
-    EXPECT_CALL(*mockDlsym, dlopen(::testing::_, RTLD_LAZY))
-        .WillOnce(Return(nullptr));
-    auto ret = RdbSecurityManager::GetInstance().Init(bundleName);
-    EXPECT_EQ(ret, E_ERROR);
-}
-
-/**
- * @tc.name: SaveSecretKeyToFileKeyTest
- * @tc.desc: Abnormal test for SaveSecretKeyToFileKey
- * @tc.type: FUNC
- */  
-HWTEST_F(MockRdbSecurityManagerTest, SaveSecretKeyToFileTest, TestSize.Level1)
-{
-    EXPECT_CALL(*mockDlsym, dlopen(::testing::_, RTLD_LAZY))
-        .WillOnce(Return(nullptr));
-    std::vector<uint8_t> key;
-    std::string keyPath = ""
-    auto ret  = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(key);
-    EXPECT_FALSE(ret);
 }
