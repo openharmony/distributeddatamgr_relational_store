@@ -17,6 +17,7 @@
 
 #include "convertor_error_code.h"
 #include "grd_api_manager.h"
+#include "HandleManager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
 #include "oh_data_define.h"
