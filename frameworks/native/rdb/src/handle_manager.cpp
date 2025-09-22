@@ -15,7 +15,7 @@
 
 #define LOG_TAG "HandleManager"
 
-#include "handle_manager.h
+#include "handle_manager.h"
 #include "logger.h"
 #include "rdb_store_manager.h"
 #include "task_executor.h"
