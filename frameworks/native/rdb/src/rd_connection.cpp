@@ -20,6 +20,7 @@
 #include <string>
 
 #include "grd_api_manager.h"
+#include "handle_manager.h"
 #include "logger.h"
 #include "rd_statement.h"
 #include "rdb_errno.h"
@@ -170,6 +171,9 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     RdUtils::ClearAndZeroString(configStr);
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
+        if (errCode == E_SQLITE_CORRUPT) {
+            HandleManager::HandleCorrupt(config);
+        }
         return errCode;
     }
     errCode = RdUtils::RdSqlRegistryThreadPool(dbHandle_);

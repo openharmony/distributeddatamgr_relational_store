@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "connection_pool.h"
+#include "handle_manager.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
@@ -170,6 +171,9 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
             (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
             Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
                 (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::Prepare")));
+            if (errCode == SQLITE_CORRUPT) {
+                HandleManager::HandleCorrupt(*config_);
+            }
         }
         if (config_ != nullptr) {
             Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD,
@@ -387,6 +391,9 @@ int SqliteStatement::InnerStep()
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep")));
+        if (errCode == SQLITE_CORRUPT) {
+            HandleManager::HandleCorrupt(*config_);
+        }
     }
     if (config_ != nullptr && ret != E_OK && !config_->GetBundleName().empty()) {
         Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, ret, *config_, "sqlite3_step", true));
@@ -736,6 +743,7 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
         if (ret) {
             Reportor::ReportCorruptedOnce(Reportor::Create(*config_, errCode,
                 "FillBlockInfo: " + SqliteGlobalConfig::GetLastCorruptionMsg()));
+            HandleManager::HandleCorrupt(*config_);
         }
         return errCode;
     }

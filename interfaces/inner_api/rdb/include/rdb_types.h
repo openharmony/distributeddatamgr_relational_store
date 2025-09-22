@@ -416,6 +416,15 @@ struct Results {
     std::shared_ptr<ResultSet> results;
 };
 
+class RdbStore;
+class CorruptHandler {
+public:
+    virtual ~CorruptHandler() {};
+    virtual void OnCorrupt() = 0;
+    virtual void SetStore(std::shared_ptrNativeRdb::RdbStore store) = 0;
+    virtual std::shared_ptrOHOS::NativeRdb::RdbStore GetStore() = 0;
+};
+
 enum Tokenizer : int32_t {
     NONE_TOKENIZER = 0,
     ICU_TOKENIZER,

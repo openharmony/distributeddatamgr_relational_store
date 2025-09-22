@@ -1164,6 +1164,40 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
     return callback == callback_;
 }
 
+NDKCorruptHandler::NDKCorruptHandler(
+    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptrNativeRdb::RdbStore store)
+    : config_(config), context_(context), handler_(handler), store_(std::move(store))
+{
+}
+
+void NDKCorruptHandler::OnCorrupt()
+{
+    if (handler_ == nullptr) {
+        return;
+    }
+    if (!isExecute_.exchange(true)) {
+        OH_Rdb_Store *store = nullptr;
+        if (store_.lock() != nullptr) {
+            store = new (std::nothrow) RelationalStore(store_.lock());
+        }
+        (*handler_)(config_, context_, store);
+        delete store;
+        isExecute_.store(false);
+    } else {
+        LOG_ERROR("corruptHandler is already executing");
+    }
+}
+
+void NDKCorruptHandler::SetStore(std::shared_ptrOHOS::NativeRdb::RdbStore store)
+{
+    store_ = store;
+}
+
+std::shared_ptrOHOS::NativeRdb::RdbStore NDKCorruptHandler::GetStore()
+{
+    return store_.lock();
+}
+
 NDKStoreObserver::NDKStoreObserver(const Rdb_DataObserver *observer, int mode) : mode_(mode), observer_(observer)
 {
 }
@@ -1360,5 +1394,41 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto errCode = rdbStore->GetStore()->ConfigLocale(locale);
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> store = OHOS::NativeRdb::RdbHelper::GetRdb(rdbStoreConfig);
+    auto ndkHandler = std::make_shared<NDKCorruptHandler>(config, context, handler, store);
+    auto errCode = OHOS::NativeRdb::HandleManager::GetInstance().Register(rdbStoreConfig, ndkHandler);
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_UnRegisterCorruptedHandler(OH_Rdb_ConfigV2 *config)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto errCode = OHOS::NativeRdb::HandleManager::GetInstance().Unregister(rdbStoreConfig.GetPath());
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
