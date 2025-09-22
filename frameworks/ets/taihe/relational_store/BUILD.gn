@@ -1,0 +1,118 @@
+# Copyright (C) 2025-2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//build/ohos/taihe_idl/taihe.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+subsystem_name = "distributeddatamgr"
+part_name = "relational_store"
+taihe_generated_file_path = "$taihe_file_path/out/$subsystem_name/$part_name"
+
+copy_taihe_idl("copy_taihe") {
+  sources = [ "${relational_store_frameworks_path}/ets/taihe/relational_store/idl/ohos.data.relationalStore.taihe" ]
+}
+
+ohos_taihe("run_taihe") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  deps = [ ":copy_taihe" ]
+  outputs = [
+    "$taihe_generated_file_path/src/ohos.data.relationalStore.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.data.relationalStore.abi.c",
+  ]
+}
+
+taihe_shared_library("relationalstore_ani") {
+  taihe_generated_file_path = "$taihe_generated_file_path"
+  subsystem_name = "$subsystem_name"
+  part_name = "$part_name"
+  include_dirs = [
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/include",
+    "${relational_store_frameworks_path}/common/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_frameworks_path}/js/napi/relationalstore/include",
+    "${relational_store_frameworks_path}/js/napi/common/include",
+  ]
+  sources = get_target_outputs(":run_taihe")
+  sources += [
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_ability_utils.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_constructor.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_rdb_utils.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_utils.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ohos.data.relationalStore.impl.cpp",
+    "${relational_store_frameworks_path}/js/napi/relationalstore/src/napi_rdb_error.cpp",
+    "${relational_store_js_common_path}/src/js_ability.cpp",
+    "${relational_store_js_common_path}/src/js_utils.cpp",
+  ]
+  deps = [
+    ":run_taihe",
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
+  ]
+
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  cflags = [
+    "-DHILOG_ENABLE",
+    "-fPIC",
+    "-g3",
+  ]
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:ani_base_context",
+    "ability_runtime:app_context",
+    "ability_runtime:extensionkit_native",
+    "ability_runtime:napi_base_context",
+    "data_share:datashare_common_lite",
+    "hilog:libhilog",
+    "runtime_core:ani_helpers",
+  ]
+}
+
+generate_static_abc("relationalstore_abc") {
+  base_url = "$taihe_generated_file_path"
+  files = [ "$taihe_generated_file_path/@ohos.data.relationalStore.ets" ]
+  dst_file = "$target_out_dir/relationalstore.abc"
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/relationalstore.abc"
+  dependencies = [ ":run_taihe" ]
+}
+
+ohos_prebuilt_etc("relationalstore_etc") {
+  source = "$target_out_dir/relationalstore.abc"
+  module_install_dir = "framework"
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  deps = [ ":relationalstore_abc" ]
+}
+
+generate_static_abc("relationalstore_framework_test") {
+  base_url =
+      "${relational_store_frameworks_path}/ets/taihe/relational_store/test"
+  files = [ "${relational_store_frameworks_path}/ets/taihe/relational_store/test/test_main.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/relationalstore_framework_test.abc"
+}
+
+group("relationalstore_ani_pack") {
+  deps = [
+    ":relationalstore_ani",
+    ":relationalstore_etc",
+  ]
+}
