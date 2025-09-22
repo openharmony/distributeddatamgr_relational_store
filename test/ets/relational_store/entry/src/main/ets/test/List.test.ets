@@ -28,7 +28,6 @@ import RdbstoreCustomTokenizerTest from './RdbstoreCustomTokenizerEts.ets';
 import SetLocaleEtsTest from './RdbstoreSetLocaleEts.test.ets';
 import RelationalStoreEtsTest from './RelationalStoreEtsTest.test.ets'
 import RdbStoreDataChangeTestEts from './RdbstoreDataChangeEts.test.ets'
-import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -46,5 +45,4 @@ export default function testsuite() {
   SetLocaleEtsTest();
   RelationalStoreEtsTest();
   RdbStoreDataChangeTestEts();
-  RelationalStoreCloseTest();
 }

@@ -37,7 +37,6 @@ class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
 class NapiPerfStatObserver;
 class NapiLogObserver;
-struct NapiRdbStoreData;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -101,9 +100,7 @@ private:
     static napi_value UnlockCloudContainer(napi_env env, napi_callback_info info);
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
-    static void UnregisterAll(
-        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NapiRdbStoreData> napiRdbStoreData);
-    std::shared_ptr<NapiRdbStoreData> StealNapiRdbStoreData();
+    void UnregisterAll();
 
     static constexpr int EVENT_HANDLE_NUM = 5;
     static constexpr int WAIT_TIME_DEFAULT = 2;
@@ -114,6 +111,22 @@ private:
 
     napi_value OffRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
+
+    class SyncObserver
+        : public DistributedRdb::DetailProgressObserver, public std::enable_shared_from_this<SyncObserver> {
+    public:
+        SyncObserver(napi_env env, napi_value callback, std::shared_ptr<AppDataMgrJsKit::UvQueue> uvQueue);
+        virtual ~SyncObserver();
+        void Clear();
+        bool operator==(napi_value value);
+        void ProgressNotification(const DistributedRdb::Details &details) override;
+
+    private:
+        napi_env env_ = nullptr;
+        napi_ref callback_ = nullptr;
+        std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_ = nullptr;
+    };
+
     napi_value RegisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
     napi_value UnregisterSyncCallback(napi_env env, size_t argc, napi_value *argv);
     napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
@@ -146,8 +159,13 @@ private:
     bool isSystemAppCalled_ = false;
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
+    std::list<std::shared_ptr<NapiRdbStoreObserver>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
+    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
+    std::list<std::shared_ptr<SyncObserver>> syncObservers_;
+    std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
     std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
-    std::shared_ptr<NapiRdbStoreData> napiRdbStoreData_ = nullptr;
+    std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
 };
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
