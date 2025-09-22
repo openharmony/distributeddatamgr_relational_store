@@ -42,7 +42,8 @@ using namespace OHOS::Rdb;
 namespace OHOS {
 
 static const int MIN_BLOB_SIZE = 1;
-static const int MAX_BLOB_SIZE = 200;
+static const int MAX_BLOB_SIZE = 20;
+static const int STRING_MAX_LENGTH = 15;
 static const std::string TABLE_NAME = "test";
 static const std::string DATABASE_NAME = "/data/test/returningFuzz.db";
 static const std::string CREATE_TABLE_SQL =
@@ -101,7 +102,7 @@ std::vector<std::string> GetColumns(FuzzedDataProvider &provider, int max = 10, 
     std::vector<std::string> columns;
     int colCount = provider.ConsumeIntegralInRange<int>(min, max);
     for (int i = 0; i < colCount; i++) {
-        columns.push_back(provider.ConsumeRandomLengthString());
+        columns.push_back(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH));
     }
     return columns;
 }
@@ -151,7 +152,7 @@ ConflictResolution GetRandomConflictResolution(FuzzedDataProvider &provider)
 
 void BatchInsertReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> store)
 {
-    std::string valName = provider.ConsumeRandomLengthString();
+    std::string valName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int valAge = provider.ConsumeIntegral<int>();
     double valSalary = provider.ConsumeFloatingPoint<double>();
 
@@ -185,7 +186,7 @@ void BatchInsertReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbS
 
 void UpdateReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> store)
 {
-    std::string valName = provider.ConsumeRandomLengthString();
+    std::string valName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int valAge = provider.ConsumeIntegral<int>();
     double valSalary = provider.ConsumeFloatingPoint<double>();
 
@@ -199,7 +200,7 @@ void UpdateReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
     values.PutBlob("blobType", blobData);
 
     AbsRdbPredicates predicates(TABLE_NAME);
-    predicates.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString()));
+    predicates.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH)));
     auto returningFields = GetColumns(provider);
 
     store->Update(values, predicates, returningFields);
@@ -212,7 +213,7 @@ void UpdateReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
     }
 
     AbsRdbPredicates predicates2(TABLE_NAME);
-    predicates2.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString()));
+    predicates2.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH)));
     auto returningFields2 = GetColumns(provider);
     
     trans->Update(values, predicates2, returningFields2);
@@ -222,7 +223,7 @@ void UpdateReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
 void DeleteReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> store)
 {
     AbsRdbPredicates predicates(TABLE_NAME);
-    predicates.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString()));
+    predicates.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH)));
     auto returningFields = GetColumns(provider);
 
     store->Delete(predicates, returningFields);
@@ -234,7 +235,7 @@ void DeleteReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
         return;
     }
     AbsRdbPredicates predicates2(TABLE_NAME);
-    predicates2.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString()));
+    predicates2.EqualTo("name", ValueObject(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH)));
     auto returningFields2 = GetColumns(provider);
     trans->Delete(predicates2, returningFields2);
     trans->Rollback();
@@ -242,11 +243,11 @@ void DeleteReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore>
 
 void ExecuteExtReturningFuzz(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> store)
 {
-    std::string sql = provider.ConsumeRandomLengthString();
+    std::string sql = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 
     std::vector<ValueObject> bindArgs;
     bindArgs.push_back(ValueObject(provider.ConsumeIntegral<int>()));
-    bindArgs.push_back(ValueObject(provider.ConsumeRandomLengthString()));
+    bindArgs.push_back(ValueObject(provider.ConsumeRandomLengthString(STRING_MAX_LENGTH)));
     bindArgs.push_back(ValueObject(provider.ConsumeIntegral<int>()));
     bindArgs.push_back(ValueObject(provider.ConsumeFloatingPoint<double>()));
 
@@ -295,7 +296,7 @@ void ValuesBucketFuzz(FuzzedDataProvider &provider)
     }
 
     vb1.RowSize();
-    std::string field = provider.ConsumeRandomLengthString();
+    std::string field = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     vb1.GetFieldsAndValues();
     int32_t size = static_cast<int32_t>(provider.ConsumeIntegral<uint8_t>());
     vb1.Reserve(size);
@@ -304,10 +305,16 @@ void ValuesBucketFuzz(FuzzedDataProvider &provider)
 
 } // namespace OHOS
 
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+{
+    OHOS::ReturningFuzzTest::SetUpTestCase();
+    return 0;
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     FuzzedDataProvider provider(data, size);
-    OHOS::ReturningFuzzTest::SetUpTestCase();
     OHOS::BatchInsertReturningFuzz(provider, ReturningFuzzTest::store_);
     OHOS::UpdateReturningFuzz(provider, ReturningFuzzTest::store_);
     OHOS::DeleteReturningFuzz(provider, ReturningFuzzTest::store_);
