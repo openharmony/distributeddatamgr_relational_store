@@ -41,7 +41,7 @@ public:
         std::weak_ptr<NativeRdb::RdbStore> store);
     void OnCorrupt();
     void SetStore(std::shared_ptr<NativeRdb::RdbStore> store);
-    std::shared_ptrOHOS::NativeRdb::RdbStore GetStore();
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore();
 
 private:
     OH_Rdb_ConfigV2 *config_;
