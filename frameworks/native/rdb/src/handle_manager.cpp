@@ -29,7 +29,7 @@ HandleManager &HandleManager::GetInstance()
     return instance;
 }
 
-int HandleManager::Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr corruptHandler)
+int HandleManager::Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler)
 {
     if (corruptHandler == nullptr) {
         LOG_ERROR("register failed: corruptHandler is null.");
@@ -82,7 +82,7 @@ void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
         }
         auto tmpHandler = handler;
         taskPool->Schedule(std::chrono::milliseconds(100), [tmpHandler]() {
-                tmpHandler->OnCorrupt();
+            tmpHandler->OnCorrupt();
         });
     }
 }

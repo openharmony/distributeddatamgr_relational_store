@@ -45,7 +45,7 @@ public:
     API_EXPORT static std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int version, RdbOpenCallback &openCallback, int &errCode);
 
-    API_EXPORT static std::shared_ptr GetRdb(const RdbStoreConfig &config);
+    API_EXPORT static std::shared_ptr<RdbStore> GetRdb(const RdbStoreConfig &config);
 
     /**
      * @brief Deletes the database with a specified name.
