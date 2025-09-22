@@ -168,7 +168,7 @@ HWTEST_F(RdbSecurityManagerTest, LockNBTest001, TestSize.Level1)
     std::string lockPath = dbFile_ + "-LockNBTest001";
     RdbSecurityManager::KeyFiles keyFiles(lockPath);
     EXPECT_EQ(keyFiles.DestroyLock(), E_OK);
-    EXPECT_NE(keyFiles.Lock(false), E_OK);
+    EXPECT_EQ(keyFiles.Lock(false), E_OK);
 }
 
 /**
@@ -191,14 +191,16 @@ HWTEST_F(RdbSecurityManagerTest, LockNBTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: InitPathTest
- * @tc.desc: test init path test
+ * @tc.name: KeyFilesLockTest001
+ * @tc.desc: Abnormal test for LockNB
  * @tc.type: FUNC
  */
-HWTEST_F(RdbSecurityManagerTest, InitPathTest, TestSize.Level1)
+HWTEST_F(RdbSecurityManagerTest, KeyFilesLockTest001, TestSize.Level1)
 {
     std::string filePath("system/test");
-    bool ret = RdbSecurityManager::InitPath(filePath);
-    EXPECT_FALSE(ret);
+    RdbSecurityManager::KeyFiles keyFiles(filePath);
+    keyFiles.lock_ = "";
+    EXPECT_EQ(keyFiles.Lock(false), E_INVALID_FILE_PATH);
 }
+
 } // namespace Test

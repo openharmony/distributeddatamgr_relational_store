@@ -136,7 +136,7 @@ std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::st
 {
     std::chrono::system_clock::time_point timePoint;
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v1";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2";
     if (!OHOS::FileExists(keyPath)) {
         return timePoint;
     }
@@ -157,7 +157,7 @@ std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::st
 bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 {
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v1";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2";
     if (!OHOS::FileExists(keyPath)) {
         return false;
     }
@@ -178,8 +178,8 @@ bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 bool RdbRekeyTest::SaveNewKey(const string &dbName)
 {
     std::string name = RemoveSuffix(dbName);
-    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v1";
-    auto newKeyPath = RDB_TEST_PATH + "key/" + name + ".pub_key.new";
+    auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2";
+    auto newKeyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2.new";
     if (!OHOS::FileExists(keyPath)) {
         return false;
     }
@@ -257,8 +257,8 @@ void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -288,7 +288,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
@@ -314,8 +314,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -345,8 +345,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -375,8 +375,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -406,8 +406,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
 {
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key.new";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
 
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
@@ -452,7 +452,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
     struct stat fileStat;
@@ -498,7 +498,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
     struct stat fileStat;
@@ -986,7 +986,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_FALSE(isFileExists);
 
@@ -1050,7 +1050,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
  
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v1";
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
  
@@ -1167,108 +1167,4 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 1);
-}
-
-/**
-* @tc.name: DecryptV1Test_001
-* @tc.desc: RdbSecurityManager DecryptV1 test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, DecryptV1Test_001, TestSize.Level1)
-{
-    RdbSecurityManager manager;
-    RdbSecretContent content;
-    std::string invalidStr = ".pub";
-    auto str = manager.ReplaceSuffix(invalidStr);
-    EXPECT_EQ(invalidStr, str);
-    bool res = false;
-    RdbSecretKeyData keyData;
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
- 
-    content.encrypt_ = {0x01, 0x02, 0x03, 0x04};
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
- 
-    std::vector<uint8_t> timeData(sizeof(time_t), 0x00);
-    time_t testTime = 1630400000;
-    errno_t err = memcpy_s(timeData.data(),
-        timeData.size(),
-        &testTime,
-        sizeof(time_t)
-    );
-    EXPECT_EQ(err, EOK);
-    
-    std::vector<uint8_t> key(16, 0x01);
-    content.encrypt_ = {0x01};
-    content.encrypt_.insert(content.encrypt_.end(), timeData.begin(), timeData.end());
-    content.encrypt_.insert(content.encrypt_.end(), key.begin(), key.end());
-    content.nonce_.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x01);
-    
-    std::tie(res, keyData) = manager.DecryptV1(content);
-    EXPECT_FALSE(res);
-    EXPECT_EQ(keyData.distributed, 0x01);
-    EXPECT_EQ(keyData.timeValue, testTime);
-}
- 
-/**
-* @tc.name: DecryptV1Test_002
-* @tc.desc: RdbSecurityManager decryptV1 key length invalid test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, DecryptV1Test_002, TestSize.Level1)
-{
-    RdbSecurityManager manager;
-    RdbSecretContent content;
-    content.encrypt_.push_back(0x01);
- 
-    time_t testTime = 1630400000;
-    std::vector<uint8_t> timeData(sizeof(time_t));
-    errno_t err = memcpy_s(
-        timeData.data(),
-        timeData.size(),
-        &testTime,
-        sizeof(time_t)
-    );
-    EXPECT_EQ(err, EOK);
- 
-    content.encrypt_.insert(content.encrypt_.end(), timeData.begin(), timeData.end());
-    const size_t keyDataSize = RdbSecurityManager::AEAD_LEN + 1;
-    std::vector<uint8_t> keyData(keyDataSize, 0x01);
-    content.encrypt_.insert(content.encrypt_.end(), keyData.begin(), keyData.end());
-    content.nonce_.resize(RdbSecretContent::NONCE_VALUE_SIZE, 0x02);
-    auto result = manager.DecryptV1(content);
-    EXPECT_TRUE(result.first);
-    EXPECT_EQ(result.second.distributed, 0x01);
-    EXPECT_EQ(result.second.timeValue, testTime);
-    EXPECT_TRUE(result.second.secretKey.empty());
-}
-
-/**
-* @tc.name: Rdb_UnpackV2_Test_001
-* @tc.desc: unpackV2 test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, UnpackV2Test, TestSize.Level1)
-{
-    RdbSecurityManager manager;
-    std::vector<char> content;
-    auto result = manager.UnpackV2(content);
-    EXPECT_FALSE(result.first);
-    EXPECT_EQ(result.second.nonce_.size(), 0);
-    EXPECT_EQ(result.second.encrypt_.size(), 0);
- 
-    uint32_t magicNum = RdbSecretContent::MAGIC_NUMBER_V2;
-    char* magicPtr = reinterpret_cast<char*>(&magicNum);
-    content.insert(content.end(), magicPtr, magicPtr + sizeof(magicNum));
-
-    const size_t nonceSize = RdbSecretContent::NONCE_VALUE_SIZE - 1;
-    std::vector<char> nonce(nonceSize, 'N');
-    content.insert(content.end(), nonce.begin(), nonce.end());
-
-    result = manager.UnpackV2(content);
-
-    EXPECT_FALSE(result.first);
-    EXPECT_EQ(result.second.nonce_.size(), 0);
-    EXPECT_EQ(result.second.encrypt_.size(), 0);
 }

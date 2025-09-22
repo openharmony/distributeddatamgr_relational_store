@@ -251,6 +251,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
       "${relational_store_mock_path}/frameworks/native/win32",
+      "${relational_store_mock_path}/frameworks/native/win32/openssl",
       "mock/include",
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb/mock/include",
@@ -302,6 +303,7 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp",
+      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
