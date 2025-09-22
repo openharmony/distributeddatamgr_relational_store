@@ -86,7 +86,7 @@ static constexpr int E_DFX_UPGRADE_KEY_FAIL = (E_DFX_BASE + 0xC);
 /**
  * @brief Only use for dfx, print key file hmac failed.
  */
-static constexpr int E_DFX_HMAC_KEY_FAIL = (E_DFX_BASE + 0xC);
+static constexpr int E_DFX_HMAC_KEY_FAIL = (E_DFX_BASE + 0xD);
 
 } // namespace NativeRdb
 } // namespace OHOS

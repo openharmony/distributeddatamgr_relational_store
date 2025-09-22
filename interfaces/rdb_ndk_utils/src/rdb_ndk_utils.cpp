@@ -76,7 +76,6 @@ std::pair<int32_t, OHOS::NativeRdb::RdbStoreConfig> RdbNdkUtils::GetRdbStoreConf
     rdbStoreConfig.SetArea(config->area - 1);
     rdbStoreConfig.SetIsVector(config->dbType == RDB_CAYLEY);
     rdbStoreConfig.SetBundleName(config->bundleName);
-    rdbStoreConfig.SetModuleName(config->moduleName);
     rdbStoreConfig.SetName(config->storeName);
     rdbStoreConfig.SetTokenizer(ConvertTokenizer2Native(static_cast<Rdb_Tokenizer>(config->token)));
     rdbStoreConfig.SetStorageMode(

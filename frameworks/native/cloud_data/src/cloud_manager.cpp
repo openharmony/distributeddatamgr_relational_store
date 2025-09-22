@@ -26,6 +26,7 @@ namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 
+static constexpr int LOAD_SA_TIMEOUT_SECONDS = 1;
 class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
 public:
     explicit DataMgrService(const sptr<IRemoteObject> &impl);
@@ -65,6 +66,10 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
+    if (dataMgrObject == nullptr) {
+        LOG_WARN("Check distributed data manager failed");
+        dataMgrObject = saMgr->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
+    }
     if (dataMgrObject == nullptr) {
         LOG_ERROR("Get distributed data manager failed.");
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
