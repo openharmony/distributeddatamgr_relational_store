@@ -191,7 +191,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 
 std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, const std::string &key)
 {
-    unsigned char hmacResult[EVP_MAX_MD_SIZE];
+    unsigned char hmacResult[HMAC_SIZE];
     unsigned int hmacLen;
 
     HMAC(EVP_sha256(),
@@ -201,7 +201,7 @@ std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, cons
 
     std::vector<char> result;
     result.reserve(HMAC_SIZE);
-    for (unsigned int i = 0; i < HMAC_SIZE && i < hmacLen; ++i) {
+    for (unsigned int i = 0; i < HMAC_SIZE; ++i) {
         result.push_back(static_cast<char>(hmacResult[i]));
     }
     return result;
@@ -429,6 +429,8 @@ void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::strin
                 SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
             return;
         }
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
+            "version:" std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
         keyData.secretKey.assign(keyData.secretKey.size(), 0);
     }
 }
@@ -624,6 +626,8 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<c
     std::vector<char> storedHMAC(content.begin() + dataLength, content.end());
     auto calculatedHMAC = GenerateHMAC(originalData, "");
     if (calculatedHMAC != storedHMAC) {
+        Reportor::ReportFault(RdbFaultEvent(
+            FT_EX_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac key file failed" + std::to_string(errno)));
         LOG_ERROR("hmac check failed");
         return { false, rdbSecretContent };
     }
