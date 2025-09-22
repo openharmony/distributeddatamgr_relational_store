@@ -48,7 +48,7 @@ private:
     void *context_;
     Rdb_CorruptedHandler *handler_;
     std::weak_ptr<NativeRdb::RdbStore> store_;
-    std::atomic isExecute_ = false;
+    std::atomic<bool> isExecute_ = false;
 };
 
 class NDKStoreObserver : public OHOS::DistributedRdb::RdbStoreObserver {
