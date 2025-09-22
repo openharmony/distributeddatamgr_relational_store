@@ -61,7 +61,7 @@ int HandleManager::Unregister(const std::string &path)
     return E_OK;
 }
 
-std::shared_ptr HandleManager::GetHandler(const std::string &path)
+std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &path)
 {
     std::lock_guardstd::mutex lock(mutex_);
     auto it = handlers_.find(path);
