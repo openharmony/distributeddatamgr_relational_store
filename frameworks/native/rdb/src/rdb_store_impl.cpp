@@ -1185,6 +1185,8 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (initStatus_ != -1) {
         return initStatus_;
     }
+    isNeedSetAcl = isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
+                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID);
     std::lock_guard<std::mutex> lock(initMutex_);
     if (initStatus_ != -1) {
         return initStatus_;
@@ -1197,6 +1199,10 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
             SqliteUtils::Anonymous(path_).c_str());
         return errCode;
+    }
+    if (isNeedSetAcl) {
+        isNeedSetAcl_ = true;
+        SetFileGid(config_, SERVICE_GID);
     }
     InitSyncerParam(config_, created);
     InitReportFunc(syncerParam_);
@@ -1217,10 +1223,6 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         }
     }
     initStatus_ = errCode;
-    if (isNeedSetAcl) {
-        isNeedSetAcl_ = true;
-        SetFileGid(config_, SERVICE_GID);
-    }
     return initStatus_;
 }
 
