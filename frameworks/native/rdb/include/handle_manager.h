@@ -39,7 +39,7 @@ private:
     HandleManager() = default;
     HandleManager(const HandleManager &) = delete;
     HandleManager &operator=(const HandleManager &) = delete;
-    std::map<std::string, std::shared_ptr> handlers_;
+    std::map<std::string, std::shared_ptr<CorruptHandler>> handlers_;
     std::mutex mutex_;
 };
 

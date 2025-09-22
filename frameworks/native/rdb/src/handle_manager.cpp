@@ -53,7 +53,7 @@ int HandleManager::Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr<Corru
 
 int HandleManager::Unregister(const std::string &path)
 {
-    std::lock_guardstd::mutex lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = handlers_.find(path);
     if (it != handlers_.end()) {
         handlers_.erase(it);
