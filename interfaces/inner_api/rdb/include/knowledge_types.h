@@ -46,6 +46,7 @@ struct RdbKnowledgeField {
 struct RdbKnowledgeTable {
     std::string tableName;
     std::string tokenizer;
+    bool processInvertedFirst;
     std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
     std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;

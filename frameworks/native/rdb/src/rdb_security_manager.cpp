@@ -191,7 +191,7 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 
 std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, const std::string &key)
 {
-    unsigned char hmacResult[HMAC_SIZE];
+    unsigned char hmacResult[EVP_MAX_MD_SIZE];
     unsigned int hmacLen;
 
     HMAC(EVP_sha256(),
@@ -201,7 +201,7 @@ std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, cons
 
     std::vector<char> result;
     result.reserve(HMAC_SIZE);
-    for (unsigned int i = 0; i < HMAC_SIZE; ++i) {
+    for (unsigned int i = 0; i < HMAC_SIZE && i < hmacLen; ++i) {
         result.push_back(static_cast<char>(hmacResult[i]));
     }
     return result;
@@ -348,7 +348,7 @@ bool RdbSecurityManager::CreateDir(const std::string &fileDir)
 
 std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(const std::string &keyPath)
 {
-    LOG_INFO("load secret key V0path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    LOG_INFO("load secret key path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     RdbSecretKeyData keyData;
     if (SqliteUtils::IsKeyFileEmpty(keyPath)) {
         return { false, keyData };
@@ -375,7 +375,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(co
 
 std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath)
 {
-    LOG_INFO("load secret key V1path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    LOG_INFO("load secret key path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     RdbSecretKeyData keyData;
     if (SqliteUtils::IsKeyFileEmpty(keyPath)) {
         return { false, keyData };
@@ -430,7 +430,7 @@ void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::strin
             return;
         }
         Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
-            "version:" std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
+            "version:" + std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
         keyData.secretKey.assign(keyData.secretKey.size(), 0);
     }
 }

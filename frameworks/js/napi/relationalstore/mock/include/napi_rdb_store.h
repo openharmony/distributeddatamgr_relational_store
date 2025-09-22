@@ -35,6 +35,7 @@ class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
 class NapiPerfStatObserver;
 class NapiLogObserver;
+struct NapiRdbStoreData;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
@@ -107,18 +108,16 @@ private:
         { "perfStat", &RdbStoreProxy::OffPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog },
     };
-    void UnregisterAll();
+    static void UnregisterAll(
+        std::shared_ptr<NativeRdb::RdbStore> rdbStore, std::shared_ptr<NapiRdbStoreData> napiRdbStoreData);
+    std::shared_ptr<NapiRdbStoreData> StealNapiRdbStoreData();
 
     int32_t dbType = NativeRdb::DB_SQLITE;
     std::mutex mutex_;
     bool isSystemAppCalled_ = false;
-    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localObservers_;
-    std::map<std::string, std::list<std::shared_ptr<NapiRdbStoreObserver>>> localSharedObservers_;
     std::shared_ptr<AppDataMgrJsKit::UvQueue> queue_;
-    std::list<std::shared_ptr<NapiStatisticsObserver>> statisticses_;
     std::list<std::shared_ptr<NapiPerfStatObserver>> perfStats_;
-    std::list<std::shared_ptr<NapiLogObserver>> logObservers_;
-
+    std::shared_ptr<NapiRdbStoreData> napiRdbStoreData_ = nullptr;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
 };

@@ -29,7 +29,6 @@
 #include <cstdio>
 #include <cstring>
 #if !defined(CROSS_PLATFORM)
-#include <filesystem>
 #include <sqlite3.h>
 #include "relational/relational_store_sqlite_ext.h"
 #endif
@@ -42,6 +41,7 @@
 #include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_file_system.h"
 #include "rdb_platform.h"
 #include "rdb_store_config.h"
 #include "string_utils.h"
@@ -124,13 +124,9 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
     if ((aclAccess.SetAccessGroup(gid, mode) != E_OK) || (aclDefault.SetDefaultGroup(gid, mode) != E_OK)) {
         return false;
     }
-    std::error_code ec;
-    for (const auto &entry : std::filesystem::recursive_directory_iterator(path, ec)) {
-        if (ec) {
-            ec.clear();
-            continue;
-        }
-        Acl aclAccess(entry.path().string(), Acl::ACL_XATTR_ACCESS);
+    auto entries = RdbFileSystem::GetEntries(path);
+    for (const auto &entry : entries) {
+        Acl aclAccess(entry, Acl::ACL_XATTR_ACCESS);
         if ((aclAccess.SetAccessGroup(gid, mode) != E_OK)) {
             return false;
         }
@@ -406,19 +402,13 @@ std::string SqliteUtils::RemoveSuffix(const std::string &name)
 
 size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
 {
-#if !defined(CROSS_PLATFORM)
-    std::error_code ec;
-    size_t count = std::filesystem::remove_all(folderPath, ec);
+    auto [count, ec] = RdbFileSystem::RemoveAll(folderPath);
     auto errorCount = static_cast<std::uintmax_t>(-1);
     if (count == errorCount) {
-        LOG_WARN("remove folder, %{public}d, %{public}s, %{public}s", ec.value(),
-            ec.message().c_str(), Anonymous(folderPath).c_str());
+        LOG_WARN("remove folder, %{public}d, %{public}s", ec, Anonymous(folderPath).c_str());
         count = 0;
     }
     return count;
-#else
-    return 0;
-#endif
 }
 
 bool SqliteUtils::IsKeyword(const std::string &word)

@@ -337,6 +337,8 @@ public:
     void SetSearchable(bool searchable);
     int GetWriteTime() const;
     void SetWriteTime(int timeout);
+    int GetTransactionTime() const;
+    void SetTransactionTime(int timeout);
     int GetReadTime() const;
     void SetReadTime(int timeout);
     void SetRoleType(RoleType role);
@@ -397,6 +399,7 @@ private:
     int32_t readConSize_ = 4;
     int32_t area_ = 0;
     int32_t writeTimeout_ = 2; // seconds
+    int32_t transactionTimeout_ = 2; // seconds
     int32_t readTimeout_ = 1;  // seconds
     int32_t dbType_ = DB_SQLITE;
     int32_t haMode_ = HAMode::SINGLE;
