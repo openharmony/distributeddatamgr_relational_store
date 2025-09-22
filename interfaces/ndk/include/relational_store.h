@@ -1081,6 +1081,12 @@ typedef void (*Rdb_BriefObserver)(void *context, const char *values[], uint32_t 
  */
 typedef void (*Rdb_DetailsObserver)(void *context, const Rdb_ChangeInfo **changeInfo, uint32_t count);
 
+typedef void (*Rdb_CorruptedHandler)(OH_Rdb_ConfigV2 *config, void *context, OH_Rdb_Store *store);
+
+int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler);
+
+int OH_Rdb_UnRegisterCorruptedHandler(OH_Rdb_ConfigV2 *config);
+
 /**
  * @brief Indicates the callback functions.
  *

@@ -37,6 +37,7 @@ public:
     virtual ~RdbStoreManager();
     std::shared_ptr<RdbStore> GetRdbStore(
         const RdbStoreConfig &config, int &errCode, int version, RdbOpenCallback &openCallback);
+    std::shared_ptr GetRdb(const RdbStoreConfig &config);
     void Clear();
     void Init();
     bool Destroy();

@@ -146,6 +146,16 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     return rdbStore;
 }
 
+std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
+{
+    std::string path;
+    int errCode = SqliteGlobalConfig::GetDbPath(config, path);
+    if (errCode != E_OK) {
+        return nullptr;
+    }
+    return GetStoreFromCache(path, config, errCode);
+}
+
 bool RdbStoreManager::SilentProxys::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(silentProxys)], silentProxys);
