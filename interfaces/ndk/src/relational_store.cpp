@@ -1165,7 +1165,7 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
 }
 
 NDKCorruptHandler::NDKCorruptHandler(
-    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptrNativeRdb::RdbStore store)
+    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptr<NativeRdb::RdbStore> store)
     : config_(config), context_(context), handler_(handler), store_(std::move(store))
 {
 }
@@ -1188,12 +1188,12 @@ void NDKCorruptHandler::OnCorrupt()
     }
 }
 
-void NDKCorruptHandler::SetStore(std::shared_ptrOHOS::NativeRdb::RdbStore store)
+void NDKCorruptHandler::SetStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)
 {
     store_ = store;
 }
 
-std::shared_ptrOHOS::NativeRdb::RdbStore NDKCorruptHandler::GetStore()
+std::shared_ptr<OHOS::NativeRdb::RdbStore> NDKCorruptHandler::GetStore()
 {
     return store_.lock();
 }

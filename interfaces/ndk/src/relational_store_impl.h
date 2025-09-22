@@ -37,17 +37,17 @@ private:
 
 class NDKCorruptHandler : public NativeRdb::CorruptHandler {
 public:
-    explicit NDKCorruptHandler(
-        OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptrNativeRdb::RdbStore store);
+    explicit NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler,
+        std::weak_ptr<NativeRdb::RdbStore> store);
     void OnCorrupt();
-    void SetStore(std::shared_ptrNativeRdb::RdbStore store);
+    void SetStore(std::shared_ptr<NativeRdb::RdbStore> store);
     std::shared_ptrOHOS::NativeRdb::RdbStore GetStore();
 
 private:
     OH_Rdb_ConfigV2 *config_;
     void *context_;
     Rdb_CorruptedHandler *handler_;
-    std::weak_ptrNativeRdb::RdbStore store_;
+    std::weak_ptr<NativeRdb::RdbStore> store_;
     std::atomic isExecute_ = false;
 };
 
