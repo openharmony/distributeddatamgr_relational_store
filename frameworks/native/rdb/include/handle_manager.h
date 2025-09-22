@@ -16,9 +16,9 @@
 #ifndef HANDLE_MANAGER_H
 #define HANDLE_MANAGER_H
 
-#include
-#include
-#include
+#include <mutex>
+#include <map>
+#include <memory>
 #include "rdb_store.h"
 #include "rdb_types.h"
 
