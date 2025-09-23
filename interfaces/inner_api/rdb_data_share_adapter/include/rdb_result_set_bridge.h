@@ -40,7 +40,7 @@ public:
 private:
     int32_t WriteBlock(int32_t start, int32_t target, int columnCount, Writer &writer);
     bool WriteBlobData(int column, Writer &writer);
-    void WriteColumn(int columnCount, Writer &writer, int row);
+    int32_t WriteColumn(int columnCount, Writer &writer, int row);
     std::shared_ptr<ResultSet> rdbResultSet_;
 };
 } // namespace RdbDataShareAdapter
