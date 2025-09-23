@@ -28,6 +28,7 @@ struct RDBCryptoFault {
     std::string message;
 };
 struct RDBCryptoParam {
+    std::vector<uint8_t> rootAlias;
     std::vector<uint8_t> nonce_;
     std::vector<uint8_t> KeyValue;
     RDBCryptoParam() = default;
@@ -36,14 +37,6 @@ struct RDBCryptoParam {
         nonce_.assign(nonce_.size(), 0);
         KeyValue.assign(KeyValue.size(), 0);
     }
-};
-class RDBCrypto {
-public:
-    virtual ~RDBCrypto();
-    virtual int32_t Init(RDBCryptoFault &rdbFault);
-    virtual bool RootKeyExists();
-    virtual std::vector<uint8_t> Encrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault) = 0;
-    virtual std::vector<uint8_t> Decrypt(const RDBCryptoParam &param, RDBCryptoFault &rdbFault) = 0;
 };
 } // namespace OHOS::NativeRdb
 } // OHOS
