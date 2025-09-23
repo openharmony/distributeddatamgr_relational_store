@@ -27,6 +27,7 @@
 using namespace testing::ext;
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
+using RdbConfig = OHOS::NativeRdb::RdbStoreConfig;
 
 class RdbStoreConfigTest : public testing::Test {
 public:
@@ -1293,7 +1294,7 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_039, TestSize.Level2)
 }
 
 /* *
- * @tc.name: RdbStoreConfigSetEnableSemanticIndex_001
+ * @tc.name: RdbStoreConfigSetEnableSemanticIndex_002
  * @tc.desc: test RdbStoreConfigSetEnableSemanticIndex
  * @tc.type: FUNC
  */
@@ -1309,4 +1310,40 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_040, TestSize.Level2)
     enableSemanticIndex = false;
     config.SetEnableSemanticIndex(enableSemanticIndex);
     EXPECT_EQ(enableSemanticIndex, config.GetEnableSemanticIndex());
+}
+
+/* *
+ * @tc.name: RdbStoreConfigSetTransactionTime_001
+ * @tc.desc: test RdbStoreConfigSetTransactionTime
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_041, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    // set transactionTime_ to 0
+    int transactionTime = 0;
+    config.SetTransactionTime(transactionTime);
+    EXPECT_EQ(RdbConfig::MIN_TIMEOUT, config.GetTransactionTime());
+
+    // set transactionTime_ to 400
+    transactionTime = 400;
+    config.SetTransactionTime(transactionTime);
+    EXPECT_EQ(RdbConfig::MAX_TIMEOUT, config.GetTransactionTime());
+
+    // set transactionTime_ to 200
+    transactionTime = 200;
+    config.SetTransactionTime(transactionTime);
+    EXPECT_EQ(transactionTime, config.GetTransactionTime());
+
+    // set transactionTime_ to 1
+    transactionTime = 1;
+    config.SetTransactionTime(transactionTime);
+    EXPECT_EQ(transactionTime, config.GetTransactionTime());
+
+    // set transactionTime_ to 300
+    transactionTime = 300;
+    config.SetTransactionTime(transactionTime);
+    EXPECT_EQ(transactionTime, config.GetTransactionTime());
 }
