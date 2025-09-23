@@ -76,6 +76,7 @@ public:
     static std::string GetArea(const std::string &srcFile);
     static ssize_t GetFileSize(const std::string &fileName);
     static bool IsSlaveDbName(const std::string &fileName);
+    static bool DeleteFiles(const std::vector<std::string> &filePaths);
     static std::string GetSlavePath(const std::string &name);
     static int SetSlaveInvalid(const std::string &dbPath);
     static int SetSlaveInterrupted(const std::string &dbPath);
@@ -91,6 +92,8 @@ public:
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
+    static bool IsFilePathEmpty(const std::string &filePath);
+    static bool IsFilePathsEmpty(const std::vector<std::string> &filePaths);
     static void WriteSqlToFile(const std::string &comparePath, const std::string &sql);
     static bool CleanFileContent(const std::string &filePath);
     static std::string GetErrInfoFromMsg(const std::string &message, const std::string &errStr);
