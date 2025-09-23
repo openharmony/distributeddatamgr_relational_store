@@ -24,6 +24,7 @@
 #include "file_ex.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
+#include "relational_store_crypt.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
