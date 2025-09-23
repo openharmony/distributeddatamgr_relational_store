@@ -18,7 +18,11 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <fstream>
 #include <securec.h>
+#include <sstream>
+#include <iomanip>
+#include <openssl/hmac.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -39,12 +43,9 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-using Reporter = RdbFaultHiViewReporter;
-using CheckRootKeyExistsFunc = int32_t (*)(std::vector<uint8_t> &);
-using GenerateRootKeyFunc = int32_t (*)(const std::vector<uint8_t> &, RDBCryptoFault &);
-using EncryptFunc = std::vector<uint8_t> (*)(const RDBCryptoParam &, RDBCryptoFault &);
-using DecryptFunc = std::vector<uint8_t> (*)(const RDBCryptoParam &, RDBCryptoFault &);
-using GenerateRandomNumFunc = std::vector<uint8_t> (*)(int32_t &);
+using Reportor = RdbFaultHiViewReporter;
+using Creator = std::shared_ptr<OHOS::NativeRdb::RDBCrypto> (*)(const std::vector<uint8_t> &rootKeyAlias);
+using GenerateRandomNumFunc = std::vector<uint8_t> (*)(const uint32_t, RDBCryptoFault &);
 
 RdbPassword::RdbPassword() = default;
 
@@ -108,130 +109,126 @@ bool RdbPassword::IsValid() const
     return size_ != 0;
 }
 
-std::vector<uint8_t> RdbSecurityManager::GetRootKeyAlias()
-{
-    std::lock_guard<std::mutex> lock(rootKeyMutex_);
-    return rootKeyAlias_;
-}
-
-void RdbSecurityManager::SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias)
-{
-    std::lock_guard<std::mutex> lock(rootKeyMutex_);
-    rootKeyAlias_ = std::move(rootKeyAlias);
-}
-
-std::string RdbSecurityManager::GetBundleNameByAlias()
-{
-    auto rootKeyAlias = GetRootKeyAlias();
-    return GetBundleNameByAlias(rootKeyAlias);
-}
-
-std::string RdbSecurityManager::GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias)
-{
-    auto prefixLen = strlen(RDB_ROOT_KEY_ALIAS_PREFIX);
-    if (rootKeyAlias.size() > prefixLen) {
-        return std::string(rootKeyAlias.begin() + prefixLen, rootKeyAlias.end());
-    }
-    return "";
-}
-
 RdbSecurityManager::RdbSecurityManager()
+    : rootAlias_(std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS, RDB_ROOT_KEY_ALIAS + strlen(RDB_ROOT_KEY_ALIAS))),
+      handle_(nullptr)
 {
-    handle_ = nullptr;
-};
+}
+
+void RdbSecurityManager::SetBundleName(const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(bundleNameMutex_);
+    bundleNames_.insert(bundleName);
+}
+
+std::set<std::string> RdbSecurityManager::GetBundleNames()
+{
+    std::lock_guard<std::mutex> lock(bundleNameMutex_);
+    return bundleNames_;
+}
+
+std::string RdbSecurityManager::GetBundleName()
+{
+    std::lock_guard<std::mutex> lock(bundleNameMutex_);
+    if (bundleNames_.empty()) {
+        return "";
+    }
+    std::string result;
+    for (const auto& bundleName: bundleNames_) {
+        if (!result.empty()) {
+            result += " ";
+        }
+        result += bundleName;
+    }
+    return result;
+}
 
 RdbSecurityManager::~RdbSecurityManager()
 {
+    rdbCrypto_ = nullptr;
     if (handle_ != nullptr) {
         dlclose(handle_);
         handle_ = nullptr;
     }
 }
 
-std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(int32_t len)
+std::vector<uint8_t> RdbSecurityManager::GenerateRandomNum(uint32_t len)
 {
     auto handle = GetHandle();
     if (handle == nullptr) {
         return {};
     }
-    auto generateRandomNum = reinterpret_cast<GenerateRandomNumFunc>(dlsym(handle, "generateRandomNum"));
+    auto generateRandomNum = reinterpret_cast<GenerateRandomNumFunc>(dlsym(handle, "GenerateRdbRandomNum"));
     if (generateRandomNum == nullptr) {
         LOG_ERROR("dlsym GenerateRandomNum failed(%{public}d)!", errno);
         return {};
     }
-    auto ret = generateRandomNum(len);
+    RDBCryptoFault rdbFault;
+    auto ret = generateRandomNum(len, rdbFault);
+    ReportCryptFault(rdbFault.code, rdbFault.message);
     return ret;
 }
 
-bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey)
+bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workKey)
 {
     LOG_INFO("begin keyFile%{public}s.", SqliteUtils::Anonymous(keyFile).c_str());
-    if (!HasRootKey()) {
-        Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_ROOT_KEY_NOT_LOAD, GetBundleNameByAlias(), "not root key"));
-        LOG_ERROR("Root key not exists!");
-        return false;
-    }
 
-    std::vector<uint8_t> key = workey.empty() ? GenerateRandomNum(RDB_KEY_SIZE) : workey;
+    std::vector<uint8_t> key = workKey.empty() ? GenerateRandomNum(RDB_KEY_SIZE) : workKey;
     if (key.empty()) {
         return false;
     }
-    RdbSecretKeyData keyData;
-    keyData.timeValue = std::chrono::system_clock::to_time_t(std::chrono::system_clock::system_clock::now());
-    std::vector<uint8_t> keyContent;
-    keyContent.push_back(char(keyData.distributed));
-    keyContent.insert(keyContent.end(), reinterpret_cast<uint8_t*>(&keyData.timeValue),
-        reinterpret_cast<uint8_t*>(&keyData.timeValue) + sizeof(keyData.timeValue));
-    keyContent.insert(keyContent.end(), key.begin(), key.end());
-    auto [res, secretContent] = EncryptWorkKey(keyContent);
-    if (!res) {
+    std::shared_ptr<const char> autoClean =
+        std::shared_ptr<const char>("autoClean", [&key](const char *) mutable { key.assign(key.size(), 0); });
+    auto [res, secretContent] = EncryptWorkKey(key);
+    if (!res || secretContent.encrypt_.empty()) {
+        Reportor::ReportFault(
+            RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleName() + "res:" + std::to_string(res), "key is empty"));
         LOG_ERROR("EncryptWorkKey failed, keyFile%{public}s", SqliteUtils::Anonymous(keyFile).c_str());
-        keyContent.assign(keyContent.size(), 0);
-        key.assign(key.size(), 0);
         return false;
     }
-    if (secretContent.encrypt_.empty()) {
-        Reporter::ReportFault(RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "key is empty"));
-        LOG_ERROR("Key size is 0");
-        keyContent.assign(keyContent.size(), 0);
-        key.assign(key.size(), 0);
-        return false;
-    }
+    return SaveSecretKeyToDisk(keyFile, secretContent);
+}
 
-    keyContent.assign(keyContent.size(), 0);
-    key.assign(key.size(), 0);
-    auto keyFileOld = ReplaceSuffix(keyFile);
-    auto ret = SaveSecretKeyToDisk(keyFile, secretContent);
-    if (!ret) {
-        LOG_ERROR("Save key to file fail, ret:%{public}d", ret);
-        return false;
+std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, const std::string &key)
+{
+    unsigned char hmacResult[EVP_MAX_MD_SIZE];
+    unsigned int hmacLen;
+
+    HMAC(EVP_sha256(),
+         key.c_str(), static_cast<int>(key.length()),
+         reinterpret_cast<const unsigned char*>(data.data()), static_cast<int>(data.size()),
+         hmacResult, &hmacLen);
+
+    std::vector<char> result;
+    result.reserve(HMAC_SIZE);
+    for (unsigned int i = 0; i < HMAC_SIZE && i < hmacLen; ++i) {
+        result.push_back(static_cast<char>(hmacResult[i]));
     }
-    return SqliteUtils::DeleteFile(keyFileOld);
+    return result;
 }
 
 bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent)
 {
     LOG_INFO("begin keyPath:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-
-    std::string secretKeyInString;
-    secretKeyInString.append(reinterpret_cast<const char *>(&secretContent.magicNum), sizeof(uint32_t));
-    secretKeyInString.append(
-        reinterpret_cast<const char *>(secretContent.nonce_.data()), secretContent.nonce_.size());
-    secretKeyInString.append(
-        reinterpret_cast<const char *>(secretContent.encrypt_.data()), secretContent.encrypt_.size());
-
-    bool ret;
+    std::vector<char> payload;
+    payload.push_back(secretContent.version);
+    payload.insert(payload.end(), secretContent.nonce_.begin(), secretContent.nonce_.end());
+    payload.insert(payload.end(), secretContent.encrypt_.begin(), secretContent.encrypt_.end());
+    auto hmacKey = GenerateHMAC(payload, "");
+    payload.insert(payload.end(), hmacKey.begin(), hmacKey.end());
+    bool ret = false;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto fd = open(keyPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        ret = SaveStringToFd(fd, secretKeyInString);
         if (fd >= 0) {
             close(fd);
+            ret = SaveBufferToFile(keyPath, payload);
         }
     }
     if (!ret) {
-        Reporter::ReportFault(RdbFaultEvent(
-            FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleNameByAlias(), "save fail errno=" + std::to_string(errno)));
+        Reportor::ReportFault(
+            RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleName(), "save fail errno=" + std::to_string(errno)));
+        LOG_ERROR("Save key to file fail errno:%{public}d", errno);
     }
     return ret;
 }
@@ -241,91 +238,56 @@ void RdbSecurityManager::ReportCryptFault(int32_t code, const std::string &messa
     if (message.empty()) {
         return;
     }
-    Reporter::ReportFault(RdbFaultEvent(FT_EX_HUKS, code, GetBundleNameByAlias(), message));
+    Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, code, GetBundleName(), message));
+}
+
+std::shared_ptr<RDBCrypto> RdbSecurityManager::GetDelegate()
+{
+    std::lock_guard<std::mutex> lock(cryptoMutex_);
+    if (rdbCrypto_ != nullptr) {
+        return rdbCrypto_;
+    }
+    rdbCrypto_ = CreateDelegate(rootAlias_);
+    RDBCryptoFault fault;
+    auto ret = rdbCrypto_->Init(fault);
+    if (ret != E_OK) {
+        ReportCryptFault(fault.code, fault.message);
+        rdbCrypto_ = nullptr;
+        return nullptr;
+    }
+    return rdbCrypto_;
 }
 
 int32_t RdbSecurityManager::Init(const std::string &bundleName)
 {
-    std::vector<uint8_t> rootKeyAlias = GenerateRootKeyAlias(bundleName);
-    constexpr uint32_t RETRY_MAX_TIMES = 5;
-    constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000;
-    int32_t ret = HKS_FAILURE;
-    uint32_t retryCount = 0;
-    while (retryCount < RETRY_MAX_TIMES) {
-        ret = CheckRootKeyExists(rootKeyAlias);
-        if (ret == HKS_ERROR_NOT_EXIST) {
-            hasRootKey_ = false;
-            ret = GenerateRootKey(rootKeyAlias);
-        }
-        if (ret == HKS_SUCCESS) {
-            if (!HasRootKey()) {
-                hasRootKey_ = true;
-            }
-            SetRootKeyAlias(std::move(rootKeyAlias));
-            break;
-        }
-        retryCount++;
-        usleep(RETRY_TIME_INTERVAL_MILLISECOND);
+    auto rdbCrypto = GetDelegate();
+    if (rdbCrypto == nullptr) {
+        return E_ERROR;
     }
-    LOG_INFO("bundleName:%{public}s, retry:%{public}u, error:%{public}d", bundleName.c_str(), retryCount, ret);
-    return ret;
-}
-
-int32_t RdbSecurityManager::CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias)
-{
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return E_NOT_SUPPORT;
+    if (!bundleName.empty()) {
+        SetBundleName(bundleName);
     }
-    auto creatorCheck = reinterpret_cast<CheckRootKeyExistsFunc>(dlsym(handle, "checkRootKeyExists"));
-    if (creatorCheck == nullptr) {
-        LOG_ERROR("CheckRootKeyExists failed(%{public}d)!", errno);
-        return E_NOT_SUPPORT;
-    }
-    return creatorCheck(rootKeyAlias);
-}
-
-int32_t RdbSecurityManager::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias)
-{
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return E_NOT_SUPPORT;
-    }
-    RDBCryptoFault rdbFault;
-    auto generateRootKey = reinterpret_cast<GenerateRootKeyFunc>(dlsym(handle, "generateRootKey"));
-    if (generateRootKey == nullptr) {
-        LOG_ERROR("dlsym GenerateRootKey failed(%{public}d)!", errno);
-        return E_NOT_SUPPORT;
-    }
-    auto ret = generateRootKey(rootKeyAlias, rdbFault);
-    ReportCryptFault(rdbFault.code, rdbFault.message);
-    return ret;
+    LOG_INFO("bundleName:%{public}s", bundleName.c_str());
+    return E_OK;
 }
 
 std::pair<bool, RdbSecretContent> RdbSecurityManager::EncryptWorkKey(const std::vector<uint8_t> &key)
 {
     RdbSecretContent rdbSecretContent;
-    auto handle = GetHandle();
-    if (handle == nullptr) {
+    auto rdbCrypto = GetDelegate();
+    if (rdbCrypto == nullptr) {
         return { false, rdbSecretContent };
     }
-    RDBCryptoFault rdbFault;
-    auto encrypt = reinterpret_cast<EncryptFunc>(dlsym(handle, "encrypt"));
-    if (encrypt == nullptr) {
-        LOG_ERROR("dlsym Encrypt failed(%{public}d)!", errno);
-        return { false, rdbSecretContent };
-    }
-    auto rootKeyAlias = GetRootKeyAlias();
     RDBCryptoParam param;
     param.KeyValue = key;
-    param.rootAlias = rootKeyAlias;
     param.nonce_ = GenerateRandomNum(RdbSecretContent::NONCE_VALUE_SIZE);
     if (param.nonce_.empty()) {
         return { false, rdbSecretContent };
     }
-    auto encryptKey = encrypt(param, rdbFault);
-    rdbSecretContent.nonce_ = param.nonce_;
-    rdbSecretContent.encrypt_ = encryptKey;
+    RDBCryptoFault rdbFault;
+    auto encryptKey = rdbCrypto->Encrypt(param, rdbFault);
+    rdbSecretContent.nonce_ = std::move(param.nonce_);
+    rdbSecretContent.encrypt_ = std::move(encryptKey);
     ReportCryptFault(rdbFault.code, rdbFault.message);
     return { true, rdbSecretContent };
 }
@@ -333,26 +295,39 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::EncryptWorkKey(const std::
 std::vector<uint8_t> RdbSecurityManager::DecryptWorkKey(
     const std::vector<uint8_t> &key, const std::vector<uint8_t> &nonce)
 {
-    auto handle = GetHandle();
-    if (handle == nullptr) {
-        return {};
-    }
-    RDBCryptoFault rdbFault;
-    auto decrypt = reinterpret_cast<DecryptFunc>(dlsym(handle, "decrypt"));
-    if (decrypt == nullptr) {
-        LOG_ERROR("dlsym Decrypt failed(%{public}d)!", errno);
+    auto rdbCrypto = GetDelegate();
+    if (rdbCrypto == nullptr) {
         return {};
     }
     RDBCryptoParam param;
     param.KeyValue = key;
     param.nonce_ = nonce;
-    param.rootAlias = GetRootKeyAlias();
-    auto decryptKey = decrypt(param, rdbFault);
+    RDBCryptoFault rdbFault;
+    std::vector<uint8_t> decryptKey = rdbCrypto->Decrypt(param, rdbFault);
+    if (!decryptKey.empty()) {
+        return decryptKey;
+    }
+    auto bundleNames = GetBundleNames();
+    for (const auto &bundleName : bundleNames) {
+        std::vector<uint8_t> rootKeyAlias =
+            std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS, RDB_ROOT_KEY_ALIAS + strlen(RDB_ROOT_KEY_ALIAS));
+        rootKeyAlias.insert(rootKeyAlias.end(), bundleName.begin(), bundleName.end());
+        auto rdbBundleCrypto = CreateDelegate(rootKeyAlias);
+        if (rdbBundleCrypto == nullptr) {
+            continue;
+        }
+        if (rdbBundleCrypto->RootKeyExists()) {
+            decryptKey = rdbBundleCrypto->Decrypt(param, rdbFault);
+        }
+        if (!decryptKey.empty()) {
+            return decryptKey;
+        }
+    }
     ReportCryptFault(rdbFault.code, rdbFault.message);
     return decryptKey;
 }
 
-bool RdbSecurityManager::InitPath(const std::string &fileDir)
+bool RdbSecurityManager::CreateDir(const std::string &fileDir)
 {
     constexpr mode_t DEFAULT_UMASK = 0002;
     if (access(fileDir.c_str(), F_OK) == 0) {
@@ -361,8 +336,8 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
     umask(DEFAULT_UMASK);
     auto ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
     if (ret != 0 && errno != EEXIST) {
-        Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
-            RdbSecurityManager::GetInstance().GetBundleNameByAlias(),
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
+            RdbSecurityManager::GetInstance().GetBundleName(),
             "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
             ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
         LOG_ERROR("mkdir error:%{public}d, area:%{public}s", errno, SqliteUtils::GetArea(fileDir).c_str());
@@ -371,81 +346,131 @@ bool RdbSecurityManager::InitPath(const std::string &fileDir)
     return true;
 }
 
-RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyFile)
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(const std::string &keyPath)
 {
-    auto keyFileOld = ReplaceSuffix(keyFile);
-    RdbPassword rdbPasswd;
+    LOG_INFO("load secret key path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     RdbSecretKeyData keyData;
-    if (access(keyFile.c_str(), F_OK) == 0) {
-        if (LoadSecretKeyFromDiskV1(keyFile, keyData) && !keyData.secretKey.empty()) {
-            rdbPasswd.isKeyExpired = IsKeyExpired(keyData.timeValue);
-            rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
-            return rdbPasswd;
+    if (SqliteUtils::IsFilePathEmpty(keyPath)) {
+        return { false, keyData };
+    }
+    std::vector<char> content;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!LoadBufferFromFile(keyPath, content)) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
+            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+            return { false, keyData };
         }
     }
-    if (LoadSecretKeyFromDisk(keyFileOld, keyData) && !keyData.secretKey.empty()) {
-        rdbPasswd.isKeyExpired = IsKeyExpired(keyData.timeValue);
+
+    auto [res, rdbSecretContent] = UnpackV0(content);
+    std::tie(res, keyData) = DecryptV0(rdbSecretContent);
+    if (!res) {
+        LOG_ERROR("DecryptV0 %{public}s failed, size:%{public}zu.", SqliteUtils::Anonymous(keyPath).c_str(),
+            rdbSecretContent.encrypt_.size());
+    }
+    return { res, keyData };
+}
+
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath)
+{
+    LOG_INFO("load secret key path:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    RdbSecretKeyData keyData;
+    if (SqliteUtils::IsFilePathEmpty(keyPath)) {
+        return { false, keyData };
+    }
+    std::vector<char> content;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!LoadBufferFromFile(keyPath, content)) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
+            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+            return { false, keyData };
+        }
+    }
+
+    auto [res, rdbSecretContent] = UnpackV1(content);
+    if (!res) {
+        LOG_ERROR("UnpackV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+        return { false, keyData };
+    }
+    std::tie(res, keyData) = DecryptV1(rdbSecretContent);
+    if (!res) {
+        LOG_ERROR("DecryptV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+    }
+    return { res, keyData };
+}
+
+void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType)
+{
+    auto suffixes = (keyFileType == PUB_KEY_FILE) ? OLD_PUB_KEY_SUFFIXES : OLD_PUB_NEW_KEY_SUFFIXES;
+    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
+    const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    std::vector<std::string> oldKeyPaths;
+    for (int32_t i = 0; i < PUB_KEY_FILE_BUTT; i++) {
+        std::string oldKeyPath = dbKeyDir + dbName + suffixes[i];
+        oldKeyPaths.push_back(std::move(oldKeyPath));
+    }
+    if (SqliteUtils::IsFilePathsEmpty(oldKeyPaths)) {
+        return;
+    }
+    for (int32_t type = PUB_KEY_FILE; type < PUB_KEY_FILE_BUTT; type++) {
+        auto [ret, keyData] = (this->*LOAD_KEY_HANDLERS[type])(oldKeyPaths[type]);
+        if (!ret || keyData.secretKey.empty()) {
+            continue;
+        }
+        LOG_INFO("begin to upgrade key path:%{public}s", SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
+        if (SaveSecretKeyToFile(keyPath, keyData.secretKey)) {
+            SqliteUtils::DeleteFiles(oldKeyPaths);
+            keyData.secretKey.assign(keyData.secretKey.size(), 0);
+            LOG_INFO("UpgradeKey success oldversion:%{public}d, path:%{public}s", type,
+                SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
+            return;
+        }
+        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
+            "version:" + std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
+        keyData.secretKey.assign(keyData.secretKey.size(), 0);
+    }
+}
+
+RdbPassword RdbSecurityManager::LoadSecretKeyFromFile(const std::string &keyPath)
+{
+    RdbPassword rdbPasswd;
+    auto [res, keyData] = LoadSecretKeyFromDisk(keyPath);
+    if (!keyData.secretKey.empty()) {
         rdbPasswd.SetValue(keyData.secretKey.data(), keyData.secretKey.size());
+        keyData.secretKey.assign(keyData.secretKey.size(), 0);
         return rdbPasswd;
     }
     return {};
 }
 
-bool RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData)
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDisk(const std::string &keyPath)
 {
+    LOG_INFO("LoadSecretKeyFromDisk keyPath:%{public}s", SqliteUtils::Anonymous(keyPath).c_str());
+    RdbSecretKeyData keyData;
     std::vector<char> content;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
+        if (!LoadBufferFromFile(keyPath, content)) {
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
-            LOG_ERROR("LoadBufferFromFile failed!");
-            return false;
+            LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+            return { false, keyData };
         }
     }
-    auto [res, rdbSecretContent] = UnpackV1(content);
+    auto [res, rdbSecretContent] = Unpack(content);
     if (!res) {
-        LOG_ERROR("UnpackV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return false;
+        LOG_ERROR("Unpack failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
+        return { false, keyData };
     }
-    std::tie(res, keyData) = DecryptV1(rdbSecretContent);
+    std::tie(res, keyData) = Decrypt(rdbSecretContent);
     if (!res) {
-        LOG_ERROR("DecryptV1 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return false;
+        LOG_ERROR("Decrypt failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
     }
-    std::string keyPathV1;
-    std::string oldSuffix = std::string(SUFFIX_PUB_KEY_OLD);
-    if (keyPath.length() >= oldSuffix.length() &&
-        keyPath.compare(keyPath.length() - oldSuffix.length(), oldSuffix.length(), oldSuffix) == 0) {
-        keyPathV1 = keyPath.substr(0, keyPath.length() - oldSuffix.length()) + SUFFIX_PUB_KEY;
-    }
-    SaveSecretKeyToFile(keyPathV1, keyData.secretKey);
-    return true;
-}
-
-bool RdbSecurityManager::LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData)
-{
-    std::vector<char> content;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!LoadBufferFromFile(keyPath, content) || content.empty()) {
-            Reporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleNameByAlias(),
-                "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
-            LOG_ERROR("LoadBufferFromFile failed!");
-            return false;
-        }
-    }
-    auto [res, rdbSecretContent] = UnpackV2(content);
-    if (!res) {
-        LOG_ERROR("UnpackV2 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return false;
-    }
-    std::tie(res, keyData) = DecryptV2(rdbSecretContent);
-    if (!res) {
-        LOG_ERROR("DecryptV2 failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
-        return false;
-    }
-    return true;
+    return { res, keyData };
 }
 
 RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, KeyFileType keyFileType)
@@ -453,8 +478,8 @@ RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, KeyFil
     KeyFiles keyFiles(dbPath);
     keyFiles.Lock();
     auto keyFile = keyFiles.GetKeyFile(keyFileType);
-    auto keyFileOld = ReplaceSuffix(keyFile);
-    if (IsKeyFileEmpty(keyFile) && IsKeyFileEmpty(keyFileOld)) {
+    UpgradeKey(keyFile, dbPath, keyFileType);
+    if (SqliteUtils::IsFilePathEmpty(keyFile)) {
         keyFiles.InitKeyPath();
         if (!SaveSecretKeyToFile(keyFile)) {
             keyFiles.Unlock();
@@ -465,14 +490,6 @@ RdbPassword RdbSecurityManager::GetRdbPassword(const std::string &dbPath, KeyFil
     auto rdbPassword = LoadSecretKeyFromFile(keyFile);
     keyFiles.Unlock();
     return rdbPassword;
-}
-
-std::vector<uint8_t> RdbSecurityManager::GenerateRootKeyAlias(const std::string &bundlename)
-{
-    std::vector<uint8_t> rootKeyAlias =
-        std::vector<uint8_t>(RDB_ROOT_KEY_ALIAS_PREFIX, RDB_ROOT_KEY_ALIAS_PREFIX + strlen(RDB_ROOT_KEY_ALIAS_PREFIX));
-    rootKeyAlias.insert(rootKeyAlias.end(), bundlename.begin(), bundlename.end());
-    return rootKeyAlias;
 }
 
 void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
@@ -486,10 +503,9 @@ void RdbSecurityManager::DelAllKeyFiles(const std::string &dbPath)
     keyFiles.Lock();
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        SqliteUtils::DeleteFile(keyFiles.GetKeyFile(PUB_KEY_FILE));
-        SqliteUtils::DeleteFile(keyFiles.GetKeyFile(PUB_KEY_FILE_NEW_KEY));
-        SqliteUtils::DeleteFile(ReplaceSuffix(keyFiles.GetKeyFile(PUB_KEY_FILE)));
-        SqliteUtils::DeleteFile(ReplaceSuffix(keyFiles.GetKeyFile(PUB_KEY_FILE_NEW_KEY)));
+        for (int32_t type = PUB_KEY_FILE; type < PUB_KEY_FILE_BUTT; type++) {
+            SqliteUtils::DeleteFile(keyFiles.GetKeyFile(KeyFileType(type)));
+        }
     }
     keyFiles.Unlock();
     keyFiles.DestroyLock();
@@ -506,12 +522,6 @@ void RdbSecurityManager::DelKeyFile(const std::string &dbPath, KeyFileType keyFi
     keyFiles.Unlock();
 }
 
-bool RdbSecurityManager::IsKeyExpired(const time_t &createTime)
-{
-    auto timePoint = std::chrono::system_clock::from_time_t(createTime);
-    return ((timePoint + std::chrono::hours(HOURS_PER_YEAR)) < std::chrono::system_clock::now());
-}
-
 RdbSecurityManager &RdbSecurityManager::GetInstance()
 {
     static RdbSecurityManager instance;
@@ -521,7 +531,16 @@ RdbSecurityManager &RdbSecurityManager::GetInstance()
 bool RdbSecurityManager::IsKeyFileExists(const std::string &dbPath, KeyFileType keyFileType)
 {
     KeyFiles keyFiles(dbPath, false);
-    return (access(keyFiles.GetKeyFile(keyFileType).c_str(), F_OK) == 0);
+    auto suffixes = (keyFileType == PUB_KEY_FILE) ? OLD_PUB_KEY_SUFFIXES : OLD_PUB_NEW_KEY_SUFFIXES;
+    const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
+    const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    std::vector<std::string> keyPaths;
+    for (int32_t i = 0; i < PUB_KEY_FILE_BUTT; i++) {
+        std::string oldKeyPath = dbKeyDir + dbName + suffixes[i];
+        keyPaths.push_back(oldKeyPath);
+    }
+    keyPaths.push_back(keyFiles.GetKeyFile(keyFileType));
+    return !SqliteUtils::IsFilePathsEmpty(keyPaths);
 }
 
 void RdbSecurityManager::ChangeKeyFile(const std::string &dbPath)
@@ -534,11 +553,6 @@ void RdbSecurityManager::ChangeKeyFile(const std::string &dbPath)
     keyFiles.Unlock();
 }
 
-bool RdbSecurityManager::HasRootKey()
-{
-    return hasRootKey_;
-}
-
 void* RdbSecurityManager::GetHandle()
 {
     std::lock_guard<std::mutex> lock(handleMutex_);
@@ -549,16 +563,6 @@ void* RdbSecurityManager::GetHandle()
         }
     }
     return handle_;
-}
-
-bool RdbSecurityManager::IsKeyFileEmpty(const std::string &keyFile)
-{
-    struct stat fileInfo;
-    auto errCode = stat(keyFile.c_str(), &fileInfo);
-    if (errCode != 0) {
-        return true;
-    }
-    return fileInfo.st_size == 0;
 }
 
 int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std::vector<uint8_t> &key)
@@ -579,39 +583,67 @@ int32_t RdbSecurityManager::RestoreKeyFile(const std::string &dbPath, const std:
     return E_OK;
 }
 
-std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV1(const std::vector<char> &content)
+std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV0(const std::vector<char> &content)
 {
     RdbSecretContent rdbSecretContent;
-    rdbSecretContent.magicNum = 0;
+    rdbSecretContent.version = 0;
     rdbSecretContent.nonce_ = { RDB_HKS_BLOB_TYPE_NONCE,
         RDB_HKS_BLOB_TYPE_NONCE + strlen(RDB_HKS_BLOB_TYPE_NONCE) };
     rdbSecretContent.encrypt_ = { content.begin(), content.end() };
     return { true, rdbSecretContent };
 }
- 
-std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV2(const std::vector<char> &content)
+
+std::pair<bool, RdbSecretContent> RdbSecurityManager::UnpackV1(const std::vector<char> &content)
 {
-    std::pair<bool, RdbSecretContent> result;
-    auto &[res, rdbSecretContent] = result;
-    rdbSecretContent.magicNum = RdbSecretContent::MAGIC_NUMBER_V2;
-    res = false;
+    RdbSecretContent rdbSecretContent;
+
     auto size = content.size();
     std::size_t offset = sizeof(rdbSecretContent.magicNum);
     if (offset >= static_cast<std::size_t>(size)) {
-        return result;
+        return { false, rdbSecretContent };
     }
+    rdbSecretContent.magicNum = *reinterpret_cast<const uint32_t *>(&content[0]);
     if (offset + RdbSecretContent::NONCE_VALUE_SIZE >= static_cast<std::size_t>(size)) {
-        return result;
+        return { false, rdbSecretContent };
     }
     rdbSecretContent.nonce_ = { content.begin() + offset,
         content.begin() + offset + RdbSecretContent::NONCE_VALUE_SIZE };
     offset += RdbSecretContent::NONCE_VALUE_SIZE;
     rdbSecretContent.encrypt_ = { content.begin() + offset, content.end() };
-    res = true;
-    return result;
+    return { true, rdbSecretContent };
 }
- 
-std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretContent &content)
+
+std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<char> &content)
+{
+    RdbSecretContent rdbSecretContent;
+    if (content.size() <= HMAC_SIZE) {
+        LOG_ERROR("Content too short for HMAC verification, size: %zu", content.size());
+        return { false, rdbSecretContent };
+    }
+
+    size_t dataLength = content.size() - HMAC_SIZE;
+    std::vector<char> originalData(content.begin(), content.begin() + dataLength);
+    std::vector<char> storedHMAC(content.begin() + dataLength, content.end());
+    auto calculatedHMAC = GenerateHMAC(originalData, "");
+    if (calculatedHMAC != storedHMAC) {
+        Reportor::ReportFault(RdbFaultEvent(
+            FT_EX_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac key file failed" + std::to_string(errno)));
+        LOG_ERROR("hmac check failed");
+        return { false, rdbSecretContent };
+    }
+    std::size_t offset = 0;
+    rdbSecretContent.version = static_cast<uint8_t>(originalData[offset]);
+    offset += sizeof(rdbSecretContent.version);
+
+    rdbSecretContent.nonce_.assign(
+        originalData.begin() + offset, originalData.begin() + offset + RdbSecretContent::NONCE_VALUE_SIZE);
+    offset += RdbSecretContent::NONCE_VALUE_SIZE;
+
+    rdbSecretContent.encrypt_.assign(originalData.begin() + offset, originalData.end());
+    return { true, rdbSecretContent };
+}
+
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV0(const RdbSecretContent &content)
 {
     RdbSecretKeyData keyData;
     auto size = content.encrypt_.size();
@@ -620,10 +652,10 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretC
     if (offset + 1 >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
-    keyData.distributed = *iter;
+    keyData.version = *iter;
     iter++;
     offset++;
- 
+
     std::vector<uint8_t> createTime;
     if (offset + static_cast<std::size_t>(sizeof(time_t) / sizeof(uint8_t)) >= size) {
         return { false, keyData };
@@ -633,11 +665,11 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretC
         createTime.push_back(*iter);
         iter++;
     }
- 
+
     if (createTime.size() == sizeof(time_t)) {
         keyData.timeValue = *reinterpret_cast<time_t *>(&createTime[0]);
     }
- 
+
     if (offset + AEAD_LEN >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
@@ -646,8 +678,8 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretC
     key.assign(key.size(), 0);
     return { true, keyData };
 }
- 
-std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretContent &content)
+
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV1(const RdbSecretContent &content)
 {
     RdbSecretKeyData keyData;
     std::vector<uint8_t> value = DecryptWorkKey(content.encrypt_, content.nonce_);
@@ -659,10 +691,10 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretC
     if (offset + 1 >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
-    keyData.distributed = *iter;
+    keyData.version = *iter;
     iter++;
     offset++;
- 
+
     std::vector<uint8_t> createTime;
     if (offset + static_cast<std::size_t>(sizeof(time_t) / sizeof(uint8_t)) >= size) {
         return { false, keyData };
@@ -672,11 +704,11 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretC
         createTime.push_back(*iter);
         iter++;
     }
- 
+
     if (createTime.size() == sizeof(time_t)) {
         keyData.timeValue = *reinterpret_cast<time_t *>(&createTime[0]);
     }
- 
+
     if (offset + AEAD_LEN >= static_cast<std::size_t>(size)) {
         return { false, keyData };
     }
@@ -684,22 +716,38 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::DecryptV2(const RdbSecretC
     return { true, keyData };
 }
 
+std::pair<bool, RdbSecretKeyData> RdbSecurityManager::Decrypt(const RdbSecretContent &content)
+{
+    RdbSecretKeyData keyData;
+    std::vector<uint8_t> value = DecryptWorkKey(content.encrypt_, content.nonce_);
+    keyData.secretKey = { value.begin(), value.end() };
+    value.assign(value.size(), 0);
+    return { true, keyData };
+}
+
+std::shared_ptr<RDBCrypto> RdbSecurityManager::CreateDelegate(const std::vector<uint8_t> &rootKeyAlias)
+{
+    auto handle = GetHandle();
+    if (handle == nullptr) {
+        return nullptr;
+    }
+    auto creator = reinterpret_cast<Creator>(dlsym(handle, "CreateRdbCryptoDelegate"));
+    if (creator == nullptr) {
+        LOG_ERROR("dlsym failed!");
+        return nullptr;
+    }
+    return creator(rootKeyAlias);
+}
+
 RdbSecurityManager::KeyFiles::KeyFiles(const std::string &dbPath, bool openFile)
 {
     const std::string dbKeyDir = StringUtils::ExtractFilePath(dbPath) + "key/";
-    const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
-    bool isDirCreate = InitPath(lockDir);
     const std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
+    for (uint32_t i = 0; i < PUB_KEY_FILE_BUTT; i++) {
+        keys_[i] = dbKeyDir + dbName + PUB_KEY_SUFFIXES[i];
+    }
+    const std::string lockDir = StringUtils::ExtractFilePath(dbPath) + "lock/";
     lock_ = lockDir + dbName + SUFFIX_KEY_LOCK;
-    keys_[PUB_KEY_FILE] = dbKeyDir + dbName + SUFFIX_PUB_KEY;
-    keys_[PUB_KEY_FILE_NEW_KEY] = dbKeyDir + dbName + SUFFIX_PUB_KEY_NEW;
-    if (!openFile) {
-        return;
-    }
-    lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-    if (lockFd_ < 0 && isDirCreate) {
-        LOG_WARN("open failed, errno:%{public}d, file:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
-    }
 }
 
 RdbSecurityManager::KeyFiles::~KeyFiles()
@@ -711,7 +759,7 @@ RdbSecurityManager::KeyFiles::~KeyFiles()
     lockFd_ = -1;
 }
 
-const std::string &RdbSecurityManager::KeyFiles::GetKeyFile(KeyFileType type)
+const std::string RdbSecurityManager::KeyFiles::GetKeyFile(KeyFileType type)
 {
     if (type == PUB_KEY_FILE) {
         return keys_[PUB_KEY_FILE];
@@ -722,7 +770,7 @@ const std::string &RdbSecurityManager::KeyFiles::GetKeyFile(KeyFileType type)
 int32_t RdbSecurityManager::KeyFiles::InitKeyPath()
 {
     const std::string keyDir = StringUtils::ExtractFilePath(keys_[PUB_KEY_FILE]);
-    if (!InitPath(keyDir)) {
+    if (!CreateDir(keyDir)) {
         LOG_ERROR("keyDir failed, errno:%{public}d, dir:%{public}s.", errno, SqliteUtils::Anonymous(keyDir).c_str());
     }
     return E_OK;
@@ -730,7 +778,7 @@ int32_t RdbSecurityManager::KeyFiles::InitKeyPath()
 
 int32_t RdbSecurityManager::KeyFiles::Lock(bool isBlock)
 {
-    if (lockFd_ < 0) {
+    if (!InitLockPath() || lockFd_ < 0) {
         return E_INVALID_FILE_PATH;
     }
     int32_t errCode;
@@ -772,18 +820,20 @@ int32_t RdbSecurityManager::KeyFiles::DestroyLock()
     return E_OK;
 }
 
-std::string RdbSecurityManager::ReplaceSuffix(const std::string &str)
+bool RdbSecurityManager::KeyFiles::InitLockPath()
 {
-    std::string oldSuffix = std::string(SUFFIX_PUB_KEY);
-    std::string newSuffix = std::string(SUFFIX_PUB_KEY_NEW);
-    if (str.length() >= oldSuffix.length() &&
-        str.compare(str.length() - oldSuffix.length(), oldSuffix.length(), oldSuffix) == 0) {
-        return str.substr(0, str.length() - oldSuffix.length()) + SUFFIX_PUB_KEY_OLD;
-    } else if (str.length() >= newSuffix.length() &&
-        str.compare(str.length() - newSuffix.length(), newSuffix.length(), newSuffix) == 0) {
-        return str.substr(0, str.length() - newSuffix.length()) + SUFFIX_PUB_TMP_NEW_KEY;
+    bool isDirCreate = CreateDir(StringUtils::ExtractFilePath(lock_));
+    if (!isDirCreate) {
+        return false;
     }
-    return str;
+    if (lockFd_ < 0) {
+        lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    }
+    if (lockFd_ < 0) {
+        LOG_WARN("open failed, errno:%{public}d, file:%{public}s.", errno, SqliteUtils::Anonymous(lock_).c_str());
+        return false;
+    }
+    return true;
 }
 } // namespace NativeRdb
 } // namespace OHOS
