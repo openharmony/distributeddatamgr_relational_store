@@ -191,8 +191,8 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
 
 std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data, const std::string &key)
 {
-    unsigned char hmacResult[EVP_MAX_MD_SIZE];
-    unsigned int hmacLen;
+    unsigned char hmacResult[EVP_MAX_MD_SIZE] = {0};
+    unsigned int hmacLen = 0;
 
     HMAC(EVP_sha256(),
          key.c_str(), static_cast<int>(key.length()),
