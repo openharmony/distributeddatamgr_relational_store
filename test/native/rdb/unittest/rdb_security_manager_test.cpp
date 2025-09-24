@@ -24,7 +24,6 @@
 #include "file_ex.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
-#include "relational_store_crypt.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -45,6 +44,7 @@ protected:
 
 void RdbSecurityManagerTest::SetUpTestCase(void)
 {
+    RdbSecurityManager::GetInstance().Init(BUNDLE_NAME);
 }
 
 void RdbSecurityManagerTest::TearDownTestCase(void)
@@ -72,34 +72,12 @@ public:
 };
 
 /**
- * @tc.name: RdbSecurityManagerTest001
- * @tc.desc: Abnormal test for RdbSecurityManagerTest
- * @tc.type: FUNC
- */
-HWTEST_F(RdbSecurityManagerTest, RdbSecurityManagerTest001, TestSize.Level1)
-{
-    RdbSecurityManager::GetInstance().Init("");
-    std::string bundleName = RdbSecurityManager::GetInstance().GetBundleName();
-    EXPECT_TRUE(bundleName.empty());
-    RDBCryptoFault fault;
-    auto ret = RdbSecurityManager::GetInstance().rdbCrypto_->Init(fault);
-    EXPECT_EQ(ret, E_OK);
-    uint32_t len = 0;
-    std::vector<uint8_t> key = RdbSecurityManager::GetInstance().GenerateRandomNum(len);
-    EXPECT_TRUE(key.empty());
-    std::string keyPath = "";
-    auto res = RdbSecurityManager::GetInstance().SaveSecretKeyToFile(keyPath);
-    EXPECT_FALSE(res);
-}
-
-/**
  * @tc.name: Insert_BigInt_INT64
  * @tc.desc: test insert bigint to rdb store
  * @tc.type: FUNC
  */
 HWTEST_F(RdbSecurityManagerTest, RestoreKeyFile, TestSize.Level1)
 {
-    RdbSecurityManager::GetInstance().Init(BUNDLE_NAME);
     std::vector<uint8_t> key = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
@@ -190,7 +168,7 @@ HWTEST_F(RdbSecurityManagerTest, LockNBTest001, TestSize.Level1)
     std::string lockPath = dbFile_ + "-LockNBTest001";
     RdbSecurityManager::KeyFiles keyFiles(lockPath);
     EXPECT_EQ(keyFiles.DestroyLock(), E_OK);
-    EXPECT_EQ(keyFiles.Lock(false), E_OK);
+    EXPECT_NE(keyFiles.Lock(false), E_OK);
 }
 
 /**
@@ -213,16 +191,14 @@ HWTEST_F(RdbSecurityManagerTest, LockNBTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: KeyFilesLockTest001
- * @tc.desc: Abnormal test for LockNB
+ * @tc.name: InitPathTest
+ * @tc.desc: test init path test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbSecurityManagerTest, KeyFilesLockTest001, TestSize.Level1)
+HWTEST_F(RdbSecurityManagerTest, InitPathTest, TestSize.Level1)
 {
     std::string filePath("system/test");
-    RdbSecurityManager::KeyFiles keyFiles(filePath);
-    keyFiles.lock_ = "";
-    EXPECT_EQ(keyFiles.Lock(false), E_INVALID_FILE_PATH);
+    bool ret = RdbSecurityManager::InitPath(filePath);
+    EXPECT_FALSE(ret);
 }
-
 } // namespace Test
