@@ -492,7 +492,7 @@ void RdbEncryptUpgradeTest::GetKeyFileV1FromV2(
     std::vector<char> content;
     EXPECT_TRUE(OHOS::LoadBufferFromFile(keyPathV2, content));
     auto [packRet, rdbSecretContent] =
-        RdbSecurityManager::GetInstance().Unpack(content);
+        RdbSecurityManager::GetInstance().Unpack(keyPathV2, content);
     EXPECT_TRUE(packRet);
 
     std::vector<uint8_t> keyContentV1;
