@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <fstream>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -31,7 +33,6 @@
 #include "relational_store_impl.h"
 #include "relational_store_inner_types.h"
 #include "token_setproc.h"
-#include
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;

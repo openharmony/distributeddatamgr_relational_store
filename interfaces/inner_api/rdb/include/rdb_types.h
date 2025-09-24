@@ -421,7 +421,7 @@ class CorruptHandler {
 public:
     virtual ~CorruptHandler() {};
     virtual void OnCorrupt() = 0;
-    virtual void SetStore(std::shared_ptr<NativeRdb::RdbStore> store) = 0;
+    virtual void SetStore(std::weak_ptr<NativeRdb::RdbStore> store) = 0;
     virtual std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore() = 0;
 };
 

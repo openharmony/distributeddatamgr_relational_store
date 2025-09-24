@@ -1178,18 +1178,17 @@ void NDKCorruptHandler::OnCorrupt()
     }
     if (!isExecute_.exchange(true)) {
         OH_Rdb_Store *store = nullptr;
-        if (store_.lock() != nullptr) {
-            store = new (std::nothrow) RelationalStore(store_.lock());
+        auto storePtr = store_.lock();
+        if (storePtr != nullptr) {
+            store = new (std::nothrow) RelationalStore(storePtr);
         }
         (*handler_)(config_, context_, store);
         delete store;
         isExecute_.store(false);
-    } else {
-        LOG_ERROR("corruptHandler is already executing");
     }
 }
 
-void NDKCorruptHandler::SetStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> store)
+void NDKCorruptHandler::SetStore(std::weak_ptr<OHOS::NativeRdb::RdbStore> store)
 {
     store_ = store;
 }
@@ -1400,7 +1399,7 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
 
 int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler)
 {
-    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+    if (config == nullptr || handler == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or",
             (config == nullptr), (config == nullptr ? 0 : config->magicNum));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
@@ -1430,6 +1429,6 @@ int OH_Rdb_UnRegisterCorruptedHandler(OH_Rdb_ConfigV2 *config)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
-    auto errCode = OHOS::NativeRdb::HandleManager::GetInstance().Unregister(rdbStoreConfig.GetPath());
+    auto errCode = OHOS::NativeRdb::HandleManager::GetInstance().Unregister(rdbStoreConfig);
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
