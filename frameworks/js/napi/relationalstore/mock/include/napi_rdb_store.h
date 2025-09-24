@@ -35,6 +35,7 @@ class NapiRdbStoreObserver;
 class NapiStatisticsObserver;
 class NapiPerfStatObserver;
 class NapiLogObserver;
+struct NapiRdbStoreData;
 class RdbStoreProxy : public JSProxy::JSProxy<NativeRdb::RdbStore> {
 public:
     static void Init(napi_env env, napi_value exports);
