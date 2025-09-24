@@ -17,8 +17,8 @@
 #define HANDLE_MANAGER_H
 
 #include <mutex>
-#include <map>
 #include <memory>
+#include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
 
@@ -30,16 +30,16 @@ public:
     API_EXPORT static HandleManager &GetInstance();
     ~HandleManager() = default;
 
-    API_EXPORT int Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler);
-    API_EXPORT int Unregister(const std::string &path);
-    API_EXPORT std::shared_ptr<CorruptHandler> GetHandler(const std::string &path);
+    API_EXPORT int Register(const RdbStoreConfig &rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler);
+    API_EXPORT int Unregister(const RdbStoreConfig &rdbStoreConfig);
+    std::shared_ptr<CorruptHandler> GetHandler(const std::string &path);
     static void HandleCorrupt(const RdbStoreConfig &config);
 
 private:
     HandleManager() = default;
     HandleManager(const HandleManager &) = delete;
     HandleManager &operator=(const HandleManager &) = delete;
-    std::map<std::string, std::shared_ptr<CorruptHandler>> handlers_;
+    ConcurrentMap<std::string, std::shared_ptr<CorruptHandler>> handlers_;
     std::mutex mutex_;
 };
 

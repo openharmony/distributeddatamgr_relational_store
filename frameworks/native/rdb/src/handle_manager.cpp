@@ -18,6 +18,7 @@
 #include "handle_manager.h"
 #include "logger.h"
 #include "rdb_store_manager.h"
+#include "sqlite_utils.h"
 #include "task_executor.h"
 
 namespace OHOS {
@@ -29,7 +30,7 @@ HandleManager &HandleManager::GetInstance()
     return instance;
 }
 
-int HandleManager::Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler)
+int HandleManager::Register(const RdbStoreConfig &rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler)
 {
     if (corruptHandler == nullptr) {
         LOG_ERROR("register failed: corruptHandler is null.");
@@ -42,21 +43,23 @@ int HandleManager::Register(RdbStoreConfig rdbStoreConfig, std::shared_ptr<Corru
         return E_INVALID_ARGS;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = handlers_.find(path);
-    if (it != handlers_.end()) {
-        LOG_ERROR("corruptHandler for path %{public}s has already been registered.", path.c_str());
+    auto [isFound, handler] = handlers_.Find(path);
+    if (isFound) {
+        LOG_ERROR(
+            "corruptHandler for path %{public}s has already been registered.", SqliteUtils::Anonymous(path).c_str());
         return E_ERROR;
     }
-    handlers_[path] = corruptHandler;
+    handlers_.Insert(path, corruptHandler);
     return E_OK;
 }
 
-int HandleManager::Unregister(const std::string &path)
+int HandleManager::Unregister(const RdbStoreConfig &rdbStoreConfig)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = handlers_.find(path);
-    if (it != handlers_.end()) {
-        handlers_.erase(it);
+    std::string path = rdbStoreConfig.GetPath();
+    auto [isFound, handler] = handlers_.Find(path);
+    if (isFound) {
+        handlers_.Erase(path);
     }
     return E_OK;
 }
@@ -64,9 +67,9 @@ int HandleManager::Unregister(const std::string &path)
 std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = handlers_.find(path);
-    if (it != handlers_.end()) {
-        return it->second;
+    auto [isFound, handler] = handlers_.Find(path);
+    if (isFound) {
+        return handler;
     }
     return nullptr;
 }
@@ -74,17 +77,17 @@ std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &pat
 void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
 {
     auto handler = HandleManager::GetInstance().GetHandler(config.GetPath());
-    if (handler != nullptr) {
-        auto taskPool = TaskExecutor::GetInstance().GetExecutor();
-        if (taskPool == nullptr) {
-            LOG_ERROR("Get thread pool failed");
-            return;
-        }
-        auto tmpHandler = handler;
-        taskPool->Schedule(std::chrono::milliseconds(100), [tmpHandler]() {
-            tmpHandler->OnCorrupt();
-        });
+    if (handler == nullptr) {
+        return;
     }
+    auto taskPool = TaskExecutor::GetInstance().GetExecutor();
+    if (taskPool == nullptr) {
+        LOG_ERROR("Get thread pool failed");
+        return;
+    }
+    taskPool->Execute([handler]() { 
+        handler->OnCorrupt(); 
+    });
 }
 
 } // namespace NativeRdb
