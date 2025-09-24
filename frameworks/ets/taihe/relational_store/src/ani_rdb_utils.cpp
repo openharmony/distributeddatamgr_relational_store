@@ -427,12 +427,13 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *e
     if (ret != ANI_OK) {
         return std::make_pair(false, empty);
     }
+    rdbConfig.isSystemApp = contextParam.isSystemApp;
     auto [code, err] = AniGetRdbRealPath(env, aniContext, rdbConfig, contextParam);
     if (!rdbConfig.rootDir.empty()) {
         rdbConfig.isReadOnly = true;
     }
     if (OK != code && err != nullptr) {
-        taihe::set_business_error(E_NOT_SUPPORT, err->GetMessage());
+        taihe::set_business_error(err->GetCode(), err->GetMessage());
         return std::make_pair(false, empty);
     }
 

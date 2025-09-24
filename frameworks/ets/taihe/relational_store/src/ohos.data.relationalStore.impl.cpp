@@ -50,6 +50,14 @@ void ThrowInnerError(int errcode)
     }
 }
 
+void ThrowNonSystemError()
+{
+    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::NonSystemError>();
+    if (innErr != nullptr) {
+        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
+    }
+}
+
 void ThrowParamError(const char* message)
 {
     if (message == nullptr) {
@@ -322,7 +330,7 @@ public:
         if (nativeResultSet_ != nullptr) {
             errCode = nativeResultSet_->GetAssets(columnIndex, result);
         }
-        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT || result.size() == 0) {
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
             return {};
         } else if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errCode);
@@ -731,7 +739,10 @@ public:
             LOG_ERROR("nativeTransaction_ is nullptr");
             return;
         }
-        nativeTransaction_->Commit();
+        auto errCode = nativeTransaction_->Commit();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
     }
 
     void RollbackSync()
@@ -740,7 +751,10 @@ public:
             LOG_ERROR("nativeTransaction_ is nullptr");
             return;
         }
-        nativeTransaction_->Rollback();
+        auto errCode = nativeTransaction_->Rollback();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
     }
 
     int64_t InsertSync(string_view table, map_view<::taihe::string, ValueType> values,
@@ -760,7 +774,7 @@ public:
             std::string(table), bucket, nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return output;
         }
         return output;
     }
@@ -779,7 +793,7 @@ public:
         auto [errcode, output] = nativeTransaction_->BatchInsert(std::string(table), buckets);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return output;
         }
         return output;
     }
@@ -807,7 +821,7 @@ public:
             bucket, *rdbPredicateNative, nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return rows;
         }
         return rows;
     }
@@ -836,6 +850,7 @@ public:
     {
         if (nativeTransaction_ == nullptr) {
             LOG_ERROR("nativeTransaction_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return make_holder<ResultSetImpl, ResultSet>();
         }
         std::vector<std::string> stdcolumns;
@@ -856,6 +871,7 @@ public:
     {
         if (nativeTransaction_ == nullptr) {
             LOG_ERROR("nativeTransaction_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return make_holder<ResultSetImpl, ResultSet>();
         }
         std::vector<OHOS::NativeRdb::ValueObject> para;
@@ -920,6 +936,7 @@ public:
         ani_env *env = get_env();
         OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
         auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
+        isSystemApp_ = rdbConfig.isSystemApp;
         DefaultOpenCallback callback;
         int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
         if (!configRet.first) {
@@ -1038,7 +1055,7 @@ public:
         auto [errcode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return output;
         }
         return output;
     }
@@ -1074,7 +1091,7 @@ public:
             nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return ERR_NULL;
         }
         return output;
     }
@@ -1084,6 +1101,10 @@ public:
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return ERR_NULL;
+        }
+        if (!isSystemApp_) {
+            ThrowNonSystemError();
             return ERR_NULL;
         }
         ani_env *env = get_env();
@@ -1103,7 +1124,7 @@ public:
             OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return ERR_NULL;
         }
         return output;
     }
@@ -1133,6 +1154,10 @@ public:
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return ERR_NULL;
+        }
+        if (!isSystemApp_) {
+            ThrowNonSystemError();
             return ERR_NULL;
         }
         ani_env *env = get_env();
@@ -1191,6 +1216,10 @@ public:
 
     ResultSet QueryDataShareSync(::taihe::string_view table, uintptr_t predicates)
     {
+        if (!isSystemApp_) {
+            ThrowNonSystemError();
+            return taihe::make_holder<ResultSetImpl, ResultSet>();
+        }
         optional_view<array<::taihe::string>> empty;
         return QueryDataShareWithColumnSync(table, predicates, empty);
     }
@@ -1200,6 +1229,10 @@ public:
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return taihe::make_holder<ResultSetImpl, ResultSet>();
+        }
+        if (!isSystemApp_) {
+            ThrowNonSystemError();
             return taihe::make_holder<ResultSetImpl, ResultSet>();
         }
         ani_env *env = get_env();
@@ -1663,6 +1696,7 @@ public:
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
+    bool isSystemApp_ = false;
 };
 
 RdbPredicates CreateRdbPredicates(string_view name)
