@@ -78,24 +78,30 @@ int RdbResultSetBridge::OnGo(int32_t start, int32_t target, Writer &writer)
 int32_t RdbResultSetBridge::WriteBlock(int32_t start, int32_t target, int columnCount, Writer &writer)
 {
     int errCode = 0;
+    int status = 0;
     int row = start;
 
     while (!errCode && row <= target) {
-        int status = writer.AllocRow();
+        status = writer.AllocRow();
         if (status != 0) {
             LOG_ERROR("SharedBlock is full.");
             return row - 1;
         }
 
-        WriteColumn(columnCount, writer, row);
+        status = WriteColumn(columnCount, writer, row);
+        if (status != 0) {
+            writer.FreeLastRow();
+            return row - 1;
+        }
         row++;
         errCode = rdbResultSet_->GoToNextRow();
     }
     return target;
 }
 
-void RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row)
+int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row)
 {
+    int result = 0;
     for (int i = 0; i < columnCount; i++) {
         ColumnType type;
         rdbResultSet_->GetColumnType(i, type);
@@ -103,35 +109,45 @@ void RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row)
             case ColumnType::TYPE_INTEGER:
                 int64_t value;
                 rdbResultSet_->GetLong(i, value);
-                if (writer.Write(i, value)) {
-                    LOG_DEBUG("WriteLong failed of row: %{public}d, column: %{public}d", row, i);
+                result = writer.Write(i, value);
+                if (result) {
+                    LOG_WARN("WriteLong failed of row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
             case ColumnType::TYPE_FLOAT:
                 double dValue;
                 rdbResultSet_->GetDouble(i, dValue);
-                if (writer.Write(i, dValue)) {
-                    LOG_DEBUG("WriteDouble failed of row: %{public}d, column: %{public}d", row, i);
+                result = writer.Write(i, dValue);
+                if (result) {
+                    LOG_WARN("WriteDouble failed of row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
             case ColumnType::TYPE_NULL:
-                if (writer.Write(i)) {
-                    LOG_DEBUG("WriteNull failed of row: row: %{public}d, column: %{public}d", row, i);
+                result = writer.Write(i);
+                if (result) {
+                    LOG_WARN("WriteNull failed of row: row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
             case ColumnType::TYPE_BLOB:
-                if (WriteBlobData(i, writer)) {
-                    LOG_DEBUG("WriteBlob failed of row: %{public}d, column: %{public}d", row, i);
+                result = WriteBlobData(i, writer);
+                if (result) {
+                    LOG_WARN("WriteBlob failed of row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
             default:
                 std::string stringValue;
                 rdbResultSet_->GetString(i, stringValue);
-                if (writer.Write(i, stringValue.c_str(), stringValue.size() + 1)) {
-                    LOG_DEBUG("WriteString failed of row: %{public}d, column: %{public}d", row, i);
+                result = writer.Write(i, stringValue.c_str(), stringValue.size() + 1);
+                if (result) {
+                    LOG_WARN("WriteString failed of row: %{public}d, column: %{public}d", row, i);
                 }
         }
+
+        if (result != 0) {
+            break;
+        }
     }
+    return result;
 }
 
 bool RdbResultSetBridge::WriteBlobData(int column, Writer &writer)
