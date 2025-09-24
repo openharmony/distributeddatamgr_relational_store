@@ -492,7 +492,7 @@ void RdbEncryptUpgradeTest::GetKeyFileV1FromV2(
     std::vector<char> content;
     EXPECT_TRUE(OHOS::LoadBufferFromFile(keyPathV2, content));
     auto [packRet, rdbSecretContent] =
-        RdbSecurityManager::GetInstance().Unpack(keyPathV2, content);
+        RdbSecurityManager::GetInstance().Unpack(content);
     EXPECT_TRUE(packRet);
 
     std::vector<uint8_t> keyContentV1;
@@ -1938,7 +1938,7 @@ HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest001, TestSize.Level1)
     EXPECT_FALSE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     RdbHelper::DeleteRdbStore(config);
 }
@@ -1964,7 +1964,7 @@ HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest002, TestSize.Level1)
     EXPECT_FALSE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     RdbHelper::DeleteRdbStore(config);
 }
@@ -1990,7 +1990,7 @@ HWTEST_F(RdbEncryptUpgradeTest, LoadSecretKeyFromDiskTest003, TestSize.Level1)
     EXPECT_FALSE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     std::tie(res, keyData) = RdbSecurityManager::GetInstance().LoadSecretKeyFromDisk(filePath);
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
     EXPECT_TRUE(keyData.secretKey.empty());
     RdbHelper::DeleteRdbStore(config);
 }
