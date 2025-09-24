@@ -24,12 +24,14 @@
 #include "logger.h"
 #include "rd_statement.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "rdb_security_manager.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+using Reportor = RdbFaultHiViewReporter;
 __attribute__((used))
 const int32_t RdConnection::regCreator_ = Connection::RegisterCreator(DB_VECTOR, RdConnection::Create);
 __attribute__((used))
@@ -172,6 +174,8 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
         if (errCode == E_SQLITE_CORRUPT) {
+            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
+            Reportor::CreateCorruptedFlag(config.GetPath());
             HandleManager::HandleCorrupt(config);
         }
         return errCode;
