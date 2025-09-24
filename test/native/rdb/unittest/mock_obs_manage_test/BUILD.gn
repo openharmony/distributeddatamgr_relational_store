@@ -112,7 +112,6 @@ ohos_unittest("GlobalResourceTest") {
 
   sources += [
     "global_resource_test.cpp",
-    "mock_rdb_security_manager_test.cpp",
     "mock_global_resource.cpp",
   ]
 
