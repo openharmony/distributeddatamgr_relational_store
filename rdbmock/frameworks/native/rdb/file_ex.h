@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-static bool SaveBufferToFile(const std::string &filePath, const std::vector<char> &content, bool truncated = true)
+static bool SaveStringToFd(int fd, const std::string& content)
 {
     return true;
 }
