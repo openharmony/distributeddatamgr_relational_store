@@ -100,7 +100,7 @@ public:
     public:
         KeyFiles(const std::string &dbPath, bool openFile = true);
         ~KeyFiles();
-        const std::string GetKeyFile(KeyFileType type);
+        const std::string &GetKeyFile(KeyFileType type);
         int32_t InitKeyPath();
         int32_t DestroyLock();
         int32_t Lock(bool isBlock = true);
@@ -131,7 +131,7 @@ private:
     std::set<std::string> GetBundleNames();
     std::shared_ptr<RDBCrypto> GetDelegate();
     void UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType);
-    std::vector<char> GenerateHMAC(std::vector<char> &data, const std::string &key);
+    std::vector<char> GenerateHMAC(std::vector<char> &data);
     std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV0(const std::string &keyPath);
     std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV1(const std::string &keyPath);
     std::pair<bool, RdbSecretContent> UnpackV0(const std::vector<char> &content);
@@ -146,12 +146,10 @@ private:
     std::shared_ptr<RDBCrypto> CreateDelegate(const std::vector<uint8_t> &rootKeyAlias);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workKey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
-    bool UpgradeDiskToFile(
-        const std::string &keyPath, const std::vector<char> &originalData, const std::vector<char> &hmacKey);
     std::string GetBundleName();
     RdbPassword LoadSecretKeyFromFile(const std::string &keyPath);
     std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDisk(const std::string &keyPath);
-    std::pair<bool, RdbSecretContent> Unpack(const std::string &keyPath, const std::vector<char> &content);
+    std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
     std::pair<bool, RdbSecretKeyData> Decrypt(const RdbSecretContent &content);
     using LoadKeyHandler = std::pair<bool, RdbSecretKeyData> (RdbSecurityManager::*)(const std::string &keyPath);
     static constexpr LoadKeyHandler LOAD_KEY_HANDLERS[PUB_KEY_FILE_BUTT] = {
