@@ -645,7 +645,7 @@ bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)
     return access((dbPath + SLAVE_INTERRUPT).c_str(), F_OK) == 0;
 }
 
-bool SqliteUtils::IsFilePathEmpty(const std::string &filePath)
+bool SqliteUtils::IsFileEmpty(const std::string &filePath)
 {
     struct stat fileInfo;
     auto errCode = stat(filePath.c_str(), &fileInfo);
@@ -655,10 +655,10 @@ bool SqliteUtils::IsFilePathEmpty(const std::string &filePath)
     return fileInfo.st_size == 0;
 }
 
-bool SqliteUtils::IsFilePathsEmpty(const std::vector<std::string> &filePaths)
+bool SqliteUtils::IsFilesEmpty(const std::vector<std::string> &filePaths)
 {
     for (auto &filePath :filePaths) {
-        if (!IsFilePathEmpty(filePath)) {
+        if (!IsFileEmpty(filePath)) {
             LOG_ERROR("keyfiles is not empty");
             return false;
         }

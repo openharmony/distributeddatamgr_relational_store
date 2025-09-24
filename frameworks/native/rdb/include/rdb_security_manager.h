@@ -146,10 +146,12 @@ private:
     std::shared_ptr<RDBCrypto> CreateDelegate(const std::vector<uint8_t> &rootKeyAlias);
     bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workKey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
+    bool UpgradeDiskToFile(
+        const std::string &keyPath, const std::vector<char> &originalData, const std::vector<char> &hmacKey);
     std::string GetBundleName();
     RdbPassword LoadSecretKeyFromFile(const std::string &keyPath);
     std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDisk(const std::string &keyPath);
-    std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
+    std::pair<bool, RdbSecretContent> Unpack(const std::string &keyPath, const std::vector<char> &content);
     std::pair<bool, RdbSecretKeyData> Decrypt(const RdbSecretContent &content);
     using LoadKeyHandler = std::pair<bool, RdbSecretKeyData> (RdbSecurityManager::*)(const std::string &keyPath);
     static constexpr LoadKeyHandler LOAD_KEY_HANDLERS[PUB_KEY_FILE_BUTT] = {
