@@ -273,8 +273,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
     EXPECT_EQ(isNull, true);
 
     cursor->getSize(cursor, 5, &size);
-    char data5Value[size];
-    cursor->getText(cursor, 5, data5Value, size);
+    char data5Value[size + 1];
+    cursor->getText(cursor, 5, data5Value, size + 1);
     EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
 
     valueObject->destroy(valueObject);

@@ -221,8 +221,8 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(isNull, true);
 
     cursor->getSize(cursor, 5, &size);
-    char data5Value1[size];
-    cursor->getText(cursor, 5, data5Value1, size);
+    char data5Value1[size + 1];
+    cursor->getText(cursor, 5, data5Value1, size + 1);
     EXPECT_EQ(strcmp(data5Value1, "ABCDEFGH"), 0);
 
     cursor->goToNextRow(cursor);
