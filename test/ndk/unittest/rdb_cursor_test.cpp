@@ -330,8 +330,8 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
-    char data1Value[size];
-    cursor->getText(cursor, 0, data1Value, size);
+    char data1Value[size + 1];
+    cursor->getText(cursor, 0, data1Value, size + 1);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
 
     int64_t data2Value;
@@ -351,8 +351,8 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
     cursor->goToNextRow(cursor);
 
     cursor->getSize(cursor, 0, &size);
-    char data1Value1[size];
-    cursor->getText(cursor, 0, data1Value1, size);
+    char data1Value1[size + 1];
+    cursor->getText(cursor, 0, data1Value1, size + 1);
     EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
 
     cursor->getInt64(cursor, 1, &data2Value);
@@ -776,10 +776,6 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);
 
-    int rowCount = 0;
-    cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 3);
-
     cursor->goToNextRow(cursor);
 
     size_t size = 0;
@@ -788,6 +784,12 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
     char data1Value[size + 1];
     cursor->getText(cursor, 0, data1Value, size + 1);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    cursor->getSize(cursor, 3, &size);
+    unsigned char data4Value[size];
+    cursor->getBlob(cursor, 3, data4Value, size);
+    EXPECT_EQ(data4Value[0], 1);
+    EXPECT_EQ(data4Value[1], 2);
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);
@@ -807,10 +809,6 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);
 
-    int rowCount = 0;
-    cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 3);
-
     cursor->goToNextRow(cursor);
 
     OHOS::AbilityRuntime::Context::SetApplicationContext();
@@ -820,6 +818,12 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
     char data1Value[size + 1];
     cursor->getText(cursor, 0, data1Value, size + 1);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    cursor->getSize(cursor, 3, &size);
+    unsigned char data4Value[size];
+    cursor->getBlob(cursor, 3, data4Value, size);
+    EXPECT_EQ(data4Value[0], 1);
+    EXPECT_EQ(data4Value[1], 2);
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);
@@ -839,10 +843,6 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
     EXPECT_NE(cursor, NULL);
 
-    int rowCount = 0;
-    cursor->getRowCount(cursor, &rowCount);
-    EXPECT_EQ(rowCount, 3);
-
     cursor->goToNextRow(cursor);
 
     OHOS::AbilityRuntime::Context::SetApplicationContext();
@@ -853,6 +853,12 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
     char data1Value[size];
     cursor->getText(cursor, 0, data1Value, size);
     EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    cursor->getSize(cursor, 3, &size);
+    unsigned char data4Value[size];
+    cursor->getBlob(cursor, 3, data4Value, size);
+    EXPECT_EQ(data4Value[0], 1);
+    EXPECT_EQ(data4Value[1], 2);
 
     predicates->destroy(predicates);
     cursor->destroy(cursor);

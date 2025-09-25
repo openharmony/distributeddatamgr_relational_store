@@ -94,7 +94,11 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
     int errCode = self->GetSize(columnIndex, size);
     // In versions earlier than API19, the size does not increase by 1.
     if (Utils::GetHapVersion() < 19) {
-        *size = *size - 1;
+        OH_ColumnType type;
+        self->GetColumnType(columnIndex, &type);
+        if (type == TYPE_TEXT) {
+           *size = *size - 1;
+        }
     }
     return errCode;
 }
