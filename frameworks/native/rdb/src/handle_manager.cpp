@@ -24,6 +24,7 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+std::unordered_set<std::string> HandleManager::pausedPaths_;
 HandleManager &HandleManager::GetInstance()
 {
     static HandleManager instance;
@@ -42,26 +43,29 @@ int HandleManager::Register(const RdbStoreConfig &rdbStoreConfig, std::shared_pt
         LOG_ERROR("register failed: invalid database path.");
         return E_INVALID_ARGS;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto [isFound, handler] = handlers_.Find(path);
-    if (isFound) {
+    auto result = handlers_.ComputeIfAbsent(path, [&corruptHandler](const std::string &key) {
+        return corruptHandler;
+    });
+    if (!result) {
         LOG_ERROR(
             "corruptHandler for path %{public}s has already been registered.", SqliteUtils::Anonymous(path).c_str());
         return E_ERROR;
     }
-    handlers_.Insert(path, corruptHandler);
     return E_OK;
 }
 
 int HandleManager::Unregister(const RdbStoreConfig &rdbStoreConfig)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    std::string path = rdbStoreConfig.GetPath();
-    auto [isFound, handler] = handlers_.Find(path);
-    if (isFound) {
-        handlers_.Erase(path);
-    }
+    handlers_.Erase(rdbStoreConfig.GetPath());
     return E_OK;
+}
+
+void HandleManager::PauseCallback(const std::string &path) {
+    pausedPaths_.insert(path);
+}
+
+void HandleManager::ResumeCallback(const std::string &path) {
+    pausedPaths_.erase(path);
 }
 
 std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &path)
@@ -77,7 +81,7 @@ std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &pat
 void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
 {
     auto handler = HandleManager::GetInstance().GetHandler(config.GetPath());
-    if (handler == nullptr) {
+    if (handler == nullptr || pausedPaths_.count(config.GetPath()) > 0) {
         return;
     }
     auto taskPool = TaskExecutor::GetInstance().GetExecutor();
@@ -86,7 +90,7 @@ void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
         return;
     }
     taskPool->Execute([handler]() { 
-        handler->OnCorrupt(); 
+        handler->OnCorrupt();
     });
 }
 

@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "handle_manager.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rd_connection.h"
@@ -130,6 +131,7 @@ int RdStatement::Prepare(GRD_DB *db, const std::string &newSql)
     if (ret != E_OK) {
         if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
             Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret));
+            HandleManager::HandleCorrupt(*config_);
         }
         if (tmpStmt != nullptr) {
             (void)RdUtils::RdSqlFinalize(tmpStmt);
@@ -313,6 +315,7 @@ int32_t RdStatement::Step()
     int ret = RdUtils::RdSqlStep(stmtHandle_);
     if (ret == E_SQLITE_CORRUPT && config_ != nullptr) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret));
+        HandleManager::HandleCorrupt(*config_);
     }
     stepCnt_++;
     return ret;

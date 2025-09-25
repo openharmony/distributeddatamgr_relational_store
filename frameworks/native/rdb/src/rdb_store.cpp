@@ -600,6 +600,11 @@ int32_t RdbStore::GetBackupStatus() const
     return SlaveStatus::UNDEFINED;
 }
 
+int32_t RdbStore::GetInitStatus() const
+{
+    return E_OK;
+}
+
 RdbStore::ModifyTime RdbStore::GetModifyTime(
     const std::string &table, const std::string &column, std::vector<PRIKey> &keys)
 {

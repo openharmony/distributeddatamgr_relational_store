@@ -153,7 +153,11 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         return nullptr;
     }
-    return GetStoreFromCache(path, config, errCode);
+    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(path, config, errCode);
+    if(rdbStore->GetInitStatus() != E_OK){
+        return nullptr;
+    }
+    return rdbStore;
 }
 
 bool RdbStoreManager::SilentProxys::Marshal(Serializable::json &node) const
