@@ -173,11 +173,6 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     RdUtils::ClearAndZeroString(configStr);
     if (errCode != E_OK) {
         LOG_ERROR("Can not open rd db %{public}d.", errCode);
-        if (errCode == E_SQLITE_CORRUPT) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
-            Reportor::CreateCorruptedFlag(config.GetPath());
-            HandleManager::HandleCorrupt(config);
-        }
         return errCode;
     }
     errCode = RdUtils::RdSqlRegistryThreadPool(dbHandle_);

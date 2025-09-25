@@ -115,10 +115,10 @@ public:
     static std::string GetBundleName(const std::string &bundleName, const std::string &storeName);
     static void ReportRAGFault(const std::string &errMsg, const std::string &functionName,
         const std::string &bundleName, const int faultType, const int errCode);
-    static void CreateCorruptedFlag(const std::string &dbPath);
 
 private:
     static void Update(std::map<std::string, DebugInfo> &localInfos, const std::map<std::string, DebugInfo> &infos);
+    static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static bool IsReportFault(const std::string &bundleName, int32_t errCode);
     static uint8_t *GetFaultCounter(int32_t errCode);

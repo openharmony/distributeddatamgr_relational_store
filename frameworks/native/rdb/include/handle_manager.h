@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <memory>
+#include <unordered_set>
 #include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
@@ -34,12 +35,15 @@ public:
     API_EXPORT int Unregister(const RdbStoreConfig &rdbStoreConfig);
     std::shared_ptr<CorruptHandler> GetHandler(const std::string &path);
     static void HandleCorrupt(const RdbStoreConfig &config);
+    static void PauseCallback(const std::string &path);
+    static void ResumeCallback(const std::string &path);
 
 private:
     HandleManager() = default;
     HandleManager(const HandleManager &) = delete;
     HandleManager &operator=(const HandleManager &) = delete;
     ConcurrentMap<std::string, std::shared_ptr<CorruptHandler>> handlers_;
+    static std::unordered_set<std::string> pausedPaths_;
     std::mutex mutex_;
 };
 
