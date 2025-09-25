@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_UTILS_BASE_FILE_EX_H
-#define MOCK_UTILS_BASE_FILE_EX_H
+#include "hmac.h"
 
-#include <string>
-#include <vector>
-
-static bool SaveBufferToFile(const std::string &filePath, const std::vector<char> &content, bool truncated = true)
+#include <cstring>
+unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len, const unsigned char *d, size_t n,
+    unsigned char *md, unsigned int *md_len)
 {
-    return true;
-}
+    *md_len = 0;
+    return nullptr;
+};
 
-static bool LoadBufferFromFile(const std::string &filePath, std::vector<char> &content)
+const EVP_MD *EVP_sha256()
 {
-    return true;
+    return nullptr;
 }
-#endif /* MOCK_UTILS_BASE_FILE_EX_H */

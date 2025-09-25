@@ -361,6 +361,16 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
     return true;
 }
 
+bool SqliteUtils::DeleteFiles(const std::vector<std::string> &filePaths)
+{
+    for (auto &filePath : filePaths) {
+        if (!DeleteFile(filePath)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFile)
 {
     std::ifstream src(srcFile.c_str(), std::ios::binary);
@@ -633,6 +643,27 @@ bool SqliteUtils::IsSlaveInvalid(const std::string &dbPath)
 bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)
 {
     return access((dbPath + SLAVE_INTERRUPT).c_str(), F_OK) == 0;
+}
+
+bool SqliteUtils::IsFileEmpty(const std::string &filePath)
+{
+    struct stat fileInfo;
+    auto errCode = stat(filePath.c_str(), &fileInfo);
+    if (errCode != 0) {
+        return true;
+    }
+    return fileInfo.st_size == 0;
+}
+
+bool SqliteUtils::IsFilesEmpty(const std::vector<std::string> &filePaths)
+{
+    for (auto &filePath :filePaths) {
+        if (!IsFileEmpty(filePath)) {
+            LOG_ERROR("keyfiles is not empty");
+            return false;
+        }
+    }
+    return true;
 }
 
 int SqliteUtils::GetPageCountCallback(void *data, int argc, char **argv, char **azColName)
