@@ -32,6 +32,8 @@
 #include "rdb_predicates.h"
 #include "rdb_utils.h"
 #include "rdb_types.h"
+#include "js_proxy.h"
+#include "result_set_bridge.h"
 
 using namespace taihe;
 using namespace ohos::data::relationalStore;
@@ -69,6 +71,32 @@ void ThrowParamError(const char* message)
     }
 }
 
+class ResultSetProxy final : public OHOS::JSProxy::JSCreator<OHOS::DataShare::ResultSetBridge> {
+public:
+    ResultSetProxy() = default;
+    explicit ResultSetProxy(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    {
+        resultSet_ = resultSet;
+    }
+
+    ResultSetProxy operator=(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    {
+        if (resultSet_ == resultSet) {
+            return *this;
+        }
+        resultSet_ = resultSet;
+        return *this;
+    }
+
+    std::shared_ptr<OHOS::DataShare::ResultSetBridge> Create() override
+    {
+        return std::make_shared<OHOS::RdbDataShareAdapter::RdbResultSetBridge>(resultSet_);
+    }
+
+protected:
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
+};
+
 class ResultSetImpl {
 public:
     ResultSetImpl()
@@ -77,6 +105,12 @@ public:
     explicit ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
     {
         nativeResultSet_ = resultSet;
+        proxy_ = std::make_shared<ResultSetProxy>(resultSet);
+    }
+
+    int64_t GetProxy()
+    {
+        return reinterpret_cast<int64_t>(proxy_.get());
     }
 
     array<string> GetColumnNames()
@@ -416,6 +450,7 @@ public:
 
 protected:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
+    std::shared_ptr<ResultSetProxy> proxy_;
 };
 
 class RdbPredicatesImpl {
