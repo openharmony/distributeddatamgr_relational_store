@@ -56,7 +56,10 @@ ohos_shared_library("native_rdb_ndk") {
   ]
 
   external_deps = [
+    "ability_runtime:app_context",
+    "bundle_frameworks:appexecfwk_core_headers",
     "c_utils:utils",
+    "common_event_service:cesfwk_core_headers",
     "hilog:libhilog",
     "json:nlohmann_json_static",
     "kv_store:datamgr_common",

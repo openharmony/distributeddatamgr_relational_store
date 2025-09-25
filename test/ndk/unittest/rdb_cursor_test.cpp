@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include "application_context.h"
 #include "common.h"
 #include "data_asset.h"
 #include "relational_store.h"
@@ -759,4 +760,100 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetColumnName_test_012, TestSize.L
     EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyOne(nullptr));
     EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyOne(asset));
     EXPECT_EQ(RDB_OK, OH_Data_Asset_DestroyMultiple(nullptr, 0));
+}
+
+/**
+ * @tc.name: Normal_cursor_GetSize_test_001
+ * @tc.desc: Normal testCase of cursor for GetSize.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 3);
+
+    cursor->goToNextRow(cursor);
+
+    size_t size = 0;
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 8);
+    char data1Value[size + 1];
+    cursor->getText(cursor, 0, data1Value, size + 1);
+    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: Normal_cursor_GetSize_test_001
+ * @tc.desc: Normal testCase of cursor for GetSize.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 3);
+
+    cursor->goToNextRow(cursor);
+
+    OHOS::AbilityRuntime::Context::SetApplicationContext();
+    size_t size = 0;
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 8);
+    char data1Value[size + 1];
+    cursor->getText(cursor, 0, data1Value, size + 1);
+    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+}
+
+/**
+ * @tc.name: Normal_cursor_GetSize_test_003
+ * @tc.desc: Normal testCase of cursor for GetSize.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
+{
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
+    EXPECT_NE(cursor, NULL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 3);
+
+    cursor->goToNextRow(cursor);
+
+    OHOS::AbilityRuntime::Context::SetApplicationContext();
+    OHOS::AbilityRuntime::ApplicationContext::SetApplicationInfo();
+    size_t size = 0;
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 9);
+    char data1Value[size];
+    cursor->getText(cursor, 0, data1Value, size);
+    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
 }
