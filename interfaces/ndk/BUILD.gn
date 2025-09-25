@@ -59,7 +59,7 @@ ohos_shared_library("native_rdb_ndk") {
     "ability_runtime:app_context",
     "bundle_frameworks:appexecfwk_core_headers",
     "c_utils:utils",
-    "common_event_service:cesfwk_core_headers",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "json:nlohmann_json_static",
     "kv_store:datamgr_common",
