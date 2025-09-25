@@ -204,8 +204,8 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value[size];
-    cursor->getText(cursor, 1, data1Value, size);
+    char data1Value[size + 1];
+    cursor->getText(cursor, 1, data1Value, size + 1);
     EXPECT_EQ(strcmp(data1Value, "liSi"), 0);
 
     int64_t data2Value;
