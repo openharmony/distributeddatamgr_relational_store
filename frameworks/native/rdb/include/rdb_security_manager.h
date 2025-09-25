@@ -22,29 +22,36 @@
 
 #include <atomic>
 #include <climits>
+#include <memory>
 #include <mutex>
 #include <random>
+#include <set>
+#include <unordered_map>
+#include <shared_mutex>
+#include <string>
 #include <vector>
 
 namespace OHOS::NativeRdb {
+class RDBCrypto;
 struct RdbSecretKeyData {
-    static constexpr uint32_t CURRENT_VERSION = 1;
-    uint8_t distributed = CURRENT_VERSION;
+    static constexpr uint8_t CURRENT_VERSION = 2;
+    uint8_t version = CURRENT_VERSION;
     time_t timeValue{};
     std::vector<uint8_t> secretKey{};
     RdbSecretKeyData() = default;
     ~RdbSecretKeyData()
     {
-        distributed = 0;
+        version = 0;
         timeValue = time_t();
         secretKey.assign(secretKey.size(), 0);
     }
 };
-
 struct RdbSecretContent {
-    static constexpr uint32_t MAGIC_NUMBER_V2 = 0x6B6B6B6B;
+    static constexpr uint32_t MAGIC_NUMBER = 0x6B6B6B6B;
     static constexpr uint32_t NONCE_VALUE_SIZE = 12;
-    uint32_t magicNum = MAGIC_NUMBER_V2;
+    static constexpr uint8_t CURRENT_VERSION = 2;
+    uint32_t magicNum = MAGIC_NUMBER;
+    uint8_t version = CURRENT_VERSION;
     std::vector<uint8_t> nonce_{};
     std::vector<uint8_t> encrypt_{};
     RdbSecretContent() = default;
@@ -60,7 +67,6 @@ public:
     RdbPassword();
     ~RdbPassword();
 
-    bool isKeyExpired = false;
     bool operator==(const RdbPassword &input) const;
     bool operator!=(const RdbPassword &input) const;
 
@@ -89,6 +95,7 @@ public:
         PUB_KEY_FILE_NEW_KEY,
         PUB_KEY_FILE_BUTT
     };
+
     class KeyFiles {
     public:
         KeyFiles(const std::string &dbPath, bool openFile = true);
@@ -100,6 +107,7 @@ public:
         int32_t Unlock();
 
     private:
+        bool InitLockPath();
         int32_t lockFd_ = -1;
         std::string lock_;
         std::string keys_[PUB_KEY_FILE_BUTT];
@@ -118,56 +126,68 @@ private:
     RdbSecurityManager();
     ~RdbSecurityManager();
 
-    bool HasRootKey();
     void* GetHandle();
-    int32_t GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias);
-    int32_t CheckRootKeyExists(std::vector<uint8_t> &rootKeyAlias);
+    void SetBundleName(const std::string &bundleName);
+    std::set<std::string> GetBundleNames();
+    std::shared_ptr<RDBCrypto> GetDelegate();
+    void UpgradeKey(const std::string &keyPath, const std::string &dbPath, KeyFileType keyFileType);
+    std::vector<char> GenerateHMAC(std::vector<char> &data);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV0(const std::string &keyPath);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDiskV1(const std::string &keyPath);
+    std::pair<bool, RdbSecretContent> UnpackV0(const std::vector<char> &content);
+    std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
+    std::pair<bool, RdbSecretKeyData> DecryptV0(const RdbSecretContent &content);
+    std::pair<bool, RdbSecretKeyData> DecryptV1(const RdbSecretContent &content);
     std::pair<bool, RdbSecretContent> EncryptWorkKey(const std::vector<uint8_t> &key);
     std::vector<uint8_t> DecryptWorkKey(const std::vector<uint8_t> &key, const std::vector<uint8_t> &nonce);
     void ReportCryptFault(int32_t code, const std::string &message);
-    std::vector<uint8_t> GenerateRootKeyAlias(const std::string &bundleName);
-    static bool InitPath(const std::string &fileDir);
-    std::vector<uint8_t> GenerateRandomNum(int32_t len);
-    bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workey = {});
+    static bool CreateDir(const std::string &fileDir);
+    std::vector<uint8_t> GenerateRandomNum(uint32_t len);
+    std::shared_ptr<RDBCrypto> CreateDelegate(const std::vector<uint8_t> &rootKeyAlias);
+    bool SaveSecretKeyToFile(const std::string &keyFile, const std::vector<uint8_t> &workKey = {});
     bool SaveSecretKeyToDisk(const std::string &keyPath, const RdbSecretContent &secretContent);
-    RdbPassword LoadSecretKeyFromFile(const std::string &keyFile);
-    bool LoadSecretKeyFromDisk(const std::string &keyPath, RdbSecretKeyData &keyData);
-    bool LoadSecretKeyFromDiskV1(const std::string &keyPath, RdbSecretKeyData &keyData);
-    std::pair<bool, RdbSecretContent> UnpackV1(const std::vector<char> &content);
-    std::pair<bool, RdbSecretContent> UnpackV2(const std::vector<char> &content);
-    std::pair<bool, RdbSecretKeyData> DecryptV1(const RdbSecretContent &content);
-    std::pair<bool, RdbSecretKeyData> DecryptV2(const RdbSecretContent &content);
-    bool IsKeyFileEmpty(const std::string &keyFile);
-    static bool IsKeyExpired(const time_t &createTime);
-    std::vector<uint8_t> GetRootKeyAlias();
-    std::string GetBundleNameByAlias();
-    std::string GetBundleNameByAlias(const std::vector<uint8_t> &rootKeyAlias);
-    void SetRootKeyAlias(std::vector<uint8_t> rootKeyAlias);
-    std::string ReplaceSuffix(const std::string& str);
+    std::string GetBundleName();
+    RdbPassword LoadSecretKeyFromFile(const std::string &keyPath);
+    std::pair<bool, RdbSecretKeyData> LoadSecretKeyFromDisk(const std::string &keyPath);
+    std::pair<bool, RdbSecretContent> Unpack(const std::vector<char> &content);
+    std::pair<bool, RdbSecretKeyData> Decrypt(const RdbSecretContent &content);
+    using LoadKeyHandler = std::pair<bool, RdbSecretKeyData> (RdbSecurityManager::*)(const std::string &keyPath);
+    static constexpr LoadKeyHandler LOAD_KEY_HANDLERS[PUB_KEY_FILE_BUTT] = {
+        &RdbSecurityManager::LoadSecretKeyFromDiskV0,
+        &RdbSecurityManager::LoadSecretKeyFromDiskV1
+    };
 
+    static constexpr const char *PUB_KEY_SUFFIXES[] = {
+        ".pub_key_v2",
+        ".pub_key_v2.new",
+    };
+    static constexpr const char *OLD_PUB_KEY_SUFFIXES[] = {
+        ".pub_key",
+        ".pub_key_v1",
+    };
+    static constexpr const char *OLD_PUB_NEW_KEY_SUFFIXES[] = {
+        ".pub_key.new",
+        ".pub_key.new",
+    };
     static constexpr char const *SUFFIX_KEY_LOCK = ".key_lock";
-    static constexpr char const *SUFFIX_PUB_KEY = ".pub_key_v1";
-    static constexpr char const *SUFFIX_PUB_KEY_NEW = ".pub_key.new";
-    static constexpr const char *SUFFIX_PUB_KEY_OLD = ".pub_key";
-    static constexpr const char *SUFFIX_PUB_TMP_NEW_KEY = ".pub_key_v1.new";
-    static constexpr const char *RDB_ROOT_KEY_ALIAS_PREFIX = "DistributedDataRdb";
     static constexpr const char *RDB_HKS_BLOB_TYPE_NONCE = "Z5s0Bo571Koq";
-    static constexpr uint32_t TIMES = 4;
-    static constexpr uint32_t MAX_UPDATE_SIZE = 64;
-    static constexpr uint32_t MAX_OUTDATA_SIZE = MAX_UPDATE_SIZE * TIMES;
+    static constexpr const char *RDB_ROOT_KEY_ALIAS = "DistributedDataRdb";
     static constexpr uint8_t AEAD_LEN = 16;
-    static constexpr int RDB_KEY_SIZE = 32;
+    static constexpr uint32_t RDB_KEY_SIZE = 32;
+    static constexpr uint32_t UPGRADE_TIMES = 2;
+    static constexpr uint32_t HEX_FIELD_WIDTH = 2;
+    static constexpr uint8_t VERSION_V0 = 1;
+    static constexpr uint8_t VERSION_V1 = 2;
+    static constexpr uint8_t HMAC_SIZE = 8;
 
-    static constexpr int HOURS_PER_YEAR = (24 * 365);
-    static constexpr uint8_t UNDISTRIBUTED = 0;
-    static constexpr uint8_t DISTRIBUTED = 1;
-
-    std::mutex rootKeyMutex_;
-    std::vector<uint8_t> rootKeyAlias_{};
+    const std::vector<uint8_t> rootAlias_;
     std::mutex mutex_;
-    std::atomic<bool> hasRootKey_ = false;
-    void *handle_;
+    std::mutex cryptoMutex_;
+    std::shared_ptr<RDBCrypto> rdbCrypto_;
+    std::mutex bundleNameMutex_;
+    std::set<std::string> bundleNames_;
     std::mutex handleMutex_;
+    void *handle_;
 };
 
 } // namespace OHOS::NativeRdb
