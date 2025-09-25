@@ -265,6 +265,8 @@ union StringOrNumberArray {
 }
 
  interface ResultSet {
+    GetProxy (): i64;
+
     @get GetColumnCount() : i32;
 
     @get GetRowCount() : i32;
