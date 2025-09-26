@@ -24,7 +24,7 @@ public:
     static constexpr uint32_t DEFAULT_FIRST_DELAY_INTERVAL = 0;
     static constexpr uint32_t DEFAULT_MIN_EXECUTE_INTERVAL = 200;
     static constexpr uint32_t DEFAULT_MAX_EXECUTE_INTERVAL = 500;
-    static const uint32_t INVALID_INTERVAL = UINT32_MAX;
+    static constexpr uint32_t INVALID_INTERVAL = UINT32_MAX;
     void SetExecutorPool(std::shared_ptr<ExecutorPool> pool)
     {
         pool_ = std::move(pool);
@@ -148,12 +148,12 @@ private:
     mutable std::mutex mutex_;
 };
 
-template<class T, class MergeFunc = std::function<void(T &out, T &&input)>, class Task = std::function<int32_t(T &&)>>
 class DelayActuator : public ActuatorBase {
 public:
-    DelayActuator(MergeFunc mergeFunc = nullptr, uint32_t firstInterval = DEFAULT_FIRST_DELAY_INTERVAL,
+    using Task = std::function<void()>;
+    DelayActuator(uint32_t firstInterval = DEFAULT_FIRST_DELAY_INTERVAL,
         uint32_t minInterval = DEFAULT_MIN_EXECUTE_INTERVAL, uint32_t maxInterval = DEFAULT_MAX_EXECUTE_INTERVAL)
-        : ActuatorBase(firstInterval, minInterval, maxInterval), data_(T()), mergeFunc_(mergeFunc)
+        : ActuatorBase(firstInterval, minInterval, maxInterval)
     {
     }
     ~DelayActuator() {}
@@ -162,37 +162,19 @@ public:
     {
         task_ = std::move(task);
     }
-    template<class D = T>
-    void Execute(D &&value)
+    void Execute()
     {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            if (mergeFunc_) {
-                mergeFunc_(data_, std::forward<D>(value));
-            } else {
-                data_ = T{std::move(value)};
-            }
-        }
         StartTimer();
     }
-
 private:
     Task task_;
-    T data_;
-    MergeFunc mergeFunc_;
     std::mutex mutex_;
 
     void ExecuteTask() override
     {
         StopTimer(false);
-        T data;
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            data = std::move(data_);
-            data_ = T();
-        }
         if (task_) {
-            task_(std::move(data));
+            task_();
         }
     }
 };

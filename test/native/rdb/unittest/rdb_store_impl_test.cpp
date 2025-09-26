@@ -17,10 +17,16 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <map>
+#include <memory>
 #include <string>
+#include <thread>
 
+#include "block_data.h"
 #include "common.h"
+#include "connection_pool.h"
+#include "delay_actuator.h"
 #include "distributed_kv_data_manager.h"
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
@@ -30,11 +36,12 @@
 #include "relational_store_manager.h"
 #include "single_kvstore.h"
 #include "sqlite_connection.h"
+#include "task_executor.h"
 #include "types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-
+using namespace OHOS;
 class RdbStoreImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -676,6 +683,89 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_005, TestSize.Level2)
     config.SetReadConSize(128);
     EXPECT_EQ(E_OK, connection->Repair(config));
     RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_ConnectionPoolTest_006
+ * @tc.desc: Abnormal testCase for ConfigLocale
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_006, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "ConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadConSize(4);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    auto connectionPool = ConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+    connectionPool->clearActuator_ =
+        std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
+    connectionPool->clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
+    auto blockData = std::make_shared<BlockData<int>>(2, 0);
+    std::weak_ptr<ConnectionPool> pool = connectionPool;
+    connectionPool->clearActuator_->SetTask([pool, blockData]() {
+        auto realPool = pool.lock();
+        if (realPool == nullptr) {
+            return;
+        }
+        blockData->SetValue(1);
+        realPool->ClearCache();
+    });
+    auto conn = connectionPool->AcquireConnection(true);
+    EXPECT_NE(nullptr, conn);
+    conn = nullptr;
+    EXPECT_EQ(blockData->GetValue(), 1);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+}
+
+/* *
+@tc.name: Rdb_ConnectionPoolTest_007
+@tc.desc: Abnormal testCase for ConfigLocale
+@tc.type: FUNC
+*/
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_007, TestSize.Level2)
+{
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "ConnectionOpenTest.db";
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetReadConSize(0);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(E_OK, errCode);
+
+    auto connectionPool = ConnectionPool::Create(config, errCode);
+    EXPECT_NE(nullptr, connectionPool);
+    EXPECT_EQ(E_OK, errCode);
+    connectionPool->clearActuator_ =
+        std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
+    connectionPool->clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
+    auto blockData = std::make_shared<BlockData<int>>(2, 0);
+    std::weak_ptr<ConnectionPool> pool = connectionPool;
+    connectionPool->clearActuator_->SetTask([pool, blockData]() {
+        auto realPool = pool.lock();
+        if (realPool == nullptr) {
+            return;
+        }
+        blockData->SetValue(1);
+        auto conn = realPool->AcquireConnection(false);
+        realPool->ClearCache();
+    });
+    auto conn = connectionPool->AcquireConnection(false);
+    EXPECT_NE(nullptr, conn);
+    conn = nullptr;
+    EXPECT_EQ(blockData->GetValue(), 1);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(DATABASE_NAME);
 }
 
 HWTEST_F(RdbStoreImplTest, NotifyDataChangeTest_001, TestSize.Level2)
