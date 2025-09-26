@@ -20,6 +20,10 @@ namespace OHOS::RdbNdk {
 class Utils {
 public:
     static NativeRdb::ConflictResolution ConvertConflictResolution(Rdb_ConflictResolution resolution);
+    static int32_t GetHapVersion();
+
+private:
+    static constexpr int32_t INVALID_HAP_VERSION = -1;
 };
 } // namespace OHOS::RdbNdk
 #endif // OH_DATA_UTILS_H

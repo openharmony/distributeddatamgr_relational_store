@@ -17,13 +17,17 @@
 
 #include <string>
 
+#include "application_context.h"
 #include "convertor_error_code.h"
 #include "logger.h"
 #include "oh_cursor.h"
+#include "oh_data_utils.h"
 #include "rdb_errno.h"
 #include "relational_asset.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
+
+using namespace OHOS::AbilityRuntime;
 
 namespace OHOS {
 namespace RdbNdk {
@@ -87,7 +91,16 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
     if (self == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    return self->GetSize(columnIndex, size);
+    int errCode = self->GetSize(columnIndex, size);
+    // In versions earlier than API19, the size does not increase by 1.
+    if (errCode == RDB_OK && Utils::GetHapVersion() < 19) {
+        OH_ColumnType type;
+        self->GetColumnType(columnIndex, &type);
+        if (*size > 0 && type == TYPE_TEXT) {
+           *size = *size - 1;
+        }
+    }
+    return errCode;
 }
 
 int RelationalCursor::GetText(OH_Cursor *cursor, int32_t columnIndex, char *value, int length)
