@@ -433,7 +433,7 @@ void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::strin
                 SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
             return;
         }
-        LOG_WARN("upgrade key failed path:%{public}s", oldKeyPaths[type].c_str());
+        LOG_WARN("upgrade key failed path:%{public}s", SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
         Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
             "version:" + std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
         keyData.secretKey.assign(keyData.secretKey.size(), 0);
@@ -727,6 +727,9 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::Decrypt(const RdbSecretCon
 {
     RdbSecretKeyData keyData;
     std::vector<uint8_t> value = DecryptWorkKey(content.encrypt_, content.nonce_);
+    if (value.empty()) {
+        return { false, keyData };
+    }
     keyData.secretKey = { value.begin(), value.end() };
     value.assign(value.size(), 0);
     return { true, keyData };

@@ -41,49 +41,49 @@ static inline OHOS::HiviewDFX::HiLogLabel LogLabel()
 } // namespace Rdb
 } // namespace OHOS
 
-#define LOG_DEBUG(fmt, ...)                                                    \
-    do {                                                                       \
-        auto lable = LogLabel();                                               \
-        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_DEBUG)) {   \
-            ((void)HILOG_IMPL(lable.type, LOG_DEBUG, lable.domain, lable.tag,  \
-                LOG_TAG "[%{public}s]: " fmt, __FUNCTION__, ##__VA_ARGS__));   \
-        }                                                                      \
+#define LOG_DEBUG(fmt, ...)                                                                                        \
+    do {                                                                                                           \
+        auto lable = LogLabel();                                                                                   \
+        if (HiLogIsLoggable(lable.domain, LOG_TAG, LogLevel::LOG_DEBUG)) {                                         \
+            ((void)HILOG_IMPL(                                                                                     \
+                lable.type, LOG_DEBUG, lable.domain, LOG_TAG, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)); \
+        }                                                                                                          \
     } while (0)
 
-#define LOG_INFO(fmt, ...)                                                     \
-    do {                                                                       \
-        auto lable = LogLabel();                                               \
-        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_INFO)) {    \
-            ((void)HILOG_IMPL(lable.type, LOG_INFO, lable.domain, lable.tag,   \
-                LOG_TAG "[%{public}s]: " fmt, __FUNCTION__, ##__VA_ARGS__));    \
-        }                                                                      \
+#define LOG_INFO(fmt, ...)                                                                                        \
+    do {                                                                                                          \
+        auto lable = LogLabel();                                                                                  \
+        if (HiLogIsLoggable(lable.domain, LOG_TAG, LogLevel::LOG_INFO)) {                                         \
+            ((void)HILOG_IMPL(                                                                                    \
+                lable.type, LOG_INFO, lable.domain, LOG_TAG, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)); \
+        }                                                                                                         \
     } while (0)
 
-#define LOG_WARN(fmt, ...)                                                     \
-    do {                                                                       \
-        auto lable = LogLabel();                                               \
-        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_WARN)) {    \
-            ((void)HILOG_IMPL(lable.type, LOG_WARN, lable.domain, lable.tag,   \
-                LOG_TAG "[%{public}s]: " fmt, __FUNCTION__, ##__VA_ARGS__));    \
-        }                                                                      \
+#define LOG_WARN(fmt, ...)                                                                                        \
+    do {                                                                                                          \
+        auto lable = LogLabel();                                                                                  \
+        if (HiLogIsLoggable(lable.domain, LOG_TAG, LogLevel::LOG_WARN)) {                                       \
+            ((void)HILOG_IMPL(                                                                                    \
+                lable.type, LOG_WARN, lable.domain, LOG_TAG, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)); \
+        }                                                                                                         \
     } while (0)
 
-#define LOG_ERROR(fmt, ...)                                                    \
-    do {                                                                       \
-        auto lable = LogLabel();                                               \
-        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_ERROR)) {   \
-            ((void)HILOG_IMPL(lable.type, LOG_ERROR, lable.domain, lable.tag,  \
-                LOG_TAG "[%{public}s]: " fmt, __FUNCTION__, ##__VA_ARGS__));   \
-        }                                                                      \
+#define LOG_ERROR(fmt, ...)                                                                                        \
+    do {                                                                                                           \
+        auto lable = LogLabel();                                                                                   \
+        if (HiLogIsLoggable(lable.domain, LOG_TAG, LogLevel::LOG_ERROR)) {                                       \
+            ((void)HILOG_IMPL(                                                                                     \
+                lable.type, LOG_ERROR, lable.domain, LOG_TAG, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)); \
+        }                                                                                                          \
     } while (0)
 
-#define LOG_FATAL(fmt, ...)                                                    \
-    do {                                                                       \
-        auto lable = LogLabel();                                               \
-        if (HiLogIsLoggable(lable.domain, lable.tag, LogLevel::LOG_FATAL)) {   \
-            ((void)HILOG_IMPL(lable.type, LOG_FATAL, lable.domain, lable.tag,  \
-                LOG_TAG "[%{public}s]: " fmt, __FUNCTION__, ##__VA_ARGS__));   \
-        }                                                                      \
+#define LOG_FATAL(fmt, ...)                                                                                        \
+    do {                                                                                                           \
+        auto lable = LogLabel();                                                                                   \
+        if (HiLogIsLoggable(lable.domain, LOG_TAG, LogLevel::LOG_FATAL)) {                                         \
+            ((void)HILOG_IMPL(                                                                                     \
+                lable.type, LOG_FATAL, lable.domain, LOG_TAG, "%{public}s:" fmt, __FUNCTION__, ##__VA_ARGS__)); \
+        }                                                                                                          \
     } while (0)
 
 #endif // RDB_LOGGER_H
