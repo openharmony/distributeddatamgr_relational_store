@@ -72,6 +72,7 @@ public:
     static void WaitForAsyncRepairFinish(int maxTimes = 400);
     void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true, bool isSearchable = false);
     int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
+    void CreateFakeBinlogFiles(int count);
 
     static const std::string databaseName;
     static const std::string slaveDatabaseName;
@@ -110,6 +111,7 @@ static const int BINLOG_DELETE_PER_WAIT_TIME = 100000; // 100000us = 100ms
 static const int BINLOG_REPLAY_WAIT_TIME = 2; // 2s
 static const int BINLOG_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 static const int SIZE_MB = 1024 * 1024; // 1MB
+static const int BINLOG_MAX_FILE_COUNT = 50;
 
 class DoubleWriteBinlogTestOpenCallback : public RdbOpenCallback {
 public:
@@ -1455,6 +1457,38 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_028, TestSize.Level0)
     EXPECT_EQ(count, num);
     LOG_INFO("RdbStore_Binlog_028 reopen slave db finish");
     RdbDoubleWriteBinlogTest::CheckAccess();
+}
+
+void RdbDoubleWriteBinlogTest::CreateFakeBinlogFiles(int count)
+{
+    for (int i = 0; i < count; i++) {
+        std::string filePath = binlogFirstFile + std::to_string(i);
+        std::ofstream src(filePath.c_str(), std::ios::binary);
+        ASSERT_TRUE(src.is_open());
+        src.close();
+    }
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_029
+ * @tc.desc: test manuel trigger mode will set slave invalid if binlog file is over limit
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_029, TestSize.Level0)
+{
+    InitDb(HAMode::MANUAL_TRIGGER, false, true);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    ASSERT_TRUE(CheckFolderExist(binlogDatabaseName));
+    EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(databaseName));
+    LOG_INFO("---- add create file ----");
+    CreateFakeBinlogFiles(BINLOG_MAX_FILE_COUNT);
+    ASSERT_GE(SqliteUtils::GetFileCount(binlogDatabaseName), BINLOG_MAX_FILE_COUNT);
+    LOG_INFO("---- insert data to trigger replay, should get slave failure ----");
+    int64_t id = 1;
+    int count = 20;
+    Insert(id, count, false, SIZE_MB);
+    EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(databaseName));
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
