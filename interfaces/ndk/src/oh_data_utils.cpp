@@ -12,8 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "OhDataUtils"
 #include "oh_data_utils.h"
+
+#include "application_context.h"
+#include "logger.h"
+
+#define API_VERSION_MOD 100
+
+using namespace OHOS::AbilityRuntime;
 
 namespace OHOS::RdbNdk {
 NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResolution resolution)
@@ -34,5 +41,20 @@ NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResol
         default:
             return NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
     }
+}
+
+int32_t Utils::GetHapVersion()
+{
+    auto context = OHOS::AbilityRuntime::Context::GetApplicationContext();
+    if (context == nullptr) {
+        LOG_ERROR("get application context failed.");
+        return INVALID_HAP_VERSION;
+    }
+    auto appInfo = context->GetApplicationInfo();
+    if (appInfo == nullptr) {
+        LOG_ERROR("get application info failed.");
+        return INVALID_HAP_VERSION;
+    }
+    return appInfo->apiTargetVersion % API_VERSION_MOD;
 }
 } // namespace OHOS::RdbNdk
