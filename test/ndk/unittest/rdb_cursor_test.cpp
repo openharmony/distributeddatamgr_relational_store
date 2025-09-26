@@ -859,7 +859,8 @@ HWTEST_F(RdbNativeCursorTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
     cursor->getBlob(cursor, 3, data4Value, size);
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
-
+    OHOS::AbilityRuntime::Context::applicationContext_ = nullptr;
+    OHOS::AbilityRuntime::ApplicationContext::applicationInfo_ = nullptr;
     predicates->destroy(predicates);
     cursor->destroy(cursor);
 }
