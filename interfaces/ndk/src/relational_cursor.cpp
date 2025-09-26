@@ -96,7 +96,7 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
     if (errCode == RDB_OK && Utils::GetHapVersion() < 19) {
         OH_ColumnType type;
         self->GetColumnType(columnIndex, &type);
-        if (type == TYPE_TEXT) {
+        if (*size > 0 && type == TYPE_TEXT) {
            *size = *size - 1;
         }
     }
