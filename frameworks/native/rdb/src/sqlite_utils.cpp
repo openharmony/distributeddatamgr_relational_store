@@ -411,6 +411,22 @@ size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
     return count;
 }
 
+size_t SqliteUtils::GetFileCount(const std::string &folderPath)
+{
+    struct stat fileStat;
+    if (stat(folderPath.c_str(), &fileStat) != 0) {
+        LOG_WARN("path is invalid, %{public}s", Anonymous(folderPath).c_str());
+        return 0;
+    }
+    if (!S_ISDIR(fileStat.st_mode)) {
+        LOG_WARN("path is not a folder, %{public}s", Anonymous(folderPath).c_str());
+        return 0;
+    }
+
+    auto entries = RdbFileSystem::GetEntries(folderPath);
+    return entries.size();
+}
+
 bool SqliteUtils::IsKeyword(const std::string &word)
 {
     return IsMatchKeyword(SQL_KEYWORD, sizeof(SQL_KEYWORD) / sizeof(char *), StrToUpper(word).c_str()) ||
