@@ -73,6 +73,7 @@ constexpr uint32_t SqliteConnection::BINLOG_FILE_SIZE_LIMIT;
 constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
 constexpr int32_t SERVICE_GID = 3012;
+constexpr int32_t BINLOG_FILE_REPLAY_LIMIT = 50;
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
 ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::reusableReplicas_ = {};
 __attribute__((used))
@@ -499,6 +500,17 @@ SqliteConnection::~SqliteConnection()
         if (errCode != SQLITE_OK) {
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }
+    }
+    if (isWriter_ && slaveConnection_ != nullptr && IsSupportBinlog(config_)) {
+        reusableReplicas_.ComputeIfPresent(slaveConnection_->config_.GetPath(),
+            [slaveConn = slaveConnection_](auto &key, auto &weakPtr) {
+            auto sharedPtr = weakPtr.lock();
+            if (sharedPtr != nullptr && slaveConn == sharedPtr) {
+                LOG_INFO("replica connection removed when close");
+                return false;
+            }
+            return true;
+        });
     }
 }
 
@@ -1845,6 +1857,20 @@ void SqliteConnection::InsertReusableReplica(const std::string &dbPath, std::wea
     });
 }
 
+std::shared_ptr<SqliteConnection> SqliteConnection::GetReusableReplica(const std::string &dbPath)
+{
+    auto [found, weakPtr] = reusableReplicas_.Find(SqliteUtils::GetSlavePath(dbPath));
+    if (!found) {
+        LOG_WARN("no replica connection for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        return nullptr;
+    }
+    auto slaveConn = weakPtr.lock();
+    if (slaveConn == nullptr) {
+        LOG_WARN("replica connection expired for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+    }
+    return slaveConn;
+}
+
 void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath)
 {
     if (dbPath == nullptr) {
@@ -1855,26 +1881,42 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         LOG_WARN("replica invalid, skip binlog replay. count:%{public}" PRIu16, currentCount);
         return;
     }
+    std::string dbPathStr(dbPath);
+    auto lockFile = dbPathStr + BINLOG_LOCK_FILE_SUFFIX;
+    if (access(lockFile.c_str(), F_OK) != 0) {
+        LOG_WARN("binlog lock path does not exist for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
+        return;
+    }
+    auto readLock = std::make_shared<RdbSecurityManager::KeyFiles>(lockFile);
+    if (readLock == nullptr) {
+        LOG_WARN("create read lock failed");
+        return;
+    }
+    auto err = readLock->Lock(false);
+    if (err != E_OK) {
+        LOG_WARN("get lock failed, skip binlog replay for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
+        return;
+    }
     auto pool = TaskExecutor::GetInstance().GetExecutor();
     if (pool == nullptr) {
+        readLock->Unlock();
         LOG_WARN("get pool failed");
         return;
     }
-    std::string dbPathStr(dbPath);
-    auto [found, weakPtr] = reusableReplicas_.Find(SqliteUtils::GetSlavePath(dbPathStr));
-    if (!found) {
-        LOG_WARN("no replica connection for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
-        return;
-    }
-    auto slaveConn = weakPtr.lock();
+    auto slaveConn = GetReusableReplica(dbPath);
     if (slaveConn == nullptr) {
-        LOG_WARN("replica connection expired for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        readLock->Unlock();
         return;
     }
-    pool->Execute([dbPathStr, slaveConn] {
+    auto taskId = pool->Execute([dbPathStr, slaveConn, readLock] {
         LOG_INFO("task start: binlog replay for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
         SqliteConnection::ReplayBinlog(dbPathStr, slaveConn, true);
+        readLock->Unlock();
     });
+    if (taskId == TaskExecutor::INVALID_TASK_ID) {
+        LOG_WARN("start task failed, remove lock for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
+        readLock->Unlock();
+    }
 }
 
 int SqliteConnection::SetBinlog()
@@ -1910,6 +1952,12 @@ void SqliteConnection::ReplayBinlog(const std::string &dbPath,
     }
     if (slaveConn == nullptr || slaveConn->dbHandle_ == nullptr) {
         LOG_WARN("backup db does not exist, %{public}d", slaveConn == nullptr);
+        return;
+    }
+    if (slaveConn->config_.GetHaMode() == HAMode::MANUAL_TRIGGER &&
+        (SqliteUtils::GetFileCount(GetBinlogFolderPath(dbPath)) > BINLOG_FILE_REPLAY_LIMIT)) {
+        LOG_WARN("binlog file count over limit: %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        SqliteUtils::SetSlaveInvalid(dbPath);
         return;
     }
     sqlite3 *dbFrom = nullptr;

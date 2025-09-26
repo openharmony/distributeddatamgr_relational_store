@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <climits>
+#include <fstream>
 #include <string>
 
 using namespace testing::ext;
@@ -191,6 +192,17 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0025, TestSize.Level1)
 {
     EXPECT_NE(0, SqliteUtils::SetSlaveRestoring("non_exist_folder/non_exist_file"));
+}
+
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
+{
+    EXPECT_EQ(0, SqliteUtils::GetFileCount("non_exist_folder"));
+    std::string filePath = "/data/test/SqliteUtils_Test_0026";
+    std::ofstream src(filePath.c_str(), std::ios::binary);
+    ASSERT_TRUE(src.is_open());
+    src.close();
+    EXPECT_EQ(0, SqliteUtils::GetFileCount(filePath));
+    std::remove(filePath.c_str());
 }
 
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)
