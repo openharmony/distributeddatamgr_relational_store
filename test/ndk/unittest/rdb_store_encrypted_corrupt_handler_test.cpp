@@ -99,9 +99,9 @@ void RdbStoreEncryptedCorruptHandlerTest::DestroyDb(const std::string &filePath)
 {
     const char *message = "hello";
     const size_t messageLength = 5;
-    const size_t SEEK_POSITION = 64;
+    const size_t seekPosition = 64;
     std::ofstream fsDb(filePath, std::ios_base::binary | std::ios_base::out);
-    fsDb.seekp(SEEK_POSITION);
+    fsDb.seekp(seekPosition);
     fsDb.write(message, messageLength);
     fsDb.close();
 }
