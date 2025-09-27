@@ -1169,33 +1169,68 @@ NDKCorruptHandler::NDKCorruptHandler(
     OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptr<NativeRdb::RdbStore> store)
     : config_(config), context_(context), handler_(handler), store_(std::move(store))
 {
+    config_ = config;
 }
 
-void NDKCorruptHandler::OnCorrupt()
+Rdb_Tokenizer NDKCorruptHandler::ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token)
+{
+    if (token == OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER) {
+        return Rdb_Tokenizer::RDB_NONE_TOKENIZER;
+    } else if (token == OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER) {
+        return Rdb_Tokenizer::RDB_ICU_TOKENIZER;
+    }
+    return Rdb_Tokenizer::RDB_CUSTOM_TOKENIZER;
+}
+
+OH_Rdb_ConfigV2 *NDKCorruptHandler::GetOHRdbConfig(const OHOS::NativeRdb::RdbStoreConfig &rdbConfig)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    if (config == nullptr) {
+        LOG_ERROR("Failed to create OH_Rdb_ConfigV2");
+        return nullptr;
+    }
+
+    config->persist = (rdbConfig.GetStorageMode() == OHOS::NativeRdb::StorageMode::MODE_DISK);
+
+    const std::string &realPath = rdbConfig.GetPath();
+    config->dataBaseDir = OHOS::NativeRdb::RdbSqlUtils::GetDataBaseDirFromRealPath(realPath, config->persist);
+    config->securityLevel = static_cast<int32_t>(rdbConfig.GetSecurityLevel());
+    config->isEncrypt = rdbConfig.IsEncrypt();
+    config->area = rdbConfig.GetArea() + 1;
+    config->dbType = rdbConfig.IsVector() ? RDB_CAYLEY : RDB_SQLITE;
+    config->bundleName = rdbConfig.GetBundleName();
+    config->storeName = rdbConfig.GetName();
+    config->token = ConvertTokenizer2Ndk(rdbConfig.GetTokenizer());
+    config->customDir = rdbConfig.GetCustomDir();
+    config->readOnly = rdbConfig.IsReadOnly();
+    config->pluginLibs = rdbConfig.GetPluginLibs();
+    config->cryptoParam = rdbConfig.GetCryptoParam();
+    config->enableSemanticIndex = rdbConfig.GetEnableSemanticIndex();
+    return config;
+}
+
+void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config)
 {
     if (handler_ == nullptr) {
         return;
     }
-    if (!isExecute_.exchange(true)) {
+    if (!isExecuting.exchange(true)) {
         OH_Rdb_Store *store = nullptr;
         auto storePtr = store_.lock();
         if (storePtr != nullptr) {
             store = new (std::nothrow) RelationalStore(storePtr);
         }
-        (*handler_)(config_, context_, store);
+        OH_Rdb_ConfigV2* rdbConfig = GetOHRdbConfig(config);
+        (*handler_)(rdbConfig, context_, store);
         delete store;
-        isExecute_.store(false);
+        OH_Rdb_DestroyConfig(rdbConfig);
+        isExecuting.store(false);
     }
 }
 
 void NDKCorruptHandler::SetStore(std::weak_ptr<OHOS::NativeRdb::RdbStore> store)
 {
     store_ = store;
-}
-
-std::shared_ptr<OHOS::NativeRdb::RdbStore> NDKCorruptHandler::GetStore()
-{
-    return store_.lock();
 }
 
 NDKStoreObserver::NDKStoreObserver(const Rdb_DataObserver *observer, int mode) : mode_(mode), observer_(observer)

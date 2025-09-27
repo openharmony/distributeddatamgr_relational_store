@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -124,6 +124,7 @@ void RdbStoreCorruptHandlerTest::InsertData(int count, OH_Rdb_Store *store)
     const double data3Value = 100.1;
     for (int64_t i = 0; i < count; i++) {
         OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+        ASSERT_NE(valueBucket, nullptr);
         valueBucket->putInt64(valueBucket, "id", i + 1);
         valueBucket->putText(valueBucket, "data1", "zhangSan");
         valueBucket->putInt64(valueBucket, "data2", data2Value + i);
@@ -144,6 +145,7 @@ void RdbStoreCorruptHandlerTest::TransInsertData(int count, OH_Rdb_Transaction *
     const double data3Value = 100.1;
     for (int64_t i = 0; i < count; i++) {
         OH_VBucket *valueBucket2 = OH_Rdb_CreateValuesBucket();
+        ASSERT_NE(valueBucket2, nullptr);
         valueBucket2->putText(valueBucket2, "data1", "zhangSan");
         valueBucket2->putInt64(valueBucket2, "data2", data2Value + i);
         valueBucket2->putReal(valueBucket2, "data3", data3Value);
@@ -247,7 +249,9 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_002, TestSize.Level1)
 
     int errCode2 = OH_Rdb_ErrCode::RDB_OK;
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode2);
+    EXPECT_EQ(store2, NULL);
     std::this_thread::sleep_for(std::chrono::seconds(2));
+    store2 = OH_Rdb_CreateOrOpen(config1, &errCode2);
     EXPECT_NE(store2, NULL);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store2, 0, createTableSql));
     OH_Rdb_UnRegisterCorruptedHandler(config1);
@@ -287,6 +291,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_003, TestSize.Level1)
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putInt64(valueBucket1, "id", 1001);
     valueBucket1->putText(valueBucket1, "data1", "zhangSan1");
     valueBucket1->putInt64(valueBucket1, "data2", 128001);
@@ -339,6 +344,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_004, TestSize.Level1)
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putText(valueBucket1, "data1", "liSi");
     valueBucket1->putInt64(valueBucket1, "data2", 13800);
     valueBucket1->putReal(valueBucket1, "data3", 200.1);
@@ -593,6 +599,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_009, TestSize.Level1)
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
     ret = OH_Rdb_CreateTransaction(store2, g_options, &trans);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putText(valueBucket1, "data1", "test_name4");
     valueBucket1->putInt64(valueBucket1, "data2", 14800);
     valueBucket1->putReal(valueBucket1, "data3", 300.1);
@@ -683,6 +690,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_011, TestSize.Level1)
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putInt64(valueBucket1, "id", 1001);
     valueBucket1->putText(valueBucket1, "data1", "zhangSan1");
     valueBucket1->putInt64(valueBucket1, "data2", 128001);
@@ -787,6 +795,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_013, TestSize.Level1)
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
     ret = OH_Rdb_CreateTransaction(store2, g_options, &trans);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
+    ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putText(valueBucket1, "data1", "test_name4");
     valueBucket1->putInt64(valueBucket1, "data2", 14800);
     valueBucket1->putReal(valueBucket1, "data3", 300.1);

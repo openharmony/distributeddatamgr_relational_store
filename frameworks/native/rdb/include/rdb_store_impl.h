@@ -138,7 +138,7 @@ public:
     int32_t UnlockCloudContainer() override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
-    int32_t GetInitStatus() const override;
+    int32_t GetInitStatus() const;
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;

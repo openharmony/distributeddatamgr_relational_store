@@ -62,7 +62,6 @@ public:
     static void TestEncryptedCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, OH_Rdb_Store *store);
     static void TestEncryptedCorruptedHandler1(OH_Rdb_ConfigV2 *config, void *context, OH_Rdb_Store *store);
     static void DestroyDb(const std::string &filePath);
-    static void InsertData(int count, OH_Rdb_Store *store);
 };
 
 void RdbStoreEncryptedCorruptHandlerTest::TestEncryptedCorruptedHandler(
@@ -105,26 +104,6 @@ void RdbStoreEncryptedCorruptHandlerTest::DestroyDb(const std::string &filePath)
     fsDb.seekp(SEEK_POSITION);
     fsDb.write(message, messageLength);
     fsDb.close();
-}
-
-void RdbStoreEncryptedCorruptHandlerTest::InsertData(int count, OH_Rdb_Store *store)
-{
-    const int data2Value = 12800;
-    const double data3Value = 100.1;
-    for (int64_t i = 0; i < count; i++) {
-        OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-        valueBucket->putInt64(valueBucket, "id", i + 1);
-        valueBucket->putText(valueBucket, "data1", "zhangSan");
-        valueBucket->putInt64(valueBucket, "data2", data2Value + i);
-        valueBucket->putReal(valueBucket, "data3", data3Value);
-        uint8_t arr[] = { 1, 2, 3, 4, 5 };
-        int len = sizeof(arr) / sizeof(arr[0]);
-        valueBucket->putBlob(valueBucket, "data4", arr, len);
-        valueBucket->putText(valueBucket, "data5", "ABCDEFG");
-        int errCode = OH_Rdb_Insert(store, "store_test", valueBucket);
-        EXPECT_EQ(i + 1, errCode);
-        valueBucket->destroy(valueBucket);
-    }
 }
 
 void RdbStoreEncryptedCorruptHandlerTest::SetUpTestCase(void)
@@ -551,5 +530,38 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_009, TestSiz
 
     OH_Rdb_UnRegisterCorruptedHandler(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config1));
+    OH_Rdb_DestroyConfig(config1);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_010
+ * @tc.desc: test invaild args
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_010, TestSize.Level1)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+    int errCode = OH_Rdb_ErrCode::RDB_OK;
+    OH_Rdb_ConfigV2 *config = nullptr;
+    void *context = nullptr;
+    Rdb_CorruptedHandler *handler = nullptr;
+    Rdb_CorruptedHandler handler1 = TestEncryptedCorruptedHandler;
+    errCode = OH_Rdb_RegisterCorruptedHandler(config, context, &handler1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    auto config1 = InitRdbConfig();
+    errCode = OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    config1->magicNum = 0xFF;
+    errCode = OH_Rdb_RegisterCorruptedHandler(config1, context, &handler1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_UnRegisterCorruptedHandler(config);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
+    errCode = OH_Rdb_UnRegisterCorruptedHandler(config1);
+    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     OH_Rdb_DestroyConfig(config1);
 }

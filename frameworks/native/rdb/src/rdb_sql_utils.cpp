@@ -121,6 +121,20 @@ std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, cons
     return databaseDir.append("/").append(name);
 }
 
+std::string RdbSqlUtils::GetDataBaseDirFromRealPath(const std::string &realPath, bool persist)
+{
+    if (!persist) {
+        return realPath;
+    }
+    const std::string rdbSeparator = "/rdb";
+    size_t separatorPos = realPath.find(rdbSeparator);
+    if (separatorPos == std::string::npos) {
+        return "";
+    }
+    std::string dataBaseDir = realPath.substr(0, separatorPos);
+    return dataBaseDir;
+}
+
 std::string RdbSqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     return SqliteSqlBuilder::BuildQueryString(predicates, columns);
