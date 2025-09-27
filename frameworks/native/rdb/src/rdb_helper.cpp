@@ -41,11 +41,11 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
-    HandleManager::PauseCallback(config.GetPath());
+    HandleManager::GetInstance().PauseCallback();
     auto rdb = RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
-    HandleManager::ResumeCallback(config.GetPath());
+    HandleManager::GetInstance().ResumeCallback();
     if (errCode == E_SQLITE_CORRUPT) {
-        HandleManager::HandleCorrupt(config);
+        HandleManager::GetInstance().HandleCorrupt(config);
     }
     if (errCode != E_OK) {
         Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config,

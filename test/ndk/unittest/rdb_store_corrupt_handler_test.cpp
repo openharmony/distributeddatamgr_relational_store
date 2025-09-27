@@ -192,7 +192,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_001, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -236,7 +236,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_002, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -275,7 +275,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_003, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -331,7 +331,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_004, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
@@ -386,7 +386,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_005, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
@@ -430,7 +430,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_006, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -476,7 +476,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_007, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
@@ -531,7 +531,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_008, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -574,7 +574,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_009, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -638,7 +638,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_010, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
@@ -677,7 +677,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_011, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
@@ -729,7 +729,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_012, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
     InsertData(1000, store1);
@@ -773,7 +773,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_013, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
     OH_Rdb_Transaction *trans = nullptr;
@@ -832,7 +832,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_014, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -850,7 +850,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_014, TestSize.Level1)
     EXPECT_NE(store2, NULL);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, CREATE_TABLE_SQL));
     Rdb_CorruptedHandler handler1 = TestCorruptedHandler1;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler1);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2));
     DestroyDb(RDB_TEST_PATH1);
 
@@ -881,7 +881,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_015, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -928,14 +928,14 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_016, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE_SQL));
     OH_Rdb_UnRegisterCorruptedHandler(config1);
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
     DestroyDb(RDB_TEST_PATH1);
 
@@ -965,7 +965,7 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_017, TestSize.Level1)
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);

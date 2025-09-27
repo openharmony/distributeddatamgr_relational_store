@@ -1105,7 +1105,7 @@ typedef void (*Rdb_CorruptedHandler)(OH_Rdb_ConfigV2 *config, void *context, OH_
  * @see OH_Rdb_RegisterCorruptedHandler.
  * @since 22
  */
-int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler);
+int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler);
 
 /**
  * @brief Unregisters corrupted handler for the database.
