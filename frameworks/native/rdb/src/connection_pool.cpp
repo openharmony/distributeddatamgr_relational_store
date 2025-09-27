@@ -29,8 +29,8 @@
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
-#include "rdb_sql_statistic.h"
 #include "rdb_perfStat.h"
+#include "rdb_sql_statistic.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
@@ -115,31 +115,8 @@ ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig)
     attachConfig_.SetJournalMode(JournalMode::MODE_TRUNCATE);
     trans_.right_ = Container::MIN_TRANS_ID;
     trans_.left_ = trans_.right_;
-    clearActuator_ = std::make_shared<DelayActuator<std::vector<std::weak_ptr<ConnPool::ConnNode>>,
-        std::function<void(
-            std::vector<std::weak_ptr<ConnPool::ConnNode>> & out, std::shared_ptr<ConnPool::ConnNode> && input)>>>(
-        [](auto &out, std::shared_ptr<ConnNode> &&input) {
-            for (auto &node : out) {
-                if (node.lock() == input) {
-                    return;
-                }
-            }
-            out.push_back(std::move(input));
-        },
-        FIRST_DELAY_INTERVAL,
-        MIN_EXECUTE_INTERVAL,
-        MAX_EXECUTE_INTERVAL);
+    clearActuator_ = std::make_shared<DelayActuator>(FIRST_DELAY_INTERVAL, MIN_EXECUTE_INTERVAL, MAX_EXECUTE_INTERVAL);
     clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
-    clearActuator_->SetTask([](std::vector<std::weak_ptr<ConnPool::ConnNode>> &&nodes) {
-        for (auto &node : nodes) {
-            auto realNode = node.lock();
-            if (realNode == nullptr || realNode->connect_ == nullptr) {
-                continue;
-            }
-            realNode->connect_->ClearCache(true);
-        }
-        return E_OK;
-    });
 }
 
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bool needWriter)
@@ -179,6 +156,12 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bo
         },
         maxReader_, config.GetReadTime(), maxReader_ == 0);
     errCode = ret;
+    clearActuator_->SetTask([pool = weak_from_this()]() {
+        auto realPool = pool.lock();
+        if (realPool != nullptr) {
+            realPool->ClearCache();
+        }
+    });
     return result;
 }
 
@@ -239,6 +222,20 @@ void ConnPool::DelayClearTrans()
         }
         realPool->trans_.ClearUnusedTrans(realPool);
     });
+}
+
+void ConnPool::ClearCache()
+{
+    auto writeNode = AcquireById(false, START_NODE_ID);
+    if (writeNode != nullptr) {
+        writeNode->ClearCache(true);
+        writeNode = nullptr;
+    }
+    auto readNode = AcquireById(true, START_NODE_ID);
+    while (readNode != nullptr) {
+        readNode->ClearCache(true);
+        readNode = AcquireById(true, readNode->GetId());
+    }
 }
 
 void ConnPool::CloseAllConnections()
@@ -394,9 +391,9 @@ void ConnPool::ReleaseNode(std::shared_ptr<ConnNode> node, bool isTrans)
     } else {
         auto &container = node->IsWriter() ? writers_ : readers_;
         container.Release(node);
-    }
-    if (clearActuator_ != nullptr) {
-        clearActuator_->Execute<std::shared_ptr<ConnNode>>(std::move(node));
+        if (clearActuator_ != nullptr) {
+            clearActuator_->Execute();
+        }
     }
 }
 
@@ -855,6 +852,32 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
     return {!failed, nodes};
 }
 
+std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::AcquireById(int32_t id)
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    if (count_ == 0) {
+        return nullptr;
+    }
+
+    std::shared_ptr<ConnPool::ConnNode> node = nullptr;
+    auto it = nodes_.begin();
+    decltype(it) res = nodes_.end();
+    for (; it != nodes_.end(); ++it) {
+        if ((*it) == nullptr || (*it)->id_ <= id) {
+            continue;
+        }
+        if (res == nodes_.end() || (*res)->id_ > (*it)->id_) {
+            res = it;
+        }
+    }
+    if (res != nodes_.end()) {
+        count_--;
+        node = *res;
+        nodes_.erase(res);
+    }
+    return node;
+}
+
 void ConnPool::Container::Disable()
 {
     disable_ = true;
@@ -1037,6 +1060,28 @@ int32_t ConnectionPool::Container::ClearUnusedTrans(std::shared_ptr<ConnectionPo
 bool ConnPool::ConnNode::IsRecyclable()
 {
     return connect_->IsRecyclable();
+}
+
+std::shared_ptr<Conn> ConnPool::AcquireById(bool isReadOnly, int32_t id)
+{
+    Container *container = isReadOnly ? &readers_ : &writers_;
+    std::shared_ptr<ConnPool::ConnNode> node = container->AcquireById(id);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    auto conn = node->connect_;
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    return std::shared_ptr<Connection>(conn.get(), [pool = weak_from_this(), node](auto *) mutable {
+        auto realPool = pool.lock();
+        if (realPool == nullptr) {
+            return;
+        }
+        auto &container = node->IsWriter() ? realPool->writers_ : realPool->readers_;
+        container.Release(node);
+        node = nullptr;
+    });
 }
 } // namespace NativeRdb
 } // namespace OHOS

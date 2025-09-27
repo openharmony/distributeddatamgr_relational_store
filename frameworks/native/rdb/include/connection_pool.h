@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <cstdint>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -29,9 +30,10 @@
 
 #include "base_transaction.h"
 #include "connection.h"
+#include "delay_actuator.h"
 #include "rdb_common.h"
 #include "rdb_store_config.h"
-#include "delay_actuator.h"
+
 namespace OHOS {
 class ExecutorPool;
 namespace NativeRdb {
@@ -40,6 +42,7 @@ public:
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
+    static constexpr int32_t START_NODE_ID = -1;
     static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config, int &errCode);
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption(
@@ -68,6 +71,7 @@ public:
     void CloseAllConnections();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
+    SharedConn AcquireById(bool isReadOnly, int32_t id);
 
 private:
     struct ConnNode {
@@ -119,6 +123,7 @@ private:
         bool Empty();
         int32_t Dump(const char *header, int32_t count);
         int32_t ClearUnusedTrans(std::shared_ptr<ConnectionPool> pool);
+        std::shared_ptr<ConnNode> AcquireById(int32_t id);
 
     private:
         int32_t ExtendNode();
@@ -135,6 +140,7 @@ private:
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
+    void ClearCache();
 
     static constexpr uint32_t CHECK_POINT_INTERVAL = 5; // 5 min
     static constexpr int LIMITATION = 1024;
@@ -145,9 +151,7 @@ private:
     static constexpr uint32_t FIRST_DELAY_INTERVAL = ActuatorBase::INVALID_INTERVAL;
     static constexpr uint32_t MIN_EXECUTE_INTERVAL = ActuatorBase::INVALID_INTERVAL;
     static constexpr uint32_t MAX_EXECUTE_INTERVAL = 30000; // 30000ms
-    std::shared_ptr<DelayActuator<std::vector<std::weak_ptr<ConnNode>>,
-        std::function<void(std::vector<std::weak_ptr<ConnNode>> &out, std::shared_ptr<ConnNode> &&input)>>>
-        clearActuator_;
+    std::shared_ptr<DelayActuator> clearActuator_;
     const RdbStoreConfig &config_;
     RdbStoreConfig attachConfig_;
     Container writers_;
