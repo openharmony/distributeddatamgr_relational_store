@@ -17,6 +17,7 @@
 
 #include "handle_manager.h"
 #include "logger.h"
+#include "rdb_platform.h"
 #include "rdb_store_manager.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
@@ -24,8 +25,6 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-std::unordered_set<std::string> HandleManager::pausedPaths_;
-std::mutex HandleManager::mutex_;
 HandleManager &HandleManager::GetInstance()
 {
     static HandleManager instance;
@@ -61,21 +60,26 @@ int HandleManager::Unregister(const RdbStoreConfig &config)
     return E_OK;
 }
 
-void HandleManager::PauseCallback(const RdbStoreConfig &config)
+void HandleManager::PauseCallback()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    pausedPaths_.insert(config.GetPath());
+    uint64_t tid = GetThreadId();
+    pausedPaths_.Compute(tid, [](const uint64_t &key, int &value) {
+        value++;
+        return true;
+    });
 }
 
-void HandleManager::ResumeCallback(const RdbStoreConfig &config)
+void HandleManager::ResumeCallback()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    pausedPaths_.erase(config.GetPath());
+    uint64_t tid = GetThreadId();
+    pausedPaths_.ComputeIfPresent(tid, [](const uint64_t &key, int &value) {
+        value--;
+        return true;
+    });
 }
 
 std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const RdbStoreConfig &config)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     auto [isFound, handler] = handlers_.Find(config.GetPath());
     if (isFound) {
         return handler;
@@ -85,8 +89,10 @@ std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const RdbStoreConfig &
 
 void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
 {
+    uint64_t tid = GetThreadId();
+    auto [isExist, count] = pausedPaths_.Find(tid);
     auto handler = HandleManager::GetInstance().GetHandler(config.GetPath());
-    if (handler == nullptr || pausedPaths_.count(config.GetPath()) > 0) {
+    if (handler == nullptr || (isExist && count > 0)) {
         return;
     }
     auto taskPool = TaskExecutor::GetInstance().GetExecutor();

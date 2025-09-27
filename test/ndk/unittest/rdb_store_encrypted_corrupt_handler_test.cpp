@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -137,7 +137,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_001, TestSiz
     auto config1 = InitRdbConfig();
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
@@ -183,7 +183,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_002, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -226,7 +226,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_003, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE));
@@ -276,7 +276,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_004, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE));
@@ -324,7 +324,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_005, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -371,7 +371,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_006, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -389,7 +389,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_006, TestSiz
     EXPECT_NE(store2, NULL);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store2, CREATE_TABLE));
     Rdb_CorruptedHandler handler1 = TestEncryptedCorruptedHandler1;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler1);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler1);
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store2));
     DestroyDb(RDB_TEST_PATH2);
@@ -421,7 +421,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_007, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -468,14 +468,14 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_008, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
     auto [errCode1, rdbconfig1] = RdbNdkUtils::GetRdbStoreConfig(config1);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(store1, CREATE_TABLE));
     OH_Rdb_UnRegisterCorruptedHandler(config1);
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
     DestroyDb(RDB_TEST_PATH2);
@@ -507,7 +507,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_009, TestSiz
 
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestEncryptedCorruptedHandler;
-    OH_Rdb_RegisterCorruptedHandler(config1, context, &handler);
+    OH_Rdb_RegisterCorruptedHandler(config1, context, handler);
 
     auto store1 = OH_Rdb_CreateOrOpen(config1, &errCode);
     EXPECT_NE(store1, NULL);
@@ -544,9 +544,9 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_010, TestSiz
     int errCode = OH_Rdb_ErrCode::RDB_OK;
     OH_Rdb_ConfigV2 *config = nullptr;
     void *context = nullptr;
-    Rdb_CorruptedHandler *handler = nullptr;
+    Rdb_CorruptedHandler handler = nullptr;
     Rdb_CorruptedHandler handler1 = TestEncryptedCorruptedHandler;
-    errCode = OH_Rdb_RegisterCorruptedHandler(config, context, &handler1);
+    errCode = OH_Rdb_RegisterCorruptedHandler(config, context, handler1);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     auto config1 = InitRdbConfig();
@@ -554,7 +554,7 @@ HWTEST_F(RdbStoreEncryptedCorruptHandlerTest, RDB_Native_store_test_010, TestSiz
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     config1->magicNum = 0xFF;
-    errCode = OH_Rdb_RegisterCorruptedHandler(config1, context, &handler1);
+    errCode = OH_Rdb_RegisterCorruptedHandler(config1, context, handler1);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     errCode = OH_Rdb_UnRegisterCorruptedHandler(config);

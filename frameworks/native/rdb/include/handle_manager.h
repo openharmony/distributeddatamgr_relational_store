@@ -16,9 +16,7 @@
 #ifndef HANDLE_MANAGER_H
 #define HANDLE_MANAGER_H
 
-#include <mutex>
 #include <memory>
-#include <unordered_set>
 #include "concurrent_map.h"
 #include "rdb_store.h"
 #include "rdb_types.h"
@@ -34,17 +32,16 @@ public:
     API_EXPORT int Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler);
     API_EXPORT int Unregister(const RdbStoreConfig &config);
     std::shared_ptr<CorruptHandler> GetHandler(const RdbStoreConfig &config);
-    static void HandleCorrupt(const RdbStoreConfig &config);
-    static void PauseCallback(const RdbStoreConfig &config);
-    static void ResumeCallback(const RdbStoreConfig &config);
+    void HandleCorrupt(const RdbStoreConfig &config);
+    void PauseCallback();
+    void ResumeCallback();
 
 private:
     HandleManager() = default;
     HandleManager(const HandleManager &) = delete;
     HandleManager &operator=(const HandleManager &) = delete;
     ConcurrentMap<std::string, std::shared_ptr<CorruptHandler>> handlers_;
-    static std::unordered_set<std::string> pausedPaths_;
-    static std::mutex mutex_;
+    ConcurrentMap<uint64_t, int> pausedPaths_;
 };
 
 } // namespace NativeRdb

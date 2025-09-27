@@ -1166,7 +1166,7 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
 }
 
 NDKCorruptHandler::NDKCorruptHandler(
-    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler, std::weak_ptr<NativeRdb::RdbStore> store)
+    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler, std::weak_ptr<NativeRdb::RdbStore> store)
     : config_(config), context_(context), handler_(handler), store_(std::move(store))
 {
     config_ = config;
@@ -1211,21 +1211,19 @@ OH_Rdb_ConfigV2 *NDKCorruptHandler::GetOHRdbConfig(const OHOS::NativeRdb::RdbSto
 
 void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config)
 {
-    if (handler_ == nullptr) {
+    if (handler_ == nullptr || isExecuting.exchange(true)) {
         return;
     }
-    if (!isExecuting.exchange(true)) {
-        OH_Rdb_Store *store = nullptr;
-        auto storePtr = store_.lock();
-        if (storePtr != nullptr) {
-            store = new (std::nothrow) RelationalStore(storePtr);
-        }
-        OH_Rdb_ConfigV2* rdbConfig = GetOHRdbConfig(config);
-        (*handler_)(rdbConfig, context_, store);
-        delete store;
-        OH_Rdb_DestroyConfig(rdbConfig);
-        isExecuting.store(false);
+    OH_Rdb_Store *store = nullptr;
+    auto storePtr = store_.lock();
+    if (storePtr != nullptr) {
+        store = new (std::nothrow) RelationalStore(storePtr);
     }
+    OH_Rdb_ConfigV2 *rdbConfig = GetOHRdbConfig(config);
+    (*handler_)(rdbConfig, context_, store);
+    OH_Rdb_DestroyConfig(rdbConfig);
+    delete store;
+    isExecuting.store(false);
 }
 
 void NDKCorruptHandler::SetStore(std::weak_ptr<OHOS::NativeRdb::RdbStore> store)
@@ -1432,7 +1430,7 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
 
-int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler)
+int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler)
 {
     if (config == nullptr || handler == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or",

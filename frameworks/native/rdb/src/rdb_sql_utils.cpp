@@ -126,7 +126,7 @@ std::string RdbSqlUtils::GetDataBaseDirFromRealPath(const std::string &realPath,
     if (!persist) {
         return realPath;
     }
-    const std::string rdbSeparator = "/rdb";
+    const std::string rdbSeparator = "/rdb/";
     size_t separatorPos = realPath.find(rdbSeparator);
     if (separatorPos == std::string::npos) {
         return "";
