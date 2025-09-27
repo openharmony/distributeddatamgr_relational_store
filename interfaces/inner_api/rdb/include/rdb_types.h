@@ -417,12 +417,12 @@ struct Results {
 };
 
 class RdbStore;
+class RdbStoreConfig;
 class CorruptHandler {
 public:
     virtual ~CorruptHandler() {};
-    virtual void OnCorrupt() = 0;
+    virtual void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config) = 0;
     virtual void SetStore(std::weak_ptr<NativeRdb::RdbStore> store) = 0;
-    virtual std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore() = 0;
 };
 
 enum Tokenizer : int32_t {

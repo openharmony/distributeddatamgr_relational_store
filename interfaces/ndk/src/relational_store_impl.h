@@ -39,16 +39,17 @@ class NDKCorruptHandler : public NativeRdb::CorruptHandler {
 public:
     explicit NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler *handler,
         std::weak_ptr<NativeRdb::RdbStore> store);
-    void OnCorrupt();
+    void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config);
     void SetStore(std::weak_ptr<NativeRdb::RdbStore> store);
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetStore();
 
 private:
-    OH_Rdb_ConfigV2 *config_;
-    void *context_;
-    Rdb_CorruptedHandler *handler_;
+    OH_Rdb_ConfigV2 *config_ = nullptr;
+    void *context_ = nullptr;
+    Rdb_CorruptedHandler *handler_ = nullptr;
     std::weak_ptr<NativeRdb::RdbStore> store_;
-    std::atomic<bool> isExecute_ = false;
+    std::atomic<bool> isExecuting = false;
+    OH_Rdb_ConfigV2 *GetOHRdbConfig(const OHOS::NativeRdb::RdbStoreConfig &rdbConfig);
+    Rdb_Tokenizer ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token);
 };
 
 class NDKStoreObserver : public OHOS::DistributedRdb::RdbStoreObserver {

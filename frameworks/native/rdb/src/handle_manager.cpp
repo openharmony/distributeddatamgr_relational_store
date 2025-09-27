@@ -25,20 +25,21 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 std::unordered_set<std::string> HandleManager::pausedPaths_;
+std::mutex HandleManager::mutex_;
 HandleManager &HandleManager::GetInstance()
 {
     static HandleManager instance;
     return instance;
 }
 
-int HandleManager::Register(const RdbStoreConfig &rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler)
+int HandleManager::Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler)
 {
     if (corruptHandler == nullptr) {
         LOG_ERROR("register failed: corruptHandler is null.");
         return E_INVALID_ARGS;
     }
 
-    std::string path = rdbStoreConfig.GetPath();
+    std::string path = config.GetPath();
     if (path.empty()) {
         LOG_ERROR("register failed: invalid database path.");
         return E_INVALID_ARGS;
@@ -54,24 +55,26 @@ int HandleManager::Register(const RdbStoreConfig &rdbStoreConfig, std::shared_pt
     return E_OK;
 }
 
-int HandleManager::Unregister(const RdbStoreConfig &rdbStoreConfig)
+int HandleManager::Unregister(const RdbStoreConfig &config)
 {
-    handlers_.Erase(rdbStoreConfig.GetPath());
+    handlers_.Erase(config.GetPath());
     return E_OK;
 }
 
-void HandleManager::PauseCallback(const std::string &path) {
-    pausedPaths_.insert(path);
+void HandleManager::PauseCallback(const RdbStoreConfig &config) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    pausedPaths_.insert(config.GetPath());
 }
 
-void HandleManager::ResumeCallback(const std::string &path) {
-    pausedPaths_.erase(path);
+void HandleManager::ResumeCallback(const RdbStoreConfig &config) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    pausedPaths_.erase(config.GetPath());
 }
 
-std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const std::string &path)
+std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const RdbStoreConfig &config)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto [isFound, handler] = handlers_.Find(path);
+    auto [isFound, handler] = handlers_.Find(config.GetPath());
     if (isFound) {
         return handler;
     }
@@ -89,8 +92,8 @@ void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
         LOG_ERROR("Get thread pool failed");
         return;
     }
-    taskPool->Execute([handler]() { 
-        handler->OnCorrupt();
+    taskPool->Execute([handler, config]() { 
+        handler->OnCorruptHandler(config);
     });
 }
 

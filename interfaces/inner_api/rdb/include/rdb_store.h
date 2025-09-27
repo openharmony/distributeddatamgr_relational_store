@@ -720,8 +720,6 @@ public:
 
     virtual int32_t GetBackupStatus() const;
 
-    virtual int32_t GetInitStatus() const;
-
     /**
      * @brief Get the the specified column modify time.
      *

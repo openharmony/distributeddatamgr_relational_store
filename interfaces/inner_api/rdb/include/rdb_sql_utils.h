@@ -60,6 +60,8 @@ public:
      */
     static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
 
+    static std::string GetDataBaseDirFromRealPath(const std::string &realPath, bool persist);
+
     /**
      * @brief build query sql string.
      */

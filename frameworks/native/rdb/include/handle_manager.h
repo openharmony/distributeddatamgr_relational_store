@@ -31,12 +31,12 @@ public:
     API_EXPORT static HandleManager &GetInstance();
     ~HandleManager() = default;
 
-    API_EXPORT int Register(const RdbStoreConfig &rdbStoreConfig, std::shared_ptr<CorruptHandler> corruptHandler);
-    API_EXPORT int Unregister(const RdbStoreConfig &rdbStoreConfig);
-    std::shared_ptr<CorruptHandler> GetHandler(const std::string &path);
+    API_EXPORT int Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler);
+    API_EXPORT int Unregister(const RdbStoreConfig &config);
+    std::shared_ptr<CorruptHandler> GetHandler(const RdbStoreConfig &config);
     static void HandleCorrupt(const RdbStoreConfig &config);
-    static void PauseCallback(const std::string &path);
-    static void ResumeCallback(const std::string &path);
+    static void PauseCallback(const RdbStoreConfig &config);
+    static void ResumeCallback(const RdbStoreConfig &config);
 
 private:
     HandleManager() = default;
@@ -44,7 +44,7 @@ private:
     HandleManager &operator=(const HandleManager &) = delete;
     ConcurrentMap<std::string, std::shared_ptr<CorruptHandler>> handlers_;
     static std::unordered_set<std::string> pausedPaths_;
-    std::mutex mutex_;
+    static std::mutex mutex_;
 };
 
 } // namespace NativeRdb
