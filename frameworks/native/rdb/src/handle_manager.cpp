@@ -61,12 +61,14 @@ int HandleManager::Unregister(const RdbStoreConfig &config)
     return E_OK;
 }
 
-void HandleManager::PauseCallback(const RdbStoreConfig &config) {
+void HandleManager::PauseCallback(const RdbStoreConfig &config)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     pausedPaths_.insert(config.GetPath());
 }
 
-void HandleManager::ResumeCallback(const RdbStoreConfig &config) {
+void HandleManager::ResumeCallback(const RdbStoreConfig &config)
+{
     std::lock_guard<std::mutex> lock(mutex_);
     pausedPaths_.erase(config.GetPath());
 }
@@ -92,7 +94,7 @@ void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
         LOG_ERROR("Get thread pool failed");
         return;
     }
-    taskPool->Execute([handler, config]() { 
+    taskPool->Execute([handler, config]() {
         handler->OnCorruptHandler(config);
     });
 }
