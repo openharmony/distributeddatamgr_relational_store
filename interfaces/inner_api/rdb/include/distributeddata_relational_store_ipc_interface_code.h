@@ -61,6 +61,7 @@ enum class KvStoreInterfaceCode {
     GET_FEATURE_INTERFACE = 0,
     REGISTER_DEATH_OBSERVER,
     FEATURE_EXIT = 3,
+    GET_SELF_BUNDLENAME = 4,
 };
 
 enum class CloudKvStoreInterfaceCode {

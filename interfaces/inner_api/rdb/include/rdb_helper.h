@@ -92,6 +92,13 @@ public:
      * transaction, etc.) before calling, and then dlopen again to use them normally
      */
     API_EXPORT static bool Destroy(const DestroyOption &option = { false, false });
+
+    /**
+     * @brief Obtaining the BundleName.
+     *
+     * @note Obtaining the BundleName from the Server.
+     */
+    API_EXPORT static std::string GetSelfBundleName();
 };
 } // namespace NativeRdb
 } // namespace OHOS

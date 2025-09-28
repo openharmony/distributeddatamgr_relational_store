@@ -17,7 +17,6 @@
 
 #include <string>
 
-#include "application_context.h"
 #include "convertor_error_code.h"
 #include "logger.h"
 #include "oh_cursor.h"
@@ -26,8 +25,6 @@
 #include "relational_asset.h"
 #include "relational_store_error_code.h"
 #include "securec.h"
-
-using namespace OHOS::AbilityRuntime;
 
 namespace OHOS {
 namespace RdbNdk {
@@ -92,9 +89,9 @@ int RelationalCursor::GetSize(OH_Cursor *cursor, int32_t columnIndex, size_t *si
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     int errCode = self->GetSize(columnIndex, size);
-    // In versions earlier than API19, the size does not increase by 1.
-    if (errCode == RDB_OK && Utils::GetHapVersion() < 19) {
-        OH_ColumnType type;
+    // If the path is in the trustlist, the size does not increase by 1.
+    if (errCode == RDB_OK && !self->IsNeedTerminator() && Utils::IsContainTerminator()) {
+        OH_ColumnType type = TYPE_NULL;
         self->GetColumnType(columnIndex, &type);
         if (*size > 0 && type == TYPE_TEXT) {
            *size = *size - 1;
@@ -189,8 +186,13 @@ int RelationalCursor::Destroy(OH_Cursor *cursor)
     return errCode;
 }
 
-RelationalCursor::RelationalCursor(std::shared_ptr<NativeRdb::ResultSet> resultSet)
-    : resultSet_(std::move(resultSet))
+bool RelationalCursor::IsNeedTerminator()
+{
+    return isNeedTerminator_;
+}
+
+RelationalCursor::RelationalCursor(std::shared_ptr<NativeRdb::ResultSet> resultSet, bool isNeedTerminator)
+    : resultSet_(std::move(resultSet)), isNeedTerminator_(isNeedTerminator)
 {
     id = RDB_CURSOR_CID;
 

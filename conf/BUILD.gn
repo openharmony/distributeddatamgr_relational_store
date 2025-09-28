@@ -16,9 +16,20 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 #/system/etc/silent/conf
 group("build_module") {
   if (relational_store_config) {
-    deps = [ ":silent_conf" ]
+    deps = [ 
+      ":silent_conf",
+      ":trustlist_conf"
+    ]
   }
 }
+
+ohos_prebuilt_etc("trustlist_conf") {
+  source = "trustlist_config.json"
+  relative_install_dir = "trustlist/conf"
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}
+
 ohos_prebuilt_etc("silent_conf") {
   source = "silentproxy_config.json"
   relative_install_dir = "silent/conf"
