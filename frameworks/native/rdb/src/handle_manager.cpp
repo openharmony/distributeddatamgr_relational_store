@@ -25,13 +25,13 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-HandleManager &HandleManager::GetInstance()
+CorruptedHandleManager &CorruptedHandleManager::GetInstance()
 {
-    static HandleManager instance;
+    static CorruptedHandleManager instance;
     return instance;
 }
 
-int HandleManager::Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler)
+int CorruptedHandleManager::Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler)
 {
     if (corruptHandler == nullptr) {
         LOG_ERROR("register failed: corruptHandler is null.");
@@ -49,18 +49,18 @@ int HandleManager::Register(const RdbStoreConfig &config, std::shared_ptr<Corrup
     if (!result) {
         LOG_ERROR(
             "corruptHandler for path %{public}s has already been registered.", SqliteUtils::Anonymous(path).c_str());
-        return E_ERROR;
+        return E_SUB_LIMIT_REACHED;
     }
     return E_OK;
 }
 
-int HandleManager::Unregister(const RdbStoreConfig &config)
+int CorruptedHandleManager::Unregister(const RdbStoreConfig &config)
 {
     handlers_.Erase(config.GetPath());
     return E_OK;
 }
 
-void HandleManager::PauseCallback()
+void CorruptedHandleManager::PauseCallback()
 {
     uint64_t tid = GetThreadId();
     pausedPaths_.Compute(tid, [](const uint64_t &key, int &value) {
@@ -69,16 +69,16 @@ void HandleManager::PauseCallback()
     });
 }
 
-void HandleManager::ResumeCallback()
+void CorruptedHandleManager::ResumeCallback()
 {
     uint64_t tid = GetThreadId();
     pausedPaths_.ComputeIfPresent(tid, [](const uint64_t &key, int &value) {
         value--;
-        return true;
+        return value > 0;
     });
 }
 
-std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const RdbStoreConfig &config)
+std::shared_ptr<CorruptHandler> CorruptedHandleManager::GetHandler(const RdbStoreConfig &config)
 {
     auto [isFound, handler] = handlers_.Find(config.GetPath());
     if (isFound) {
@@ -87,11 +87,11 @@ std::shared_ptr<CorruptHandler> HandleManager::GetHandler(const RdbStoreConfig &
     return nullptr;
 }
 
-void HandleManager::HandleCorrupt(const RdbStoreConfig &config)
+void CorruptedHandleManager::HandleCorrupt(const RdbStoreConfig &config)
 {
     uint64_t tid = GetThreadId();
     auto [isExist, count] = pausedPaths_.Find(tid);
-    auto handler = HandleManager::GetInstance().GetHandler(config.GetPath());
+    auto handler = CorruptedHandleManager::GetInstance().GetHandler(config.GetPath());
     if (handler == nullptr || (isExist && count > 0)) {
         return;
     }

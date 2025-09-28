@@ -1099,8 +1099,8 @@ typedef void (*Rdb_CorruptedHandler)(OH_Rdb_ConfigV2 *config, void *context, OH_
  * @param handler The callback function of database corruption handle.
  * @return Returns a specific error code.
  *     {@link RDB_OK} if the execution is successful.
- *     {@link RDB_ERR} - Indicates that the function execution exception.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
+ *     {@link RDB_E_SUB_OVER_LIMIT} - Indicates the number of subscriptions exceeds the limit.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_RegisterCorruptedHandler.
  * @since 22
@@ -1111,6 +1111,7 @@ int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_
  * @brief Unregisters corrupted handler for the database.
  *
  * @param config Represents a pointer to an OH_Rdb_ConfigV2 configuration of the database related to this RDB store.
+ * @param handler The callback function of database corruption handle.
  * @return Returns a specific error code.
  *     {@link RDB_OK} if the execution is successful.
  *     {@link RDB_E_INVALID_ARGS} - The error code for common invalid args.
@@ -1118,7 +1119,7 @@ int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_
  * @see OH_Rdb_UnRegisterCorruptedHandler.
  * @since 22
  */
-int OH_Rdb_UnRegisterCorruptedHandler(OH_Rdb_ConfigV2 *config);
+int OH_Rdb_UnregisterCorruptedHandler(OH_Rdb_ConfigV2 *config, Rdb_CorruptedHandler handler);
 
 /**
  * @brief Indicates the callback functions.
