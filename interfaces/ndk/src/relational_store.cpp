@@ -592,7 +592,7 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
     if (resultSet == nullptr) {
         return nullptr;
     }
-    return new (std::nothrow) RelationalCursor(std::move(resultSet));
+    return new (std::nothrow) RelationalCursor(std::move(resultSet), false);
 }
 
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)

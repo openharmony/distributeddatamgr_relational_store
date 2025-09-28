@@ -40,6 +40,8 @@ public:
 
     std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
 
+    std::string GetSelfBundleName();
+
     void OnRemoteDied();
 
     class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -73,6 +75,7 @@ private:
     std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
     RdbSyncerParam param_;
+    std::string bundleName_;
 };
 
 class RdbStoreDataServiceProxy : public IRemoteProxy<DistributedRdb::IKvStoreDataService> {
@@ -83,7 +86,7 @@ public:
     int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer,
         const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
     int32_t Exit(const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
-
+    std::pair<int32_t, std::string> GetSelfBundleName() override;
 private:
     sptr<IRemoteObject> clientDeathObserver_;
 };

@@ -14,16 +14,26 @@
 */
 #ifndef OH_DATA_UTILS_H
 #define OH_DATA_UTILS_H
+
+#include <mutex>
+#include <optional>
 #include "oh_rdb_types.h"
 #include "rdb_common.h"
+#include "serializable.h"
 namespace OHOS::RdbNdk {
 class Utils {
 public:
     static NativeRdb::ConflictResolution ConvertConflictResolution(Rdb_ConflictResolution resolution);
-    static int32_t GetHapVersion();
+    static bool IsContainTerminator();
 
 private:
-    static constexpr int32_t INVALID_HAP_VERSION = -1;
+    struct TrustlistProxy final : public Serializable {
+        std::string bundleName_;
+        bool Marshal(json &node) const override;
+        bool Unmarshal(const json &node) override;
+    };
+    static std::optional<bool> flag_;
+    static std::mutex mutex_;
 };
 } // namespace OHOS::RdbNdk
 #endif // OH_DATA_UTILS_H
