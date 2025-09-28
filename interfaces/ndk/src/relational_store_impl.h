@@ -40,7 +40,6 @@ public:
     explicit NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler,
         std::weak_ptr<NativeRdb::RdbStore> store);
     void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config);
-    void SetStore(std::weak_ptr<NativeRdb::RdbStore> store);
 
 private:
     OH_Rdb_ConfigV2 *config_ = nullptr;

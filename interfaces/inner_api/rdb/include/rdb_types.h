@@ -422,7 +422,6 @@ class CorruptHandler {
 public:
     virtual ~CorruptHandler() {};
     virtual void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config) = 0;
-    virtual void SetStore(std::weak_ptr<NativeRdb::RdbStore> store) = 0;
 };
 
 enum Tokenizer : int32_t {

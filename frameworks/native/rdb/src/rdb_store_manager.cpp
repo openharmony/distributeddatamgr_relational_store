@@ -153,9 +153,16 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
     if (errCode != E_OK) {
         return nullptr;
     }
-    std::shared_ptr<RdbStoreImpl> rdbStore = GetStoreFromCache(path, config, errCode);
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
+    auto it = storeCache_.find(path);
+    if (it == storeCache_.end()) {
+        return nullptr;
+    }
+
+    rdbStore = it->second.lock();
     if (rdbStore == nullptr) {
-        return rdbStore;
+        return nullptr;
     }
     if (rdbStore->GetInitStatus() != E_OK) {
         return nullptr;

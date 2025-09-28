@@ -121,18 +121,36 @@ std::string RdbSqlUtils::GetDefaultDatabasePath(const std::string &baseDir, cons
     return databaseDir.append("/").append(name);
 }
 
-std::string RdbSqlUtils::GetDataBaseDirFromRealPath(const std::string &realPath, bool persist)
+std::string RdbSqlUtils::GetDataBaseDirFromRealPath(
+    const std::string &path, bool persist, const std::string &customDir, const std::string &name)
 {
     if (!persist) {
-        return realPath;
+        return path;
     }
-    const std::string rdbSeparator = "/rdb/";
-    size_t separatorPos = realPath.find(rdbSeparator);
-    if (separatorPos == std::string::npos) {
+    if (path.empty() || name.empty()) {
         return "";
     }
-    std::string dataBaseDir = realPath.substr(0, separatorPos);
-    return dataBaseDir;
+    size_t lastSlash = path.find_last_of('/');
+    if (lastSlash == std::string::npos) {
+        return "";
+    }
+    std::string dir = path.substr(0, lastSlash);
+
+    if (!customDir.empty()) {
+        std::string customSeg = "/" + customDir;
+        size_t segLen = customSeg.length();
+        if (dir.length() >= segLen && dir.substr(dir.length() - segLen) == customSeg) {
+            dir = dir.substr(0, dir.length() - segLen);
+        } else {
+            return "";
+        }
+    }
+    const std::string rdbSeg = "/rdb";
+    size_t rdbLen = rdbSeg.length();
+    if (dir.length() < rdbLen || dir.substr(dir.length() - rdbLen) != rdbSeg) {
+        return "";
+    }
+    return dir.substr(0, dir.length() - rdbLen);
 }
 
 std::string RdbSqlUtils::BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)

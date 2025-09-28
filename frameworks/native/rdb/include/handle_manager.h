@@ -24,10 +24,10 @@
 namespace OHOS {
 namespace NativeRdb {
 
-class HandleManager {
+class CorruptedHandleManager {
 public:
-    API_EXPORT static HandleManager &GetInstance();
-    ~HandleManager() = default;
+    API_EXPORT static CorruptedHandleManager &GetInstance();
+    ~CorruptedHandleManager() = default;
 
     API_EXPORT int Register(const RdbStoreConfig &config, std::shared_ptr<CorruptHandler> corruptHandler);
     API_EXPORT int Unregister(const RdbStoreConfig &config);
@@ -37,9 +37,9 @@ public:
     void ResumeCallback();
 
 private:
-    HandleManager() = default;
-    HandleManager(const HandleManager &) = delete;
-    HandleManager &operator=(const HandleManager &) = delete;
+    CorruptedHandleManager() = default;
+    CorruptedHandleManager(const CorruptedHandleManager &) = delete;
+    CorruptedHandleManager &operator=(const CorruptedHandleManager &) = delete;
     ConcurrentMap<std::string, std::shared_ptr<CorruptHandler>> handlers_;
     ConcurrentMap<uint64_t, int> pausedPaths_;
 };
