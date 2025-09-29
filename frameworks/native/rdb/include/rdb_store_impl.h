@@ -238,7 +238,6 @@ private:
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
     void SwitchOver(bool isUseReplicaDb);
     bool TryAsyncRepair();
-    bool IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath);
     bool IsInAsyncRestore(const std::string &dbPath);
     int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);

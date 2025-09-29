@@ -1491,6 +1491,35 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_029, TestSize.Level0)
     EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(databaseName));
 }
 
+/**
+ * @tc.name: RdbStore_Binlog_030
+ * @tc.desc: test db will be restore if main db is empty and the slave db is not empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_030, TestSize.Level0)
+{
+    LOG_INFO("---- step1");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    ASSERT_NE(store, nullptr);
+    int64_t id = 1;
+    int count = 20; // data size
+    Insert(id, count);
+    store = nullptr;
+    LOG_INFO("---- step2");
+    SqliteUtils::DeleteFile(databaseName);
+    SqliteUtils::DeleteFile(databaseName + "-shm");
+    SqliteUtils::DeleteFile(databaseName + "-wal");
+    SqliteUtils::DeleteFile(databaseName + "-dwr");
+    LOG_INFO("---- step3");
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
+}
+
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
