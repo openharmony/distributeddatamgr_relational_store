@@ -53,7 +53,7 @@ OH_Rdb_Config RdbCursorGetSizeTest::config_ = { 0 };
 void RdbCursorGetSizeTest::SetUpTestCase(void)
 {
     InitRdbConfig();
-    mkdir(config_.dataBaseDir, 0770);
+    mkdir(config_.dataBaseDir, 0770); // create dir with 0770 permission.
     int errCode = 0;
     char table[] = "test";
     rdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
@@ -65,8 +65,8 @@ void RdbCursorGetSizeTest::SetUpTestCase(void)
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     valueBucket->putInt64(valueBucket, "id", 1);
     valueBucket->putText(valueBucket, "data1", "zhangSan");
-    valueBucket->putInt64(valueBucket, "data2", 12800);
-    valueBucket->putReal(valueBucket, "data3", 100.1);
+    valueBucket->putInt64(valueBucket, "data2", 12800); // INTEGER is 12800.
+    valueBucket->putReal(valueBucket, "data3", 100.1); // FLOAT is 100.1.
     uint8_t arr[] = { 1, 2, 3, 4, 5 };
     int len = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "data4", arr, len);

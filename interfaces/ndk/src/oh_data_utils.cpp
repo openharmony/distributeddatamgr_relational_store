@@ -48,13 +48,13 @@ NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResol
 
 bool Utils::TrustlistProxy::Marshal(Serializable::json &node) const
 {
-    SetValue(node[GET_NAME(bundleName_)], bundleName_);
+    SetValue(node[GET_NAME(bundleName)], bundleName);
     return true;
 }
  
 bool Utils::TrustlistProxy::Unmarshal(const Serializable::json &node)
 {
-    GetValue(node, GET_NAME(bundleName_), bundleName_);
+    GetValue(node, GET_NAME(bundleName), bundleName);
     return true;
 }
 
@@ -80,8 +80,8 @@ bool Utils::IsContainTerminator()
     Utils::TrustlistProxy trustlistProxy;
     trustlistProxy.Unmarshall(jsonStr);
     fin.close();
-    if (!trustlistProxy.bundleName_.empty() &&
-        trustlistProxy.bundleName_ == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
+    if (!trustlistProxy.bundleName_empty() &&
+        trustlistProxy.bundleName == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
         flag_ = true;
     }
     return *flag_;

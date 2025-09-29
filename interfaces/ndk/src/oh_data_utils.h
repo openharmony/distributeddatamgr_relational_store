@@ -28,7 +28,7 @@ public:
 
 private:
     struct TrustlistProxy final : public Serializable {
-        std::string bundleName_;
+        std::string bundleName;
         bool Marshal(json &node) const override;
         bool Unmarshal(const json &node) override;
     };
