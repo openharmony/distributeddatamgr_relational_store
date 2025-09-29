@@ -455,7 +455,7 @@ bool UnionAccessor::TryConvert<std::vector<float>>(std::vector<float> &value)
 template<>
 bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
 {
-    std::string clsName = "escompat.BigInt";
+    std::string clsName = "std.core.BigInt";
     ani_class cls;
     auto status = env_->FindClass(clsName.c_str(), &cls);
     if (status != ANI_OK) {
