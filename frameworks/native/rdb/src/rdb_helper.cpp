@@ -16,6 +16,7 @@
 #include "rdb_helper.h"
 
 #include "global_resource.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
@@ -40,7 +41,12 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqliteGlobalConfig::InitSqliteGlobalConfig();
+    CorruptedHandleManager::GetInstance().PauseCallback();
     auto rdb = RdbStoreManager::GetInstance().GetRdbStore(config, errCode, version, openCallback);
+    CorruptedHandleManager::GetInstance().ResumeCallback();
+    if (errCode == E_SQLITE_CORRUPT) {
+        CorruptedHandleManager::GetInstance().HandleCorrupt(config);
+    }
     if (errCode != E_OK) {
         Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config,
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())),
@@ -133,6 +139,11 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     LOG_INFO("Delete rdb store, dbType:%{public}d, path %{public}s", config.GetDBType(),
         SqliteUtils::Anonymous(dbFile).c_str());
     return E_OK;
+}
+
+std::shared_ptr<RdbStore> RdbHelper::GetRdb(const RdbStoreConfig &config)
+{
+    return RdbStoreManager::GetInstance().GetRdb(config);
 }
 
 bool RdbHelper::IsSupportArkDataDb()

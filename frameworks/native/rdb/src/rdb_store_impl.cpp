@@ -2868,6 +2868,11 @@ int32_t RdbStoreImpl::GetBackupStatus() const
     return *slaveStatus_;
 }
 
+int32_t RdbStoreImpl::GetInitStatus() const
+{
+    return initStatus_;
+}
+
 bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore)
 {
     if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {

@@ -61,6 +61,12 @@ public:
     static std::string GetDefaultDatabasePath(const std::string &baseDir, const std::string &name, int &errorCode);
 
     /**
+     * @brief get dataBaseDir.
+     */
+    static std::string GetDataBaseDirFromRealPath(
+        const std::string &path, bool persist, const std::string &customDir, const std::string &name);
+
+    /**
      * @brief build query sql string.
      */
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);

@@ -35,6 +35,21 @@ private:
     const Rdb_ProgressObserver *callback_;
 };
 
+class NDKCorruptHandler : public NativeRdb::CorruptHandler {
+public:
+    explicit NDKCorruptHandler(void *context, const Rdb_CorruptedHandler handler);
+    void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config);
+    void *GetContext();
+    Rdb_CorruptedHandler GetHandler();
+
+private:
+    void *context_;
+    const Rdb_CorruptedHandler handler_;
+    std::atomic<bool> isExecuting = false;
+    OH_Rdb_ConfigV2 *GetOHRdbConfig(const OHOS::NativeRdb::RdbStoreConfig &rdbConfig);
+    Rdb_Tokenizer ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token);
+};
+
 class NDKStoreObserver : public OHOS::DistributedRdb::RdbStoreObserver {
 public:
     using Origin = DistributedRdb::Origin;
