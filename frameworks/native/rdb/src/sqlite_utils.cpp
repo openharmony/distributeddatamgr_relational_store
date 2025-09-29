@@ -1017,5 +1017,16 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
     }
     return result.empty() ? "no_parent" : result;
 }
+
+bool SqliteUtils::IsUseAsyncRestore(const RdbStoreConfig &config, const std::string &newPath,
+    const std::string &backupPath)
+{
+    if (config.GetPath() == backupPath || newPath == backupPath ||
+        config.GetDBType() == DB_VECTOR || config.GetHaMode() == HAMode::SINGLE ||
+        !SqliteUtils::IsSlaveDbName(backupPath) || !SqliteUtils::IsSlaveLarge(config.GetPath())) {
+        return false;
+    }
+    return true;
+}
 } // namespace NativeRdb
 } // namespace OHOS
