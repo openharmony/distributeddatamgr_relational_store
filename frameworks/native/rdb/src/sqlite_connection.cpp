@@ -1546,7 +1546,8 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         return ExchangeStrategy::BACKUP;
     }
     if (IsSupportBinlog(config_)) {
-        if (isRelpay) {
+        if (isRelpay || (mCount == 0 && !SqliteUtils::IsUseAsyncRestore(config_, config_.GetPath(),
+            SqliteUtils::GetSlavePath(config_.GetPath())))) {
             SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
         } else if (mCount == 0) {
             LOG_INFO("main empty");
