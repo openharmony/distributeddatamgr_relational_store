@@ -13,9 +13,9 @@
 * limitations under the License.
 */
 
-#define LOG_TAG "HandleManager"
+#define LOG_TAG "CorruptedHandleManager"
 
-#include "handle_manager.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "rdb_platform.h"
 #include "rdb_store_manager.h"
