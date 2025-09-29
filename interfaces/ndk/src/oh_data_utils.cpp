@@ -80,7 +80,7 @@ bool Utils::IsContainTerminator()
     Utils::TrustlistProxy trustlistProxy;
     trustlistProxy.Unmarshall(jsonStr);
     fin.close();
-    if (!trustlistProxy.bundleName_empty() &&
+    if (!trustlistProxy.bundleName.empty() &&
         trustlistProxy.bundleName == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
         flag_ = true;
     }
