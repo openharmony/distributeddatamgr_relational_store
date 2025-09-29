@@ -149,6 +149,32 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     return { E_OK, rdbService_ };
 }
 
+std::string RdbManagerImpl::GetSelfBundleName()
+{
+    std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!bundleName_.empty()) {
+            return bundleName_;
+        }
+        distributedDataMgr = distributedDataMgr_;
+    }
+    if (distributedDataMgr == nullptr) {
+        distributedDataMgr = GetDistributedDataManager("");
+    }
+    if (distributedDataMgr == nullptr) {
+        LOG_ERROR("Get distributed data manager failed.");
+        return "";
+    }
+    auto [code, bundle] = distributedDataMgr->GetSelfBundleName();
+    if (code != E_OK || bundle.empty()) {
+        return "";
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    bundleName_ = bundle;
+    return bundle;
+}
+
 void RdbManagerImpl::OnRemoteDied()
 {
     LOG_INFO("Rdb service has dead!");
@@ -306,5 +332,31 @@ int32_t RdbStoreDataServiceProxy::Exit(const std::string &featureName)
         }
     }
     return status;
+}
+
+std::pair<int32_t, std::string> RdbStoreDataServiceProxy::GetSelfBundleName()
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(RdbStoreDataServiceProxy::GetDescriptor())) {
+        LOG_ERROR("Write descriptor failed.");
+        return {E_ERROR, ""};
+    }
+
+    MessageParcel reply;
+    MessageOption mo{ MessageOption::TF_SYNC };
+    int32_t error =
+        Remote()->SendRequest(static_cast<uint32_t>(KvStoreInterfaceCode::GET_SELF_BUNDLENAME), data, reply, mo);
+    if (error != 0) {
+        LOG_ERROR("SendRequest returned %{public}d", error);
+        return {E_ERROR, ""};
+    }
+
+    std::string bundleName = "";
+    int32_t code = E_OK;
+    if (!ITypesUtil::Unmarshal(reply, bundleName, code)) {
+        LOG_ERROR("Unmarshal failed");
+        return {E_ERROR, ""};
+    }
+    return {code, bundleName};
 }
 } // namespace OHOS::DistributedRdb

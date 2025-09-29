@@ -454,6 +454,14 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
     return Remove(path, shouldClose);
 }
 
+std::string RdbStoreManager::GetSelfBundleName()
+{
+#if !defined(CROSS_PLATFORM)
+    return DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+#endif
+    return "";
+}
+
 int32_t RdbStoreManager::Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)

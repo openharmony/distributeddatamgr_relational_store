@@ -35,6 +35,7 @@ public:
     virtual int32_t RegisterDeathObserver(
         const std::string &bundleName, sptr<IRemoteObject> observer, const std::string &featureName) = 0;
     virtual int32_t Exit(const std::string &featureName) = 0;
+    virtual std::pair<int32_t, std::string> GetSelfBundleName() = 0;
 };
 } // namespace OHOS::DistributedRdb
 #endif
