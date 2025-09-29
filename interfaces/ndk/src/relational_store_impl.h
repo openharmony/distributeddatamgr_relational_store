@@ -37,13 +37,14 @@ private:
 
 class NDKCorruptHandler : public NativeRdb::CorruptHandler {
 public:
-    explicit NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler);
+    explicit NDKCorruptHandler(void *context, const Rdb_CorruptedHandler handler);
     void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config);
+    void *GetContext();
+    Rdb_CorruptedHandler GetHandler();
 
 private:
-    OH_Rdb_ConfigV2 *config_ = nullptr;
-    void *context_ = nullptr;
-    Rdb_CorruptedHandler handler_ = nullptr;
+    void *context_;
+    const Rdb_CorruptedHandler handler_;
     std::atomic<bool> isExecuting = false;
     OH_Rdb_ConfigV2 *GetOHRdbConfig(const OHOS::NativeRdb::RdbStoreConfig &rdbConfig);
     Rdb_Tokenizer ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token);

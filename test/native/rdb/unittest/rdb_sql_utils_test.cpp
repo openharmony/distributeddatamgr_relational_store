@@ -236,7 +236,7 @@ HWTEST_F(RdbSqlUtilsTest, GetDeleteSqlInfo_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStore_GetDeleteSqlInfo_002
+ * @tc.name: GetDataBaseDir_001
  * @tc.desc: test RdbStore GetDataBaseDirFromRealPath
  * @tc.type: FUNC
  */
@@ -254,4 +254,29 @@ HWTEST_F(RdbSqlUtilsTest, GetDataBaseDir_001, TestSize.Level1)
     dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath(
         "/data/app/rdb/custom/rdb/rdbtest.db", true, "custom/rdb", "rdbtest.db");
     EXPECT_EQ(dataBaseDir, "/data/app");
+}
+
+/**
+ * @tc.name: GetDataBaseDir_002
+ * @tc.desc: test RdbStore GetDataBaseDirFromRealPath
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqlUtilsTest, GetDataBaseDir_002, TestSize.Level1)
+{
+    auto dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("", true, "custom", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("/data/app/rdb/test.db", true, "", "");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("test.db", true, "", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("/data/app/rdb/abc.db", true, "", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("data/app/rdb/cs/test.db", true, "custom", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("/data/app/rdb/other/test.db", true, "custom", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("/rd/custom/test.db", true, "custom", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
+    dataBaseDir = RdbSqlUtils::GetDataBaseDirFromRealPath("/data/app/custom/test.db", true, "custom", "test.db");
+    EXPECT_EQ(dataBaseDir, "");
 }
