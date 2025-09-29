@@ -423,6 +423,13 @@ typedef enum OH_Rdb_ErrCode {
      * @since 18
      */
     RDB_E_SQLITE_CONSTRAINT = (E_BASE + 65),
+
+    /**
+     * @brief The number of subscriptions exceeds the limit.
+     *
+     * @since 22
+     */
+    RDB_E_SUB_LIMIT_REACHED = (E_BASE + 66),
 } OH_Rdb_ErrCode;
 
 #ifdef __cplusplus

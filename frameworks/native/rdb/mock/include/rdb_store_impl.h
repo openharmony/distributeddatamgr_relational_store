@@ -82,6 +82,7 @@ public:
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;
     int InterruptBackup() override;
     int32_t GetBackupStatus() const override;
+    int32_t GetInitStatus() const;
     int32_t GetDbType() const override;
     std::pair<int32_t, std::shared_ptr<Transaction>> CreateTransaction(int32_t type) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;

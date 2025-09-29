@@ -17,6 +17,7 @@
 
 #include "convertor_error_code.h"
 #include "grd_api_manager.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
 #include "oh_data_define.h"
@@ -50,6 +51,8 @@ constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
 constexpr int RDB_ATTACH_WAIT_TIME_MAX = 300;
 constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
 constexpr int RDB_CONFIG_CUST_DIR_MAX_LEN = 128;
+std::mutex mutex_;
+std::map<std::string, std::shared_ptr<NDKCorruptHandler>> corruptedHandlers_;
 
 static int g_supportDbTypes[] = { RDB_SQLITE, RDB_CAYLEY };
 
@@ -1164,6 +1167,77 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
     return callback == callback_;
 }
 
+NDKCorruptHandler::NDKCorruptHandler(void *context, const Rdb_CorruptedHandler handler)
+    : context_(context), handler_(handler)
+{
+}
+
+void *NDKCorruptHandler::GetContext()
+{
+    return context_;
+}
+
+Rdb_CorruptedHandler NDKCorruptHandler::GetHandler()
+{
+    return handler_;
+}
+
+Rdb_Tokenizer NDKCorruptHandler::ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token)
+{
+    if (token == OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER) {
+        return Rdb_Tokenizer::RDB_NONE_TOKENIZER;
+    } else if (token == OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER) {
+        return Rdb_Tokenizer::RDB_ICU_TOKENIZER;
+    }
+    return Rdb_Tokenizer::RDB_CUSTOM_TOKENIZER;
+}
+
+OH_Rdb_ConfigV2 *NDKCorruptHandler::GetOHRdbConfig(const OHOS::NativeRdb::RdbStoreConfig &rdbConfig)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    if (config == nullptr) {
+        LOG_ERROR("Failed to create OH_Rdb_ConfigV2");
+        return nullptr;
+    }
+
+    config->persist = (rdbConfig.GetStorageMode() == OHOS::NativeRdb::StorageMode::MODE_DISK);
+
+    config->dataBaseDir = OHOS::NativeRdb::RdbSqlUtils::GetDataBaseDirFromRealPath(
+        rdbConfig.GetPath(), config->persist, rdbConfig.GetCustomDir(), rdbConfig.GetName());
+    config->securityLevel = static_cast<int32_t>(rdbConfig.GetSecurityLevel());
+    config->isEncrypt = rdbConfig.IsEncrypt();
+    config->area = rdbConfig.GetArea() + 1;
+    config->dbType = rdbConfig.IsVector() ? RDB_CAYLEY : RDB_SQLITE;
+    config->bundleName = rdbConfig.GetBundleName();
+    config->storeName = rdbConfig.GetName();
+    config->token = ConvertTokenizer2Ndk(rdbConfig.GetTokenizer());
+    config->customDir = rdbConfig.GetCustomDir();
+    config->readOnly = rdbConfig.IsReadOnly();
+    config->pluginLibs = rdbConfig.GetPluginLibs();
+    config->cryptoParam = rdbConfig.GetCryptoParam();
+    config->enableSemanticIndex = rdbConfig.GetEnableSemanticIndex();
+    return config;
+}
+
+void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config)
+{
+    if (handler_ == nullptr || isExecuting.exchange(true)) {
+        return;
+    }
+    OH_Rdb_Store *store = nullptr;
+    auto storePtr = NativeRdb::RdbHelper::GetRdb(config);
+    if (storePtr != nullptr) {
+        store = new (std::nothrow) RelationalStore(storePtr);
+    }
+    OH_Rdb_ConfigV2 *rdbConfig = GetOHRdbConfig(config);
+    if (rdbConfig != nullptr) {
+        (*handler_)(context_, rdbConfig, store);
+        OH_Rdb_DestroyConfig(rdbConfig);
+    }
+    delete store;
+    isExecuting.store(false);
+}
+
 NDKStoreObserver::NDKStoreObserver(const Rdb_DataObserver *observer, int mode) : mode_(mode), observer_(observer)
 {
 }
@@ -1360,5 +1434,51 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto errCode = rdbStore->GetStore()->ConfigLocale(locale);
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_RegisterCorruptedHandler(const OH_Rdb_ConfigV2 *config, void *context, const Rdb_CorruptedHandler handler)
+{
+    if (config == nullptr || handler == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto ndkHandler = std::make_shared<NDKCorruptHandler>(context, handler);
+    auto errCode = OHOS::NativeRdb::CorruptedHandleManager::GetInstance().Register(rdbStoreConfig, ndkHandler);
+    if (errCode == OHOS::NativeRdb::E_OK) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        corruptedHandlers_[rdbStoreConfig.GetPath()] = ndkHandler;
+    }
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_UnregisterCorruptedHandler(const OH_Rdb_ConfigV2 *config, void *context, const Rdb_CorruptedHandler handler)
+{
+    if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
+        LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d",
+            (config == nullptr), (config == nullptr ? 0 : config->magicNum));
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = corruptedHandlers_.find(rdbStoreConfig.GetPath());
+    if (it == corruptedHandlers_.end() || (handler != nullptr && it->second->GetHandler() != handler) ||
+        (context != nullptr && it->second->GetContext() != context)) {
+        return OH_Rdb_ErrCode::RDB_OK;
+    }
+
+    auto errCode = OHOS::NativeRdb::CorruptedHandleManager::GetInstance().Unregister(rdbStoreConfig);
+    corruptedHandlers_.erase(rdbStoreConfig.GetPath());
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }

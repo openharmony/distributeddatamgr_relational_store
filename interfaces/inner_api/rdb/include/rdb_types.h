@@ -416,6 +416,13 @@ struct Results {
     std::shared_ptr<ResultSet> results;
 };
 
+class RdbStoreConfig;
+class CorruptHandler {
+public:
+    virtual ~CorruptHandler() {};
+    virtual void OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &config) = 0;
+};
+
 enum Tokenizer : int32_t {
     NONE_TOKENIZER = 0,
     ICU_TOKENIZER,
