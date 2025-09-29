@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 #define LOG_TAG "OhDataUtils"
-#include "oh_data_utils.h"
 
-#include "application_context.h"
+#include <sstream>
+#include <fstream>
+
+#include "oh_data_utils.h"
+#include "rdb_helper.h"
 #include "logger.h"
 
-#define API_VERSION_MOD 100
-
-using namespace OHOS::AbilityRuntime;
-
 namespace OHOS::RdbNdk {
+static constexpr const char *TRUSTLIST_CONF_PATH = "/system/etc/trustlist/conf/";
+static constexpr const char *TRUSTLIST_CONFIG_JSON_PATH = "trustlist_config.json";
+std::optional<bool> Utils::flag_;
+std::mutex Utils::mutex_;
 NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResolution resolution)
 {
     switch (resolution) {
@@ -43,18 +46,44 @@ NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResol
     }
 }
 
-int32_t Utils::GetHapVersion()
+bool Utils::TrustlistProxy::Marshal(Serializable::json &node) const
 {
-    auto context = OHOS::AbilityRuntime::Context::GetApplicationContext();
-    if (context == nullptr) {
-        LOG_ERROR("get application context failed.");
-        return INVALID_HAP_VERSION;
+    SetValue(node[GET_NAME(bundleName)], bundleName);
+    return true;
+}
+ 
+bool Utils::TrustlistProxy::Unmarshal(const Serializable::json &node)
+{
+    GetValue(node, GET_NAME(bundleName), bundleName);
+    return true;
+}
+
+bool Utils::IsContainTerminator()
+{
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (flag_.has_value()) {
+        return *flag_;
     }
-    auto appInfo = context->GetApplicationInfo();
-    if (appInfo == nullptr) {
-        LOG_ERROR("get application info failed.");
-        return INVALID_HAP_VERSION;
+    flag_ = false;
+    std::ifstream fin(std::string(TRUSTLIST_CONF_PATH) + std::string(TRUSTLIST_CONFIG_JSON_PATH));
+    if (!fin.good()) {
+        LOG_ERROR("Failed to open silent json file");
+        return *flag_;
     }
-    return appInfo->apiTargetVersion % API_VERSION_MOD;
+    std::string jsonStr;
+    while (fin.good()) {
+        std::string line;
+        std::getline(fin, line);
+        jsonStr += line;
+    }
+
+    Utils::TrustlistProxy trustlistProxy;
+    trustlistProxy.Unmarshall(jsonStr);
+    fin.close();
+    if (!trustlistProxy.bundleName.empty() &&
+        trustlistProxy.bundleName == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
+        flag_ = true;
+    }
+    return *flag_;
 }
 } // namespace OHOS::RdbNdk

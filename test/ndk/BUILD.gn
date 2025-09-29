@@ -22,7 +22,6 @@ config("module_private_config") {
   include_dirs = [
     "${relational_store_base_path}/interfaces/ndk",
     "${relational_store_base_path}/interfaces/ndk/include",
-    "${relational_store_base_path}/test/ndk/mock",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_base_path}/interfaces/ndk/src",
@@ -34,25 +33,15 @@ config("module_private_config") {
 ohos_unittest("NativeRdbNdkTest") {
   module_out_path = module_output_path
 
+  cflags = [
+    "-fno-access-control",  # Ignore Private Member Access Control
+  ]
+
   sources = [
-    "${relational_store_base_path}/test/ndk/mock/application_context.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/convertor_error_code.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/modify_time_cursor.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_data_utils.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_data_value.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_data_values_buckets.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_data_values.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_rdb_crypto_param.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/oh_rdb_transaction.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_asset.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_cursor.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_predicates_objects.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_predicates.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_store.cpp",
-    "${relational_store_base_path}/interfaces/ndk/src/relational_values_bucket.cpp",
     "unittest/rdb_asset_test.cpp",
     "unittest/rdb_crypto_param_test.cpp",
     "unittest/rdb_cursor_test.cpp",
+    "unittest/rdb_cursor_getSize_test.cpp",
     "unittest/rdb_performance_test.cpp",
     "unittest/rdb_predicates_pref_test.cpp",
     "unittest/rdb_predicates_test.cpp",
@@ -75,6 +64,7 @@ ohos_unittest("NativeRdbNdkTest") {
   ]
 
   deps = [
+    "${relational_store_base_path}/interfaces/ndk:native_rdb_ndk",
     "${relational_store_base_path}/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
     "${relational_store_innerapi_path}/rdb:native_rdb",
   ]

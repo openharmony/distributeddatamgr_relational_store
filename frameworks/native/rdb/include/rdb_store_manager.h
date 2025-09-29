@@ -42,6 +42,7 @@ public:
     bool Destroy();
     bool Remove(const std::string &path, bool shouldClose);
     bool Delete(const RdbStoreConfig &config, bool shouldClose);
+    std::string GetSelfBundleName();
 
 private:
     struct SilentProxy final : public Serializable {

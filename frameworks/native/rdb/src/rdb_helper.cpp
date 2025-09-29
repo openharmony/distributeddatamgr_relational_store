@@ -90,6 +90,11 @@ bool RdbHelper::Destroy(const DestroyOption &option)
     return ret;
 }
 
+std::string RdbHelper::GetSelfBundleName()
+{
+    return RdbStoreManager::GetInstance().GetSelfBundleName();
+}
+
 int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     RdbStoreConfig config(dbFileName);
