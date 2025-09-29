@@ -52,7 +52,7 @@ constexpr int RDB_ATTACH_WAIT_TIME_MAX = 300;
 constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
 constexpr int RDB_CONFIG_CUST_DIR_MAX_LEN = 128;
 std::mutex mutex_;
-std::map<std::string, Rdb_CorruptedHandler> corruptedHandlers_;
+std::map<std::string, std::shared_ptr<NDKCorruptHandler>> corruptedHandlers_;
 
 static int g_supportDbTypes[] = { RDB_SQLITE, RDB_CAYLEY };
 
@@ -1167,10 +1167,19 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
     return callback == callback_;
 }
 
-NDKCorruptHandler::NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler)
-    : config_(config), context_(context), handler_(handler)
+NDKCorruptHandler::NDKCorruptHandler(void *context, const Rdb_CorruptedHandler handler)
+    : context_(context), handler_(handler)
 {
-    config_ = config;
+}
+
+void *NDKCorruptHandler::GetContext()
+{
+    return context_;
+}
+
+Rdb_CorruptedHandler NDKCorruptHandler::GetHandler()
+{
+    return handler_;
 }
 
 Rdb_Tokenizer NDKCorruptHandler::ConvertTokenizer2Ndk(OHOS::NativeRdb::Tokenizer token)
@@ -1221,8 +1230,10 @@ void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &
         store = new (std::nothrow) RelationalStore(storePtr);
     }
     OH_Rdb_ConfigV2 *rdbConfig = GetOHRdbConfig(config);
-    (*handler_)(rdbConfig, context_, store);
-    OH_Rdb_DestroyConfig(rdbConfig);
+    if (rdbConfig != nullptr) {
+        (*handler_)(context_, rdbConfig, store);
+        OH_Rdb_DestroyConfig(rdbConfig);
+    }
     delete store;
     isExecuting.store(false);
 }
@@ -1426,7 +1437,7 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale)
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
 
-int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler)
+int OH_Rdb_RegisterCorruptedHandler(const OH_Rdb_ConfigV2 *config, void *context, const Rdb_CorruptedHandler handler)
 {
     if (config == nullptr || handler == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d or",
@@ -1439,16 +1450,16 @@ int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
-    auto ndkHandler = std::make_shared<NDKCorruptHandler>(config, context, handler);
+    auto ndkHandler = std::make_shared<NDKCorruptHandler>(context, handler);
     auto errCode = OHOS::NativeRdb::CorruptedHandleManager::GetInstance().Register(rdbStoreConfig, ndkHandler);
     if (errCode == OHOS::NativeRdb::E_OK) {
         std::lock_guard<std::mutex> lock(mutex_);
-        corruptedHandlers_[rdbStoreConfig.GetPath()] = handler;
+        corruptedHandlers_[rdbStoreConfig.GetPath()] = ndkHandler;
     }
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
 
-int OH_Rdb_UnregisterCorruptedHandler(OH_Rdb_ConfigV2 *config, Rdb_CorruptedHandler handler)
+int OH_Rdb_UnregisterCorruptedHandler(const OH_Rdb_ConfigV2 *config, void *context, const Rdb_CorruptedHandler handler)
 {
     if (config == nullptr || (config->magicNum != RDB_CONFIG_V2_MAGIC_CODE)) {
         LOG_ERROR("Parameters set error:config is NULL ? %{public}d or magicNum is not valid %{public}d",
@@ -1461,11 +1472,10 @@ int OH_Rdb_UnregisterCorruptedHandler(OH_Rdb_ConfigV2 *config, Rdb_CorruptedHand
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (handler != nullptr) {
-        auto it = corruptedHandlers_.find(rdbStoreConfig.GetPath());
-        if (it == corruptedHandlers_.end() || it->second != handler) {
-            return OH_Rdb_ErrCode::RDB_OK;
-        }
+    auto it = corruptedHandlers_.find(rdbStoreConfig.GetPath());
+    if (it == corruptedHandlers_.end() || (handler != nullptr && it->second->GetHandler() != handler) ||
+        (context != nullptr && it->second->GetContext() != context)) {
+        return OH_Rdb_ErrCode::RDB_OK;
     }
 
     auto errCode = OHOS::NativeRdb::CorruptedHandleManager::GetInstance().Unregister(rdbStoreConfig);
