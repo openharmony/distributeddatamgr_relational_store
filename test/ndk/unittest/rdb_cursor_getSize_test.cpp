@@ -89,6 +89,7 @@ void RdbCursorGetSizeTest::SetUp(void)
 
 void RdbCursorGetSizeTest::TearDown(void)
 {
+    OHOS::RdbNdk::Utils::flag_ = std::nullopt;
 }
 
 /**
@@ -99,7 +100,7 @@ void RdbCursorGetSizeTest::TearDown(void)
 HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-
+    OHOS::RdbNdk::Utils::flag_ = std::nullopt;
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
@@ -122,12 +123,12 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
 
     cursor1->goToNextRow(cursor1);
 
-    cursor->getSize(cursor1, 0, &size);
+    cursor1->getSize(cursor1, 1, &size);
     EXPECT_EQ(size, 9);
 
-    cursor->getSize(cursor1, 3, &size);
+    cursor1->getSize(cursor1, 4, &size);
     EXPECT_EQ(size, 5);
-    cursor->destroy(cursor1);
+    cursor1->destroy(cursor1);
 }
 
 /**
@@ -163,12 +164,12 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
 
     cursor1->goToNextRow(cursor1);
 
-    cursor->getSize(cursor1, 0, &size);
+    cursor1->getSize(cursor1, 1, &size);
     EXPECT_EQ(size, 9);
 
-    cursor->getSize(cursor1, 3, &size);
+    cursor1->getSize(cursor1, 4, &size);
     EXPECT_EQ(size, 5);
-    cursor->destroy(cursor1);
+    cursor1->destroy(cursor1);
 }
 
 /**
@@ -191,6 +192,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
 
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
+    // BundleName is on the whitelist, size does not contain a terminator
     EXPECT_EQ(size, 8);
 
     cursor->getSize(cursor, 3, &size);
@@ -204,10 +206,10 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
 
     cursor1->goToNextRow(cursor1);
 
-    cursor->getSize(cursor1, 0, &size);
+    cursor1->getSize(cursor1, 1, &size);
     EXPECT_EQ(size, 9);
 
-    cursor->getSize(cursor1, 3, &size);
+    cursor1->getSize(cursor1, 4, &size);
     EXPECT_EQ(size, 5);
-    cursor->destroy(cursor1);
+    cursor1->destroy(cursor1);
 }
