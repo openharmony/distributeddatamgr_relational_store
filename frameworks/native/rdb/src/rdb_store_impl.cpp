@@ -1106,7 +1106,7 @@ int32_t RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCall
 bool RdbStoreImpl::TryAsyncRepair()
 {
     std::string slavePath = SqliteUtils::GetSlavePath(path_);
-    if (!IsUseAsyncRestore(path_, slavePath)) {
+    if (!SqliteUtils::IsUseAsyncRestore(config_, path_, slavePath)) {
         return false;
     }
 
@@ -2616,16 +2616,6 @@ void RdbStoreImpl::SwitchOver(bool isUseReplicaDb)
     isUseReplicaDb_ = isUseReplicaDb;
 }
 
-bool RdbStoreImpl::IsUseAsyncRestore(const std::string &newPath, const std::string &backupPath)
-{
-    if (config_.GetPath() == backupPath || newPath == backupPath ||
-        config_.GetDBType() == DB_VECTOR || config_.GetHaMode() == HAMode::SINGLE ||
-        !SqliteUtils::IsSlaveDbName(backupPath) || !SqliteUtils::IsSlaveLarge(config_.GetPath())) {
-        return false;
-    }
-    return true;
-}
-
 int32_t RdbStoreImpl::RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path)
 {
     if (pool == nullptr) {
@@ -2714,7 +2704,7 @@ int RdbStoreImpl::StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatu
 int RdbStoreImpl::RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
     std::shared_ptr<ConnectionPool> pool)
 {
-    bool isUseAsync = IsUseAsyncRestore(path_, destPath);
+    bool isUseAsync = SqliteUtils::IsUseAsyncRestore(config_, path_, destPath);
     LOG_INFO("restore start, using async=%{public}d", isUseAsync);
     if (!isUseAsync) {
         bool isNeedSetAcl = isNeedSetAcl_ || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID);
