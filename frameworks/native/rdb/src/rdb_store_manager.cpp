@@ -161,10 +161,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
     }
 
     rdbStore = it->second.lock();
-    if (rdbStore == nullptr) {
-        return nullptr;
-    }
-    if (rdbStore->GetInitStatus() != E_OK) {
+    if (rdbStore == nullptr || rdbStore->GetInitStatus() != E_OK) {
         return nullptr;
     }
     return rdbStore;

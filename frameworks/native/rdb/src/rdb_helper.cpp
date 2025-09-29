@@ -16,7 +16,7 @@
 #include "rdb_helper.h"
 
 #include "global_resource.h"
-#include "handle_manager.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"

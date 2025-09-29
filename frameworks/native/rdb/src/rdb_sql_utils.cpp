@@ -134,6 +134,9 @@ std::string RdbSqlUtils::GetDataBaseDirFromRealPath(
     if (lastSlash == std::string::npos) {
         return "";
     }
+    if (path.substr(lastSlash + 1) != name) {
+        return "";
+    }
     std::string dir = path.substr(0, lastSlash);
 
     if (!customDir.empty()) {

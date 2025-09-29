@@ -22,7 +22,7 @@
 #include "accesstoken_kit.h"
 #include "common.h"
 #include "grd_api_manager.h"
-#include "handle_manager.h"
+#include "corrupted_handle_manager.h"
 #include "oh_data_define.h"
 #include "oh_data_utils.h"
 #include "rdb_errno.h"

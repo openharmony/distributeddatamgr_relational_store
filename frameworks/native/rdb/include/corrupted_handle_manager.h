@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef HANDLE_MANAGER_H
-#define HANDLE_MANAGER_H
+#ifndef CORRUPTED_HANDLE_MANAGER_H
+#define CORRUPTED_HANDLE_MANAGER_H
 
 #include <memory>
 #include "concurrent_map.h"

@@ -416,7 +416,6 @@ struct Results {
     std::shared_ptr<ResultSet> results;
 };
 
-class RdbStore;
 class RdbStoreConfig;
 class CorruptHandler {
 public:

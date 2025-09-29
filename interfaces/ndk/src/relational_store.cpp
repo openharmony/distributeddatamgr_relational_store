@@ -17,7 +17,7 @@
 
 #include "convertor_error_code.h"
 #include "grd_api_manager.h"
-#include "handle_manager.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
 #include "oh_data_define.h"
@@ -1167,9 +1167,8 @@ bool NDKDetailProgressObserver::operator==(const Rdb_ProgressObserver *callback)
     return callback == callback_;
 }
 
-NDKCorruptHandler::NDKCorruptHandler(
-    OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler, std::weak_ptr<NativeRdb::RdbStore> store)
-    : config_(config), context_(context), handler_(handler), store_(std::move(store))
+NDKCorruptHandler::NDKCorruptHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_CorruptedHandler handler)
+    : config_(config), context_(context), handler_(handler)
 {
     config_ = config;
 }
@@ -1194,9 +1193,8 @@ OH_Rdb_ConfigV2 *NDKCorruptHandler::GetOHRdbConfig(const OHOS::NativeRdb::RdbSto
 
     config->persist = (rdbConfig.GetStorageMode() == OHOS::NativeRdb::StorageMode::MODE_DISK);
 
-    const std::string &realPath = rdbConfig.GetPath();
     config->dataBaseDir = OHOS::NativeRdb::RdbSqlUtils::GetDataBaseDirFromRealPath(
-        realPath, config->persist, rdbConfig.GetCustomDir(), rdbConfig.GetName());
+        rdbConfig.GetPath(), config->persist, rdbConfig.GetCustomDir(), rdbConfig.GetName());
     config->securityLevel = static_cast<int32_t>(rdbConfig.GetSecurityLevel());
     config->isEncrypt = rdbConfig.IsEncrypt();
     config->area = rdbConfig.GetArea() + 1;
@@ -1217,9 +1215,8 @@ void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &
     if (handler_ == nullptr || isExecuting.exchange(true)) {
         return;
     }
-    store_ = NativeRdb::RdbHelper::GetRdb(config);
     OH_Rdb_Store *store = nullptr;
-    auto storePtr = store_.lock();
+    auto storePtr = NativeRdb::RdbHelper::GetRdb(config);
     if (storePtr != nullptr) {
         store = new (std::nothrow) RelationalStore(storePtr);
     }
@@ -1442,10 +1439,10 @@ int OH_Rdb_RegisterCorruptedHandler(OH_Rdb_ConfigV2 *config, void *context, Rdb_
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
 
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> store = OHOS::NativeRdb::RdbHelper::GetRdb(rdbStoreConfig);
-    auto ndkHandler = std::make_shared<NDKCorruptHandler>(config, context, handler, store);
+    auto ndkHandler = std::make_shared<NDKCorruptHandler>(config, context, handler);
     auto errCode = OHOS::NativeRdb::CorruptedHandleManager::GetInstance().Register(rdbStoreConfig, ndkHandler);
     if (errCode == OHOS::NativeRdb::E_OK) {
+        std::lock_guard<std::mutex> lock(mutex_);
         corruptedHandlers_[rdbStoreConfig.GetPath()] = handler;
     }
     return ConvertorErrorCode::GetInterfaceCode(errCode);

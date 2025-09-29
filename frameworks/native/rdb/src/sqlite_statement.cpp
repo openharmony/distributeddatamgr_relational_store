@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "connection_pool.h"
-#include "handle_manager.h"
+#include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
