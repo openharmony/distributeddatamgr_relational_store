@@ -421,7 +421,7 @@ public:
             ThrowInnerError(errCode);
             return aniMap;
         }
-        std::map<std::string, OHOS::NativeRdb::ValueObject> rowMap = rowEntity.Get();
+        const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
         for (auto it = rowMap.begin(); it != rowMap.end(); ++it) {
             auto const &[key, value] = *it;
             ValueType aniTemp = ani_rdbutils::ValueObjectToAni(value);
@@ -470,130 +470,115 @@ public:
         return reinterpret_cast<int64_t>(this);
     }
 
-    RdbPredicates InDevices(weak::RdbPredicates thiz, array_view<string> devices)
+    void InnerInDevices(array_view<string> devices)
     {
         std::vector<std::string> fields(devices.begin(), devices.end());
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->InDevices(fields);
         }
-        return thiz;
     }
 
-    RdbPredicates InAllDevices(weak::RdbPredicates thiz)
+    void InnerInAllDevices()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->InAllDevices();
         }
-        return thiz;
     }
 
-    RdbPredicates EqualTo(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerEqualTo(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->EqualTo(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates NotEqualTo(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerNotEqualTo(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotEqualTo(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates BeginWrap(weak::RdbPredicates thiz)
+    void InnerBeginWrap()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->BeginWrap();
         }
-        return thiz;
     }
 
-    RdbPredicates EndWrap(weak::RdbPredicates thiz)
+    void InnerEndWrap()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->EndWrap();
         }
-        return thiz;
     }
 
-    RdbPredicates Or(weak::RdbPredicates thiz)
+    void InnerOr()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Or();
         }
-        return thiz;
     }
 
-    RdbPredicates And(weak::RdbPredicates thiz)
+    void InnerAnd()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->And();
         }
-        return thiz;
     }
 
-    RdbPredicates Contains(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerContains(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Contains(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates BeginsWith(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerBeginsWith(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->BeginsWith(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates EndsWith(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerEndsWith(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->EndsWith(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates IsNull(weak::RdbPredicates thiz, string_view field)
+    void InnerIsNull(string_view field)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->IsNull(std::string(field));
         }
-        return thiz;
     }
 
-    RdbPredicates IsNotNull(weak::RdbPredicates thiz, string_view field)
+    void InnerIsNotNull(string_view field)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->IsNotNull(std::string(field));
         }
-        return thiz;
     }
 
-    RdbPredicates Like(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerLike(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Like(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates Glob(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerGlob(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Glob(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates Between(weak::RdbPredicates thiz, string_view field, ValueType const &low,
+    void InnerBetween(string_view field, ValueType const &low,
         ValueType const &high)
     {
         OHOS::NativeRdb::ValueObject lowValueObj = ani_rdbutils::ValueTypeToNative(low);
@@ -601,10 +586,9 @@ public:
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Between(std::string(field), lowValueObj, highValueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates NotBetween(weak::RdbPredicates thiz, string_view field, ValueType const &low,
+    void InnerNotBetween(string_view field, ValueType const &low,
         ValueType const &high)
     {
         OHOS::NativeRdb::ValueObject lowValueObj = ani_rdbutils::ValueTypeToNative(low);
@@ -612,103 +596,91 @@ public:
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotBetween(std::string(field), lowValueObj, highValueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates GreaterThan(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerGreaterThan(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->GreaterThan(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates LessThan(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerLessThan(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->LessThan(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates GreaterThanOrEqualTo(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerGreaterThanOrEqualTo(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->GreaterThanOrEqualTo(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates LessThanOrEqualTo(weak::RdbPredicates thiz, string_view field, ValueType const &value)
+    void InnerLessThanOrEqualTo(string_view field, ValueType const &value)
     {
         OHOS::NativeRdb::ValueObject valueObj = ani_rdbutils::ValueTypeToNative(value);
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->LessThanOrEqualTo(std::string(field), valueObj);
         }
-        return thiz;
     }
 
-    RdbPredicates OrderByAsc(weak::RdbPredicates thiz, string_view field)
+    void InnerOrderByAsc(string_view field)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->OrderByAsc(std::string(field));
         }
-        return thiz;
     }
 
-    RdbPredicates OrderByDesc(weak::RdbPredicates thiz, string_view field)
+    void InnerOrderByDesc(string_view field)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->OrderByDesc(std::string(field));
         }
-        return thiz;
     }
 
-    RdbPredicates Distinct(weak::RdbPredicates thiz)
+    void InnerDistinct()
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Distinct();
         }
-        return thiz;
     }
 
-    RdbPredicates LimitAs(weak::RdbPredicates thiz, int32_t value)
+    void InnerLimitAs(int32_t value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Limit(value);
         }
-        return thiz;
     }
 
-    RdbPredicates OffsetAs(weak::RdbPredicates thiz, int32_t rowOffset)
+    void InnerOffsetAs(int32_t rowOffset)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->Offset(rowOffset);
         }
-        return thiz;
     }
 
-    RdbPredicates GroupBy(weak::RdbPredicates thiz, array_view<string> fields)
+    void InnerGroupBy(array_view<string> fields)
     {
         std::vector<std::string> para(fields.begin(), fields.end());
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->GroupBy(para);
         }
-        return thiz;
     }
 
-    RdbPredicates IndexedBy(weak::RdbPredicates thiz, string_view field)
+    void InnerIndexedBy(string_view field)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->IndexedBy(std::string(field));
         }
-        return thiz;
     }
 
-    RdbPredicates InValues(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
+    void InnerInValues(string_view field, array_view<ValueType> value)
     {
         std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
         std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
@@ -718,10 +690,9 @@ public:
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->In(std::string(field), para);
         }
-        return thiz;
     }
 
-    RdbPredicates NotInValues(weak::RdbPredicates thiz, string_view field, array_view<ValueType> value)
+    void InnerNotInValues(string_view field, array_view<ValueType> value)
     {
         std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
         std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
@@ -731,23 +702,20 @@ public:
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotIn(std::string(field), para);
         }
-        return thiz;
     }
 
-    RdbPredicates NotContains(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerNotContains(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotContains(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
-    RdbPredicates NotLike(weak::RdbPredicates thiz, string_view field, string_view value)
+    void InnerNotLike(string_view field, string_view value)
     {
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotLike(std::string(field), std::string(value));
         }
-        return thiz;
     }
 
     std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePtr()
