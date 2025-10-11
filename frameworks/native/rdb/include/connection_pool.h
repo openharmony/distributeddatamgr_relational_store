@@ -64,6 +64,7 @@ public:
     int ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
         const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus);
     int Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
+    int RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam);
     std::stack<BaseTransaction> &GetTransactionStack();
     std::mutex &GetTransactionStackMutex();
     int AcquireTransaction();

@@ -261,6 +261,7 @@ static napi_value ExportEncryptionAlgo(napi_env env)
 
     SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_GCM", int32_t(NativeRdb::EncryptAlgo::AES_256_GCM));
     SET_NAPI_PROPERTY(encryptionAlgo, "AES_256_CBC", int32_t(NativeRdb::EncryptAlgo::AES_256_CBC));
+    SET_NAPI_PROPERTY(encryptionAlgo, "PLAIN_TEXT", int32_t(NativeRdb::EncryptAlgo::PLAIN_TEXT));
     napi_object_freeze(env, encryptionAlgo);
     return encryptionAlgo;
 }

@@ -499,7 +499,7 @@ describe('rdbEncryptTest', function () {
             cryptoParam: {
                 encryptionKey: new Uint8Array(['t', 'e', 's', 't', 'k', 'e', 'y']),
                 iterationCount: 25000,
-                encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC + 1,
+                encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC + 2,
                 hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
                 kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
                 cryptoPageSize: 2048

@@ -711,11 +711,25 @@ void RdbStoreConfig::EnableRekey(bool enable)
     autoRekey_ = enable;
 }
 
-void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam)
+void RdbStoreConfig::SetEncryptStatus(const bool status) const
+{
+    this->isEncrypt_ = status;
+}
+
+void RdbStoreConfig::SetCryptoParam(RdbStoreConfig::CryptoParam cryptoParam) const
 {
     cryptoParam_ = cryptoParam;
     if (!(cryptoParam_.encryptKey_.empty())) {
         customEncryptParam_ = true;
+    } else {
+        customEncryptParam_ = false;
+    }
+}
+
+void RdbStoreConfig::SetCustomEncryptParam(const RdbStoreConfig::CryptoParam &cryptoParam) const
+{
+    if ((cryptoParam.encryptKey_.empty())) {
+        customEncryptParam_ = false;
     }
 }
 
@@ -738,7 +752,7 @@ bool RdbStoreConfig::CryptoParam::IsValid() const
         return false;
     }
 
-    if (encryptAlgo != AES_256_CBC && encryptAlgo != AES_256_GCM) {
+    if (encryptAlgo < AES_256_GCM || encryptAlgo > PLAIN_TEXT) {
         return false;
     }
 

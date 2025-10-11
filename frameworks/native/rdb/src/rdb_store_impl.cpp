@@ -506,6 +506,53 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return errCode;
 }
 
+int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    if (!cryptoParam.IsValid()) {
+        LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
+        return E_INVALID_ARGS_NEW;
+    }
+
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        LOG_ERROR("Database already closed.");
+        return E_ALREADY_CLOSED;
+    }
+
+#if !defined(CROSS_PLATFORM)
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+#endif
+    LOG_INFO("Start rekeyEx, name:%{public}s, IsCustomEncrypt:%{public}d. ",
+        SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
+    auto errCode = pool->RekeyEx(cryptoParam);
+#if !defined(CROSS_PLATFORM)
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+        if (errCode == E_OK) {
+            auto syncerParam = syncerParam_;
+            if (!config_.IsEncrypt()) {
+                syncerParam.isEncrypt_ = false;
+                syncerParam.password_ = {};
+            } else if (!config_.IsCustomEncryptParam()) {
+                syncerParam.isEncrypt_ = true;
+                syncerParam.password_ = config_.GetEncryptKey();
+            } else {
+                syncerParam.isEncrypt_ = true;
+                syncerParam.password_ = {};
+            }
+            service->AfterOpen(syncerParam);
+        }
+    }
+#endif
+    return errCode;
+}
+
 int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
     const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig)
 {

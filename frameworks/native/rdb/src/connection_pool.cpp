@@ -605,6 +605,33 @@ int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_OK;
 }
 
+int ConnPool::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    int errCode = E_OK;
+    CloseAllConnections();
+    auto key = config_.GetEncryptKey();
+
+    errCode = Connection::RekeyEx(config_, cryptoParam);
+    if (errCode != E_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+        key.assign(key.size(), 0);
+        auto initRes = Init();
+        if (initRes.first != E_OK) {
+            LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
+        }
+        return errCode;
+    }
+    auto initRes = Init();
+    if (initRes.first != E_OK) {
+        LOG_ERROR("Init fail, errCode:%{public}d", initRes.first);
+        config_.ResetEncryptKey(key);
+        key.assign(key.size(), 0);
+        initRes = Init();
+        return initRes.first;
+    }
+    return E_OK;
+}
+
 std::stack<BaseTransaction> &ConnPool::GetTransactionStack()
 {
     return transactionStack_;
