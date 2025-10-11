@@ -273,7 +273,6 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     }
     status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
     if (ANI_OK != status) {
-        delete resultsetProxy;
         ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.class: LResultSetInner;");
         return nullptr;
     }

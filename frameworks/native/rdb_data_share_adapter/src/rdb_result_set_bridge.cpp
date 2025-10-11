@@ -107,7 +107,7 @@ int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row
         rdbResultSet_->GetColumnType(i, type);
         switch (type) {
             case ColumnType::TYPE_INTEGER:
-                int64_t value = 0;
+                int64_t value;
                 rdbResultSet_->GetLong(i, value);
                 result = writer.Write(i, value);
                 if (result) {
@@ -115,7 +115,7 @@ int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row
                 }
                 break;
             case ColumnType::TYPE_FLOAT:
-                double dValue = 0;
+                double dValue;
                 rdbResultSet_->GetDouble(i, dValue);
                 result = writer.Write(i, dValue);
                 if (result) {
@@ -135,7 +135,7 @@ int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row
                 }
                 break;
             default:
-                std::string stringValue = "";
+                std::string stringValue;
                 rdbResultSet_->GetString(i, stringValue);
                 result = writer.Write(i, stringValue.c_str(), stringValue.size() + 1);
                 if (result) {
