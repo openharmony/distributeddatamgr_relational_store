@@ -57,7 +57,7 @@ void RdbCursorGetSizeTest::SetUpTestCase(void)
     int errCode = 0;
     char table[] = "test";
     rdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(rdbStore_, NULL);
+    ASSERT_NE(rdbStore_, NULL);
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(rdbStore_, createTableSql);
@@ -89,7 +89,8 @@ void RdbCursorGetSizeTest::SetUp(void)
 
 void RdbCursorGetSizeTest::TearDown(void)
 {
-    OHOS::RdbNdk::Utils::flag_ = std::nullopt;
+    OHOS::RdbNdk::Utils::isInited_ = false;
+    OHOS::RdbNdk::Utils::flag_ = false;
 }
 
 /**
@@ -100,11 +101,10 @@ void RdbCursorGetSizeTest::TearDown(void)
 HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OHOS::RdbNdk::Utils::flag_ = std::nullopt;
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    ASSERT_NE(cursor, NULL);
 
     cursor->goToNextRow(cursor);
 
@@ -119,7 +119,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    EXPECT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, NULL);
 
     cursor1->goToNextRow(cursor1);
 
@@ -138,14 +138,14 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
  */
 HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
 {
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-
+    OHOS::RdbNdk::Utils::isInited_ = true;
     OHOS::RdbNdk::Utils::flag_ = false;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
 
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    ASSERT_NE(cursor, NULL);
 
     cursor->goToNextRow(cursor);
 
@@ -160,7 +160,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    EXPECT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, NULL);
 
     cursor1->goToNextRow(cursor1);
 
@@ -179,14 +179,14 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
  */
 HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
 {
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-
+    OHOS::RdbNdk::Utils::isInited_ = true;
     OHOS::RdbNdk::Utils::flag_ = true;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
 
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    ASSERT_NE(cursor, NULL);
 
     cursor->goToNextRow(cursor);
 
@@ -202,7 +202,51 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    EXPECT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, NULL);
+
+    cursor1->goToNextRow(cursor1);
+
+    cursor1->getSize(cursor1, 1, &size);
+    EXPECT_EQ(size, 9);
+
+    cursor1->getSize(cursor1, 4, &size);
+    EXPECT_EQ(size, 5);
+    cursor1->destroy(cursor1);
+}
+
+/**
+ * @tc.name: Normal_cursor_GetSize_test_004
+ * @tc.desc: Normal testCase of cursor for GetSize.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_004, TestSize.Level0)
+{
+    OHOS::RdbNdk::Utils::isInited_ = false;
+    OHOS::RdbNdk::Utils::flag_ = true;
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
+    const char *columnNames[] = { "data1", "data2", "data3", "data4" };
+    int len = sizeof(columnNames) / sizeof(columnNames[0]);
+
+    OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
+    ASSERT_NE(cursor, NULL);
+
+    cursor->goToNextRow(cursor);
+
+    size_t size = 0;
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 8);
+
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 8);
+
+    cursor->getSize(cursor, 3, &size);
+    EXPECT_EQ(size, 5);
+    predicates->destroy(predicates);
+    cursor->destroy(cursor);
+
+    char querySql[] = "SELECT * FROM test";
+    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
+    ASSERT_NE(cursor1, NULL);
 
     cursor1->goToNextRow(cursor1);
 
