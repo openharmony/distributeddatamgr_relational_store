@@ -92,3 +92,29 @@ HWTEST_F(DelayNotifyTest, StartTimer_Test_002, TestSize.Level1)
     delayNotifier.reset();
     ASSERT_NO_FATAL_FAILURE(EXPECT_FALSE(block->GetValue()));
 }
+
+/**
+* @tc.name: UpdateNotify_Test_001
+* @tc.desc: Check if the function UpdateNotify() can notify heart beat task while new changed table(s) add.
+* @tc.type: FUNC
+*/
+HWTEST_F(DelayNotifyTest, UpdateNotify_Test_001, TestSize.Level1)
+{
+    auto delayNotifier = std::make_shared<DelayNotify>();
+    delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(1, 1));
+    auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+    delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+        block->SetValue(true);
+        return 0;
+    });
+    delayNotifier->delaySyncTaskId_ = 1;
+    delayNotifier->isInitialized_ = true;
+    auto changedData = RdbChangedData();
+    delayNotifier->UpdateNotify(changedData);
+    EXPECT_FALSE(block->GetValue());
+    auto rdbChangeProperties = RdbChangeProperties();
+    rdbChangeProperties.isTrackedDataChange = true;
+    changedData.tableData.insert_or_assign("UpdateNotify_Test_001", rdbChangeProperties);
+    delayNotifier->UpdateNotify(changedData);
+    EXPECT_TRUE(block->GetValue());
+}
