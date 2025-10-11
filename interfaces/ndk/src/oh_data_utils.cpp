@@ -22,9 +22,10 @@
 #include "logger.h"
 
 namespace OHOS::RdbNdk {
-static constexpr const char *TRUSTLIST_CONF_PATH = "/system/etc/trustlist/conf/";
-static constexpr const char *TRUSTLIST_CONFIG_JSON_PATH = "trustlist_config.json";
-std::optional<bool> Utils::flag_;
+static constexpr const char *TRUSTS_CONF_PATH = "/system/etc/trusts/conf/";
+static constexpr const char *TRUSTS_CONFIG_JSON_PATH = "trusts_config.json";
+bool Utils::isInited_ = false;
+bool Utils::flag_ = false;
 std::mutex Utils::mutex_;
 NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResolution resolution)
 {
@@ -46,13 +47,13 @@ NativeRdb::ConflictResolution Utils::ConvertConflictResolution(Rdb_ConflictResol
     }
 }
 
-bool Utils::TrustlistProxy::Marshal(Serializable::json &node) const
+bool Utils::TrustsProxy::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(bundleName)], bundleName);
     return true;
 }
  
-bool Utils::TrustlistProxy::Unmarshal(const Serializable::json &node)
+bool Utils::TrustsProxy::Unmarshal(const Serializable::json &node)
 {
     GetValue(node, GET_NAME(bundleName), bundleName);
     return true;
@@ -60,15 +61,17 @@ bool Utils::TrustlistProxy::Unmarshal(const Serializable::json &node)
 
 bool Utils::IsContainTerminator()
 {
-    std::lock_guard<decltype(mutex_)> lock(mutex_);
-    if (flag_.has_value()) {
-        return *flag_;
+    if (isInited_) {
+        return flag_;
     }
-    flag_ = false;
-    std::ifstream fin(std::string(TRUSTLIST_CONF_PATH) + std::string(TRUSTLIST_CONFIG_JSON_PATH));
+    std::lock_guard<decltype(mutex_)> lock(mutex_);
+    if (isInited_) {
+        return flag_;
+    }
+    std::ifstream fin(std::string(TRUSTS_CONF_PATH) + std::string(TRUSTS_CONFIG_JSON_PATH));
     if (!fin.good()) {
         LOG_ERROR("Failed to open silent json file");
-        return *flag_;
+        return flag_;
     }
     std::string jsonStr;
     while (fin.good()) {
@@ -77,13 +80,14 @@ bool Utils::IsContainTerminator()
         jsonStr += line;
     }
 
-    Utils::TrustlistProxy trustlistProxy;
-    trustlistProxy.Unmarshall(jsonStr);
+    Utils::TrustsProxy trustsProxy;
+    trustsProxy.Unmarshall(jsonStr);
     fin.close();
-    if (!trustlistProxy.bundleName.empty() &&
-        trustlistProxy.bundleName == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
+    if (!trustsProxy.bundleName.empty() &&
+        trustsProxy.bundleName == OHOS::NativeRdb::RdbHelper::GetSelfBundleName()) {
         flag_ = true;
     }
-    return *flag_;
+    isInited_ = true;
+    return flag_;
 }
 } // namespace OHOS::RdbNdk

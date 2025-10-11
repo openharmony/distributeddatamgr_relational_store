@@ -27,12 +27,13 @@ public:
     static bool IsContainTerminator();
 
 private:
-    struct TrustlistProxy final : public Serializable {
+    struct TrustsProxy final : public Serializable {
         std::string bundleName;
         bool Marshal(json &node) const override;
         bool Unmarshal(const json &node) override;
     };
-    static std::optional<bool> flag_;
+    static bool isInited_;
+    static bool flag_;
     static std::mutex mutex_;
 };
 } // namespace OHOS::RdbNdk
