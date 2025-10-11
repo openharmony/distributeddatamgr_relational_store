@@ -615,6 +615,13 @@ public:
     virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
 
     /**
+     * @brief Changes the cryptoParam used to encrypt the database.
+     *
+     * @param Crypto parameters
+     */
+    virtual int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam);
+
+    /**
      * @brief Check the current database is memory database.
      */
     virtual bool IsMemoryRdb() const;

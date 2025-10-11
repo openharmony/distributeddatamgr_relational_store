@@ -105,7 +105,8 @@ enum KdfAlgo : int32_t {
 
 enum EncryptAlgo : int32_t {
     AES_256_GCM = 0,
-    AES_256_CBC
+    AES_256_CBC,
+    PLAIN_TEXT
 };
 
 enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
@@ -245,6 +246,8 @@ public:
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     bool IsCustomEncryptParam() const;
+    void SetCustomEncryptParam(const RdbStoreConfig::CryptoParam &cryptoParam) const;
+    void SetEncryptStatus(const bool status) const;
     std::string GetDatabaseFileType() const;
     SecurityLevel GetSecurityLevel() const;
     void SetEncryptStatus(const bool status);
@@ -368,7 +371,7 @@ public:
     void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
-    void SetCryptoParam(CryptoParam cryptoParam);
+    void SetCryptoParam(CryptoParam cryptoParam) const;
     CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
     void EnableRekey(bool enable);
@@ -385,14 +388,14 @@ private:
     int32_t GenerateEncryptedKey() const;
 
     bool readOnly_ = false;
-    bool isEncrypt_ = false;
+    mutable bool isEncrypt_ = false;
     bool isCreateNecessary_;
     bool isSearchable_ = false;
     bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    bool customEncryptParam_ = false;
+    mutable bool customEncryptParam_ = false;
     bool enableSemanticIndex_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
@@ -409,7 +412,7 @@ private:
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
     mutable Tokenizer tokenizer_ = Tokenizer::NONE_TOKENIZER;
-    CryptoParam cryptoParam_;
+    mutable CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
     std::string journalMode_;

@@ -197,6 +197,7 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION("createTransaction", CreateTransaction),
             DECLARE_NAPI_FUNCTION("setLocale", SetLocale),
             DECLARE_NAPI_FUNCTION("rekey", Rekey),
+            DECLARE_NAPI_FUNCTION("rekeyEx", RekeyEx),
             DECLARE_NAPI_FUNCTION("on", OnEvent),
             DECLARE_NAPI_FUNCTION("off", OffEvent),
         };
@@ -1082,6 +1083,35 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
         return rdbStore->Rekey(context->cryptoParam);
+    };
+
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::RekeyEx(napi_env env, napi_callback_info info)
+{
+    LOG_INFO("RdbStoreProxy::RekeyEx start.");
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc >= 0 && argc <= 1, std::make_shared<ParamNumError>("0 - 1"));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
+            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+        }
+        CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
+        return rdbStore->RekeyEx(context->cryptoParam);
     };
 
     auto output = [context](napi_env env, napi_value &result) {

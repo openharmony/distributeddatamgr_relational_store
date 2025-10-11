@@ -49,6 +49,7 @@ public:
     static int32_t CheckReplicaIntegrity(const RdbStoreConfig &config);
     static int32_t ClientCleanUp();
     static int32_t OpenSSLCleanUp();
+    static int32_t RekeyEx(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam);
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection, bool isSlave = false);
     ~SqliteConnection();
     int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
@@ -179,6 +180,7 @@ private:
     static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
+    static const int32_t regRekeyExer_;
     static ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> reusableReplicas_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {

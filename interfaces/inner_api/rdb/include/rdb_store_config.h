@@ -191,7 +191,9 @@ enum EncryptAlgo : int32_t {
     /** The AES_256_GCM encryption algorithm. */
     AES_256_GCM = 0,
     /** The AES_256_CBC encryption algorithm. */
-    AES_256_CBC
+    AES_256_CBC,
+    /** Database is unencrypted. */
+    PLAIN_TEXT
 };
 
 enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
@@ -315,7 +317,7 @@ public:
     */
     struct API_EXPORT CryptoParam {
         mutable int32_t iterNum = 0;
-        int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
+        mutable int32_t encryptAlgo = EncryptAlgo::AES_256_GCM;
         int32_t hmacAlgo = HmacAlgo::SHA256;
         int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
         uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
@@ -594,6 +596,8 @@ public:
      */
     API_EXPORT void SetEncryptAlgo(EncryptAlgo encryptAlgo);
 
+    API_EXPORT void SetEncryptStatus(const bool status) const;
+
     /**
      * @brief Obtains the read connection size in this {@code StoreConfig} object.
      */
@@ -667,6 +671,8 @@ public:
      * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
      */
     bool IsCustomEncryptParam() const;
+
+    void SetCustomEncryptParam(const RdbStoreConfig::CryptoParam &cryptoParam) const;
 
     /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
@@ -821,7 +827,7 @@ public:
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
-    void SetCryptoParam(CryptoParam cryptoParam);
+    void SetCryptoParam(CryptoParam cryptoParam) const;
 
     CryptoParam GetCryptoParam() const;
 
@@ -847,14 +853,14 @@ private:
     int32_t GenerateEncryptedKey() const;
 
     bool readOnly_ = false;
-    bool isEncrypt_ = false;
+    mutable bool isEncrypt_ = false;
     bool isCreateNecessary_;
     bool isSearchable_ = false;
     bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
-    bool customEncryptParam_ = false;
+    mutable bool customEncryptParam_ = false;
     bool enableSemanticIndex_ = false;
     int32_t journalSize_;
     int32_t pageSize_;
@@ -871,7 +877,7 @@ private:
     DistributedType distributedType_ = DistributedRdb::RdbDistributedType::RDB_DEVICE_COLLABORATION;
     StorageMode storageMode_;
     IntegrityCheck checkType_ = IntegrityCheck::NONE;
-    CryptoParam cryptoParam_;
+    mutable CryptoParam cryptoParam_;
     std::string name_;
     std::string path_;
     std::string journalMode_;

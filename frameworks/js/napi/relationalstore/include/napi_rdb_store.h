@@ -83,6 +83,7 @@ private:
     static napi_value GetModifyTime(napi_env env, napi_callback_info info);
     static napi_value CleanDirtyData(napi_env env, napi_callback_info info);
     static napi_value Rekey(napi_env env, napi_callback_info info);
+    static napi_value RekeyEx(napi_env env, napi_callback_info info);
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
     static napi_value SetLocale(napi_env env, napi_callback_info info);
