@@ -89,7 +89,6 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
     }
     status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
     if (ANI_OK != status) {
-        delete proxy;
         LOG_ERROR("[ANI] Failed to initFinalizer for class '%{public}s'.", className);
         ThrowBusinessError(env, E_INNER_ERROR, "init rdbStore finalizer failed.");
         return nullptr;
