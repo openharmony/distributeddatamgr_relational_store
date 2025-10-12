@@ -508,7 +508,7 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 
 int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
-    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_ || config_.GetHaMode() != HAMode::SINGLE) {
         return E_NOT_SUPPORT;
     }
     if (!cryptoParam.IsValid()) {
@@ -530,24 +530,28 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
 #endif
     LOG_INFO("Start rekeyEx, name:%{public}s, IsCustomEncrypt:%{public}d. ",
         SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
-    auto errCode = pool->RekeyEx(cryptoParam);
+
+    pool->CloseAllConnections();
+    pool = nullptr;
+    auto errCode = Connection::RekeyEx(config_, cryptoParam);
+    if (errCode != E_OK) {
+        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
+        int err = E_OK;
+        connectionPool_ = ConnectionPool::Create(config_, err);
+        return errCode;
+    }
+    connectionPool_ = ConnectionPool::Create(config_, errCode);
 #if !defined(CROSS_PLATFORM)
-    if (service != nullptr) {
-        service->Enable(syncerParam_);
-        if (errCode == E_OK) {
-            auto syncerParam = syncerParam_;
-            if (!config_.IsEncrypt()) {
-                syncerParam.isEncrypt_ = false;
-                syncerParam.password_ = {};
-            } else if (!config_.IsCustomEncryptParam()) {
-                syncerParam.isEncrypt_ = true;
-                syncerParam.password_ = config_.GetEncryptKey();
-            } else {
-                syncerParam.isEncrypt_ = true;
-                syncerParam.password_ = {};
-            }
-            service->AfterOpen(syncerParam);
-        }
+    if (service == nullptr) {
+        return errCode;
+    }
+    service->Enable(syncerParam_);
+    if (errCode == E_OK) {
+        auto syncerParam = syncerParam_;
+        syncerParam.isEncrypt_ = cryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT;
+        syncerParam.password_ = (config_.IsEncrypt() && !config_.IsCustomEncryptParam()) ? config_.GetEncryptKey()
+                                                                                         : std::vector<uint8_t>{};
+        service->AfterOpen(syncerParam);
     }
 #endif
     return errCode;
