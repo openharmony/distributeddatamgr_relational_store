@@ -46,7 +46,7 @@ public:
     using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
     using GetDbFileser = std::vector<std::string> (*)(const RdbStoreConfig &config);
     using ReplicaChecker = int32_t (*)(const RdbStoreConfig &config);
-    using RekeyExer = int32_t (*)(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam);
+    using RekeyExcuter = int32_t (*)(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam);
     static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t Repair(const RdbStoreConfig &config);
     static int32_t Delete(const RdbStoreConfig &config);
@@ -60,7 +60,7 @@ public:
     static int32_t RegisterCollector(int32_t dbType, Collector collector);
     static int32_t RegisterGetDbFileser(int32_t dbType, GetDbFileser getDbFileser);
     static int32_t RegisterReplicaChecker(int32_t dbType, ReplicaChecker replicaChecker);
-    static int32_t RegisterRekeyExer(int32_t dbType, RekeyExer rekeyExer);
+    static int32_t RegisterRekeyExcuter(int32_t dbType, RekeyExcuter rekeyExcuter);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;

@@ -94,13 +94,15 @@ enum DistributedType {
 enum HmacAlgo : int32_t {
     SHA1 = 0,
     SHA256,
-    SHA512
+    SHA512,
+    HMAC_BUTT
 };
 
 enum KdfAlgo : int32_t {
     KDF_SHA1 = 0,
     KDF_SHA256,
-    KDF_SHA512
+    KDF_SHA512,
+    KDF_BUTT
 };
 
 enum EncryptAlgo : int32_t {
@@ -246,7 +248,6 @@ public:
     bool IsReadOnly() const;
     bool IsMemoryRdb() const;
     bool IsCustomEncryptParam() const;
-    void SetCustomEncryptParam(const RdbStoreConfig::CryptoParam &cryptoParam) const;
     void SetEncryptStatus(const bool status) const;
     std::string GetDatabaseFileType() const;
     SecurityLevel GetSecurityLevel() const;
@@ -371,7 +372,7 @@ public:
     void SetSubUser(int32_t subUser);
     void SetHaMode(int32_t haMode);
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
-    void SetCryptoParam(CryptoParam cryptoParam) const;
+    void SetCryptoParam(const CryptoParam &cryptoParam) const;
     CryptoParam GetCryptoParam() const;
     void SetJournalMode(const std::string &journalMode);
     void EnableRekey(bool enable);

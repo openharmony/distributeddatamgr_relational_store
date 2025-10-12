@@ -154,6 +154,7 @@ private:
     static std::string GetBinlogFolderPath(const std::string &dbPath);
     static void InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn);
     static std::shared_ptr<SqliteConnection> GetReusableReplica(const std::string &dbPath);
+    static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
     static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
@@ -165,6 +166,7 @@ private:
     static constexpr int BACKUP_PAGES_PRE_STEP = 12800; // 1024 * 4 * 12800 == 50m
     static constexpr int BACKUP_PRE_WAIT_TIME = 10;
     static constexpr int RESTORE_PRE_WAIT_TIME = 120;
+    static constexpr int DEFAULT_ITER_NUM = 10000;
     static constexpr ssize_t SLAVE_WAL_SIZE_LIMIT = 2147483647;       // 2147483647 = 2g - 1
     static constexpr ssize_t SLAVE_INTEGRITY_CHECK_LIMIT = 524288000; // 524288000 == 1024 * 1024 * 500
     static constexpr unsigned short BINLOG_FILE_NUMS_LIMIT = 2;
@@ -180,7 +182,7 @@ private:
     static const int32_t regReplicaChecker_;
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
-    static const int32_t regRekeyExer_;
+    static const int32_t regRekeyExcuter_;
     static ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> reusableReplicas_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
@@ -191,6 +193,10 @@ private:
         { RegisterType::STORE_OBSERVER, &SqliteConnection::RegisterStoreObs },
         { RegisterType::CLIENT_OBSERVER, &SqliteConnection::RegisterClientObs },
     };
+    static constexpr const char *ENCRYPT_ALGOS[EncryptAlgo::PLAIN_TEXT] = { "aes-256-gcm", "aes-256-cbc" };
+    static constexpr const char *HMAC_ALGOS[static_cast<int>(HmacAlgo::HMAC_BUTT)] = { "SHA1", "SHA256", "SHA512" };
+    static constexpr const char *KDF_ALGOS[static_cast<int>(KdfAlgo::KDF_BUTT)] = { "KDF_SHA1", "KDF_SHA256",
+        "KDF_SHA512" };
 
     std::atomic<uint64_t> backupId_;
     sqlite3 *dbHandle_;

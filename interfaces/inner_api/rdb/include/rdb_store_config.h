@@ -175,7 +175,9 @@ enum HmacAlgo : int32_t {
     /** The HMAC_SHA256 algorithm. */
     SHA256,
     /** The HMAC_SHA512 algorithm. */
-    SHA512
+    SHA512,
+    /** The BUTT of HMAC. */
+    HMAC_BUTT
 };
 
 enum KdfAlgo : int32_t {
@@ -184,7 +186,9 @@ enum KdfAlgo : int32_t {
     /** The PBKDF2_HMAC_SHA256 algorithm. */
     KDF_SHA256,
     /** The PBKDF2_HMAC_SHA512 algorithm. */
-    KDF_SHA512
+    KDF_SHA512,
+    /** The BUTT of KDF. */
+    KDF_BUTT
 };
 
 enum EncryptAlgo : int32_t {
@@ -672,8 +676,6 @@ public:
      */
     bool IsCustomEncryptParam() const;
 
-    void SetCustomEncryptParam(const RdbStoreConfig::CryptoParam &cryptoParam) const;
-
     /**
      * @brief Set the isVector field in this {@code StoreConfig} object.
      */
@@ -827,7 +829,7 @@ public:
 
     void SetScalarFunctions(const std::map<std::string, ScalarFunctionInfo> functions);
 
-    void SetCryptoParam(CryptoParam cryptoParam) const;
+    void SetCryptoParam(const CryptoParam &cryptoParam) const;
 
     CryptoParam GetCryptoParam() const;
 
