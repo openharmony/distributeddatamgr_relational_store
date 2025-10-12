@@ -522,7 +522,7 @@ bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
         return false;
     }
     ani_ref keys;
-    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":C{escompat.IterableIterator}", &keys);
+    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":C{std.core.IterableIterator}", &keys);
     if (status != ANI_OK) {
         LOG_ERROR("Object_CallMethodByName_Ref failed");
     }
