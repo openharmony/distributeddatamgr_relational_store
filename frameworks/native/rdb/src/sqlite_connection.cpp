@@ -833,6 +833,18 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_OK;
 }
 
+CodecConfig CreateCodecConfig() {
+    CodecConfig config;
+    config.pCipher = nullptr;
+    config.pHmacAlgo = nullptr;
+    config.pKdfAlgo = nullptr;
+    config.pKey = nullptr;
+    config.nKey = 0;
+    config.kdfIter = 0;
+    config.pageSize = 0;
+    return config;
+}
+
 CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param)
 {
     CodecConfig config = CreateCodecConfig();
@@ -894,6 +906,7 @@ int RekeyToGenerateKey(const RdbStoreConfig &config, CodecConfig &rekeyCfg, Code
             key.assign(key.size(), 0);
             config.ResetEncryptKey(oldkey);
             config.SetEncryptStatus(oldEncryptStatus);
+            oldkey.assign(oldkey.size(), 0);
             LOG_ERROR("ReKeyex failed, err = %{public}d, name = %{public}s", errCode,
                 SqliteUtils::Anonymous(config.GetName()).c_str());
             return errCode;
@@ -917,7 +930,6 @@ int RekeyToGenerateKey(const RdbStoreConfig &config, CodecConfig &rekeyCfg, Code
     RdbSecurityManager::GetInstance().ChangeKeyFile(config.GetPath());
     config.SetCryptoParam(cryptoParam);
     config.ResetEncryptKey(key);
-    oldkey.assign(oldkey.size(), 0);
     key.assign(key.size(), 0);
     return E_OK;
 }
