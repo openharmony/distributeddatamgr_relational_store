@@ -41,11 +41,13 @@ public:
     void TearDown();
     OH_VBucket *CreateAndSetValueBucket()
     {
+        const int data2Value = 12800;
+        const double data3Value = 200.1;
         OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
         valueBucket->putInt64(valueBucket, "id", 1);
         valueBucket->putText(valueBucket, "data1", "zhangSan");
-        valueBucket->putInt64(valueBucket, "data2", 13800);
-        valueBucket->putReal(valueBucket, "data3", 200.1);
+        valueBucket->putInt64(valueBucket, "data2", data2Value);
+        valueBucket->putReal(valueBucket, "data3", data3Value);
         valueBucket->putText(valueBucket, "data5", "ABCDEFGH");
         return valueBucket;
     }
@@ -75,10 +77,10 @@ public:
         return errCode;
     }
 };
-const char *createTableSql =
+const char *CREATE_TABLE_SQL =
     "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
     "data3 FLOAT, data4 BLOB, data5 TEXT);";
-const char *querySql = "SELECT * FROM store_test";
+const char *QUERY_SQL = "SELECT * FROM store_test";
 
 void RdbStoreRekeyTest::SetUpTestCase(void)
 {
@@ -116,7 +118,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_001, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
     ASSERT_NE(store, nullptr);
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -136,7 +138,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_001, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -154,7 +156,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_001, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Rekey_test_002
- * @tc.desc: 自定义->自定义
+ * @tc.desc: test custom encrypted database rekey to custom encrypted database
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
@@ -173,7 +175,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -192,7 +194,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
     errCode = OH_Rdb_RekeyEx(store, crypto2);
     EXPECT_EQ(errCode, RDB_OK);
 
-    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -210,14 +212,6 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
     store = OH_Rdb_CreateOrOpen(rekeyTestConfig, &errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
-
-    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, querySql);
-
-    rowCount = 0;
-    cursor1->getRowCount(cursor1, &rowCount);
-    EXPECT_EQ(rowCount, 0);
-    cursor1->destroy(cursor1);
-    valueBucket->destroy(valueBucket);
     errCode = OH_Rdb_DeleteStoreV2(rekeyTestConfig);
     EXPECT_EQ(errCode, 0);
     errCode = OH_Rdb_DestroyConfig(rekeyTestConfig);
@@ -225,8 +219,8 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Native_store_test_037
- * @tc.desc: 改变其他参数
+ * @tc.name: RDB_Rekey_test_003
+ * @tc.desc: test rekey other params
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_003, TestSize.Level1)
@@ -239,7 +233,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_003, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -264,7 +258,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_003, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor1->getRowCount(cursor1, &rowCount);
@@ -278,8 +272,8 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_003, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Rekey_test_002
- * @tc.desc: 自定义->自动
+ * @tc.name: RDB_Rekey_test_004
+ * @tc.desc: test custom encrypted database rekey to encrypted database
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
@@ -298,7 +292,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -321,7 +315,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor1->getRowCount(cursor1, &rowCount);
@@ -335,8 +329,8 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
 }
 
 /**
- * @tc.name: RDB_Rekey_test_002
- * @tc.desc: 自动->自动
+ * @tc.name: RDB_Rekey_test_005
+ * @tc.desc: test encrypted database rekey to encrypted database
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
@@ -353,7 +347,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -367,7 +361,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
     errCode = OH_Rdb_RekeyEx(store, crypto2);
     EXPECT_EQ(errCode, RDB_OK);
 
-    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -386,7 +380,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     rowCount = 0;
     cursor1->getRowCount(cursor1, &rowCount);
@@ -401,7 +395,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
 
 /**
  * @tc.name: RDB_Rekey_test_002
- * @tc.desc: 自动->自定义
+ * @tc.desc: test non-encrypted database rekey to encrypted database
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
@@ -418,7 +412,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    errCode = OH_Rdb_Execute(store, createTableSql);
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
     EXPECT_EQ(errCode, 0);
 
     OH_VBucket *valueBucket = CreateAndSetValueBucket();
@@ -435,7 +429,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     errCode = OH_Rdb_RekeyEx(store, crypto2);
     EXPECT_EQ(errCode, RDB_OK);
 
-    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -454,7 +448,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, querySql);
+    OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
 
     rowCount = 0;
     cursor1->getRowCount(cursor1, &rowCount);

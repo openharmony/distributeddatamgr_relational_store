@@ -833,14 +833,15 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_OK;
 }
 
-CodecConfig CreateCodecConfig() {
+CodecConfig SqliteConnection::CreateCodecConfig()
+{
     CodecConfig config;
     config.pCipher = nullptr;
     config.pHmacAlgo = nullptr;
     config.pKdfAlgo = nullptr;
     config.pKey = nullptr;
     config.nKey = 0;
-    config.kdfIter = 0;
+    config.kdfIter = DEFAULT_ITER_NUM;
     config.pageSize = 0;
     return config;
 }
@@ -860,9 +861,7 @@ CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConf
 
     config.pKey = param.encryptKey_.empty() ? nullptr : static_cast<const void *>(param.encryptKey_.data());
     config.nKey = static_cast<int>(param.encryptKey_.size());
-    if (param.iterNum == 0) {
-        config.kdfIter = DEFAULT_ITER_NUM;
-    } else {
+    if (param.iterNum != 0) {
         config.kdfIter = static_cast<int>(param.iterNum);
     }
     config.pageSize = static_cast<int>(param.cryptoPageSize);
@@ -887,62 +886,47 @@ int RekeyToPlainText(
     }
     RdbSecurityManager::GetInstance().DelAllKeyFiles(config.GetPath());
     config.SetEncryptStatus(false);
-    config.SetCryptoParam(cryptoParam);
     return E_OK;
 }
 
-int RekeyToGenerateKey(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRekeyConfig &rekeyConfig,
+int PrepareGenerateKey(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    if (!(config.IsCustomEncryptParam() || !config.IsEncrypt())) {
+        return E_OK;
+    }
+    auto oldKey = config.GetEncryptKey();
+    bool oldEncryptStatus = config.IsEncrypt();
+    config.ResetEncryptKey(cryptoParam.encryptKey_);
+    config.SetEncryptStatus(true);
+
+    int errCode = config.Initialize();
+    if (errCode != E_OK) {
+        config.ResetEncryptKey(oldKey);
+        config.SetEncryptStatus(oldEncryptStatus);
+        return errCode;
+    }
+    return E_OK;
+}
+
+int RekeyToEncrypt(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRekeyConfig &rekeyConfig,
     const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     std::vector<uint8_t> key;
     int errCode = E_OK;
-    if (config.IsCustomEncryptParam() || !config.IsEncrypt()) {
-        auto oldkey = config.GetEncryptKey();
-        auto oldEncryptStatus = config.IsEncrypt();
-        config.ResetEncryptKey(cryptoParam.encryptKey_);
-        config.SetEncryptStatus(true);
-        errCode = config.Initialize();
+    if (cryptoParam.encryptKey_.empty()) {
+        errCode = PrepareGenerateKey(config, cryptoParam);
         if (errCode != E_OK) {
-            key.assign(key.size(), 0);
-            config.ResetEncryptKey(oldkey);
-            config.SetEncryptStatus(oldEncryptStatus);
-            oldkey.assign(oldkey.size(), 0);
-            LOG_ERROR("ReKeyex failed, err = %{public}d, name = %{public}s", errCode,
-                SqliteUtils::Anonymous(config.GetName()).c_str());
             return errCode;
         }
-    }
-    auto rdbPwd =
-        RdbSecurityManager::GetInstance().GetRdbPassword(config.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
-    key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    rekeyCfg.pKey = static_cast<const void *>(key.data());
-    rekeyCfg.nKey = static_cast<int>(key.size());
-    errno_t err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &rekeyCfg, sizeof(rekeyCfg));
-    if (err != 0) {
-        LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
-        return E_ERROR;
-    }
-    errCode = sqlite3_rekey_v3(&rekeyConfig);
-    if (errCode != SQLITE_OK) {
-        key.assign(key.size(), 0);
-        return SQLiteError::ErrNo(errCode);
-    }
-    RdbSecurityManager::GetInstance().ChangeKeyFile(config.GetPath());
-    config.SetCryptoParam(cryptoParam);
-    config.ResetEncryptKey(key);
-    key.assign(key.size(), 0);
-    return E_OK;
-}
-
-int RekeyToCustomKey(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRekeyConfig &rekeyConfig,
-    const RdbStoreConfig::CryptoParam &cryptoParam)
-{
-    std::vector<uint8_t> key;
-    int errCode = E_OK;
-    key = cryptoParam.encryptKey_;
-    if (key.empty()) {
-        LOG_ERROR("key is empty");
-        return E_ERROR;
+        auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
+            config.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+    } else {
+        key = cryptoParam.encryptKey_;
+        if (key.empty()) {
+            LOG_ERROR("key is empty, name = %{public}s", SqliteUtils::Anonymous(config.GetName()).c_str());
+            return E_ERROR;
+        }
     }
     rekeyCfg.pKey = static_cast<const void *>(key.data());
     rekeyCfg.nKey = static_cast<int>(key.size());
@@ -955,13 +939,17 @@ int RekeyToCustomKey(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecR
     errCode = sqlite3_rekey_v3(&rekeyConfig);
     if (errCode != SQLITE_OK) {
         key.assign(key.size(), 0);
-        LOG_ERROR("ReKey failed, err = %{public}d, name = %{public}s", errCode,
+        LOG_ERROR("Rekey failed, err = %{public}d, name = %{public}s", errCode,
             SqliteUtils::Anonymous(config.GetName()).c_str());
         return SQLiteError::ErrNo(errCode);
     }
-    config.ResetEncryptKey(cryptoParam.encryptKey_);
-    config.SetCryptoParam(cryptoParam);
-    RdbSecurityManager::GetInstance().DelAllKeyFiles(config.GetPath());
+
+    if (cryptoParam.encryptKey_.empty()) {
+        RdbSecurityManager::GetInstance().ChangeKeyFile(config.GetPath());
+    } else {
+        RdbSecurityManager::GetInstance().DelAllKeyFiles(config.GetPath());
+    }
+    config.ResetEncryptKey(key);
     key.assign(key.size(), 0);
     return E_OK;
 }
@@ -974,25 +962,14 @@ int SqliteConnection::RekeyEx(const RdbStoreConfig &config, const RdbStoreConfig
     auto path = config.GetPath();
     const char *dbPath = path.c_str();
     auto param = config.GetCryptoParam();
-    CodecConfig dbCfg = ConvertCryptoParamToCodecConfig(param);
-    CodecConfig rekeyCfg = ConvertCryptoParamToCodecConfig(cryptoParam);
-    if (cryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT && cryptoParam.iterNum == 0) {
-        cryptoParam.encryptAlgo = EncryptAlgo::AES_256_GCM;
-        rekeyCfg.kdfIter = DEFAULT_ITER_NUM;
-        rekeyCfg.pCipher = "aes-256-gcm";
-    }
     CodecRekeyConfig rekeyConfig;
     rekeyConfig.dbPath = dbPath;
-    rekeyConfig.dbCfg = dbCfg;
-    rekeyConfig.rekeyCfg = rekeyCfg;
+    rekeyConfig.dbCfg = ConvertCryptoParamToCodecConfig(param);
+    rekeyConfig.rekeyCfg = ConvertCryptoParamToCodecConfig(cryptoParam);
     if (cryptoParam.encryptAlgo == EncryptAlgo::PLAIN_TEXT) {
         return RekeyToPlainText(config, rekeyConfig, cryptoParam);
     }
-    if (cryptoParam.encryptKey_.empty()) {
-        errCode = RekeyToGenerateKey(config, rekeyCfg, rekeyConfig, cryptoParam);
-    } else {
-        errCode = RekeyToCustomKey(config, rekeyCfg, rekeyConfig, cryptoParam);
-    }
+    errCode = RekeyToEncrypt(config, rekeyConfig.rekeyCfg, rekeyConfig, cryptoParam);
     return errCode;
 }
 

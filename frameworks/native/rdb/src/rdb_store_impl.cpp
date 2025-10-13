@@ -533,13 +533,18 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
 
     pool->CloseAllConnections();
     pool = nullptr;
-    auto errCode = Connection::RekeyEx(config_, cryptoParam);
+    auto rekeyCryptoParam = cryptoParam;
+    if (rekeyCryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT && rekeyCryptoParam.iterNum == 0) {
+        rekeyCryptoParam.encryptAlgo = EncryptAlgo::AES_256_GCM;
+    }
+    auto errCode = Connection::RekeyEx(config_, rekeyCryptoParam);
     if (errCode != E_OK) {
         LOG_ERROR("ReKey failed, err = %{public}d", errCode);
         int err = E_OK;
         connectionPool_ = ConnectionPool::Create(config_, err);
         return errCode;
     }
+    config_.SetCryptoParam(rekeyCryptoParam);
     connectionPool_ = ConnectionPool::Create(config_, errCode);
 #if !defined(CROSS_PLATFORM)
     if (service == nullptr) {

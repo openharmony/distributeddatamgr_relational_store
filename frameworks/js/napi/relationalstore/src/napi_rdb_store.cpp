@@ -1102,9 +1102,7 @@ napi_value RdbStoreProxy::RekeyEx(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        if (!JSUtils::IsNull(env, argv[0])) {
-            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
-        }
+        CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
         CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
     };

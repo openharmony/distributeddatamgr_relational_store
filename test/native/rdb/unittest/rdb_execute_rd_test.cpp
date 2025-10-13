@@ -1414,3 +1414,25 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_RegisterAlgo_005, TestSize.Level1)
     int ret = store->RegisterAlgo(algoName, ClusterAlgoByEvenNumber);
     EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
+
+/**
+ * @tc.name: RdbStore_RekeyEx_001
+ * @tc.desc: test rd_database rekeyEx
+ * @tc.type: FUNC
+ */
+HWTEST_P(RdbExecuteRdTest, RdbStore_RekeyEx_001, TestSize.Level1)
+{
+    RdbExecuteRdTest::store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbExecuteRdTest::databaseName);
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbExecuteRdTest::databaseName);
+    config.SetIsVector(true);
+    config.SetReadOnly(true);
+    ExecuteTestOpenRdCallback helper;
+    RdbExecuteRdTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbExecuteRdTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+}
