@@ -273,6 +273,8 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
     }
     status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
     if (ANI_OK != status) {
+        // After successful wrapping, the resultsetProxy's lifecycle is managed by obj and does not require
+        // manual release
         ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.class: LResultSetInner;");
         return nullptr;
     }
