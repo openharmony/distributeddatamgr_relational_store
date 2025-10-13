@@ -536,13 +536,12 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
     bool isHasAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID);
     auto errCode = Connection::RekeyEx(config_, rekeyCryptoParam);
     if (errCode != E_OK) {
-        LOG_ERROR("ReKey failed, err = %{public}d", errCode);
         pool->ReopenConns();
         return errCode;
     }
     config_.SetCryptoParam(rekeyCryptoParam);
     pool->ReopenConns();
-    if(isHasAcl) {
+    if (isHasAcl) {
         SetFileGid(config_, SERVICE_GID);
     }
 #if !defined(CROSS_PLATFORM)
