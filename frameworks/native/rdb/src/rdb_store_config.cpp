@@ -719,11 +719,7 @@ void RdbStoreConfig::SetEncryptStatus(const bool status) const
 void RdbStoreConfig::SetCryptoParam(const RdbStoreConfig::CryptoParam &cryptoParam) const
 {
     cryptoParam_ = cryptoParam;
-    if (!(cryptoParam_.encryptKey_.empty())) {
-        customEncryptParam_ = true;
-    } else {
-        customEncryptParam_ = false;
-    }
+    customEncryptParam_ = !cryptoParam_.encryptKey_.empty();
 }
 
 RdbStoreConfig::CryptoParam RdbStoreConfig::GetCryptoParam() const

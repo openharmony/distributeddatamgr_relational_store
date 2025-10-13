@@ -126,8 +126,8 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_004, TestSize.Level1)
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
     EXPECT_NE(obj, NULL);
 
-    // 2 is invalid encryption
-    auto ret = OH_Crypto_SetEncryptionAlgo(obj, 2);
+    // 3 is invalid encryption
+    auto ret = OH_Crypto_SetEncryptionAlgo(obj, 3);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
     ret = OH_Crypto_SetEncryptionAlgo(obj, RDB_AES_256_CBC);

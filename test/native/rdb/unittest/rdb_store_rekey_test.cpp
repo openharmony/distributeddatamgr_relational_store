@@ -1170,8 +1170,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_010
-* @tc.desc: 非加密库转加密库
+* @tc.name: Rdb_Rekey_020
+* @tc.desc: non-encrypted rekey to encrypted 
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
@@ -1217,20 +1217,13 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    auto resultSet = store->QueryByStep("SELECT * FROM test1");
-    ASSERT_NE(resultSet, nullptr);
-    int32_t rowCount{};
-    ret = resultSet->GetRowCount(rowCount);
-    ASSERT_EQ(ret, E_OK);
-    ASSERT_EQ(rowCount, 2);
-
     store = nullptr;
     config.SetEncryptStatus(true);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
 
-    resultSet = nullptr;
-    resultSet = store->QueryByStep("SELECT * FROM test1");
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
     ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 2);
@@ -1240,8 +1233,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_011
-* @tc.desc: 更换其他参数
+* @tc.name: Rdb_Rekey_021
+* @tc.desc: rekey other parameters
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
@@ -1270,27 +1263,15 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam cryptoParam1;
     cryptoParam1.iterNum = 500;
+    cryptoParam1.encryptAlgo = EncryptAlgo::AES_256_CBC;
     errCode = store->RekeyEx(cryptoParam1);
     ASSERT_EQ(errCode, E_OK);
 
     RdbStoreConfig::CryptoParam cryptoParam2;
-    cryptoParam2.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    cryptoParam2.hmacAlgo = HmacAlgo::SHA512;
+    cryptoParam2.kdfAlgo = KdfAlgo::KDF_SHA512;
+    cryptoParam2.cryptoPageSize = 2048;
     errCode = store->RekeyEx(cryptoParam2);
-    ASSERT_EQ(errCode, E_OK);
-
-    RdbStoreConfig::CryptoParam cryptoParam3;
-    cryptoParam3.hmacAlgo = HmacAlgo::SHA512;
-    errCode = store->RekeyEx(cryptoParam3);
-    ASSERT_EQ(errCode, E_OK);
-
-    RdbStoreConfig::CryptoParam cryptoParam4;
-    cryptoParam4.kdfAlgo = KdfAlgo::KDF_SHA512;
-    errCode = store->RekeyEx(cryptoParam4);
-    ASSERT_EQ(errCode, E_OK);
-
-    RdbStoreConfig::CryptoParam cryptoParam5;
-    cryptoParam5.cryptoPageSize = 2048;
-    errCode = store->RekeyEx(cryptoParam5);
     ASSERT_EQ(errCode, E_OK);
 
     values.Clear();
@@ -1302,7 +1283,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
     EXPECT_EQ(2, id);
 
     store = nullptr;
-    config.SetCryptoParam(cryptoParam5);
+    config.SetCryptoParam(cryptoParam2);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
@@ -1318,8 +1299,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_12
-* @tc.desc: 自定-》自定
+* @tc.name: Rdb_Rekey_022
+* @tc.desc: custom encrypted rekey to custom encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_022, TestSize.Level1)
@@ -1381,8 +1362,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_022, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_013
-* @tc.desc: 自动-》自定
+* @tc.name: Rdb_Rekey_023
+* @tc.desc: encrypted rekey to custom encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_023, TestSize.Level1)
@@ -1444,8 +1425,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_023, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_014
-* @tc.desc: 自动-》自动
+* @tc.name: Rdb_Rekey_024
+* @tc.desc: encrypted rekey to encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_024, TestSize.Level1)
@@ -1504,8 +1485,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_024, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_015
-* @tc.desc: 自定-》自动
+* @tc.name: Rdb_Rekey_025
+* @tc.desc: custom encrypted rekey to encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_025, TestSize.Level1)
@@ -1565,8 +1546,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_025, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_014
-* @tc.desc: 加密转非加密
+* @tc.name: Rdb_Rekey_026
+* @tc.desc: encrypted rekey to non-encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_026, TestSize.Level1)
@@ -1627,8 +1608,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_026, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_011
-* @tc.desc: 更换其他参数iterNum
+* @tc.name: Rdb_Rekey_027
+* @tc.desc: test rekey iterNum
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
@@ -1669,6 +1650,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
     EXPECT_EQ(2, id);
 
     store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_EQ(store, nullptr);
     config.SetCryptoParam(cryptoParam1);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
@@ -1685,8 +1668,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_12
-* @tc.desc: 自定-》自定encryptAlgo
+* @tc.name: Rdb_Rekey_028
+* @tc.desc: test rekey encryptAlgo
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
@@ -1700,8 +1683,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
     config.SetBundleName("com.example.test_rekey");
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
-    errCode = RdbHelper::DeleteRdbStore(config);
-    EXPECT_EQ(errCode, E_OK);
+
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
@@ -1721,6 +1703,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
     newCryptoParam.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    newCryptoParam.iterNum = 500;
     errCode = store->RekeyEx(newCryptoParam);
     ASSERT_EQ(errCode, E_OK);
 
@@ -1744,14 +1727,11 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 2);
-
-    RdbHelper::DeleteRdbStore(config);
-    EXPECT_EQ(ret, E_OK);
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_013
-* @tc.desc: 自动-》自定hmacAlgo
+* @tc.name: Rdb_Rekey_029
+* @tc.desc: test rekey hmacAlgo
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_029, TestSize.Level1)
@@ -1815,8 +1795,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_029, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_014
-* @tc.desc: 自动-》自动kdfAlgo
+* @tc.name: Rdb_Rekey_030
+* @tc.desc: test rekey kdfAlgo
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_030, TestSize.Level1)
@@ -1877,8 +1857,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_030, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_015
-* @tc.desc: 自定-》自动
+* @tc.name: Rdb_Rekey_031
+* @tc.desc: test rekey cryptoPageSize
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_031, TestSize.Level1)
@@ -1939,7 +1919,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_031, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_016
+* @tc.name: Rdb_Rekey_032
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
@@ -2004,7 +1984,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_017
+* @tc.name: Rdb_Rekey_033
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
@@ -2067,8 +2047,8 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_018
-* @tc.desc: rekey test
+* @tc.name: Rdb_Rekey_034
+* @tc.desc: readOnly rekey test
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_034, TestSize.Level1)
@@ -2093,7 +2073,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_034, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Delete_Rekey_Test_019
+* @tc.name: Rdb_Rekey_035
 * @tc.desc: mutltiThread rekey test
 * @tc.type: FUNC
 */
@@ -2152,4 +2132,58 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 1);
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_037
+* @tc.desc: memory rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_037, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetName("RekeyEx_Memmory_test.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_038
+* @tc.desc: replica rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_038, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
 }

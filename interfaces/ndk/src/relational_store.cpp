@@ -1489,6 +1489,10 @@ int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param)
     if (rdbStore == nullptr || param == nullptr || !param->IsValid()) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    auto errCode = rdbStore->GetStore()->RekeyEx(param->cryptoParam);
+    auto innerStore = rdbStore->GetStore();
+    if (innerStore == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto errCode = innerStore->RekeyEx(param->cryptoParam);
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }

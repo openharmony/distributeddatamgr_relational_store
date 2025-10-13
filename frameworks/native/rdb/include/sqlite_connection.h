@@ -154,7 +154,11 @@ private:
     static std::string GetBinlogFolderPath(const std::string &dbPath);
     static void InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn);
     static std::shared_ptr<SqliteConnection> GetReusableReplica(const std::string &dbPath);
+    /**
+     * @brief The lifecycle of config must be shorter than that of param..
+     */
     static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
+    static CodecConfig CreateCodecConfig();
     static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },

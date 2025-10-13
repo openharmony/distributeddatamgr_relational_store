@@ -69,7 +69,7 @@ int OH_Crypto_SetIteration(OH_Rdb_CryptoParam *param, int64_t iteration)
 int OH_Crypto_SetEncryptionAlgo(OH_Rdb_CryptoParam *param, int32_t algo)
 {
     if (param == nullptr || !param->IsValid() ||
-        (algo < static_cast<int32_t>(RDB_AES_256_GCM) &&
+        (algo < static_cast<int32_t>(RDB_AES_256_GCM) ||
         algo > static_cast<int32_t>(RDB_PLAIN_TEXT))) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
