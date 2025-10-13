@@ -891,7 +891,7 @@ int RekeyToPlainText(
 
 int PrepareGenerateKey(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam)
 {
-    if (!(config.IsCustomEncryptParam() || !config.IsEncrypt())) {
+    if (!config.IsCustomEncryptParam() && config.IsEncrypt()) {
         return E_OK;
     }
     auto oldKey = config.GetEncryptKey();
@@ -911,22 +911,19 @@ int PrepareGenerateKey(const RdbStoreConfig &config, const RdbStoreConfig::Crypt
 int RekeyToEncrypt(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRekeyConfig &rekeyConfig,
     const RdbStoreConfig::CryptoParam &cryptoParam)
 {
-    std::vector<uint8_t> key;
-    int errCode = E_OK;
-    if (cryptoParam.encryptKey_.empty()) {
-        errCode = PrepareGenerateKey(config, cryptoParam);
+    std::vector<uint8_t> key = cryptoParam.encryptKey_;
+    if (key.empty()) {
+        auto errCode = PrepareGenerateKey(config, cryptoParam);
         if (errCode != E_OK) {
             return errCode;
         }
         auto rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
             config.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
         key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
-    } else {
-        key = cryptoParam.encryptKey_;
-        if (key.empty()) {
-            LOG_ERROR("key is empty, name = %{public}s", SqliteUtils::Anonymous(config.GetName()).c_str());
-            return E_ERROR;
-        }
+    }
+    if (key.empty()) {
+        LOG_ERROR("key is empty, name = %{public}s", SqliteUtils::Anonymous(config.GetName()).c_str());
+        return E_ERROR;
     }
     rekeyCfg.pKey = static_cast<const void *>(key.data());
     rekeyCfg.nKey = static_cast<int>(key.size());
@@ -936,7 +933,7 @@ int RekeyToEncrypt(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRek
         return E_ERROR;
     }
 
-    errCode = sqlite3_rekey_v3(&rekeyConfig);
+    int errCode = sqlite3_rekey_v3(&rekeyConfig);
     if (errCode != SQLITE_OK) {
         key.assign(key.size(), 0);
         LOG_ERROR("Rekey failed, err = %{public}d, name = %{public}s", errCode,
