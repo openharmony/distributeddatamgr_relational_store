@@ -16,7 +16,7 @@
 #ifndef RELATIONAL_STORE_SECUREC_H
 #define RELATIONAL_STORE_SECUREC_H
 
-static memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+static errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
 {
     memcpy(dest, src, count);
     return 0; 
