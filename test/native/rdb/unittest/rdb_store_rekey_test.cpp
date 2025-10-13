@@ -1293,9 +1293,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 2);
-
-    ret = RdbHelper::DeleteRdbStore(config);
-    EXPECT_EQ(ret, E_OK);
 }
 
 /**
