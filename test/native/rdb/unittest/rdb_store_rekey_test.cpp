@@ -2132,6 +2132,43 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
 }
 
 /**
+* @tc.name: Rdb_Rekey_036
+* @tc.desc: invalid param test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_036, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    cryptoParam1.encryptAlgo = -1;
+    cryptoParam1.hmacAlgo = -1;
+    cryptoParam1.kdfAlgo = -1;
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+    auto conn = std::make_shared<SqliteConnection>(config, false);
+    auto codecConfig = conn->ConvertCryptoParamToCodecConfig(cryptoParam1);
+    EXPECT_EQ(codecConfig.pCipher, nullptr);
+    EXPECT_EQ(codecConfig.pHmacAlgo, nullptr);
+    EXPECT_EQ(codecConfig.pKdfAlgo, nullptr);
+    cryptoParam1.encryptAlgo = 4;
+    cryptoParam1.hmacAlgo = 4;
+    cryptoParam1.kdfAlgo = 4;
+    codecConfig = conn->ConvertCryptoParamToCodecConfig(cryptoParam1);
+    EXPECT_EQ(codecConfig.pCipher, nullptr);
+    EXPECT_EQ(codecConfig.pHmacAlgo, nullptr);
+    EXPECT_EQ(codecConfig.pKdfAlgo, nullptr);
+}
+
+/**
 * @tc.name: Rdb_Rekey_037
 * @tc.desc: memory rekey test
 * @tc.type: FUNC
