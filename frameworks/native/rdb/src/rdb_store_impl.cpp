@@ -528,8 +528,6 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
         service->Disable(syncerParam_);
     }
 #endif
-    LOG_INFO("Start rekeyEx, name:%{public}s, IsCustomEncrypt:%{public}d. ",
-        SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
 
     pool->CloseAllConnections();
     pool = nullptr;
