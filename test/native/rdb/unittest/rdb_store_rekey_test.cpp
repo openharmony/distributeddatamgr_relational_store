@@ -1171,7 +1171,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 
 /**
 * @tc.name: Rdb_Rekey_020
-* @tc.desc: non-encrypted rekey to encrypted 
+* @tc.desc: non-encrypted rekey to encrypted
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
@@ -2132,8 +2132,6 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
     ret = resultSet->GetRowCount(rowCount);
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 1);
-    ret = RdbHelper::DeleteRdbStore(config);
-    EXPECT_EQ(ret, E_OK);
 }
 
 /**
