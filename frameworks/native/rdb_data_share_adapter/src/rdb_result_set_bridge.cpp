@@ -106,24 +106,22 @@ int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row
         ColumnType type;
         rdbResultSet_->GetColumnType(i, type);
         switch (type) {
-            case ColumnType::TYPE_INTEGER: {
-                int64_t value = 0;
+            case ColumnType::TYPE_INTEGER:
+                int64_t value;
                 rdbResultSet_->GetLong(i, value);
                 result = writer.Write(i, value);
                 if (result) {
                     LOG_WARN("WriteLong failed of row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
-            }
-            case ColumnType::TYPE_FLOAT: {
-                double dValue = 0;
+            case ColumnType::TYPE_FLOAT:
+                double dValue;
                 rdbResultSet_->GetDouble(i, dValue);
                 result = writer.Write(i, dValue);
                 if (result) {
                     LOG_WARN("WriteDouble failed of row: %{public}d, column: %{public}d", row, i);
                 }
                 break;
-            }
             case ColumnType::TYPE_NULL:
                 result = writer.Write(i);
                 if (result) {
@@ -137,7 +135,7 @@ int32_t RdbResultSetBridge::WriteColumn(int columnCount, Writer &writer, int row
                 }
                 break;
             default:
-                std::string stringValue = "";
+                std::string stringValue;
                 rdbResultSet_->GetString(i, stringValue);
                 result = writer.Write(i, stringValue.c_str(), stringValue.size() + 1);
                 if (result) {
