@@ -16,10 +16,6 @@
 #ifndef RELATIONAL_STORE_SECUREC_H
 #define RELATIONAL_STORE_SECUREC_H
 #include <cstring>
-errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
-{
-    memcpy(dest, src, count);
-    return 0;
-}
+errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count);
 
 #endif //RELATIONAL_STORE_SECUREC_H
