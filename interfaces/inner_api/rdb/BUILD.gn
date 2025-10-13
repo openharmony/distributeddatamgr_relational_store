@@ -356,6 +356,7 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/rdb/common",
+      "${relational_store_mock_path}/frameworks/native/rdb/securec",
       "${relational_store_mock_path}/frameworks/native/win32",
       "mock/include",
       "${relational_store_common_path}/include",
