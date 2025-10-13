@@ -33,6 +33,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_security_manager.h"
+#include "sqlite_connection.h"
 #include "sqlite_utils.h"
 
 using namespace testing::ext;
