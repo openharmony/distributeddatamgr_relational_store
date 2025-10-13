@@ -16,13 +16,9 @@
 #ifndef RELATIONAL_STORE_SECUREC_H
 #define RELATIONAL_STORE_SECUREC_H
 
-enum errno_t {
-    EOK = 0,
-};
-
 errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
 {
-    return EOK;
+    return 0;
 }
 
 #endif //RELATIONAL_STORE_SECUREC_H
