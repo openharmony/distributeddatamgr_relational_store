@@ -54,6 +54,7 @@ void DelayNotify::UpdateNotify(const DistributedRdb::RdbChangedData &changedData
             auto it = changedData_.tableData.find(k);
             if (it == changedData_.tableData.end()) {
                 changedData_.tableData.insert_or_assign(k, v);
+                tableChanged_ = true;
             }
         }
         isFull_ |= isFull;
@@ -97,8 +98,7 @@ void DelayNotify::StartTimer()
                     }
                 });
         } else {
-            delaySyncTaskId_ =
-                pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
+            delaySyncTaskId_ = pool_->Reset(delaySyncTaskId_, std::chrono::milliseconds(autoSyncInterval_));
         }
 
         if (changedData.tableData.empty()) {
@@ -116,6 +116,11 @@ void DelayNotify::StartTimer()
                 needExecTask = true;
                 lastTimePoint_ = std::chrono::steady_clock::now();
             }
+        }
+
+        if (tableChanged_) {
+            tableChanged_ = false;
+            needExecTask = true;
         }
     }
 
