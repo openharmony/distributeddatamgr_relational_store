@@ -319,6 +319,9 @@ void RdbStoreConfig::SetEncryptStatus(const bool status)
 
 bool RdbStoreConfig::IsEncrypt() const
 {
+    if (cryptoParam_.encryptAlgo == EncryptAlgo::PLAIN_TEXT) {
+        return false;
+    }
     return isEncrypt_ || !cryptoParam_.encryptKey_.empty();
 }
 
@@ -391,7 +394,7 @@ int32_t RdbStoreConfig::Initialize() const
 
 int32_t RdbStoreConfig::GenerateEncryptedKey() const
 {
-    if (!isEncrypt_ || !cryptoParam_.encryptKey_.empty()) {
+    if (!isEncrypt_ || !cryptoParam_.encryptKey_.empty() || cryptoParam_.encryptAlgo == EncryptAlgo::PLAIN_TEXT) {
         return E_OK;
     }
 

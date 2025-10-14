@@ -2220,3 +2220,28 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_038, TestSize.Level1)
     int ret = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+* @tc.name: Rdb_Rekey_039
+* @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_039, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptAlgo = EncryptAlgo::PLAIN_TEXT;
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetName("test_plain_test.db");
+    config.SetCryptoParam(cryptoParam);
+    RekeyTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto ret = config.IsEncrypt();
+    ASSERT_EQ(ret, false);
+}
