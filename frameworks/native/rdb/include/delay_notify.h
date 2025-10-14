@@ -47,6 +47,7 @@ private:
     static constexpr uint32_t SERVICE_INTERVAL = 10000;
     bool isInitialized_ = false;
     bool isFull_ = false;
+    bool tableChanged_ = false;
     Time lastTimePoint_;
     std::atomic_int32_t pauseCount_;
     uint64_t delaySyncTaskId_ = 0;
