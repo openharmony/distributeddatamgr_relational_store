@@ -1644,6 +1644,26 @@ int OH_Rdb_Detach(OH_Rdb_Store *store, const char *attachName, int64_t waitTime,
  */
 int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale);
 
+/**
+ * @brief Change the encrypted database key.
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param param Represents a pointer to an instance of OH_Rdb_CryptoParam.
+ * @return Returns the status code of the execution.
+ *         Returns {@link RDB_OK} if the execution is successful.
+ *         Returns {@link RDB_E_ERROR} database common error.
+ *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
+ *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
+ *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
+ *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
+ *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
+ *         Returns {@link RDB_E_SQLITE_NOMEM} SQLite: The database is out of memory.
+ *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
+ *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
+ *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
+ * @since 22
+ */
+int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param);
+
 #ifdef __cplusplus
 };
 #endif

@@ -257,6 +257,11 @@ int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_NOT_SUPPORT;
 }
 
+int32_t RdConnection::RekeyEx(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    return E_NOT_SUPPORT;
+}
+
 int32_t RdConnection::TryCheckPoint(bool timeout)
 {
     return E_NOT_SUPPORT;

@@ -1482,3 +1482,17 @@ int OH_Rdb_UnregisterCorruptedHandler(const OH_Rdb_ConfigV2 *config, void *conte
     corruptedHandlers_.erase(rdbStoreConfig.GetPath());
     return ConvertorErrorCode::GetInterfaceCode(errCode);
 }
+
+int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || param == nullptr || !param->IsValid()) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto innerStore = rdbStore->GetStore();
+    if (innerStore == nullptr) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto errCode = innerStore->RekeyEx(param->cryptoParam);
+    return ConvertorErrorCode::GetInterfaceCode(errCode);
+}

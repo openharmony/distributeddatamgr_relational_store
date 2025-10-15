@@ -494,6 +494,12 @@ int RdbStore::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    (void)cryptoParam;
+    return E_NOT_SUPPORT;
+}
+
 std::string RdbStore::ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode)
 {
     errCode = E_NOT_SUPPORT;
