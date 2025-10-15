@@ -506,6 +506,60 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return errCode;
 }
 
+int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_ || config_.GetHaMode() != HAMode::SINGLE) {
+        return E_NOT_SUPPORT;
+    }
+    if (!cryptoParam.IsValid()) {
+        LOG_ERROR("Invalid crypto param, name:%{public}s", SqliteUtils::Anonymous(config_.GetName()).c_str());
+        return E_INVALID_ARGS_NEW;
+    }
+
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        LOG_ERROR("Database already closed.");
+        return E_ALREADY_CLOSED;
+    }
+
+#if !defined(CROSS_PLATFORM)
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+#endif
+    pool->CloseAllConnections();
+    auto rekeyCryptoParam = cryptoParam;
+    if (rekeyCryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT && rekeyCryptoParam.iterNum == 0) {
+        rekeyCryptoParam.encryptAlgo = EncryptAlgo::AES_256_GCM;
+    }
+    bool isHasAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID);
+    auto errCode = Connection::RekeyEx(config_, rekeyCryptoParam);
+    if (errCode != E_OK) {
+        pool->ReopenConns();
+        return errCode;
+    }
+    config_.SetCryptoParam(rekeyCryptoParam);
+    pool->ReopenConns();
+    if (isHasAcl) {
+        SetFileGid(config_, SERVICE_GID);
+    }
+#if !defined(CROSS_PLATFORM)
+    if (service == nullptr) {
+        return errCode;
+    }
+    service->Enable(syncerParam_);
+    if (errCode == E_OK) {
+        auto syncerParam = syncerParam_;
+        syncerParam.isEncrypt_ = cryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT;
+        syncerParam.password_ = (config_.IsEncrypt() && !config_.IsCustomEncryptParam()) ? config_.GetEncryptKey()
+                                                                                         : std::vector<uint8_t>{};
+        service->AfterOpen(syncerParam);
+    }
+#endif
+    return errCode;
+}
+
 int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
     const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig)
 {
