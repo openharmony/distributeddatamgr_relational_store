@@ -979,7 +979,7 @@ public:
             LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
             std::string dir = "/data/storage/el2/database/rdb";
             std::string path = dir + "/" + std::string(config.name);
-            OHOS::NativeRdb::RdbStoreConfig storeConfig(path.c_str());
+            OHOS::NativeRdb::RdbStoreConfig storeConfig(path);
             OHOS::NativeRdb::RdbSqlUtils::CreateDirectory(dir);
             nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
         } else {
