@@ -446,6 +446,7 @@ public:
     void Close()
     {
         nativeResultSet_ = nullptr;
+        proxy_ = nullptr;
     }
 
 protected:
