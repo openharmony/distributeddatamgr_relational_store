@@ -33,7 +33,6 @@ using RdbServiceProxy = DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 constexpr int32_t MAX_RETRY = 100;
-constexpr int32_t LOAD_SA_TIMEOUT_SECONDS = 1;
 class DeathStub : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");
@@ -56,7 +55,8 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
             LOG_ERROR("Create load callback failed.");
             return nullptr;
         }
-        // The data management service process is asynchronously invoked, but the handle cannot be returned normally. Therefore, the handle in the callback is not processed
+        // The data management service process is asynchronously invoked, but the handle cannot be returned normally. 
+        // Therefore, the handle in the callback is not processed
         int32_t errCode = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, loadCallback);
         // start load failed
         if (errCode != ERR_OK) {
