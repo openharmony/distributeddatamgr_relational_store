@@ -59,7 +59,14 @@ public:
         RdbManagerImpl *owner_;
     };
 
-    class ServiceProxyLoadCallBack : public SystemAbilityLoadCallback
+    class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
+    public:
+        ServiceProxyLoadCallback() = default;
+        virtual ~ServiceProxyLoadCallback() = default;
+
+        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+    };
 
 private:
     RdbManagerImpl();
