@@ -55,7 +55,7 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
             LOG_ERROR("Create load callback failed.");
             return nullptr;
         }
-        // The data management service process is asynchronously invoked, but the handle cannot be returned normally. 
+        // The data management service process is asynchronously invoked, but the handle cannot be returned normally
         // Therefore, the handle in the callback is not processed
         int32_t errCode = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, loadCallback);
         // start load failed
