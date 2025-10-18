@@ -26,6 +26,7 @@
 #include "iremote_proxy.h"
 #include "rdb_types.h"
 #include "refbase.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::DistributedRdb {
 class RdbService;
@@ -56,6 +57,15 @@ public:
 
     private:
         RdbManagerImpl *owner_;
+    };
+
+    class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
+    public:
+        ServiceProxyLoadCallback() = default;
+        virtual ~ServiceProxyLoadCallback() = default;
+
+        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
     };
 
 private:
