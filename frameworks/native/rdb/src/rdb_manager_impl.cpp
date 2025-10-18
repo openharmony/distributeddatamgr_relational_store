@@ -33,7 +33,6 @@ using RdbServiceProxy = DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 constexpr int32_t MAX_RETRY = 100;
-constexpr int32_t LOAD_SA_TIMEOUT_SECONDS = 1;
 class DeathStub : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");
@@ -48,12 +47,22 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
     }
     auto dataMgr = manager->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgr == nullptr) {
-        LOG_WARN("Get distributed data manager CheckSystemAbility failed.");
-        dataMgr = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
-        if (dataMgr == nullptr) {
-            LOG_ERROR("Get distributed data manager LoadSystemAbility failed.");
+        // check SA failed, try load SA
+        LOG_ERROR("Get distributed data manager CheckSystemAbility failed.");
+        // callback of load
+        sptr<ServiceProxyLoadCallback> loadCallback = new (std::nothrow) ServiceProxyLoadCallback();
+        if (loadCallback == nullptr) {
+            LOG_ERROR("Create load callback failed.");
             return nullptr;
         }
+        // The data management service process is asynchronously invoked, but the handle cannot be returned normally
+        // Therefore, the handle in the callback is not processed
+        int32_t errCode = manager->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, loadCallback);
+        // start load failed
+        if (errCode != ERR_OK) {
+            LOG_ERROR("Get distributed data manager LoadSystemAbility failed, err: %{public}d", errCode);
+        }
+        return nullptr;
     }
     sptr<RdbStoreDataServiceProxy> dataService = new (std::nothrow) RdbStoreDataServiceProxy(dataMgr);
     if (dataService == nullptr) {
@@ -64,6 +73,24 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
     sptr<IRemoteObject> observer = new (std::nothrow) DeathStubImpl();
     dataService->RegisterDeathObserver(bundleName, observer);
     return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService](const auto *) {});
+}
+
+void RdbManagerImpl::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
+{
+    if (systemAbilityId != DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
+        LOG_ERROR("Incorrect SA Id: %{public}d", systemAbilityId);
+        return;
+    }
+    if (remoteObject == nullptr) {
+        LOG_ERROR("remote object is nullptr");
+        return;
+    }
+}
+
+void RdbManagerImpl::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+{
+    LOG_ERROR("Load SA: %{public}d failed", systemAbilityId);
 }
 
 sptr<IRemoteObject::DeathRecipient> RdbManagerImpl::LinkToDeath(const sptr<IRemoteObject> &remote)
