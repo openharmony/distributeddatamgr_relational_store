@@ -207,12 +207,12 @@ export default namespace relationalStore {
           return num as Object
       }
       let p1 = taskpool.execute(cb);
-      p1.then((v: NullishType): void => {
+      p1.then((v: Any): void => {
         let error = new BusinessError<void>
         error.code = 0
         callback(error, v as number)
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         callback(err as BusinessError<void>, 0 as number)
       });
     }
@@ -224,10 +224,10 @@ export default namespace relationalStore {
             return num as Object
         }
         let p1 = taskpool.execute(cb);
-        p1.then((v: NullishType): void => {
+        p1.then((v: Any): void => {
           resolve(v as number);
         });
-        p1.catch((err: NullishType): void => {
+        p1.catch((err: Any): void => {
           reject(err as Error);
         });
       });
@@ -244,10 +244,10 @@ export default namespace relationalStore {
             return num as Object
         }
         let p1 = taskpool.execute(cb);
-        p1.then((v: NullishType): void => {
+        p1.then((v: Any): void => {
           resolve(v as number);
         });
-        p1.catch((err: NullishType): void => {
+        p1.catch((err: Any): void => {
           reject(err as Error);
         });
       });
@@ -260,12 +260,12 @@ export default namespace relationalStore {
           return num as Object
       }
       let p1 = taskpool.execute(cb);
-      p1.then((v: NullishType): void => {
+      p1.then((v: Any): void => {
         let error = new BusinessError
         error.code = 0
         callback(error, v as number)
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         callback(err as BusinessError, 0 as number)
       });
     }
@@ -279,10 +279,10 @@ export default namespace relationalStore {
             return num as Object
         }
         let p1 = taskpool.execute(cb);
-        p1.then((v: NullishType): void => {
+        p1.then((v: Any): void => {
           resolve(v as number);
         });
-        p1.catch((err: NullishType): void => {
+        p1.catch((err: Any): void => {
           reject(err as Error);
         });
       });
@@ -295,12 +295,12 @@ export default namespace relationalStore {
           return num as Object
       }
       let p1 = taskpool.execute(cb);
-      p1.then((v: NullishType): void => {
+      p1.then((v: Any): void => {
         let error = new BusinessError
         error.code = 0
         callback(error, v as number)
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         callback(err as BusinessError, 0 as number)
       });
     }
@@ -311,12 +311,12 @@ export default namespace relationalStore {
           return undefined
       }
       let p1 = taskpool.execute(cb);
-      p1.then((v: NullishType): void => {
+      p1.then((v: Any): void => {
         let error = new BusinessError
         error.code = 0
         callback(error, undefined)
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         callback(err as BusinessError, undefined)
       });
     }
@@ -327,27 +327,27 @@ export default namespace relationalStore {
           return undefined
       }
       let p1 = taskpool.execute(cb);
-      p1.then((v: NullishType): void => {
+      p1.then((v: Any): void => {
         let error = new BusinessError
         error.code = 0
         callback(error, undefined)
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         callback(err as BusinessError, undefined)
       });
     }
 
     executeSql(sql: string, bindArgs?: Array<ValueType>): Promise<void> {
-      let p = new Promise<void>((resolve: (v: NullishType) => void, reject: (error: Object) => void): void => {
+      let p = new Promise<void>((resolve: (v: Any) => void, reject: (error: Object) => void): void => {
         let cb = (): undefined => {
             this.executeSqlSync(sql, bindArgs)
             return undefined
         }
         let p1 = taskpool.execute(cb);
-        p1.then((v: NullishType): void => {
+        p1.then((v: Any): void => {
           resolve(v);
         });
-        p1.catch((err: NullishType): void => {
+        p1.catch((err: Any): void => {
           reject(err as Error);
         });
       });
@@ -367,12 +367,12 @@ export default namespace relationalStore {
 
   export function getRdbStore(context: Context, config: StoreConfig, callback: AsyncCallback<RdbStore>): void {
     let p1 = taskpool.execute(getRdbStoreSync, context, config);
-    p1.then((rdb: NullishType): void => {
+    p1.then((rdb: Any): void => {
       let error = new BusinessError
       error.code = 0
       callback(error, rdb as RdbStore)
     });
-    p1.catch((err: NullishType): void => {
+    p1.catch((err: Any): void => {
       let rdb = new RdbStoreInner()
       callback(err as BusinessError, rdb)
     });
@@ -380,10 +380,10 @@ export default namespace relationalStore {
   export function getRdbStore(context: Context, config: StoreConfig): Promise<RdbStore> {
     let p = new Promise<RdbStore>((resolve: (value: RdbStore) => void, reject: (error: Object) => void): void => {
       let p1 = taskpool.execute(getRdbStoreSync, context, config);
-      p1.then((rdb: NullishType): void => {
+      p1.then((rdb: Any): void => {
         resolve(rdb as RdbStore);
       });
-      p1.catch((err: NullishType): void => {
+      p1.catch((err: Any): void => {
         reject(err as Object);
       });
     });
