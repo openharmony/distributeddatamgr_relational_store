@@ -75,6 +75,7 @@ constexpr uint32_t SqliteConnection::DB_INDEX;
 constexpr uint32_t SqliteConnection::WAL_INDEX;
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int32_t BINLOG_FILE_REPLAY_LIMIT = 50;
+constexpr int64_t BINLOG_REPLAY_REPORT_TIME = 15 * 60 * 1000; // ms
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
 ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> SqliteConnection::reusableReplicas_ = {};
 __attribute__((used))
@@ -2083,6 +2084,21 @@ int SqliteConnection::SetBinlog()
     return E_OK;
 }
 
+int SqliteConnection::ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, const RdbStoreConfig &config)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    auto errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, slaveDb));
+    auto endTime = std::chrono::steady_clock::now();
+    int64_t replayTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    if (replayTime >= BINLOG_REPLAY_REPORT_TIME) {
+        Reportor::ReportFault(
+            RdbFaultDbFileEvent(FT_SQLITE, E_DFX_REPLAY_TIMEOUT_FAIL, config, "binlog replay timeout"));
+        LOG_WARN("binlog replay timeout, time=%{public}" PRId64 "ms, %{public}s", replayTime,
+            SqliteUtils::Anonymous(config.GetPath()).c_str());
+    }
+    return errCode;
+}
+
 void SqliteConnection::ReplayBinlog(const std::string &dbPath,
     std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean)
 {
@@ -2107,7 +2123,7 @@ void SqliteConnection::ReplayBinlog(const std::string &dbPath,
         return;
     }
     SqliteConnection::BinlogSetConfig(dbFrom);
-    errCode = SQLiteError::ErrNo(sqlite3_replay_binlog(dbFrom, slaveConn->dbHandle_));
+    errCode = SqliteConnection::ReplayBinlogSqlite(dbFrom, slaveConn->dbHandle_, slaveConn->config_);
     if (errCode != E_OK) {
         LOG_WARN("async replay err:%{public}d", errCode);
     } else if (isNeedClean) {
@@ -2131,7 +2147,7 @@ void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
         LOG_WARN("main db does not exist");
         return;
     }
-    int err = SQLiteError::ErrNo(sqlite3_replay_binlog(dbHandle_, slaveConnection_->dbHandle_));
+    int err = SqliteConnection::ReplayBinlogSqlite(dbHandle_, slaveConnection_->dbHandle_, config);
     if (err != E_OK) {
         LOG_WARN("replay err:%{public}d", err);
     }
