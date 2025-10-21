@@ -1854,3 +1854,24 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     EXPECT_GT(T1 * 1.8, T1_2);
     LOG_INFO("----RdbStore_Binlog_Performance_006----, %{public}" PRId64 ", %{public}" PRId64 ",", T1, T1_2);
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_Report_001
+ * @tc.desc: test binlog replay after writing 1M binlog file
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Report_001, TestSize.Level3)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
+        RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
+    }
+    InitDb(HAMode::MAIN_REPLICA, false);
+    int64_t id = 1;
+    int count = 1024;
+    Insert(id, count, false, 1024);
+
+    WaitForBinlogReplayFinish();
+    bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
+    ASSERT_FALSE(isBinlogExist);
+}
