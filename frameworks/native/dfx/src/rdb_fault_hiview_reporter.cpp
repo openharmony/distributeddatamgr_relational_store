@@ -80,7 +80,8 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_GROUPID_INFO, 0 },
     { E_DFX_HUKS_GEN_RANDOM_FAIL, 0 },
     { E_DFX_UPGRADE_KEY_FAIL, 0 },
-    { E_DFX_HMAC_KEY_FAIL, 0 }
+    { E_DFX_HMAC_KEY_FAIL, 0 },
+    { E_DFX_REPLAY_TIMEOUT_FAIL, 0}
 };
 
 bool RdbFaultHiViewReporter::memCorruptReportedFlg_ = false;
