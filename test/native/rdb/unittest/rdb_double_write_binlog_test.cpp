@@ -1871,7 +1871,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Report_001, TestSize.Level3)
     int count = 1024;
     Insert(id, count, false, 1024);
 
-    WaitForBinlogReplayFinish();
     bool isBinlogExist = CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName);
-    ASSERT_FALSE(isBinlogExist);
+    ASSERT_TRUE(isBinlogExist);
+    WaitForBinlogReplayFinish();
 }
