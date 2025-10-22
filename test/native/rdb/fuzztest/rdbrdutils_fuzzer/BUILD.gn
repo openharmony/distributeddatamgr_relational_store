@@ -37,12 +37,14 @@ ohos_fuzztest("RdbRdUtilsFuzzTest") {
 
   sources = [
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
+    "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
     "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
     "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
     "${relational_store_native_path}/rdb/src/rd_statement.cpp",
     "${relational_store_native_path}/rdb/src/rd_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/task_executor.cpp",
     "rdbrdutils_fuzzer.cpp",
   ]
 
