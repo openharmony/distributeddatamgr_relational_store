@@ -230,6 +230,7 @@ int32_t RDBCrypto::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDB
         { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE },
         { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
         { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE },
+        { .tag = HKS_TAG_KEY_OVERRIDE, .boolParam = false },
     };
 
     ret = HksAddParams(params, hksParam, sizeof(hksParam) / sizeof(hksParam[0]));
@@ -250,11 +251,16 @@ int32_t RDBCrypto::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDB
 
     ret = HksGenerateKey(&rootKeyName, params, nullptr);
     HksFreeParamSet(&params);
-    if (ret != HKS_SUCCESS) {
+    if (ret == HKS_SUCCESS) {
+        LOG_INFO("HksGenerateKey-client success first!");
+        return ret;
+    }
+    if (ret != HKS_ERROR_CODE_KEY_ALREADY_EXIST) {
         rdbFault = GetDfxFault(E_ROOT_KEY_FAULT, "HksGenerateKey ret=" + std::to_string(ret));
         LOG_ERROR("HksGenerateKey-client failed with error %{public}d", ret);
+        return ret;
     }
-    return ret;
+    return HKS_SUCCESS;
 }
 
 std::vector<HksParam> CreateEncryptHksParams(const HksBlob &blobNonce, const HksBlob &blobAad)
