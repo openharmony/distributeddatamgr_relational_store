@@ -73,6 +73,7 @@ public:
     void InitDb(HAMode mode = HAMode::MAIN_REPLICA, bool isOpenSlave = true, bool isSearchable = false);
     int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
     void CreateFakeBinlogFiles(int count);
+    void CorruptDbHeader(const std::string &fileName);
 
     static const std::string databaseName;
     static const std::string slaveDatabaseName;
@@ -520,6 +521,18 @@ void RdbDoubleWriteBinlogTest::CheckAccess()
         ret = SqliteUtils::HasAccessAcl(entry.path().string(), SERVICE_GID);
         EXPECT_EQ(ret, true);
     }
+}
+
+void RdbDoubleWriteBinlogTest::CorruptDbHeader(const std::string &fileName)
+{
+    std::fstream file(fileName, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open() == true);
+    file.seekp(30, std::ios::beg); // 30 is offset
+    ASSERT_TRUE(file.good() == true);
+    char bytes[2] = { 0x6, 0x6 };
+    file.write(bytes, 2); // 2 is size
+    ASSERT_TRUE(file.good() == true);
+    file.close();
 }
 
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_001, TestSize.Level0)
@@ -1518,6 +1531,45 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_030, TestSize.Level0)
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     RdbDoubleWriteBinlogTest::CheckNumber(store, count);
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_031
+ * @tc.desc: test db will be rebuild but not replay if db both corrupted
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_031, TestSize.Level0)
+{
+    LOG_INFO("---- step1");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    LOG_INFO("---- step2");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    ASSERT_NE(store, nullptr);
+    WaitForBinlogReplayFinish();
+    std::string createTb = "CREATE TABLE IF NOT EXISTS test2(id INTEGER)";
+    EXPECT_EQ(store->ExecuteSql(createTb), E_OK);
+    store = nullptr;
+    LOG_INFO("---- step3");
+    CorruptDbHeader(databaseName);
+    CorruptDbHeader(slaveDatabaseName);
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::databaseName + "-dwr");
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::slaveDatabaseName + "-dwr");
+    LOG_INFO("RdbStore_Binlog_031 corrupt db finish");
+    RdbStoreConfig config(databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetAllowRebuild(true);
+    int errCode = E_OK;
+    DoubleWriteBinlogTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    RdbStoreConfig slaveConfig(slaveDatabaseName);
+    DoubleWriteBinlogTestOpenCallback slaveHelper;
+    slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(slaveStore, nullptr);
+    LOG_INFO("---- step4");
+    CheckNumber(store, -1, E_SQLITE_ERROR, "test2");
+    CheckNumber(slaveStore, -1, E_SQLITE_ERROR, "test2");
 }
 
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
