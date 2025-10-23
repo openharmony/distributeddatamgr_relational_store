@@ -422,10 +422,8 @@ public:
             return aniMap;
         }
         const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
-        for (auto it = rowMap.begin(); it != rowMap.end(); ++it) {
-            auto const &[key, value] = *it;
-            ValueType aniTemp = ani_rdbutils::ValueObjectToAni(value);
-            aniMap.emplace(string(key), aniTemp);
+        for (auto const &[key, value] : rowMap) {
+            aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
         }
         return aniMap;
     }
@@ -460,7 +458,7 @@ public:
     {
     }
 
-    explicit RdbPredicatesImpl(std::string name)
+    explicit RdbPredicatesImpl(const std::string &name)
     {
         nativeRdbPredicates_ = std::make_shared<OHOS::NativeRdb::RdbPredicates>(name);
     }
