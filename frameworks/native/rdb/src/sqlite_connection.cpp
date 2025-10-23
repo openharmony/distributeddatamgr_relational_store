@@ -224,8 +224,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
     if (errCode != E_OK) {
         SqliteUtils::SetSlaveInvalid(config_.GetPath());
         if (errCode == E_SQLITE_CORRUPT) {
-            LOG_WARN("slave corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
-            (void)Delete(config.GetPath());
+            DeleteCorruptSlave(config.GetPath());
             // trigger mode does not require rebuild the slave
             if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
                 return result;
@@ -2047,6 +2046,18 @@ ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdx
     LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
         mCount, mIdxCount, sCount, sIdxCount);
     return ExchangeStrategy::BACKUP;
+}
+
+void SqliteConnection::DeleteCorruptSlave(const std::string &path)
+{
+    LOG_WARN("slave corrupt, rebuild:%{public}s, handle:%{public}d", SqliteUtils::Anonymous(path).c_str(),
+        dbHandle_ != nullptr);
+    if (dbHandle_ != nullptr) {
+        sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+    }
+    (void)Delete(path);
+    size_t num = SqliteUtils::DeleteFolder(GetBinlogFolderPath(config_.GetPath()), false);
+    LOG_INFO("deleted %{public}zu binlog related items", num);
 }
 
 int SqliteConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
