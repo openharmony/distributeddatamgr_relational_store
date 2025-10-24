@@ -860,10 +860,7 @@ CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConf
         config.pKdfAlgo = KDF_ALGOS[param.kdfAlgo];
     }
 
-    config.pKey = nullptr;
-    if (param.encryptAlgo != EncryptAlgo::PLAIN_TEXT && !param.encryptKey_.empty()) {
-        config.pKey = static_cast<const void *>(param.encryptKey_.data());
-    }
+    config.pKey = param.encryptKey_.empty() ? nullptr : static_cast<const void *>(param.encryptKey_.data());
     config.nKey = static_cast<int>(param.encryptKey_.size());
     if (param.iterNum != 0) {
         config.kdfIter = static_cast<int>(param.iterNum);
