@@ -2248,7 +2248,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_039, TestSize.Level1)
 
 /**
 * @tc.name: Rdb_Rekey_040
-* @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT then rekeyex
+* @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT then rekeyex success and query success
 * @tc.type: FUNC
 */
 HWTEST_F(RdbRekeyTest, Rdb_Rekey_040, TestSize.Level1)

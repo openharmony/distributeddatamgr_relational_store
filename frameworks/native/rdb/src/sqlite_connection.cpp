@@ -850,9 +850,6 @@ CodecConfig SqliteConnection::CreateCodecConfig()
 CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param)
 {
     CodecConfig config = CreateCodecConfig();
-    if (param.encryptAlgo == EncryptAlgo::PLAIN_TEXT) {
-        return { NULL, NULL, NULL, NULL, 0, 0, param.cryptoPageSize };
-    }
     if (param.encryptAlgo >= EncryptAlgo::AES_256_GCM && param.encryptAlgo < EncryptAlgo::PLAIN_TEXT) {
         config.pCipher = ENCRYPT_ALGOS[param.encryptAlgo];
     }
