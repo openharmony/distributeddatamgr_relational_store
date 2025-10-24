@@ -15,8 +15,11 @@
 #include "securec.h"
 #include <cstring>
 
-errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+int memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
 {
+    if (dest == nullptr || src == nullptr || destMax < count) {
+        return -1;
+    }
     memcpy(dest, src, count);
     return 0;
 }
