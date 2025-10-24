@@ -501,7 +501,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
     OH_Rdb_ConfigV2 *confg = OH_Rdb_CreateConfig();
     EXPECT_NE(confg, nullptr);
 
-    const char *plugins[] = { "1" };
+    const char *plugins[] = { "1", nullptr };
     auto ret = OH_Rdb_SetPlugins(nullptr, plugins, 1);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 
@@ -511,7 +511,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_011, TestSize.Level1)
     ret = OH_Rdb_SetPlugins(confg, plugins, 0);
     EXPECT_EQ(ret, RDB_OK);
 
-    ret = OH_Rdb_SetPlugins(confg, plugins, 1);
+    ret = OH_Rdb_SetPlugins(confg, plugins, 2);
     EXPECT_EQ(ret, RDB_OK);
 
     const char *pluginsNew[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "0", "x" };
