@@ -860,7 +860,10 @@ CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConf
         config.pKdfAlgo = KDF_ALGOS[param.kdfAlgo];
     }
 
-    config.pKey = param.encryptKey_.empty() ? nullptr : static_cast<const void *>(param.encryptKey_.data());
+    config.pKey = nullptr;
+    if (param.encryptAlgo != EncryptAlgo::PLAIN_TEXT && !param.encryptKey_.empty()) {
+        config.pKey = static_cast<const void *>(param.encryptKey_.data());
+    }
     config.nKey = static_cast<int>(param.encryptKey_.size());
     if (param.iterNum != 0) {
         config.kdfIter = static_cast<int>(param.iterNum);
@@ -873,7 +876,7 @@ int RekeyToPlainText(
     const RdbStoreConfig &config, CodecRekeyConfig &rekeyConfig, const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     CodecConfig plainTextCfg = { NULL, NULL, NULL, NULL, 0, 0, cryptoParam.cryptoPageSize };
-    errno_t err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &plainTextCfg, sizeof(plainTextCfg));
+    auto err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &plainTextCfg, sizeof(plainTextCfg));
     if (err != 0) {
         LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
         return E_ERROR;
@@ -928,7 +931,7 @@ int RekeyToEncrypt(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRek
     }
     rekeyCfg.pKey = static_cast<const void *>(key.data());
     rekeyCfg.nKey = static_cast<int>(key.size());
-    errno_t err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &rekeyCfg, sizeof(rekeyCfg));
+    auto err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &rekeyCfg, sizeof(rekeyCfg));
     if (err != 0) {
         LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
         return E_ERROR;
