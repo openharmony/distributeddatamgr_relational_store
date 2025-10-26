@@ -820,6 +820,13 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
             SqliteUtils::Anonymous(config_.GetName()).c_str());
         return SQLiteError::ErrNo(errCode);
     }
+    errCode = ExecuteSql(std::string(GlobalExpr::REKEY_HMAC_ALGO) +
+                              SqliteUtils::HmacAlgoDescription(cryptoParam.hmacAlgo) +
+                              std::string(GlobalExpr::ALGO_SUFFIX));
+    if (errCode != E_OK) {
+        LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
     errCode = SetEncryptAgo(cryptoParam);
     if (errCode != E_OK) {
         key.assign(key.size(), 0);
