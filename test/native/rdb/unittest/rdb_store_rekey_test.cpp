@@ -2300,3 +2300,117 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_040, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_EQ(rowCount, 1);
 }
+
+/**
+* @tc.name: Rdb_Rekey_041
+* @tc.desc: test cryptoParam is custom then rekey and query success
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_041, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    cryptoParam.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    cryptoParam.iterNum = 500;
+    cryptoParam.hmacAlgo = HmacAlgo::SHA512;
+    cryptoParam.kdfAlgo = KdfAlgo::KDF_SHA512;
+    cryptoParam.cryptoPageSize = 2048;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    errCode = E_OK;
+
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam = cryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_042
+* @tc.desc: test cryptoParam is custom then rekey and query success
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_042, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6, 7, 8 };
+    cryptoParam.encryptAlgo = EncryptAlgo::AES_256_GCM;
+    cryptoParam.iterNum = 2000;
+    cryptoParam.hmacAlgo = HmacAlgo::SHA1;
+    cryptoParam.kdfAlgo = KdfAlgo::KDF_SHA256;
+    cryptoParam.cryptoPageSize = 4096;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    errCode = E_OK;
+
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam = cryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 8, 7, 6, 2, 3, 4, 5, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
