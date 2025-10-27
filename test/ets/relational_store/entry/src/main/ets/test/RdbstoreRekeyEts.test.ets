@@ -857,6 +857,134 @@ export default function RdbstoreRekeysEtsTest() {
       }
       console.info(TAG + " ************* End*************");
     });
+
+    /**
+     * @tc.number testRekey
+     * @tc.name testRekey0026
+     * @tc.desc rekey HmacAlgo is SHA512 test
+     */
+    it('testRekey0026', 0, async () => {
+      console.log(TAG + "************* testRekey0026 start *************");
+      let cryptoParam: data_relationalStore.CryptoParam = {
+        encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
+        iterationCount: 1000,
+        encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC,
+        hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
+        kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
+        cryptoPageSize: 2048
+      };
+      let storeConfig: data_relationalStore.StoreConfig = {
+        name: "testRekey0026.db",
+        securityLevel: data_relationalStore.SecurityLevel.S2,
+        encrypt: true,
+        cryptoParam:cryptoParam
+      }
+      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      await rdbStore.executeSql(CREATE_TABLE_TEST);
+      try {
+        let cryptoParam1: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([6, 5, 4, 3, 2, 1]),
+          iterationCount: 1000,
+          encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_CBC,
+          hmacAlgo: data_relationalStore.HmacAlgo.SHA512,
+          kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA512,
+          cryptoPageSize: 2048
+        };
+        let  u8 = new Uint8Array([1, 2, 3])
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket);
+        await rdbStore.rekey(cryptoParam1);
+        const valueBucket1: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 19,
+          "salary": 200.5,
+          "blobType": u8,
+        }
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("NAME", "zhangsan");
+        let num = await rdbStore.update(valueBucket1, predicates)
+        console.log(TAG + "update success,num:" + num);
+        expect(num).assertEqual(1);
+        let num1 = await rdbStore.delete(predicates);
+        console.log(TAG + "delete success,num:" + num1);
+        expect(num1).assertEqual(1);
+      } catch (err) {
+        console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
+        expect().assertFail();
+        console.log(TAG + "************* testRekey0026 end *************");
+      }
+    });
+
+    /**
+     * @tc.number testRekey
+     * @tc.name testRekey0027
+     * @tc.desc rekey HmacAlgo is SHA1 test
+     */
+    it('testRekey0027', 0, async () => {
+      console.log(TAG + "************* testRekey0027 start *************");
+      let cryptoParam: data_relationalStore.CryptoParam = {
+        encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]),
+        iterationCount: 6000,
+        encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_GCM,
+        hmacAlgo: data_relationalStore.HmacAlgo.SHA1,
+        kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA1,
+        cryptoPageSize: 4096
+      };
+      let storeConfig: data_relationalStore.StoreConfig = {
+        name: "testRekey0027.db",
+        securityLevel: data_relationalStore.SecurityLevel.S2,
+        encrypt: true,
+        cryptoParam:cryptoParam
+      }
+      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      await rdbStore.executeSql(CREATE_TABLE_TEST);
+      try {
+        let cryptoParam1: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([8, 7, 6, 5, 4, 3, 2, 1]),
+          iterationCount: 6000,
+          encryptionAlgo: data_relationalStore.EncryptionAlgo.AES_256_GCM,
+          hmacAlgo: data_relationalStore.HmacAlgo.SHA1,
+          kdfAlgo: data_relationalStore.KdfAlgo.KDF_SHA1,
+          cryptoPageSize: 4096
+        };
+        let  u8 = new Uint8Array([1, 2, 3])
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket);
+        await rdbStore.rekey(cryptoParam1);
+        await rdbStore.close();
+        storeConfig.cryptoParam = cryptoParam1;
+        rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+
+        const valueBucket1: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 19,
+          "salary": 200.5,
+          "blobType": u8,
+        }
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo("NAME", "zhangsan");
+        let num = await rdbStore.update(valueBucket1, predicates)
+        console.log(TAG + "update success,num:" + num);
+        expect(num).assertEqual(1);
+        let num1 = await rdbStore.delete(predicates);
+        console.log(TAG + "delete success,num:" + num1);
+        expect(num1).assertEqual(1);
+      } catch (err) {
+        console.log("catch err: failed, err: code=" + err.code + " message=" + err.message);
+        expect().assertFail();
+        console.log(TAG + "************* testRekey0027 end *************");
+      }
+    });
     console.log(TAG + "*************Unit Test End*************");
   })
 }

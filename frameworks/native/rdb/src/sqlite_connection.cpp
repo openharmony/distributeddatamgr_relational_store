@@ -813,6 +813,14 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         LOG_ERROR("key is empty");
         return E_ERROR;
     }
+    errCode = ExecuteSql(std::string(GlobalExpr::REKEY_HMAC_ALGO) +
+                              SqliteUtils::HmacAlgoDescription(config_.GetCryptoParam().hmacAlgo) +
+                              std::string(GlobalExpr::ALGO_SUFFIX));
+    if (errCode != E_OK) {
+        key.assign(key.size(), 0);
+        LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
     errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     if (errCode != SQLITE_OK) {
         key.assign(key.size(), 0);
