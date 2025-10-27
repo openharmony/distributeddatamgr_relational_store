@@ -1572,6 +1572,53 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_031, TestSize.Level0)
     CheckNumber(slaveStore, -1, E_SQLITE_ERROR, "test2");
 }
 
+/**
+ * @tc.name: RdbStore_Binlog_032
+ * @tc.desc: test replay without reopening the db after slave is corrupted
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_032, TestSize.Level2)
+{
+    LOG_INFO("---- step1");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    LOG_INFO("---- step2");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    ASSERT_NE(store, nullptr);
+    WaitForBinlogReplayFinish();
+    std::string createTb = "CREATE TABLE IF NOT EXISTS test2(id INTEGER)";
+    EXPECT_EQ(store->ExecuteSql(createTb), E_OK);
+    store = nullptr;
+    LOG_INFO("---- step3");
+    CorruptDbHeader(slaveDatabaseName);
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::slaveDatabaseName + "-dwr");
+    LOG_INFO("RdbStore_Binlog_032 corrupt db finish");
+    InitDb(HAMode::MAIN_REPLICA, false, false);
+    WaitForBinlogReplayFinish();
+    LOG_INFO("---- step4");
+    RdbStoreConfig slaveConfig(slaveDatabaseName);
+    DoubleWriteBinlogTestOpenCallback slaveHelper;
+    int errCode = E_OK;
+    slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(slaveStore, nullptr);
+    CheckNumber(store, 0, E_OK, "test2");
+    CheckNumber(slaveStore, -1, E_SQLITE_ERROR, "test2");
+    EXPECT_EQ(store->ExecuteSql(DoubleWriteBinlogTestOpenCallback::createTableTest), E_OK);
+    int id = 1;
+    int totalCount = 6;
+    int size = 1024 * 1024;
+    Insert(id, totalCount, false, size);
+    WaitForBinlogReplayFinish();
+    LOG_INFO("---- step5");
+    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int countNum;
+    int ret = resultSet->GetRowCount(countNum);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_NE(countNum, 0);
+}
+
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
