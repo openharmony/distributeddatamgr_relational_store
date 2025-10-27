@@ -570,7 +570,7 @@ ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
 template<>
 bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
 {
-    if (!IsInstanceOf("escompat.Record")) {
+    if (!IsInstanceOf("std.core.Record")) {
         return false;
     }
     ani_ref keys;
