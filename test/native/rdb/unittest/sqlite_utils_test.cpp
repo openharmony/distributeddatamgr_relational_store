@@ -205,6 +205,22 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
     std::remove(filePath.c_str());
 }
 
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
+{
+    std::string filePath = "/data/test/SqliteUtils_Test_0027";
+    std::string subPath = filePath + "/bin001";
+    std::error_code ec;
+    std::filesystem::create_directories(filePath, ec);
+    std::ofstream src(subPath.c_str(), std::ios::binary);
+    ASSERT_TRUE(src.is_open());
+    src.close();
+    EXPECT_EQ(1, SqliteUtils::GetFileCount(filePath)); // 1 is file count
+    EXPECT_EQ(1, SqliteUtils::DeleteFolder(filePath, false)); // 1 is removed counbt
+    EXPECT_EQ(0, SqliteUtils::GetFileCount(filePath));
+    EXPECT_EQ(1, SqliteUtils::DeleteFolder(filePath)); // 1 is removed counbt
+    EXPECT_EQ(0, SqliteUtils::GetFileCount(filePath));
+}
+
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::GetParentModes("/data/service/el1/public/database/distributeddata/meta", 3),

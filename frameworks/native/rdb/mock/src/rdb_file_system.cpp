@@ -24,7 +24,7 @@ std::vector<std::string> RdbFileSystem::GetEntries(const std::string &path)
 {
     return {};
 }
-std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path)
+std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path, bool removeSelf)
 {
     return std::make_pair(0, 0);
 }
