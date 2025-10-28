@@ -141,6 +141,7 @@ private:
         sqlite3 *db, bool isFromReplica);
     void ReplayBinlog(const RdbStoreConfig &config);
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
+    void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
