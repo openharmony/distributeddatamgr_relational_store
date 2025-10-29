@@ -12,86 +12,114 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #define LOG_TAG "AniUtils"
 #include "ani_utils.h"
-#include "asset_value.h"
-#include "big_integer.h"
-#include "values_bucket.h"
-#include "logger.h"
+
 #include <ani_signature_builder.h>
 
-using namespace OHOS::NativeRdb;
+#include "asset_value.h"
+#include "big_integer.h"
+#include "logger.h"
+#include "values_bucket.h"
 using namespace OHOS::Rdb;
+using namespace OHOS::NativeRdb;
 using namespace arkts::ani_signature;
 
 namespace ani_utils {
-
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result, bool optional)
+inline ani_status HandlePropertyError(
+    ani_status status, const char *property, ErrorHandling handling, const char *type_name)
 {
-    ani_object object = nullptr;
-    int32_t status = AniGetProperty(env, ani_obj, property, object, optional);
-    if (status == ANI_OK && object != nullptr) {
-        result = AniStringUtils::ToStd(env, reinterpret_cast<ani_string>(object));
+    return PropertyErrorHandler::HandleError(status, property, handling, type_name);
+}
+
+ani_status AniGetProperty(
+    ani_env *env, ani_object ani_obj, const char *property, std::string &result, ErrorHandling handling)
+{
+    ani_object property_obj;
+    ani_status status = AniGetPropertyImpl<ani_object, ani_ref>(
+        env, ani_obj, property, property_obj, handling, &ani_env::Object_GetPropertyByName_Ref);
+
+    if (status != ANI_OK) {
+        return status;
     }
+    result = AniStringUtils::ToStd(env, reinterpret_cast<ani_string>(property_obj));
     return status;
 }
 
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result, bool optional)
+ani_status GetEnumValueInt(
+    ani_env *env, ani_object ani_obj, const char *property, int32_t &result, ErrorHandling handling)
 {
-    ani_boolean ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Boolean(
-        ani_obj, property, reinterpret_cast<ani_boolean*>(&ani_field_value));
+    ani_object property_obj;
+    ani_status status = AniGetPropertyImpl<ani_object, ani_ref>(
+        env, ani_obj, property, property_obj, handling, &ani_env::Object_GetPropertyByName_Ref);
+
     if (status != ANI_OK) {
-        if (optional) {
-            status = ANI_OK;
-        }
         return status;
     }
-    result = (bool)ani_field_value;
+
+    status = env->EnumItem_GetValue_Int(static_cast<ani_enum_item>(property_obj), &result);
+
+    if (status != ANI_OK) {
+        return HandlePropertyError(status, property, handling, GetTypeName<ani_enum_item>());
+    }
     return ANI_OK;
 }
-
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result, bool optional)
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result, ErrorHandling handling)
 {
-    ani_int ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Int(
-        ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
-    if (status != ANI_OK) {
-        if (optional) {
-            status = ANI_OK;
-        }
-        return status;
-    }
-    result = (int32_t)ani_field_value;
-    return ANI_OK;
+    return AniGetPropertyImpl<bool, ani_boolean>(
+        env, ani_obj, property, result, handling, &ani_env::Object_GetPropertyByName_Boolean);
 }
 
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result, bool optional)
+ani_status AniGetProperty(
+    ani_env *env, ani_object ani_obj, const char *property, int32_t &result, ErrorHandling handling)
 {
-    ani_int ani_field_value;
-    ani_status status = env->Object_GetPropertyByName_Int(
-        ani_obj, property, reinterpret_cast<ani_int*>(&ani_field_value));
-    if (status != ANI_OK) {
-        if (optional) {
-            status = ANI_OK;
-        }
-        return status;
-    }
-    result = (uint32_t)ani_field_value;
-    return ANI_OK;
+    return AniGetPropertyImpl<int32_t, ani_int>(
+        env, ani_obj, property, result, handling, &ani_env::Object_GetPropertyByName_Int);
 }
 
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, ani_object &result, bool optional)
+ani_status AniGetProperty(
+    ani_env *env, ani_object ani_obj, const char *property, uint32_t &result, ErrorHandling handling)
 {
-    ani_status status = env->Object_GetPropertyByName_Ref(ani_obj, property, reinterpret_cast<ani_ref*>(&result));
-    if (status != ANI_OK) {
-        if (optional) {
-            status = ANI_OK;
-        }
-        return status;
+    return AniGetPropertyImpl<uint32_t, ani_int>(
+        env, ani_obj, property, result, handling, &ani_env::Object_GetPropertyByName_Int);
+}
+
+ani_status AniGetProperty(
+    ani_env *env, ani_object ani_obj, const char *property, ani_object &result, ErrorHandling handling)
+{
+    return AniGetPropertyImpl<ani_object, ani_ref>(
+        env, ani_obj, property, result, handling, &ani_env::Object_GetPropertyByName_Ref);
+}
+
+ani_status PropertyErrorHandler::HandleError(
+    ani_status status, const char *property, ErrorHandling handling, const char *type_name)
+{
+    switch (status) {
+        case ANI_OK:
+            return ANI_OK;
+
+        case ANI_NOT_FOUND:
+            return PropertyErrorHandler::HandleNotFound(property, handling, type_name);
+
+        default:
+            return PropertyErrorHandler::HandleSystemError(status, property, type_name);
     }
-    return ANI_OK;
+}
+
+ani_status PropertyErrorHandler::HandleNotFound(const char *property, ErrorHandling handling, const char *type_name)
+{
+    if (handling == ErrorHandling::OPTIONAL) {
+        return ANI_OK;
+    } else {
+        LOG_ERROR("Required %{public}s property '%{public}s' not found", type_name, property);
+        return ANI_NOT_FOUND;
+    }
+}
+
+ani_status PropertyErrorHandler::HandleSystemError(ani_status status, const char *property, const char *type_name)
+{
+    LOG_ERROR("System error getting %{public}s property '%{public}s': %{public}d", type_name, property, status);
+    return status;
 }
 
 template<>
@@ -121,7 +149,7 @@ bool UnionAccessor::IsInstanceOfType<std::string>()
 template<>
 bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
 {
-    ani_double length;
+    ani_double length = 0;
     if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &length)) {
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
@@ -141,7 +169,7 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
 template<>
 bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
 {
-    ani_double length;
+    ani_double length = 0;
     if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &length)) {
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
@@ -152,7 +180,7 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
-        ani_boolean val;
+        ani_boolean val = false;
         if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Boolean unbox failed");
             return false;
@@ -166,7 +194,7 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
 template<>
 bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
 {
-    ani_double length;
+    ani_double length = 0;
     if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &length)) {
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
@@ -177,7 +205,7 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
-        ani_int intValue;
+        ani_int intValue = 0;
         if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "unboxed", nullptr, &intValue)) {
             LOG_ERROR("Object_CallMethodByName_Int unbox failed");
             return false;
@@ -191,7 +219,7 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
 template<>
 bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
 {
-    ani_double length;
+    ani_double length = 0;
     if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &length)) {
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
@@ -202,7 +230,7 @@ bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
-        ani_double val;
+        ani_double val = 0;
         if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Double unbox failed");
             return false;
@@ -221,14 +249,14 @@ bool UnionAccessor::TryConvertArray<uint8_t>(std::vector<uint8_t> &value)
         LOG_ERROR("Object_GetFieldByName_Ref failed");
         return false;
     }
-    void* data;
-    size_t size;
+    void *data = nullptr;
+    size_t size = 0;
     if (ANI_OK != env_->ArrayBuffer_GetInfo(static_cast<ani_arraybuffer>(buffer), &data, &size)) {
         LOG_ERROR("ArrayBuffer_GetInfo failed");
         return false;
     }
     for (size_t i = 0; i < size; i++) {
-        value.push_back(static_cast<uint8_t*>(data)[i]);
+        value.push_back(static_cast<uint8_t *>(data)[i]);
     }
     LOG_DEBUG("convert uint8 array ok.");
     return true;
@@ -242,24 +270,37 @@ bool UnionAccessor::TryConvertArray<float>(std::vector<float> &value)
         LOG_ERROR("Object_GetFieldByName_Ref failed");
         return false;
     }
-    void* data;
-    size_t size;
+    void *data = nullptr;
+    size_t size = 0;
     if (ANI_OK != env_->ArrayBuffer_GetInfo(static_cast<ani_arraybuffer>(buffer), &data, &size)) {
         LOG_ERROR("ArrayBuffer_GetInfo failed");
         return false;
     }
-    auto count = size / sizeof(float);
-    for (size_t i = 0; i < count; i++) {
-        value.push_back(static_cast<uint8_t*>(data)[i]);
+    if (data == nullptr) {
+        LOG_ERROR("ArrayBuffer data is null");
+        return false;
     }
-    LOG_DEBUG("convert float array ok.");
+
+    if (size == 0) {
+        LOG_DEBUG("ArrayBuffer is empty");
+        return true;
+    }
+    if (size % sizeof(float) != 0) {
+        LOG_ERROR("ArrayBuffer size %{public}zu is not multiple of float size %{public}zu", size, sizeof(float));
+        return false;
+    }
+    auto count = size / sizeof(float);
+    const float *floatData = static_cast<const float *>(data);
+    const size_t oldSize = value.size();
+    value.reserve(oldSize + count);
+    value.insert(value.end(), floatData, floatData + count);
     return true;
 }
 
 template<>
 bool UnionAccessor::TryConvertArray<std::string>(std::vector<std::string> &value)
 {
-    ani_double length;
+    ani_double length = 0;
     if (ANI_OK != env_->Object_GetPropertyByName_Double(obj_, "length", &length)) {
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
@@ -284,7 +325,7 @@ bool UnionAccessor::TryConvert<int>(int &value)
         return false;
     }
 
-    ani_int aniValue;
+    ani_int aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
@@ -322,7 +363,7 @@ bool UnionAccessor::TryConvert<double>(double &value)
         return false;
     }
 
-    ani_double aniValue;
+    ani_double aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
@@ -351,7 +392,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
         return false;
     }
 
-    ani_boolean aniValue;
+    ani_boolean aniValue = false;
     auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
@@ -370,13 +411,17 @@ bool UnionAccessor::TryConvert<std::vector<uint8_t>>(std::vector<uint8_t> &value
     return TryConvertArray(value);
 }
 
-bool UnionAccessor::GetObjectRefPropertyByName(const std::string clsName, const char *name, ani_ref &val)
+bool UnionAccessor::GetObjectRefPropertyByName(const std::string &clsName, const char *name, ani_ref &val)
 {
     ani_class cls;
-    env_->FindClass(clsName.c_str(), &cls);
+    ani_status status = env_->FindClass(clsName.c_str(), &cls);
+    if (status != ANI_OK) {
+        LOG_ERROR("FindClass failed, status=%{public}d", status);
+        return false;
+    }
     std::string methodName(name);
     ani_method getter;
-    ani_status status = env_->Class_FindMethod(cls, Builder::BuildGetterName(methodName).c_str(), nullptr, &getter);
+    status = env_->Class_FindMethod(cls, Builder::BuildGetterName(methodName).c_str(), nullptr, &getter);
     if (status != ANI_OK) {
         LOG_ERROR("GetObjectRefPropertyByName Class_FindMethod failed, status=%{public}d", status);
         return false;
@@ -391,7 +436,7 @@ bool UnionAccessor::GetObjectRefPropertyByName(const std::string clsName, const 
     return true;
 }
 
-bool UnionAccessor::GetObjectStringPropertyByName(const std::string clsName, const char *name, std::string &val)
+bool UnionAccessor::GetObjectStringPropertyByName(const std::string &clsName, const char *name, std::string &val)
 {
     ani_ref ref;
     auto isOk = GetObjectRefPropertyByName(clsName, name, ref);
@@ -403,7 +448,7 @@ bool UnionAccessor::GetObjectStringPropertyByName(const std::string clsName, con
     return true;
 }
 
-bool UnionAccessor::GetObjectEnumValuePropertyByName(const std::string clsName, const char *name, ani_int &val)
+bool UnionAccessor::GetObjectEnumValuePropertyByName(const std::string &clsName, const char *name, ani_int &val)
 {
     ani_ref ref;
     auto isOk = GetObjectRefPropertyByName(clsName, name, ref);
@@ -411,7 +456,7 @@ bool UnionAccessor::GetObjectEnumValuePropertyByName(const std::string clsName, 
         LOG_ERROR("GetObjectRefPropertyByName failed");
         return false;
     }
-    ani_int enumValue;
+    ani_int enumValue = 0;
     auto status = env_->EnumItem_GetValue_Int(static_cast<ani_enum_item>(ref), &enumValue);
     if (status != ANI_OK) {
         LOG_ERROR("EnumItem_GetValue_Int failed");
@@ -452,7 +497,7 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
     if (!isOk) {
         return false;
     }
-    ani_int enumVal;
+    ani_int enumVal = 0;
     isOk = GetObjectEnumValuePropertyByName(clsName, "status", enumVal);
     if (!isOk) {
         return false;
@@ -469,13 +514,13 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
     if (!IsInstanceOf(clsName)) {
         return false;
     }
-    ani_size arrayLength;
+    ani_size arrayLength = 0;
     auto status = env_->Array_GetLength(static_cast<ani_array>(obj_), &arrayLength);
     if (status != ANI_OK) {
         LOG_ERROR("Array_GetLength failed");
         return false;
     }
-    for (int i = 0; i < int(arrayLength); i++) {
+    for (ani_size i = 0; i < arrayLength; i++) {
         ani_ref result;
         status = env_->Array_Get(static_cast<ani_array>(obj_), i, &result);
         if (status != ANI_OK) {
@@ -511,11 +556,11 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
     ani_class cls;
     auto status = env_->FindClass(clsName.c_str(), &cls);
     if (status != ANI_OK) {
-        LOG_ERROR("FindClass failed");
+        LOG_ERROR("FindClass failed, status=%{public}d", status);
         return false;
     }
 
-    ani_boolean ret;
+    ani_boolean ret = false;
     env_->Object_InstanceOf(obj_, cls, &ret);
     if (!ret) {
         return false;
@@ -527,7 +572,7 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
         return false;
     }
 
-    ani_long longNum;
+    ani_long longNum = 0;
     if (ANI_OK != env_->Object_CallMethod_Long(obj_, getLongMethod, &longNum)) {
         LOG_ERROR("Object_CallMethod_Long failed");
         return false;
@@ -616,7 +661,7 @@ std::optional<double> OptionalAccessor::Convert<double>()
         return std::nullopt;
     }
 
-    ani_double aniValue;
+    ani_double aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return std::nullopt;
@@ -632,7 +677,7 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
         return std::nullopt;
     }
 
-    ani_size strSize;
+    ani_size strSize = 0;
     env_->String_GetUTF8Size(static_cast<ani_string>(obj_), &strSize);
 
     std::vector<char> buffer(strSize + 1);
@@ -648,34 +693,34 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
 
 std::string AniStringUtils::ToStd(ani_env *env, ani_string ani_str)
 {
+    if (env == nullptr || ani_str == nullptr) {
+        LOG_ERROR("[ANI] Invalid parameters");
+        return std::string();
+    }
     ani_size strSize = 0;
     auto status = env->String_GetUTF8Size(ani_str, &strSize);
     if (ANI_OK != status) {
-        LOG_INFO("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        LOG_ERROR("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
         return std::string();
     }
-
-    std::vector<char> buffer(strSize + 1); // +1 for null terminator
-    char *utf8Buffer = buffer.data();
-
-    // String_GetUTF8 Supportted by https://gitee.com/openharmony/arkcompiler_runtime_core/pulls/3416
-    ani_size bytesWritten = 0;
-    status = env->String_GetUTF8(ani_str, utf8Buffer, strSize + 1, &bytesWritten);
+    if (strSize == 0) {
+        return std::string();
+    }
+    std::string result(strSize + 1, '\0');
+    status = env->String_GetUTF8(ani_str, result.data(), result.size(), &strSize);
     if (ANI_OK != status) {
-        LOG_INFO("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        LOG_ERROR("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
         return std::string();
     }
-
-    utf8Buffer[bytesWritten] = '\0';
-    std::string content = std::string(utf8Buffer);
-    return content;
+    result.resize(strSize);
+    return result;
 }
 
-ani_string AniStringUtils::ToAni(ani_env *env, const std::string& str)
+ani_string AniStringUtils::ToAni(ani_env *env, const std::string &str)
 {
     ani_string aniStr = nullptr;
     if (ANI_OK != env->String_NewUTF8(str.data(), str.size(), &aniStr)) {
-        LOG_INFO("[ANI] Unsupported ANI_VERSION_1");
+        LOG_ERROR("[ANI] Unsupported ANI_VERSION_1");
         return nullptr;
     }
     return aniStr;

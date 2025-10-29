@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 #define LOG_TAG "AniRdbUtils"
-#include "ani_utils.h"
 #include "ani_rdb_utils.h"
-#include "ani_ability_utils.h"
-#include "logger.h"
 
 #include <string>
 
-#include "js_utils.h"
+#include "ani_ability_utils.h"
+#include "ani_base_context.h"
+#include "ani_utils.h"
 #include "js_ability.h"
-#include "rdb_sql_utils.h"
-#include "rdb_store_config.h"
+#include "js_utils.h"
+#include "logger.h"
 #include "napi_rdb_error.h"
 #include "rdb_helper.h"
-#include "ani_base_context.h"
+#include "rdb_sql_utils.h"
+#include "rdb_store_config.h"
 
 namespace ani_rdbutils {
 using namespace taihe;
@@ -60,11 +60,10 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
 std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
     ::taihe::array<::ohos::data::relationalStore::Asset> const &assets)
 {
-    std::vector<OHOS::NativeRdb::AssetValue> result(assets.size());
-    std::transform(assets.begin(), assets.end(), result.begin(), [](::ohos::data::relationalStore::Asset c) {
-        OHOS::NativeRdb::AssetValue value = AssetToNative(c);
-        return value;
-    });
+    std::vector<OHOS::NativeRdb::AssetValue> result;
+    result.reserve(assets.size());
+    std::transform(assets.begin(), assets.end(), std::back_inserter(result),
+        [](const ::ohos::data::relationalStore::Asset &asset) { return AssetToNative(asset); });
     return result;
 }
 
@@ -85,18 +84,16 @@ std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
 std::vector<::ohos::data::relationalStore::Asset> AssetsToAni(OHOS::NativeRdb::ValueObject::Assets const &valueObj)
 {
     std::vector<::ohos::data::relationalStore::Asset> aniAssets;
-    for (auto it = valueObj.begin(); it != valueObj.end(); ++it) {
-        auto const &assetItem = *it;
-        ::ohos::data::relationalStore::Asset aniAsset = AssetToAni(assetItem);
-        aniAssets.emplace_back(aniAsset);
+    for (const auto &val : valueObj) {
+        aniAssets.emplace_back(AssetToAni(val));
     }
     return aniAssets;
 }
 
 std::vector<::ohos::data::relationalStore::Asset> AssetsToAni(OHOS::NativeRdb::ValueObject const &valueObj)
 {
-    auto nativeAseets = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
-    return AssetsToAni(nativeAseets);
+    auto nativeAssets = (OHOS::NativeRdb::ValueObject::Assets)valueObj;
+    return AssetsToAni(nativeAssets);
 }
 
 OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value)
@@ -106,43 +103,43 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
     switch (tag) {
         case TaiheValueType::tag_t::INT64: {
             valueObj.value = value.get_INT64_ref();
-        }
             break;
+        }
         case TaiheValueType::tag_t::F64: {
             valueObj.value = value.get_F64_ref();
-        }
             break;
+        }
         case TaiheValueType::tag_t::STRING: {
             valueObj.value = std::string(value.get_STRING_ref());
-        }
             break;
+        }
         case TaiheValueType::tag_t::BOOL: {
             valueObj.value = value.get_BOOL_ref();
-        }
             break;
+        }
         case TaiheValueType::tag_t::Uint8Array: {
             ::taihe::array<uint8_t> const &tmp = value.get_Uint8Array_ref();
             valueObj.value = std::vector<uint8_t>(tmp.data(), tmp.data() + tmp.size());
-        }
             break;
+        }
         case TaiheValueType::tag_t::ASSET: {
             valueObj.value = AssetToNative(value.get_ASSET_ref());
-        }
             break;
+        }
         case TaiheValueType::tag_t::ASSETS: {
             valueObj.value = AssetsToNative(value.get_ASSETS_ref());
-        }
             break;
+        }
         case TaiheValueType::tag_t::Float32Array: {
             ::taihe::array<float> const &tmp = value.get_Float32Array_ref();
             valueObj.value = std::vector<float>(tmp.begin(), tmp.end());
-        }
             break;
+        }
         case TaiheValueType::tag_t::bigint: {
             ::taihe::array<uint64_t> const &tmp = value.get_bigint_ref();
             valueObj.value = OHOS::NativeRdb::BigInteger(false, std::vector<uint64_t>(tmp.begin(), tmp.end()));
-        }
             break;
+        }
         default:
             break;
     }
@@ -155,45 +152,45 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
     switch (valueObj.GetType()) {
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_INT: {
             value = ::ohos::data::relationalStore::ValueType::make_INT64((int64_t)valueObj);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_DOUBLE: {
             value = ::ohos::data::relationalStore::ValueType::make_F64((double)valueObj);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_STRING: {
             value = ::ohos::data::relationalStore::ValueType::make_STRING((std::string)valueObj);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BOOL: {
             value = ::ohos::data::relationalStore::ValueType::make_BOOL((bool)valueObj);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BLOB: {
             auto temp = (OHOS::NativeRdb::ValueObject::Blob)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Uint8Array(temp);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSET: {
             auto temp = (OHOS::NativeRdb::ValueObject::Asset)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_ASSET(AssetToAni(temp));
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_ASSETS: {
             auto temp = AssetsToAni(valueObj);
             value = ::ohos::data::relationalStore::ValueType::make_ASSETS(temp);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_VECS: {
             auto temp = (OHOS::NativeRdb::ValueObject::FloatVector)valueObj;
             value = ::ohos::data::relationalStore::ValueType::make_Float32Array(temp);
-        }
             break;
+        }
         case OHOS::NativeRdb::ValueObject::TypeId::TYPE_BIGINT: {
             auto temp = ((OHOS::NativeRdb::ValueObject::BigInt)valueObj).Value();
             value = ::ohos::data::relationalStore::ValueType::make_bigint(temp);
-        }
             break;
+        }
         default:
             break;
     }
@@ -203,25 +200,19 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
 OHOS::NativeRdb::ValuesBucket MapValuesToNative(
     taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values)
 {
-    OHOS::NativeRdb::ValuesBucket bucket;
     std::map<std::string, OHOS::NativeRdb::ValueObject> valueMap;
-    for (auto it = values.begin(); it != values.end(); ++it) {
-        auto const &[key, value] = *it;
-        OHOS::NativeRdb::ValueObject temp = ValueTypeToNative(value);
-        valueMap[std::string(key)] = temp;
+    for (const auto &[key, value] : values) {
+        valueMap.emplace(std::string(key), ValueTypeToNative(value));
     }
-    bucket = OHOS::NativeRdb::ValuesBucket(valueMap);
-    return bucket;
+    return OHOS::NativeRdb::ValuesBucket(std::move(valueMap));
 }
 
 std::vector<OHOS::NativeRdb::ValueObject> ArrayValuesToNative(
     taihe::array_view<::ohos::data::relationalStore::ValueType> const &values)
 {
     std::vector<OHOS::NativeRdb::ValueObject> nativeValues;
-    for (auto it = values.begin(); it != values.end(); ++it) {
-        auto const &value = *it;
-        OHOS::NativeRdb::ValueObject temp = ValueTypeToNative(value);
-        nativeValues.emplace_back(temp);
+    for (const auto &val : values) {
+        nativeValues.emplace_back(ValueTypeToNative(val));
     }
     return nativeValues;
 }
@@ -230,10 +221,8 @@ OHOS::NativeRdb::ValuesBuckets BucketValuesToNative(
     taihe::array_view<taihe::map<taihe::string, ::ohos::data::relationalStore::ValueType>> const &values)
 {
     OHOS::NativeRdb::ValuesBuckets buckets;
-    for (auto it = values.begin(); it != values.end(); ++it) {
-        auto const &value = *it;
-        OHOS::NativeRdb::ValuesBucket bucket = MapValuesToNative(value);
-        buckets.Put(bucket);
+    for (const auto &val : values) {
+        buckets.Put(MapValuesToNative(val));
     }
     return buckets;
 }
@@ -261,8 +250,7 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     return value;
 }
 
-OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
-    const ::ohos::data::relationalStore::StoreConfig &storeConfig)
+OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ::ohos::data::relationalStore::StoreConfig &storeConfig)
 {
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
     if (storeConfig.encrypt.has_value()) {
@@ -306,8 +294,8 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     return rdbConfig;
 }
 
-std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRdbRealPath(
-    ani_env *env, ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRdbRealPath(ani_env *env,
+    ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param)
 {
     using namespace OHOS::AppDataMgrJsKit::JSUtils;
@@ -338,7 +326,7 @@ std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRd
         }
         std::string groupDir;
         int errCode = stageContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
-        CHECK_RETURN_CORE(errCode == E_OK || !groupDir.empty(), RDB_DO_NOTHING,
+        CHECK_RETURN_CORE(errCode == E_OK && !groupDir.empty(), RDB_DO_NOTHING,
             std::make_tuple(ERR, std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID)));
         baseDir = groupDir;
     }
@@ -349,8 +337,7 @@ std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRd
             std::make_tuple(ERR, std::make_shared<PathError>()));
         auto [realPath, errorCode] =
             RdbSqlUtils::GetCustomDatabasePath(rdbConfig.rootDir, rdbConfig.name, rdbConfig.customDir);
-        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<PathError>()));
+        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING, std::make_tuple(ERR, std::make_shared<PathError>()));
         rdbConfig.path = realPath;
         return std::make_tuple(E_OK, nullptr);
     }
@@ -393,13 +380,13 @@ void InitRdbStoreConfig(OHOS::NativeRdb::RdbStoreConfig &nativeStoreConfig,
     nativeStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
 }
 
-std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniContext,
-    OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig)
+std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
+    ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig)
 {
     using namespace OHOS::RelationalStoreJsKit;
     using namespace OHOS::NativeRdb;
 
-    OHOS::NativeRdb::RdbStoreConfig empty ("");
+    OHOS::NativeRdb::RdbStoreConfig empty("");
     if (!rdbConfig.cryptoParam.IsValid()) {
         taihe::set_business_error(E_PARAM_ERROR, "Illegal CryptoParam.");
         return std::make_pair(false, empty);

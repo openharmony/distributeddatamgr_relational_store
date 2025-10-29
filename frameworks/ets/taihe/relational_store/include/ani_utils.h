@@ -17,7 +17,9 @@
 #define ANI_UTILS_H
 
 #include <ani.h>
+
 #include <cstdarg>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -25,19 +27,30 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
-#include <iostream>
 
 namespace ani_utils {
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result,
-    bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result,
-    bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result,
-    bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result,
-    bool optional = false);
-int32_t AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, ani_object &result,
-    bool optional = false);
+enum class ErrorHandling {
+    STRICT,  // Strict mode: All errors are returned.
+    OPTIONAL // Optional mode: Only handle 'ANID_NOT_SFOUND' errors.
+};
+
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
+
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, bool &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
+
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, int32_t &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
+
+ani_status GetEnumValueInt(ani_env *env, ani_object ani_obj, const char *property, int32_t &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
+
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, uint32_t &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
+
+ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, ani_object &result,
+    ErrorHandling handling = ErrorHandling::STRICT);
 
 class AniObjectUtils {
 public:
@@ -48,20 +61,20 @@ public:
     }
 
     template<typename T>
-    static T* Unwrap(ani_env *env, ani_object object, const char *propName = "nativePtr")
+    static T *Unwrap(ani_env *env, ani_object object, const char *propName = "nativePtr")
     {
-        ani_long nativePtr;
+        ani_long nativePtr = 0;
         if (ANI_OK != env->Object_GetFieldByName_Long(object, propName, &nativePtr)) {
             return nullptr;
         }
-        return reinterpret_cast<T*>(nativePtr);
+        return reinterpret_cast<T *>(nativePtr);
     }
 };
 
 class AniStringUtils {
 public:
     static std::string ToStd(ani_env *env, ani_string ani_str);
-    static ani_string ToAni(ani_env *env, const std::string& str);
+    static ani_string ToAni(ani_env *env, const std::string &str);
 };
 
 class UnionAccessor {
@@ -70,13 +83,19 @@ public:
     {
     }
 
-    bool IsInstanceOf(const std::string& cls_name)
+    bool IsInstanceOf(const std::string &cls_name)
     {
         ani_class cls;
-        env_->FindClass(cls_name.c_str(), &cls);
+        auto status = env_->FindClass(cls_name.c_str(), &cls);
+        if (status != ANI_OK) {
+            return false;
+        }
 
-        ani_boolean ret;
-        env_->Object_InstanceOf(obj_, cls, &ret);
+        ani_boolean ret = false;
+        status = env_->Object_InstanceOf(obj_, cls, &ret);
+        if (status != ANI_OK) {
+            return false;
+        }
         return ret;
     }
 
@@ -113,9 +132,9 @@ public:
     template<typename T>
     bool TryConvertArray(std::vector<T> &value);
 
-    bool GetObjectRefPropertyByName(const std::string clsName, const char *name, ani_ref &val);
-    bool GetObjectStringPropertyByName(const std::string clsName, const char *name, std::string &val);
-    bool GetObjectEnumValuePropertyByName(const std::string clsName, const char *name, ani_int &val);
+    bool GetObjectRefPropertyByName(const std::string &clsName, const char *name, ani_ref &val);
+    bool GetObjectStringPropertyByName(const std::string &clsName, const char *name, std::string &val);
+    bool GetObjectEnumValuePropertyByName(const std::string &clsName, const char *name, ani_int &val);
     ani_ref AniIteratorNext(ani_ref interator, bool &isSuccess);
 
 private:
@@ -131,7 +150,7 @@ public:
 
     bool IsUndefined()
     {
-        ani_boolean isUndefined;
+        ani_boolean isUndefined = false;
         env_->Reference_IsUndefined(obj_, &isUndefined);
         return isUndefined;
     }
@@ -144,6 +163,72 @@ private:
     ani_object obj_;
 };
 
+class PropertyErrorHandler {
+public:
+    static ani_status HandleError(
+        ani_status status, const char *property, ErrorHandling handling, const char *type_name);
+
+private:
+    static ani_status HandleNotFound(const char *property, ErrorHandling handling, const char *type_name);
+    static ani_status HandleSystemError(ani_status status, const char *property, const char *type_name);
+};
+
+template<typename T>
+constexpr const char *GetTypeName()
+{
+    return "unknown";
+}
+
+template<>
+constexpr const char *GetTypeName<bool>()
+{
+    return "bool";
+}
+
+template<>
+constexpr const char *GetTypeName<int32_t>()
+{
+    return "int32";
+}
+
+template<>
+constexpr const char *GetTypeName<uint32_t>()
+{
+    return "uint32";
+}
+
+template<>
+constexpr const char *GetTypeName<ani_object>()
+{
+    return "object";
+}
+
+template<>
+constexpr const char *GetTypeName<ani_enum_item>()
+{
+    return "ani_enum_item";
+}
+
+template<typename NativeType, typename AniType>
+ani_status AniGetPropertyImpl(ani_env *env, ani_object ani_obj, const char *property, NativeType &result,
+    ErrorHandling handling, ani_status (ani_env::*getter)(ani_object, const char *, AniType *))
+{
+    if (getter == nullptr) {
+        return ANI_INVALID_ARGS;
+    }
+
+    if (env == nullptr) {
+        return ANI_INVALID_ARGS;
+    }
+    AniType ani_value;
+    ani_status status = (env->*getter)(ani_obj, property, &ani_value);
+
+    if (status != ANI_OK) {
+        return HandlePropertyError(status, property, handling, GetTypeName<NativeType>());
+    }
+
+    result = static_cast<NativeType>(ani_value);
+    return ANI_OK;
+}
 } //namespace ani_utils
 #endif
-
