@@ -35,6 +35,11 @@ struct RdbKnowledgeParser {
     std::string path;
 };
 
+struct RdbProcessSequence {
+    std::string columnName;
+    std::string sortType;
+};
+
 struct RdbKnowledgeField {
     std::string columnName;
     std::vector<std::string> type;
@@ -50,6 +55,7 @@ struct RdbKnowledgeTable {
     std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
     std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
+    RdbProcessSequence processSequence;
 };
 
 struct RdbKnowledgeProcess {
@@ -88,7 +94,8 @@ public:
     /**
      * @brief Start build knowledge data task.
      */
-    API_EXPORT virtual void StartTask(const std::string &dbName) = 0;
+    API_EXPORT virtual void StartTask(const std::string &dbName,
+        const DistributedRdb::RdbChangedData &rdbChangedData) = 0;
 
     /**
      * @brief Stop build knowledge data task.
