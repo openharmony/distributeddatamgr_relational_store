@@ -1353,7 +1353,15 @@ int SqliteConnection::TryCheckPoint(bool timeout)
 
     std::shared_ptr<Connection> autoCheck(slaveConnection_.get(), [this, timeout](Connection *conn) {
         if (conn != nullptr && backupId_ == TaskExecutor::INVALID_TASK_ID) {
-            conn->TryCheckPoint(timeout);
+            int rc = conn->TryCheckPoint(timeout);
+            if (rc == E_SQLITE_CORRUPT) {
+                RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
+                slaveConnection_ = nullptr;
+                DeleteCorruptSlave(slaveConfig.GetPath());
+                Reportor::ReportCorrupted(Reportor::Create(slaveConfig,
+                    SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
+                LOG_ERROR("slave CheckPoint failed err:%{public}d, errno:%{public}d", rc, errno);
+            }
         }
     });
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
@@ -1656,18 +1664,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
         }
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
-    rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
-    if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
-        if (!isRestore) {
-            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
-        }
-        LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
-        return E_OK;
-    }
-    *curStatus = SlaveStatus::BACKUP_FINISHED;
-    SqliteUtils::SetSlaveValid(config_.GetPath());
-    LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
-    return E_OK;
+    return SqliteBackupCheckpoint(isRestore, curStatus);
 }
 
 ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay)
@@ -2188,6 +2185,31 @@ std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
 {
     std::string suffix(BINLOG_FOLDER_SUFFIX);
     return dbPath + suffix;
+}
+
+int SqliteConnection::SqliteBackupCheckpoint(bool isRestore, std::shared_ptr<SlaveStatus> curStatus)
+{
+    int rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
+    if (!isRestore && rc == E_SQLITE_CORRUPT) {
+        RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
+        slaveConnection_ = nullptr;
+        DeleteCorruptSlave(slaveConfig.GetPath());
+        *curStatus = SlaveStatus::BACKUP_INTERRUPT;
+        Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
+        LOG_ERROR("CheckPoint failed, remove slave, err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return rc;
+    }
+    if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        if (!isRestore) {
+            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
+        }
+        LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return E_OK;
+    }
+    *curStatus = SlaveStatus::BACKUP_FINISHED;
+    SqliteUtils::SetSlaveValid(config_.GetPath());
+    LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
+    return E_OK;
 }
 
 ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdxCount)
