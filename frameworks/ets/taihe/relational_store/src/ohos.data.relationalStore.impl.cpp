@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 #define LOG_TAG "AniRelationalStoreImpl"
-#include "ohos.data.relationalStore.proj.hpp"
 #include "ohos.data.relationalStore.impl.hpp"
-#include "taihe/runtime.hpp"
-#include "stdexcept"
 
-#include "ani_utils.h"
-#include "ani_rdb_utils.h"
-#include "logger.h"
 #include "abs_rdb_predicates.h"
+#include "ani_rdb_utils.h"
+#include "ani_utils.h"
 #include "datashare_abs_predicates.h"
+#include "js_proxy.h"
+#include "logger.h"
 #include "napi_rdb_js_utils.h"
-#include "rdb_store_config.h"
+#include "ohos.data.relationalStore.proj.hpp"
+#include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_predicates.h"
 #include "rdb_result_set_bridge.h"
 #include "rdb_sql_utils.h"
-#include "rdb_helper.h"
-#include "rdb_predicates.h"
-#include "rdb_utils.h"
+#include "rdb_store_config.h"
 #include "rdb_types.h"
-#include "js_proxy.h"
+#include "rdb_utils.h"
 #include "result_set_bridge.h"
+#include "stdexcept"
+#include "taihe/runtime.hpp"
 
 using namespace taihe;
 using namespace ohos::data::relationalStore;
@@ -60,7 +60,7 @@ void ThrowNonSystemError()
     }
 }
 
-void ThrowParamError(const char* message)
+void ThrowParamError(const char *message)
 {
     if (message == nullptr) {
         return;
@@ -370,12 +370,10 @@ public:
             ThrowInnerError(errCode);
             return {};
         }
-        ohos::data::relationalStore::Asset aniempty = {};
-        std::vector<ohos::data::relationalStore::Asset> resultTemp(result.size(), aniempty);
-        std::transform(result.begin(), result.end(), resultTemp.begin(), [](OHOS::NativeRdb::AssetValue c) {
-            ohos::data::relationalStore::Asset anitemp = ani_rdbutils::AssetToAni(c);
-            return anitemp;
-        });
+        std::vector<ohos::data::relationalStore::Asset> resultTemp;
+        resultTemp.reserve(result.size());
+        std::transform(result.begin(), result.end(), std::back_inserter(resultTemp),
+            [](const OHOS::NativeRdb::AssetValue &asset) { return ani_rdbutils::AssetToAni(asset); });
         return array<ohos::data::relationalStore::Asset>(::taihe::copy_data_t{}, resultTemp.data(), resultTemp.size());
     }
 
@@ -389,8 +387,7 @@ public:
         if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errCode);
         }
-        ValueType aniresult = ani_rdbutils::ValueObjectToAni(object);
-        return aniresult;
+        return ani_rdbutils::ValueObjectToAni(object);
     }
 
     array<float> GetFloat32Array(int32_t columnIndex)
@@ -463,9 +460,9 @@ public:
         nativeRdbPredicates_ = std::make_shared<OHOS::NativeRdb::RdbPredicates>(name);
     }
 
-    int64_t GetSpecificImplPtr()
+    uintptr_t GetSpecificImplPtr()
     {
-        return reinterpret_cast<int64_t>(this);
+        return reinterpret_cast<uintptr_t>(this);
     }
 
     void InnerInDevices(array_view<string> devices)
@@ -576,8 +573,7 @@ public:
         }
     }
 
-    void InnerBetween(string_view field, ValueType const &low,
-        ValueType const &high)
+    void InnerBetween(string_view field, ValueType const &low, ValueType const &high)
     {
         OHOS::NativeRdb::ValueObject lowValueObj = ani_rdbutils::ValueTypeToNative(low);
         OHOS::NativeRdb::ValueObject highValueObj = ani_rdbutils::ValueTypeToNative(high);
@@ -586,8 +582,7 @@ public:
         }
     }
 
-    void InnerNotBetween(string_view field, ValueType const &low,
-        ValueType const &high)
+    void InnerNotBetween(string_view field, ValueType const &low, ValueType const &high)
     {
         OHOS::NativeRdb::ValueObject lowValueObj = ani_rdbutils::ValueTypeToNative(low);
         OHOS::NativeRdb::ValueObject highValueObj = ani_rdbutils::ValueTypeToNative(high);
@@ -680,11 +675,10 @@ public:
 
     void InnerInValues(string_view field, array_view<ValueType> value)
     {
-        std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
-        std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
-            OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-            return obj;
-        });
+        std::vector<OHOS::NativeRdb::ValueObject> para;
+        para.reserve(value.size());
+        std::transform(value.begin(), value.end(), std::back_inserter(para),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->In(std::string(field), para);
         }
@@ -692,11 +686,10 @@ public:
 
     void InnerNotInValues(string_view field, array_view<ValueType> value)
     {
-        std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
-        std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
-            OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-            return obj;
-        });
+        std::vector<OHOS::NativeRdb::ValueObject> para;
+        para.reserve(value.size());
+        std::transform(value.begin(), value.end(), std::back_inserter(para),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         if (nativeRdbPredicates_ != nullptr) {
             nativeRdbPredicates_->NotIn(std::string(field), para);
         }
@@ -759,8 +752,8 @@ public:
         }
     }
 
-    int64_t InsertSync(string_view table, map_view<::taihe::string, ValueType> values,
-        optional_view<ConflictResolution> conflict)
+    int64_t InsertSync(
+        string_view table, map_view<::taihe::string, ValueType> values, optional_view<ConflictResolution> conflict)
     {
         if (nativeTransaction_ == nullptr) {
             LOG_ERROR("nativeTransaction_ is nullptr");
@@ -772,8 +765,7 @@ public:
         }
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
-        auto [errcode, output] = nativeTransaction_->Insert(
-            std::string(table), bucket, nativeConflictValue);
+        auto [errcode, output] = nativeTransaction_->Insert(std::string(table), bucket, nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
             return output;
@@ -800,8 +792,8 @@ public:
         return output;
     }
 
-    int64_t UpdateSync(map_view<string, ValueType> values, weak::RdbPredicates predicates,
-        optional_view<ConflictResolution> conflict)
+    int64_t UpdateSync(
+        map_view<string, ValueType> values, weak::RdbPredicates predicates, optional_view<ConflictResolution> conflict)
     {
         if (nativeTransaction_ == nullptr) {
             LOG_ERROR("nativeTransaction_ is nullptr");
@@ -811,7 +803,11 @@ public:
         if (conflict.has_value()) {
             conflictres = conflict.value().get_key();
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return ERR_NULL;
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -819,8 +815,7 @@ public:
         }
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
-        auto [errcode, rows] = nativeTransaction_->Update(
-            bucket, *rdbPredicateNative, nativeConflictValue);
+        auto [errcode, rows] = nativeTransaction_->Update(bucket, *rdbPredicateNative, nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
             return rows;
@@ -834,7 +829,11 @@ public:
             LOG_ERROR("nativeTransaction_ is nullptr");
             return ERR_NULL;
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return ERR_NULL;
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -843,7 +842,7 @@ public:
         auto [errcode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
-            return 0;
+            return rows;
         }
         return rows;
     }
@@ -859,7 +858,11 @@ public:
         if (columns.has_value()) {
             stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return make_holder<ResultSetImpl, ResultSet>();
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -879,10 +882,8 @@ public:
         std::vector<OHOS::NativeRdb::ValueObject> para;
         if (args.has_value()) {
             para.resize(args.value().size());
-            std::transform(args.value().begin(), args.value().end(), para.begin(), [](ValueType c) {
-                OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-                return obj;
-            });
+            std::transform(args.value().begin(), args.value().end(), para.begin(),
+                [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         }
         auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
@@ -898,10 +899,8 @@ public:
         std::vector<OHOS::NativeRdb::ValueObject> para;
         if (args.has_value()) {
             para.resize(args.value().size());
-            std::transform(args.value().begin(), args.value().end(), para.begin(), [](ValueType c) {
-                OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-                return obj;
-            });
+            std::transform(args.value().begin(), args.value().end(), para.begin(),
+                [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         }
         auto [errcode, nativeValue] = nativeTransaction_->Execute(std::string(sql), para);
         if (errcode != OHOS::NativeRdb::E_OK) {
@@ -1033,8 +1032,8 @@ public:
         return InsertWithConflict(table, values, ConflictResolution::key_t::ON_CONFLICT_NONE);
     }
 
-    int64_t InsertSync(string_view table, map_view<string, ValueType> values,
-        optional_view<ConflictResolution> conflict)
+    int64_t InsertSync(
+        string_view table, map_view<string, ValueType> values, optional_view<ConflictResolution> conflict)
     {
         ConflictResolution conflictres = ConflictResolution::key_t::ON_CONFLICT_NONE;
         if (conflict.has_value()) {
@@ -1068,8 +1067,8 @@ public:
         return UpdateSync(values, predicates, emptyConflict);
     }
 
-    int64_t UpdateSync(map_view<string, ValueType> values, weak::RdbPredicates predicates,
-        optional_view<ConflictResolution> conflict)
+    int64_t UpdateSync(
+        map_view<string, ValueType> values, weak::RdbPredicates predicates, optional_view<ConflictResolution> conflict)
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -1079,7 +1078,11 @@ public:
         if (conflict.has_value()) {
             conflictres = conflict.value().get_key();
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return ERR_NULL;
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -1089,8 +1092,7 @@ public:
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
         int output = 0;
         int errcode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicateNative->GetTableName(), bucket,
-            rdbPredicateNative->GetWhereClause(), rdbPredicateNative->GetBindArgs(),
-            nativeConflictValue);
+            rdbPredicateNative->GetWhereClause(), rdbPredicateNative->GetBindArgs(), nativeConflictValue);
         if (errcode != OHOS::NativeRdb::E_OK) {
             ThrowInnerError(errcode);
             return ERR_NULL;
@@ -1098,8 +1100,8 @@ public:
         return output;
     }
 
-    int64_t UpdateDataShareSync(::taihe::string_view table, ::ohos::data::relationalStore::ValuesBucket const &values,
-        uintptr_t predicates)
+    int64_t UpdateDataShareSync(
+        ::taihe::string_view table, ::ohos::data::relationalStore::ValuesBucket const &values, uintptr_t predicates)
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -1137,7 +1139,11 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return ERR_NULL;
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -1206,7 +1212,11 @@ public:
         if (columns.has_value()) {
             stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
         }
-        RdbPredicatesImpl* impl = reinterpret_cast<RdbPredicatesImpl*>(predicates->GetSpecificImplPtr());
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return make_holder<ResultSetImpl, ResultSet>();
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         if (rdbPredicateNative == nullptr) {
             LOG_ERROR("rdbPredicateNative is nullptr");
@@ -1226,8 +1236,8 @@ public:
         return QueryDataShareWithColumnSync(table, predicates, empty);
     }
 
-    ResultSet QueryDataShareWithColumnSync(string_view table, uintptr_t predicates,
-        optional_view<array<::taihe::string>> columns)
+    ResultSet QueryDataShareWithColumnSync(
+        string_view table, uintptr_t predicates, optional_view<array<::taihe::string>> columns)
     {
         if (nativeRdbStore_ == nullptr) {
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -1274,10 +1284,8 @@ public:
         std::vector<OHOS::NativeRdb::ValueObject> para;
         if (bindArgs.has_value()) {
             para.resize(bindArgs.value().size());
-            std::transform(bindArgs.value().begin(), bindArgs.value().end(), para.begin(), [](ValueType c) {
-                OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-                return obj;
-            });
+            std::transform(bindArgs.value().begin(), bindArgs.value().end(), para.begin(),
+                [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         }
         std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet = nullptr;
         if (nativeRdbStore_->GetDbType() == OHOS::NativeRdb::DB_VECTOR) {
@@ -1292,8 +1300,8 @@ public:
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
-    map<PRIKeyType, uintptr_t> GetModifyTimeSync(string_view table, string_view columnName,
-        array_view<PRIKeyType> primaryKeys)
+    map<PRIKeyType, uintptr_t> GetModifyTimeSync(
+        string_view table, string_view columnName, array_view<PRIKeyType> primaryKeys)
     {
         TH_THROW(std::runtime_error, "getModifyTimeSync not implemented");
     }
@@ -1313,8 +1321,7 @@ public:
         TH_THROW(std::runtime_error, "cleanDirtyDataWithOptionCursor not implemented");
     }
 
-    ResultSet QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,
-        optional_view<array<string>> columns)
+    ResultSet QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates, optional_view<array<string>> columns)
     {
         return make_holder<ResultSetImpl, ResultSet>();
     }
@@ -1361,10 +1368,8 @@ public:
         }
         array<ValueType> const &value = bindArgs.value();
         std::vector<OHOS::NativeRdb::ValueObject> para(value.size());
-        std::transform(value.begin(), value.end(), para.begin(), [](ValueType c) {
-            OHOS::NativeRdb::ValueObject obj = ani_rdbutils::ValueTypeToNative(c);
-            return obj;
-        });
+        std::transform(value.begin(), value.end(), para.begin(),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         if (ani_rdbutils::HasDuplicateAssets(para)) {
             ThrowParamError("Duplicate assets are not allowed");
             return;
@@ -1534,14 +1539,14 @@ public:
         TH_THROW(std::runtime_error, "setDistributedTablesWithType not implemented");
     }
 
-    void SetDistributedTablesWithConfig(array_view<string> tables, DistributedType type,
-        DistributedConfig const &config)
+    void SetDistributedTablesWithConfig(
+        array_view<string> tables, DistributedType type, DistributedConfig const &config)
     {
         TH_THROW(std::runtime_error, "setDistributedTablesWithConfig not implemented");
     }
 
-    void SetDistributedTablesWithOptionConfig(array_view<string> tables, optional_view<DistributedType> type,
-        optional_view<DistributedConfig> config)
+    void SetDistributedTablesWithOptionConfig(
+        array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config)
     {
         TH_THROW(std::runtime_error, "setDistributedTablesWithOptionConfig not implemented");
     }
@@ -1556,25 +1561,25 @@ public:
         TH_THROW(std::runtime_error, "syncSync not implemented");
     }
 
-    void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const&)> progress)
+    void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress)
     {
         TH_THROW(std::runtime_error, "cloudSyncWithProgress not implemented");
     }
 
-    void CloudSyncWithTable(SyncMode mode, array_view<string> tables,
-        callback_view<void(ProgressDetails const&)> progress)
+    void CloudSyncWithTable(
+        SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress)
     {
         TH_THROW(std::runtime_error, "cloudSyncWithTable not implemented");
     }
 
-    void CloudSyncWithPredicates(SyncMode mode, weak::RdbPredicates predicates,
-        callback_view<void(ProgressDetails const&)> progress)
+    void CloudSyncWithPredicates(
+        SyncMode mode, weak::RdbPredicates predicates, callback_view<void(ProgressDetails const &)> progress)
     {
         TH_THROW(std::runtime_error, "cloudSyncWithPredicates not implemented");
     }
 
-    ResultSet RemoteQuerySync(string_view device, string_view table, weak::RdbPredicates predicates,
-        array_view<string> columns)
+    ResultSet RemoteQuerySync(
+        string_view device, string_view table, weak::RdbPredicates predicates, array_view<string> columns)
     {
         return make_holder<ResultSetImpl, ResultSet>();
     }
@@ -1639,8 +1644,8 @@ public:
         TH_THROW(std::runtime_error, "attachWithWaitTime not implemented");
     }
 
-    int32_t AttachWithContext(uintptr_t context, StoreConfig const &config,
-        string_view attachName, optional_view<int64_t> waitTime)
+    int32_t AttachWithContext(
+        uintptr_t context, StoreConfig const &config, string_view attachName, optional_view<int64_t> waitTime)
     {
         TH_THROW(std::runtime_error, "attachWithContext not implemented");
     }
@@ -1718,17 +1723,15 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     rdbConfig.name = std::string(name);
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
     if (!configRet.first) {
-        LOG_INFO("AniGetRdbStoreConfig failed");
+        LOG_ERROR("AniGetRdbStoreConfig failed");
         return;
     }
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
-    int errCodeSqlite = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(
-        storeConfig, OHOS::AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20);
+    int errCodeSqlite = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
-    int errCodeVector = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(
-        storeConfig, OHOS::AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20);
+    int errCodeVector = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     LOG_INFO("deleteRdbStoreWithName sqlite %{public}d, vector %{public}d", errCodeSqlite, errCodeVector);
 }
 
@@ -1738,17 +1741,16 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
     if (!configRet.first) {
-        LOG_INFO("AniGetRdbStoreConfig failed");
+        LOG_ERROR("AniGetRdbStoreConfig failed");
         return;
     }
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
-    int errcode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(
-        storeConfig, OHOS::AppDataMgrJsKit::JSUtils::GetHapVersion() >= 20);
+    int errcode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     LOG_INFO("deleteRdbStoreWithConfig errcode %{public}d", errcode);
 }
 
-}  // namespace
+} // namespace
 
 // Since these macros are auto-generate, lint will cause false positive.
 // NOLINTBEGIN
