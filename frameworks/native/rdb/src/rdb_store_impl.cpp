@@ -933,7 +933,7 @@ void RdbStoreImpl::InitDelayNotifier()
             if (realHelper == nullptr) {
                 LOG_WARN("knowledge helper is nullptr");
             } else {
-                realHelper->DonateKnowledgeData();
+                realHelper->DonateKnowledgeData(rdbChangedData);
             }
         }
         if (!IsNotifyService(rdbChangedData)) {
@@ -3163,7 +3163,7 @@ void RdbStoreImpl::SetKnowledgeSchema()
     isKnowledgeSchemaReady_ = true;
     auto helper = GetKnowledgeSchemaHelper();
     helper->Init(config_, schema);
-    helper->DonateKnowledgeData();
+    helper->DonateKnowledgeData({});
 }
 
 int RdbStoreImpl::InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
