@@ -31,7 +31,7 @@
 namespace ani_utils {
 enum class ErrorHandling {
     STRICT,  // Strict mode: All errors are returned.
-    OPTIONAL // Optional mode: Only handle 'ANID_NOT_SFOUND' errors.
+    OPTIONAL // Optional mode: Skip 'ANI_NOT_FOUND' error, still handle other errors.
 };
 
 ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result,
@@ -90,7 +90,6 @@ public:
         if (status != ANI_OK) {
             return false;
         }
-
         ani_boolean ret = false;
         status = env_->Object_InstanceOf(obj_, cls, &ret);
         if (status != ANI_OK) {
@@ -209,24 +208,24 @@ constexpr const char *GetTypeName<ani_enum_item>()
     return "ani_enum_item";
 }
 
+template<typename AniType>
+using PropertyGetter = ani_status (ani_env::*)(ani_object, const char *, AniType *);
+
 template<typename NativeType, typename AniType>
 ani_status AniGetPropertyImpl(ani_env *env, ani_object ani_obj, const char *property, NativeType &result,
-    ErrorHandling handling, ani_status (ani_env::*getter)(ani_object, const char *, AniType *))
+    ErrorHandling handling, PropertyGetter<AniType> getter)
 {
     if (getter == nullptr) {
         return ANI_INVALID_ARGS;
     }
-
     if (env == nullptr) {
         return ANI_INVALID_ARGS;
     }
     AniType ani_value;
     ani_status status = (env->*getter)(ani_obj, property, &ani_value);
-
     if (status != ANI_OK) {
         return HandlePropertyError(status, property, handling, GetTypeName<NativeType>());
     }
-
     result = static_cast<NativeType>(ani_value);
     return ANI_OK;
 }

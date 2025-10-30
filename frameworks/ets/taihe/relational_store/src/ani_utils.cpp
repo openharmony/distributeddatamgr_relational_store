@@ -20,6 +20,7 @@
 #include "asset_value.h"
 #include "big_integer.h"
 #include "logger.h"
+#include "securec.h"
 #include "values_bucket.h"
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -38,7 +39,6 @@ ani_status AniGetProperty(
     ani_object property_obj;
     ani_status status = AniGetPropertyImpl<ani_object, ani_ref>(
         env, ani_obj, property, property_obj, handling, &ani_env::Object_GetPropertyByName_Ref);
-
     if (status != ANI_OK) {
         return status;
     }
@@ -52,13 +52,10 @@ ani_status GetEnumValueInt(
     ani_object property_obj;
     ani_status status = AniGetPropertyImpl<ani_object, ani_ref>(
         env, ani_obj, property, property_obj, handling, &ani_env::Object_GetPropertyByName_Ref);
-
     if (status != ANI_OK) {
         return status;
     }
-
     status = env->EnumItem_GetValue_Int(static_cast<ani_enum_item>(property_obj), &result);
-
     if (status != ANI_OK) {
         return HandlePropertyError(status, property, handling, GetTypeName<ani_enum_item>());
     }
@@ -97,10 +94,8 @@ ani_status PropertyErrorHandler::HandleError(
     switch (status) {
         case ANI_OK:
             return ANI_OK;
-
         case ANI_NOT_FOUND:
             return PropertyErrorHandler::HandleNotFound(property, handling, type_name);
-
         default:
             return PropertyErrorHandler::HandleSystemError(status, property, type_name);
     }
@@ -255,10 +250,13 @@ bool UnionAccessor::TryConvertArray<uint8_t>(std::vector<uint8_t> &value)
         LOG_ERROR("ArrayBuffer_GetInfo failed");
         return false;
     }
-    for (size_t i = 0; i < size; i++) {
-        value.push_back(static_cast<uint8_t *>(data)[i]);
+    const size_t old_size = value.size();
+    value.resize(old_size + size);
+    errno_t result = memcpy_s(value.data() + old_size, size, data, size);
+    if (result != 0) {
+        LOG_ERROR("memcpy_s failed with error: %{public}d", result);
+        return false;
     }
-    LOG_DEBUG("convert uint8 array ok.");
     return true;
 }
 
@@ -280,7 +278,6 @@ bool UnionAccessor::TryConvertArray<float>(std::vector<float> &value)
         LOG_ERROR("ArrayBuffer data is null");
         return false;
     }
-
     if (size == 0) {
         LOG_DEBUG("ArrayBuffer is empty");
         return true;
@@ -289,11 +286,9 @@ bool UnionAccessor::TryConvertArray<float>(std::vector<float> &value)
         LOG_ERROR("ArrayBuffer size %{public}zu is not multiple of float size %{public}zu", size, sizeof(float));
         return false;
     }
-    auto count = size / sizeof(float);
-    const float *floatData = static_cast<const float *>(data);
-    const size_t oldSize = value.size();
-    value.reserve(oldSize + count);
-    value.insert(value.end(), floatData, floatData + count);
+    value = (data != nullptr
+                 ? std::vector<float>(static_cast<float *>(data), static_cast<float *>(data) + size / sizeof(float))
+                 : std::vector<float>());
     return true;
 }
 
@@ -305,7 +300,6 @@ bool UnionAccessor::TryConvertArray<std::string>(std::vector<std::string> &value
         LOG_ERROR("Object_GetPropertyByName_Double length failed");
         return false;
     }
-
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
         if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
@@ -314,7 +308,6 @@ bool UnionAccessor::TryConvertArray<std::string>(std::vector<std::string> &value
         }
         value.push_back(AniStringUtils::ToStd(env_, static_cast<ani_string>(ref)));
     }
-    LOG_DEBUG("convert string array ok.");
     return true;
 }
 
@@ -324,14 +317,12 @@ bool UnionAccessor::TryConvert<int>(int &value)
     if (!IsInstanceOfType<int>()) {
         return false;
     }
-
     ani_int aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
     value = static_cast<int>(aniValue);
-    LOG_DEBUG("convert int ok.");
     return true;
 }
 
@@ -343,7 +334,6 @@ bool UnionAccessor::TryConvert<std::monostate>(std::monostate &value)
     if (ANI_OK == status) {
         if (isNull) {
             value = std::monostate();
-            LOG_DEBUG("convert null ok.");
             return true;
         }
     }
@@ -362,14 +352,12 @@ bool UnionAccessor::TryConvert<double>(double &value)
     if (!IsInstanceOfType<double>()) {
         return false;
     }
-
     ani_double aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
     value = static_cast<double>(aniValue);
-    LOG_DEBUG("convert double ok.");
     return true;
 }
 
@@ -379,9 +367,7 @@ bool UnionAccessor::TryConvert<std::string>(std::string &value)
     if (!IsInstanceOfType<std::string>()) {
         return false;
     }
-
     value = AniStringUtils::ToStd(env_, static_cast<ani_string>(obj_));
-    LOG_DEBUG("convert string ok.");
     return true;
 }
 
@@ -391,14 +377,12 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
     if (!IsInstanceOfType<bool>()) {
         return false;
     }
-
     ani_boolean aniValue = false;
     auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
     value = static_cast<bool>(aniValue);
-    LOG_DEBUG("convert bool ok.");
     return true;
 }
 
@@ -503,7 +487,6 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
         return false;
     }
     value.status = static_cast<AssetValue::Status>(enumVal);
-    LOG_DEBUG("convert asset ok.");
     return true;
 }
 
@@ -536,7 +519,6 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
         }
         value.push_back(val);
     }
-    LOG_DEBUG("convert assets ok.");
     return true;
 }
 
@@ -559,26 +541,22 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
         LOG_ERROR("FindClass failed, status=%{public}d", status);
         return false;
     }
-
     ani_boolean ret = false;
     env_->Object_InstanceOf(obj_, cls, &ret);
     if (!ret) {
         return false;
     }
-
     ani_method getLongMethod;
     if (ANI_OK != env_->Class_FindMethod(cls, "getLong", ":l", &getLongMethod)) {
         LOG_ERROR("Class_FindMethod failed");
         return false;
     }
-
     ani_long longNum = 0;
     if (ANI_OK != env_->Object_CallMethod_Long(obj_, getLongMethod, &longNum)) {
         LOG_ERROR("Object_CallMethod_Long failed");
         return false;
     }
     value = BigInteger(longNum);
-    LOG_DEBUG("convert bigint ok.");
     return true;
 }
 
@@ -600,7 +578,6 @@ ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
         isSuccess = false;
         return nullptr;
     }
-
     if (ANI_OK != env_->Object_GetFieldByName_Boolean(static_cast<ani_object>(next), "done", &done)) {
         LOG_ERROR("Failed to check iterator done");
         isSuccess = false;
@@ -632,7 +609,6 @@ bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
             success = false;
             break;
         }
-
         ani_ref valueObj;
         if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", nullptr, &valueObj, key_value)) {
             LOG_ERROR("Failed to get value for key");
@@ -660,7 +636,6 @@ std::optional<double> OptionalAccessor::Convert<double>()
     if (IsUndefined()) {
         return std::nullopt;
     }
-
     ani_double aniValue = 0;
     auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
     if (ret != ANI_OK) {
@@ -676,16 +651,12 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
     if (IsUndefined()) {
         return std::nullopt;
     }
-
     ani_size strSize = 0;
     env_->String_GetUTF8Size(static_cast<ani_string>(obj_), &strSize);
-
     std::vector<char> buffer(strSize + 1);
     char *utf8_buffer = buffer.data();
-
     ani_size bytes_written = 0;
     env_->String_GetUTF8(static_cast<ani_string>(obj_), utf8_buffer, strSize + 1, &bytes_written);
-
     utf8_buffer[bytes_written] = '\0';
     std::string content = std::string(utf8_buffer);
     return content;

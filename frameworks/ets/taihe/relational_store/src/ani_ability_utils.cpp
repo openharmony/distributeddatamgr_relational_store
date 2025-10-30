@@ -74,14 +74,12 @@ int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::Contex
     LOG_INFO("AniGetContext");
     ani_env *env = taihe::get_env();
     param.isStageMode = true;
-
     int32_t status =
         ani_utils::AniGetProperty(env, jsValue, "databaseDir", param.baseDir, ani_utils::ErrorHandling::STRICT);
     ASSERT(status == ANI_OK, "get databaseDir failed.", ANI_INVALID_ARGS);
 
     status = ani_utils::GetEnumValueInt(env, jsValue, "area", param.area, ani_utils::ErrorHandling::OPTIONAL);
     ASSERT(status == ANI_OK, "get area failed.", ANI_INVALID_ARGS);
-
     ani_object hapInfo = nullptr;
     status = ani_utils::AniGetProperty(env, jsValue, "currentHapModuleInfo", hapInfo, ani_utils::ErrorHandling::STRICT);
     ASSERT(status == ANI_OK, "get currentHapModuleInfo failed.", ANI_INVALID_ARGS);
@@ -89,7 +87,6 @@ int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::Contex
         status = ani_utils::AniGetProperty(env, hapInfo, "name", param.moduleName, ani_utils::ErrorHandling::STRICT);
         ASSERT(status == ANI_OK, "get currentHapModuleInfo.name failed.", ANI_INVALID_ARGS);
     }
-
     ani_object appInfo = nullptr;
     ani_utils::AniGetProperty(env, jsValue, "applicationInfo", appInfo, ani_utils::ErrorHandling::STRICT);
     if (appInfo != nullptr) {
