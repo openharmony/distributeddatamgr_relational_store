@@ -1710,6 +1710,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
+    std::string processSequence = "processSequence";
     for (const auto &table : schema.tables) {
         DistributedDB::KnowledgeSourceSchema sourceSchema;
         sourceSchema.tableName = table.tableName;
@@ -1718,6 +1719,7 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         }
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
+        sourceSchema.columnsToVerify = {{processSequence, {table.processSequence.columnName}}};
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
             return E_ERROR;
