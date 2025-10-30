@@ -13,18 +13,23 @@
  * limitations under the License.
  */
 #define LOG_TAG "AniUtils"
-#include "ohos.data.relationalStore.ani.hpp"
+#include "ani.h"
 #include "logger.h"
+#include "ohos.data.relationalStore.ani.hpp"
 using namespace OHOS::Rdb;
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
+    if (vm == nullptr || result == nullptr) {
+        LOG_ERROR("ANI_Constructor: Invalid parameters");
+        return ANI_INVALID_ARGS;
+    }
     ani_env *env;
     if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
         return ANI_ERROR;
     }
     if (ANI_OK != ohos::data::relationalStore::ANIRegister(env)) {
-        LOG_INFO("Error from ohos::data::relationalStore::ANIRegister");
+        LOG_ERROR("Error from ohos::data::relationalStore::ANIRegister");
         return ANI_ERROR;
     }
     *result = ANI_VERSION_1;
