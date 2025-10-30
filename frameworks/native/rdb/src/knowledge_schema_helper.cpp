@@ -99,7 +99,7 @@ std::pair<int, DistributedRdb::RdbKnowledgeSchema> KnowledgeSchemaHelper::GetRdb
     return res;
 }
 
-void KnowledgeSchemaHelper::DonateKnowledgeData()
+void KnowledgeSchemaHelper::DonateKnowledgeData(const DistributedRdb::RdbChangedData &rdbChangedData)
 {
     if (!inited_) {
         LOG_WARN("knowledge schema helper not init.");
@@ -121,13 +121,13 @@ void KnowledgeSchemaHelper::DonateKnowledgeData()
         return;
     }
     std::weak_ptr<KnowledgeSchemaHelper> helper = shared_from_this();
-    executor->Execute([helper]() {
+    executor->Execute([helper, rdbChangedData]() {
         auto realHelper = helper.lock();
         if (realHelper == nullptr) {
             LOG_WARN("knowledge helper is null");
             return;
         }
-        realHelper->StartTask();
+        realHelper->StartTask(rdbChangedData);
     });
 }
 
@@ -176,7 +176,7 @@ bool KnowledgeSchemaHelper::IsLoadLib() const
 #endif
 }
 
-void KnowledgeSchemaHelper::StartTask()
+void KnowledgeSchemaHelper::StartTask(const DistributedRdb::RdbChangedData &rdbChangedData)
 {
     DistributedRdb::IKnowledgeSchemaManager *manager = nullptr;
     {
@@ -187,7 +187,7 @@ void KnowledgeSchemaHelper::StartTask()
         }
         manager = schemaManager_;
     }
-    manager->StartTask(dbName_);
+    manager->StartTask(dbName_, rdbChangedData);
 }
 
 void KnowledgeSchemaHelper::Close()
