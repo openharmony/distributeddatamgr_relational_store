@@ -114,7 +114,7 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) != 0) {
-        LOG_WARN("SetDefaultGid file is not exist. dir:%{public}s.", Anonymous(path).c_str());
+        LOG_WARN("file is not exist. dir:%{public}s.", Anonymous(path).c_str());
         return false;
     }
     Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
@@ -142,7 +142,7 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
     }
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) != 0) {
-        LOG_WARN("SetDbFileGid file is not exist. dir:%{public}s.", Anonymous(path).c_str());
+        LOG_WARN("file is not exist. dir:%{public}s.", Anonymous(path).c_str());
         return false;
     }
     bool ret = true;
@@ -171,18 +171,19 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
     if (path.empty()) {
         return false;
     }
-    struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) != 0) {
-        LOG_WARN("SetDbDirGid file is not exist. dir:%{public}s.", Anonymous(path).c_str());
+    char resolved_path[PATH_MAX];
+    if (realpath(path.c_str(), resolved_path) == nullptr) {
+        LOG_WARN("path is not exist, path is %{public}s", Anonymous(path).c_str());
         return false;
     }
+    std::string realpath = resolved_path;
     if (isDefault) {
-        return SetDefaultGid(path, gid);
+        return SetDefaultGid(realpath, gid);
     }
     bool ret = true;
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    std::string filePath = StringUtils::ExtractFilePath(path);
-    std::string tempDirectory = path;
+    std::string filePath = StringUtils::ExtractFilePath(realpath);
+    std::string tempDirectory = realpath;
     std::string dbDir = "/";
     bool isSetAcl = false;
     size_t pos = tempDirectory.find('/');
