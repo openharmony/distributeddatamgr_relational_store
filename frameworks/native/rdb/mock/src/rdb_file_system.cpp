@@ -28,6 +28,7 @@ std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path)
 {
     return std::make_pair(0, 0);
 }
+
 std::string RdbFileSystem::RealPath(const std::string &path)
 {
     return "";
