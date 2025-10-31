@@ -239,6 +239,11 @@ HWTEST_F(SqliteUtilsTest, LongDirectoryName, TestSize.Level1)
     EXPECT_NE(SqliteUtils::GetParentModes(longName + "/b", 1).find("aaa***"), std::string::npos);
 }
 
+/**
+ * @tc.name: HasPermit001
+ * @tc.desc: file has S_IXOTH and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasPermit001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -257,6 +262,11 @@ HWTEST_F(SqliteUtilsTest, HasPermit001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasPermit002
+ * @tc.desc: file no S_IXOTH and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasPermit002, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -276,6 +286,11 @@ HWTEST_F(SqliteUtilsTest, HasPermit002, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasPermit003
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasPermit003, TestSize.Level1)
 {
     std::string fileDir = "/data/test/database/hapname/rdb";
@@ -283,6 +298,11 @@ HWTEST_F(SqliteUtilsTest, HasPermit003, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: HasAccessAcl001
+ * @tc.desc: file set acl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasAccessAcl001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -309,6 +329,11 @@ HWTEST_F(SqliteUtilsTest, HasAccessAcl001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasAccessAcl002
+ * @tc.desc: file not set acl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasAccessAcl002, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -327,6 +352,11 @@ HWTEST_F(SqliteUtilsTest, HasAccessAcl002, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasAccessAcl002
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasAccessAcl003, TestSize.Level1)
 {
     std::string fileDir = "/data/test/database/hapname/rdb";
@@ -334,6 +364,11 @@ HWTEST_F(SqliteUtilsTest, HasAccessAcl003, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: HasDefaultAcl001
+ * @tc.desc: file set default and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasDefaultAcl001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -360,6 +395,11 @@ HWTEST_F(SqliteUtilsTest, HasDefaultAcl001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasDefaultAcl002
+ * @tc.desc: file not set default and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasDefaultAcl002, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -378,6 +418,11 @@ HWTEST_F(SqliteUtilsTest, HasDefaultAcl002, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: HasDefaultAcl003
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, HasDefaultAcl003, TestSize.Level1)
 {
     std::string fileDir = "/data/test/database/hapname/rdb";
@@ -385,6 +430,11 @@ HWTEST_F(SqliteUtilsTest, HasDefaultAcl003, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDbDirGid001
+ * @tc.desc: file dir setacl and has S_IXOTH and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbDirGid001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -414,6 +464,11 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDbDirGid002
+ * @tc.desc: file dir setacl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbDirGid002, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -441,6 +496,11 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid002, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDbDirGid003
+ * @tc.desc: file dir setacl and has coustomdir and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbDirGid003, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -474,6 +534,11 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid003, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDbDirGid004
+ * @tc.desc: file dir not exist and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbDirGid004, TestSize.Level1)
 {
     std::string fileDir = "/data/test/database/hapname/rdb";
@@ -490,12 +555,22 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid004, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDbDirGid005
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbDirGid005, TestSize.Level1)
 {
     bool res = SqliteUtils::SetDbDirGid("", 3012, false);
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDefaultGid001
+ * @tc.desc: file set default acl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDefaultGid001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -535,6 +610,11 @@ HWTEST_F(SqliteUtilsTest, SetDefaultGid001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDefaultGid002
+ * @tc.desc: file not exist set default acl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDefaultGid002, TestSize.Level1)
 {
     std::string fileDir = "/data/test/database/hapname/rdb/binlog";
@@ -553,12 +633,22 @@ HWTEST_F(SqliteUtilsTest, SetDefaultGid002, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDefaultGid003
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDefaultGid003, TestSize.Level1)
 {
     bool res = SqliteUtils::SetDefaultGid("", 3012);
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDbFileGid001
+ * @tc.desc: file set acl and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbFileGid001, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -593,6 +683,11 @@ HWTEST_F(SqliteUtilsTest, SetDbFileGid001, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDbFileGid002
+ * @tc.desc: files is empty and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbFileGid002, TestSize.Level1)
 {
     std::string databaseDir = "/data/test/database";
@@ -627,6 +722,11 @@ HWTEST_F(SqliteUtilsTest, SetDbFileGid002, TestSize.Level1)
     std::remove(databaseDir.c_str());
 }
 
+/**
+ * @tc.name: SetDbFileGid003
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbFileGid003, TestSize.Level1)
 {
     std::vector<std::string> files;
@@ -637,6 +737,11 @@ HWTEST_F(SqliteUtilsTest, SetDbFileGid003, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
+/**
+ * @tc.name: SetDbFileGid004
+ * @tc.desc: path is not exist and check
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SetDbFileGid004, TestSize.Level1)
 {
     std::string filename = "/data/test/database/hapname/rdb/test.db";

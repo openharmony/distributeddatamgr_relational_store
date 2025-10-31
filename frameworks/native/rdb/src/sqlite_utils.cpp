@@ -152,7 +152,7 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
         std::string dbPath = dbDir + file;
         struct stat fileStat;
         if (stat((dbPath).c_str(), &fileStat) != 0) {
-            LOG_WARN("SetDbFileGid file is not exist. dir:%{public}s.", Anonymous(dbPath).c_str());
+            LOG_WARN("file is not exist. dir:%{public}s.", Anonymous(dbPath).c_str());
             continue;
         }
         Acl aclAccess(dbPath, Acl::ACL_XATTR_ACCESS);
