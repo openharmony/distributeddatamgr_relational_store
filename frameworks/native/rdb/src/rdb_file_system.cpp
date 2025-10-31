@@ -43,5 +43,16 @@ std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path)
     return std::make_pair(count, ec.value());
 }
 
+std::string RdbFileSystem::RealPath(const std::string &path)
+{
+    char *canonicalPath = realpath(path.c_str(), nullptr);
+    if (canonicalPath == nullptr) {
+        return "";
+    }
+    std::string realPath = canonicalPath;
+    free(canonicalPath);
+    canonicalPath = nullptr;
+    return realPath;
+}
 } // namespace NativeRdb
 } // namespace OHOS
