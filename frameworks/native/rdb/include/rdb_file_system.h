@@ -23,6 +23,7 @@ class RdbFileSystem {
 public:
     static std::vector<std::string> GetEntries(const std::string &path);
     static std::pair<size_t, int32_t> RemoveAll(const std::string &path);
+    static std::string RealPath(const std::string &path);
 };
 } // namespace NativeRdb
 } // namespace OHOS

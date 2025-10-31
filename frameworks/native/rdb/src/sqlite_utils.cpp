@@ -171,28 +171,24 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
     if (path.empty()) {
         return false;
     }
-    char *canonicalPath = realpath(path.c_str(), nullptr);
-    if (canonicalPath == nullptr) {
+    std::string realPath = RdbFileSystem::RealPath(path);
+    if (realPath.empty()) {
         LOG_WARN("path is not exist, path is %{public}s", Anonymous(path).c_str());
         return false;
     }
-    std::string realPath = canonicalPath;
-    free(canonicalPath);
-    canonicalPath = nullptr;
     if (isDefault) {
         return SetDefaultGid(realPath, gid);
     }
     bool ret = true;
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
     std::string filePath = StringUtils::ExtractFilePath(realPath);
-    std::string tempDirectory = realPath;
     std::string dbDir = "/";
     bool isSetAcl = false;
-    size_t pos = tempDirectory.find('/');
+    size_t pos = realPath.find('/');
     while (pos != std::string::npos) {
-        std::string directory = tempDirectory.substr(0, pos);
-        tempDirectory = tempDirectory.substr(pos + 1);
-        pos = tempDirectory.find('/');
+        std::string directory = realPath.substr(0, pos);
+        realPath = realPath.substr(pos + 1);
+        pos = realPath.find('/');
         if (directory.empty()) {
             continue;
         }
