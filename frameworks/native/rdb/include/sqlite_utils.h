@@ -69,7 +69,7 @@ public:
     static bool DeleteFile(const std::string &filePath);
     static bool RenameFile(const std::string &srcFile, const std::string &destFile);
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
-    static size_t DeleteFolder(const std::string &folderPath);
+    static size_t DeleteFolder(const std::string &folderPath, bool removeSelf = true);
     static size_t GetFileCount(const std::string &folderPath);
     API_EXPORT static std::string Anonymous(const std::string &srcFile);
     static std::string RemoveSuffix(const std::string &name);

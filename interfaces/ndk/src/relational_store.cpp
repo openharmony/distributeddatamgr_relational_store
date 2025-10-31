@@ -212,6 +212,9 @@ int OH_Rdb_SetPlugins(OH_Rdb_ConfigV2 *config, const char **plugins, int32_t len
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     for (int i = 0; i < length; i++) {
+        if (plugins[i] == nullptr) {
+            continue;
+        }
         config->pluginLibs.push_back(plugins[i]);
     }
     return OH_Rdb_ErrCode::RDB_OK;
