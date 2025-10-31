@@ -443,6 +443,39 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid002, TestSize.Level1)
 
 HWTEST_F(SqliteUtilsTest, SetDbDirGid003, TestSize.Level1)
 {
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/../../../../../data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+
+    bool res = SqliteUtils::SetDbDirGid(filename, 3012, false);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(hapDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl("/data/test", 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl("/data", 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl("/", 3012);
+    EXPECT_EQ(res, false);
+    std::remove(filename.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+HWTEST_F(SqliteUtilsTest, SetDbDirGid004, TestSize.Level1)
+{
     std::string fileDir = "/data/test/database/hapname/rdb";
     std::string hapDir = "/data/test/database/hapname";
     std::string filename = "/data/test/database/hapname/rdb/test.db";
@@ -457,7 +490,7 @@ HWTEST_F(SqliteUtilsTest, SetDbDirGid003, TestSize.Level1)
     EXPECT_EQ(res, false);
 }
 
-HWTEST_F(SqliteUtilsTest, SetDbDirGid004, TestSize.Level1)
+HWTEST_F(SqliteUtilsTest, SetDbDirGid005, TestSize.Level1)
 {
     bool res = SqliteUtils::SetDbDirGid("", 3012, false);
     EXPECT_EQ(res, false);
