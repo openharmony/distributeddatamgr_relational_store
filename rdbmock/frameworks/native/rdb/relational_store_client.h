@@ -16,6 +16,7 @@
 #ifndef RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
 #define RELATIONAL_STORE_RELATIONAL_STORE_CLIENT_H
 
+#include <map>
 #include <memory>
 #include <set>
 
@@ -63,6 +64,7 @@ struct KnowledgeSourceSchema {
     std::string tableName;
     std::set<std::string> extendColNames;
     std::set<std::string> knowledgeColNames;
+    std::map<std::string, std::set<std::string>> columnsToVerify;
 };
 }
 

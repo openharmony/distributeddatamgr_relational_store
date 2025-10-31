@@ -228,8 +228,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
     if (errCode != E_OK) {
         SqliteUtils::SetSlaveInvalid(config_.GetPath());
         if (errCode == E_SQLITE_CORRUPT) {
-            LOG_WARN("slave corrupt, rebuild:%{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
-            (void)Delete(config.GetPath());
+            DeleteCorruptSlave(config.GetPath());
             // trigger mode does not require rebuild the slave
             if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
                 return result;
@@ -813,6 +812,14 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         LOG_ERROR("key is empty");
         return E_ERROR;
     }
+    errCode = ExecuteSql(std::string(GlobalExpr::REKEY_HMAC_ALGO) +
+                              SqliteUtils::HmacAlgoDescription(config_.GetCryptoParam().hmacAlgo) +
+                              std::string(GlobalExpr::ALGO_SUFFIX));
+    if (errCode != E_OK) {
+        key.assign(key.size(), 0);
+        LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
+        return errCode;
+    }
     errCode = sqlite3_rekey(dbHandle_, static_cast<const void *>(key.data()), static_cast<int>(key.size()));
     if (errCode != SQLITE_OK) {
         key.assign(key.size(), 0);
@@ -860,7 +867,10 @@ CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConf
         config.pKdfAlgo = KDF_ALGOS[param.kdfAlgo];
     }
 
-    config.pKey = param.encryptKey_.empty() ? nullptr : static_cast<const void *>(param.encryptKey_.data());
+    config.pKey = nullptr;
+    if (param.encryptAlgo != EncryptAlgo::PLAIN_TEXT && !param.encryptKey_.empty()) {
+        config.pKey = static_cast<const void *>(param.encryptKey_.data());
+    }
     config.nKey = static_cast<int>(param.encryptKey_.size());
     if (param.iterNum != 0) {
         config.kdfIter = static_cast<int>(param.iterNum);
@@ -873,7 +883,7 @@ int RekeyToPlainText(
     const RdbStoreConfig &config, CodecRekeyConfig &rekeyConfig, const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     CodecConfig plainTextCfg = { NULL, NULL, NULL, NULL, 0, 0, cryptoParam.cryptoPageSize };
-    errno_t err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &plainTextCfg, sizeof(plainTextCfg));
+    auto err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &plainTextCfg, sizeof(plainTextCfg));
     if (err != 0) {
         LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
         return E_ERROR;
@@ -928,7 +938,7 @@ int RekeyToEncrypt(const RdbStoreConfig &config, CodecConfig &rekeyCfg, CodecRek
     }
     rekeyCfg.pKey = static_cast<const void *>(key.data());
     rekeyCfg.nKey = static_cast<int>(key.size());
-    errno_t err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &rekeyCfg, sizeof(rekeyCfg));
+    auto err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &rekeyCfg, sizeof(rekeyCfg));
     if (err != 0) {
         LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
         return E_ERROR;
@@ -1343,7 +1353,15 @@ int SqliteConnection::TryCheckPoint(bool timeout)
 
     std::shared_ptr<Connection> autoCheck(slaveConnection_.get(), [this, timeout](Connection *conn) {
         if (conn != nullptr && backupId_ == TaskExecutor::INVALID_TASK_ID) {
-            conn->TryCheckPoint(timeout);
+            int rc = conn->TryCheckPoint(timeout);
+            if (rc == E_SQLITE_CORRUPT) {
+                RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
+                slaveConnection_ = nullptr;
+                DeleteCorruptSlave(slaveConfig.GetPath());
+                Reportor::ReportCorrupted(Reportor::Create(slaveConfig,
+                    SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
+                LOG_ERROR("slave CheckPoint failed err:%{public}d, errno:%{public}d", rc, errno);
+            }
         }
     });
     std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
@@ -1646,18 +1664,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
         }
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
-    rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
-    if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
-        if (!isRestore) {
-            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
-        }
-        LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
-        return E_OK;
-    }
-    *curStatus = SlaveStatus::BACKUP_FINISHED;
-    SqliteUtils::SetSlaveValid(config_.GetPath());
-    LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
-    return E_OK;
+    return SqliteBackupCheckpoint(isRestore, curStatus);
 }
 
 ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay)
@@ -1703,6 +1710,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
+    std::string processSequence = "processSequence";
     for (const auto &table : schema.tables) {
         DistributedDB::KnowledgeSourceSchema sourceSchema;
         sourceSchema.tableName = table.tableName;
@@ -1711,6 +1719,7 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         }
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
+        sourceSchema.columnsToVerify = {{processSequence, {table.processSequence.columnName}}};
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
             return E_ERROR;
@@ -2180,6 +2189,31 @@ std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
     return dbPath + suffix;
 }
 
+int SqliteConnection::SqliteBackupCheckpoint(bool isRestore, std::shared_ptr<SlaveStatus> curStatus)
+{
+    int rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
+    if (!isRestore && rc == E_SQLITE_CORRUPT) {
+        RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
+        slaveConnection_ = nullptr;
+        DeleteCorruptSlave(slaveConfig.GetPath());
+        *curStatus = SlaveStatus::BACKUP_INTERRUPT;
+        Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
+        LOG_ERROR("CheckPoint failed, remove slave, err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return rc;
+    }
+    if (rc != E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        if (!isRestore) {
+            *curStatus = SlaveStatus::BACKUP_INTERRUPT;
+        }
+        LOG_WARN("CheckPoint failed err:%{public}d, isRestore:%{public}d", rc, isRestore);
+        return E_OK;
+    }
+    *curStatus = SlaveStatus::BACKUP_FINISHED;
+    SqliteUtils::SetSlaveValid(config_.GetPath());
+    LOG_INFO("backup slave success, isRestore:%{public}d", isRestore);
+    return E_OK;
+}
+
 ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdxCount)
 {
     const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
@@ -2203,6 +2237,18 @@ ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdx
     LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
         mCount, mIdxCount, sCount, sIdxCount);
     return ExchangeStrategy::BACKUP;
+}
+
+void SqliteConnection::DeleteCorruptSlave(const std::string &path)
+{
+    LOG_WARN("slave corrupt, rebuild:%{public}s, handle:%{public}d", SqliteUtils::Anonymous(path).c_str(),
+        dbHandle_ != nullptr);
+    if (dbHandle_ != nullptr) {
+        sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+    }
+    (void)Delete(path);
+    size_t num = SqliteUtils::DeleteFolder(GetBinlogFolderPath(config_.GetPath()), false);
+    LOG_INFO("deleted %{public}zu binlog related items", num);
 }
 
 int SqliteConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)

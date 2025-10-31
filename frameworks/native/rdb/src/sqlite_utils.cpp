@@ -411,9 +411,9 @@ std::string SqliteUtils::RemoveSuffix(const std::string &name)
     return { name, 0, pos };
 }
 
-size_t SqliteUtils::DeleteFolder(const std::string &folderPath)
+size_t SqliteUtils::DeleteFolder(const std::string &folderPath, bool removeSelf)
 {
-    auto [count, ec] = RdbFileSystem::RemoveAll(folderPath);
+    auto [count, ec] = RdbFileSystem::RemoveAll(folderPath, removeSelf);
     auto errorCount = static_cast<std::uintmax_t>(-1);
     if (count == errorCount) {
         LOG_WARN("remove folder, %{public}d, %{public}s", ec, Anonymous(folderPath).c_str());

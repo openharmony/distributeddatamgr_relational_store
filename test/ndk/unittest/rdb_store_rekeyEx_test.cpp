@@ -460,3 +460,64 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     errCode = OH_Rdb_DestroyConfig(rekeyTestConfig);
     EXPECT_EQ(errCode, RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Rekey_test_007
+ * @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT then rekeyex success and query success
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_007, TestSize.Level1)
+{
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    ASSERT_NE(config, nullptr);
+    OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH);
+    OH_Rdb_SetStoreName(config, "rdb_store_test.db");
+    OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk");
+    OH_Rdb_SetEncrypted(config, true);
+    OH_Rdb_SetSecurityLevel(config, OH_Rdb_SecurityLevel::S1);
+    OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1);
+    OH_Rdb_CryptoParam *crypto = OH_Rdb_CreateCryptoParam();
+    EXPECT_NE(crypto, NULL);
+    OH_Crypto_SetEncryptionAlgo(crypto, RDB_PLAIN_TEXT);
+    const uint8_t newKey[] = "87654321";
+    OH_Crypto_SetEncryptionKey(crypto, newKey, sizeof(newKey) - 1);
+    OH_Rdb_SetCryptoParam(config, crypto);
+    int errCode = 0;
+    OH_Rdb_Store *store = OH_Rdb_CreateOrOpen(config, &errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+
+    errCode = OH_Rdb_Execute(store, CREATE_TABLE_SQL);
+    EXPECT_EQ(errCode, 0);
+    ASSERT_NE(store, nullptr);
+    OH_VBucket *valueBucket = CreateAndSetValueBucket();
+    errCode = OH_Rdb_Insert(store, "store_test", valueBucket);
+    EXPECT_EQ(errCode, 1);
+
+    OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
+    EXPECT_NE(crypto1, NULL);
+    errCode = OH_Rdb_RekeyEx(store, crypto1);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_CloseStore(store);
+    EXPECT_EQ(errCode, 0);
+
+    OH_Rdb_SetCryptoParam(config, crypto1);
+    store = OH_Rdb_CreateOrOpen(config, &errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
+
+    OH_Cursor *cursor = OH_Rdb_ExecuteQuery(store, QUERY_SQL);
+
+    int rowCount = 0;
+    cursor->getRowCount(cursor, &rowCount);
+    EXPECT_EQ(rowCount, 1);
+
+    valueBucket->destroy(valueBucket);
+    cursor->destroy(cursor);
+    errCode = OH_Rdb_DeleteStoreV2(config);
+    EXPECT_EQ(errCode, 0);
+    errCode = OH_Rdb_DestroyConfig(config);
+    EXPECT_EQ(errCode, RDB_OK);
+    errCode = OH_Rdb_DestroyCryptoParam(crypto1);
+    EXPECT_EQ(errCode, RDB_OK);
+}

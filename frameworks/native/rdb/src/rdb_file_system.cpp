@@ -36,10 +36,23 @@ std::vector<std::string> RdbFileSystem::GetEntries(const std::string &path)
     return paths;
 }
 
-std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path)
+std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path, bool removeSelf)
 {
     std::error_code ec;
-    size_t count = std::filesystem::remove_all(path, ec);
+    size_t count = 0;
+
+    if (removeSelf) {
+        count = std::filesystem::remove_all(path, ec);
+        return std::make_pair(count, ec.value());
+    }
+    for (const auto &subPath : RdbFileSystem::GetEntries(path)) {
+        auto res = std::filesystem::remove_all(subPath, ec);
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+        count += res;
+    }
     return std::make_pair(count, ec.value());
 }
 
