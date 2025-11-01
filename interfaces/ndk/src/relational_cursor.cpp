@@ -289,12 +289,7 @@ int RelationalCursor::GetSize(int32_t columnIndex, size_t *size)
     if (size == nullptr || resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    int ret = ConvertorErrorCode::NativeToNdk(resultSet_->GetSize(columnIndex, *size));
-    const size_t sizeMax = 102400; // String length threshold for reading from the database
-    if (*size >= sizeMax) {
-        LOG_WARN("size is greater than sizeMax, size = %{public}zu", *size);
-    }
-    return ret;
+    return ConvertorErrorCode::NativeToNdk(resultSet_->GetSize(columnIndex, *size));
 }
 
 int RelationalCursor::GetText(int32_t columnIndex, char *value, int length)
