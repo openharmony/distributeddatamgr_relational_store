@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "value_object"
 #include "value_object.h"
-
+#include "logger.h"
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -23,6 +23,7 @@
 #include "sqlite_utils.h"
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 ValueObject::ValueObject()
 {
 }
