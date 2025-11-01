@@ -311,7 +311,8 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
     if (lastParam.customDir_ != config.GetCustomDir() || lastParam.hapName_ != config.GetModuleName() ||
         lastParam.area_ != config.GetArea()) {
         LOG_WARN("Diff db with the same name! customDir:%{public}s -> %{public}s, hapName:%{public}s -> %{public}s,"
-            "area:%{public}d -> %{public}d.", lastParam.customDir_.c_str(), config.GetCustomDir().c_str(),
+                 "area:%{public}d -> %{public}d.",
+            SqliteUtils::Anonymous(lastParam.customDir_).c_str(), SqliteUtils::Anonymous(config.GetCustomDir()).c_str(),
             lastParam.hapName_.c_str(), config.GetModuleName().c_str(), lastParam.area_, config.GetArea());
         return false;
     }
