@@ -14,13 +14,15 @@
  */
 #define LOG_TAG "value_object"
 #include "value_object.h"
-#include "logger.h"
+
 #include <iostream>
 #include <limits>
 #include <sstream>
 
+#include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
