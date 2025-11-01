@@ -467,7 +467,12 @@ std::pair<int32_t, ValueObject> RdStatement::GetColumn(int32_t index) const
             object = static_cast<int64_t>(RdUtils::RdSqlColInt64(stmtHandle_, index));
             break;
         case ColumnType::TYPE_STRING:
-            object = reinterpret_cast<const char *>(RdUtils::RdSqlColText(stmtHandle_, index));
+            char *sqlColText = RdUtils::RdSqlColText(stmtHandle_, index);
+            if (sqlColText == NULL) {
+                LOG_ERROR("sqlColText is NULL");
+                break;
+            }
+            object = reinterpret_cast<const char *>(sqlColText);
             break;
         case ColumnType::TYPE_NULL:
             break;
