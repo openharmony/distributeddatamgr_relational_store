@@ -114,6 +114,7 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) != 0) {
+        LOG_WARN("file is not exist. dir:%{public}s.", Anonymous(path).c_str());
         return false;
     }
     Acl aclAccess(path, Acl::ACL_XATTR_ACCESS);
@@ -136,7 +137,12 @@ bool SqliteUtils::SetDefaultGid(const std::string &path, int32_t gid)
 
 bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::string> &files, int32_t gid)
 {
-    if (files.empty()) {
+    if (files.empty() || path.empty()) {
+        return false;
+    }
+    struct stat fileStat;
+    if (stat(path.c_str(), &fileStat) != 0) {
+        LOG_WARN("file is not exist. dir:%{public}s.", Anonymous(path).c_str());
         return false;
     }
     bool ret = true;
@@ -146,10 +152,10 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
         std::string dbPath = dbDir + file;
         struct stat fileStat;
         if (stat((dbPath).c_str(), &fileStat) != 0) {
+            LOG_WARN("SetDbFileGid file is not exist. dir:%{public}s.", Anonymous(dbPath).c_str());
             continue;
         }
         Acl aclAccess(dbPath, Acl::ACL_XATTR_ACCESS);
-        
         if (aclAccess.HasAccessGroup(gid, mode)) {
             continue;
         }
@@ -165,30 +171,35 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
     if (path.empty()) {
         return false;
     }
+    std::string realPath = RdbFileSystem::RealPath(path);
+    if (realPath.empty()) {
+        LOG_WARN("path is not exist, path is %{public}s", Anonymous(path).c_str());
+        return false;
+    }
     if (isDefault) {
-        return SetDefaultGid(path, gid);
+        return SetDefaultGid(realPath, gid);
     }
     bool ret = true;
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
-    std::string tempDirectory = path;
-    std::string dbDir = "";
+    std::string filePath = StringUtils::ExtractFilePath(realPath);
+    std::string dbDir = "/";
     bool isSetAcl = false;
-    size_t pos = tempDirectory.find('/');
+    size_t pos = realPath.find('/');
     while (pos != std::string::npos) {
-        std::string directory = tempDirectory.substr(0, pos);
-        tempDirectory = tempDirectory.substr(pos + 1);
-        pos = tempDirectory.find('/');
+        std::string directory = realPath.substr(0, pos);
+        realPath = realPath.substr(pos + 1);
+        pos = realPath.find('/');
         if (directory.empty()) {
             continue;
         }
         if (directory == DATABASE) {
             isSetAcl = true;
         }
-        dbDir = dbDir + "/" + directory;
+        dbDir = dbDir + directory + "/";
         if (!isSetAcl) {
             continue;
         }
-        if (HasPermit(dbDir, S_IXOTH)) {
+        if (HasPermit(dbDir, S_IXOTH) && (dbDir != filePath)) {
             continue;
         }
         Acl aclAccess(dbDir, Acl::ACL_XATTR_ACCESS);

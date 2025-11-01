@@ -18,11 +18,18 @@
 #include <gtest/gtest.h>
 
 #include <climits>
+#include <dlfcn.h>
+#include <fcntl.h>
 #include <fstream>
 #include <string>
+#include <iostream>
+#include <sys/stat.h>
+#include "acl.h"
+#include "rdb_platform.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+using namespace OHOS::DATABASE_UTILS;
 
 class SqliteUtilsTest : public testing::Test {
 public:
@@ -246,4 +253,520 @@ HWTEST_F(SqliteUtilsTest, LongDirectoryName, TestSize.Level1)
 {
     std::string longName(20, 'a');
     EXPECT_NE(SqliteUtils::GetParentModes(longName + "/b", 1).find("aaa***"), std::string::npos);
+}
+
+/**
+ * @tc.name: HasPermit001
+ * @tc.desc: file has S_IXOTH and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasPermit001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    bool res = SqliteUtils::HasPermit(fileDir, S_IXOTH);
+    EXPECT_EQ(res, true);
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasPermit002
+ * @tc.desc: file no S_IXOTH and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasPermit002, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    bool res = SqliteUtils::HasPermit(fileDir, S_IXOTH);
+    EXPECT_EQ(res, false);
+    std::remove(fileDir.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasPermit003
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasPermit003, TestSize.Level1)
+{
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    bool res = SqliteUtils::HasPermit(fileDir, S_IXOTH);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: HasAccessAcl001
+ * @tc.desc: file set acl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasAccessAcl001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+
+    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
+    auto result = Acl(filename, Acl::ACL_XATTR_ACCESS).SetAccessGroup(3012, mode);
+    EXPECT_EQ(result, Acl::E_OK);
+    bool res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, true);
+    std::remove(filename.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasAccessAcl002
+ * @tc.desc: file not set acl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasAccessAcl002, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    bool res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasAccessAcl002
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasAccessAcl003, TestSize.Level1)
+{
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    bool res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: HasDefaultAcl001
+ * @tc.desc: file set default and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasDefaultAcl001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+
+    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
+    auto result = Acl(fileDir, Acl::ACL_XATTR_ACCESS).SetAccessGroup(3012, mode);
+    EXPECT_EQ(result, Acl::E_OK);
+    result = Acl(fileDir, Acl::ACL_XATTR_DEFAULT).SetDefaultGroup(3012, mode);
+    EXPECT_EQ(result, Acl::E_OK);
+    bool res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasDefaultAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasDefaultAcl002
+ * @tc.desc: file not set default and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasDefaultAcl002, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    bool res = SqliteUtils::HasDefaultAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: HasDefaultAcl003
+ * @tc.desc: file not exist and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, HasDefaultAcl003, TestSize.Level1)
+{
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    bool res = SqliteUtils::HasDefaultAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDbDirGid001
+ * @tc.desc: file dir setacl and has S_IXOTH and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbDirGid001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+
+    bool res = SqliteUtils::SetDbDirGid(filename, 3012, false);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(hapDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, false);
+    std::remove(filename.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDbDirGid002
+ * @tc.desc: file dir setacl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbDirGid002, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+
+    bool res = SqliteUtils::SetDbDirGid(filename, 3012, false);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(hapDir, 3012);
+    EXPECT_EQ(res, true);
+    std::remove(filename.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDbDirGid003
+ * @tc.desc: file dir setacl and has coustomdir and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbDirGid003, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/../../../../../data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+
+    bool res = SqliteUtils::SetDbDirGid(filename, 3012, false);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(hapDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl("/data/test", 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl("/data", 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl("/", 3012);
+    EXPECT_EQ(res, false);
+    std::remove(filename.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDbDirGid004
+ * @tc.desc: file dir not exist and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbDirGid004, TestSize.Level1)
+{
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    std::string hapDir = "/data/test/database/hapname";
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+
+    bool res = SqliteUtils::SetDbDirGid(filename, 3012, false);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(hapDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDbDirGid005
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbDirGid005, TestSize.Level1)
+{
+    bool res = SqliteUtils::SetDbDirGid("", 3012, false);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDefaultGid001
+ * @tc.desc: file set default acl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDefaultGid001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string binlogDir = "/data/test/database/hapname/rdb/binlog/";
+    ret = MkDir(binlogDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/binlog/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+    std::string filename1 = "/data/test/database/hapname/rdb/binlog/test.wal";
+    int fd1 = open(filename1.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd1, -1) << "open file failed." << std::strerror(errno);
+
+    bool res = SqliteUtils::SetDbDirGid(binlogDir, 3012, true);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(binlogDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasDefaultAcl(binlogDir, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(filename1, 3012);
+    EXPECT_EQ(res, true);
+    std::remove(filename.c_str());
+    std::remove(filename1.c_str());
+    std::remove(binlogDir.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDefaultGid002
+ * @tc.desc: file not exist set default acl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDefaultGid002, TestSize.Level1)
+{
+    std::string fileDir = "/data/test/database/hapname/rdb/binlog";
+    std::string filename = "/data/test/database/hapname/rdb/binlog/test.db";
+    std::string filename1 = "/data/test/database/hapname/rdb/binlog/test.wal";
+
+    bool res = SqliteUtils::SetDefaultGid(filename, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasDefaultAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename1, 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDefaultGid003
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDefaultGid003, TestSize.Level1)
+{
+    bool res = SqliteUtils::SetDefaultGid("", 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDbFileGid001
+ * @tc.desc: file set acl and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbFileGid001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+    std::string filename1 = "/data/test/database/hapname/rdb/test.db-wal";
+    int fd1 = open(filename1.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd1, -1) << "open file failed." << std::strerror(errno);
+    std::vector<std::string> files;
+    files.push_back("test.db");
+    files.push_back("test.db-wal");
+
+    bool res = SqliteUtils::SetDbFileGid(filename, files, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, true);
+    res = SqliteUtils::HasAccessAcl(filename1, 3012);
+    EXPECT_EQ(res, true);
+    std::remove(filename.c_str());
+    std::remove(filename1.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDbFileGid002
+ * @tc.desc: files is empty and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbFileGid002, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/database";
+    auto ret = MkDir(databaseDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string hapDir = "/data/test/database/hapname";
+    ret = MkDir(hapDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string fileDir = "/data/test/database/hapname/rdb";
+    ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH));
+    EXPECT_EQ(ret, 0) << "directory creation failed." << std::strerror(errno);
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    int fd = open(filename.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd, -1) << "open file failed." << std::strerror(errno);
+    std::string filename1 = "/data/test/database/hapname/rdb/test.db-wal";
+    int fd1 = open(filename1.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    EXPECT_NE(fd1, -1) << "open file failed." << std::strerror(errno);
+    std::vector<std::string> files;
+
+    bool res = SqliteUtils::SetDbFileGid(filename, files, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(fileDir, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename1, 3012);
+    EXPECT_EQ(res, false);
+    std::remove(filename.c_str());
+    std::remove(filename1.c_str());
+    std::remove(fileDir.c_str());
+    std::remove(hapDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: SetDbFileGid003
+ * @tc.desc: path is empty and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbFileGid003, TestSize.Level1)
+{
+    std::vector<std::string> files;
+    files.push_back("test.db");
+    files.push_back("test.db-wal");
+
+    bool res = SqliteUtils::SetDbFileGid("", files, 3012);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.name: SetDbFileGid004
+ * @tc.desc: path is not exist and check
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SetDbFileGid004, TestSize.Level1)
+{
+    std::string filename = "/data/test/database/hapname/rdb/test.db";
+    std::vector<std::string> files;
+    files.push_back("test.db");
+    files.push_back("test.db-wal");
+
+    bool res = SqliteUtils::SetDbFileGid(filename, files, 3012);
+    EXPECT_EQ(res, false);
+    res = SqliteUtils::HasAccessAcl(filename, 3012);
+    EXPECT_EQ(res, false);
 }
