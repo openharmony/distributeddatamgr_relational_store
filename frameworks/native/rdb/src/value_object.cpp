@@ -72,13 +72,11 @@ ValueObject::ValueObject(std::string val) : value(std::move(val))
 {
 }
 
-ValueObject::ValueObject(const char *val)
+ValueObject::ValueObject(const char *val) : ValueObject(val ? std::string(val) : std::string())
 {
-    if (val == NULL) {
+    if (val == nullptr) {
         LOG_ERROR("val is NULL");
-        return;
     }
-    ValueObject(std::string(val));
 }
 
 ValueObject::ValueObject(const std::vector<uint8_t> &val) : value(val)
