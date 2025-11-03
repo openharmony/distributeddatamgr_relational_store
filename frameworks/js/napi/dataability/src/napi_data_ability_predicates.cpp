@@ -171,7 +171,7 @@ void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, vo
     if (proxy == nullptr) {
         return;
     }
-    proxy->predicates_ = std::move(nullptr);
+    proxy->predicates_ = nullptr;
     delete proxy;
 }
 
