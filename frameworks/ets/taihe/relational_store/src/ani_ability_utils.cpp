@@ -14,18 +14,18 @@
  */
 #define LOG_TAG "AniAbilityUtils"
 #include "ani_ability_utils.h"
-#include "ani_utils.h"
-#include "logger.h"
 
 #include <string>
 
-#include "js_utils.h"
+#include "ani_base_context.h"
+#include "ani_utils.h"
 #include "js_ability.h"
-#include "rdb_sql_utils.h"
-#include "rdb_store_config.h"
+#include "js_utils.h"
+#include "logger.h"
 #include "napi_rdb_error.h"
 #include "rdb_helper.h"
-#include "ani_base_context.h"
+#include "rdb_sql_utils.h"
+#include "rdb_store_config.h"
 
 namespace ani_abilityutils {
 
@@ -43,20 +43,19 @@ static constexpr int32_t INVALID_HAP_VERSION = -1;
         }                                                        \
     } while (0)
 
-
 int32_t GetHapVersion(ani_env *env, ani_object value)
 {
     auto stageContext = OHOS::AbilityRuntime::GetStageModeContext(env, value);
     if (stageContext == nullptr) {
         LOG_ERROR("GetStageModeContext failed.");
-        return INVALID_HAP_VERSION ;
+        return INVALID_HAP_VERSION;
     }
     auto appInfo = stageContext->GetApplicationInfo();
     if (appInfo != nullptr) {
         return appInfo->apiTargetVersion % API_VERSION_MOD;
     }
     LOG_WARN("GetApplicationInfo failed.");
-    return INVALID_HAP_VERSION ;
+    return INVALID_HAP_VERSION;
 }
 
 std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env, ani_object value)
@@ -75,26 +74,26 @@ int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::Contex
     LOG_INFO("AniGetContext");
     ani_env *env = taihe::get_env();
     param.isStageMode = true;
-
-    int32_t status = ani_utils::AniGetProperty(env, jsValue, "databaseDir", param.baseDir);
+    int32_t status =
+        ani_utils::AniGetProperty(env, jsValue, "databaseDir", param.baseDir, ani_utils::ErrorHandling::STRICT);
     ASSERT(status == ANI_OK, "get databaseDir failed.", ANI_INVALID_ARGS);
 
-    status = ani_utils::AniGetProperty(env, jsValue, "area", param.area, true);
+    status = ani_utils::GetEnumValueInt(env, jsValue, "area", param.area, ani_utils::ErrorHandling::OPTIONAL);
     ASSERT(status == ANI_OK, "get area failed.", ANI_INVALID_ARGS);
-
     ani_object hapInfo = nullptr;
-    ani_utils::AniGetProperty(env, jsValue, "currentHapModuleInfo", hapInfo);
+    status = ani_utils::AniGetProperty(env, jsValue, "currentHapModuleInfo", hapInfo, ani_utils::ErrorHandling::STRICT);
+    ASSERT(status == ANI_OK, "get currentHapModuleInfo failed.", ANI_INVALID_ARGS);
     if (hapInfo != nullptr) {
-        status = ani_utils::AniGetProperty(env, hapInfo, "name", param.moduleName);
+        status = ani_utils::AniGetProperty(env, hapInfo, "name", param.moduleName, ani_utils::ErrorHandling::STRICT);
         ASSERT(status == ANI_OK, "get currentHapModuleInfo.name failed.", ANI_INVALID_ARGS);
     }
-
     ani_object appInfo = nullptr;
-    ani_utils::AniGetProperty(env, jsValue, "applicationInfo", appInfo);
+    ani_utils::AniGetProperty(env, jsValue, "applicationInfo", appInfo, ani_utils::ErrorHandling::STRICT);
     if (appInfo != nullptr) {
-        status = ani_utils::AniGetProperty(env, appInfo, "name", param.bundleName);
+        status = ani_utils::AniGetProperty(env, appInfo, "name", param.bundleName, ani_utils::ErrorHandling::STRICT);
         ASSERT(status == ANI_OK, "get applicationInfo.name failed.", ANI_INVALID_ARGS);
-        status = ani_utils::AniGetProperty(env, appInfo, "systemApp", param.isSystemApp, true);
+        status = ani_utils::AniGetProperty(
+            env, appInfo, "systemApp", param.isSystemApp, ani_utils::ErrorHandling::OPTIONAL);
         ASSERT(status == ANI_OK, "get applicationInfo.systemApp failed.", ANI_INVALID_ARGS);
         int32_t hapVersion = GetHapVersion(env, jsValue);
         OHOS::AppDataMgrJsKit::JSUtils::SetHapVersion(hapVersion);

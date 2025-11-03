@@ -265,6 +265,8 @@ union StringOrNumberArray {
 }
 
  interface ResultSet {
+    GetProxy (): i64;
+
     @get GetColumnCount() : i32;
 
     @get GetRowCount() : i32;
@@ -325,38 +327,169 @@ union StringOrNumberArray {
 @class
 interface RdbPredicates {
     GetSpecificImplPtr (): i64;
-    InDevices(@sts_this thiz : RdbPredicates, devices: Array<String>): RdbPredicates;
-    InAllDevices(@sts_this thiz : RdbPredicates): RdbPredicates;
-    EqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    NotEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    BeginWrap(@sts_this thiz : RdbPredicates): RdbPredicates;
-    EndWrap(@sts_this thiz : RdbPredicates): RdbPredicates;
-    Or(@sts_this thiz : RdbPredicates): RdbPredicates;
-    And(@sts_this thiz : RdbPredicates): RdbPredicates;
-    Contains(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    BeginsWith(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    EndsWith(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    IsNull(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    IsNotNull(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    Like(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    Glob(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    Between(@sts_this thiz : RdbPredicates, field: String, low: ValueType, high: ValueType): RdbPredicates;
-    NotBetween(@sts_this thiz : RdbPredicates, field: String, low: ValueType, high: ValueType): RdbPredicates;
-    GreaterThan(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    LessThan(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    GreaterThanOrEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    LessThanOrEqualTo(@sts_this thiz : RdbPredicates, field: String, value: ValueType): RdbPredicates;
-    OrderByAsc(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    OrderByDesc(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    Distinct(@sts_this thiz : RdbPredicates): RdbPredicates;
-    LimitAs(@sts_this thiz : RdbPredicates, value:i32): RdbPredicates;
-    OffsetAs(@sts_this thiz : RdbPredicates, rowOffset: i32): RdbPredicates;
-    GroupBy(@sts_this thiz : RdbPredicates, fields: Array<String>): RdbPredicates;
-    IndexedBy(@sts_this thiz : RdbPredicates, field: String): RdbPredicates;
-    InValues(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
-    NotInValues(@sts_this thiz : RdbPredicates, field: String, value: Array<ValueType>): RdbPredicates;
-    NotContains(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
-    NotLike(@sts_this thiz : RdbPredicates, field: String, value: String): RdbPredicates;
+    InnerInDevices(devices: Array<String>): void;
+    InnerInAllDevices(): void;
+    InnerEqualTo(field: String, value: ValueType): void;
+    InnerNotEqualTo(field: String, value: ValueType): void;
+    InnerBeginWrap(): void;
+    InnerEndWrap(): void;
+    InnerOr(): void;
+    InnerAnd(): void;
+    InnerContains(field: String, value: String): void;
+    InnerBeginsWith(field: String, value: String): void;
+    InnerEndsWith(field: String, value: String): void;
+    InnerIsNull(field: String): void;
+    InnerIsNotNull(field: String): void;
+    InnerLike(field: String, value: String): void;
+    InnerGlob(field: String, value: String): void;
+    InnerBetween(field: String, low: ValueType, high: ValueType): void;
+    InnerNotBetween(field: String, low: ValueType, high: ValueType): void;
+    InnerGreaterThan(field: String, value: ValueType): void;
+    InnerLessThan(field: String, value: ValueType): void;
+    InnerGreaterThanOrEqualTo(field: String, value: ValueType): void;
+    InnerLessThanOrEqualTo(field: String, value: ValueType): void;
+    InnerOrderByAsc(field: String): void;
+    InnerOrderByDesc(field: String): void;
+    InnerDistinct(): void;
+    InnerLimitAs(value:i32): void;
+    InnerOffsetAs(rowOffset: i32): void;
+    InnerGroupBy(fields: Array<String>): void;
+    InnerIndexedBy(field: String): void;
+    InnerInValues(field: String, value: Array<ValueType>): void;
+    InnerNotInValues(field: String, value: Array<ValueType>): void;
+    InnerNotContains(field: String, value: String): void;
+    InnerNotLike(field: String, value: String): void;
+    @!sts_inject_into_class("""
+    
+    inDevices(devices: Array<String>): RdbPredicates {
+        this.innerInDevices(devices);
+        return this;
+    }
+    inAllDevices(): RdbPredicates {
+        this.innerInAllDevices();
+        return this;
+    }
+    equalTo(field: String, value: ValueType): RdbPredicates {
+        this.innerEqualTo(field, value);
+        return this;
+    }
+    notEqualTo(field: String, value: ValueType): RdbPredicates {
+        this.innerNotEqualTo(field, value);
+        return this;
+    }
+    beginWrap(): RdbPredicates {
+        this.innerBeginWrap();
+        return this;
+    }
+    endWrap(): RdbPredicates {
+        this.innerEndWrap();
+        return this;
+    }
+    or(): RdbPredicates {
+        this.innerOr();
+        return this;
+    }
+    and(): RdbPredicates {
+        this.innerAnd();
+        return this;
+    }
+    contains(field: String, value: String): RdbPredicates {
+        this.innerContains(field, value);
+        return this;
+    }
+    beginsWith(field: String, value: String): RdbPredicates {
+        this.innerBeginsWith(field, value);
+        return this;
+    }
+    endsWith(field: String, value: String): RdbPredicates {
+        this.innerEndsWith(field, value);
+        return this;
+    }
+    isNull(field: String): RdbPredicates {
+        this.innerIsNull(field);
+        return this;
+    }
+    isNotNull(field: String): RdbPredicates {
+        this.innerIsNotNull(field);
+        return this;
+    }
+    like(field: String, value: String): RdbPredicates {
+        this.innerLike(field, value);
+        return this;
+    }
+    glob(field: String, value: String): RdbPredicates {
+        this.innerGlob(field, value);
+        return this;
+    }
+    between(field: String, low: ValueType, high: ValueType): RdbPredicates {
+        this.innerBetween(field, low, high);
+        return this;
+    }
+    notBetween(field: String, low: ValueType, high: ValueType): RdbPredicates {
+        this.innerNotBetween(field, low, high);
+        return this;
+    }
+    greaterThan(field: String, value: ValueType): RdbPredicates {
+        this.innerGreaterThan(field, value);
+        return this;
+    }
+    lessThan(field: String, value: ValueType): RdbPredicates {
+        this.innerLessThan(field, value);
+        return this;
+    }
+    greaterThanOrEqualTo(field: String, value: ValueType): RdbPredicates {
+        this.innerGreaterThanOrEqualTo(field, value);
+        return this;
+    }
+    lessThanOrEqualTo(field: String, value: ValueType): RdbPredicates {
+        this.innerLessThanOrEqualTo(field, value);
+        return this;
+    }
+    orderByAsc(field: String): RdbPredicates {
+        this.innerOrderByAsc(field);
+        return this;
+    }
+    orderByDesc(field: String): RdbPredicates {
+        this.innerOrderByDesc(field);
+        return this;
+    }
+    distinct(): RdbPredicates {
+        this.innerDistinct();
+        return this;
+    }
+    limitAs(value: int): RdbPredicates {
+        this.innerLimitAs(value);
+        return this;
+    }
+    offsetAs(rowOffset: int): RdbPredicates {
+        this.innerOffsetAs(rowOffset);
+        return this;
+    }
+    groupBy(fields: Array<String>): RdbPredicates {
+        this.innerGroupBy(fields);
+        return this;
+    }
+    indexedBy(field: String): RdbPredicates {
+        this.innerIndexedBy(field);
+        return this;
+    }
+    inValues(field: String, value: Array<ValueType>): RdbPredicates {
+        this.innerInValues(field, value);
+        return this;
+    }
+    notInValues(field: String, value: Array<ValueType>): RdbPredicates {
+        this.innerNotInValues(field, value);
+        return this;
+    }
+    notContains(field: String, value: String): RdbPredicates {
+        this.innerNotContains(field, value);
+        return this;
+    }
+    notLike(field: String, value: String): RdbPredicates {
+        this.innerNotLike(field, value);
+        return this;
+    }
+    """)
 }
 
 @ctor("RdbPredicates")
