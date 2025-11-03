@@ -77,7 +77,7 @@ ValueObject::ValueObject(std::string val) : value(std::move(val))
 ValueObject::ValueObject(const char *val) : ValueObject(val ? std::string(val) : std::string())
 {
     if (val == nullptr) {
-        LOG_ERROR("val is nullptr");
+        LOG_WARN("val is nullptr");
     }
 }
 
