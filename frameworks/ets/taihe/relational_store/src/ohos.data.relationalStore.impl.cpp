@@ -79,7 +79,7 @@ public:
         resultSet_ = resultSet;
     }
 
-    ResultSetProxy operator=(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    ResultSetProxy& operator=(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
     {
         if (resultSet_ == resultSet) {
             return *this;
