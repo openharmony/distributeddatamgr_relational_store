@@ -15,17 +15,16 @@
 #ifndef OHOS_RELATION_STORE_ANI_ABILITY_UTILS_H_
 #define OHOS_RELATION_STORE_ANI_ABILITY_UTILS_H_
 
-#include "taihe/runtime.hpp"
-#include "ohos.data.relationalStore.proj.hpp"
-#include "ohos.data.relationalStore.impl.hpp"
-
-#include "napi_rdb_js_utils.h"
 #include "js_ability.h"
+#include "napi_rdb_js_utils.h"
+#include "ohos.data.relationalStore.impl.hpp"
+#include "ohos.data.relationalStore.proj.hpp"
+#include "taihe/runtime.hpp"
 
 namespace ani_abilityutils {
 int32_t GetHapVersion(ani_env *env, ani_object value);
 std::shared_ptr<OHOS::AppDataMgrJsKit::Context> GetStageModeContext(ani_env *env, ani_object value);
 int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param);
-}
+} // namespace ani_abilityutils
 
 #endif
