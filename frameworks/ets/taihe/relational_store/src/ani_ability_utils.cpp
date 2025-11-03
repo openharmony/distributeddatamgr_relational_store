@@ -88,7 +88,8 @@ int32_t AniGetContext(ani_object jsValue, OHOS::AppDataMgrJsKit::JSUtils::Contex
         ASSERT(status == ANI_OK, "get currentHapModuleInfo.name failed.", ANI_INVALID_ARGS);
     }
     ani_object appInfo = nullptr;
-    ani_utils::AniGetProperty(env, jsValue, "applicationInfo", appInfo, ani_utils::ErrorHandling::STRICT);
+    status = ani_utils::AniGetProperty(env, jsValue, "applicationInfo", appInfo, ani_utils::ErrorHandling::STRICT);
+    ASSERT(status == ANI_OK, "get applicationInfo failed.", ANI_INVALID_ARGS);
     if (appInfo != nullptr) {
         status = ani_utils::AniGetProperty(env, appInfo, "name", param.bundleName, ani_utils::ErrorHandling::STRICT);
         ASSERT(status == ANI_OK, "get applicationInfo.name failed.", ANI_INVALID_ARGS);
