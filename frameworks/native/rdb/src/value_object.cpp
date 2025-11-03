@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define LOG_TAG "value_object"
+#define LOG_TAG "ValueObject"
 #include "value_object.h"
 
 #include <iostream>
